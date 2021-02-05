@@ -37,8 +37,8 @@ namespace Platform.API.Repository
             {
                 return new BaseResponse<WalletBalanceResponse>
                 {
-                    StatusCode = StatusCode.Missing_Unsupported_OperatorToken_In_RequestHeaders,
-                    Message = StatusCode.Missing_Unsupported_OperatorToken_In_RequestHeaders.ToString().Replace('_', ' '),
+                    StatusCode = StatusCode.Missing_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
                 };
             }
 

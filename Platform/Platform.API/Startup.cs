@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Platform.API.ActionFilters;
 using Platform.API.Data;
 using Platform.API.Repository;
 
@@ -40,6 +41,8 @@ namespace Platform.API
                 options.KnownNetworks.Clear();
                 options.KnownProxies.Clear();
             });
+
+            services.AddScoped<APIKeyFilter>();
 
             services.AddControllers();
 

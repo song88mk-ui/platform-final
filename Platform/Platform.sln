@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Shared", "Platform
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Operator.API", "Platform.Operator.API\Platform.Operator.API.csproj", "{6853AAA4-EE34-42E0-8A6E-D8DADB82206D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Betting.API", "Platform.Betting.API\Platform.Betting.API.csproj", "{4351BA3C-7C1F-42E6-ADDD-6B484CBD3781}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{6853AAA4-EE34-42E0-8A6E-D8DADB82206D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6853AAA4-EE34-42E0-8A6E-D8DADB82206D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6853AAA4-EE34-42E0-8A6E-D8DADB82206D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4351BA3C-7C1F-42E6-ADDD-6B484CBD3781}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4351BA3C-7C1F-42E6-ADDD-6B484CBD3781}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4351BA3C-7C1F-42E6-ADDD-6B484CBD3781}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4351BA3C-7C1F-42E6-ADDD-6B484CBD3781}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

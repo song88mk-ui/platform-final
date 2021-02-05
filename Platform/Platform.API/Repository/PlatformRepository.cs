@@ -1,5 +1,4 @@
 ﻿using Platform.API.Data;
-using Platform.API.Data.Entities;
 using Platform.API.Models;
 using Platform.Shared.Enums;
 using System;
@@ -18,6 +17,40 @@ namespace Platform.API.Repository
         {
             _httpClient = httpClient;
             _platformContext = platformContext;
+        }
+        public async Task<BaseResponse<WalletBalanceResponse>> GetWalletBalance(string clientId, string operatorToken)
+        {
+            var client = await GetClient(clientId);
+
+            if (client == null)
+            {
+                return new BaseResponse<WalletBalanceResponse>
+                {
+                    StatusCode = StatusCode.Missing_Unsupported_ClientId_In_Request_Headers,
+                    Message = StatusCode.Missing_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                };
+            }
+
+            var authenticate = await Authenticate(operatorToken, client.Endpoint);
+
+            if (authenticate == null)
+            {
+                return new BaseResponse<WalletBalanceResponse>
+                {
+                    StatusCode = StatusCode.Missing_Unsupported_OperatorToken_In_RequestHeaders,
+                    Message = StatusCode.Missing_Unsupported_OperatorToken_In_RequestHeaders.ToString().Replace('_', ' '),
+                };
+            }
+
+            return new BaseResponse<WalletBalanceResponse>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new WalletBalanceResponse
+                {
+                    Balance = authenticate.Balance
+                }
+            };
         }
         private async Task<ClientResponse> GetClient(string clientId)
         {
@@ -64,40 +97,6 @@ namespace Platform.API.Repository
             {
                 return null;
             }
-        }
-        public async Task<BaseResponse<WalletBalanceResponse>> GetWalletBalance(string clientId, string operatorToken)
-        {
-            var client = await GetClient(clientId);
-            
-            if (client == null)
-            {
-                return new BaseResponse<WalletBalanceResponse>
-                {
-                    StatusCode = StatusCode.Missing_Unsupported_ClientId_In_Request_Headers,
-                    Message = StatusCode.Missing_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
-                };
-            }
-
-            var authenticate = await Authenticate(operatorToken, client.Endpoint);
-
-            if (authenticate == null)
-            {
-                return new BaseResponse<WalletBalanceResponse>
-                {
-                    StatusCode = StatusCode.Missing_Unsupported_OperatorToken_In_RequestHeaders,
-                    Message = StatusCode.Missing_Unsupported_OperatorToken_In_RequestHeaders.ToString().Replace('_', ' '),
-                };
-            }
-
-            return new BaseResponse<WalletBalanceResponse>
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = new WalletBalanceResponse
-                {
-                    Balance = authenticate.Balance
-                }
-            };
         }
     }
 }

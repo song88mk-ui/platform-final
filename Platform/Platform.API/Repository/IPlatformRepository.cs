@@ -7,6 +7,6 @@ namespace Platform.API.Repository
     {
         Task<AuthenticationResponse> Authenticate(string operatorToken, string endpoint);
         Task<ClientResponse> GetClient(string clientId);
-        Task<WalletBalanceResponse> GetWalletBalance(decimal balance);
+        Task<BaseResponse<WalletBalanceResponse>> GetWalletBalance(decimal balance);
     }
 }

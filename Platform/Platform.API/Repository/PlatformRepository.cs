@@ -66,11 +66,16 @@ namespace Platform.API.Repository
                 return null;
             }
         }
-        public async Task<WalletBalanceResponse> GetWalletBalance(decimal balance)
+        public async Task<BaseResponse<WalletBalanceResponse>> GetWalletBalance(decimal balance)
         {
-            return new WalletBalanceResponse
+            return new BaseResponse<WalletBalanceResponse>
             {
-                Balance = balance
+                StatusCode = (int)ResultType.Success,
+                Message = ResultType.Success.ToString(),
+                Result = new WalletBalanceResponse
+                {
+                    Balance = balance
+                }
             };
         }
     }

@@ -6,7 +6,7 @@ using Platform.API.Repository;
 namespace Platform.API.Controllers
 {
     [ApiController]
-    public class IntegrationController : BaseController
+    public class IntegrationController : ControllerBase
     {
         private readonly IPlatformRepository _platformRepository;
 

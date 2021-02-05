@@ -1,6 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Platform.API.ActionFilters;
 using Platform.API.Repository;
 
 namespace Platform.API.Controllers
@@ -15,10 +15,13 @@ namespace Platform.API.Controllers
             _platformRepository = platformRepository;
         }
 
-        [HttpGet("v1/wallet/balance"), ServiceFilter(typeof(WalletActionFilter))]
+        [HttpGet("v1/wallet/balance")]
         public async Task<IActionResult> GetWalletBalance()
         {
-            return Ok(await _platformRepository.GetWalletBalance(Balance));
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+
+            return Ok(await _platformRepository.GetWalletBalance(clientId, operatorToken));
         }
     }
 }

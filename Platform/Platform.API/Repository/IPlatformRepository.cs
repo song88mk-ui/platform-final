@@ -5,8 +5,6 @@ namespace Platform.API.Repository
 {
     public interface IPlatformRepository
     {
-        Task<AuthenticationResponse> Authenticate(string operatorToken, string endpoint);
-        Task<ClientResponse> GetClient(string clientId);
-        Task<BaseResponse<WalletBalanceResponse>> GetWalletBalance(decimal balance);
+        Task<BaseResponse<WalletBalanceResponse>> GetWalletBalance(string clientId, string operatorToken);
     }
 }

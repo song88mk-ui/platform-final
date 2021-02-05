@@ -19,7 +19,7 @@ namespace Platform.API.Repository
             _httpClient = httpClient;
             _platformContext = platformContext;
         }
-        public async Task<ClientResponse> GetClient(string clientId)
+        private async Task<ClientResponse> GetClient(string clientId)
         {
             var isGuid = Guid.TryParse(clientId, out Guid guid);
 
@@ -40,11 +40,10 @@ namespace Platform.API.Repository
                     Endpoint = result.Endpoint
                 };
             }
-
             else
                 return null;
         }
-        public async Task<AuthenticationResponse> Authenticate(string operatorToken, string endpoint)
+        private async Task<AuthenticationResponse> Authenticate(string operatorToken, string endpoint)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken)) return null;
 
@@ -66,15 +65,37 @@ namespace Platform.API.Repository
                 return null;
             }
         }
-        public async Task<BaseResponse<WalletBalanceResponse>> GetWalletBalance(decimal balance)
+        public async Task<BaseResponse<WalletBalanceResponse>> GetWalletBalance(string clientId, string operatorToken)
         {
+            var client = await GetClient(clientId);
+            
+            if (client == null)
+            {
+                return new BaseResponse<WalletBalanceResponse>
+                {
+                    StatusCode = StatusCode.Missing_Unsupported_ClientId_In_Request_Headers,
+                    Message = StatusCode.Missing_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                };
+            }
+
+            var authenticate = await Authenticate(operatorToken, client.Endpoint);
+
+            if (authenticate == null)
+            {
+                return new BaseResponse<WalletBalanceResponse>
+                {
+                    StatusCode = StatusCode.Missing_Unsupported_OperatorToken_In_RequestHeaders,
+                    Message = StatusCode.Missing_Unsupported_OperatorToken_In_RequestHeaders.ToString().Replace('_', ' '),
+                };
+            }
+
             return new BaseResponse<WalletBalanceResponse>
             {
-                StatusCode = (int)ResultType.Success,
-                Message = ResultType.Success.ToString(),
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
                 Result = new WalletBalanceResponse
                 {
-                    Balance = balance
+                    Balance = authenticate.Balance
                 }
             };
         }

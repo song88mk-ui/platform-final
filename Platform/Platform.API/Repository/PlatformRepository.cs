@@ -48,10 +48,23 @@ namespace Platform.API.Repository
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken)) return null;
 
+            _httpClient.BaseAddress = new Uri(endpoint);
             _httpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
 
-            return await JsonSerializer.DeserializeAsync<AuthenticationResponse>
-                (await _httpClient.GetStreamAsync($"{endpoint}/authentication"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            var response = await _httpClient.PostAsync($"/v1/authentication", new StringContent(JsonSerializer.Serialize(new { }), System.Text.Encoding.UTF8, "application/json"));
+
+            if (response.IsSuccessStatusCode)
+            {
+                var val = JsonSerializer.Deserialize<AuthenticationResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                return new AuthenticationResponse
+                {
+                    Balance = val.Balance
+                };
+            }
+            else
+            {
+                return null;
+            }
         }
         public async Task<WalletBalanceResponse> GetWalletBalance(decimal balance)
         {

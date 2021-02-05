@@ -8,17 +8,17 @@ namespace Platform.API.Controllers
     [ApiController]
     public class IntegrationController : BaseController
     {
-        private readonly IPlatformRepository _integrationRepository;
+        private readonly IPlatformRepository _platformRepository;
 
-        public IntegrationController(IPlatformRepository integrationRepository)
+        public IntegrationController(IPlatformRepository platformRepository)
         {
-            _integrationRepository = integrationRepository;
+            _platformRepository = platformRepository;
         }
 
         [HttpGet("v1/wallet/balance"), ServiceFilter(typeof(WalletActionFilter))]
         public async Task<IActionResult> GetWalletBalance()
         {
-            return Ok(await _integrationRepository.GetWalletBalance(Balance));
+            return Ok(await _platformRepository.GetWalletBalance(Balance));
         }
     }
 }

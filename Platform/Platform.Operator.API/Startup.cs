@@ -6,11 +6,14 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using Platform.Operator.API.Data;
+using Platform.Operator.API.Repository;
 
 namespace Platform.Operator.API
 {
@@ -44,12 +47,16 @@ namespace Platform.Operator.API
                 options.KnownProxies.Clear();
             });
 
+            services.AddScoped<IPlatformRepository, PlatformRepository>();
+
             services.AddControllers();
 
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Operator API", Version = "v1" });
             });
+
+            services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Platform"]));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -22,8 +22,8 @@ namespace Platform.API.ActionFilters
             {
                 context.Result = new BadRequestObjectResult(new
                 {
-                    StatusCode = StatusCode.Missing_Unsupported_APIKey_In_Request_Headers,
-                    Message = StatusCode.Missing_Unsupported_APIKey_In_Request_Headers.ToString().Replace('_', ' ')
+                    StatusCode = StatusCode.Missing_Or_Unsupported_APIKey_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_APIKey_In_Request_Headers.ToString().Replace('_', ' ')
                 });
                 return;
             }

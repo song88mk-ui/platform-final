@@ -5,7 +5,7 @@ namespace Platform.Betting.API.Data.Entities
     public class Bet
     {
         public Guid BetId { get; set; }
-        public string User { get; set; }
+        public string UserId { get; set; }
         public decimal Stake { get; set; }
         public decimal TrueStake { get; set; }
         public decimal Odds { get; set; }

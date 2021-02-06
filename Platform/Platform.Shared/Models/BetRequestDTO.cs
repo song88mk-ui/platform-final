@@ -13,9 +13,13 @@ namespace Platform.Shared.Models
         public string APIKey { get; set; }
         public string OperatorToken { get; set; }
         public string ClientId { get; set; }
+        public string ClientCode { get; set; }
+        public string LimitId { get; set; }
+        public string Endpoint { get; set; }
+        public Guid BetId { get; set; }
         public string UserId { get; set; }
         public decimal Stake { get; set; }
-        public DateTime TransactionDate { get; set; }
+        public DateTime BetDate { get; set; }
         public OddsType OddsType { get; set; }
         public CurrencyCode CurrencyCode { get; set; }
         public LanguageCode LanguageCode { get; set; }
@@ -26,6 +30,7 @@ namespace Platform.Shared.Models
 
     public class BetSelectionRequestDTO
     {
+        public Guid BetSelectionId { get; set; }
         public int SportId { get; set; }
         public string SportName { get; set; }
         public int SegmentId { get; set; }
@@ -34,10 +39,11 @@ namespace Platform.Shared.Models
         public string LeagueName { get; set; }
         public long FixtureId { get; set; }
         public string FixtureName { get; set; }
+        public FixtureType FixtureType { get; set; }
         public int MarketTemplateId { get; set; }
         public long MarketId { get; set; }
         public string MarketName { get; set; }
-        public decimal Line { get; set; }
+        public string Line { get; set; }
         public int SelectionTemplateId { get; set; }
         public long SelectionId { get; set; }
         public string SelectionName { get; set; }

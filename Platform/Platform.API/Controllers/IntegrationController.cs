@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Platform.API.ActionFilters;
@@ -8,7 +9,7 @@ using Platform.API.Repository;
 
 namespace Platform.API.Controllers
 {
-    [ApiController, ServiceFilter(typeof(APIKeyFilter))]
+    [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(APIKeyFilter))]
     public class IntegrationController : ControllerBase
     {
         private readonly IPlatformRepository _platformRepository;

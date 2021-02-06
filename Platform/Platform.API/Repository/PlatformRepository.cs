@@ -19,7 +19,6 @@ namespace Platform.API.Repository
         private readonly HttpClient _httpClient;
         private readonly PlatformContext _platformContext;
         private readonly IConfiguration _configuration;
-
         public PlatformRepository(IOperatorRepository operatorRepository, HttpClient httpClient, PlatformContext platformContext, IConfiguration configuration)
         {
             _operatorRepository = operatorRepository;
@@ -126,9 +125,12 @@ namespace Platform.API.Repository
                 APIKey = apiKey,
                 OperatorToken = operatorToken,
                 ClientId = clientId,
+                ClientCode = client.ClientCode,
+                LimitId = client.LimitId,
+                Endpoint = client.Endpoint,
                 UserId = result.UserId,
                 Stake = request.Stake,
-                TransactionDate = request.TransactionDate,
+                BetDate = request.TransactionDate,
                 OddsType = request.OddsType,
                 CurrencyCode = request.CurrencyCode,
                 LanguageCode = request.LanguageCode,
@@ -144,6 +146,7 @@ namespace Platform.API.Repository
                     LeagueName = s.LeagueName,
                     FixtureId = s.FixtureId,
                     FixtureName = s.FixtureName,
+                    FixtureType = s.FixtureType,
                     MarketTemplateId = s.MarketTemplateId,
                     MarketId = s.MarketId,
                     MarketName = s.MarketName,

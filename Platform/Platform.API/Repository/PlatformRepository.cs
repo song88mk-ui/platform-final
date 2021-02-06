@@ -14,13 +14,15 @@ namespace Platform.API.Repository
 {
     public class PlatformRepository : IPlatformRepository
     {
-        private readonly HttpClient _httpClient;
+        private readonly HttpClient _operatorHttpClient;
+        private readonly HttpClient _bettingHttpClient;
         private readonly PlatformContext _platformContext;
         private readonly IConfiguration _configuration;
 
-        public PlatformRepository(HttpClient httpClient, PlatformContext platformContext, IConfiguration configuration)
+        public PlatformRepository(HttpClient operatorHttpClient, HttpClient bettingHttpClient, PlatformContext platformContext, IConfiguration configuration)
         {
-            _httpClient = httpClient;
+            _operatorHttpClient = operatorHttpClient;
+            _bettingHttpClient = bettingHttpClient;
             _platformContext = platformContext;
             _configuration = configuration;
         }
@@ -133,9 +135,9 @@ namespace Platform.API.Repository
                 }).ToList()
             };
 
-            _httpClient.BaseAddress = new Uri(_configuration["API:PlatformBettingAPI"]);
+            _bettingHttpClient.BaseAddress = new Uri(_configuration["API:PlatformBettingAPI"]);
 
-            var response = await _httpClient.PostAsync($"/v1/bet/placement", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
+            var response = await _bettingHttpClient.PostAsync($"/v1/bet/placement", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
 
             var result = JsonSerializer.Deserialize<BaseResponseDTO<BetResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
@@ -178,9 +180,9 @@ namespace Platform.API.Repository
                 PageSize = request.PageSize
             };
 
-            _httpClient.BaseAddress = new Uri(_configuration["API:PlatformBettingAPI"]);
+            _bettingHttpClient.BaseAddress = new Uri(_configuration["API:PlatformBettingAPI"]);
 
-            var response = await _httpClient.PostAsync($"/v1/bet/history", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
+            var response = await _bettingHttpClient.PostAsync($"/v1/bet/history", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
 
             var result = JsonSerializer.Deserialize<BaseResponseDTO<BetHistoryResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
@@ -214,10 +216,10 @@ namespace Platform.API.Repository
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken)) return null;
 
-            _httpClient.BaseAddress = new Uri(endpoint);
-            _httpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+            _operatorHttpClient.BaseAddress = new Uri(endpoint);
+            _operatorHttpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
 
-            var response = await _httpClient.PostAsync($"/v1/authentication", new StringContent(JsonSerializer.Serialize(new { }), System.Text.Encoding.UTF8, "application/json"));
+            var response = await _operatorHttpClient.PostAsync($"/v1/authentication", new StringContent(JsonSerializer.Serialize(new { }), System.Text.Encoding.UTF8, "application/json"));
 
             if (response.IsSuccessStatusCode)
                 return JsonSerializer.Deserialize<AuthenticationResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });

@@ -38,6 +38,7 @@ namespace Platform.API.Models
 
     public class BetSelectionHistory
     {
+        public string BetSelectionId { get; set; }
         public int SportId { get; set; }
         public string SportName { get; set; }
         public int SegmentId { get; set; }

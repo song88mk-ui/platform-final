@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "Platform.Settlement.Service": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

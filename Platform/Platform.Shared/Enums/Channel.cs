@@ -1,6 +1,6 @@
 ﻿namespace Platform.Shared.Enums
 {
-    public enum SenderChannel
+    public enum Channel
     {
         Internet = 0,
         Retail = 1,

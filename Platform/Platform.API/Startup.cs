@@ -46,6 +46,7 @@ namespace Platform.API
 
             services.AddControllers();
 
+            services.AddHttpClient<IOperatorRepository, OperatorRepository>();
             services.AddHttpClient<IPlatformRepository, PlatformRepository>();
 
             services.AddSwaggerGen(c =>

@@ -17,6 +17,9 @@
         Betting_Restricted = 110,
         Sport_Betting_Restricted = 111,
         Segment_Betting_Restricted = 112,
-        League_Betting_Restricted = 113
+        League_Betting_Restricted = 113,
+
+        Error = 1000,
+        Operator_Error = 1001
     }
 }

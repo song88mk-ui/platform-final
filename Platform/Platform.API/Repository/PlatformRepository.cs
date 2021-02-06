@@ -141,7 +141,7 @@ namespace Platform.API.Repository
 
             return result;
         }
-        public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(string clientId, string operatorToken, BetHistoryRequest request)
+        public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(string apiKey, string clientId, string operatorToken, BetHistoryRequest request)
         {
             var client = await GetClient(clientId);
 
@@ -165,21 +165,26 @@ namespace Platform.API.Repository
                 };
             }
 
-            //TODO: call Betting API for bet history
-            //TODO: return the proper data from betting api
-            return new BaseResponseDTO<BetHistoryResponseDTO>
+            var payload = new BetHistoryRequestDTO
             {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString().Replace('_', ' '),
-                Result = new BetHistoryResponseDTO
-                {
-                    CurrentPage = 1,
-                    PageCount = 10,
-                    PageSize = 20,
-                    RowCount = 20,
-                    Bets = new List<BetHistoryDTO>()
-                }
+                APIKey = apiKey,
+                OperatorToken = operatorToken,
+                ClientId = clientId,
+                UserId = authenticate.UserId,
+                FromDate = request.FromDate,
+                ToDate = request.ToDate,
+                BetStatusFilter = request.BetStatusFilter,
+                Page = request.Page,
+                PageSize = request.PageSize
             };
+
+            _httpClient.BaseAddress = new Uri(_configuration["API:PlatformBettingAPI"]);
+
+            var response = await _httpClient.PostAsync($"/v1/bet/history", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
+
+            var result = JsonSerializer.Deserialize<BaseResponseDTO<BetHistoryResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+            return result;
         }
         private async Task<ClientResponse> GetClient(string clientId)
         {

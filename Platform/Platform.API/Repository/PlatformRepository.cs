@@ -2,6 +2,7 @@
 using Platform.API.Models;
 using Platform.Shared.Enums;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -26,8 +27,8 @@ namespace Platform.API.Repository
             {
                 return new BaseResponse<WalletBalanceResponse>
                 {
-                    StatusCode = StatusCode.Missing_Unsupported_ClientId_In_Request_Headers,
-                    Message = StatusCode.Missing_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
                 };
             }
 
@@ -37,8 +38,8 @@ namespace Platform.API.Repository
             {
                 return new BaseResponse<WalletBalanceResponse>
                 {
-                    StatusCode = StatusCode.Missing_Unsupported_OperatorToken_In_Request_Headers,
-                    Message = StatusCode.Missing_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
                 };
             }
 
@@ -48,7 +49,95 @@ namespace Platform.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new WalletBalanceResponse
                 {
+                    UserId = authenticate.UserId,
                     Balance = authenticate.Balance
+                }
+            };
+        }
+        public async Task<BaseResponse<BetResponse>> PlaceBet(string clientId, string operatorToken, BetRequest request)
+        {
+            var client = await GetClient(clientId);
+
+            if (client == null)
+            {
+                return new BaseResponse<BetResponse>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                };
+            }
+
+            var authenticate = await Authenticate(operatorToken, client.Endpoint);
+
+            if (authenticate == null)
+            {
+                return new BaseResponse<BetResponse>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (authenticate.Balance < request.Stake)
+            {
+                return new BaseResponse<BetResponse>
+                {
+                    StatusCode = StatusCode.Insufficient_Funds,
+                    Message = StatusCode.Insufficient_Funds.ToString().Replace('_', ' '),
+                };
+            }
+
+            //TODO: call Betting API for bet placement
+            //TODO: return the proper status from betting api
+            return new BaseResponse<BetResponse>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString().Replace('_', ' '),
+                Result = new BetResponse
+                {
+                    BetId = Guid.NewGuid().ToString().ToUpper(),
+                    UserId = authenticate.UserId,
+                    BetStatus = BetStatus.Waiting
+                }
+            };
+        }
+        public async Task<BaseResponse<BetHistoryResponse>> GetBetHistory(string clientId, string operatorToken, BetHistoryRequest request)
+        {
+            var client = await GetClient(clientId);
+
+            if (client == null)
+            {
+                return new BaseResponse<BetHistoryResponse>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                };
+            }
+
+            var authenticate = await Authenticate(operatorToken, client.Endpoint);
+
+            if (authenticate == null)
+            {
+                return new BaseResponse<BetHistoryResponse>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
+            //TODO: call Betting API for bet history
+            //TODO: return the proper data from betting api
+            return new BaseResponse<BetHistoryResponse>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString().Replace('_', ' '),
+                Result = new BetHistoryResponse
+                {
+                    CurrentPage = 1,
+                    PageCount = 10,
+                    PageSize = 20,
+                    RowCount = 20,
+                    Bets = new List<BetHistory>()
                 }
             };
         }
@@ -90,6 +179,7 @@ namespace Platform.API.Repository
                 var val = JsonSerializer.Deserialize<AuthenticationResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 return new AuthenticationResponse
                 {
+                    UserId = val.UserId,
                     Balance = val.Balance
                 };
             }

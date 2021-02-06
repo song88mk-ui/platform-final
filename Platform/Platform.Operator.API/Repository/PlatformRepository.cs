@@ -1,9 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Platform.Operator.API.Data;
-using Platform.Operator.API.Models;
+using Platform.Shared.Models;
 using System;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Platform.Operator.API.Repository
@@ -17,7 +16,7 @@ namespace Platform.Operator.API.Repository
             _platformContext = platformContext;
         }
 
-        public async Task<AuthenticationResponse> Authenticate(string operatorToken)
+        public async Task<AuthenticationResponseDTO> Authenticate(string operatorToken)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken)) return null;
 
@@ -25,7 +24,7 @@ namespace Platform.Operator.API.Repository
 
             if (!isGuid)
             {
-                return new AuthenticationResponse
+                return new AuthenticationResponseDTO
                 {
                     StatusId = 1002
                 };
@@ -35,14 +34,14 @@ namespace Platform.Operator.API.Repository
 
             if (result == null)
             {
-                return new AuthenticationResponse
+                return new AuthenticationResponseDTO
                 {
                     StatusId = 1002
                 };
             }
             else
             {
-                return new AuthenticationResponse
+                return new AuthenticationResponseDTO
                 {
                     UserId = result.UserId.ToString().ToUpper(),
                     StatusId = 1000,

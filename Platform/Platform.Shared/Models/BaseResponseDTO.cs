@@ -1,8 +1,8 @@
 ﻿using Platform.Shared.Enums;
 
-namespace Platform.API.Models
+namespace Platform.Shared.Models
 {
-    public class BaseResponse<T>
+    public class BaseResponseDTO<T>
     {
         public StatusCode StatusCode { get; set; }
         public string Message { get; set; }

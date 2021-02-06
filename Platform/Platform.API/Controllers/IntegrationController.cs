@@ -63,8 +63,9 @@ namespace Platform.API.Controllers
         {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
 
-            var result = await _platformRepository.PlaceBet(clientId, operatorToken, request);
+            var result = await _platformRepository.PlaceBet(apiKey,clientId, operatorToken, request);
 
             switch (result.StatusCode)
             {

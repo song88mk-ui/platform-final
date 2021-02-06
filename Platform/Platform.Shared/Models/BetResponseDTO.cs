@@ -1,8 +1,11 @@
 ﻿using Platform.Shared.Enums;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace Platform.API.Models
+namespace Platform.Shared.Models
 {
-    public class BetResponse
+    public class BetResponseDTO
     {
         public string UserId { get; set; }
         public string BetId { get; set; }

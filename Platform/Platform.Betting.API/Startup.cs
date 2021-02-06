@@ -1,16 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using Platform.Betting.API.Repository;
 
 namespace Platform.Betting.API
 {
@@ -45,6 +40,8 @@ namespace Platform.Betting.API
             });
 
             services.AddControllers();
+
+            services.AddScoped<IBettingRepository, BettingRepository>();
 
             services.AddSwaggerGen(c =>
             {

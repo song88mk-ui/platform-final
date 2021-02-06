@@ -2,26 +2,26 @@
 using System;
 using System.Collections.Generic;
 
-namespace Platform.API.Models
+namespace Platform.Shared.Models
 {
-    public class BetHistoryResponse
+    public class BetHistoryResponseDTO
     {
-        public BetHistoryResponse()
+        public BetHistoryResponseDTO()
         {
-            Bets = new List<BetHistory>();
+            Bets = new List<BetHistoryDTO>();
         }
         public int CurrentPage { get; set; }
         public int PageCount { get; set; }
         public int PageSize { get; set; }
         public int RowCount { get; set; }
-        public List<BetHistory> Bets { get; set; }
+        public List<BetHistoryDTO> Bets { get; set; }
     }
 
-    public class BetHistory
+    public class BetHistoryDTO
     {
-        public BetHistory()
+        public BetHistoryDTO()
         {
-            Selections = new List<BetSelectionHistory>();
+            Selections = new List<BetSelectionHistoryDTO>();
         }
         public string BetId { get; set; }
         public decimal Stake { get; set; }
@@ -33,10 +33,10 @@ namespace Platform.API.Models
         public OddsType OddsType { get; set; }
         public CurrencyCode CurrencyCode { get; set; }
         public DateTime TransactionDate { get; set; }
-        public List<BetSelectionHistory> Selections { get; set; }
+        public List<BetSelectionHistoryDTO> Selections { get; set; }
     }
 
-    public class BetSelectionHistory
+    public class BetSelectionHistoryDTO
     {
         public string BetSelectionId { get; set; }
         public int SportId { get; set; }

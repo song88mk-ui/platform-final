@@ -1,6 +1,6 @@
-﻿namespace Platform.API.Models
+﻿namespace Platform.Shared.Models
 {
-    public class WalletBalanceResponse
+    public class WalletBalanceResponseDTO
     {
         public string UserId { get; set; }
         public decimal Balance { get; set; }

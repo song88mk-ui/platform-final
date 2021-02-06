@@ -1,6 +1,6 @@
-﻿namespace Platform.API.Models
+﻿namespace Platform.Shared.Models
 {
-    public class AuthenticationResponse
+    public class AuthenticationResponseDTO
     {
         public string UserId { get; set; }
         public int StatusId { get; set; }

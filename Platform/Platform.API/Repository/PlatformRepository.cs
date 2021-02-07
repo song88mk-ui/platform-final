@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Platform.API.Data;
+using Platform.API.Data.Entities;
 using Platform.API.Models;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
@@ -120,6 +121,8 @@ namespace Platform.API.Repository
                 };
             }
 
+            var rate = await GetExchangeRate(result.CurrencyCode);
+
             var payload = new BetRequestDTO
             {
                 APIKey = apiKey,
@@ -128,6 +131,8 @@ namespace Platform.API.Repository
                 ClientCode = client.ClientCode,
                 LimitId = client.LimitId,
                 Endpoint = client.Endpoint,
+                CompanyShare = client.CompanyShare,
+                ExchangeRate = rate.ExchangeRate,
                 UserId = result.UserId,
                 Stake = request.Stake,
                 BetDate = request.TransactionDate,
@@ -263,11 +268,25 @@ namespace Platform.API.Repository
                     ClientCode = result.ClientCode,
                     LimitId = result.LimitId,
                     IsActive = result.IsActive,
-                    Endpoint = result.Endpoint
+                    Endpoint = result.Endpoint,
+                    CompanyShare = result.CompanyShare
                 };
             }
             else
                 return null;
+        }
+        private async Task<ForexEURResponse> GetExchangeRate(string currencyCode)
+        {
+            var result = await _platformContext.ForexEUR.FindAsync(currencyCode);
+
+            if (result == null)
+                return new ForexEURResponse();
+
+            return new ForexEURResponse
+            {
+                CurrencyCode = result.CurrencyCode,
+                ExchangeRate = result.ExchangeRate
+            };
         }
     }
 }

@@ -10,5 +10,12 @@ namespace Platform.API.Models
         public string LimitId { get; set; }
         public bool IsActive { get; set; }
         public string Endpoint { get; set; }
+        public decimal CompanyShare { get; set; }
+    }
+
+    public class ForexEURResponse
+    {
+        public string CurrencyCode { get; set; }
+        public decimal ExchangeRate { get; set; }
     }
 }

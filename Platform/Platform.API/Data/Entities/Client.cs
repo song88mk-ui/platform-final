@@ -10,5 +10,6 @@ namespace Platform.API.Data.Entities
         public string LimitId { get; set; }
         public bool IsActive { get; set; }
         public string Endpoint { get; set; }
+        public decimal CompanyShare { get; set; }
     }
 }

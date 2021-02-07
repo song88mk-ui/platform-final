@@ -16,6 +16,8 @@ namespace Platform.Shared.Models
         public string ClientCode { get; set; }
         public string LimitId { get; set; }
         public string Endpoint { get; set; }
+        public decimal CompanyShare { get; set; }
+        public decimal ExchangeRate { get; set; }
         public Guid BetId { get; set; }
         public string UserId { get; set; }
         public decimal Stake { get; set; }

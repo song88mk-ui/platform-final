@@ -149,6 +149,69 @@ namespace Platform.API.Repository
                 };
             }
 
+            if (!IsValidOddsType(request.OddsType))
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_OddsType,
+                    Message = StatusCode.Unsupported_OddsType.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (!IsValidCurrencyCode(request.CurrencyCode))
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_CurrencyCode,
+                    Message = StatusCode.Unsupported_CurrencyCode.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (IsMatchCurrencyCode(request.CurrencyCode, result.CurrencyCode))
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.CurrencyCode_Mismatch,
+                    Message = StatusCode.CurrencyCode_Mismatch.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (!IsValidLanguageCode(request.LanguageCode))
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (!IsValidChannel(request.Channel))
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_Channel,
+                    Message = StatusCode.Unsupported_Channel.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (!IsValidFixtureType(request.Selections.Select(s => s.FixtureType).ToList()))
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_FixtureType,
+                    Message = StatusCode.Unsupported_FixtureType.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (!IsValidFixtureStatus(request.Selections.Select(s => s.FixtureStatus).ToList()))
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_FixtureStatus,
+                    Message = StatusCode.Unsupported_FixtureStatus.ToString().Replace('_', ' '),
+                };
+            }
+
             var rate = await GetExchangeRate(result.CurrencyCode);
 
             var payload = new BetRequestDTO
@@ -357,6 +420,46 @@ namespace Platform.API.Repository
                 CurrencyCode = result.CurrencyCode,
                 ExchangeRate = result.ExchangeRate
             };
+        }
+        private bool IsMatchCurrencyCode(CurrencyCode requestCurrencyCode, string userCurrencyCode)
+        {
+            return requestCurrencyCode.ToString().ToUpper() == userCurrencyCode.ToUpper() ? true : false;
+        }
+        private bool IsValidCurrencyCode(CurrencyCode currencyCode)
+        {
+            return Enum.IsDefined(typeof(CurrencyCode), currencyCode) ? true : false;
+        }
+        private bool IsValidLanguageCode(LanguageCode languageCode)
+        {
+            return Enum.IsDefined(typeof(LanguageCode), languageCode) ? true : false;
+        }
+        private bool IsValidOddsType(OddsType oddsType)
+        {
+            return Enum.IsDefined(typeof(OddsType), oddsType) ? true : false;
+        }
+        private bool IsValidChannel(Channel channel)
+        {
+            return Enum.IsDefined(typeof(Channel), channel) ? true : false;
+        }
+        private bool IsValidFixtureType(List<FixtureType> fixtureTypes)
+        {
+            foreach (var item in fixtureTypes)
+            {
+                if (!Enum.IsDefined(typeof(FixtureType), item))
+                    return false;
+            }
+
+            return true;
+        }
+        private bool IsValidFixtureStatus(List<FixtureStatus> fixtureStatus)
+        {
+            foreach (var item in fixtureStatus)
+            {
+                if (!Enum.IsDefined(typeof(FixtureStatus), item))
+                    return false;
+            }
+
+            return true;
         }
     }
 }

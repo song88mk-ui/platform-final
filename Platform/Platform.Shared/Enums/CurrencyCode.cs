@@ -2,7 +2,6 @@
 {
     public enum CurrencyCode
     {
-        None = 0,
         USD = 1,
         EUR = 2,
         GBP = 3,

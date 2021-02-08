@@ -2,7 +2,6 @@
 {
     public enum LanguageCode
     {
-        None = 0,
         EN = 1,
         TH = 2,
         MY = 3,

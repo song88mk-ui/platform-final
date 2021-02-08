@@ -19,11 +19,11 @@ namespace Platform.Betting.API.Repository
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(BetRequestDTO request)
         {
             //TODO: bet validation
-            //TODO: Max Fixture Bet validation
+            //TODO: Max Fixture Bet  
 
-            try
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
-                using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+                try
                 {
                     Guid betId;
 
@@ -174,15 +174,20 @@ namespace Platform.Betting.API.Repository
                             CorrelationId = selection.CorrelationId
                         });
                     }
+
+                    _bettingContext.SaveChanges();
+                    scope.Complete();
+
                 }
-            }
-            catch (Exception)
-            {
-                return new BaseResponseDTO<BetResponseDTO>
+                catch (Exception ex)
                 {
-                    StatusCode = StatusCode.Error,
-                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} (Error saving to database)"
-                };
+                    scope.Dispose();
+                    return new BaseResponseDTO<BetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} (Error saving to database)"
+                    };
+                }
             }
 
             //TODO: publish to placement consumer

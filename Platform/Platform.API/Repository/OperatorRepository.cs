@@ -13,8 +13,9 @@ namespace Platform.API.Repository
         public OperatorRepository(HttpClient httpClient)
         {
             _httpClient = httpClient;
+            _httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
-        public  async Task<HttpResponseMessage> Authenticate(string operatorToken, string endpoint)
+        public async Task<HttpResponseMessage> Authenticate(string operatorToken, string endpoint)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken)) return null;
 

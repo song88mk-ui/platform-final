@@ -64,5 +64,19 @@ namespace Platform.Operator.API.Controllers
                     return new BadRequestObjectResult(result);
             }
         }
+
+        [HttpPost("v1/bet/cancellation")]
+        public async Task<IActionResult> BetCancellation([FromBody] OperatorBetCancellationRequestDTO request)
+        {
+            var result = await _platformRepository.BetCancellation(request.UserId, request.Stake);
+
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return new BadRequestObjectResult(result);
+            }
+        }
     }
 }

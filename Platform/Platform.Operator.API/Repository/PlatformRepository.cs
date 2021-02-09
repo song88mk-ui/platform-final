@@ -18,6 +18,7 @@ namespace Platform.Operator.API.Repository
             _platformContext = platformContext;
         }
 
+        #region Authenticate
         public async Task<AuthenticationResponseDTO> Authenticate(string operatorToken)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken)) return null;
@@ -52,7 +53,9 @@ namespace Platform.Operator.API.Repository
                 };
             }
         }
+        #endregion
 
+        #region BetPlacement
         public async Task<OperatorBetResponseDTO> BetPlacement(string operatorToken, decimal stake, string currencyCode)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
@@ -125,7 +128,9 @@ namespace Platform.Operator.API.Repository
             };
 
         }
+        #endregion
 
+        #region BetSettlement
         public async Task<OperatorBetResponseDTO> BetSettlement(string userId, decimal payout)
         {
             if (string.IsNullOrEmpty(userId) || string.IsNullOrWhiteSpace(userId))
@@ -179,5 +184,62 @@ namespace Platform.Operator.API.Repository
             };
 
         }
+        #endregion
+
+        #region BetCancellation
+        public async Task<OperatorBetResponseDTO> BetCancellation(string userId, decimal stake)
+        {
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrWhiteSpace(userId))
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003 //Internal Error
+                };
+
+            var isGuid = Guid.TryParse(userId, out Guid guid);
+            if (!isGuid)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003 //Internal Error
+                };
+            }
+
+            var result = await _platformContext.Operator.Where(c => c.UserId == guid).FirstOrDefaultAsync();
+            if (result == null)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003 //Internal Error
+                };
+            }
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                try
+                {
+                    //Update wallet balance
+                    result.Balance += stake;
+                    _platformContext.SaveChanges();
+                    scope.Complete();
+
+                }
+                catch (Exception ex)
+                {
+                    scope.Dispose();
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1003 //Internal Error
+                    };
+                }
+            }
+
+            return new OperatorBetResponseDTO
+            {
+                StatusId = 1000,
+                Balance = result.Balance
+            };
+
+        }
+        #endregion
     }
 }

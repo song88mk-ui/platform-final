@@ -8,5 +8,6 @@ namespace Platform.Operator.API.Repository
         Task<AuthenticationResponseDTO> Authenticate(string operatorToken);
         Task<OperatorBetResponseDTO> BetPlacement(string operatorToken, decimal stake, string currencyCode);
         Task<OperatorBetResponseDTO> BetSettlement(string userId, decimal payout);
+        Task<OperatorBetResponseDTO> BetCancellation(string userId, decimal stake);
     }
 }

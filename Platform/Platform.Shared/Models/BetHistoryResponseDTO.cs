@@ -50,7 +50,7 @@ namespace Platform.Shared.Models
         public int MarketTemplateId { get; set; }
         public long MarketId { get; set; }
         public string MarketName { get; set; }
-        public decimal Line { get; set; }
+        public string Line { get; set; }
         public int SelectionTemplateId { get; set; }
         public long SelectionId { get; set; }
         public string SelectionName { get; set; }

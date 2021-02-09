@@ -7,17 +7,19 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.API", "Platform.AP
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Shared", "Platform.Shared\Platform.Shared.csproj", "{A306A71B-2334-4437-A685-B09A2E828C9F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Operator.API", "Platform.Operator.API\Platform.Operator.API.csproj", "{6853AAA4-EE34-42E0-8A6E-D8DADB82206D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Operator.API", "Platform.Operator.API\Platform.Operator.API.csproj", "{6853AAA4-EE34-42E0-8A6E-D8DADB82206D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Betting.API", "Platform.Betting.API\Platform.Betting.API.csproj", "{4351BA3C-7C1F-42E6-ADDD-6B484CBD3781}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Betting.API", "Platform.Betting.API\Platform.Betting.API.csproj", "{4351BA3C-7C1F-42E6-ADDD-6B484CBD3781}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Placement.Service", "Platform.Placement.Service\Platform.Placement.Service.csproj", "{5A1FC002-FBA4-45C0-8901-C75F7B6996E4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Placement.Service", "Platform.Placement.Service\Platform.Placement.Service.csproj", "{5A1FC002-FBA4-45C0-8901-C75F7B6996E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Cancellation.Service", "Platform.Cancellation.Service\Platform.Cancellation.Service.csproj", "{55A314C8-A2B5-49F9-9D8C-6D89098C741F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Cancellation.Service", "Platform.Cancellation.Service\Platform.Cancellation.Service.csproj", "{55A314C8-A2B5-49F9-9D8C-6D89098C741F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Settlement.Service", "Platform.Settlement.Service\Platform.Settlement.Service.csproj", "{4CAC3C09-65E3-4F4F-8F49-6EF886C2F6EF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Settlement.Service", "Platform.Settlement.Service\Platform.Settlement.Service.csproj", "{4CAC3C09-65E3-4F4F-8F49-6EF886C2F6EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Operator.Service", "Platform.Operator.Service\Platform.Operator.Service.csproj", "{714F73FE-B32F-4B66-ADD4-DA137E55C246}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Operator.Service", "Platform.Operator.Service\Platform.Operator.Service.csproj", "{714F73FE-B32F-4B66-ADD4-DA137E55C246}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Betting.API.UnitTest", "Platform.Betting.API.UnitTest\Platform.Betting.API.UnitTest.csproj", "{96704F40-7C42-420C-8D40-0FC5071B8836}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +59,10 @@ Global
 		{714F73FE-B32F-4B66-ADD4-DA137E55C246}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{714F73FE-B32F-4B66-ADD4-DA137E55C246}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{714F73FE-B32F-4B66-ADD4-DA137E55C246}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96704F40-7C42-420C-8D40-0FC5071B8836}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96704F40-7C42-420C-8D40-0FC5071B8836}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96704F40-7C42-420C-8D40-0FC5071B8836}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96704F40-7C42-420C-8D40-0FC5071B8836}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

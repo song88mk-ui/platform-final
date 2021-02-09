@@ -5,6 +5,7 @@ using Platform.Placement.Service.Entities;
 using Platform.Placement.Service.Utility;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
+using System;
 using System.Linq;
 using System.Transactions;
 
@@ -27,7 +28,7 @@ namespace Platform.Placement.Service.Repository
                 {
                     try
                     {
-                        var bet = context.Bet.Find(message);
+                        var bet = context.Bet.Find(message.BetId);
 
                         if (bet != null)
                         {
@@ -123,7 +124,7 @@ namespace Platform.Placement.Service.Repository
 
                         scope.Complete();
                     }
-                    catch (System.Exception)
+                    catch (Exception ex)
                     {
                         scope.Dispose();
                     }

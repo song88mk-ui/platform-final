@@ -4,6 +4,7 @@ using Platform.Shared.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace Platform.Operator.API.Repository
 {
@@ -53,7 +54,7 @@ namespace Platform.Operator.API.Repository
 
         public async Task<OperatorBetResponseDTO> BetPlacement(string operatorToken, decimal stake, string currencyCode)
         {
-            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken)) 
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
                 return new OperatorBetResponseDTO
                 {
                     StatusId = 1003 //Internal Error
@@ -80,7 +81,7 @@ namespace Platform.Operator.API.Repository
             }
 
             //validate stake
-            if(stake > result.Balance)
+            if (stake > result.Balance)
             {
                 return new OperatorBetResponseDTO
                 {
@@ -96,15 +97,31 @@ namespace Platform.Operator.API.Repository
                 };
             }
 
-            //Update wallet balance
-            result.Balance -= stake;
-            _platformContext.SaveChanges();
-
-            return new OperatorBetResponseDTO
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
-                StatusId = 1000,
-                Balance = result.Balance
-            };
+                try
+                {
+                    //Update wallet balance
+                    result.Balance -= stake;
+                    _platformContext.SaveChanges();
+                    scope.Complete();
+
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1000,
+                        Balance = result.Balance
+                    };
+                }
+                catch (Exception ex)
+                {
+                    scope.Dispose();
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1003 //Internal Error
+                    };
+                }
+            }
+            
         }
     }
 }

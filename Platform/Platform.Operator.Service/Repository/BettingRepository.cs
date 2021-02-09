@@ -3,11 +3,15 @@ using Microsoft.Extensions.Configuration;
 using Platform.Operator.Service.Data;
 using Platform.Operator.Service.Entities;
 using Platform.Operator.Service.Utility;
+using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
+using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Transactions;
 
 namespace Platform.Operator.Service.Repository
@@ -22,7 +26,7 @@ namespace Platform.Operator.Service.Repository
             _httpClient = httpClient;
             _httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
-        public void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId)
+        public async void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId)
         {
             var betData = new Bet();
             var betSelectionData = new List<BetSelection>();
@@ -52,57 +56,111 @@ namespace Platform.Operator.Service.Repository
             }
 
             _httpClient.BaseAddress = new Uri(betData.Endpoint);
-            //_httpClient.DefaultRequestHeaders.Add("x-operator-token", betData.);
+            _httpClient.DefaultRequestHeaders.Add("x-operator-token", betData.OperatorToken);
 
-            //try
-            //{
-            //    var response = await _httpClient.PostAsync($"/v1/authentication", new StringContent(JsonSerializer.Serialize(new { }), System.Text.Encoding.UTF8, "application/json"));
+            try
+            {
+                var payload = new OperatorBetRequestDTO2
+                {
+                    TransactionId = Guid.NewGuid().ToString().ToUpper(),
+                    BetId = betData.BetId.ToString().ToUpper(),
+                    UserId = betData.UserId,
+                    CurrencyCode = betData.CurrencyCode,
+                    Stake = betData.Stake,
+                    Odds = betData.Odds,
+                    BetStatus = betData.BetStatusName,
+                    TransactionDate = betData.BetDate,
+                    BetSelections = betSelectionData.Select(s => new OperatorBetSelectionRequestDTO2
+                    {
+                        BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
+                        BetSelectionStatus = s.BetSelectionStatusName,
+                        SportId = s.SportId,
+                        SportName = s.SportName,
+                        SegmentId = s.SegmentId,
+                        SegmentName = s.SegmentName,
+                        LeagueId = s.LeagueId,
+                        LeagueName = s.LeagueName,
+                        FixtureId = s.FixtureId.ToString(),
+                        FixtureName = s.FixtureName,
+                        FixtureStartDate = s.FixtureStartDate,
+                        FixtureStatus = s.FixtureStatusName,
+                        Score = $"{s.BetHomeScore} - {s.BetAwayScore}",
+                        MarketId = s.MarketId.ToString(),
+                        MarketName = s.MarketName,
+                        Line = s.Line,
+                        SelectionId = s.SelectionId.ToString(),
+                        SelectionName = s.SelectionName,
+                        Odds = s.Odds,
+                        HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureTypeName.Split(" - ").First().Trim() : string.Empty,
+                        AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureTypeName.Split(" - ").Last().Trim() : string.Empty
+                    }).ToList()
+                };
+                var response = await _httpClient.PostAsync($"/v1/bet/placement", new StringContent(JsonSerializer.Serialize(new { }), System.Text.Encoding.UTF8, "application/json"));
 
-            //    if (response.IsSuccessStatusCode)
-            //    {
-            //        var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-            //        return new BaseResponseDTO<AuthenticationResponseDTO>
-            //        {
-            //            StatusCode = StatusCode.Success,
-            //            Message = StatusCode.Success.ToString(),
-            //            Result = new AuthenticationResponseDTO
-            //            {
-            //                UserId = result.UserId,
-            //                Balance = result.Balance,
-            //                CurrencyCode = result.CurrencyCode,
-            //                StatusId = result.StatusId
-            //            }
-            //        };
-            //    }
-            //    else
-            //    {
-            //        if (response.StatusCode == HttpStatusCode.BadRequest)
-            //        {
-            //            return new BaseResponseDTO<AuthenticationResponseDTO>
-            //            {
-            //                StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
-            //                Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
-            //            };
-            //        }
-            //        else
-            //        {
-            //            return new BaseResponseDTO<AuthenticationResponseDTO>
-            //            {
-            //                StatusCode = StatusCode.Operator_Error,
-            //                Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})",
-            //            };
-            //        }
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    return new BaseResponseDTO<AuthenticationResponseDTO>
-            //    {
-            //        StatusCode = StatusCode.Operator_Error,
-            //        Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({ex.Message})",
-            //    };
-            //}
+                    
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+
+                    }
+                    else
+                    {
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
+    }
+
+    public class OperatorBetRequestDTO2
+    {
+        public OperatorBetRequestDTO2()
+        {
+            BetSelections = new List<OperatorBetSelectionRequestDTO2>();
+        }
+        public string TransactionId { get; set; }
+        public string BetId { get; set; }
+        public string UserId { get; set; }
+        public string CurrencyCode { get; set; }
+        public decimal Stake { get; set; }
+        public decimal Odds { get; set; }
+        public string BetStatus { get; set; }
+        public DateTime TransactionDate { get; set; }
+        public List<OperatorBetSelectionRequestDTO2> BetSelections { get; set; }
+    }
+
+    public class OperatorBetSelectionRequestDTO2
+    {
+        public string BetSelectionId { get; set; }
+        public string BetSelectionStatus { get; set; }
+        public int SportId { get; set; }
+        public string SportName { get; set; }
+        public int SegmentId { get; set; }
+        public string SegmentName { get; set; }
+        public int LeagueId { get; set; }
+        public string LeagueName { get; set; }
+        public string FixtureId { get; set; }
+        public string FixtureName { get; set; }
+        public DateTime FixtureStartDate { get; set; }
+        public string FixtureStatus { get; set; }
+        public string Score { get; set; }
+        public string MarketId { get; set; }
+        public string MarketName { get; set; }
+        public string Line { get; set; }
+        public string SelectionId { get; set; }
+        public string SelectionName { get; set; }
+        public decimal Odds { get; set; }
+        public string HomeName { get; set; }
+        public string AwayName { get; set; }
     }
 }

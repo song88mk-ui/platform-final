@@ -56,14 +56,14 @@ namespace Platform.Operator.API.Controllers
         {
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
-            var result = await _platformRepository.BetPlacement(operatorToken, request.Stake, request.CurrencyCode.ToString());
+            var result = await _platformRepository.BetPlacement(request, operatorToken);
 
             switch (result.StatusId)
             {
                 case 1000:
                     return Ok(result);
                 default:
-                    return new BadRequestObjectResult(result);
+                    return BadRequest(result);
             }
         }
 

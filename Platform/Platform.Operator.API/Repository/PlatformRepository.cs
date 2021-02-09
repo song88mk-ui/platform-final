@@ -94,48 +94,15 @@ namespace Platform.Operator.API.Repository
         #endregion
 
         #region BetPlacement
-        public async Task<OperatorBetResponseDTO> BetPlacement(string operatorToken, decimal stake, string currencyCode)
+        public async Task<OperatorBetResponseDTO> BetPlacement(OperatorBetRequestDTO request, string operatorToken)
         {
-            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
-                return new OperatorBetResponseDTO
-                {
-                    StatusId = 1003 //Internal Error
-                };
-
             var isGuid = Guid.TryParse(operatorToken, out Guid guid);
 
             if (!isGuid)
             {
                 return new OperatorBetResponseDTO
                 {
-                    StatusId = 1002 //Invalid Token
-                };
-            }
-
-            var result = await _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefaultAsync();
-
-            if (result == null)
-            {
-                return new OperatorBetResponseDTO
-                {
-                    StatusId = 1002 //Invalid Token
-                };
-            }
-
-            //validate stake
-            if (stake > result.Balance)
-            {
-                return new OperatorBetResponseDTO
-                {
-                    StatusId = 1001 //Insuficient Fund
-                };
-            }
-
-            if (result.CurrencyCode.ToLower() != currencyCode.ToLower())
-            {
-                return new OperatorBetResponseDTO
-                {
-                    StatusId = 1002 //Invalid Token
+                    StatusId = 1002
                 };
             }
 
@@ -143,28 +110,51 @@ namespace Platform.Operator.API.Repository
             {
                 try
                 {
-                    //Update wallet balance
-                    result.Balance -= stake;
+                    var result = await _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefaultAsync();
+
+                    if (result == null)
+                    {
+                        scope.Dispose();
+
+                        return new OperatorBetResponseDTO
+                        {
+                            StatusId = 1002
+                        };
+                    }
+
+                    if (result.Balance < request.Stake)
+                    {
+                        scope.Dispose();
+
+                        return new OperatorBetResponseDTO
+                        {
+                            StatusId = 1001
+                        };
+                    }
+
+                    result.Balance -= request.Stake;
+                    _platformContext.Operator.Update(result);
+
                     _platformContext.SaveChanges();
                     scope.Complete();
 
-                }
-                catch (Exception ex)
-                {
-                    scope.Dispose();
                     return new OperatorBetResponseDTO
                     {
-                        StatusId = 1003 //Internal Error
+                        StatusId = 1000,
+                        Balance = result.Balance
+                    };
+
+                }
+                catch (Exception)
+                {
+                    scope.Dispose();
+
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1003
                     };
                 }
             }
-
-            return new OperatorBetResponseDTO
-            {
-                StatusId = 1000,
-                Balance = result.Balance
-            };
-
         }
         #endregion
 

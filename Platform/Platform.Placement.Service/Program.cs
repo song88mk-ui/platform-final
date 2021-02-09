@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Platform.Placement.Service.Repository;
+using Platform.Placement.Service.Utility;
 
 namespace Platform.Placement.Service
 {
@@ -18,6 +20,8 @@ namespace Platform.Placement.Service
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddSingleton<IMessageBroker, MessageBroker>();
+                    services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();
                 });
     }

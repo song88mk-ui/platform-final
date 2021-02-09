@@ -4,6 +4,7 @@ using Platform.Shared.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace Platform.Operator.API.Repository
 {
@@ -49,6 +50,78 @@ namespace Platform.Operator.API.Repository
                     CurrencyCode = result.CurrencyCode
                 };
             }
+        }
+
+        public async Task<OperatorBetResponseDTO> BetPlacement(string operatorToken, decimal stake, string currencyCode)
+        {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003 //Internal Error
+                };
+
+            var isGuid = Guid.TryParse(operatorToken, out Guid guid);
+
+            if (!isGuid)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1002 //Invalid Token
+                };
+            }
+
+            var result = await _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefaultAsync();
+
+            if (result == null)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1002 //Invalid Token
+                };
+            }
+
+            //validate stake
+            if (stake > result.Balance)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1001 //Insuficient Fund
+                };
+            }
+
+            if (result.CurrencyCode.ToLower() != currencyCode.ToLower())
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1002 //Invalid Token
+                };
+            }
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                try
+                {
+                    //Update wallet balance
+                    result.Balance -= stake;
+                    _platformContext.SaveChanges();
+                    scope.Complete();
+
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1000,
+                        Balance = result.Balance
+                    };
+                }
+                catch (Exception ex)
+                {
+                    scope.Dispose();
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1003 //Internal Error
+                    };
+                }
+            }
+            
         }
     }
 }

@@ -21,6 +21,8 @@ namespace Platform.Shared.Models
         public Guid BetId { get; set; }
         public string UserId { get; set; }
         public decimal Stake { get; set; }
+        public decimal Odds { get; set; }
+        public string BetStatus { get; set; }
         public DateTime BetDate { get; set; }
         public OddsType OddsType { get; set; }
         public CurrencyCode CurrencyCode { get; set; }

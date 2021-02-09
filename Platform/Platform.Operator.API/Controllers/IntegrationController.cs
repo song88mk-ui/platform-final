@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Platform.Operator.API.Repository;
+using Platform.Shared.Models;
 
 namespace Platform.Operator.API.Controllers
 {
@@ -31,6 +32,22 @@ namespace Platform.Operator.API.Controllers
                     return new BadRequestObjectResult(result.StatusId);
                 default:
                     return Ok(result);
+            }
+        }
+
+        [HttpPost("v1/bet/placement")]
+        public async Task<IActionResult> BetPlacement([FromBody] OperatorBetRequestDTO request)
+        {
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+
+            var result = await _platformRepository.BetPlacement(operatorToken);
+
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return new BadRequestObjectResult(result);
             }
         }
     }

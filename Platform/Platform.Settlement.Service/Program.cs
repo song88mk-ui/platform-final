@@ -1,9 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Platform.Settlement.Service.Repository;
+using Platform.Settlement.Service.Utility;
 
 namespace Platform.Settlement.Service
 {
@@ -18,6 +16,8 @@ namespace Platform.Settlement.Service
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddSingleton<IMessageBroker, MessageBroker>();
+                    services.AddSingleton<IPlatformRepository, PlatformRepository>();
                     services.AddHostedService<Worker>();
                 });
     }

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Platform.Betting.API.Data;
 using Platform.Betting.API.Repository;
+using Platform.Betting.API.Utility;
 using Platform.Shared.Models;
 using System;
 using System.Configuration;
@@ -14,12 +15,14 @@ namespace Platform.Betting.API.UnitTest
     {
         private readonly IBettingRepository repo;
         private IConfiguration _config;
-
+        private readonly IMessageBroker messagebroker;
         public UnitTestBetHistory()
         {
             var services = new ServiceCollection();
             services.AddDbContext<BettingContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Betting"]));
+            services.AddSingleton<IConfiguration>(Configuration);
             services.AddTransient<IBettingRepository, BettingRepository>();
+            services.AddTransient<IMessageBroker, MessageBroker>();
             var serviceProvider = services.BuildServiceProvider();
             repo = serviceProvider.GetService<IBettingRepository>();
         }

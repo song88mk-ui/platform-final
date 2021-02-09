@@ -50,5 +50,42 @@ namespace Platform.Operator.API.Repository
                 };
             }
         }
+
+        public async Task<OperatorBetResponseDTO> BetPlacement(string operatorToken)
+        {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken)) 
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003
+                };
+
+            var isGuid = Guid.TryParse(operatorToken, out Guid guid);
+
+            if (!isGuid)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1002
+                };
+            }
+
+            var result = await _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefaultAsync();
+
+            if (result == null)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003
+                };
+            }
+            else
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1000,
+                    Balance = result.Balance
+                };
+            }
+        }
     }
 }

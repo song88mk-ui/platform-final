@@ -17,67 +17,37 @@ namespace Platform.API.Repository
     public class PlatformRepository : IPlatformRepository
     {
         private readonly IOperatorRepository _operatorRepository;
-        private readonly HttpClient _httpClient;
+        private readonly IBettingRepository _bettingRepository;
         private readonly PlatformContext _platformContext;
-        private readonly IConfiguration _configuration;
-        public PlatformRepository(IOperatorRepository operatorRepository, HttpClient httpClient, PlatformContext platformContext, IConfiguration configuration)
+        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, PlatformContext platformContext)
         {
             _operatorRepository = operatorRepository;
-            _httpClient = httpClient;
+            _bettingRepository = bettingRepository;
             _platformContext = platformContext;
-            _configuration = configuration;
-
-            _httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
         public async Task<BaseResponseDTO<WalletBalanceResponseDTO>> GetWalletBalance(string clientId, string operatorToken)
         {
-            var client = await GetClient(clientId);
+            var clientResponse = await GetClient(clientId);
 
-            if (client == null)
+            if (clientResponse.StatusCode != StatusCode.Success)
             {
                 return new BaseResponseDTO<WalletBalanceResponseDTO>
                 {
-                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
-                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
                 };
             }
 
-            HttpResponseMessage authenticate;
+            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
 
-            try
-            {
-                authenticate = await _operatorRepository.Authenticate(operatorToken, client.Endpoint);
-
-                if (!authenticate.IsSuccessStatusCode)
-                {
-                    if (authenticate.StatusCode == HttpStatusCode.BadRequest)
-                    {
-                        return new BaseResponseDTO<WalletBalanceResponseDTO>
-                        {
-                            StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
-                            Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
-                        };
-                    }
-                    else
-                    {
-                        return new BaseResponseDTO<WalletBalanceResponseDTO>
-                        {
-                            StatusCode = StatusCode.Operator_Error,
-                            Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({authenticate.ReasonPhrase})",
-                        };
-                    }
-                }
-            }
-            catch (Exception ex)
+            if (authenticationResponse.StatusCode != StatusCode.Success)
             {
                 return new BaseResponseDTO<WalletBalanceResponseDTO>
                 {
-                    StatusCode = StatusCode.Operator_Error,
-                    Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({ex.Message})",
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
                 };
             }
-
-            var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await authenticate.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
             return new BaseResponseDTO<WalletBalanceResponseDTO>
             {
@@ -85,62 +55,36 @@ namespace Platform.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new WalletBalanceResponseDTO
                 {
-                    UserId = result.UserId,
-                    Balance = result.Balance
+                    UserId = authenticationResponse.Result.UserId,
+                    Balance = authenticationResponse.Result.Balance
                 }
             };
         }
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(string apiKey, string clientId, string operatorToken, BetRequest request)
         {
-            var client = await GetClient(clientId);
+            var clientResponse = await GetClient(clientId);
 
-            if (client == null)
+            if (clientResponse.StatusCode != StatusCode.Success)
             {
                 return new BaseResponseDTO<BetResponseDTO>
                 {
-                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
-                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
                 };
             }
 
-            HttpResponseMessage authenticate;
+            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
 
-            try
-            {
-                authenticate = await _operatorRepository.Authenticate(operatorToken, client.Endpoint);
-
-                if (!authenticate.IsSuccessStatusCode)
-                {
-                    if (authenticate.StatusCode == HttpStatusCode.BadRequest)
-                    {
-                        return new BaseResponseDTO<BetResponseDTO>
-                        {
-                            StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
-                            Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
-                        };
-                    }
-                    else
-                    {
-                        return new BaseResponseDTO<BetResponseDTO>
-                        {
-                            StatusCode = StatusCode.Operator_Error,
-                            Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({authenticate.ReasonPhrase})",
-                        };
-                    }
-                }
-            }
-            catch (Exception ex)
+            if (authenticationResponse.StatusCode != StatusCode.Success)
             {
                 return new BaseResponseDTO<BetResponseDTO>
                 {
-                    StatusCode = StatusCode.Operator_Error,
-                    Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({ex.Message})",
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
                 };
             }
 
-            var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await authenticate.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-
-            if (result.Balance < request.Stake)
+            if (authenticationResponse.Result.Balance < request.Stake)
             {
                 return new BaseResponseDTO<BetResponseDTO>
                 {
@@ -167,7 +111,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            if (IsMatchCurrencyCode(request.CurrencyCode, result.CurrencyCode))
+            if (IsMatchCurrencyCode(request.CurrencyCode, authenticationResponse.Result.CurrencyCode))
             {
                 return new BaseResponseDTO<BetResponseDTO>
                 {
@@ -212,19 +156,19 @@ namespace Platform.API.Repository
                 };
             }
 
-            var rate = await GetExchangeRate(result.CurrencyCode);
+            var rate = await GetExchangeRate(authenticationResponse.Result.CurrencyCode);
 
             var payload = new BetRequestDTO
             {
                 APIKey = apiKey,
                 OperatorToken = operatorToken,
                 ClientId = clientId,
-                ClientCode = client.ClientCode,
-                LimitId = client.LimitId,
-                Endpoint = client.Endpoint,
-                CompanyShare = client.CompanyShare,
+                ClientCode = clientResponse.Result.ClientCode,
+                LimitId = clientResponse.Result.LimitId,
+                Endpoint = clientResponse.Result.Endpoint,
+                CompanyShare = clientResponse.Result.CompanyShare,
                 ExchangeRate = rate.ExchangeRate,
-                UserId = result.UserId,
+                UserId = authenticationResponse.Result.UserId,
                 Stake = request.Stake,
                 BetDate = request.TransactionDate,
                 OddsType = request.OddsType,
@@ -261,94 +205,38 @@ namespace Platform.API.Repository
                 }).ToList()
             };
 
-            try
-            {
-                _httpClient.BaseAddress = new Uri(_configuration["API:PlatformBettingAPI"]);
-
-                var response = await _httpClient.PostAsync($"/v1/bet/placement", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
-
-                if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<BetResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-                else
-                {
-                    if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<BetResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-                    else
-                    {
-                        return new BaseResponseDTO<BetResponseDTO>
-                        {
-                            StatusCode = StatusCode.Error,
-                            Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
-                        };
-                    }
-
-                }
-            }
-            catch (Exception ex)
-            {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Error,
-                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
-                };
-            }
+            return await _bettingRepository.PlaceBet(payload);
         }
         public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(string apiKey, string clientId, string operatorToken, BetHistoryRequest request)
         {
-            var client = await GetClient(clientId);
+            var clientResponse = await GetClient(clientId);
 
-            if (client == null)
+            if (clientResponse.StatusCode != StatusCode.Success)
             {
                 return new BaseResponseDTO<BetHistoryResponseDTO>
                 {
-                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
-                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
                 };
             }
 
-            HttpResponseMessage authenticate;
+            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
 
-            try
-            {
-                authenticate = await _operatorRepository.Authenticate(operatorToken, client.Endpoint);
-
-                if (!authenticate.IsSuccessStatusCode)
-                {
-                    if (authenticate.StatusCode == HttpStatusCode.BadRequest)
-                    {
-                        return new BaseResponseDTO<BetHistoryResponseDTO>
-                        {
-                            StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
-                            Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
-                        };
-                    }
-                    else
-                    {
-                        return new BaseResponseDTO<BetHistoryResponseDTO>
-                        {
-                            StatusCode = StatusCode.Operator_Error,
-                            Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({authenticate.ReasonPhrase})",
-                        };
-                    }
-                }
-            }
-            catch (Exception ex)
+            if (authenticationResponse.StatusCode != StatusCode.Success)
             {
                 return new BaseResponseDTO<BetHistoryResponseDTO>
                 {
-                    StatusCode = StatusCode.Operator_Error,
-                    Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({ex.Message})",
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
                 };
             }
-
-            var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await authenticate.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
             var payload = new BetHistoryRequestDTO
             {
                 APIKey = apiKey,
                 OperatorToken = operatorToken,
                 ClientId = clientId,
-                UserId = result.UserId,
+                UserId = authenticationResponse.Result.UserId,
                 FromDate = request.FromDate,
                 ToDate = request.ToDate,
                 BetStatusFilter = request.BetStatusFilter,
@@ -356,34 +244,9 @@ namespace Platform.API.Repository
                 PageSize = request.PageSize
             };
 
-            try
-            {
-                _httpClient.BaseAddress = new Uri(_configuration["API:PlatformBettingAPI"]);
-
-                var response = await _httpClient.PostAsync($"/v1/bet/history", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
-
-                if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<BetHistoryResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-                else
-                {
-                    return new BaseResponseDTO<BetHistoryResponseDTO>
-                    {
-                        StatusCode = StatusCode.Error,
-                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
-                    };
-                }
-            }
-            catch (Exception ex)
-            {
-
-                return new BaseResponseDTO<BetHistoryResponseDTO>
-                {
-                    StatusCode = StatusCode.Error,
-                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
-                };
-            }
+            return await _bettingRepository.GetBetHistory(payload);
         }
-        private async Task<ClientResponse> GetClient(string clientId)
+        private async Task<BaseResponseDTO<ClientResponse>> GetClient(string clientId)
         {
             var isGuid = Guid.TryParse(clientId, out Guid guid);
 
@@ -394,19 +257,41 @@ namespace Platform.API.Repository
                 if (result == null) return null;
                 if (result.IsActive == false) return null;
 
-                return new ClientResponse
+                if (result == null || result.IsActive == false)
                 {
-                    ClientId = result.ClientId,
-                    ClientName = result.ClientName,
-                    ClientCode = result.ClientCode,
-                    LimitId = result.LimitId,
-                    IsActive = result.IsActive,
-                    Endpoint = result.Endpoint,
-                    CompanyShare = result.CompanyShare
-                };
+                    return new BaseResponseDTO<ClientResponse>
+                    {
+                        StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                        Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                    };
+                }
+                else
+                {
+                    return new BaseResponseDTO<ClientResponse>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString().Replace('_', ' '),
+                        Result = new ClientResponse
+                        {
+                            ClientId = result.ClientId,
+                            ClientName = result.ClientName,
+                            ClientCode = result.ClientCode,
+                            LimitId = result.LimitId,
+                            IsActive = result.IsActive,
+                            Endpoint = result.Endpoint,
+                            CompanyShare = result.CompanyShare
+                        }
+                    };
+                }
             }
             else
-                return null;
+            {
+                return new BaseResponseDTO<ClientResponse>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                };
+            }
         }
         private async Task<ForexEURResponse> GetExchangeRate(string currencyCode)
         {

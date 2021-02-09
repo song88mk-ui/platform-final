@@ -40,7 +40,7 @@ namespace Platform.Operator.API.Controllers
         {
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
-            var result = await _platformRepository.BetPlacement(operatorToken);
+            var result = await _platformRepository.BetPlacement(operatorToken, request.Stake, request.CurrencyCode.ToString());
 
             switch (result.StatusId)
             {

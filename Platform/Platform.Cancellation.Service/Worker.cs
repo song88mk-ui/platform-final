@@ -20,7 +20,7 @@ namespace Platform.Cancellation.Service
         private readonly IMessageBroker _messageBroker;
         private MtsSdk _mtsSdk;
         private IBuilderFactory _factory;
-        private readonly int BookmakerId = 32290;
+        private const int BookmakerId = 32290; // 25740 is original value, 32290 is for 10 bet
 
         public Worker(ILogger<Worker> logger, IMessageBroker messageBroker)
         {
@@ -67,7 +67,7 @@ namespace Platform.Cancellation.Service
 
                         _factory = _mtsSdk.BuilderFactory;
 
-                        var betCancel = _factory.CreateTicketCancelBuilder().BuildTicket(cancellation.BetId.ToString().ToUpper(), 25740, TicketCancellationReason.TimeoutTriggered);
+                        var betCancel = _factory.CreateTicketCancelBuilder().BuildTicket(cancellation.BetId.ToString().ToUpper(), BookmakerId, TicketCancellationReason.TimeoutTriggered);
 
                         var timeoutResponse = _mtsSdk.SendTicketCancelBlocking(betCancel);
 
@@ -81,7 +81,7 @@ namespace Platform.Cancellation.Service
 
                         _factory = _mtsSdk.BuilderFactory;
 
-                        var manualBetCancel = _factory.CreateTicketCancelBuilder().BuildTicket(manualCancellation.BetId.ToString().ToUpper(), 25740, TicketCancellationReason.BookmakerBackofficeTriggered);
+                        var manualBetCancel = _factory.CreateTicketCancelBuilder().BuildTicket(manualCancellation.BetId.ToString().ToUpper(), BookmakerId, TicketCancellationReason.BookmakerBackofficeTriggered);
 
                         var manualResponse = _mtsSdk.SendTicketCancelBlocking(manualBetCancel);
 

@@ -2,9 +2,9 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Platform.Shared.MessageModels;
 using Platform.Cancellation.Service.Utility;
 using RabbitMQ.Client.Events;
@@ -20,6 +20,7 @@ namespace Platform.Cancellation.Service
         private readonly IMessageBroker _messageBroker;
         private MtsSdk _mtsSdk;
         private IBuilderFactory _factory;
+        private readonly int BookmakerId = 32290;
 
         public Worker(ILogger<Worker> logger, IMessageBroker messageBroker)
         {
@@ -62,7 +63,7 @@ namespace Platform.Cancellation.Service
                 switch (messageType)
                 {
                     case "timeout":
-                        var cancellation = JsonConvert.DeserializeObject<BetCancellationPayload>(payload);
+                        var cancellation = JsonSerializer.Deserialize<OnBetCancellation>(payload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                         _factory = _mtsSdk.BuilderFactory;
 
@@ -76,7 +77,7 @@ namespace Platform.Cancellation.Service
                             _logger.LogInformation($"TicketId = {cancellation.BetId.ToString().ToUpper()} Reason = 102 Successful");
                         break;
                     case "manual.cancellation":
-                        var manualCancellation = JsonConvert.DeserializeObject<BetCancellationPayload>(payload);
+                        var manualCancellation = JsonSerializer.Deserialize<OnBetCancellation>(payload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                         _factory = _mtsSdk.BuilderFactory;
 

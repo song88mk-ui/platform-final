@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Platform.Cancellation.Service.Utility;
 
 namespace Platform.Cancellation.Service
 {
@@ -18,6 +19,7 @@ namespace Platform.Cancellation.Service
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddHostedService<Worker>();
                 });
     }

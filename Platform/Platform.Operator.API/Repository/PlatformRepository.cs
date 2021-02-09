@@ -143,9 +143,8 @@ namespace Platform.Operator.API.Repository
                         StatusId = 1000,
                         Balance = result.Balance
                     };
-
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     scope.Dispose();
 

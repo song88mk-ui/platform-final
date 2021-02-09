@@ -13,7 +13,7 @@ namespace Platform.Placement.Service.Repository
         }
         public void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId)
         {
-            //var bet = _bettingContext.Bet.Find(message)
+            var bet = _bettingContext.Bet.Find(message);
         }
     }
 }

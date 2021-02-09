@@ -62,34 +62,12 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(string apiKey, string clientId, string operatorToken, BetRequest request)
         {
-            var clientResponse = await GetClient(clientId);
-
-            if (clientResponse.StatusCode != StatusCode.Success)
+            if (request.Stake <= 0)
             {
                 return new BaseResponseDTO<BetResponseDTO>
                 {
-                    StatusCode = clientResponse.StatusCode,
-                    Message = clientResponse.Message
-                };
-            }
-
-            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
-
-            if (authenticationResponse.StatusCode != StatusCode.Success)
-            {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = authenticationResponse.StatusCode,
-                    Message = authenticationResponse.Message,
-                };
-            }
-
-            if (authenticationResponse.Result.Balance < request.Stake)
-            {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Insufficient_Funds,
-                    Message = StatusCode.Insufficient_Funds.ToString().Replace('_', ' '),
+                    StatusCode = StatusCode.Stake_Must_Bet_Greater_Than_Zero,
+                    Message = StatusCode.Stake_Must_Bet_Greater_Than_Zero.ToString().Replace('_', ' '),
                 };
             }
 
@@ -108,15 +86,6 @@ namespace Platform.API.Repository
                 {
                     StatusCode = StatusCode.Unsupported_CurrencyCode,
                     Message = StatusCode.Unsupported_CurrencyCode.ToString().Replace('_', ' '),
-                };
-            }
-
-            if (IsMatchCurrencyCode(request.CurrencyCode, authenticationResponse.Result.CurrencyCode))
-            {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.CurrencyCode_Mismatch,
-                    Message = StatusCode.CurrencyCode_Mismatch.ToString().Replace('_', ' '),
                 };
             }
 
@@ -153,6 +122,46 @@ namespace Platform.API.Repository
                 {
                     StatusCode = StatusCode.Unsupported_FixtureStatus,
                     Message = StatusCode.Unsupported_FixtureStatus.ToString().Replace('_', ' '),
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+
+            if (authenticationResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
+                };
+            }
+
+            if (authenticationResponse.Result.Balance < request.Stake)
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Insufficient_Funds,
+                    Message = StatusCode.Insufficient_Funds.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (IsMatchCurrencyCode(request.CurrencyCode, authenticationResponse.Result.CurrencyCode))
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.CurrencyCode_Mismatch,
+                    Message = StatusCode.CurrencyCode_Mismatch.ToString().Replace('_', ' '),
                 };
             }
 

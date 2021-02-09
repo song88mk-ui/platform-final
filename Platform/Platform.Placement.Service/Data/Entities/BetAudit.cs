@@ -26,6 +26,7 @@ namespace Platform.Placement.Service.Entities
         public string ClientCode { get; set; }
         public string LimitId { get; set; }
         public string Endpoint { get; set; }
+        public string OperatorToken { get; set; }
         public decimal CompanyShare { get; set; }
         public bool IsResettled { get; set; }
         public bool IsCashout { get; set; }

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.Betting.API.Data;
 using Platform.Betting.API.Repository;
+using Platform.Betting.API.Utility;
 
 namespace Platform.Betting.API
 {
@@ -43,6 +44,7 @@ namespace Platform.Betting.API
 
             services.AddControllers();
 
+            services.AddSingleton<IMessageBroker, MessageBroker>();
             services.AddScoped<IBettingRepository, BettingRepository>();
 
             services.AddSwaggerGen(c =>

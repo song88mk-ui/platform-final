@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Platform.Betting.API.Data;
 using Platform.Betting.API.Data.Entities;
+using Platform.Betting.API.Utility;
 using Platform.Shared.Enums;
+using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
@@ -14,9 +16,12 @@ namespace Platform.Betting.API.Repository
     public class BettingRepository : IBettingRepository
     {
         private readonly BettingContext _bettingContext;
-        public BettingRepository(BettingContext bettingContext)
+        private readonly IMessageBroker _messageBroker;
+        public BettingRepository(BettingContext bettingContext, IMessageBroker messageBroker)
         {
             _bettingContext = bettingContext;
+            _messageBroker = messageBroker;
+            _messageBroker.Connect();
         }
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(BetRequestDTO request)
         {
@@ -122,8 +127,8 @@ namespace Platform.Betting.API.Repository
                             FixtureStatusName = selection.FixtureStatus.ToString(),
                             Line = selection.Line,
                             Odds = selection.Odds,
-                            SelectionStatusId = betEntity.BetStatusId,
-                            SelectionStatusName = betEntity.BetStatusName,
+                            BetSelectionStatusId = betEntity.BetStatusId,
+                            BetSelectionStatusName = betEntity.BetStatusName,
                             IsSettled = false,
                             IsResettled = false,
                             FixtureSpecifier = selection.FixtureSpecifier,
@@ -162,8 +167,8 @@ namespace Platform.Betting.API.Repository
                             FixtureStatusName = selection.FixtureStatus.ToString(),
                             Line = selection.Line,
                             Odds = selection.Odds,
-                            SelectionStatusId = betEntity.BetStatusId,
-                            SelectionStatusName = betEntity.BetStatusName,
+                            BetSelectionStatusId = betEntity.BetStatusId,
+                            BetSelectionStatusName = betEntity.BetStatusName,
                             IsSettled = false,
                             IsResettled = false,
                             FixtureSpecifier = selection.FixtureSpecifier,
@@ -180,6 +185,7 @@ namespace Platform.Betting.API.Repository
                     _bettingContext.SaveChanges();
                     scope.Complete();
 
+                    _messageBroker.Publish(new OnBetPlacement { BetId = betId }, "OnBetPlacement", "r.bet.placement", Guid.NewGuid().ToString().ToUpper());
                 }
                 catch (Exception ex)
                 {
@@ -187,12 +193,10 @@ namespace Platform.Betting.API.Repository
                     return new BaseResponseDTO<BetResponseDTO>
                     {
                         StatusCode = StatusCode.Error,
-                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} (Error saving to database)"
+                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
                     };
                 }
             }
-
-            //TODO: publish to placement consumer
 
             return new BaseResponseDTO<BetResponseDTO>
             {

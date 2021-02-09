@@ -25,8 +25,8 @@ namespace Platform.Betting.API.Data.Entities
         public string FixtureStatusName { get; set; }
         public string Line { get; set; }
         public decimal Odds { get; set; }
-        public int SelectionStatusId { get; set; }
-        public string SelectionStatusName { get; set; }
+        public int BetSelectionStatusId { get; set; }
+        public string BetSelectionStatusName { get; set; }
         public bool IsSettled { get; set; }
         public bool IsResettled { get; set; }
         public string FixtureSpecifier { get; set; }

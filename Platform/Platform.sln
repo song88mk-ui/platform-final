@@ -22,6 +22,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Settlement.Service
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Operator.Service", "Platform.Operator.Service\Platform.Operator.Service.csproj", "{714F73FE-B32F-4B66-ADD4-DA137E55C246}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Betting.API.UnitTest", "Platform.Betting.API.UnitTest\Platform.Betting.API.UnitTest.csproj", "{283367E0-2DB5-459D-A479-3E940840F9F8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -60,6 +62,10 @@ Global
 		{714F73FE-B32F-4B66-ADD4-DA137E55C246}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{714F73FE-B32F-4B66-ADD4-DA137E55C246}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{714F73FE-B32F-4B66-ADD4-DA137E55C246}.Release|Any CPU.Build.0 = Release|Any CPU
+		{283367E0-2DB5-459D-A479-3E940840F9F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{283367E0-2DB5-459D-A479-3E940840F9F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{283367E0-2DB5-459D-A479-3E940840F9F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{283367E0-2DB5-459D-A479-3E940840F9F8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

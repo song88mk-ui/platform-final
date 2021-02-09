@@ -1,10 +1,12 @@
-﻿using Platform.Betting.API.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using Platform.Betting.API.Data;
 using Platform.Betting.API.Data.Entities;
 using Platform.Betting.API.Utility;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -213,7 +215,129 @@ namespace Platform.Betting.API.Repository
 
         public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(BetHistoryRequestDTO request)
         {
-            return new BaseResponseDTO<BetHistoryResponseDTO>();
+            var skip = (request.Page - 1) * request.PageSize;
+            double rowCount = 0;
+            var result = new List<BetHistoryDTO>();
+            var transactions = new List<Bet>();
+            DateTime dateNow = DateTime.Now;
+            if (request.IsCurrent)
+            {
+                // Get current bets waiting, running
+                // Get cancelled and rejected with age of 5min
+                //Accepted Status
+                var betStatusWaitingRunning = new int[] { (int)BetStatus.Waiting, (int)BetStatus.Running };
+                var betStatusCancelledRejected = new int[] { (int)BetStatus.Cancelled, (int)BetStatus.Rejected };
+
+                var rawCurrent = _bettingContext.Bet.Where(c => c.BetDateOffset.Date >= request.FromDate && c.BetDateOffset.Date <= request.ToDate.Date && c.UserId == request.UserId && c.ClientId == request.ClientId && (betStatusWaitingRunning.Contains(c.BetStatusId) || (betStatusCancelledRejected.Contains(c.BetStatusId) && c.BetDateOffset.AddMinutes(5) <= DateTime.Now))).AsNoTracking();
+                rowCount = rawCurrent.Count();
+                transactions = rawCurrent.OrderByDescending(c => c.BetDateOffset).Skip(skip).Take(request.PageSize).ToList();
+            }
+            else
+            {
+                if (request.BetStatusFilter == BetStatusFilter.All)
+                {
+                    var rawAll = _bettingContext.Bet.Where(c => c.BetDateOffset.Date >= request.FromDate && c.BetDateOffset.Date <= request.ToDate.Date && c.UserId == request.UserId && c.ClientId == request.ClientId).AsNoTracking();
+
+                    rowCount = rawAll.Count();
+                    transactions = rawAll.OrderByDescending(c => c.BetDateOffset).Skip(skip).Take(request.PageSize).ToList();
+                }
+
+                if (request.BetStatusFilter == BetStatusFilter.Open)
+                {
+                    var rawOpen = _bettingContext.Bet.Where(c => c.BetDateOffset.Date >= request.FromDate.Date && c.BetDateOffset.Date <= request.ToDate.Date && c.UserId == request.UserId && c.BetStatusId < (int)BetStatus.Won && c.ClientId == request.ClientId).AsNoTracking();
+
+                    rowCount = rawOpen.Count();
+                    transactions = rawOpen.OrderByDescending(c => c.BetDateOffset).Skip(skip).Take(request.PageSize).ToList();
+                }
+
+                if (request.BetStatusFilter == BetStatusFilter.Settled)
+                {
+                    var rawSettled = _bettingContext.Bet.Where(c => c.BetDateOffset.Date >= request.FromDate.Date && c.BetDateOffset.Date <= request.ToDate.Date && c.UserId == request.UserId && c.BetStatusId > (int)BetStatus.Running && c.ClientId == request.ClientId).AsNoTracking();
+
+                    rowCount = rawSettled.Count();
+                    transactions = rawSettled.OrderByDescending(c => c.BetDateOffset).Skip(skip).Take(request.PageSize).ToList();
+                }
+            }
+            
+
+            if (transactions.Count == 0)
+            {
+                return new BaseResponseDTO<BetHistoryResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new BetHistoryResponseDTO
+                    {
+                        CurrentPage = request.Page,
+                        PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
+                        PageSize = request.PageSize,
+                        RowCount = request.RowCount,
+                        Bets = result
+                    }
+                };
+            }
+
+            var winLoss = _bettingContext.Bet.Where(c => c.BetDateOffset.Date >= request.FromDate.Date && c.BetDateOffset.Date <= request.ToDate.Date).AsNoTracking();
+
+            foreach (var bet in transactions)
+            {
+                var selections = _bettingContext.BetSelection.Where(c => c.BetId == bet.BetId).AsNoTracking();
+
+                result.Add(new BetHistoryDTO
+                {
+                    BetId = bet.BetId.ToString(),
+                    Stake = bet.Stake,
+                    Odds = bet.Odds,
+                    Payout = bet.Payout,
+                    WinLoss = bet.WinLoss,
+                    BetStatus = (BetStatus)bet.BetStatusId,
+                    TransactionDate = bet.BetDate,
+                    Commission = bet.CompanyShare,
+                    CurrencyCode = (CurrencyCode)Enum.Parse(typeof(CurrencyCode), bet.CurrencyCode),
+                    OddsType = (OddsType)bet.OddsTypeId,
+                    Selections = selections.Select(s => new BetSelectionHistoryDTO
+                    {
+                        SportId = s.SportId,
+                        SportName = s.SportName,
+                        LeagueId = s.LeagueId,
+                        LeagueName = s.LeagueName,
+                        FixtureId = s.FixtureId,
+                        FixtureName = s.FixtureName,
+                        MarketId = s.MarketId,
+                        MarketName = s.MarketName,
+                        Line = s.Line,
+                        SelectionId = s.SelectionId,
+                        SelectionName = s.SelectionName,
+                        Odds = s.Odds,
+                        BetAwayScore = s.BetAwayScore,
+                        BetHomeScore = s.BetHomeScore,
+                        BetSelectionId = s.BetSelectionId.ToString(),
+                        FixtureStartDate = s.FixtureStartDate,
+                        FixtureStatus = (FixtureStatus)s.FixtureStatusId,
+                        MarketTemplateId = 0, // No available mapping
+                        SegmentId = s.SegmentId,
+                        SegmentName = s.SegmentName,
+                        SelectionTemplateId= 0, // No available mapping
+                        SettlementAwayScore = s.SettlementAwayScore,
+                        SettlementHomeScore = s.SettlementHomeScore
+
+                    }).ToList()
+                });
+            }
+
+            return new BaseResponseDTO<BetHistoryResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BetHistoryResponseDTO
+                {
+                    CurrentPage = request.Page,
+                    PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
+                    PageSize = request.PageSize,
+                    RowCount = request.RowCount,
+                    Bets = result
+                }
+            };
         }
     }
 }

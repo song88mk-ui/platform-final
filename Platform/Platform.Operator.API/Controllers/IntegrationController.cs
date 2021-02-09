@@ -50,5 +50,19 @@ namespace Platform.Operator.API.Controllers
                     return new BadRequestObjectResult(result);
             }
         }
+
+        [HttpPost("v1/bet/settlement")]
+        public async Task<IActionResult> BetSettlement([FromBody] OperatorBetSettlementRequestDTO request)
+        {
+            var result = await _platformRepository.BetSettlement(request.UserId, request.Payout);
+
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return new BadRequestObjectResult(result);
+            }
+        }
     }
 }

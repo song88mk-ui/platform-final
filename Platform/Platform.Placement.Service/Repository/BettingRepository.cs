@@ -63,6 +63,7 @@ namespace Platform.Placement.Service.Repository
                                 ClientCode = bet.ClientCode,
                                 LimitId = bet.LimitId,
                                 Endpoint = bet.Endpoint,
+                                OperatorToken = bet.OperatorToken,
                                 CompanyShare = bet.CompanyShare,
                                 IsResettled = bet.IsResettled,
                                 IsCashout = bet.IsCashout,
@@ -123,6 +124,7 @@ namespace Platform.Placement.Service.Repository
                         }
 
                         scope.Complete();
+                        messageBroker.Publish(message, "OnBetPlacement", "r.bet.operator", Guid.NewGuid().ToString().ToUpper());
                     }
                     catch (Exception ex)
                     {

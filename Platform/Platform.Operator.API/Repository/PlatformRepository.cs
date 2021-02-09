@@ -51,12 +51,12 @@ namespace Platform.Operator.API.Repository
             }
         }
 
-        public async Task<OperatorBetResponseDTO> BetPlacement(string operatorToken)
+        public async Task<OperatorBetResponseDTO> BetPlacement(string operatorToken, decimal stake, string currencyCode)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken)) 
                 return new OperatorBetResponseDTO
                 {
-                    StatusId = 1003
+                    StatusId = 1003 //Internal Error
                 };
 
             var isGuid = Guid.TryParse(operatorToken, out Guid guid);
@@ -65,7 +65,7 @@ namespace Platform.Operator.API.Repository
             {
                 return new OperatorBetResponseDTO
                 {
-                    StatusId = 1002
+                    StatusId = 1002 //Invalid Token
                 };
             }
 
@@ -75,17 +75,36 @@ namespace Platform.Operator.API.Repository
             {
                 return new OperatorBetResponseDTO
                 {
-                    StatusId = 1003
+                    StatusId = 1002 //Invalid Token
                 };
             }
-            else
+
+            //validate stake
+            if(stake > result.Balance)
             {
                 return new OperatorBetResponseDTO
                 {
-                    StatusId = 1000,
-                    Balance = result.Balance
+                    StatusId = 1001 //Insuficient Fund
                 };
             }
+
+            if (result.CurrencyCode.ToLower() != currencyCode.ToLower())
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1002 //Invalid Token
+                };
+            }
+
+            //Update wallet balance
+            result.Balance -= stake;
+            _platformContext.SaveChanges();
+
+            return new OperatorBetResponseDTO
+            {
+                StatusId = 1000,
+                Balance = result.Balance
+            };
         }
     }
 }

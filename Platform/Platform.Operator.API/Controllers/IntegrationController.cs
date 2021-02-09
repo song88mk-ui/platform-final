@@ -28,10 +28,26 @@ namespace Platform.Operator.API.Controllers
 
             switch (result.StatusId)
             {
-                case 1002:
-                    return new BadRequestObjectResult(result.StatusId);
-                default:
+                case 1000:
                     return Ok(result);
+                default:
+                    return new BadRequestObjectResult(result.StatusId);
+            }
+        }
+
+        [HttpPost("v1/wallet/balance")]
+        public async Task<IActionResult> WalletBalance()
+        {
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+
+            var result = await _platformRepository.WalletBalance(operatorToken);
+
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return new BadRequestObjectResult(result);
             }
         }
 

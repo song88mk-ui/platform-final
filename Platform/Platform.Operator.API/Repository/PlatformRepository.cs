@@ -55,6 +55,44 @@ namespace Platform.Operator.API.Repository
         }
         #endregion
 
+        #region WalletBalance
+        public async Task<OperatorBetResponseDTO> WalletBalance(string operatorToken)
+        {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003 //Internal Error
+                };
+
+            var isGuid = Guid.TryParse(operatorToken, out Guid guid);
+
+            if (!isGuid)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1002 //Invalid Token
+                };
+            }
+
+            var result = await _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefaultAsync();
+
+            if (result == null)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1002 //Invalid Token
+                };
+            }
+
+            return new OperatorBetResponseDTO
+            {
+                StatusId = 1000,
+                Balance = result.Balance
+            };
+
+        }
+        #endregion
+
         #region BetPlacement
         public async Task<OperatorBetResponseDTO> BetPlacement(string operatorToken, decimal stake, string currencyCode)
         {

@@ -56,7 +56,6 @@ namespace Platform.Cancellation.Service
         {
             var payload = Encoding.UTF8.GetString(e.Body);
             var messageType = e.BasicProperties.Type;
-            var correlationId = e.BasicProperties.CorrelationId;
 
             try
             {

@@ -1,4 +1,4 @@
-﻿namespace Platform.Shared.Data.Entities
+﻿namespace Platform.Shared.Data.Platform.Entities
 {
     public class ForexEUR
     {

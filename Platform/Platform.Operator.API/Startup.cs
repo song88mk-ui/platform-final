@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.Operator.API.Repository;
 using Platform.Shared.Data;
+using Platform.Shared.Data.Platform;
 
 namespace Platform.Operator.API
 {

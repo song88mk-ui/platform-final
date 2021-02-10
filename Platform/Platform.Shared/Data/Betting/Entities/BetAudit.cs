@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Platform.Shared.Data.Entities
+namespace Platform.Shared.Data.Betting.Entities
 {
     public class BetAudit
     {

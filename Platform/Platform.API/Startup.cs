@@ -9,6 +9,7 @@ using Microsoft.OpenApi.Models;
 using Platform.API.ActionFilters;
 using Platform.API.Repository;
 using Platform.Shared.Data;
+using Platform.Shared.Data.Platform;
 
 namespace Platform.API
 {

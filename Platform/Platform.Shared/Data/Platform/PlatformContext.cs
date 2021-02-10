@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Platform.Shared.Data.Entities;
+using Platform.Shared.Data.Platform.Entities;
 
-namespace Platform.Shared.Data
+namespace Platform.Shared.Data.Platform
 {
     public class PlatformContext : DbContext
     {

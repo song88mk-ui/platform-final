@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Platform.Betting.API.Utility;
-using Platform.Shared.Data;
-using Platform.Shared.Data.Entities;
+using Platform.Shared.Data.Betting;
+using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;

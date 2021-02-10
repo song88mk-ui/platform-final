@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Platform.Betting.API.Repository;
 using Platform.Betting.API.Utility;
-using Platform.Shared.Data;
+using Platform.Shared.Data.Betting;
 using Platform.Shared.Models;
 using System;
 namespace Platform.Betting.API.UnitTest

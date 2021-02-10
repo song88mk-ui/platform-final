@@ -9,6 +9,7 @@ using Microsoft.OpenApi.Models;
 using Platform.Betting.API.Repository;
 using Platform.Betting.API.Utility;
 using Platform.Shared.Data;
+using Platform.Shared.Data.Betting;
 
 namespace Platform.Betting.API
 {

@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.Operator.Service.Utility;
-using Platform.Shared.Data;
-using Platform.Shared.Data.Entities;
+using Platform.Shared.Data.Betting;
+using Platform.Shared.Data.Betting.Entities;
+using Platform.Shared.Data.Platform;
+using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;

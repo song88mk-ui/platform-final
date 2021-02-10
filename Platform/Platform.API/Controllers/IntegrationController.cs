@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Platform.API.ActionFilters;
 using Platform.API.Models;
 using Platform.API.Repository;
+using Platform.Shared.Models;
 
 namespace Platform.API.Controllers
 {
@@ -37,9 +38,21 @@ namespace Platform.API.Controllers
         }
 
         [HttpPost("v1/bet/config")]
-        public async Task<IActionResult> GetBetConfig()
+        public async Task<IActionResult> GetBetConfig(BetConfigRequestDTO request)
         {
-            return Ok();
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+
+            var result = await _platformRepository.GetBetConfig(apiKey, clientId, operatorToken, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
         }
 
         [HttpPost("v1/bet/history")]

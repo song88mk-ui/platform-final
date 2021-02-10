@@ -1,18 +1,49 @@
-﻿using Platform.Shared.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Platform.Shared.Models
 {
     public class OperatorBetSettlementRequestDTO
     {
-        public Guid TransactionId { get; set; }
-        public Guid BetId { get; set; }
+        public OperatorBetSettlementRequestDTO()
+        {
+            BetSelections = new List<OperatorBetSelectionSettlementRequestDTO>();
+        }
+        public string TransactionId { get; set; }
+        public string BetId { get; set; }
         public string UserId { get; set; }
-        public decimal Payout { get; set; }
         public string CurrencyCode { get; set; }
+        public decimal Payout { get; set; }
+        public decimal Stake { get; set; }
+        public decimal Odds { get; set; }
         public string BetStatus { get; set; }
         public DateTime TransactionDate { get; set; }
-        public IEnumerable<BetSelectionRequestDTO> BetSelections { get; set; }
+        public List<OperatorBetSelectionSettlementRequestDTO> BetSelections { get; set; }
+    }
+
+    public class OperatorBetSelectionSettlementRequestDTO
+    {
+        public string BetSelectionId { get; set; }
+        public string BetSelectionStatus { get; set; }
+        public int SportId { get; set; }
+        public string SportName { get; set; }
+        public int SegmentId { get; set; }
+        public string SegmentName { get; set; }
+        public int LeagueId { get; set; }
+        public string LeagueName { get; set; }
+        public string FixtureId { get; set; }
+        public string FixtureName { get; set; }
+        public DateTime FixtureStartDate { get; set; }
+        public string FixtureStatus { get; set; }
+        public string Score { get; set; }
+        public string SettlementScore { get; set; }
+        public string MarketId { get; set; }
+        public string MarketName { get; set; }
+        public string Line { get; set; }
+        public string SelectionId { get; set; }
+        public string SelectionName { get; set; }
+        public decimal Odds { get; set; }
+        public string HomeName { get; set; }
+        public string AwayName { get; set; }
     }
 }

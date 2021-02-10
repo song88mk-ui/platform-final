@@ -71,14 +71,14 @@ namespace Platform.Operator.API.Controllers
         [HttpPost("v1/bet/settlement")]
         public async Task<IActionResult> BetSettlement([FromBody] OperatorBetSettlementRequestDTO request)
         {
-            var result = await _platformRepository.BetSettlement(request.UserId, request.Payout);
+            var result = await _platformRepository.BetSettlement(request);
 
             switch (result.StatusId)
             {
                 case 1000:
                     return Ok(result);
                 default:
-                    return new BadRequestObjectResult(result);
+                    return BadRequest(result);
             }
         }
 

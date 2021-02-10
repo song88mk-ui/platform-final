@@ -56,6 +56,7 @@ namespace Platform.Settlement.Service
             {
                 switch (messageType)
                 {
+                    case "OnBetCancellation":
                     case "OnBetSettlement":
                         var onBetSettlement = JsonSerializer.Deserialize<OnUOFBetSettlement>(payload);
 
@@ -64,7 +65,7 @@ namespace Platform.Settlement.Service
                         //var test = new OnUOFBetSettlement
                         //{
                         //    SelectionId = 0,
-                        //    SelectionStatus = BetStatus.Won,
+                        //    SelectionStatus = BetStatus.Lost,
                         //    SettlementHomeScore = "1",
                         //    SettlementAwayScore = "0"
                         //};

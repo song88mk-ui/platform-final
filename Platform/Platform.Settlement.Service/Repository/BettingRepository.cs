@@ -69,6 +69,9 @@ namespace Platform.Settlement.Service.Repository
                     case BetStatus.Void:
                         values.Add(1m);
                         break;
+                    case BetStatus.Cancelled:
+                        values.Add(1m);
+                        break;
                 }
             }
 
@@ -86,6 +89,10 @@ namespace Platform.Settlement.Service.Repository
             var halfWon = bets.Where(c => c == BetStatus.HalfWon).Count();
             var halfLost = bets.Where(c => c == BetStatus.HalfLost).Count();
             var voidd = bets.Where(c => c == BetStatus.Void).Count();
+            var cancelled = bets.Where(c => c == BetStatus.Cancelled).Count();
+
+            if (cancelled > 0)
+                result = BetStatus.Cancelled;
 
             if (voidd > 0)
                 result = BetStatus.Void;
@@ -185,10 +192,7 @@ namespace Platform.Settlement.Service.Repository
                                     CorrelationId = betSelection.CorrelationId
                                 });
 
-                                var totalSettled = selections.Where(c => c.SelectionId != message.SelectionId && c.IsSettled == true).Count();
-                                var totalSelections = selections.Where(c => c.SelectionId != message.SelectionId).Count();
-
-                                if (totalSettled == totalSelections)
+                                if (message.SelectionStatus == BetStatus.Lost)
                                 {
                                     var bet = context.Bet.Find(betSelection.BetId);
 
@@ -243,6 +247,69 @@ namespace Platform.Settlement.Service.Repository
                                         isPublish = true;
                                         payload.Bet = betEntity;
                                         payload.BetSelections = selections;
+                                    }
+                                }
+                                else
+                                {
+                                    var totalSettled = selections.Where(c => c.SelectionId != message.SelectionId && c.IsSettled == true).Count();
+                                    var totalSelections = selections.Where(c => c.SelectionId != message.SelectionId).Count();
+
+                                    if (totalSettled == totalSelections)
+                                    {
+                                        var bet = context.Bet.Find(betSelection.BetId);
+
+                                        if (bet != null)
+                                        {
+                                            var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), bet.TrueStake);
+
+                                            var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
+
+                                            bet.WinLoss = payout == 0 ? -bet.Stake : payout - bet.Stake;
+                                            bet.BetStatusId = (int)betStatus;
+                                            bet.BetStatusName = betStatus.ToString();
+                                            bet.Payout = payout;
+                                            bet.SettlementDate = settledDate;
+                                            bet.SettlementDateOffset = settledDate.AddHours(-4);
+
+                                            var betEntity = context.Bet.Update(bet).Entity;
+
+                                            context.BetAudit.Add(new BetAudit
+                                            {
+                                                BetId = betEntity.BetId,
+                                                UserId = betEntity.UserId,
+                                                Stake = betEntity.Stake,
+                                                TrueStake = betEntity.TrueStake,
+                                                Odds = betEntity.Odds,
+                                                OddsTypeId = betEntity.OddsTypeId,
+                                                OddsTypeName = betEntity.OddsTypeName,
+                                                Payout = betEntity.Payout,
+                                                WinLoss = betEntity.WinLoss,
+                                                BetStatusId = betEntity.BetStatusId,
+                                                BetStatusName = betEntity.BetStatusName,
+                                                Reason = betEntity.Reason,
+                                                CurrencyCode = betEntity.CurrencyCode,
+                                                LanguageCode = betEntity.LanguageCode,
+                                                ExchangeRate = betEntity.ExchangeRate,
+                                                IPAddress = betEntity.IPAddress,
+                                                Channel = betEntity.Channel,
+                                                ClientId = betEntity.ClientId,
+                                                ClientCode = betEntity.ClientCode,
+                                                LimitId = betEntity.LimitId,
+                                                Endpoint = betEntity.Endpoint,
+                                                OperatorToken = betEntity.OperatorToken,
+                                                CompanyShare = betEntity.CompanyShare,
+                                                IsResettled = betEntity.IsResettled,
+                                                IsCashout = betEntity.IsCashout,
+                                                BetDate = betEntity.BetDate,
+                                                BetDateOffset = betEntity.BetDateOffset,
+                                                SettlementDate = betEntity.SettlementDate,
+                                                SettlementDateOffset = betEntity.SettlementDateOffset
+                                            });
+
+                                            isPublish = true;
+                                            payload.Bet = betEntity;
+                                            payload.BetSelections = selections;
+                                        }
                                     }
                                 }
 

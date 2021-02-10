@@ -66,6 +66,12 @@ namespace Platform.Operator.Service
 
                         _bettingRepository.ProcesssBetSettlement(onBetSettlement, _messageBroker, correlationId);
                         break;
+
+                    case "OnBetCancellation":
+                        var onBetCancellation = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+
+                        _bettingRepository.ProcesssBetSettlement(onBetCancellation, _messageBroker, correlationId);
+                        break;
                 }
             }
             catch (Exception)

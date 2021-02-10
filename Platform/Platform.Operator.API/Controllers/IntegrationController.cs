@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Platform.Operator.API.Repository;
@@ -9,7 +10,7 @@ using Platform.Shared.Models;
 
 namespace Platform.Operator.API.Controllers
 {
-    [ApiController]
+    [ApiController, EnableCors("AllowAllOrigins")]
     public class IntegrationController : ControllerBase
     {
         private readonly IPlatformRepository _platformRepository;

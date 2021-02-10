@@ -26,7 +26,7 @@ namespace Platform.Operator.Service.Repository
             _httpClient = httpClient;
             _httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
-        public async void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId)
+        public void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId)
         {
             var betData = new Bet();
             var betSelectionData = new List<BetSelection>();
@@ -95,11 +95,11 @@ namespace Platform.Operator.Service.Repository
                         AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureTypeName.Split(" - ").Last().Trim() : string.Empty
                     }).ToList()
                 };
-                var response = await _httpClient.PostAsync($"/v1/bet/placement", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
+                var response = _httpClient.PostAsync($"/v1/bet/placement", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                     
                 }

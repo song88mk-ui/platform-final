@@ -21,12 +21,31 @@ namespace Platform.Operator.Service.Repository
     public class BettingRepository : IBettingRepository
     {
         private readonly IConfiguration _configuration;
-        private readonly HttpClient _httpClient;
-        public BettingRepository(IConfiguration configuration, HttpClient httpClient)
+        private List<HttpClient> _httpClients = new List<HttpClient>();
+        public BettingRepository(IConfiguration configuration)
         {
             _configuration = configuration;
-            _httpClient = httpClient;
-            _httpClient.Timeout = TimeSpan.FromSeconds(5);
+        }
+        private HttpClient GetHttpClient(string endpoint, string operatorToken)
+        {
+            var result = _httpClients.Where(c => c.BaseAddress.OriginalString == endpoint).FirstOrDefault();
+
+            if (result == null)
+            {
+                var newHttpClient = new HttpClient
+                {
+                    BaseAddress = new Uri(endpoint),
+                    Timeout = TimeSpan.FromSeconds(5)
+                };
+
+                newHttpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+
+                _httpClients.Add(newHttpClient);
+
+                return newHttpClient;
+            }
+            else
+                return result;
         }
         private Tuple<Bet, List<BetSelection>> GetBet(Guid betId)
         {
@@ -194,9 +213,6 @@ namespace Platform.Operator.Service.Repository
             betData = bet.Item1;
             betSelectionData = bet.Item2;
 
-            _httpClient.BaseAddress = new Uri(betData.Endpoint);
-            _httpClient.DefaultRequestHeaders.Add("x-operator-token", betData.OperatorToken);
-
             try
             {
                 var payload = new OperatorBetRequestDTO
@@ -248,7 +264,9 @@ namespace Platform.Operator.Service.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = _httpClient.PostAsync($"/v1/bet/placement", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var test1 = JsonSerializer.Serialize(payload);
+
+                var response = GetHttpClient(betData.Endpoint, betData.OperatorToken).PostAsync($"/v1/bet/placement", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -271,6 +289,7 @@ namespace Platform.Operator.Service.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
+                        var test = response.Content.ReadAsStringAsync().Result;
                         var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                         AddOperatorLog(new OperatorLog

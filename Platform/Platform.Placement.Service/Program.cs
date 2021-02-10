@@ -23,6 +23,6 @@ namespace Platform.Placement.Service
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();
-                });
+                }).UseWindowsService();
     }
 }

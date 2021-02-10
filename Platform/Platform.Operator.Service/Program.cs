@@ -16,9 +16,10 @@ namespace Platform.Operator.Service
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddHttpClient();
                     services.AddSingleton<IMessageBroker, MessageBroker>();
-                    services.AddHttpClient<IBettingRepository, BettingRepository>();
+                    services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();
-                });
+                }).UseWindowsService();
     }
 }

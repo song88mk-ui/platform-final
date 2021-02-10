@@ -68,9 +68,8 @@ namespace Platform.Operator.Service
                         break;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-
             }
         }
     }

@@ -299,6 +299,27 @@ namespace Platform.API.Repository
                 };
             }
         }
+
+        public async Task<BaseResponseDTO<BetConfigResponseDTO>> GetBetConfig(string apiKey, string clientId, string operatorToken, BetConfigRequestDTO request)
+        {
+            //Create mock data temporarily
+            return new BaseResponseDTO<BetConfigResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString().Replace('_', ' '),
+                Result = new BetConfigResponseDTO
+                {
+                    IsMaxTier = true,
+                    MaxBet = 1000.000000000000000000M,
+                    MinBet = 1.000000000000000000M,
+                    MaxLiability = 19404M,
+                    MaxPayout = 0.000000000000000000M,
+                    MaxFixtureBet = 1000.000000000000000000M,
+                    ReferenceBet = 1.000000000000000000M
+                }
+            };
+        }
+
         private async Task<ForexEURResponse> GetExchangeRate(string currencyCode)
         {
             var result = await _platformContext.ForexEUR.FindAsync(currencyCode);
@@ -352,5 +373,6 @@ namespace Platform.API.Repository
 
             return true;
         }
+
     }
 }

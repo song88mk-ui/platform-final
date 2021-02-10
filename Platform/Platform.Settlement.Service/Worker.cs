@@ -4,10 +4,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client.Events;
-using Platform.Settlement.Service.Utility;
 using System.Text.Json;
 using System.Text;
-using Platform.Placement.Service.Entities;
+using Platform.Shared.Utility;
 using Platform.Settlement.Service.Repository;
 
 namespace Platform.Settlement.Service
@@ -16,13 +15,13 @@ namespace Platform.Settlement.Service
     {
         private readonly ILogger<Worker> _logger;
         private readonly IMessageBroker _messageBroker;
-        private readonly IPlatformRepository _platformRepository;
+        private readonly IBettingRepository _bettingRepository;
 
-        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IPlatformRepository platformRepository)
+        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository)
         {
             _logger = logger;
             _messageBroker = messageBroker;
-            _platformRepository = platformRepository;
+            _bettingRepository = bettingRepository;
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
@@ -54,11 +53,11 @@ namespace Platform.Settlement.Service
             {
                 switch (messageType)
                 {
-                    case "won2":
-                        var onSettlement = JsonSerializer.Deserialize<OnSettlementMessage>(payload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    //case "won2":
+                    //    var onSettlement = JsonSerializer.Deserialize<OnSettlementMessage>(payload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                        _platformRepository.ProcessSettlement(onSettlement, _messageBroker);
-                        break;
+                    //    _platformRepository.ProcessSettlement(onSettlement, _messageBroker);
+                    //    break;
                 }
             }
             catch (Exception ex)

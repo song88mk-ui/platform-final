@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Platform.Placement.Service.Data;
-using Platform.Placement.Service.Entities;
-using Platform.Placement.Service.Utility;
+using Platform.Shared.Data.Betting;
+using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
+using Platform.Shared.Utility;
 using System;
 using System.Linq;
 using System.Transactions;

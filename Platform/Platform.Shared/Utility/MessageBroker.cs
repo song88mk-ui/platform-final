@@ -5,7 +5,7 @@ using System;
 using System.Text;
 using System.Text.Json;
 
-namespace Platform.Placement.Service.Utility
+namespace Platform.Shared.Utility
 {
     public class MessageBroker : IDisposable, IMessageBroker
     {

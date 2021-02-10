@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Platform.Cancellation.Service.Utility;
+using Platform.Shared.Utility;
 
 namespace Platform.Cancellation.Service
 {
@@ -17,6 +17,6 @@ namespace Platform.Cancellation.Service
                 {
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddHostedService<Worker>();
-                });
+                }).UseWindowsService();
     }
 }

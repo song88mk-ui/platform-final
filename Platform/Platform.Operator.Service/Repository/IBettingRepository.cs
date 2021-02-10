@@ -1,5 +1,5 @@
-﻿using Platform.Operator.Service.Utility;
-using Platform.Shared.MessageModels;
+﻿using Platform.Shared.MessageModels;
+using Platform.Shared.Utility;
 
 namespace Platform.Operator.Service.Repository
 {

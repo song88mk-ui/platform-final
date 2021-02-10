@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Platform.Operator.Service.Repository;
-using Platform.Operator.Service.Utility;
 using Platform.Shared.MessageModels;
+using Platform.Shared.Utility;
 using RabbitMQ.Client.Events;
 
 namespace Platform.Operator.Service

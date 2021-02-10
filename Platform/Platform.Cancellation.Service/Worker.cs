@@ -6,11 +6,11 @@ using System.Text.Json;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Platform.Shared.MessageModels;
-using Platform.Cancellation.Service.Utility;
 using RabbitMQ.Client.Events;
 using Sportradar.MTS.SDK.API;
 using Sportradar.MTS.SDK.Entities.Builders;
 using Sportradar.MTS.SDK.Entities.Enums;
+using Platform.Shared.Utility;
 
 namespace Platform.Cancellation.Service
 {

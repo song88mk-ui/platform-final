@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Platform.Operator.Service.Repository;
-using Platform.Operator.Service.Utility;
+using Platform.Shared.Utility;
 
 namespace Platform.Operator.Service
 {

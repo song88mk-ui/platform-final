@@ -1,7 +1,7 @@
 ﻿using RabbitMQ.Client.Events;
 using System;
 
-namespace Platform.Betting.API.Utility
+namespace Platform.Shared.Utility
 {
     public interface IMessageBroker
     {

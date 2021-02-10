@@ -6,7 +6,7 @@ namespace Platform.Shared.MessageModels
     {
         public long MarketId { get; set; }
         public long SelectionId { get; set; }
-        public SettlementStatus SettlementStatus { get; set; }
+        public BetStatus SelectionStatus { get; set; }
         public string SettlementHomeScore { get; set; }
         public string SettlementAwayScore { get; set; }
     }

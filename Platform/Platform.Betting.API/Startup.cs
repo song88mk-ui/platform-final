@@ -7,9 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.Betting.API.Repository;
-using Platform.Betting.API.Utility;
-using Platform.Shared.Data;
 using Platform.Shared.Data.Betting;
+using Platform.Shared.Utility;
 
 namespace Platform.Betting.API
 {

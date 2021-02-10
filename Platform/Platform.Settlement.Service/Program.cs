@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Platform.Settlement.Service.Repository;
-using Platform.Settlement.Service.Utility;
+using Platform.Shared.Utility;
 
 namespace Platform.Settlement.Service
 {
@@ -17,8 +17,8 @@ namespace Platform.Settlement.Service
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddSingleton<IMessageBroker, MessageBroker>();
-                    services.AddSingleton<IPlatformRepository, PlatformRepository>();
+                    services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();
-                });
+                }).UseWindowsService();
     }
 }

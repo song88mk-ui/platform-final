@@ -8,6 +8,8 @@ using System.Text.Json;
 using System.Text;
 using Platform.Shared.Utility;
 using Platform.Settlement.Service.Repository;
+using Platform.Shared.MessageModels;
+using Platform.Shared.Enums;
 
 namespace Platform.Settlement.Service
 {
@@ -48,21 +50,30 @@ namespace Platform.Settlement.Service
         {
             var payload = Encoding.UTF8.GetString(e.Body);
             var messageType = e.BasicProperties.Type;
+            var correlationId = e.BasicProperties.CorrelationId;
 
             try
             {
                 switch (messageType)
                 {
-                    //case "won2":
-                    //    var onSettlement = JsonSerializer.Deserialize<OnSettlementMessage>(payload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    case "OnBetSettlement":
+                        var onBetSettlement = JsonSerializer.Deserialize<OnBetSettlement>(payload);
 
-                    //    _platformRepository.ProcessSettlement(onSettlement, _messageBroker);
-                    //    break;
+                        _bettingRepository.ProcesssBetSettlement(onBetSettlement, _messageBroker, correlationId);
+                        //var test = new OnBetSettlement
+                        //{
+                        //    SelectionId = 0,
+                        //    SelectionStatus = BetStatus.HalfLost,
+                        //    SettlementHomeScore = "1",
+                        //    SettlementAwayScore = "0"
+                        //};
+
+                        //_bettingRepository.ProcesssBetSettlement(test, _messageBroker, correlationId);
+                        break;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-
             }
         }
     }

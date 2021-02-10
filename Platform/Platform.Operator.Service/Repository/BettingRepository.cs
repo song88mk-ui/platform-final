@@ -178,6 +178,8 @@ namespace Platform.Operator.Service.Repository
 
                         context.SaveChanges();
                         scope.Complete();
+
+                        //TODO: send message to self ProcesssBetCancellation
                     }
                     catch (Exception)
                     {

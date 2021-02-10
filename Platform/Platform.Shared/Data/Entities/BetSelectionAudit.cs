@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Platform.Operator.Service.Entities
+namespace Platform.Shared.Data.Entities
 {
     public class BetSelectionAudit
     {
@@ -18,8 +18,10 @@ namespace Platform.Operator.Service.Entities
         public string FixtureName { get; set; }
         public int FixtureTypeId { get; set; }
         public string FixtureTypeName { get; set; }
+        public string MarketTemplateId { get; set; }
         public long MarketId { get; set; }
         public string MarketName { get; set; }
+        public string SelectionTemplateId { get; set; }
         public long SelectionId { get; set; }
         public string SelectionName { get; set; }
         public int FixtureStatusId { get; set; }

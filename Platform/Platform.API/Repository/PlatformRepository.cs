@@ -1,15 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
-using Platform.API.Data;
-using Platform.API.Data.Entities;
-using Platform.API.Models;
+﻿using Platform.API.Models;
+using Platform.Shared.Data;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Platform.API.Repository

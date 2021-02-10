@@ -7,8 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.API.ActionFilters;
-using Platform.API.Data;
 using Platform.API.Repository;
+using Platform.Shared.Data;
 
 namespace Platform.API
 {

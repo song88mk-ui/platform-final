@@ -1,12 +1,11 @@
 ﻿using System;
 
-namespace Platform.Betting.API.Data.Entities
+namespace Platform.Shared.Data.Entities
 {
-    public class BetSelectionAudit
+    public class BetSelection
     {
-        public long Id { get; set; }
-        public Guid BetId { get; set; }
         public Guid BetSelectionId { get; set; }
+        public Guid BetId { get; set; }
         public string UserId { get; set; }
         public int SportId { get; set; }
         public string SportName { get; set; }
@@ -18,8 +17,10 @@ namespace Platform.Betting.API.Data.Entities
         public string FixtureName { get; set; }
         public int FixtureTypeId { get; set; }
         public string FixtureTypeName { get; set; }
+        public string MarketTemplateId { get; set; }
         public long MarketId { get; set; }
         public string MarketName { get; set; }
+        public string SelectionTemplateId { get; set; }
         public long SelectionId { get; set; }
         public string SelectionName { get; set; }
         public int FixtureStatusId { get; set; }

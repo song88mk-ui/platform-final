@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Platform.Operator.API.Data;
-using Platform.Shared.Enums;
+using Platform.Shared.Data;
 using Platform.Shared.Models;
 using System;
 using System.Linq;

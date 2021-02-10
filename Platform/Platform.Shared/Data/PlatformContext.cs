@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Platform.API.Data.Entities;
+using Platform.Shared.Data.Entities;
 
-namespace Platform.API.Data
+namespace Platform.Shared.Data
 {
     public class PlatformContext : DbContext
     {
@@ -12,10 +12,14 @@ namespace Platform.API.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Client>().HasKey(k => new { k.ClientId });
+            modelBuilder.Entity<Operator>().HasKey(k => new { k.UserId });
             modelBuilder.Entity<ForexEUR>().HasKey(k => new { k.CurrencyCode });
+            modelBuilder.Entity<OperatorLog>().HasKey(k => new { k.Id });
         }
 
         public DbSet<Client> Client { get; set; }
+        public DbSet<Operator> Operator { get; set; }
         public DbSet<ForexEUR> ForexEUR { get; set; }
+        public DbSet<OperatorLog> OperatorLog { get; set; }
     }
 }

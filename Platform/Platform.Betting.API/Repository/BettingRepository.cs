@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Platform.Betting.API.Data;
-using Platform.Betting.API.Data.Entities;
 using Platform.Betting.API.Utility;
+using Platform.Shared.Data;
+using Platform.Shared.Data.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
@@ -121,6 +121,7 @@ namespace Platform.Betting.API.Repository
                             FixtureName = selection.FixtureName,
                             FixtureTypeId = (int)selection.FixtureType,
                             FixtureTypeName = selection.FixtureType.ToString(),
+                            MarketTemplateId = selection.MarketTemplateId,
                             MarketId = selection.MarketId,
                             MarketName = selection.MarketName,
                             SelectionId = selection.SelectionId,
@@ -128,6 +129,7 @@ namespace Platform.Betting.API.Repository
                             FixtureStatusId = (int)selection.FixtureStatus,
                             FixtureStatusName = selection.FixtureStatus.ToString(),
                             Line = selection.Line,
+                            SelectionTemplateId = selection.SelectionTemplateId,
                             Odds = selection.Odds,
                             BetSelectionStatusId = betEntity.BetStatusId,
                             BetSelectionStatusName = betEntity.BetStatusName,

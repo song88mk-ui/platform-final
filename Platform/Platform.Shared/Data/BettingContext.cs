@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Platform.Operator.Service.Entities;
+using Platform.Shared.Data.Entities;
 
-namespace Platform.Operator.Service.Data
+namespace Platform.Shared.Data
 {
     public class BettingContext : DbContext
     {

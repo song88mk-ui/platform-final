@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Platform.Operator.Service.Data.Entities
+namespace Platform.Shared.Data.Entities
 {
     public class OperatorLog
     {

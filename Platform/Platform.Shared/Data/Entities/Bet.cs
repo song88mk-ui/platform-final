@@ -1,10 +1,9 @@
 ﻿using System;
 
-namespace Platform.Operator.Service.Entities
+namespace Platform.Shared.Data.Entities
 {
-    public class BetAudit
+    public class Bet
     {
-        public long Id { get; set; }
         public Guid BetId { get; set; }
         public string UserId { get; set; }
         public decimal Stake { get; set; }

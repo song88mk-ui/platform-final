@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Platform.Operator.API.Data.Entities
+namespace Platform.Shared.Data.Entities
 {
     public class Operator
     {
@@ -9,5 +9,6 @@ namespace Platform.Operator.API.Data.Entities
         public Guid ClientId { get; set; }
         public decimal Balance { get; set; }
         public string CurrencyCode { get; set; }
+        public DateTime CreatedDate { get; set; }
     }
 }

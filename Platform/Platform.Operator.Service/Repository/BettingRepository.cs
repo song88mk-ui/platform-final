@@ -1,10 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Platform.API.Data;
-using Platform.Operator.Service.Data;
-using Platform.Operator.Service.Data.Entities;
-using Platform.Operator.Service.Entities;
 using Platform.Operator.Service.Utility;
+using Platform.Shared.Data;
+using Platform.Shared.Data.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
@@ -151,8 +149,10 @@ namespace Platform.Operator.Service.Repository
                                 FixtureName = betSelection.FixtureName,
                                 FixtureTypeId = betSelection.FixtureTypeId,
                                 FixtureTypeName = betSelection.FixtureTypeName,
+                                MarketTemplateId = betSelection.MarketTemplateId,
                                 MarketId = betSelection.MarketId,
                                 MarketName = betSelection.MarketName,
+                                SelectionTemplateId = betSelection.SelectionTemplateId,
                                 SelectionId = betSelection.SelectionId,
                                 SelectionName = betSelection.SelectionName,
                                 FixtureStatusId = betSelection.FixtureStatusId,

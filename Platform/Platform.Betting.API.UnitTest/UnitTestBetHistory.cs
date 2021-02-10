@@ -2,12 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Platform.Betting.API.Data;
 using Platform.Betting.API.Repository;
 using Platform.Betting.API.Utility;
+using Platform.Shared.Data;
 using Platform.Shared.Models;
 using System;
-using System.Configuration;
 namespace Platform.Betting.API.UnitTest
 {
     [TestClass]

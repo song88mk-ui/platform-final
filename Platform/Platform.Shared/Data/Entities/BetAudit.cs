@@ -1,9 +1,10 @@
 ﻿using System;
 
-namespace Platform.Betting.API.Data.Entities
+namespace Platform.Shared.Data.Entities
 {
-    public class Bet
+    public class BetAudit
     {
+        public long Id { get; set; }
         public Guid BetId { get; set; }
         public string UserId { get; set; }
         public decimal Stake { get; set; }

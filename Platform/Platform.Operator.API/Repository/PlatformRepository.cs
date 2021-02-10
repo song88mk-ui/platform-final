@@ -110,12 +110,10 @@ namespace Platform.Operator.API.Repository
             {
                 try
                 {
-                    var result = await _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefaultAsync();
+                    var result = _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefault();
 
                     if (result == null)
                     {
-                        scope.Dispose();
-
                         return new OperatorBetResponseDTO
                         {
                             StatusId = 1002
@@ -124,8 +122,6 @@ namespace Platform.Operator.API.Repository
 
                     if (result.Balance < request.Stake)
                     {
-                        scope.Dispose();
-
                         return new OperatorBetResponseDTO
                         {
                             StatusId = 1001
@@ -146,8 +142,6 @@ namespace Platform.Operator.API.Repository
                 }
                 catch (Exception ex)
                 {
-                    scope.Dispose();
-
                     return new OperatorBetResponseDTO
                     {
                         StatusId = 1003

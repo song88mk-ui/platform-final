@@ -9,6 +9,6 @@ namespace Platform.Operator.API.Repository
         Task<OperatorBetResponseDTO> WalletBalance(string operatorToken);
         Task<OperatorBetResponseDTO> BetPlacement(OperatorBetRequestDTO request, string operatorToken);
         Task<OperatorBetResponseDTO> BetSettlement(OperatorBetSettlementRequestDTO request);
-        Task<OperatorBetResponseDTO> BetCancellation(string userId, decimal stake);
+        Task<OperatorBetResponseDTO> BetCancellation(OperatorBetCancellationRequestDTO request);
     }
 }

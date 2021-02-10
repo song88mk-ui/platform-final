@@ -60,10 +60,11 @@ namespace Platform.Settlement.Service
                         var onBetSettlement = JsonSerializer.Deserialize<OnUOFBetSettlement>(payload);
 
                         _bettingRepository.ProcesssBetSettlement(onBetSettlement, _messageBroker, correlationId);
-                        //var test = new OnBetSettlement
+
+                        //var test = new OnUOFBetSettlement
                         //{
                         //    SelectionId = 0,
-                        //    SelectionStatus = BetStatus.HalfLost,
+                        //    SelectionStatus = BetStatus.Won,
                         //    SettlementHomeScore = "1",
                         //    SettlementAwayScore = "0"
                         //};

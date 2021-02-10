@@ -252,10 +252,10 @@ namespace Platform.Settlement.Service.Repository
 
                             if (isPublish)
                             {
-                                messageBroker.Publish(message, "OnBetSettlement", "r.bet.operator", correlationId);
+                                messageBroker.Publish(payload, "OnBetSettlement", "r.bet.operator", string.IsNullOrEmpty(correlationId)? Guid.NewGuid().ToString().ToUpper() : correlationId);
                             }
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
 
                         }

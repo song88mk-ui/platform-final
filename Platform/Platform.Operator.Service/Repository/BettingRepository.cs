@@ -77,33 +77,6 @@ namespace Platform.Operator.Service.Repository
 
             return new Tuple<Bet, List<BetSelection>>(betData, betSelectionData);
         }
-        private List<BetSelection> GetBetSelections(long selectionId)
-        {
-            var result = new List<BetSelection>();
-
-            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
-            {
-                var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
-
-                using (var context = new BettingContext(optionsBuilder.Options))
-                {
-                    try
-                    {
-                        var betSelections = context.BetSelection.AsNoTracking().Where(c => c.SelectionId == selectionId).ToList();
-                        if (betSelections.Count > 0)
-                            result.AddRange(betSelections);
-
-                        scope.Complete();
-                    }
-                    catch (Exception)
-                    {
-                        return result;
-                    }
-                }
-            }
-
-            return result;
-        }
         private void CancelBet(Guid betId, string reason)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
@@ -230,67 +203,6 @@ namespace Platform.Operator.Service.Repository
                 {
                 }
             }
-        }
-        private decimal GetPayout(List<Tuple<BetStatus, decimal>> selections, decimal stake)
-        {
-            var values = new List<decimal>();
-
-            foreach (var selection in selections)
-            {
-                switch (selection.Item1)
-                {
-                    case BetStatus.Lost:
-                        values.Add(0m);
-                        break;
-                    case BetStatus.HalfWon:
-                        values.Add((selection.Item2 + 1) / 2);
-                        break;
-                    case BetStatus.HalfLost:
-                        values.Add(0.5m);
-                        break;
-                    case BetStatus.Won:
-                        values.Add(selection.Item2);
-                        break;
-                    case BetStatus.Void:
-                        values.Add(1m);
-                        break;
-                }
-            }
-
-            return values.Aggregate((a, b) => a * b) * stake;
-        }
-        private BetStatus GetStatus(List<BetStatus> statuses, BetStatus status, decimal payout, decimal stake)
-        {
-            var result = BetStatus.Lost;
-
-            var bets = statuses;
-            bets.Add(status);
-
-            var lost = bets.Where(c => c == BetStatus.Lost).Count();
-            var won = bets.Where(c => c == BetStatus.Won).Count();
-            var halfWon = bets.Where(c => c == BetStatus.HalfWon).Count();
-            var halfLost = bets.Where(c => c == BetStatus.HalfLost).Count();
-            var voidd = bets.Where(c => c == BetStatus.Void).Count();
-
-            if (voidd > 0)
-                result = BetStatus.Void;
-
-            if (halfLost > 0)
-                result = payout == stake ? BetStatus.HalfLost : BetStatus.Lost;
-
-            if (halfWon == 1)
-                result = (payout - stake) > stake ? BetStatus.HalfWon : BetStatus.Lost;
-
-            if (halfWon > 1)
-                result = (payout - stake) > stake ? BetStatus.Won : BetStatus.Lost;
-
-            if (won > 0)
-                result = BetStatus.Won;
-
-            if (lost > 0)
-                result = BetStatus.Lost;
-
-            return result;
         }
         public void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId)
         {

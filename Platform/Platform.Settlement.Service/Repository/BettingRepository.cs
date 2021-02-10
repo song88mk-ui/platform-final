@@ -110,12 +110,14 @@ namespace Platform.Settlement.Service.Repository
 
             return result;
         }
-        public void ProcesssBetSettlement(OnBetSettlement message, IMessageBroker messageBroker, string correlationId)
+        public void ProcesssBetSettlement(OnUOFBetSettlement message, IMessageBroker messageBroker, string correlationId)
         {
             var betSelections = GetBetSelections(message.SelectionId);
 
             foreach (var betSelection in betSelections)
             {
+                var isPublish = false;
+                var payload = new OnBetSettlement();
                 var settledDate = DateTime.UtcNow;
 
                 using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
@@ -188,9 +190,6 @@ namespace Platform.Settlement.Service.Repository
 
                                 if (totalSettled == totalSelections)
                                 {
-                                    var liveCount = selections.Where(c => c.FixtureStatusId == (int)FixtureStatus.Live).Count();
-                                    var prematchCount = selections.Where(c => c.FixtureStatusId == (int)FixtureStatus.Prematch).Count();
-
                                     var bet = context.Bet.Find(betSelection.BetId);
 
                                     if (bet != null)
@@ -241,15 +240,20 @@ namespace Platform.Settlement.Service.Repository
                                             SettlementDateOffset = betEntity.SettlementDateOffset
                                         });
 
-
+                                        isPublish = true;
+                                        payload.Bet = betEntity;
+                                        payload.BetSelections = selections;
                                     }
                                 }
 
                                 context.SaveChanges();
-                                //TODO: publish to operator service
                             }
-
                             scope.Complete();
+
+                            if (isPublish)
+                            {
+                                messageBroker.Publish(message, "OnBetSettlement", "r.bet.operator", correlationId);
+                            }
                         }
                         catch (Exception)
                         {

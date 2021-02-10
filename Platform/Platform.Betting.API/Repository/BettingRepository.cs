@@ -316,10 +316,10 @@ namespace Platform.Betting.API.Repository
                         BetSelectionId = s.BetSelectionId.ToString(),
                         FixtureStartDate = s.FixtureStartDate,
                         FixtureStatus = (FixtureStatus)s.FixtureStatusId,
-                        MarketTemplateId = 0, // No available mapping
+                        MarketTemplateId = s.MarketTemplateId,
                         SegmentId = s.SegmentId,
                         SegmentName = s.SegmentName,
-                        SelectionTemplateId= 0, // No available mapping
+                        SelectionTemplateId= s.SelectionTemplateId,
                         SettlementAwayScore = s.SettlementAwayScore,
                         SettlementHomeScore = s.SettlementHomeScore
 

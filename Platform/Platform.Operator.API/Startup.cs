@@ -77,6 +77,8 @@ namespace Platform.Operator.API
 
             app.UseRouting();
 
+            app.UseCors("AllowAllOrigins");
+
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

@@ -263,9 +263,6 @@ namespace Platform.API.Repository
             {
                 var result = await _platformContext.Client.FindAsync(guid);
 
-                if (result == null) return null;
-                if (result.IsActive == false) return null;
-
                 if (result == null || result.IsActive == false)
                 {
                     return new BaseResponseDTO<ClientResponse>

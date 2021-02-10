@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Platform.API.Data;
 using Platform.Operator.Service.Data;
+using Platform.Operator.Service.Data.Entities;
 using Platform.Operator.Service.Entities;
 using Platform.Operator.Service.Utility;
 using Platform.Shared.Enums;
@@ -26,7 +28,8 @@ namespace Platform.Operator.Service.Repository
             _httpClient = httpClient;
             _httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
-        public void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId)
+
+        private Tuple<Bet, List<BetSelection>> GetBet(Guid betId)
         {
             var betData = new Bet();
             var betSelectionData = new List<BetSelection>();
@@ -39,7 +42,7 @@ namespace Platform.Operator.Service.Repository
                 {
                     try
                     {
-                        var bet = context.Bet.Find(message.BetId);
+                        var bet = context.Bet.Find(betId);
                         betData = bet;
 
                         var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
@@ -49,18 +52,31 @@ namespace Platform.Operator.Service.Repository
                     }
                     catch (Exception)
                     {
-                        scope.Dispose();
-                        return;
+                        return new Tuple<Bet, List<BetSelection>>(null, null);
                     }
                 }
             }
+
+            return new Tuple<Bet, List<BetSelection>>(betData, betSelectionData);
+        }
+
+        public void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId)
+        {
+            var uri = "/v1/bet/placement";
+
+            var betData = new Bet();
+            var betSelectionData = new List<BetSelection>();
+
+            var bet = GetBet(message.BetId);
+            betData = bet.Item1;
+            betSelectionData = bet.Item2;
 
             _httpClient.BaseAddress = new Uri(betData.Endpoint);
             _httpClient.DefaultRequestHeaders.Add("x-operator-token", betData.OperatorToken);
 
             try
             {
-                var payload = new OperatorBetRequestDTO2
+                var payload = new OperatorBetRequestDTO
                 {
                     TransactionId = Guid.NewGuid().ToString().ToUpper(),
                     BetId = betData.BetId.ToString().ToUpper(),
@@ -70,7 +86,7 @@ namespace Platform.Operator.Service.Repository
                     Odds = betData.Odds,
                     BetStatus = betData.BetStatusName,
                     TransactionDate = betData.BetDate,
-                    BetSelections = betSelectionData.Select(s => new OperatorBetSelectionRequestDTO2
+                    BetSelections = betSelectionData.Select(s => new OperatorBetSelectionRequestDTO
                     {
                         BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
                         BetSelectionStatus = s.BetSelectionStatusName,
@@ -96,72 +112,156 @@ namespace Platform.Operator.Service.Repository
                     }).ToList()
                 };
 
+                using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+                {
+                    var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]);
+
+                    using var context = new PlatformContext(optionsBuilder.Options);
+                    try
+                    {
+                        context.OperatorLog.Add(new OperatorLog
+                        {
+                            Direction = "REQUEST",
+                            ClientId = betData.ClientId,
+                            ClientCode = betData.ClientCode,
+                            URL = $"{betData.Endpoint}{uri}",
+                            BetId = betData.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(payload),
+                            OperatorToken = betData.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
+
+                        context.SaveChanges();
+                        scope.Complete();
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+
                 var response = _httpClient.PostAsync($"/v1/bet/placement", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
                     var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                    
+                    using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
+                    var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]);
+
+                    using var context = new PlatformContext(optionsBuilder.Options);
+                    try
+                    {
+                        context.OperatorLog.Add(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = betData.ClientId,
+                            ClientCode = betData.ClientCode,
+                            URL = $"{betData.Endpoint}{uri}",
+                            BetId = betData.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(result),
+                            OperatorToken = betData.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
+
+                        context.SaveChanges();
+                        scope.Complete();
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
+                        var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]);
 
+                        using var context = new PlatformContext(optionsBuilder.Options);
+                        try
+                        {
+                            context.OperatorLog.Add(new OperatorLog
+                            {
+                                Direction = "RESPONSE",
+                                ClientId = betData.ClientId,
+                                ClientCode = betData.ClientCode,
+                                URL = $"{betData.Endpoint}{uri}",
+                                BetId = betData.BetId.ToString().ToUpper(),
+                                Info = JsonSerializer.Serialize(result),
+                                OperatorToken = betData.OperatorToken,
+                                CorrelationId = correlationId,
+                                Timestamp = DateTime.UtcNow
+                            });
+
+                            context.SaveChanges();
+                            scope.Complete();
+                        }
+                        catch (Exception)
+                        {
+                        }
                     }
                     else
                     {
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
+                        var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]);
 
+                        using var context = new PlatformContext(optionsBuilder.Options);
+                        try
+                        {
+                            context.OperatorLog.Add(new OperatorLog
+                            {
+                                Direction = "RESPONSE",
+                                ClientId = betData.ClientId,
+                                ClientCode = betData.ClientCode,
+                                URL = $"{betData.Endpoint}{uri}",
+                                BetId = betData.BetId.ToString().ToUpper(),
+                                Info = JsonSerializer.Serialize(response.ReasonPhrase),
+                                OperatorToken = betData.OperatorToken,
+                                CorrelationId = correlationId,
+                                Timestamp = DateTime.UtcNow
+                            });
+
+                            context.SaveChanges();
+                            scope.Complete();
+                        }
+                        catch (Exception)
+                        {
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
+                using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
+                var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]);
 
+                using var context = new PlatformContext(optionsBuilder.Options);
+                try
+                {
+                    context.OperatorLog.Add(new OperatorLog
+                    {
+                        Direction = "RESPONSE",
+                        ClientId = betData.ClientId,
+                        ClientCode = betData.ClientCode,
+                        URL = $"{betData.Endpoint}{uri}",
+                        BetId = betData.BetId.ToString().ToUpper(),
+                        Info = JsonSerializer.Serialize(ex.Message),
+                        OperatorToken = betData.OperatorToken,
+                        CorrelationId = correlationId,
+                        Timestamp = DateTime.UtcNow
+                    });
+
+                    context.SaveChanges();
+                    scope.Complete();
+                }
+                catch (Exception)
+                {
+                }
             }
         }
-    }
-
-    public class OperatorBetRequestDTO2
-    {
-        public OperatorBetRequestDTO2()
-        {
-            BetSelections = new List<OperatorBetSelectionRequestDTO2>();
-        }
-        public string TransactionId { get; set; }
-        public string BetId { get; set; }
-        public string UserId { get; set; }
-        public string CurrencyCode { get; set; }
-        public decimal Stake { get; set; }
-        public decimal Odds { get; set; }
-        public string BetStatus { get; set; }
-        public DateTime TransactionDate { get; set; }
-        public List<OperatorBetSelectionRequestDTO2> BetSelections { get; set; }
-    }
-
-    public class OperatorBetSelectionRequestDTO2
-    {
-        public string BetSelectionId { get; set; }
-        public string BetSelectionStatus { get; set; }
-        public int SportId { get; set; }
-        public string SportName { get; set; }
-        public int SegmentId { get; set; }
-        public string SegmentName { get; set; }
-        public int LeagueId { get; set; }
-        public string LeagueName { get; set; }
-        public string FixtureId { get; set; }
-        public string FixtureName { get; set; }
-        public DateTime FixtureStartDate { get; set; }
-        public string FixtureStatus { get; set; }
-        public string Score { get; set; }
-        public string MarketId { get; set; }
-        public string MarketName { get; set; }
-        public string Line { get; set; }
-        public string SelectionId { get; set; }
-        public string SelectionName { get; set; }
-        public decimal Odds { get; set; }
-        public string HomeName { get; set; }
-        public string AwayName { get; set; }
     }
 }

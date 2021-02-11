@@ -36,7 +36,6 @@ namespace Platform.Shared.Models
         public DateTime FixtureStartDate { get; set; }
         public string FixtureStatus { get; set; }
         public string Score { get; set; }
-        public string SettlementScore { get; set; }
         public string MarketId { get; set; }
         public string MarketName { get; set; }
         public string Line { get; set; }

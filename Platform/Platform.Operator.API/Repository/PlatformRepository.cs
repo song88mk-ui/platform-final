@@ -46,7 +46,8 @@ namespace Platform.Operator.API.Repository
                     UserId = result.UserId.ToString().ToUpper(),
                     StatusId = 1000,
                     Balance = result.Balance,
-                    CurrencyCode = result.CurrencyCode
+                    CurrencyCode = result.CurrencyCode,
+                    LanguageCode = "EN"
                 };
             }
         }

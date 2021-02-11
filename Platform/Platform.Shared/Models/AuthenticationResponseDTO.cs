@@ -6,5 +6,6 @@
         public int StatusId { get; set; }
         public decimal Balance { get; set; }
         public string CurrencyCode { get; set; }
+        public string LanguageCode { get; set; }
     }
 }

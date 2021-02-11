@@ -62,8 +62,8 @@ namespace Platform.API.Repository
             {
                 return new BaseResponseDTO<BetResponseDTO>
                 {
-                    StatusCode = StatusCode.Stake_Must_Bet_Greater_Than_Zero,
-                    Message = StatusCode.Stake_Must_Bet_Greater_Than_Zero.ToString().Replace('_', ' '),
+                    StatusCode = StatusCode.Stake_Must_Be_Greater_Than_Zero,
+                    Message = StatusCode.Stake_Must_Be_Greater_Than_Zero.ToString().Replace('_', ' '),
                 };
             }
 
@@ -118,6 +118,15 @@ namespace Platform.API.Repository
                 {
                     StatusCode = StatusCode.Unsupported_FixtureStatus,
                     Message = StatusCode.Unsupported_FixtureStatus.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (!IsValidOdds(request.Selections.Select(s => s.Odds).ToList()))
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Odds_Must_Be_Greater_Or_Higher_Than_1,
+                    Message = StatusCode.Odds_Must_Be_Greater_Or_Higher_Than_1.ToString().Replace('_', ' '),
                 };
             }
 
@@ -364,6 +373,17 @@ namespace Platform.API.Repository
             foreach (var item in fixtureStatus)
             {
                 if (!Enum.IsDefined(typeof(FixtureStatus), item))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private bool IsValidOdds(List<decimal> odds)
+        {
+            foreach (var item in odds)
+            {
+                if (item <= 1m)
                     return false;
             }
 

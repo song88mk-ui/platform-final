@@ -13,4 +13,7 @@ steps:
 - script: dotnet publish --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)
   workingDirectory: $(Build.SourcesDirectory)/Platform/Platform.Placement.Service
   displayName: 'dotnet build $(buildConfiguration)'
-- task: PublishBuildArtifacts@1
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'publish'
+    publishWebProjects: true

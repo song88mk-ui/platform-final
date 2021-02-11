@@ -14,6 +14,9 @@ namespace Platform.Shared.Models
         public int PageCount { get; set; }
         public int PageSize { get; set; }
         public int RowCount { get; set; }
+        public decimal TotalCommission { get; set; }
+        public decimal TotalWinLoss { get; set; }
+        public decimal TotalWLC { get; set; }
         public List<BetHistoryDTO> Bets { get; set; }
     }
 

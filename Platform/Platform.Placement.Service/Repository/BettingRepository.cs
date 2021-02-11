@@ -130,7 +130,6 @@ namespace Platform.Placement.Service.Repository
                     }
                     catch (Exception ex)
                     {
-                        scope.Dispose();
                     }
                 }
             }

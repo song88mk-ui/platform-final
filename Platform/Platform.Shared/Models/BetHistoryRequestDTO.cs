@@ -14,8 +14,6 @@ namespace Platform.Shared.Models
         public BetStatusFilter BetStatusFilter { get; set; }
         public int Page { get; set; }
         public int PageSize { get; set; }
-        public int RowCount { get; set; }
-
         public bool IsCurrent { get; set; } = false;
     }
 }

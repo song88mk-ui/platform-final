@@ -48,7 +48,8 @@ namespace Platform.API.Repository
                             UserId = result.UserId,
                             Balance = result.Balance,
                             CurrencyCode = result.CurrencyCode,
-                            StatusId = result.StatusId
+                            StatusId = result.StatusId,
+                            LanguageCode = result.LanguageCode
                         }
                     };
                 }

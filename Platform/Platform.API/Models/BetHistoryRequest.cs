@@ -10,5 +10,6 @@ namespace Platform.API.Models
         public BetStatusFilter BetStatusFilter { get; set; }
         public int Page { get; set; }
         public int PageSize { get; set; }
+        public bool IsCurrent { get; set; }
     }
 }

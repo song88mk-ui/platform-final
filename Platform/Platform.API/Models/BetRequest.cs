@@ -13,8 +13,6 @@ namespace Platform.API.Models
         public decimal Stake { get; set; }
         public DateTime TransactionDate { get; set; }
         public OddsType OddsType { get; set; }
-        public CurrencyCode CurrencyCode { get; set; }
-        public LanguageCode LanguageCode { get; set; }
         public Channel Channel { get; set; }
         public string IPAddress { get; set; }
         public List<BetSelectionRequest> Selections { get; set; }

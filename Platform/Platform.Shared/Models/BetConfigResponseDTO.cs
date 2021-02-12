@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Platform.Shared.Models
+﻿namespace Platform.Shared.Models
 {
-   public class BetConfigResponseDTO
+    public class BetConfigResponseDTO
     {
         public decimal MinBet { get; set; }
         public decimal MaxBet { get; set; }

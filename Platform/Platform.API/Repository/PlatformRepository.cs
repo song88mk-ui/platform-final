@@ -52,7 +52,8 @@ namespace Platform.API.Repository
                 Result = new WalletBalanceResponseDTO
                 {
                     UserId = authenticationResponse.Result.UserId,
-                    Balance = authenticationResponse.Result.Balance
+                    Balance = authenticationResponse.Result.Balance,
+                    CurrencyCode = authenticationResponse.Result.CurrencyCode
                 }
             };
         }
@@ -73,24 +74,6 @@ namespace Platform.API.Repository
                 {
                     StatusCode = StatusCode.Unsupported_OddsType,
                     Message = StatusCode.Unsupported_OddsType.ToString().Replace('_', ' '),
-                };
-            }
-
-            if (!IsValidCurrencyCode(request.CurrencyCode))
-            {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Unsupported_CurrencyCode,
-                    Message = StatusCode.Unsupported_CurrencyCode.ToString().Replace('_', ' '),
-                };
-            }
-
-            if (!IsValidLanguageCode(request.LanguageCode))
-            {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Unsupported_LanguageCode,
-                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' '),
                 };
             }
 
@@ -125,8 +108,8 @@ namespace Platform.API.Repository
             {
                 return new BaseResponseDTO<BetResponseDTO>
                 {
-                    StatusCode = StatusCode.Odds_Must_Be_Greater_Or_Higher_Than_1,
-                    Message = StatusCode.Odds_Must_Be_Greater_Or_Higher_Than_1.ToString().Replace('_', ' '),
+                    StatusCode = StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1,
+                    Message = StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1.ToString().Replace('_', ' '),
                 };
             }
 
@@ -161,15 +144,6 @@ namespace Platform.API.Repository
                 };
             }
 
-            if (IsMatchCurrencyCode(request.CurrencyCode, authenticationResponse.Result.CurrencyCode))
-            {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.CurrencyCode_Mismatch,
-                    Message = StatusCode.CurrencyCode_Mismatch.ToString().Replace('_', ' '),
-                };
-            }
-
             var rate = await GetExchangeRate(authenticationResponse.Result.CurrencyCode);
 
             var payload = new BetRequestDTO
@@ -186,8 +160,8 @@ namespace Platform.API.Repository
                 Stake = request.Stake,
                 BetDate = request.TransactionDate,
                 OddsType = request.OddsType,
-                CurrencyCode = request.CurrencyCode,
-                LanguageCode = request.LanguageCode,
+                CurrencyCode = (CurrencyCode)Enum.Parse(typeof(CurrencyCode), authenticationResponse.Result.CurrencyCode),
+                LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode),
                 Channel = request.Channel,
                 IPAddress = request.IPAddress,
                 Selections = request.Selections.Select(s => new BetSelectionRequestDTO
@@ -254,6 +228,7 @@ namespace Platform.API.Repository
                 FromDate = request.FromDate,
                 ToDate = request.ToDate,
                 BetStatusFilter = request.BetStatusFilter,
+                IsCurrent = request.IsCurrent,
                 Page = request.Page,
                 PageSize = request.PageSize
             };

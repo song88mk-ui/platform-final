@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Platform.Shared.Models
 {
@@ -10,11 +8,8 @@ namespace Platform.Shared.Models
         public string UserId { get; set; }
         public string CurrencyCode { get; set; }
         public string LanguageCode { get; set; }
-
         public List<BetConfigSelectionDTO> BetSelections { get; set; }
-
         public BetConfigCurrentSelectionDTO CurrentSelection { get; set; }
-
     }
 
     public class BetConfigCurrentSelectionDTO

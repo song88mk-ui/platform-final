@@ -42,9 +42,8 @@ namespace Platform.API.Controllers
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
-            var result = await _platformRepository.GetBetConfig(apiKey, clientId, operatorToken, request);
+            var result = await _platformRepository.GetBetConfig(apiKey, clientId, request);
 
             switch (result.StatusCode)
             {

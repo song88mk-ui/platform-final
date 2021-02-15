@@ -280,22 +280,52 @@ namespace Platform.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<BetConfigResponseDTO>> GetBetConfig(string apiKey, string clientId, string operatorToken, BetConfigRequestDTO request)
+        public async Task<BaseResponseDTO<BetConfigResponseDTO>> GetBetConfig(string apiKey, string clientId, BetConfigRequestDTO request)
         {
-            //Create mock data temporarily
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<BetConfigResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
             return new BaseResponseDTO<BetConfigResponseDTO>
             {
                 StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString().Replace('_', ' '),
+                Message = StatusCode.Success.ToString(),
                 Result = new BetConfigResponseDTO
                 {
-                    IsMaxTier = true,
-                    MaxBet = 1000.000000000000000000M,
-                    MinBet = 1.000000000000000000M,
-                    MaxLiability = 19404M,
-                    MaxPayout = 0.000000000000000000M,
-                    MaxFixtureBet = 1000.000000000000000000M,
-                    ReferenceBet = 1.000000000000000000M
+                    DefaultSportConfig = new DefaultSportConfig
+                    {
+                        MinStake = 10,
+                        MaxStake = 100
+                    },
+                    OverrideSportConfig = new List<OverrideSportConfig>
+                    {
+                        new OverrideSportConfig
+                        {
+                            SportId = 1,
+                            SportName = "Soccer",
+                            MinStake = 1,
+                            MaxStake = 100
+                        },
+                        new OverrideSportConfig
+                        {
+                            SportId = 21,
+                            SportName = "Cricket",
+                            MinStake = 1,
+                            MaxStake = 100
+                        }
+                    },
+                    Parlayconfig = new ParlayConfig
+                    {
+                        MinStake = 10,
+                        MaxStake = 50
+                    }
                 }
             };
         }

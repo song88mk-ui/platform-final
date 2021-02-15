@@ -1,13 +1,35 @@
-﻿namespace Platform.Shared.Models
+﻿using System.Collections.Generic;
+
+namespace Platform.Shared.Models
 {
     public class BetConfigResponseDTO
     {
-        public decimal MinBet { get; set; }
-        public decimal MaxBet { get; set; }
-        public decimal MaxPayout { get; set; }
-        public decimal MaxFixtureBet { get; set; }
-        public decimal ReferenceBet { get; set; }
-        public decimal MaxLiability { get; set; }
-        public bool IsMaxTier { get; set; }
+        public BetConfigResponseDTO()
+        {
+            OverrideSportConfig = new List<OverrideSportConfig>();
+        }
+        public DefaultSportConfig DefaultSportConfig { get; set; }
+        public List<OverrideSportConfig> OverrideSportConfig { get; set; }
+        public ParlayConfig Parlayconfig { get; set; }
+    }
+
+    public class OverrideSportConfig
+    {
+        public int SportId { get; set; }
+        public string SportName { get; set; }
+        public decimal MinStake { get; set; }
+        public decimal MaxStake { get; set; }
+    }
+
+    public class DefaultSportConfig
+    {
+        public decimal MinStake { get; set; }
+        public decimal MaxStake { get; set; }
+    }
+
+    public class ParlayConfig
+    {
+        public decimal MinStake { get; set; }
+        public decimal MaxStake { get; set; }
     }
 }

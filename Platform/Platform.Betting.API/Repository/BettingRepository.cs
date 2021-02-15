@@ -358,5 +358,18 @@ namespace Platform.Betting.API.Repository
                 }
             };
         }
+
+        public async Task<BaseResponseDTO<BetConfigResponseDTO>> GetBetConfig(BetConfigRequestDTO request)
+        {
+            var result = new BetConfigResponseDTO();
+            var clientId = new Guid(request.ClientId);
+            var betConfig = _bettingContext.BetConfig.Where(x => x.EffectivityDate <= DateTime.UtcNow && x.ClientId == clientId).OrderByDescending(x => x.TransactionDate);
+            return new BaseResponseDTO<BetConfigResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = result
+            };
+        }
     }
 }

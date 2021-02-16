@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Platform.API.Models;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
@@ -87,6 +88,40 @@ namespace Platform.API.Repository
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
                 };
             }
-        } 
+        }
+
+        public async Task<BaseResponseDTO<BetConfigResponseDTO>> BetConfig(BetConfigRequestDTO request)
+        {
+            //_httpClient.DefaultRequestHeaders.Add("x-operator-token", request.OperatorToken);
+
+            try
+            {
+                var response = await _httpClient.PostAsync($"/v1/bet/config", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                    return JsonSerializer.Deserialize<BaseResponseDTO<BetConfigResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                        return JsonSerializer.Deserialize<BaseResponseDTO<BetConfigResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    else
+                    {
+                        return new BaseResponseDTO<BetConfigResponseDTO>
+                        {
+                            StatusCode = StatusCode.Error,
+                            Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<BetConfigResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
+            }
+        }
     }
 }

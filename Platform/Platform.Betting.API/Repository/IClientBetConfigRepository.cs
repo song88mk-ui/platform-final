@@ -7,6 +7,6 @@ namespace Platform.Betting.API.Repository
 {
     public interface IClientBetConfigRepository
     {
-        Task<BaseResponseDTO<StatusCode>> ProcessClientBetConfig(BackOfficeBetConfigPayloadDTO request);
+        Task<BaseResponseDTO<StatusCode>> ProcessClientBetConfig(BackOfficeBetConfigPayloadDTO payload);
     }
 }

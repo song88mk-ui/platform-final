@@ -10,6 +10,7 @@ using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
 
@@ -26,15 +27,43 @@ namespace Platform.Betting.API.Repository
             _messageBroker.Connect();
         }
 
-        public async Task<BaseResponseDTO<StatusCode>> ProcessClientBetConfig(BackOfficeBetConfigPayloadDTO request)
+        public async Task<BaseResponseDTO<StatusCode>> ProcessClientBetConfig(BackOfficeBetConfigPayloadDTO payload)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
             {
                 try
                 {
-                    foreach (var betconfig in request.BetConfigPayload)
+                    foreach (var config in payload.BetConfigPayload)
                     {
-                        _platformContext.BetConfig.Add(betconfig);
+                        var betconfig = _platformContext.BetConfig.FirstOrDefault(b => b.ClientId == config.ClientId && b.SportsId == config.SportsId && b.CurrencyCode == config.CurrencyCode);
+                        if (betconfig != null)
+                        {
+                            betconfig.MinBet = config.MinBet;
+                            betconfig.MaxBet = config.MaxBet;
+                            betconfig.MaxPerGame = config.MaxPerGame;
+                            betconfig.TransactionDate = DateTime.UtcNow;
+
+                            _platformContext.BetConfig.Update(betconfig);
+                        }
+                        else
+                        {
+                            var newbetconfig = new BetConfig
+                            {
+                                ClientId = config.ClientId,
+                                SportsId = config.SportsId,
+                                CategoryId = config.CategoryId,
+                                ReferenceBet = config.ReferenceBet,
+                                MinBet = config.MinBet,
+                                MaxBet = config.MaxBet,
+                                MaxPerGame = config.MaxPerGame,
+                                CompanyShare = config.CompanyShare,
+                                TransactionDate = config.TransactionDate,
+                                EffectivityDate = config.EffectivityDate,
+                                CurrencyCode = config.CurrencyCode,
+                            };
+
+                            _platformContext.BetConfig.Add(newbetconfig);
+                        }
                     }
 
                     await _platformContext.SaveChangesAsync();

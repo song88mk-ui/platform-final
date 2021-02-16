@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Platform.Betting.API.Repository;
 using Platform.Shared.Models;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Platform.Betting.API.Controllers
@@ -17,9 +18,9 @@ namespace Platform.Betting.API.Controllers
         }
 
         [HttpPost("v1/config/client")]
-        public async Task<IActionResult> ProcessBackOfficeClientBetConfig([FromBody] BackOfficeBetConfigPayloadDTO request)
+        public async Task<IActionResult> ProcessBackOfficeClientBetConfig([FromBody] BackOfficeBetConfigPayloadDTO payload)
         {
-            var result = await _clientbetconfigRepository.ProcessClientBetConfig(request);
+            var result = await _clientbetconfigRepository.ProcessClientBetConfig(payload);
 
             switch (result.StatusCode)
             {

@@ -23,7 +23,19 @@ namespace Platform.Betting.API.Repository
             {
                 try
                 {
-                    _platformContext.Client.Add(request.Client);
+                    _platformContext.Client.Add(new Client
+                    {
+                        ClientId = request.ClientId,
+                        ClientCode = request.ClientCode,
+                        ClientName = request.ClientName,
+                        ClientIdRef = request.ClientIdRef,
+                        CurrentCompanyShare = request.CurrentCompanyShare,
+                        EffectiveDate = request.EffectiveDate,
+                        IsActive = request.IsActive,
+                        Endpoint = request.Endpoint,
+                        LimitId = request.LimitId,
+                        NextCompanyShare = request.NextCompanyShare
+                    });
                     await _platformContext.SaveChangesAsync();
 
                     scope.Complete();

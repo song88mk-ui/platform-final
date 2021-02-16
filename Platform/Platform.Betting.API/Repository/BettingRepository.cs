@@ -27,7 +27,27 @@ namespace Platform.Betting.API.Repository
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(BetRequestDTO request)
         {
             //TODO: bet validation
-            //TODO: Max Fixture Bet  
+            var clientId = new Guid(request.ClientId);
+            var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == clientId && x.CurrencyCode == request.CurrencyCode.ToString()).OrderByDescending(x => x.CreatedDate).FirstOrDefault();
+
+
+            //Parlay
+            if (request.Selections.Count() > 1)
+            { 
+            
+            }
+            
+            
+            //Check first if SportsId exist in Override column
+            
+            List<OverrideSportConfig> overrideSportConfig = JsonSerializer.Deserialize<List<OverrideSportConfig>>(betConfig.OverrideConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+            //Use the default Config if SportsId Does not exist in the Override column
+
+
+            //TODO: Max Fixture Bet 
+            var betFixtureLimits = _bettingContext.StakeLimitFixture.Find(request.ClientId, request.Selections.FirstOrDefault().FixtureId);
+
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {

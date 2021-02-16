@@ -16,7 +16,7 @@ namespace Platform.Shared.Data.Platform
             modelBuilder.Entity<Operator>().HasKey(k => new { k.UserId });
             modelBuilder.Entity<ForexEUR>().HasKey(k => new { k.CurrencyCode });
             modelBuilder.Entity<OperatorLog>().HasKey(k => new { k.Id });
-            modelBuilder.Entity<BetConfig>().HasKey(k => new { k.ClientId, k.SportsId, k.CurrencyCode });
+            modelBuilder.Entity<BetConfig>().HasKey(k => new { k.ClientId, k.CurrencyCode });
         }
 
         public DbSet<Client> Client { get; set; }

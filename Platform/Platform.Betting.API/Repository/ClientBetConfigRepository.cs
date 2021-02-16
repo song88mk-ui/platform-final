@@ -1,16 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Platform.Shared.Data.Betting;
-using Platform.Shared.Data.Betting.Entities;
+﻿using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
-using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
 
@@ -33,36 +27,29 @@ namespace Platform.Betting.API.Repository
             {
                 try
                 {
+                    var clientID = payload.ClientId;
                     foreach (var config in payload.BetConfigPayload)
                     {
-                        var betconfig = _platformContext.BetConfig.FirstOrDefault(b => b.ClientId == config.ClientId && b.SportsId == config.SportsId && b.CurrencyCode == config.CurrencyCode);
+                        var betconfig = _platformContext.BetConfig.FirstOrDefault(b => b.ClientId == clientID && b.CurrencyCode == config.CurrencyCode);
                         if (betconfig != null)
                         {
-                            betconfig.MinBet = config.MinBet;
-                            betconfig.MaxBet = config.MaxBet;
-                            betconfig.MaxPerGame = config.MaxPerGame;
-                            betconfig.TransactionDate = DateTime.UtcNow;
+                            betconfig.OverrideConfig = "";
+                            betconfig.ParlayConfig = "";
 
                             _platformContext.BetConfig.Update(betconfig);
                         }
                         else
                         {
-                            var newbetconfig = new BetConfig
+                            _platformContext.BetConfig.Add(new BetConfig
                             {
-                                ClientId = config.ClientId,
-                                SportsId = config.SportsId,
-                                CategoryId = config.CategoryId,
-                                ReferenceBet = config.ReferenceBet,
-                                MinBet = config.MinBet,
-                                MaxBet = config.MaxBet,
-                                MaxPerGame = config.MaxPerGame,
-                                CompanyShare = config.CompanyShare,
-                                TransactionDate = config.TransactionDate,
-                                EffectivityDate = config.EffectivityDate,
+                                ClientId = clientID,
                                 CurrencyCode = config.CurrencyCode,
-                            };
-
-                            _platformContext.BetConfig.Add(newbetconfig);
+                                StakeLimitFixture = 0, //TODO
+                                MaxParlayPayout = config.Parlay.MaxPayout,
+                                DefaultConfig = "",
+                                OverrideConfig = "",
+                                ParlayConfig = ""
+                            });
                         }
                     }
 

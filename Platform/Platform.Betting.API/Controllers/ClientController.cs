@@ -29,5 +29,19 @@ namespace Platform.Betting.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/client/put")]
+        public async Task<IActionResult> UpdateClientAsync([FromBody] ClientRequestDTO request)
+        {
+            var result = await _clientRepository.InsertClient(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

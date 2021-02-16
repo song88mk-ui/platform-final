@@ -47,8 +47,9 @@ namespace Platform.Betting.API
 
             services.AddSingleton<IMessageBroker, MessageBroker>();
             services.AddScoped<IBettingRepository, BettingRepository>();
+            services.AddScoped<IClientRepository, ClientRepository>();
             services.AddScoped<IClientBetConfigRepository, ClientBetConfigRepository>();
-
+            
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Platform Betting API", Version = "v1" });

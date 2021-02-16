@@ -380,11 +380,12 @@ namespace Platform.Betting.API.Repository
             result.OverrideSportConfig = new List<OverrideSportConfig>();
             foreach (var overRide in overrideSportConfig)
             {
-                OverrideSportConfig newRec = new OverrideSportConfig();
-                newRec.SportId = overRide.SportId;
-                newRec.SportName = overRide.SportName;
-                newRec.MinStake = GetMinStake(overRide.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode);
-                newRec.MaxStake = GetMaxStake(overRide.MaxStake);
+                OverrideSportConfig newOverrideSport = new OverrideSportConfig();
+                newOverrideSport.SportId = overRide.SportId;
+                newOverrideSport.SportName = overRide.SportName;
+                newOverrideSport.MinStake = GetMinStake(overRide.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode);
+                newOverrideSport.MaxStake = GetMaxStake(overRide.MaxStake);
+                result.OverrideSportConfig.Add(newOverrideSport);
             }
 
             result.Parlayconfig = new ParlayConfig()

@@ -6,25 +6,13 @@ namespace Platform.Shared.Data.Betting.Entities
 {
     public class BetConfig
     {
-        [Key]
         public Guid ClientId { get; set; }
-
-        public int SportsId { get; set; }
-
-        public int CategoryId { get; set; }
-
-        public decimal ReferenceBet { get; set; }
-
-        public decimal MinBet { get; set; }
-        public decimal MaxBet { get; set; }
-        public decimal MaxPerGame { get; set; }
-
-        [Column(TypeName = "decimal(30,18)")]
-        public decimal CompanyShare { get; set; }
-
-        public DateTime TransactionDate { get; set; }
-        public DateTime EffectivityDate { get; set; }
-
         public string CurrencyCode { get; set; }
+        public decimal StakeLimitFixture { get; set; }
+        public decimal MaxParlayPayout { get; set; }
+        public string DefaultConfig { get; set; }
+        public string OverrideConfig { get; set; }
+        public string ParlayConfig { get; set; }
+        public DateTime CreatedDate { get; set; }
     }
 }

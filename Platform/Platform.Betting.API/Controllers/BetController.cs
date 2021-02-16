@@ -43,5 +43,19 @@ namespace Platform.Betting.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/bet/config")]
+        public async Task<IActionResult> GetBetHistory([FromBody] BetConfigRequestDTO request)
+        {
+            var result = await _bettingRepository.GetBetConfig(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

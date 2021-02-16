@@ -8,6 +8,7 @@ using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
 
@@ -267,7 +268,7 @@ namespace Platform.Betting.API.Repository
 
                 if (request.BetStatusFilter == BetStatusFilter.Settled)
                 {
-                    var rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId &&  c.BetDateOffset.Date >= request.FromDate.Date && c.BetDateOffset.Date <= request.ToDate.Date && c.BetStatusId > (int)BetStatus.Running);
+                    var rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && c.BetDateOffset.Date >= request.FromDate.Date && c.BetDateOffset.Date <= request.ToDate.Date && c.BetStatusId > (int)BetStatus.Running);
 
                     rowCount = rawSettled.Count();
                     winLoss = rawSettled.Sum(c => c.WinLoss);
@@ -333,7 +334,7 @@ namespace Platform.Betting.API.Repository
                         MarketTemplateId = s.MarketTemplateId,
                         SegmentId = s.SegmentId,
                         SegmentName = s.SegmentName,
-                        SelectionTemplateId= s.SelectionTemplateId,
+                        SelectionTemplateId = s.SelectionTemplateId,
                         SettlementAwayScore = s.SettlementAwayScore,
                         SettlementHomeScore = s.SettlementHomeScore
 
@@ -358,5 +359,87 @@ namespace Platform.Betting.API.Repository
                 }
             };
         }
+
+        public async Task<BaseResponseDTO<BetConfigResponseDTO>> GetBetConfig(BetConfigRequestDTO request)
+        {
+            var result = new BetConfigResponseDTO();
+            var clientId = new Guid(request.ClientId);
+            var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == clientId && x.CurrencyCode == request.CurrencyCode).OrderByDescending(x => x.CreatedDate).FirstOrDefault();
+
+            DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            ParlayConfig parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            List<OverrideSportConfig> overrideSportConfig = JsonSerializer.Deserialize<List<OverrideSportConfig>>(betConfig.OverrideConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+
+            result.DefaultSportConfig = new DefaultSportConfig()
+            {
+                MinStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
+                MaxStake = GetMaxStake(defaultSportConfig.MaxStake)
+            };
+
+            result.OverrideSportConfig = new List<OverrideSportConfig>();
+            foreach (var overRide in overrideSportConfig)
+            {
+                OverrideSportConfig newOverrideSport = new OverrideSportConfig();
+                newOverrideSport.SportId = overRide.SportId;
+                newOverrideSport.SportName = overRide.SportName;
+                newOverrideSport.MinStake = GetMinStake(overRide.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode);
+                newOverrideSport.MaxStake = GetMaxStake(overRide.MaxStake);
+                result.OverrideSportConfig.Add(newOverrideSport);
+            }
+
+            result.Parlayconfig = new ParlayConfig()
+            {
+                MinStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
+                MaxStake = GetMaxStake(parlayConfig.MaxStake)
+            };
+
+            return new BaseResponseDTO<BetConfigResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = result
+            };
+        }
+
+        public decimal GetMinStake(decimal minStake, decimal exchangeRate, decimal companyShare, string currencyCode)
+        {
+            List<decimal> minimumStake = new List<decimal>();
+            var highCurrencies = new List<string> { "KRW", "VND", "KHR", "IDR", "MMK" };
+
+            //1. Reference Bet
+            minimumStake.Add(Math.Truncate(exchangeRate) + 1);
+
+            //2. High Currency add 1000 default
+            if (highCurrencies.Contains(currencyCode))
+            { minimumStake.Add(1000m); }
+
+            //3 Get Min from betconfig
+            minimumStake.Add(minStake);
+
+            //4 Reference Bet / Company Share
+            minimumStake.Add(Math.Truncate(exchangeRate / companyShare) + 1);
+
+            //5 Possible to add computation for Odds
+
+            //Get Max decimal value
+            return minimumStake.Max();
+        }
+
+        public decimal GetMaxStake(decimal maxStake)
+        {
+            List<decimal> maximumStake = new List<decimal>();
+
+            //1 Get Max from betconfig
+            maximumStake.Add(maxStake);
+
+            //2 Possible to add computation for Odds
+
+            //3 Possible to add computation for MTS max stake
+
+            //Get min decimal value
+            return maximumStake.Min();
+        }
+
     }
 }

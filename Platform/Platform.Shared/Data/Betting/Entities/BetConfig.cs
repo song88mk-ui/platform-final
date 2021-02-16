@@ -2,9 +2,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Platform.Shared.Models
+namespace Platform.Shared.Data.Betting.Entities
 {
-    public class BackOfficeBetConfigDTO
+    public class BetConfig
     {
         [Key]
         public Guid ClientId { get; set; }

@@ -26,9 +26,36 @@ namespace Platform.Betting.API.Repository
             _messageBroker.Connect();
         }
 
-        public Task<IActionResult> ProcessConfig(BackOfficeBetConfigDTO request)
+        public async Task<BaseResponseDTO<StatusCode>> ProcessClientBetConfig(BackOfficeBetConfigPayloadDTO request)
         {
-            throw new NotImplementedException();
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
+            {
+                try
+                {
+                    foreach (var betconfig in request.BetConfigPayload)
+                    {
+                        _platformContext.BetConfig.Add(betconfig);
+                    }
+
+                    await _platformContext.SaveChangesAsync();
+
+                    scope.Complete();                    
+                }
+                catch (Exception ex)
+                {
+                    scope.Dispose();
+                    return new BaseResponseDTO<StatusCode>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = StatusCode.Error.ToString()
+                    };
+                }
+            }
+            return new BaseResponseDTO<StatusCode>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString()
+            };
         }
     }
 }

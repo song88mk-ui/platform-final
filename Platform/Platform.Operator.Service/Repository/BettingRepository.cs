@@ -38,6 +38,7 @@ namespace Platform.Operator.Service.Repository
                     Timeout = TimeSpan.FromSeconds(5)
                 };
 
+                newHttpClient.DefaultRequestHeaders.Remove("x-operator-token");
                 newHttpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
 
                 _httpClients.Add(newHttpClient);

@@ -335,6 +335,15 @@ namespace Platform.API.Repository
 
             var rate = await GetExchangeRate(request.CurrencyCode);
 
+            if (rate.CurrencyCode == null)
+            {
+                return new BaseResponseDTO<BetConfigResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_CurrencyCode,
+                    Message = StatusCode.Unsupported_CurrencyCode.ToString().Replace('_', ' ')
+                };
+            }
+
             var payload = new BetConfigRequestDTO()
             {
                 CompanyShare = clientResponse.Result.CompanyShare,

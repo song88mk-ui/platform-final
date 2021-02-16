@@ -1,5 +1,5 @@
 ﻿using Platform.Shared.Data.Betting.Entities;
-using Platform.Shared.Data.Platform;
+using Platform.Shared.Data.Betting;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
@@ -14,11 +14,11 @@ namespace Platform.Betting.API.Repository
 {
     public class ClientBetConfigRepository : IClientBetConfigRepository
     {
-        private readonly PlatformContext _platformContext;
+        private readonly BettingContext _bettingContext;
         private readonly IMessageBroker _messageBroker;
-        public ClientBetConfigRepository(PlatformContext platformContext, IMessageBroker messageBroker)
+        public ClientBetConfigRepository(BettingContext bettingContext, IMessageBroker messageBroker)
         {
-            _platformContext = platformContext;
+            _bettingContext = bettingContext;
             _messageBroker = messageBroker;
             _messageBroker.Connect();
         }
@@ -69,19 +69,17 @@ namespace Platform.Betting.API.Repository
                             MaxStake = config.Parlay.MaxBet
                         });
 
-                        var betconfig = _platformContext.BetConfig.FirstOrDefault(b => b.ClientId == clientID && b.CurrencyCode == config.CurrencyCode);
+                        var betconfig = _bettingContext.BetConfig.FirstOrDefault(b => b.ClientId == clientID && b.CurrencyCode == config.CurrencyCode);
                         if (betconfig != null)
-                        {
-                            
-
+                        {                      
                             betconfig.OverrideConfig = overridesJSON;
                             betconfig.ParlayConfig = parleyJSON;
 
-                            _platformContext.BetConfig.Update(betconfig);
+                            _bettingContext.BetConfig.Update(betconfig);
                         }
                         else
                         {
-                            _platformContext.BetConfig.Add(new BetConfig
+                            _bettingContext.BetConfig.Add(new BetConfig
                             {
                                 ClientId = clientID,
                                 CurrencyCode = config.CurrencyCode,
@@ -94,7 +92,7 @@ namespace Platform.Betting.API.Repository
                         }
                     }
 
-                    await _platformContext.SaveChangesAsync();
+                    await _bettingContext.SaveChangesAsync();
 
                     scope.Complete();                    
                 }

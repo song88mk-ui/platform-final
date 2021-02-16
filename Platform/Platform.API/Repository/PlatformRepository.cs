@@ -332,10 +332,15 @@ namespace Platform.API.Repository
                 };
             }
 
+
+            var rate = await GetExchangeRate(request.CurrencyCode);
+
             var payload = new BetConfigRequestDTO()
             {
+                CompanyShare = clientResponse.Result.CompanyShare,
                 ClientId = clientId,
-                CurrencyCode = request.CurrencyCode
+                CurrencyCode = request.CurrencyCode,
+                ExchangeRate = rate.ExchangeRate
             };
 
             return await _bettingRepository.BetConfig(payload);

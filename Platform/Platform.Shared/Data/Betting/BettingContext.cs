@@ -14,7 +14,7 @@ namespace Platform.Shared.Data.Betting
             modelBuilder.Entity<BetAudit>().HasKey(k => new { k.Id });
             modelBuilder.Entity<BetSelection>().HasKey(k => new { k.BetSelectionId });
             modelBuilder.Entity<BetSelectionAudit>().HasKey(k => new { k.Id });
-            modelBuilder.Entity<BetConfig>().HasKey(k => new { k.Id });
+            modelBuilder.Entity<BetConfig>().HasKey(k => new { k.ClientId, k.CurrencyCode });
         }
 
         public DbSet<Bet> Bet { get; set; }

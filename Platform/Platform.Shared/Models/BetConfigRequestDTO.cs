@@ -6,5 +6,7 @@ namespace Platform.Shared.Models
     {
         public string ClientId { get; set; }
         public string CurrencyCode { get; set; }
+        public decimal ExchangeRate { get; set; }
+        public decimal CompanyShare { get; set; }
     }
 }

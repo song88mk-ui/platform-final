@@ -38,7 +38,7 @@ namespace Platform.API.Controllers
         }
 
         [HttpPost("v1/bet/config")]
-        public async Task<IActionResult> GetBetConfig(BetConfigRequestDTO request)
+        public async Task<IActionResult> GetBetConfig(BetConfigRequest request)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();

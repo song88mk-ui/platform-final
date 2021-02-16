@@ -353,42 +353,6 @@ namespace Platform.API.Repository
             };
 
             return await _bettingRepository.BetConfig(payload);
-
-            //return new BaseResponseDTO<BetConfigResponseDTO>
-            //{
-            //    StatusCode = StatusCode.Success,
-            //    Message = StatusCode.Success.ToString(),
-            //    Result = new BetConfigResponseDTO
-            //    {
-            //        DefaultSportConfig = new DefaultSportConfig
-            //        {
-            //            MinStake = 10,
-            //            MaxStake = 100
-            //        },
-            //        OverrideSportConfig = new List<OverrideSportConfig>
-            //        {
-            //            new OverrideSportConfig
-            //            {
-            //                SportId = 1,
-            //                SportName = "Soccer",
-            //                MinStake = 1,
-            //                MaxStake = 100
-            //            },
-            //            new OverrideSportConfig
-            //            {
-            //                SportId = 21,
-            //                SportName = "Cricket",
-            //                MinStake = 1,
-            //                MaxStake = 100
-            //            }
-            //        },
-            //        Parlayconfig = new ParlayConfig
-            //        {
-            //            MinStake = 10,
-            //            MaxStake = 50
-            //        }
-            //    }
-            //};
         }
 
         private async Task<ForexEURResponse> GetExchangeRate(string currencyCode)

@@ -4,7 +4,9 @@ using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
 
@@ -28,13 +30,52 @@ namespace Platform.Betting.API.Repository
                 try
                 {
                     var clientID = payload.ClientId;
+                    var defaultJSON = JsonSerializer.Serialize(
+                        new DefaultSportConfig
+                        {
+                            MinStake = 1,
+                            MaxStake = 100
+                        });
                     foreach (var config in payload.BetConfigPayload)
                     {
+                        var overridesJSON = JsonSerializer.Serialize(new List<OverrideSportConfig>
+                        {
+                            new OverrideSportConfig
+                            {
+                                SportId = 1,
+                                SportName = "Soccer",
+                                MinStake = config.Football.MinBet,
+                                MaxStake = config.Football.MaxBet
+                            },
+                            new OverrideSportConfig
+                            {
+                                SportId = 2,
+                                SportName = "Cricket",
+                                MinStake = config.Cricket.MinBet,
+                                MaxStake = config.Cricket.MaxBet
+                            },
+                            new OverrideSportConfig
+                            {
+                                SportId = 3,
+                                SportName = "Other Sports",
+                                MinStake = config.OtherSports.MinBet,
+                                MaxStake = config.OtherSports.MaxBet
+                            },
+                        });
+
+                        var parleyJSON = JsonSerializer.Serialize(new ParlayConfig
+                        {
+                            MinStake = config.Parlay.MinBet,
+                            MaxStake = config.Parlay.MaxBet
+                        });
+
                         var betconfig = _platformContext.BetConfig.FirstOrDefault(b => b.ClientId == clientID && b.CurrencyCode == config.CurrencyCode);
                         if (betconfig != null)
                         {
-                            betconfig.OverrideConfig = "";
-                            betconfig.ParlayConfig = "";
+                            
+
+                            betconfig.OverrideConfig = overridesJSON;
+                            betconfig.ParlayConfig = parleyJSON;
 
                             _platformContext.BetConfig.Update(betconfig);
                         }
@@ -44,11 +85,11 @@ namespace Platform.Betting.API.Repository
                             {
                                 ClientId = clientID,
                                 CurrencyCode = config.CurrencyCode,
-                                StakeLimitFixture = 0, //TODO
+                                StakeLimitFixture = 0, //TODO: remove???
                                 MaxParlayPayout = config.Parlay.MaxPayout,
-                                DefaultConfig = "",
-                                OverrideConfig = "",
-                                ParlayConfig = ""
+                                DefaultConfig = defaultJSON,
+                                OverrideConfig = overridesJSON,
+                                ParlayConfig = parleyJSON
                             });
                         }
                     }
@@ -63,7 +104,7 @@ namespace Platform.Betting.API.Repository
                     return new BaseResponseDTO<StatusCode>
                     {
                         StatusCode = StatusCode.Error,
-                        Message = StatusCode.Error.ToString()
+                        Message = ex.Message
                     };
                 }
             }

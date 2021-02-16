@@ -15,18 +15,18 @@ using System.Transactions;
 
 namespace Platform.Betting.API.Repository
 {
-    public class ClientConfigRepository : IClientConfigRepository
+    public class ClientBetConfigRepository : IClientBetConfigRepository
     {
         private readonly PlatformContext _platformContext;
         private readonly IMessageBroker _messageBroker;
-        public ClientConfigRepository(PlatformContext platformContext, IMessageBroker messageBroker)
+        public ClientBetConfigRepository(PlatformContext platformContext, IMessageBroker messageBroker)
         {
             _platformContext = platformContext;
             _messageBroker = messageBroker;
             _messageBroker.Connect();
         }
 
-        public Task<IActionResult> ProcessConfig(ClientConfigRequestDTO request)
+        public Task<IActionResult> ProcessConfig(BackOfficeBetConfigDTO request)
         {
             throw new NotImplementedException();
         }

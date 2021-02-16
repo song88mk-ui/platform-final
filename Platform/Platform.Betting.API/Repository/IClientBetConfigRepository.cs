@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 
 namespace Platform.Betting.API.Repository
 {
-    public interface IClientConfigRepository
+    public interface IClientBetConfigRepository
     {
-        Task<IActionResult> ProcessConfig(ClientConfigRequestDTO request);
+        Task<IActionResult> ProcessConfig(BackOfficeBetConfigDTO request);
     }
 }

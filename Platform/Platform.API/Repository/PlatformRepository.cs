@@ -1,4 +1,5 @@
-﻿using Platform.API.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using Platform.API.Models;
 using Platform.Shared.Data;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
@@ -265,21 +266,58 @@ namespace Platform.API.Repository
                             LimitId = result.LimitId,
                             IsActive = result.IsActive,
                             Endpoint = result.Endpoint,
-                            CompanyShare = result.CompanyShare
+                            CompanyShare = result.EffectiveDate.Date >= DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare
                         }
                     };
                 }
             }
             else
             {
-                return new BaseResponseDTO<ClientResponse>
+                //TODO: temp approach while using the old backoffice sportsbook client with ClientId as integer type
+                var isInteger = int.TryParse(clientId, out int intClientId);
+
+                if (isInteger)
                 {
-                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
-                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
-                };
+                    var result = await _platformContext.Client.Where(c => c.ClientIdRef == intClientId).FirstOrDefaultAsync();
+
+                    if (result == null || result.IsActive == false)
+                    {
+                        return new BaseResponseDTO<ClientResponse>
+                        {
+                            StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                            Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                        };
+                    }
+                    else
+                    {
+                        return new BaseResponseDTO<ClientResponse>
+                        {
+                            StatusCode = StatusCode.Success,
+                            Message = StatusCode.Success.ToString().Replace('_', ' '),
+                            Result = new ClientResponse
+                            {
+                                ClientId = result.ClientId,
+                                ClientName = result.ClientName,
+                                ClientCode = result.ClientCode,
+                                LimitId = result.LimitId,
+                                IsActive = result.IsActive,
+                                Endpoint = result.Endpoint,
+                                CompanyShare = result.EffectiveDate.Date >= DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare
+                            }
+                        };
+                    }
+                }
+                else
+                {
+                    return new BaseResponseDTO<ClientResponse>
+                    {
+                        StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                        Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                    };
+                }
+                //
             }
         }
-
         public async Task<BaseResponseDTO<BetConfigResponseDTO>> GetBetConfig(string apiKey, string clientId, BetConfigRequestDTO request)
         {
             var clientResponse = await GetClient(clientId);

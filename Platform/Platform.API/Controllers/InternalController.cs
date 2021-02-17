@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Platform.API.ActionFilters;
 using Platform.API.Repository;
+using Platform.Shared.Models;
 
 namespace Platform.API.Controllers
 {
@@ -21,12 +22,9 @@ namespace Platform.API.Controllers
         }
 
         [HttpPost("v1/client")]
-        public async Task<IActionResult> AddOrUpdateClient()
+        public async Task<IActionResult> AddOrUpdateClient([FromBody] ClientRequestDTO request)
         {
-            var clientId = HttpContext.Request.Headers["x-api-id"].FirstOrDefault();
-            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
-
-            var result = await _platformRepository.GetWalletBalance(clientId, operatorToken);
+            var result = await _platformRepository.AddOrUpdateClient(request);
 
             switch (result.StatusCode)
             {

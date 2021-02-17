@@ -2,12 +2,14 @@
 using Platform.API.Models;
 using Platform.Shared.Data;
 using Platform.Shared.Data.Platform;
+using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace Platform.API.Repository
 {
@@ -353,6 +355,74 @@ namespace Platform.API.Repository
             };
 
             return await _bettingRepository.BetConfig(payload);
+        }
+        public async Task<BaseResponseDTO<ClientResponseDTO>> AddOrUpdateClient(ClientRequestDTO request)
+        {
+            Guid clientId;
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
+            {
+                try
+                {
+                    var currentClient = await _platformContext.Client.FindAsync(request.ClientId);
+                    decimal currentCompanyShare = request.CurrentCompanyShare;
+                    decimal nextCompanyShare = request.CurrentCompanyShare;
+                    DateTime effectiveDate = request.EffectiveDate;
+                    if (currentClient != null)
+                    {
+                        currentCompanyShare = currentClient.EffectiveDate < DateTime.UtcNow  && currentClient.CurrentCompanyShare != request.CurrentCompanyShare ?
+                                                 currentClient.NextCompanyShare : currentClient.CurrentCompanyShare;
+                        effectiveDate = currentClient.EffectiveDate < DateTime.UtcNow && currentClient.CurrentCompanyShare != request.CurrentCompanyShare ?
+                                                GetFirstDayOfNextMonth() : currentClient.EffectiveDate;
+                        nextCompanyShare = currentClient.CurrentCompanyShare != request.CurrentCompanyShare ?
+                                                 request.CurrentCompanyShare : currentClient.NextCompanyShare;
+                    }
+
+                    var clientEntity = _platformContext.Client.Update(new Client
+                    {
+                        ClientCode = request.ClientCode,
+                        ClientName = request.ClientName,
+                        ClientIdRef = request.ClientIdRef,
+                        IsActive = request.IsActive,
+                        Endpoint = request.Endpoint,
+                        LimitId = request.LimitId,
+                        CurrentCompanyShare = currentCompanyShare,
+                        EffectiveDate = effectiveDate,
+                        NextCompanyShare = nextCompanyShare
+                    }).Entity;
+
+                    clientId = clientEntity.ClientId;
+
+                    await _platformContext.SaveChangesAsync();
+
+                    scope.Complete();
+                }
+                catch
+                {
+                    scope.Dispose();
+                    return new BaseResponseDTO<ClientResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = StatusCode.Error.ToString()
+                    };
+                }
+            }
+            return new BaseResponseDTO<ClientResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new ClientResponseDTO
+                {
+                    ClientId = clientId
+                }
+            };
+        }
+
+        private DateTime GetFirstDayOfNextMonth()
+        {
+            DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+
+            return ss.AddMonths(1);
         }
 
         private async Task<ForexEURResponse> GetExchangeRate(string currencyCode)

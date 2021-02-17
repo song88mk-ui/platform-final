@@ -1,6 +1,6 @@
 using System;
 
-namespace Platform.Client.API
+namespace Platform.Sportsbook.API
 {
     public class WeatherForecast
     {

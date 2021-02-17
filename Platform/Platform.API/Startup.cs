@@ -44,6 +44,7 @@ namespace Platform.API
             });
 
             services.AddScoped<APIKeyFilter>();
+            services.AddScoped<InternalAPIKeyFilter>();
 
             services.AddControllers();
 

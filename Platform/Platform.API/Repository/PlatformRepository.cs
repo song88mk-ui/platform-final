@@ -422,7 +422,7 @@ namespace Platform.API.Repository
                     var currentClient = await _platformContext.Client.AsNoTracking().FirstOrDefaultAsync(c => c.ClientIdRef == request.ClientIdRef);
                     decimal currentCompanyShare = request.CurrentCompanyShare;
                     decimal nextCompanyShare = request.CurrentCompanyShare;
-                    DateTime effectiveDate = request.EffectiveDate;
+                    DateTime effectiveDate = DateTime.UtcNow;
                     if (currentClient != null)
                     {
                         currentCompanyShare = currentClient.EffectiveDate < DateTime.UtcNow  && currentClient.CurrentCompanyShare != request.CurrentCompanyShare ?

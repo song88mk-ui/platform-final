@@ -30,7 +30,7 @@ namespace Platform.Betting.API.Repository
                 try
                 {
                     var clientID = payload.ClientId;                    
-                    var dateCreated = DateTime.UtcNow.Date;
+                    var dateCreated = DateTime.UtcNow;
 
                     foreach (var config in payload.BetConfigPayload)
                     {

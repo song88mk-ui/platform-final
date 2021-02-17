@@ -422,8 +422,8 @@ namespace Platform.API.Repository
                     var currentClient = await _platformContext.Client.AsNoTracking().FirstOrDefaultAsync(c => c.ClientIdRef == request.ClientIdRef);
                     decimal currentCompanyShare = request.CurrentCompanyShare;
                     decimal nextCompanyShare = request.CurrentCompanyShare;
-                    string endPoint = request.Endpoint;
-                    string limitId = request.LimitId;
+                    string endPoint = string.IsNullOrEmpty(request.Endpoint) ? string.Empty : request.Endpoint;
+                    string limitId = string.IsNullOrEmpty(request.LimitId) ? string.Empty : request.LimitId;
                     DateTime effectiveDate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
                     if (currentClient != null)
                     {

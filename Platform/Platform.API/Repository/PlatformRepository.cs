@@ -266,7 +266,7 @@ namespace Platform.API.Repository
                             LimitId = result.LimitId,
                             IsActive = result.IsActive,
                             Endpoint = result.Endpoint,
-                            CompanyShare = result.EffectiveDate.Date >= DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare
+                            CompanyShare = result.EffectiveDate.Date < DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare
                         }
                     };
                 }

@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 
 namespace Platform.Betting.API.Repository
 {
-    public interface IClientBetConfigRepository
+    public interface IBetConfigRepository
     {
-        Task<BaseResponseDTO<StatusCode>> ProcessClientBetConfig(BackOfficeBetConfigPayloadDTO payload);
+        Task<BaseResponseDTO<StatusCode>> ProcessBetConfig(BackOfficeBetConfigPayloadDTO payload);
     }
 }

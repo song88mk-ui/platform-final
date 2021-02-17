@@ -12,18 +12,18 @@ using System.Transactions;
 
 namespace Platform.Betting.API.Repository
 {
-    public class ClientBetConfigRepository : IClientBetConfigRepository
+    public class BetConfigRepository : IBetConfigRepository
     {
         private readonly BettingContext _bettingContext;
         private readonly IMessageBroker _messageBroker;
-        public ClientBetConfigRepository(BettingContext bettingContext, IMessageBroker messageBroker)
+        public BetConfigRepository(BettingContext bettingContext, IMessageBroker messageBroker)
         {
             _bettingContext = bettingContext;
             _messageBroker = messageBroker;
             _messageBroker.Connect();
         }
 
-        public async Task<BaseResponseDTO<StatusCode>> ProcessClientBetConfig(BackOfficeBetConfigPayloadDTO payload)
+        public async Task<BaseResponseDTO<StatusCode>> ProcessBetConfig(BackOfficeBetConfigPayloadDTO payload)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
             {
@@ -36,6 +36,7 @@ namespace Platform.Betting.API.Repository
                             MinStake = 1,
                             MaxStake = 100
                         });
+                    var dateCreated = DateTime.UtcNow.Date;
                     foreach (var config in payload.BetConfigPayload)
                     {
                         var overridesJSON = JsonSerializer.Serialize(new List<OverrideSportConfig>
@@ -74,6 +75,7 @@ namespace Platform.Betting.API.Repository
                         {                      
                             betconfig.OverrideConfig = overridesJSON;
                             betconfig.ParlayConfig = parleyJSON;
+                            betconfig.CreatedDate = dateCreated;
 
                             _bettingContext.BetConfig.Update(betconfig);
                         }
@@ -87,7 +89,8 @@ namespace Platform.Betting.API.Repository
                                 MaxParlayPayout = config.Parlay.MaxPayout,
                                 DefaultConfig = defaultJSON,
                                 OverrideConfig = overridesJSON,
-                                ParlayConfig = parleyJSON
+                                ParlayConfig = parleyJSON,
+                                CreatedDate = dateCreated
                             });
                         }
                     }

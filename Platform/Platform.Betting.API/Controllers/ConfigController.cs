@@ -10,9 +10,9 @@ namespace Platform.Betting.API.Controllers
     [ApiController, EnableCors("AllowAllOrigins")]
     public class ConfigController : ControllerBase
     {
-        private readonly IClientBetConfigRepository _clientbetconfigRepository;
+        private readonly IBetConfigRepository _clientbetconfigRepository;
 
-        public ConfigController(IClientBetConfigRepository clientbeconfigRepository)
+        public ConfigController(IBetConfigRepository clientbeconfigRepository)
         {
             _clientbetconfigRepository = clientbeconfigRepository;
         }
@@ -20,7 +20,7 @@ namespace Platform.Betting.API.Controllers
         [HttpPost("v1/config/client")]
         public async Task<IActionResult> ProcessBackOfficeClientBetConfig([FromBody] BackOfficeBetConfigPayloadDTO payload)
         {
-            var result = await _clientbetconfigRepository.ProcessClientBetConfig(payload);
+            var result = await _clientbetconfigRepository.ProcessBetConfig(payload);
 
             switch (result.StatusCode)
             {

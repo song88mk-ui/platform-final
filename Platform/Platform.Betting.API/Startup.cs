@@ -48,7 +48,7 @@ namespace Platform.Betting.API
             services.AddSingleton<IMessageBroker, MessageBroker>();
             services.AddScoped<IBettingRepository, BettingRepository>();
             services.AddScoped<IClientRepository, ClientRepository>();
-            services.AddScoped<IClientBetConfigRepository, ClientBetConfigRepository>();
+            services.AddScoped<IBetConfigRepository, BetConfigRepository>();
             
             services.AddSwaggerGen(c =>
             {

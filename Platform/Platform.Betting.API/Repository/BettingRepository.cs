@@ -33,13 +33,14 @@ namespace Platform.Betting.API.Repository
 
             //Parlay
             if (request.Selections.Count() > 1)
-            { 
-            
+            {
+                ParlayConfig parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
             }
-            
-            
+
+
             //Check first if SportsId exist in Override column
-            
+
             List<OverrideSportConfig> overrideSportConfig = JsonSerializer.Deserialize<List<OverrideSportConfig>>(betConfig.OverrideConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
             //Use the default Config if SportsId Does not exist in the Override column
@@ -393,7 +394,7 @@ namespace Platform.Betting.API.Repository
 
             result.DefaultSportConfig = new DefaultSportConfig()
             {
-                MinStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
+                MinStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode, 0, false),
                 MaxStake = GetMaxStake(defaultSportConfig.MaxStake)
             };
 
@@ -403,14 +404,14 @@ namespace Platform.Betting.API.Repository
                 OverrideSportConfig newOverrideSport = new OverrideSportConfig();
                 newOverrideSport.SportId = overRide.SportId;
                 newOverrideSport.SportName = overRide.SportName;
-                newOverrideSport.MinStake = GetMinStake(overRide.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode);
+                newOverrideSport.MinStake = GetMinStake(overRide.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode, 0, false);
                 newOverrideSport.MaxStake = GetMaxStake(overRide.MaxStake);
                 result.OverrideSportConfig.Add(newOverrideSport);
             }
 
             result.Parlayconfig = new ParlayConfig()
             {
-                MinStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
+                MinStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode, 0, false),
                 MaxStake = GetMaxStake(parlayConfig.MaxStake)
             };
 
@@ -422,7 +423,7 @@ namespace Platform.Betting.API.Repository
             };
         }
 
-        public decimal GetMinStake(decimal minStake, decimal exchangeRate, decimal companyShare, string currencyCode)
+        public decimal GetMinStake(decimal minStake, decimal exchangeRate, decimal companyShare, string currencyCode, decimal odds, bool isPlacement)
         {
             List<decimal> minimumStake = new List<decimal>();
             var highCurrencies = new List<string> { "KRW", "VND", "KHR", "IDR", "MMK" };
@@ -440,7 +441,15 @@ namespace Platform.Betting.API.Repository
             //4 Reference Bet / Company Share
             minimumStake.Add(Math.Truncate(exchangeRate / companyShare) + 1);
 
-            //5 Possible to add computation for Odds
+
+            //5. Get Max Liability by Tier
+
+
+            //6 Possible to add computation for Odds
+            if (isPlacement)
+            { 
+                //Compute based on Max Liability and Odds
+            }
 
             //Get Max decimal value
             return minimumStake.Max();

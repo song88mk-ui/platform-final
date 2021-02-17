@@ -67,7 +67,6 @@ namespace Platform.Betting.API.Repository
                     var client = _platformContext.Client.FirstOrDefault(c => c.ClientIdRef == request.ClientIdRef);
                     if(client != null)
                     {
-                        client.ClientCode= request.ClientCode;
                         client.ClientName = request.ClientName;
                         //client.LimitId = request.LimitId;
                         //client.Endpoint = request.Endpoint;

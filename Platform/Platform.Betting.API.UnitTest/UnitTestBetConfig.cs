@@ -22,6 +22,17 @@ namespace Platform.Betting.API.UnitTest
             services.AddSingleton(Configuration);
             services.AddTransient<IBettingRepository, BettingRepository>();
             services.AddTransient<IMessageBroker, MessageBroker>();
+
+            services.AddHttpClient();
+            services.AddHttpClient("BackOffice", a =>
+            {
+                a.BaseAddress = new Uri(Configuration["API:BackOffice"]);
+            });
+            services.AddHttpClient("Song88Betting", a =>
+            {
+                a.BaseAddress = new Uri(Configuration["API:Song88Betting"]);
+            });
+
             var serviceProvider = services.BuildServiceProvider();
             repo = serviceProvider.GetService<IBettingRepository>();
         }

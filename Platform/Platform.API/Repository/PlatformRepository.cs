@@ -422,7 +422,7 @@ namespace Platform.API.Repository
                     var currentClient = await _platformContext.Client.AsNoTracking().FirstOrDefaultAsync(c => c.ClientIdRef == request.ClientIdRef);
                     decimal currentCompanyShare = request.CurrentCompanyShare;
                     decimal nextCompanyShare = request.CurrentCompanyShare;
-                    DateTime effectiveDate = DateTime.UtcNow;
+                    DateTime effectiveDate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
                     if (currentClient != null)
                     {
                         currentCompanyShare = currentClient.EffectiveDate < DateTime.UtcNow  && currentClient.CurrentCompanyShare != request.CurrentCompanyShare ?
@@ -440,8 +440,8 @@ namespace Platform.API.Repository
                         ClientName = request.ClientName,
                         ClientIdRef = request.ClientIdRef,
                         IsActive = request.IsActive,
-                        Endpoint = string.IsNullOrEmpty(request.Endpoint) ? string.Empty : request.Endpoint,
-                        LimitId = string.IsNullOrEmpty(request.LimitId) ? "0" : request.LimitId,
+                        Endpoint = string.IsNullOrEmpty(request.Endpoint) ? currentClient.Endpoint : request.Endpoint,
+                        LimitId = string.IsNullOrEmpty(request.LimitId) ? currentClient.LimitId : request.LimitId,
                         CurrentCompanyShare = currentCompanyShare,
                         EffectiveDate = effectiveDate,
                         NextCompanyShare = nextCompanyShare

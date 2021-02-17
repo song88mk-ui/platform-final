@@ -419,7 +419,7 @@ namespace Platform.API.Repository
             {
                 try
                 {
-                    var currentClient = await _platformContext.Client.FindAsync(request.ClientId);
+                    var currentClient = await _platformContext.Client.AsNoTracking().FirstOrDefaultAsync(c => c.ClientIdRef == request.ClientIdRef);
                     decimal currentCompanyShare = request.CurrentCompanyShare;
                     decimal nextCompanyShare = request.CurrentCompanyShare;
                     DateTime effectiveDate = request.EffectiveDate;
@@ -435,12 +435,13 @@ namespace Platform.API.Repository
 
                     var clientEntity = _platformContext.Client.Update(new Client
                     {
+                        ClientId = currentClient != null ? currentClient.ClientId : Guid.Empty,
                         ClientCode = request.ClientCode,
                         ClientName = request.ClientName,
                         ClientIdRef = request.ClientIdRef,
                         IsActive = request.IsActive,
-                        Endpoint = request.Endpoint,
-                        LimitId = request.LimitId,
+                        Endpoint = string.IsNullOrEmpty(request.Endpoint) ? string.Empty : request.Endpoint,
+                        LimitId = string.IsNullOrEmpty(request.LimitId) ? "0" : request.LimitId,
                         CurrentCompanyShare = currentCompanyShare,
                         EffectiveDate = effectiveDate,
                         NextCompanyShare = nextCompanyShare
@@ -452,7 +453,7 @@ namespace Platform.API.Repository
 
                     scope.Complete();
                 }
-                catch
+                catch(Exception ex)
                 {
                     scope.Dispose();
                     return new BaseResponseDTO<ClientResponseDTO>

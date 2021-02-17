@@ -29,9 +29,9 @@ namespace Platform.Betting.API.Repository
             {
                 try
                 {
-                    var clientID = payload.ClientId;
-                    
+                    var clientID = payload.ClientId;                    
                     var dateCreated = DateTime.UtcNow.Date;
+
                     foreach (var config in payload.BetConfigPayload)
                     {
                         var defaultJSON = JsonSerializer.Serialize(new DefaultSportConfig
@@ -68,7 +68,8 @@ namespace Platform.Betting.API.Repository
 
                         var betconfig = _bettingContext.BetConfig.FirstOrDefault(b => b.ClientId == clientID && b.CurrencyCode == config.CurrencyCode);
                         if (betconfig != null)
-                        {                      
+                        {
+                            betconfig.DefaultConfig = defaultJSON;
                             betconfig.OverrideConfig = overrideJSON;
                             betconfig.ParlayConfig = parleyJSON;
                             betconfig.CreatedDate = dateCreated;

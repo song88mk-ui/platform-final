@@ -30,50 +30,46 @@ namespace Platform.Betting.API.Repository
                 try
                 {
                     var clientID = payload.ClientId;
-                    var defaultJSON = JsonSerializer.Serialize(
-                        new DefaultSportConfig
-                        {
-                            MinStake = 1,
-                            MaxStake = 100
-                        });
+                    
                     var dateCreated = DateTime.UtcNow.Date;
                     foreach (var config in payload.BetConfigPayload)
                     {
-                        var overridesJSON = JsonSerializer.Serialize(new List<OverrideSportConfig>
+                        var defaultJSON = JsonSerializer.Serialize(new DefaultSportConfig
+                        {
+                            MinStake = config.OtherSports.MinBet,
+                            MaxStake = config.OtherSports.MaxBet,
+                            StakeLimitFixture = config.OtherSports.MaxFixtureBet
+                        });
+                        var overrideJSON = JsonSerializer.Serialize(new List<OverrideSportConfig>
                         {
                             new OverrideSportConfig
                             {
                                 SportId = 1,
                                 SportName = "Soccer",
                                 MinStake = config.Football.MinBet,
-                                MaxStake = config.Football.MaxBet
+                                MaxStake = config.Football.MaxBet,
+                                StakeLimitFixture = config.Football.MaxFixtureBet
                             },
                             new OverrideSportConfig
                             {
                                 SportId = 2,
                                 SportName = "Cricket",
                                 MinStake = config.Cricket.MinBet,
-                                MaxStake = config.Cricket.MaxBet
-                            },
-                            new OverrideSportConfig
-                            {
-                                SportId = 3,
-                                SportName = "Other Sports",
-                                MinStake = config.OtherSports.MinBet,
-                                MaxStake = config.OtherSports.MaxBet
-                            },
+                                MaxStake = config.Cricket.MaxBet,
+                                StakeLimitFixture = config.Cricket.MaxFixtureBet
+                            }
                         });
-
                         var parleyJSON = JsonSerializer.Serialize(new ParlayConfig
                         {
                             MinStake = config.Parlay.MinBet,
-                            MaxStake = config.Parlay.MaxBet
+                            MaxStake = config.Parlay.MaxBet,
+                            MaxPayout = config.Parlay.MaxPayout,
                         });
 
                         var betconfig = _bettingContext.BetConfig.FirstOrDefault(b => b.ClientId == clientID && b.CurrencyCode == config.CurrencyCode);
                         if (betconfig != null)
                         {                      
-                            betconfig.OverrideConfig = overridesJSON;
+                            betconfig.OverrideConfig = overrideJSON;
                             betconfig.ParlayConfig = parleyJSON;
                             betconfig.CreatedDate = dateCreated;
 
@@ -85,10 +81,8 @@ namespace Platform.Betting.API.Repository
                             {
                                 ClientId = clientID,
                                 CurrencyCode = config.CurrencyCode,
-                                StakeLimitFixture = 0, //TODO: remove???
-                                MaxParlayPayout = config.Parlay.MaxPayout,
                                 DefaultConfig = defaultJSON,
-                                OverrideConfig = overridesJSON,
+                                OverrideConfig = overrideJSON,
                                 ParlayConfig = parleyJSON,
                                 CreatedDate = dateCreated
                             });

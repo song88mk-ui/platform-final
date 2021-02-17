@@ -19,17 +19,20 @@ namespace Platform.Shared.Models
         public string SportName { get; set; }
         public decimal MinStake { get; set; }
         public decimal MaxStake { get; set; }
+        public decimal StakeLimitFixture { get; set; }
     }
 
     public class DefaultSportConfig
     {
         public decimal MinStake { get; set; }
         public decimal MaxStake { get; set; }
+        public decimal StakeLimitFixture { get; set; }
     }
 
     public class ParlayConfig
     {
         public decimal MinStake { get; set; }
         public decimal MaxStake { get; set; }
+        public decimal MaxPayout { get; set; }
     }
 }

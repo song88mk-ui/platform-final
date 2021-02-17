@@ -16,13 +16,11 @@ namespace Platform.Shared.Data.Platform
             modelBuilder.Entity<Operator>().HasKey(k => new { k.UserId });
             modelBuilder.Entity<ForexEUR>().HasKey(k => new { k.CurrencyCode });
             modelBuilder.Entity<OperatorLog>().HasKey(k => new { k.Id });
-            modelBuilder.Entity<BetConfig>().HasKey(k => new { k.ClientId, k.CurrencyCode });
         }
 
         public DbSet<Client> Client { get; set; }
         public DbSet<Operator> Operator { get; set; }
         public DbSet<ForexEUR> ForexEUR { get; set; }
         public DbSet<OperatorLog> OperatorLog { get; set; }
-        public DbSet<BetConfig> BetConfig { get; set; }
     }
 }

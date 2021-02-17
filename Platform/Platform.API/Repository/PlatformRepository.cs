@@ -334,10 +334,7 @@ namespace Platform.API.Repository
                 };
             }
 
-
-            var rate = await GetExchangeRate(request.CurrencyCode);
-
-            if (rate.CurrencyCode == null)
+            if (string.IsNullOrEmpty(request.CurrencyCode) || string.IsNullOrWhiteSpace(request.CurrencyCode))
             {
                 return new BaseResponseDTO<BetConfigResponseDTO>
                 {
@@ -346,15 +343,73 @@ namespace Platform.API.Repository
                 };
             }
 
-            var payload = new BetConfigRequestDTO()
+            var currencyCode = (CurrencyCode)Enum.Parse(typeof(CurrencyCode), request.CurrencyCode);
+
+            if (!IsValidCurrencyCode(currencyCode))
             {
-                CompanyShare = clientResponse.Result.CompanyShare,
-                ClientId = clientId,
-                CurrencyCode = request.CurrencyCode,
-                ExchangeRate = rate.ExchangeRate
+                return new BaseResponseDTO<BetConfigResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_CurrencyCode,
+                    Message = StatusCode.Unsupported_CurrencyCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            return new BaseResponseDTO<BetConfigResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BetConfigResponseDTO
+                {
+                    DefaultSportConfig = new DefaultSportConfig
+                    {
+                        MinStake = 10,
+                        MaxStake = 100
+                    },
+                    OverrideSportConfig = new List<OverrideSportConfig>
+                    {
+                        new OverrideSportConfig
+                        {
+                            SportId = 1,
+                            SportName = "Soccer",
+                            MinStake = 1,
+                            MaxStake = 100
+                        },
+                        new OverrideSportConfig
+                        {
+                            SportId = 21,
+                            SportName = "Cricket",
+                            MinStake = 1,
+                            MaxStake = 100
+                        }
+                    },
+                    Parlayconfig = new ParlayConfig
+                    {
+                        MinStake = 10,
+                        MaxStake = 50
+                    }
+                }
             };
 
-            return await _bettingRepository.BetConfig(payload);
+            //var rate = await GetExchangeRate(request.CurrencyCode);
+
+            //if (rate.CurrencyCode == null)
+            //{
+            //    return new BaseResponseDTO<BetConfigResponseDTO>
+            //    {
+            //        StatusCode = StatusCode.Unsupported_CurrencyCode,
+            //        Message = StatusCode.Unsupported_CurrencyCode.ToString().Replace('_', ' ')
+            //    };
+            //}
+
+            //var payload = new BetConfigRequestDTO()
+            //{
+            //    CompanyShare = clientResponse.Result.CompanyShare,
+            //    ClientId = clientId,
+            //    CurrencyCode = request.CurrencyCode,
+            //    ExchangeRate = rate.ExchangeRate
+            //};
+
+            //return await _bettingRepository.BetConfig(payload);
         }
         public async Task<BaseResponseDTO<ClientResponseDTO>> AddOrUpdateClient(ClientRequestDTO request)
         {

@@ -90,6 +90,24 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpPost("v1/sportsbook/livestream")]
+        public async Task<IActionResult> GetLivestream([FromBody] LivestreamRequest request)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+
+            var result = await _platformRepository.GetLivestream(apiKey, clientId, operatorToken, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/sportsbook/recovery")]
         public async Task<IActionResult> RecoverOdds()
         {

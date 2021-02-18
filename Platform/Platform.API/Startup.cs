@@ -51,6 +51,7 @@ namespace Platform.API
             services.AddScoped<IPlatformRepository, PlatformRepository>();
             services.AddHttpClient<IBettingRepository, BettingRepository>();
             services.AddHttpClient<IOperatorRepository, OperatorRepository>();
+            services.AddHttpClient<ISportsbookRepository, SportsbookRepository>();
 
             services.AddSwaggerGen(c =>
             {

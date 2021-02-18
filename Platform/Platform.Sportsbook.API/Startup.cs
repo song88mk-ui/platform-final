@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using Platform.Sportsbook.API.Repository;
 
 namespace Platform.Sportsbook.API
 {
@@ -45,6 +46,8 @@ namespace Platform.Sportsbook.API
             });
 
             services.AddControllers();
+
+            services.AddHttpClient<ISportsbookRepository, SportsbookRepository>();
 
             services.AddSwaggerGen(c =>
             {

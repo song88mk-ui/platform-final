@@ -27,6 +27,9 @@
         Segment_Betting_Restricted = 120,
         League_Betting_Restricted = 121,
 
+        IPAddress_Must_Be_IPv4 = 122,
+        Fixture_Has_No_Livestream = 123,
+
         Error = 1000,
         Operator_Error = 1001
     }

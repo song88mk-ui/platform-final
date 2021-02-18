@@ -8,6 +8,7 @@ using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using System.Transactions;
 
@@ -17,11 +18,13 @@ namespace Platform.API.Repository
     {
         private readonly IOperatorRepository _operatorRepository;
         private readonly IBettingRepository _bettingRepository;
+        private readonly ISportsbookRepository _sportsbookRepository;
         private readonly PlatformContext _platformContext;
-        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, PlatformContext platformContext)
+        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, PlatformContext platformContext)
         {
             _operatorRepository = operatorRepository;
             _bettingRepository = bettingRepository;
+            _sportsbookRepository = sportsbookRepository;
             _platformContext = platformContext;
         }
         public async Task<BaseResponseDTO<WalletBalanceResponseDTO>> GetWalletBalance(string clientId, string operatorToken)
@@ -410,6 +413,49 @@ namespace Platform.API.Repository
             //};
 
             //return await _bettingRepository.BetConfig(payload);
+        }
+
+        public async Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(string apiKey, string clientId, string operatorToken, LivestreamRequest request)
+        {
+            var isIPAddress = IPAddress.TryParse(request.IPAddress, out IPAddress ipAddress);
+
+            if (!isIPAddress)
+            {
+                return new BaseResponseDTO<LivestreamResponseDTO>
+                {
+                    StatusCode = StatusCode.IPAddress_Must_Be_IPv4,
+                    Message = StatusCode.IPAddress_Must_Be_IPv4.ToString().Replace('_', ' '),
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<LivestreamResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+
+            if (authenticationResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<LivestreamResponseDTO>
+                {
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
+                };
+            }
+
+            return await _sportsbookRepository.GetLivestream(new LivestreamRequestDTO 
+            { 
+                ProviderFixtureId = request.ProviderFixtureId, 
+                IPAddress = request.IPAddress, 
+                IsMobile = request.IsMobile 
+            });
         }
         public async Task<BaseResponseDTO<ClientResponseDTO>> AddOrUpdateClient(ClientRequestDTO request)
         {

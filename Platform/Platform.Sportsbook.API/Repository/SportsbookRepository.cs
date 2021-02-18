@@ -169,7 +169,7 @@ namespace Platform.Sportsbook.API.Repository
                 SegmentName = s.SegNa,
                 LeagueId = s.LeId,
                 LeagueName = s.LeNa
-            }).Take(15).ToList();
+            }).Take(10).ToList();
 
             return new BaseResponseDTO<TopFixturesResponseDTO>
             {

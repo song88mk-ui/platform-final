@@ -309,7 +309,7 @@ namespace Platform.Betting.API.Repository
                     WinLoss = bet.WinLoss,
                     BetStatus = (BetStatus)bet.BetStatusId,
                     TransactionDate = bet.BetDate,
-                    Commission = bet.CompanyShare,
+                    Commission = 0,
                     CurrencyCode = (CurrencyCode)Enum.Parse(typeof(CurrencyCode), bet.CurrencyCode),
                     OddsType = (OddsType)bet.OddsTypeId,
                     Selections = selections.Select(s => new BetSelectionHistoryDTO

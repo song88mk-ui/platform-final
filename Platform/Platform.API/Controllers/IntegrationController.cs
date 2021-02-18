@@ -115,14 +115,14 @@ namespace Platform.API.Controllers
         }
 
         [HttpPost("v1/sportsbook/topleagues")]
-        public async Task<IActionResult> GetTopLeagues([FromBody] int sportId)
+        public async Task<IActionResult> GetTopLeagues([FromBody] TempTopLeaguesRequest request2)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
             var request = new TopLeaguesRequest
             {
-                SportId = sportId,
+                SportId = request2.SportId,
                 LanguageCode = "EN"
             };
 

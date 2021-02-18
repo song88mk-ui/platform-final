@@ -5,4 +5,8 @@
         public int SportId { get; set; }
         public string LanguageCode { get; set; }
     }
+    public class TempTopLeaguesRequest
+    {
+        public int SportId { get; set; }
+    }
 }

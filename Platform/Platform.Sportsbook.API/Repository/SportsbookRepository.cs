@@ -204,13 +204,22 @@ namespace Platform.Sportsbook.API.Repository
                 SportName = s.SpNa
             }).ToList();
 
+            var finalResult = new List<OrderedSport>();
+
+            foreach (var item in result)
+            {
+                if (finalResult.Any(c => c.SportId == item.SportId)) continue;
+
+                finalResult.Add(item);
+            }
+
             return new BaseResponseDTO<OrderedSportsResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
                 Result = new OrderedSportsResponseDTO
                 {
-                    Sports = result
+                    Sports = finalResult
                 }
             };
         }
@@ -239,13 +248,22 @@ namespace Platform.Sportsbook.API.Repository
                 LeagueName = s.LeNa
             }).ToList();
 
+            var finalResult = new List<OrderedLeague>();
+
+            foreach (var item in result)
+            {
+                if (finalResult.Any(c => c.SportId == item.SportId && c.SegmentId == item.SegmentId && c.LeagueId == item.LeagueId)) continue;
+
+                finalResult.Add(item);
+            }
+
             return new BaseResponseDTO<OrderedLeaguesResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
                 Result = new OrderedLeaguesResponseDTO
                 {
-                    Leagues = result
+                    Leagues = finalResult
                 }
             };
         }

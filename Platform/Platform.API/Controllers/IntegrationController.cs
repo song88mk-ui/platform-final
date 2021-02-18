@@ -20,48 +20,13 @@ namespace Platform.API.Controllers
             _platformRepository = platformRepository;
         }
 
-        [HttpPost("v1/wallet/balance")]
+        [HttpGet("v1/wallet/balance")]
         public async Task<IActionResult> GetWalletBalance()
         {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
             var result = await _platformRepository.GetWalletBalance(clientId, operatorToken);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
-        [HttpPost("v1/bet/config")]
-        public async Task<IActionResult> GetBetConfig(BetConfigRequest request)
-        {
-            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-
-            var result = await _platformRepository.GetBetConfig(apiKey, clientId, request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
-        [HttpPost("v1/bet/history")]
-        public async Task<IActionResult> GetBetHistory([FromBody] BetHistoryRequest request)
-        {
-            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
-
-            var result = await _platformRepository.GetBetHistory(apiKey, clientId, operatorToken, request);
 
             switch (result.StatusCode)
             {
@@ -90,14 +55,31 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpPost("v1/sportsbook/livestream")]
-        public async Task<IActionResult> GetLivestream([FromBody] LivestreamRequest request)
+        [HttpGet("v1/bet/config")]
+        public async Task<IActionResult> GetBetConfig([FromQuery] BetConfigRequest request)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetBetConfig(apiKey, clientId, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/bet/history")]
+        public async Task<IActionResult> GetBetHistory([FromQuery] BetHistoryRequest request)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
-            var result = await _platformRepository.GetLivestream(apiKey, clientId, operatorToken, request);
+            var result = await _platformRepository.GetBetHistory(apiKey, clientId, operatorToken, request);
 
             switch (result.StatusCode)
             {
@@ -114,8 +96,26 @@ namespace Platform.API.Controllers
             return Ok();
         }
 
-        [HttpPost("v1/sportsbook/topleagues")]
-        public async Task<IActionResult> GetTopLeagues([FromBody] TempTopLeaguesRequest request2)
+        [HttpGet("v1/sportsbook/livestream")]
+        public async Task<IActionResult> GetLivestream([FromQuery] LivestreamRequest request)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+
+            var result = await _platformRepository.GetLivestream(apiKey, clientId, operatorToken, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/sportsbook/topleagues")]
+        public async Task<IActionResult> GetTopLeagues([FromQuery] TempTopLeaguesRequest request2)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
@@ -137,7 +137,7 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpPost("v1/sportsbook/topfixtures")]
+        [HttpGet("v1/sportsbook/topfixtures")]
         public async Task<IActionResult> GetTopFixtures()
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
@@ -159,7 +159,7 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpPost("v1/sportsbook/orderedsports")]
+        [HttpGet("v1/sportsbook/orderedsports")]
         public async Task<IActionResult> GetOrderedSports()
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
@@ -181,7 +181,7 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpPost("v1/sportsbook/orderedleagues")]
+        [HttpGet("v1/sportsbook/orderedleagues")]
         public async Task<IActionResult> GetOrderedLeagues()
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();

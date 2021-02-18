@@ -85,5 +85,21 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+
+
+
+        [HttpPost("v1/sportsbook/activefixtures")]
+        public async Task<IActionResult> GetActiveFixtures([FromBody] ActiveFixturesRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetActiveFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

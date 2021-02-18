@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Platform.Client.API.ActionFilters;
+using Platform.Client.API.Repository;
 
 namespace Platform.Client.API
 {
@@ -48,6 +49,8 @@ namespace Platform.Client.API
             services.AddScoped<APIKeyFilter>();
 
             services.AddControllers();
+
+            services.AddHttpClient<ISportsbookRepository, SportsbookRepository>();
 
             services.AddSwaggerGen(c =>
             {

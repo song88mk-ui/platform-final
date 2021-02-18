@@ -265,7 +265,7 @@ namespace Platform.Sportsbook.API.Repository
 
 
 
-        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures()
+        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(ActiveFixturesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();

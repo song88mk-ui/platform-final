@@ -29,5 +29,33 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/sportsbook/topleagues")]
+        public async Task<IActionResult> GetTopLeagues([FromBody] TopLeaguesRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetTopLeagues(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/sportsbook/topfixtures")]
+        public async Task<IActionResult> GetTopFixtures([FromBody] TopFixturesRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetTopFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

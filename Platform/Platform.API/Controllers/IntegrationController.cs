@@ -113,5 +113,39 @@ namespace Platform.API.Controllers
         {
             return Ok();
         }
+
+        [HttpPost("v1/sportsbook/topleagues")]
+        public async Task<IActionResult> GetTopLeagues([FromBody] TopLeaguesRequest request)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetTopLeagues(apiKey, clientId, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/sportsbook/topfixtures")]
+        public async Task<IActionResult> GetTopFixtures([FromBody] TopFixturesRequest request)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetTopFixtures(apiKey, clientId, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

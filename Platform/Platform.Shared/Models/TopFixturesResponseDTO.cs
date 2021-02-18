@@ -19,7 +19,7 @@ namespace Platform.Shared.Models
         public string SegmentName { get; set; }
         public int LeagueId { get; set; }
         public string LeagueName { get; set; }
-        public long FixtureId { get; set; }
+        public string FixtureId { get; set; }
         public string FixtureName { get; set; }
     }
 }

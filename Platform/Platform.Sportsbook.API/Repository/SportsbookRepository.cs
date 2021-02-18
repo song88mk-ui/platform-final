@@ -171,7 +171,7 @@ namespace Platform.Sportsbook.API.Repository
                 SegmentName = s.SegNa,
                 LeagueId = s.LeId,
                 LeagueName = s.LeNa,
-                FixtureId = s.FiId,
+                FixtureId = s.FiId.ToString(),
                 FixtureName = s.FiNa
             }).Take(10).ToList();
 

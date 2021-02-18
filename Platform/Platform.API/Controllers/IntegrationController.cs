@@ -115,10 +115,16 @@ namespace Platform.API.Controllers
         }
 
         [HttpPost("v1/sportsbook/topleagues")]
-        public async Task<IActionResult> GetTopLeagues([FromBody] TopLeaguesRequest request)
+        public async Task<IActionResult> GetTopLeagues([FromBody] int sportId)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var request = new TopLeaguesRequest
+            {
+                SportId = sportId,
+                LanguageCode = "EN"
+            };
 
             var result = await _platformRepository.GetTopLeagues(apiKey, clientId, request);
 
@@ -132,10 +138,15 @@ namespace Platform.API.Controllers
         }
 
         [HttpPost("v1/sportsbook/topfixtures")]
-        public async Task<IActionResult> GetTopFixtures([FromBody] TopFixturesRequest request)
+        public async Task<IActionResult> GetTopFixtures()
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var request = new TopFixturesRequest
+            {
+                LanguageCode = "EN"
+            };
 
             var result = await _platformRepository.GetTopFixtures(apiKey, clientId, request);
 

@@ -78,7 +78,6 @@ namespace Platform.Sportsbook.API.Repository
                         }
                     };
                 }
-
                 else
                 {
                     var result = JsonSerializer.Deserialize<LivestreamResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
@@ -86,11 +85,7 @@ namespace Platform.Sportsbook.API.Repository
                     return new BaseResponseDTO<LivestreamResponseDTO>
                     {
                         StatusCode = StatusCode.Error,
-                        Message = $"{result.Error.Code} : {result.Error.Message}",
-                        Result = new LivestreamResponseDTO
-                        {
-                            LiveStreamURL = result.Url
-                        }
+                        Message = $"{result.Error.Code} : {result.Error.Message}"
                     };
                 }
             }

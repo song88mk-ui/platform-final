@@ -56,14 +56,56 @@ namespace Platform.Betting.API.UnitTest
         public void TestBetPlacement()
         {
             BetRequestDTO request = new BetRequestDTO();
-            //request.CurrencyCode = "KRW";
-            //request.CompanyShare = 0.1m;
-            //request.ExchangeRate =1336.04M;
-            //request.ClientId = "5093617a-9367-eb11-89fb-00224815b68b";
+            request.APIKey = "";
+            request.OperatorToken = "CB2D9909-9467-EB11-89FB-00224815B68B";
+            request.ClientId = "5093617A-9367-EB11-89FB-00224815B68B";
+            request.ClientCode = "10C";
+            request.LimitId = "0";
+            request.Endpoint = "https://preprod-operatorapi.song88.com";
+            request.CompanyShare = 0.1m;
+            request.ExchangeRate = 1.0m;
+
+            request.UserId = "CA2D9909-9467-EB11-89FB-00224815B68B";
+            request.Stake = 2.0m;
+            request.Odds = 1.05m;
+            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
+            request.LanguageCode = Shared.Enums.LanguageCode.EN;
+            request.Channel = Shared.Enums.Channel.Internet;
+            request.IPAddress = "";
+            request.Selections = new System.Collections.Generic.List<BetSelectionRequestDTO>();
+            BetSelectionRequestDTO newSelection = new BetSelectionRequestDTO();
+
+            newSelection.SportId = 1;
+            newSelection.SportName = "";
+            newSelection.SegmentId =1;
+            newSelection.SegmentName = "";
+            newSelection.LeagueId = 19;
+            newSelection.LeagueName = "";
+            newSelection.FixtureId = 805792717043966917;
+            newSelection.FixtureName = "";
+            newSelection.FixtureType =  Shared.Enums.FixtureType.Match;
+            newSelection.MarketTemplateId = "";
+            newSelection.MarketId = 806266155319689250;
+            newSelection.MarketName = "";
+            newSelection.Line = "2.50";
+            newSelection.SelectionTemplateId = "";
+            newSelection.SelectionId = 806266155319689252;
+            newSelection.SelectionName = "";
+            newSelection.Odds = 1.71000000000000000000m;
+            //newSelection.FixtureStatus = "";
+            //newSelection.FixtureStartDate = "";
+            newSelection.BetHomeScore = "";
+            newSelection.BetAwayScore = "";
+            newSelection.FixtureSpecifier = "sr:match:25547338";
+            newSelection.SelectionSpecifier = "uof:3/sr:sport:1/18/13?total=2.5";
+            newSelection.CorrelationId = "";
+            
+
+            request.Selections.Add(newSelection);
 
             var data = repo.PlaceBet(request);
         }
-              
+
 
     }
 }

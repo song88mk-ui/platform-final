@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using JsonProperty = System.Text.Json.Serialization.JsonPropertyNameAttribute;
 
 namespace Platform.Shared.Models
 {
@@ -15,24 +16,35 @@ namespace Platform.Shared.Models
 
     public class OverrideSportConfig
     {
+        [JsonProperty("sportId")] 
         public int SportId { get; set; }
+        [JsonProperty("sportName")]
         public string SportName { get; set; }
+        [JsonProperty("minStake")]
         public decimal MinStake { get; set; }
+        [JsonProperty("maxStake")]
         public decimal MaxStake { get; set; }
-        public decimal StakeLimitFixture { get; set; }
+        [JsonProperty("maxPerGame")]
+        public decimal MaxPerGame { get; set; }
     }
 
     public class DefaultSportConfig
     {
+        [JsonProperty("minStake")] 
         public decimal MinStake { get; set; }
+        [JsonProperty("maxStake")]
         public decimal MaxStake { get; set; }
-        public decimal StakeLimitFixture { get; set; }
+        [JsonProperty("maxPerGame")]
+        public decimal MaxPerGame { get; set; }
     }
 
     public class ParlayConfig
     {
+        [JsonProperty("minStake")] 
         public decimal MinStake { get; set; }
+        [JsonProperty("maxStake")]
         public decimal MaxStake { get; set; }
+        [JsonProperty("maxPayout")]
         public decimal MaxPayout { get; set; }
     }
 }

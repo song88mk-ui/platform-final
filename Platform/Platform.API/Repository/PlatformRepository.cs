@@ -469,7 +469,7 @@ namespace Platform.API.Repository
                     decimal currentCompanyShare = request.CurrentCompanyShare;
                     decimal nextCompanyShare = request.CurrentCompanyShare;
                     string endPoint = string.IsNullOrEmpty(request.Endpoint) ? string.Empty : request.Endpoint;
-                    string limitId = string.IsNullOrEmpty(request.LimitId) ? string.Empty : request.LimitId;
+                    string limitId = string.IsNullOrEmpty(request.LimitId) ? "0" : request.LimitId;
                     DateTime effectiveDate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
                     if (currentClient != null)
                     {

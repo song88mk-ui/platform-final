@@ -38,7 +38,7 @@ namespace Platform.Betting.API.Repository
                         {
                             MinStake = config.OtherSports.MinBet,
                             MaxStake = config.OtherSports.MaxBet,
-                            StakeLimitFixture = config.OtherSports.MaxFixtureBet
+                            MaxPerGame = config.OtherSports.MaxFixtureBet
                         });
                         var overrideJSON = JsonSerializer.Serialize(new List<OverrideSportConfig>
                         {
@@ -48,7 +48,7 @@ namespace Platform.Betting.API.Repository
                                 SportName = "Soccer",
                                 MinStake = config.Football.MinBet,
                                 MaxStake = config.Football.MaxBet,
-                                StakeLimitFixture = config.Football.MaxFixtureBet
+                                MaxPerGame = config.Football.MaxFixtureBet
                             },
                             new OverrideSportConfig
                             {
@@ -56,7 +56,7 @@ namespace Platform.Betting.API.Repository
                                 SportName = "Cricket",
                                 MinStake = config.Cricket.MinBet,
                                 MaxStake = config.Cricket.MaxBet,
-                                StakeLimitFixture = config.Cricket.MaxFixtureBet
+                                MaxPerGame = config.Cricket.MaxFixtureBet
                             }
                         });
                         var parleyJSON = JsonSerializer.Serialize(new ParlayConfig

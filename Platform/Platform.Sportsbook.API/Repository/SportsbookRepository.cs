@@ -103,7 +103,6 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
         }
-
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetTopLeagues(TopLeaguesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiTyId == 0 && c.FiStId < 2);
@@ -147,7 +146,6 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
-
         public async Task<BaseResponseDTO<TopFixturesResponseDTO>> GetTopFixtures(TopFixturesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiTyId == 0 && c.FiStId < 1);
@@ -182,6 +180,114 @@ namespace Platform.Sportsbook.API.Repository
                 Result = new TopFixturesResponseDTO
                 {
                     TopFixtures = result
+                }
+            };
+        }
+        public async Task<BaseResponseDTO<OrderedSportsResponseDTO>> GetOrderedSports(OrderedSportsRequestDTO request)
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<OrderedSportsResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new OrderedSportsResponseDTO()
+                };
+            }
+
+            var result = fixtures.OrderBy(o => o.SpId).Select(s => new OrderedSport
+            {
+                SportId = s.SpId,
+                SportName = s.SpNa
+            }).ToList();
+
+            return new BaseResponseDTO<OrderedSportsResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new OrderedSportsResponseDTO
+                {
+                    Sports = result
+                }
+            };
+        }
+        public async Task<BaseResponseDTO<OrderedLeaguesResponseDTO>> GetOrderedLeagues(OrderedLeaguesRequestDTO request)
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<OrderedLeaguesResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new OrderedLeaguesResponseDTO()
+                };
+            }
+
+            var result = fixtures.OrderBy(o => o.SpId).Select(s => new OrderedLeague
+            {
+                SportId = s.SpId,
+                SportName = s.SpNa,
+                SegmentId = s.SegId,
+                SegmentName = s.SegNa,
+                LeagueId = s.LeId,
+                LeagueName = s.LeNa
+            }).ToList();
+
+            return new BaseResponseDTO<OrderedLeaguesResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new OrderedLeaguesResponseDTO
+                {
+                    Leagues = result
+                }
+            };
+        }
+
+
+
+        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures()
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<ActiveFixturesResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new ActiveFixturesResponseDTO()
+                };
+            }
+
+            var result = fixtures.OrderBy(o => o.FiStDa).Select(s => new ActiveFixture
+            {
+                SportId = s.SpId,
+                SportName = s.SpNa,
+                SegmentId = s.SegId,
+                SegmentName = s.SegNa,
+                LeagueId = s.LeId,
+                LeagueName = s.LeNa,
+                FixtureType = s.FiTyNa,
+                FixtureId = s.FiId.ToString(),
+                FixtureName = s.FiNa,
+                FixtureStartDate = s.FiStDa
+            }).ToList();
+
+            return new BaseResponseDTO<ActiveFixturesResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new ActiveFixturesResponseDTO
+                {
+                    Fixtures = result
                 }
             };
         }

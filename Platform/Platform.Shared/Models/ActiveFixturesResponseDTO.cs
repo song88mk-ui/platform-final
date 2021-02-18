@@ -1,0 +1,28 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace Platform.Shared.Models
+{
+    public class ActiveFixturesResponseDTO
+    {
+        public ActiveFixturesResponseDTO()
+        {
+            Fixtures = new List<ActiveFixture>();
+        }
+        public List<ActiveFixture> Fixtures { get; set; }
+    }
+
+    public class ActiveFixture
+    {
+        public int SportId { get; set; }
+        public string SportName { get; set; }
+        public int SegmentId { get; set; }
+        public string SegmentName { get; set; }
+        public int LeagueId { get; set; }
+        public string LeagueName { get; set; }
+        public string FixtureType { get; set; }
+        public string FixtureId { get; set; }
+        public string FixtureName { get; set; }
+        public DateTime FixtureStartDate { get; set; }
+    }
+}

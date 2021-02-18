@@ -158,5 +158,49 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/sportsbook/orderedsports")]
+        public async Task<IActionResult> GetOrderedSports()
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var request = new OrderedSportsRequest
+            {
+                LanguageCode = "EN"
+            };
+
+            var result = await _platformRepository.GetOrderedSports(apiKey, clientId, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/sportsbook/orderedleagues")]
+        public async Task<IActionResult> GetOrderedLeagues()
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var request = new OrderedLeaguesRequest
+            {
+                LanguageCode = "EN"
+            };
+
+            var result = await _platformRepository.GetOrderedLeagues(apiKey, clientId, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

@@ -57,5 +57,33 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/sportsbook/orderedsports")]
+        public async Task<IActionResult> GetOrderedSports([FromBody] OrderedSportsRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetOrderedSports(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/sportsbook/orderedleagues")]
+        public async Task<IActionResult> GetOrderedLeagues([FromBody] OrderedLeaguesRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetOrderedLeagues(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

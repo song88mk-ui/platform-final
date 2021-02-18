@@ -42,7 +42,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            if (string.IsNullOrEmpty(fixture.LiStId) || string.IsNullOrWhiteSpace(fixture.LiStId))
+            if (string.IsNullOrEmpty(fixture.LiId) || string.IsNullOrWhiteSpace(fixture.LiId))
             {
                 return new BaseResponseDTO<LivestreamResponseDTO>
                 {
@@ -61,7 +61,7 @@ namespace Platform.Sportsbook.API.Repository
 
             try
             {
-                var response = await _httpClient.GetAsync($"/v1/streams/{fixture.LiStId}/{streamType}");
+                var response = await _httpClient.GetAsync($"/v1/streams/{fixture.LiId}/{streamType}");
 
                 if (response.IsSuccessStatusCode)
                 {

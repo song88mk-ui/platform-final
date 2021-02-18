@@ -54,7 +54,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
 
         public int ToTi { get; set; }
 
-        public string LiStId { get; set; }
+        public string LiId { get; set; }
 
         public string StUr { get; set; }
 

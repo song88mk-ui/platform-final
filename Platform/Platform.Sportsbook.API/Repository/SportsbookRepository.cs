@@ -165,10 +165,14 @@ namespace Platform.Sportsbook.API.Repository
 
             var result = fixtures.OrderBy(o => o.FiStDa).Select(s => new TopFixture
             {
+                SportId = s.SpId,
+                SportName = s.SpNa,
                 SegmentId = s.SegId,
                 SegmentName = s.SegNa,
                 LeagueId = s.LeId,
-                LeagueName = s.LeNa
+                LeagueName = s.LeNa,
+                FixtureId = s.FiId,
+                FixtureName = s.FiNa
             }).Take(10).ToList();
 
             return new BaseResponseDTO<TopFixturesResponseDTO>

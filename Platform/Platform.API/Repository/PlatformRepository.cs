@@ -346,7 +346,18 @@ namespace Platform.API.Repository
                 };
             }
 
-            var currencyCode = (CurrencyCode)Enum.Parse(typeof(CurrencyCode), request.CurrencyCode);
+            var isValidCurrencyCode = Enum.IsDefined(typeof(CurrencyCode), request.CurrencyCode) ? true : false;
+
+            if (!isValidCurrencyCode)
+            {
+                return new BaseResponseDTO<BetConfigResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_CurrencyCode,
+                    Message = StatusCode.Unsupported_CurrencyCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var currencyCode = (CurrencyCode)Enum.Parse(typeof(CurrencyCode), request.CurrencyCode.ToUpper());
 
             if (!IsValidCurrencyCode(currencyCode))
             {
@@ -459,7 +470,18 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetTopLeagues(string apiKey, string clientId, TopLeaguesRequest request)
         {
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode);
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<TopLeaguesResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -490,7 +512,18 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<TopFixturesResponseDTO>> GetTopFixtures(string apiKey, string clientId, TopFixturesRequest request)
         {
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode);
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<TopFixturesResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
 
             if (!IsValidLanguageCode(languageCode))
             {

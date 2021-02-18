@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Platform.Shared.Enums;
 
 namespace Platform.API.Models
 {
     public class BetConfigRequest
     {
-        public string CurrencyCode { get; set; }
+        public CurrencyCode CurrencyCode { get; set; }
     }
 }

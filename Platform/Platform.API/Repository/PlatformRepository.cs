@@ -337,29 +337,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            if (string.IsNullOrEmpty(request.CurrencyCode) || string.IsNullOrWhiteSpace(request.CurrencyCode))
-            {
-                return new BaseResponseDTO<BetConfigResponseDTO>
-                {
-                    StatusCode = StatusCode.Unsupported_CurrencyCode,
-                    Message = StatusCode.Unsupported_CurrencyCode.ToString().Replace('_', ' ')
-                };
-            }
-
-            var isValidCurrencyCode = Enum.IsDefined(typeof(CurrencyCode), request.CurrencyCode) ? true : false;
-
-            if (!isValidCurrencyCode)
-            {
-                return new BaseResponseDTO<BetConfigResponseDTO>
-                {
-                    StatusCode = StatusCode.Unsupported_CurrencyCode,
-                    Message = StatusCode.Unsupported_CurrencyCode.ToString().Replace('_', ' ')
-                };
-            }
-
-            var currencyCode = (CurrencyCode)Enum.Parse(typeof(CurrencyCode), request.CurrencyCode.ToUpper());
-
-            if (!IsValidCurrencyCode(currencyCode))
+            if (!IsValidCurrencyCode(request.CurrencyCode))
             {
                 return new BaseResponseDTO<BetConfigResponseDTO>
                 {

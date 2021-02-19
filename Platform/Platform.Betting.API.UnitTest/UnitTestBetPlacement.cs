@@ -63,10 +63,10 @@ namespace Platform.Betting.API.UnitTest
             request.LimitId = "0";
             request.Endpoint = "https://preprod-operatorapi.song88.com";
             request.CompanyShare = 0.1m;
-            request.ExchangeRate = 1.0m;
+            request.ExchangeRate = 1336.98252800m;
 
             request.UserId = "CA2D9909-9467-EB11-89FB-00224815B68B";
-            request.Stake = 2.0m;
+            request.Stake = 1340m;
             request.Odds = 1.05m;
             request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             request.LanguageCode = Shared.Enums.LanguageCode.EN;

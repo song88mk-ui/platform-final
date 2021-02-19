@@ -63,7 +63,7 @@ namespace Platform.Betting.API.UnitTest
             request.ExchangeRate = 1336.98252800m;
 
             request.UserId = "CA2D9909-9467-EB11-89FB-00224815B68B";
-            request.Stake = 1340m;
+            request.Stake = 13370M;
             request.Odds = 1.05m;
             request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             request.LanguageCode = Shared.Enums.LanguageCode.EN;

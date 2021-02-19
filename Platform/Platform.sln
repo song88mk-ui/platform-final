@@ -26,7 +26,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Betting.API.UnitTe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Client.API", "Platform.Client.API\Platform.Client.API.csproj", "{7B22A870-0C2A-4EA6-8039-1B8837FD9F82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Sportsbook.API", "Platform.Sportsbook.API\Platform.Sportsbook.API.csproj", "{A258130A-DC9A-47D1-B23D-C9F395ED73EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Sportsbook.API", "Platform.Sportsbook.API\Platform.Sportsbook.API.csproj", "{A258130A-DC9A-47D1-B23D-C9F395ED73EC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

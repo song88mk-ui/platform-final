@@ -11,8 +11,10 @@ namespace Platform.Shared.Data.Sportsbook
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<ClientSportOrder>().HasKey(k => new { k.ClientId, k.SportId });
+            modelBuilder.Entity<TierLeagueOrder>().HasKey(k => new { k.SegmentId, k.LeagueId });
         }
 
         public DbSet<ClientSportOrder> ClientSportOrder { get; set; }
+        public DbSet<TierLeagueOrder> TierLeagueOrder { get; set; }
     }
 }

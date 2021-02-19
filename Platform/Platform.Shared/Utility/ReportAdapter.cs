@@ -7,7 +7,7 @@ namespace Platform.Shared.Utility
 {
     public class ReportAdapter
     {
-        public static BetModelRequestDTO ConvertBetAndSelection(Bet bet, List<BetSelection> selections)
+        public static BetModelRequestDTO ConvertToBetModel(Bet bet, List<BetSelection> selections)
         {
             var sel = selections.FirstOrDefault();
             return new BetModelRequestDTO
@@ -53,7 +53,7 @@ namespace Platform.Shared.Utility
                 MarketId = sel.MarketId,
                 MarketName = sel.MarketName,
                 Line = 0, // TODO: get value
-                SelectionTemplateId = 0,// TODO: get value
+                SelectionTemplateId = 0, // TODO: get value
                 SelectionId = sel.SelectionId,
                 SelectionName = sel.SelectionName,
                 TransactionDate = bet.BetDate,
@@ -66,7 +66,7 @@ namespace Platform.Shared.Utility
                     BetId = bet.BetId,
                     BetSelectionId = b.BetSelectionId,
                     ClientId = 0,// TODO: get value
-                    UserId = "",// TODO: get value
+                    UserId = bet.UserId,
                     SportId = b.SportId,
                     SportName = b.SportName,
                     SegmentId = b.SegmentId,
@@ -100,14 +100,14 @@ namespace Platform.Shared.Utility
                 })
             };
         }
-        public static ReportBetSelectionDTO ConvertSelection(Bet bet, BetSelection selection)
+        public static ReportBetSelectionDTO ConvertToSelection(Bet bet, BetSelection selection)
         {
             return new ReportBetSelectionDTO()
             {
                 BetId = bet.BetId,
                 BetSelectionId = selection.BetSelectionId,
                 ClientId = 0,// TODO: get value
-                UserId = "",// TODO: get value
+                UserId = bet.UserId,
                 SportId = selection.SportId,
                 SportName = selection.SportName,
                 SegmentId = selection.SegmentId,

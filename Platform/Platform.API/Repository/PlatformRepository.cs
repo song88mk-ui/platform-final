@@ -347,64 +347,64 @@ namespace Platform.API.Repository
             }
 
             #region Mock
-            return new BaseResponseDTO<BetConfigFEResponseDTO>
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = new BetConfigFEResponseDTO
-                {
-                    DefaultSportConfig = new DefaultSportConfigFE
-                    {
-                        MinStake = 10,
-                        MaxStake = 100
-                    },
-                    OverrideSportConfig = new List<OverrideSportConfigFE>
-                    {
-                        new OverrideSportConfigFE
-                        {
-                            SportId = 1,
-                            SportName = "Soccer",
-                            MinStake = 1,
-                            MaxStake = 100
-                        },
-                        new OverrideSportConfigFE
-                        {
-                            SportId = 21,
-                            SportName = "Cricket",
-                            MinStake = 1,
-                            MaxStake = 100
-                        }
-                    },
-                    Parlayconfig = new ParlayConfigFE
-                    {
-                        MinStake = 10,
-                        MaxStake = 50
-                    }
-                }
-            };
+            //return new BaseResponseDTO<BetConfigFEResponseDTO>
+            //{
+            //    StatusCode = StatusCode.Success,
+            //    Message = StatusCode.Success.ToString(),
+            //    Result = new BetConfigFEResponseDTO
+            //    {
+            //        DefaultSportConfig = new DefaultSportConfigFE
+            //        {
+            //            MinStake = 10,
+            //            MaxStake = 100
+            //        },
+            //        OverrideSportConfig = new List<OverrideSportConfigFE>
+            //        {
+            //            new OverrideSportConfigFE
+            //            {
+            //                SportId = 1,
+            //                SportName = "Soccer",
+            //                MinStake = 1,
+            //                MaxStake = 100
+            //            },
+            //            new OverrideSportConfigFE
+            //            {
+            //                SportId = 21,
+            //                SportName = "Cricket",
+            //                MinStake = 1,
+            //                MaxStake = 100
+            //            }
+            //        },
+            //        Parlayconfig = new ParlayConfigFE
+            //        {
+            //            MinStake = 10,
+            //            MaxStake = 50
+            //        }
+            //    }
+            //};
             #endregion
 
 
-            //var rate = await GetExchangeRate(request.CurrencyCode.ToString());
+            var rate = await GetExchangeRate(request.CurrencyCode.ToString());
 
-            //if (rate.CurrencyCode == null)
-            //{
-            //    return new BaseResponseDTO<BetConfigFEResponseDTO>
-            //    {
-            //        StatusCode = StatusCode.Unsupported_CurrencyCode,
-            //        Message = StatusCode.Unsupported_CurrencyCode.ToString().Replace('_', ' ')
-            //    };
-            //}
+            if (rate.CurrencyCode == null)
+            {
+                return new BaseResponseDTO<BetConfigFEResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_CurrencyCode,
+                    Message = StatusCode.Unsupported_CurrencyCode.ToString().Replace('_', ' ')
+                };
+            }
 
-            //var payload = new BetConfigRequestDTO()
-            //{
-            //    CompanyShare = clientResponse.Result.CompanyShare,
-            //    ClientId = clientId,
-            //    CurrencyCode = request.CurrencyCode.ToString(),
-            //    ExchangeRate = rate.ExchangeRate
-            //};
+            var payload = new BetConfigRequestDTO()
+            {
+                CompanyShare = clientResponse.Result.CompanyShare,
+                ClientId = clientResponse.Result.ClientId.ToString(),
+                CurrencyCode = request.CurrencyCode.ToString(),
+                ExchangeRate = rate.ExchangeRate
+            };
 
-            //return await _bettingRepository.BetConfig(payload);
+            return await _bettingRepository.BetConfig(payload);
         }
 
         public async Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(string apiKey, string clientId, string operatorToken, LivestreamRequest request)

@@ -17,7 +17,7 @@ namespace Platform.Shared.Models
         public string SportName { get; set; }
     }
 
-    public class TempOrderSport : OrderedSport
+    public class TempOrderedSport : OrderedSport
     {
         public int SortOrder { get; set; }
     }

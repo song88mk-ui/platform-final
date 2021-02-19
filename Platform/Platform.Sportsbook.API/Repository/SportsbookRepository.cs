@@ -186,7 +186,7 @@ namespace Platform.Sportsbook.API.Repository
             foreach (var item in result)
             {
                 if (finalResult.Any(c => c.FixtureId == item.FixtureId)) continue;
-                if (finalResult.Count == 15) break;
+                if (finalResult.Count == 10) break;
 
                 finalResult.Add(item);
             }
@@ -333,6 +333,126 @@ namespace Platform.Sportsbook.API.Repository
                 Result = new ActiveFixturesResponseDTO
                 {
                     Fixtures = result
+                }
+            };
+        }
+        public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetSportsLookup()
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 12);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<SportsLookupResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new SportsLookupResponseDTO()
+                };
+            }
+
+            var result = fixtures.Select(s => new SportLookup 
+            {
+                SportId = s.SpId,
+                SportName = s.SpNa
+            }).OrderBy(o => o.SportId).ToList();
+
+            var finalResult = new List<SportLookup>();
+
+            foreach (var item in result)
+            {
+                if (finalResult.Any(c => c.SportId == item.SportId)) continue;
+
+                finalResult.Add(item);
+            }
+
+            return new BaseResponseDTO<SportsLookupResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new SportsLookupResponseDTO
+                {
+                    Sports = finalResult
+                }
+            };
+        }
+        public async Task<BaseResponseDTO<SegmentsLookupResponseDTO>> GetSegmentsLookup()
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 12);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<SegmentsLookupResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new SegmentsLookupResponseDTO()
+                };
+            }
+
+            var result = fixtures.Select(s => new SegmentLookup
+            {
+                SegmentId = s.SegId,
+                SegmentName = s.SegNa
+            }).OrderBy(o => o.SegmentId).ToList();
+
+            var finalResult = new List<SegmentLookup>();
+
+            foreach (var item in result)
+            {
+                if (finalResult.Any(c => c.SegmentId == item.SegmentId)) continue;
+
+                finalResult.Add(item);
+            }
+
+            return new BaseResponseDTO<SegmentsLookupResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new SegmentsLookupResponseDTO
+                {
+                    Segments = finalResult
+                }
+            };
+        }
+        public async Task<BaseResponseDTO<LeaguesLookupResponseDTO>> GetLeaguesLookup()
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<LeaguesLookupResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new LeaguesLookupResponseDTO()
+                };
+            }
+
+            var result = fixtures.Select(s => new LeagueLookup
+            {
+                LeagueId = s.LeId,
+                LeagueName = s.LeNa
+            }).OrderBy(o => o.LeagueId).ToList();
+
+            var finalResult = new List<LeagueLookup>();
+
+            foreach (var item in result)
+            {
+                if (finalResult.Any(c => c.LeagueId == item.LeagueId)) continue;
+
+                finalResult.Add(item);
+            }
+
+            return new BaseResponseDTO<LeaguesLookupResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new LeaguesLookupResponseDTO
+                {
+                    Leagues = finalResult
                 }
             };
         }

@@ -315,11 +315,227 @@ namespace Platform.Settlement.Service.Repository
 
                                 context.SaveChanges();
                             }
+                            else //IsSettled == true
+                            {
+                                //Accepted Status
+                                var states = new int[] { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost, (int)BetStatus.Void };
+                                if (!states.Contains((int)message.SelectionId)) continue;
+
+                                filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;
+                                filteredSelection.BetSelectionStatusName = message.SelectionStatus.ToString();
+                                filteredSelection.SettlementHomeScore = message.SettlementHomeScore;
+                                filteredSelection.SettlementAwayScore = message.SettlementAwayScore;
+                                filteredSelection.IsResettled = true;
+
+                                var betSelectionEntity = context.BetSelection.Update(filteredSelection).Entity;
+
+
+
+                                context.BetSelectionAudit.Add(new BetSelectionAudit
+                                {
+                                    BetId = betSelectionEntity.BetId,
+                                    BetSelectionId = betSelectionEntity.BetSelectionId,
+                                    UserId = betSelectionEntity.UserId,
+                                    SportId = betSelectionEntity.SportId,
+                                    SportName = betSelectionEntity.SportName,
+                                    SegmentId = betSelectionEntity.SegmentId,
+                                    SegmentName = betSelectionEntity.SegmentName,
+                                    LeagueId = betSelectionEntity.LeagueId,
+                                    LeagueName = betSelectionEntity.LeagueName,
+                                    FixtureId = betSelectionEntity.FixtureId,
+                                    FixtureName = betSelectionEntity.FixtureName,
+                                    FixtureTypeId = betSelectionEntity.FixtureTypeId,
+                                    FixtureTypeName = betSelectionEntity.FixtureTypeName,
+                                    MarketTemplateId = betSelectionEntity.MarketTemplateId,
+                                    MarketId = betSelectionEntity.MarketId,
+                                    MarketName = betSelectionEntity.MarketName,
+                                    SelectionTemplateId = betSelectionEntity.SelectionTemplateId,
+                                    SelectionId = betSelectionEntity.SelectionId,
+                                    SelectionName = betSelectionEntity.SelectionName,
+                                    FixtureStatusId = betSelectionEntity.FixtureStatusId,
+                                    FixtureStatusName = betSelectionEntity.FixtureStatusName,
+                                    Line = betSelectionEntity.Line,
+                                    Odds = betSelectionEntity.Odds,
+                                    BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
+                                    BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
+                                    IsSettled = betSelectionEntity.IsSettled,
+                                    IsResettled = betSelectionEntity.IsResettled,
+                                    FixtureSpecifier = betSelectionEntity.FixtureSpecifier,
+                                    SelectionSpecifier = betSelectionEntity.SelectionSpecifier,
+                                    FixtureStartDate = betSelectionEntity.FixtureStartDate,
+                                    BetHomeScore = betSelectionEntity.BetHomeScore,
+                                    BetAwayScore = betSelectionEntity.BetAwayScore,
+                                    SettlementHomeScore = message.SettlementHomeScore,
+                                    SettlementAwayScore = message.SettlementAwayScore,
+                                    CorrelationId = betSelection.CorrelationId
+                                });
+
+                            }
+
                             scope.Complete();
 
                             if (isPublish)
                             {
                                 messageBroker.Publish(payload, "OnBetSettlement", "r.bet.operator", string.IsNullOrEmpty(correlationId)? Guid.NewGuid().ToString().ToUpper() : correlationId);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+                    }
+                }
+            }
+        }
+
+        public void ProcesssBetResettlement(OnUOFBetResettlement message, IMessageBroker messageBroker, string correlationId)
+        {
+            //Accepted Status
+            var states = new int[] { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost, (int)BetStatus.Void };
+            
+            var betSelections = GetBetSelections(message.SelectionId);
+
+            foreach (var betSelection in betSelections)
+            {
+                var isPublish = false;
+                var payload = new OnBetResettlement();
+                var settledDate = DateTime.UtcNow;
+
+                using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+                {
+                    var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+
+                    using (var context = new BettingContext(optionsBuilder.Options))
+                    {
+                        try
+                        {
+                            var selections = context.BetSelection.Where(c => c.BetId == betSelection.BetId).ToList();
+
+                            if (selections.Count == 0) continue;
+
+                            var filteredSelection = selections.Where(c => c.SelectionId == message.SelectionId).FirstOrDefault();
+
+                            if (filteredSelection == null) continue;
+
+                            if (!states.Contains((int)filteredSelection.SelectionId)) continue;
+
+                            if (filteredSelection.IsSettled == true)
+                            {
+                                filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;
+                                filteredSelection.BetSelectionStatusName = message.SelectionStatus.ToString();
+                                filteredSelection.SettlementHomeScore = message.SettlementHomeScore;
+                                filteredSelection.SettlementAwayScore = message.SettlementAwayScore;
+                                filteredSelection.IsResettled = true;
+
+                                var betSelectionEntity = context.BetSelection.Update(filteredSelection).Entity;
+
+                                context.BetSelectionAudit.Add(new BetSelectionAudit
+                                {
+                                    BetId = betSelectionEntity.BetId,
+                                    BetSelectionId = betSelectionEntity.BetSelectionId,
+                                    UserId = betSelectionEntity.UserId,
+                                    SportId = betSelectionEntity.SportId,
+                                    SportName = betSelectionEntity.SportName,
+                                    SegmentId = betSelectionEntity.SegmentId,
+                                    SegmentName = betSelectionEntity.SegmentName,
+                                    LeagueId = betSelectionEntity.LeagueId,
+                                    LeagueName = betSelectionEntity.LeagueName,
+                                    FixtureId = betSelectionEntity.FixtureId,
+                                    FixtureName = betSelectionEntity.FixtureName,
+                                    FixtureTypeId = betSelectionEntity.FixtureTypeId,
+                                    FixtureTypeName = betSelectionEntity.FixtureTypeName,
+                                    MarketTemplateId = betSelectionEntity.MarketTemplateId,
+                                    MarketId = betSelectionEntity.MarketId,
+                                    MarketName = betSelectionEntity.MarketName,
+                                    SelectionTemplateId = betSelectionEntity.SelectionTemplateId,
+                                    SelectionId = betSelectionEntity.SelectionId,
+                                    SelectionName = betSelectionEntity.SelectionName,
+                                    FixtureStatusId = betSelectionEntity.FixtureStatusId,
+                                    FixtureStatusName = betSelectionEntity.FixtureStatusName,
+                                    Line = betSelectionEntity.Line,
+                                    Odds = betSelectionEntity.Odds,
+                                    BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
+                                    BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
+                                    IsSettled = betSelectionEntity.IsSettled,
+                                    IsResettled = betSelectionEntity.IsResettled,
+                                    FixtureSpecifier = betSelectionEntity.FixtureSpecifier,
+                                    SelectionSpecifier = betSelectionEntity.SelectionSpecifier,
+                                    FixtureStartDate = betSelectionEntity.FixtureStartDate,
+                                    BetHomeScore = betSelectionEntity.BetHomeScore,
+                                    BetAwayScore = betSelectionEntity.BetAwayScore,
+                                    SettlementHomeScore = message.SettlementHomeScore,
+                                    SettlementAwayScore = message.SettlementAwayScore,
+                                    CorrelationId = betSelection.CorrelationId
+                                });
+
+                                var totalSettled = selections.Where(c => c.SelectionId != message.SelectionId && c.IsSettled == true).Count();
+                                var totalSelections = selections.Where(c => c.SelectionId != message.SelectionId).Count();
+
+                                if (totalSettled == totalSelections)
+                                {
+                                    var bet = context.Bet.Find(betSelection.BetId);
+
+                                    if (bet != null)
+                                    {
+                                        var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), bet.TrueStake);
+
+                                        var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
+
+                                        bet.BetStatusId = (int)betStatus;
+                                        bet.BetStatusName = betStatus.ToString();
+                                        bet.WinLoss *= -1; //payout == 0 ? -bet.Stake : payout - bet.Stake;
+                                        bet.Payout *= -1; //payout;
+                                        bet.Stake *= -1;
+                                        bet.TrueStake *= -1;
+                                        bet.Reason = $"{betStatus.ToString()}";
+                                        var betEntity = context.Bet.Update(bet).Entity;
+
+                                        context.BetAudit.Add(new BetAudit
+                                        {
+                                            BetId = betEntity.BetId,
+                                            UserId = betEntity.UserId,
+                                            Stake = betEntity.Stake,
+                                            TrueStake = betEntity.TrueStake,
+                                            Odds = betEntity.Odds,
+                                            OddsTypeId = betEntity.OddsTypeId,
+                                            OddsTypeName = betEntity.OddsTypeName,
+                                            Payout = betEntity.Payout,
+                                            WinLoss = betEntity.WinLoss,
+                                            BetStatusId = betEntity.BetStatusId,
+                                            BetStatusName = betEntity.BetStatusName,
+                                            Reason = betEntity.Reason,
+                                            CurrencyCode = betEntity.CurrencyCode,
+                                            LanguageCode = betEntity.LanguageCode,
+                                            ExchangeRate = betEntity.ExchangeRate,
+                                            IPAddress = betEntity.IPAddress,
+                                            Channel = betEntity.Channel,
+                                            ClientId = betEntity.ClientId,
+                                            ClientCode = betEntity.ClientCode,
+                                            LimitId = betEntity.LimitId,
+                                            Endpoint = betEntity.Endpoint,
+                                            OperatorToken = betEntity.OperatorToken,
+                                            CompanyShare = betEntity.CompanyShare,
+                                            IsResettled = betEntity.IsResettled,
+                                            IsCashout = betEntity.IsCashout,
+                                            BetDate = betEntity.BetDate,
+                                            BetDateOffset = betEntity.BetDateOffset,
+                                            SettlementDate = betEntity.SettlementDate,
+                                            SettlementDateOffset = betEntity.SettlementDateOffset
+                                        });
+
+                                        isPublish = true;
+                                        payload.Bet = betEntity;
+                                        payload.BetSelections = selections;
+                                    }
+                                }
+
+                                context.SaveChanges();
+                            }
+                            scope.Complete();
+
+                            if (isPublish)
+                            {
+                                messageBroker.Publish(payload, "OnBetResettlement", "r.bet.operator", string.IsNullOrEmpty(correlationId) ? Guid.NewGuid().ToString().ToUpper() : correlationId);
                             }
                         }
                         catch (Exception ex)

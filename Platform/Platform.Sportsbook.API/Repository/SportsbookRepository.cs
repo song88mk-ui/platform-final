@@ -320,6 +320,9 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureType = s.FiTyNa,
                 FixtureId = s.FiId.ToString(),
                 FixtureName = s.FiNa,
+                Home = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").First().Trim() : string.Empty,
+                Away = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
+                FixtureStatus = s.FiStNa,
                 FixtureStartDate = s.FiStDa
             }).ToList();
 

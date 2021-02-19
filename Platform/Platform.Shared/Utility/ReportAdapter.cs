@@ -9,6 +9,7 @@ namespace Platform.Shared.Utility
     {
         public static BetModelRequestDTO ConvertBetAndSelection(Bet bet, List<BetSelection> selections)
         {
+            var sel = selections.FirstOrDefault();
             return new BetModelRequestDTO
             {
                 BetId = bet.BetId,
@@ -34,27 +35,27 @@ namespace Platform.Shared.Utility
                 ExchangeRate = bet.ExchangeRate,
                 IPAddress = bet.IPAddress,
                 Count = selections.Count,
-                SportId = selections.FirstOrDefault().SportId,
-                SportName = selections.FirstOrDefault().SportName,
-                SegmentId = selections.FirstOrDefault().SegmentId,
-                SegmentName = selections.FirstOrDefault().SegmentName,
-                LeagueId = selections.FirstOrDefault().LeagueId,
-                LeagueName = selections.FirstOrDefault().LeagueName,
-                FixtureId = selections.FirstOrDefault().FixtureId,
-                FixtureName = selections.FirstOrDefault().FixtureName,
-                FixtureStatusId = selections.FirstOrDefault().FixtureStatusId,
-                FixtureStatusName = selections.FirstOrDefault().FixtureStatusName,
-                FixtureStartDate = selections.FirstOrDefault().FixtureStartDate,
-                Score = "(Home) " + selections.FirstOrDefault().BetHomeScore + " " + "(Away) " + selections.FirstOrDefault().BetAwayScore,
+                SportId = sel.SportId,
+                SportName = sel.SportName,
+                SegmentId = sel.SegmentId,
+                SegmentName = sel.SegmentName,
+                LeagueId = sel.LeagueId,
+                LeagueName = sel.LeagueName,
+                FixtureId = sel.FixtureId,
+                FixtureName = sel.FixtureName,
+                FixtureStatusId = sel.FixtureStatusId,
+                FixtureStatusName = sel.FixtureStatusName,
+                FixtureStartDate = sel.FixtureStartDate,
+                Score = "(Home) " + sel.BetHomeScore + " " + "(Away) " + sel.BetAwayScore,
                 MarketTemplateGroupId = 0, // TODO: get value
                 MarketTemplateGroupName = "", // TODO: get value
                 MarketTemplateId = 0, // TODO: get value
-                MarketId = selections.FirstOrDefault().MarketId,
-                MarketName = selections.FirstOrDefault().MarketName,
+                MarketId = sel.MarketId,
+                MarketName = sel.MarketName,
                 Line = 0, // TODO: get value
                 SelectionTemplateId = 0,// TODO: get value
-                SelectionId = selections.FirstOrDefault().SelectionId,
-                SelectionName = selections.FirstOrDefault().SelectionName,
+                SelectionId = sel.SelectionId,
+                SelectionName = sel.SelectionName,
                 TransactionDate = bet.BetDate,
                 TransactionDateOffset = bet.BetDateOffset,
                 SettlementDate = bet.SettlementDate,
@@ -74,12 +75,12 @@ namespace Platform.Shared.Utility
                     LeagueName = b.LeagueName,
                     FixtureId = b.FixtureId,
                     FixtureName = b.FixtureName,
-                    MarketId = selections.FirstOrDefault().MarketId,
-                    MarketName = selections.FirstOrDefault().MarketName,
-                    SelectionId = selections.FirstOrDefault().SelectionId,
-                    SelectionName = selections.FirstOrDefault().SelectionName,
-                    FixtureStatusId = selections.FirstOrDefault().FixtureStatusId,
-                    FixtureStatusName = selections.FirstOrDefault().FixtureStatusName,
+                    MarketId = sel.MarketId,
+                    MarketName = sel.MarketName,
+                    SelectionId = sel.SelectionId,
+                    SelectionName = sel.SelectionName,
+                    FixtureStatusId = sel.FixtureStatusId,
+                    FixtureStatusName = sel.FixtureStatusName,
                     Line = 0, // TODO: get value
                     Odds = bet.Odds,
                     StatusId = bet.BetStatusId,

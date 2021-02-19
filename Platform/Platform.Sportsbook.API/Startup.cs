@@ -6,11 +6,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using Platform.Shared.Data.Sportsbook;
 using Platform.Sportsbook.API.Repository;
 
 namespace Platform.Sportsbook.API
@@ -53,6 +55,8 @@ namespace Platform.Sportsbook.API
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Sportsbook API", Version = "v1" });
             });
+
+            services.AddDbContext<SportsbookContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Sportsbook"]));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

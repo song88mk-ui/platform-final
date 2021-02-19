@@ -1,4 +1,6 @@
-﻿using MongoDB.Driver;
+﻿using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
+using Platform.Shared.Data.Sportsbook;
 using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
@@ -15,16 +17,18 @@ namespace Platform.Sportsbook.API.Repository
     public class SportsbookRepository : ISportsbookRepository
     {
         private readonly IMongoDatabase _db;
+        private readonly SportsbookContext _sportsbookContext;
         private IMongoCollection<Fixture> fixtureCollection;
         private readonly HttpClient _httpClient;
 
-        public SportsbookRepository(HttpClient httpClient)
+        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient)
         {
             var client = new MongoClient("mongodb+srv://lino:fcisong88@production.n6svy.mongodb.net/sportsbook?retryWrites=true&w=0");
             _db = client.GetDatabase("Sportsbook");
 
             fixtureCollection = _db.GetCollection<Fixture>("Fixture");
 
+            _sportsbookContext = sportsbookContext;
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri("https://av-api.betradar.com");
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer C9SdxJm170K61OY152");
@@ -193,19 +197,26 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var result = fixtures.OrderBy(o => o.SpId).Select(s => new OrderedSport
+            var sortOrder = await _sportsbookContext.ClientSportOrder.Where(c => c.ClientId == request.ClientId).ToListAsync();
+
+            var result = fixtures.Select(s => new OrderedSport
             {
                 SportId = s.SpId,
                 SportName = s.SpNa
             }).ToList();
 
-            var finalResult = new List<OrderedSport>();
+            var finalResult = new List<TempOrderSport>();
 
             foreach (var item in result)
             {
                 if (finalResult.Any(c => c.SportId == item.SportId)) continue;
 
-                finalResult.Add(item);
+                finalResult.Add(new TempOrderSport 
+                { 
+                    SportId = item.SportId, 
+                    SportName = item.SportName, 
+                    SortOrder = sortOrder.FirstOrDefault(c => c.SportId == item.SportId).SortOrder 
+                });
             }
 
             return new BaseResponseDTO<OrderedSportsResponseDTO>
@@ -214,7 +225,11 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new OrderedSportsResponseDTO
                 {
-                    Sports = finalResult
+                    Sports = finalResult.OrderBy(o => o.SortOrder).Select(s => new OrderedSport
+                    {
+                        SportId = s.SportId,
+                        SportName = s.SportName
+                    }).ToList()
                 }
             };
         }

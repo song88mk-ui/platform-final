@@ -9,7 +9,7 @@ namespace Platform.Shared.Utility
     {
         public static BetModelRequestDTO ConvertBetAndSelection(Bet bet, List<BetSelection> selections)
         {
-            BetModelRequestDTO payload = new BetModelRequestDTO
+            return new BetModelRequestDTO
             {
                 BetId = bet.BetId,
                 UserId = bet.UserId,
@@ -59,16 +59,85 @@ namespace Platform.Shared.Utility
                 TransactionDateOffset = bet.BetDateOffset,
                 SettlementDate = bet.SettlementDate,
                 SettlementDateOffset = bet.SettlementDateOffset,
-                MarketTypeId = 0 // TODO: get value
+                MarketTypeId = 0, // TODO: get value
+                BetSelections = selections.Select(b => new ReportBetSelectionDTO()
+                {
+                    BetId = bet.BetId,
+                    BetSelectionId = b.BetSelectionId,
+                    ClientId = 0,// TODO: get value
+                    UserId = "",// TODO: get value
+                    SportId = b.SportId,
+                    SportName = b.SportName,
+                    SegmentId = b.SegmentId,
+                    SegmentName = b.SegmentName,
+                    LeagueId = b.LeagueId,
+                    LeagueName = b.LeagueName,
+                    FixtureId = b.FixtureId,
+                    FixtureName = b.FixtureName,
+                    MarketId = selections.FirstOrDefault().MarketId,
+                    MarketName = selections.FirstOrDefault().MarketName,
+                    SelectionId = selections.FirstOrDefault().SelectionId,
+                    SelectionName = selections.FirstOrDefault().SelectionName,
+                    FixtureStatusId = selections.FirstOrDefault().FixtureStatusId,
+                    FixtureStatusName = selections.FirstOrDefault().FixtureStatusName,
+                    Line = 0, // TODO: get value
+                    Odds = bet.Odds,
+                    StatusId = bet.BetStatusId,
+                    StatusName = bet.BetStatusName,
+                    IsSettled = b.IsSettled,
+                    IsResettled = b.IsResettled,
+                    FixtureSpecifier = b.FixtureSpecifier,
+                    SelectionSpecifier = b.SelectionSpecifier,
+                    FixtureStartDate = b.FixtureStartDate,
+                    MarketTemplateGroupId = 0,// TODO: get value
+                    MarketTemplateId = 0,// TODO: get value
+                    SelectionTemplateId = 0,// TODO: get value
+                    Score = "(Home) " + b.BetHomeScore + " " + "(Away) " + b.BetAwayScore,
+                    BetScore = "", // TODO: get value
+                    FinalScore = "", // TODO: get value
+                    HalftimeScore = "", // TODO: get value
+                })
             };
-            return payload;
         }
-        public static ReportBetSelectionDTO ConvertSelection(BetSelection selection)
+        public static ReportBetSelectionDTO ConvertSelection(Bet bet, BetSelection selection)
         {
-            ReportBetSelectionDTO payload = new ReportBetSelectionDTO()
+            return new ReportBetSelectionDTO()
             {
+                BetId = bet.BetId,
+                BetSelectionId = selection.BetSelectionId,
+                ClientId = 0,// TODO: get value
+                UserId = "",// TODO: get value
+                SportId = selection.SportId,
+                SportName = selection.SportName,
+                SegmentId = selection.SegmentId,
+                SegmentName = selection.SegmentName,
+                LeagueId = selection.LeagueId,
+                LeagueName = selection.LeagueName,
+                FixtureId = selection.FixtureId,
+                FixtureName = selection.FixtureName,
+                MarketId = selection.MarketId,
+                MarketName = selection.MarketName,
+                SelectionId = selection.SelectionId,
+                SelectionName = selection.SelectionName,
+                FixtureStatusId = selection.FixtureStatusId,
+                FixtureStatusName = selection.FixtureStatusName,
+                Line = 0, // TODO: get value
+                Odds = bet.Odds,
+                StatusId = bet.BetStatusId,
+                StatusName = bet.BetStatusName,
+                IsSettled = selection.IsSettled,
+                IsResettled = selection.IsResettled,
+                FixtureSpecifier = selection.FixtureSpecifier,
+                SelectionSpecifier = selection.SelectionSpecifier,
+                FixtureStartDate = selection.FixtureStartDate,
+                MarketTemplateGroupId = 0,// TODO: get value
+                MarketTemplateId = 0,// TODO: get value
+                SelectionTemplateId = 0,// TODO: get value
+                Score = "(Home) " + selection.BetHomeScore + " " + "(Away) " + selection.BetAwayScore,
+                BetScore = "", // TODO: get value
+                FinalScore = "", // TODO: get value
+                HalftimeScore = "", // TODO: get value
             };
-            return payload;
         }
     }
 }

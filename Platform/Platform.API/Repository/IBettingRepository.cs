@@ -8,6 +8,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(BetRequestDTO request);
         Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(BetHistoryRequestDTO request);
 
-        Task<BaseResponseDTO<BetConfigResponseDTO>> BetConfig(BetConfigRequestDTO request);
+        Task<BaseResponseDTO<BetConfigFEResponseDTO>> BetConfig(BetConfigRequestDTO request);
     }
 }

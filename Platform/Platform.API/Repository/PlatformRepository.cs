@@ -575,20 +575,7 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<OrderedLeaguesResponseDTO>> GetOrderedLeagues(string apiKey, string clientId, OrderedLeaguesRequest request)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
-
-            if (!isValidLanguageCode)
-            {
-                return new BaseResponseDTO<OrderedLeaguesResponseDTO>
-                {
-                    StatusCode = StatusCode.Unsupported_LanguageCode,
-                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
-                };
-            }
-
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
-
-            if (!IsValidLanguageCode(languageCode))
+            if (!IsValidLanguageCode(request.LanguageCode))
             {
                 return new BaseResponseDTO<OrderedLeaguesResponseDTO>
                 {
@@ -611,7 +598,8 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.GetOrderedLeagues(new OrderedLeaguesRequestDTO
             {
                 ClientId = clientResponse.Result.ClientId,
-                LanguageCode = languageCode
+                LanguageCode = request.LanguageCode,
+                SportId = request.SportId
             });
         }
 

@@ -235,7 +235,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<OrderedLeaguesResponseDTO>> GetOrderedLeagues(OrderedLeaguesRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiStId < 2);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)

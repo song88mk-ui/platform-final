@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Platform.API.ActionFilters;
 using Platform.API.Models;
 using Platform.API.Repository;
+using Platform.Shared.Enums;
 using Platform.Shared.Models;
 
 namespace Platform.API.Controllers
@@ -182,14 +183,15 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/orderedleagues")]
-        public async Task<IActionResult> GetOrderedLeagues()
+        public async Task<IActionResult> GetOrderedLeagues([FromQuery] TempOrderedLeaguesRequest request2)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
             var request = new OrderedLeaguesRequest
             {
-                LanguageCode = "EN"
+                SportId = request2.SportId,
+                LanguageCode = LanguageCode.EN
             };
 
             var result = await _platformRepository.GetOrderedLeagues(apiKey, clientId, request);

@@ -7,5 +7,6 @@ namespace Platform.Shared.Models
     {
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
+        public int SportId { get; set; }
     }
 }

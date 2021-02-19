@@ -34,5 +34,19 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/generateuser")]
+        public async Task<IActionResult> AddUser([FromBody] GenerateUserRequestDTO request)
+        {
+            var result = await _platformRepository.AddUser(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

@@ -399,7 +399,7 @@ namespace Platform.API.Repository
             var payload = new BetConfigRequestDTO()
             {
                 CompanyShare = clientResponse.Result.CompanyShare,
-                ClientId = clientResponse.Result.ClientId.ToString(),
+                ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
                 CurrencyCode = request.CurrencyCode.ToString(),
                 ExchangeRate = rate.ExchangeRate
             };

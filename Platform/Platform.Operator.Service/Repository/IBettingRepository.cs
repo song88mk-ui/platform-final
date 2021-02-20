@@ -7,5 +7,6 @@ namespace Platform.Operator.Service.Repository
     {
         void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId);
         void ProcesssBetSettlement(OnBetSettlement message, IMessageBroker messageBroker, string correlationId);
+        void ProcesssBetCancellation(OnBetSettlement message, IMessageBroker messageBroker, string correlationId);
     }
 }

@@ -78,7 +78,7 @@ namespace Platform.Operator.Service.Repository
 
             return new Tuple<Bet, List<BetSelection>>(betData, betSelectionData);
         }
-        private void CancelBet(Guid betId, string reason)
+        private void CancelBet(Guid betId, string reason, string correlationId, IMessageBroker messageBroker)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
@@ -180,7 +180,11 @@ namespace Platform.Operator.Service.Repository
                         context.SaveChanges();
                         scope.Complete();
 
-                        //TODO: send message to self ProcesssBetCancellation
+                        ProcesssBetCancellation(new OnBetSettlement
+                        {
+                            Bet = betEntity,
+                            BetSelections = betSelections
+                        }, messageBroker, correlationId);
                     }
                     catch (Exception)
                     {
@@ -307,7 +311,7 @@ namespace Platform.Operator.Service.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        CancelBet(betData.BetId, JsonSerializer.Serialize(result));
+                        CancelBet(betData.BetId, JsonSerializer.Serialize(result), Guid.NewGuid().ToString().ToUpper(), messageBroker);
                     }
                     else
                     {
@@ -324,7 +328,7 @@ namespace Platform.Operator.Service.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        CancelBet(betData.BetId, JsonSerializer.Serialize(response.ReasonPhrase));
+                        CancelBet(betData.BetId, JsonSerializer.Serialize(response.ReasonPhrase), Guid.NewGuid().ToString().ToUpper(), messageBroker);
                     }
                 }
             }
@@ -343,7 +347,7 @@ namespace Platform.Operator.Service.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                CancelBet(betData.BetId, JsonSerializer.Serialize(ex.Message));
+                CancelBet(betData.BetId, JsonSerializer.Serialize(ex.Message), Guid.NewGuid().ToString().ToUpper(), messageBroker);
             }
         }
         public void ProcesssBetSettlement(OnBetSettlement message, IMessageBroker messageBroker, string correlationId)

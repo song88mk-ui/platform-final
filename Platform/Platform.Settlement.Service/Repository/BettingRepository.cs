@@ -137,11 +137,19 @@ namespace Platform.Settlement.Service.Repository
                         {
                             var selections = context.BetSelection.Where(c => c.BetId == betSelection.BetId).ToList();
 
-                            if (selections.Count == 0) continue;
+                            if (selections.Count == 0)
+                            {
+                                scope.Complete();
+                                continue;
+                            }
 
                             var filteredSelection = selections.Where(c => c.SelectionId == message.SelectionId).FirstOrDefault();
 
-                            if (filteredSelection == null) continue;
+                            if (filteredSelection == null)
+                            {
+                                scope.Complete();
+                                continue;
+                            }
 
                             if (filteredSelection.IsSettled == false)
                             {
@@ -315,6 +323,18 @@ namespace Platform.Settlement.Service.Repository
 
                                 context.SaveChanges();
                             }
+                            else
+                            {
+                                if (message.SelectionStatus == BetStatus.Cancelled)
+                                {
+                                    scope.Complete();
+                                    continue;
+                                }
+
+                                //TODO: resettlement here
+                                //void then apply correct status
+                            }
+
                             scope.Complete();
 
                             if (isPublish)

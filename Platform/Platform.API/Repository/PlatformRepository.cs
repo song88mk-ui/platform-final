@@ -156,7 +156,7 @@ namespace Platform.API.Repository
             {
                 APIKey = apiKey,
                 OperatorToken = operatorToken,
-                ClientId = clientId,
+                ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
                 ClientCode = clientResponse.Result.ClientCode,
                 LimitId = clientResponse.Result.LimitId,
                 Endpoint = clientResponse.Result.Endpoint,

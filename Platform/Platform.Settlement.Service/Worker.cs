@@ -72,12 +72,6 @@ namespace Platform.Settlement.Service
 
                         //_bettingRepository.ProcesssBetSettlement(test, _messageBroker, correlationId);
                         break;
-                    case "OnBetResettlement":
-                        var onBetResettlement = JsonSerializer.Deserialize<OnUOFBetResettlement>(payload);
-                        _bettingRepository.ProcesssBetResettlement(onBetResettlement, _messageBroker, correlationId);
-
-                        break;
-
                 }
             }
             catch (Exception)

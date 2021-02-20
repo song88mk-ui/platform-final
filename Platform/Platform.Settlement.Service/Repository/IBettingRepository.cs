@@ -6,6 +6,5 @@ namespace Platform.Settlement.Service.Repository
     public interface IBettingRepository
     {
         void ProcesssBetSettlement(OnUOFBetSettlement message, IMessageBroker messageBroker, string correlationId);
-        void ProcesssBetResettlement(OnUOFBetResettlement message, IMessageBroker messageBroker, string correlationId);
     }
 }

@@ -7,6 +7,8 @@ using Platform.Shared.Data.Betting;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
+using System.Text.Json;
+
 namespace Platform.Betting.API.UnitTest
 {
     [TestClass]
@@ -99,7 +101,7 @@ namespace Platform.Betting.API.UnitTest
             
 
             request.Selections.Add(newSelection);
-
+            var defaultJSON = JsonSerializer.Serialize(request);
             var data = repo.PlaceBet(request);
         }
 

@@ -638,6 +638,7 @@ namespace Platform.API.Repository
                         IsActive = request.IsActive,
                         Endpoint = endPoint,
                         LimitId = limitId,
+                        MonthlyFee = request.MonthlyFee,
                         CurrentCompanyShare = currentCompanyShare,
                         EffectiveDate = effectiveDate,
                         NextCompanyShare = nextCompanyShare

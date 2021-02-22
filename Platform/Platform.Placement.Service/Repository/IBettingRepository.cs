@@ -5,6 +5,6 @@ namespace Platform.Placement.Service.Repository
 {
     public interface IBettingRepository
     {
-        void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId);
+        void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, IReportAdapter reportAdapter, string correlationId);
     }
 }

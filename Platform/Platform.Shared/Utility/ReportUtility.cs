@@ -1,7 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Platform.Shared.Data.Platform;
-using Platform.Shared.Data.Platform.Entities;
-using Platform.Shared.Models;
+﻿using Platform.Shared.Models;
 using System;
 
 namespace Platform.Shared.Utility

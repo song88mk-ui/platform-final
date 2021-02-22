@@ -1,11 +1,15 @@
-﻿using System;
+﻿using Platform.Shared.Data.Betting.Entities;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Platform.Shared.Models
 {
-    public class BetModelRequestDTO : ReportBetDTO
+    public class BetModelRequestDTO
     {
-        public IEnumerable<ReportBetSelectionDTO> BetSelections { get; set; }
+        public BetModelRequestDTO()
+        {
+            BetSelections = new List<BetSelection>();
+        }
+        public Bet Bet;
+        public IEnumerable<BetSelection> BetSelections { get; set; }
     }
 }

@@ -212,7 +212,7 @@ namespace Platform.Settlement.Service.Repository
                                 else
                                     messageBroker.Publish(payload, "OnBetSettlement", "r.bet.operator",  correlationId);
 
-                                ReportUtility.ReportBet(messageBroker, ReportAdapter.ConvertToBetModel(payload.Bet, payload.BetSelections, _configuration["ConnectionStrings:Platform"]));
+                                ReportUtility.ReportBet(messageBroker, payload.Bet, payload.BetSelections);
                             }                            
                         }
                         catch (Exception ex)

@@ -18,16 +18,15 @@ namespace Platform.Betting.API.Repository
 {
     public class BettingRepository : IBettingRepository
     {
-        private readonly IHttpClientFactory _httpClient;
         private readonly BettingContext _bettingContext;
         private readonly IMessageBroker _messageBroker;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IHttpClientFactory _httpClient;
         private readonly IConfiguration _configuration;
-        public BettingRepository(IHttpClientFactory httpClient, BettingContext bettingContext, IConfiguration configuration, IMessageBroker messageBroker, IHttpClientFactory httpClientFactory)
+        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IMessageBroker messageBroker, IHttpClientFactory httpClientFactory)
         {
             _bettingContext = bettingContext;
             _httpClientFactory = httpClientFactory;
-            _httpClient = httpClient;
             _configuration = configuration;
             _messageBroker = messageBroker;
             _messageBroker.Connect();
@@ -35,7 +34,8 @@ namespace Platform.Betting.API.Repository
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(BetRequestDTO request)
         {
             #region BET VALIDATION
-            var betConfig = await _bettingContext.BetConfig.Where(x => x.ClientId == clientId && x.CurrencyCode == request.CurrencyCode.ToString()).OrderByDescending(x => x.CreatedDate).FirstOrDefaultAsync();
+            Guid clientid = new Guid(request.ClientId);
+            var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == clientid && x.CurrencyCode == request.CurrencyCode.ToString()).OrderByDescending(x => x.CreatedDate).FirstOrDefault();
             decimal minStake = 0;
             decimal maxStake = 0;
             decimal maxPerGame = 0;
@@ -112,8 +112,8 @@ namespace Platform.Betting.API.Repository
 
                 //TODO: Max Fixture Bet 
                 var remainingFixtureBet = 0m;
-                long fixtureId = request.Selections.FirstOrDefault().FixtureId;
-                var betFixtureLimits =_bettingContext.StakeLimitFixture.Where(a=>a.UserId== request.UserId && a.FixtureId== fixtureId).FirstOrDefault();
+
+                var betFixtureLimits = _bettingContext.StakeLimitFixture.Find(request.ClientId, request.Selections.FirstOrDefault().FixtureId);
                 if (betFixtureLimits != null)
                 {
                     remainingFixtureBet = betFixtureLimits.Remaining - request.Stake;
@@ -532,15 +532,6 @@ namespace Platform.Betting.API.Repository
             var clientId = new Guid(request.ClientId);
             var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == clientId && x.CurrencyCode == request.CurrencyCode).FirstOrDefault();
 
-            if (betConfig == null)
-            {
-                return new BaseResponseDTO<BetConfigFEResponseDTO>
-                {
-                    StatusCode = StatusCode.Unsupported_CurrencyCode,
-                    Message = StatusCode.Unsupported_CurrencyCode.ToString().Replace('_', ' ')
-                };
-            }
-
             DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
             ParlayConfig parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
             List<OverrideSportConfig> overrideSportConfig = JsonSerializer.Deserialize<List<OverrideSportConfig>>(betConfig.OverrideConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
@@ -549,7 +540,7 @@ namespace Platform.Betting.API.Repository
             result.DefaultSportConfig = new DefaultSportConfigFE()
             {
                 MinStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
-                MaxStake = GetMaxStakeSingleBet(defaultSportConfig.MaxStake,request.CompanyShare,false, null,null),
+                MaxStake = GetMaxStakeSingleBet(defaultSportConfig.MaxStake, request.CompanyShare, false, null, null),
             };
 
             result.OverrideSportConfig = new List<OverrideSportConfigFE>();
@@ -559,14 +550,14 @@ namespace Platform.Betting.API.Repository
                 newOverrideSport.SportId = overRide.SportId;
                 newOverrideSport.SportName = overRide.SportName;
                 newOverrideSport.MinStake = GetMinStake(overRide.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode);
-                newOverrideSport.MaxStake = GetMaxStakeSingleBet(overRide.MaxStake,request.CompanyShare,false,null,null);
+                newOverrideSport.MaxStake = GetMaxStakeSingleBet(overRide.MaxStake, request.CompanyShare, false, null, null);
                 result.OverrideSportConfig.Add(newOverrideSport);
             }
 
             result.Parlayconfig = new ParlayConfigFE()
             {
                 MinStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
-                MaxStake = GetMaxStakeParlay(parlayConfig.MaxStake, parlayConfig.MaxPayout, request.CompanyShare, 0, false,null,null),
+                MaxStake = GetMaxStakeParlay(parlayConfig.MaxStake, parlayConfig.MaxPayout, request.CompanyShare, 0, false, null, null),
             };
 
             return new BaseResponseDTO<BetConfigFEResponseDTO>
@@ -640,11 +631,11 @@ namespace Platform.Betting.API.Repository
                 //Get MTS maxstake
                 //(**) For Max Bet: If Company Share > 0%, do not consider MTS Max Stake value from Max Stake API in Max bet logic (i.e. whichever is lowest).  
                 //Difference from [MTS Max Stake/Company Share] is required.
-                var mtsMaxStake = GetMTSMaxStake(mtsConfigRequest).Result;
+                var mtsMaxStake = GetMTSMaxStake(mtsConfigRequest);
                 if (mtsMaxStake.Result > 0)
                     //MTS Max Stake from Max Stake API
                     maximumStake.Add(Math.Truncate(mtsMaxStake.Result / companyShare) + 1);
-                Console.WriteLine("#################### value of mtsMaxStake" + mtsMaxStake.Result);
+
             }
 
             //Get min decimal value
@@ -679,7 +670,7 @@ namespace Platform.Betting.API.Repository
                 //Get MTS maxstake
                 //(**) For Max Bet: If Company Share > 0%, do not consider MTS Max Stake value from Max Stake API in Max bet logic (i.e. whichever is lowest).  
                 //Difference from [MTS Max Stake/Company Share] is required.
-                var mtsMaxStake =GetMTSMaxStake(mtsConfigRequest).Result;
+                var mtsMaxStake = GetMTSMaxStake(mtsConfigRequest);
                 if (companyShare == 0)
                 {
                     if (mtsMaxStake.Result > 0)
@@ -692,14 +683,14 @@ namespace Platform.Betting.API.Repository
                         //MTS Max Stake from Max Stake API
                         maximumStake.Add(Math.Truncate(mtsMaxStake.Result / companyShare) + 1);
                 }
-                
+
             }
 
             //Get min decimal value
             return maximumStake.Min();
         }
 
-        public decimal GetMaxPerGame(decimal maxPerGame,BetRequestDTO request)
+        public decimal GetMaxPerGame(decimal maxPerGame, BetRequestDTO request)
         {
             List<decimal> maximumPerGame = new List<decimal>();
 
@@ -718,14 +709,13 @@ namespace Platform.Betting.API.Repository
             return maximumPerGame.Min();
         }
 
-        public async Task<BaseResponseDTO<decimal>> GetMTSMaxStake(MTSConfigRequestDTO request)
+        public BaseResponseDTO<decimal> GetMTSMaxStake(MTSConfigRequestDTO request)
         {
-            Console.WriteLine("###################### GetMTSMaxStake");
             try
             {
                 //TODO //Temporarily token can be save in database
                 var accessToken = string.Empty;
-                
+
                 var authUrl = _configuration["MTSMaxBetApi:AuthApi"];
                 var authClient = _httpClientFactory.CreateClient();
 
@@ -739,92 +729,77 @@ namespace Platform.Betting.API.Repository
                       new KeyValuePair<string, string>("client_auth_method", "client-secret")
                     });
 
-                Console.WriteLine("###################### GetMTSMaxStake start authClient.PostAsync");
+                var authResponse = authClient.PostAsync(authUrl, formContent).Result;
 
-                var authResponse = authClient.PostAsync(authUrl, formContent).GetAwaiter().GetResult();
-                if (authResponse.IsSuccessStatusCode)
+                var authData = JsonSerializer.Deserialize<MTSMaxStakeAuthResponseDTO>(authResponse.Content.ReadAsStringAsync().Result);
+
+                accessToken = authData.AccessToken;
+
+                var maxStakeUrl = _configuration["MTSMaxBetApi:MaxBetApi"];
+                var maxStakeClient = _httpClient.CreateClient();
+
+                maxStakeClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+
+                var betId = Guid.NewGuid().ToString();
+
+                var bets = new List<MTSBetDTO>();
+                bets.Add(new MTSBetDTO
                 {
-                    Console.WriteLine("###################### GetMTSMaxStake auth Success");
-                    var authData = JsonSerializer.Deserialize<MTSMaxStakeAuthResponseDTO>(authResponse.Content.ReadAsStringAsync().Result);
-                    Console.WriteLine("###################### TOEKEN " + authData.AccessToken);
-                    accessToken = authData.AccessToken;
+                    Id = betId,
+                    Stake = new MTSStakeDTO { Value = 0m }
+                });
 
-                    var maxStakeUrl = _configuration["MTSMaxBetApi:MaxBetApi"];
-                    var maxStakeClient = _httpClient.CreateClient();
-
-                    maxStakeClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
-
-                    var betId = Guid.NewGuid().ToString();
-
-                    var bets = new List<MTSBetDTO>();
-                    bets.Add(new MTSBetDTO
+                var betSelections = new List<MTSBetSelectionDTO>();
+                foreach (var req in request.BetSelections)
+                {
+                    betSelections.Add(new MTSBetSelectionDTO
                     {
-                        Id = betId,
-                        Stake = new MTSStakeDTO { Value = 0m }
+                        EventId = req.FixtureSpecifier,
+                        Id = req.SelectionSpecifier,
+                        Odds = req.Odds * 10000
                     });
-
-                    var betSelections = new List<MTSBetSelectionDTO>();
-                    foreach (var req in request.BetSelections)
-                    {
-                        betSelections.Add(new MTSBetSelectionDTO
-                        {
-                            EventId = req.FixtureSpecifier,
-                            Id = req.SelectionSpecifier,
-                            Odds = req.Odds * 10000
-                        });
-                    }
-
-                    if (request.Language.Contains("ZH"))
-                        request.Language = "ZH";
-
-                    var maxStakePayload = new MTSMaxStakeRequestDTO
-                    {
-                        //TimeStamp = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds * 1000),
-                        TimeStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds(),
-                        Bets = bets,
-                        TicketId = betId,
-                        Selections = betSelections,
-                        Sender = new SenderDTO
-                        {
-                            BookmakerId = int.Parse(_configuration["MTSMaxBetApi:BookmakerId"]),
-                            LimitId = request.LimitId,
-                            Currency = request.Currency.ToUpper(),
-                            EndCustomer = new EndCustomerDTO
-                            {
-                                LanguageId = request.Language,
-                                Id = request.UserId,
-                                DeviceId = request.DeviceId
-                            }
-                        }
-                    };
-
-                    var json = JsonSerializer.Serialize(maxStakePayload);
-                    var data = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-
-                    Console.WriteLine("###################### GetMTSMaxStake maxStakeClient.PostAsync START");
-                    var maxStakeResponse = maxStakeClient.PostAsync(maxStakeUrl, data).Result;
-                    if (maxStakeResponse.IsSuccessStatusCode)
-                    {
-                        Console.WriteLine("###################### GetMTSMaxStake maxStakeClient.PostAsync DONE");
-
-                        var maxStakeData = JsonSerializer.Deserialize<MTSMaxStakeResponseDTO>(maxStakeResponse.Content.ReadAsStringAsync().Result);
-
-                        Console.WriteLine("###################### GetMTSMaxStake maxStakeData " + maxStakeResponse.Content.ReadAsStringAsync().Result);
-                        return new BaseResponseDTO<decimal>
-                        {
-                            Result = maxStakeData.MaxStake / 10000
-                        };
-                    }
-                        
                 }
+
+                if (request.Language.Contains("ZH"))
+                    request.Language = "ZH";
+
+                var maxStakePayload = new MTSMaxStakeRequestDTO
+                {
+                    //TimeStamp = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds * 1000),
+                    TimeStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds(),
+                    Bets = bets,
+                    TicketId = betId,
+                    Selections = betSelections,
+                    Sender = new SenderDTO
+                    {
+                        BookmakerId = int.Parse(_configuration["MTSMaxBetApi:BookmakerId"]),
+                        LimitId = request.LimitId,
+                        Currency = request.Currency.ToUpper(),
+                        EndCustomer = new EndCustomerDTO
+                        {
+                            LanguageId = request.Language,
+                            Id = request.UserId,
+                            DeviceId = request.DeviceId
+                        }
+                    }
+                };
+
+                var json = JsonSerializer.Serialize(maxStakePayload);
+                var data = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+                var maxStakeResponse = maxStakeClient.PostAsync(maxStakeUrl, data).Result;
+
+                var maxStakeData = JsonSerializer.Deserialize<MTSMaxStakeResponseDTO>(maxStakeResponse.Content.ReadAsStringAsync().Result);
 
                 return new BaseResponseDTO<decimal>
                 {
-                    Result = 0m
+                    Result = maxStakeData.MaxStake / 10000
                 };
             }
-            catch
+            catch (Exception ex)
             {
+                // _logger.LogError(ex.Message);
+
                 return new BaseResponseDTO<decimal>
                 {
                     Result = 0m
@@ -834,37 +809,22 @@ namespace Platform.Betting.API.Repository
 
         public BaseResponseDTO<BetConfigLeagueResponse> GetTierMaxStake(BetConfigLeagueRequestDTO request)
         {
-            try
+            var client = _httpClientFactory.CreateClient("BackOffice");
+            client.DefaultRequestHeaders.Add("x-api-key", _configuration["Custom:BackOfficeAPIKey"].ToString());
+
+            var response = client.GetAsync($"tier/maxstake?SegmentId=" + request.SegmentId + "&LeagueId=" + request.LeagueId + "&SportId=" + request.SportId).Result;
+
+            if (response.IsSuccessStatusCode)
             {
-                var client = _httpClientFactory.CreateClient("BackOffice");
-                client.DefaultRequestHeaders.Add("x-api-key", _configuration["Custom:BackOfficeAPIKey"].ToString());
-
-                var response = client.GetAsync($"tier/maxstake?SegmentId=" + request.SegmentId + "&LeagueId=" + request.LeagueId + "&SportId=" + request.SportId).Result;
-
-                if (response.IsSuccessStatusCode)
-                {
-                    return JsonSerializer.Deserialize<BaseResponseDTO<BetConfigLeagueResponse>>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-                }
-
-                return new BaseResponseDTO<BetConfigLeagueResponse>()
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new BetConfigLeagueResponse()
-                };
+                return JsonSerializer.Deserialize<BaseResponseDTO<BetConfigLeagueResponse>>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
             }
-            catch (Exception ex)
+
+            return new BaseResponseDTO<BetConfigLeagueResponse>()
             {
-                Console.WriteLine("Error: " + ex.Message.ToString());
-                Console.WriteLine("Error: " + ex.InnerException.ToString());
-                return new BaseResponseDTO<BetConfigLeagueResponse>
-                {
-                    StatusCode = StatusCode.Error,
-                    Message = StatusCode.Error.ToString(),
-                    Result = new BetConfigLeagueResponse()
-                };
-            }
-           
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BetConfigLeagueResponse()
+            };
         }
     }
 }

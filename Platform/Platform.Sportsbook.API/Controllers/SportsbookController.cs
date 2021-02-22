@@ -143,5 +143,12 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        public void SettleAsWon(string selectionId)
+        {
+            //get data from SelectionMapping
+            //get data from MarketMapping
+            //
+        }
     }
 }

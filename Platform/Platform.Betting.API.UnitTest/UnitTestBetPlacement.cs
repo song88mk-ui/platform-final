@@ -34,6 +34,10 @@ namespace Platform.Betting.API.UnitTest
 
             var serviceProvider = services.BuildServiceProvider();
             repo = serviceProvider.GetService<IBettingRepository>();
+
+            messagebroker = serviceProvider.GetService<IMessageBroker>();
+
+            messagebroker.Connect();
         }
 
 
@@ -51,8 +55,7 @@ namespace Platform.Betting.API.UnitTest
             }
         }
 
-        [TestMethod]
-        public void TestBetPlacement()
+        public BetRequestDTO GetRequest()
         {
             BetRequestDTO request = new BetRequestDTO();
             request.APIKey = "";
@@ -65,7 +68,7 @@ namespace Platform.Betting.API.UnitTest
             request.ExchangeRate = 1336.98252800m;
 
             request.UserId = "CA2D9909-9467-EB11-89FB-00224815B68B";
-            request.Stake = 13370M;
+            request.Stake = 1000M;
             request.Odds = 1.05m;
             request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             request.LanguageCode = Shared.Enums.LanguageCode.EN;
@@ -76,13 +79,13 @@ namespace Platform.Betting.API.UnitTest
 
             newSelection.SportId = 1;
             newSelection.SportName = "";
-            newSelection.SegmentId =1;
+            newSelection.SegmentId = 1;
             newSelection.SegmentName = "";
             newSelection.LeagueId = 19;
             newSelection.LeagueName = "";
             newSelection.FixtureId = 805792717043966917;
             newSelection.FixtureName = "";
-            newSelection.FixtureType =  Shared.Enums.FixtureType.Match;
+            newSelection.FixtureType = Shared.Enums.FixtureType.Match;
             newSelection.MarketTemplateId = "";
             newSelection.MarketId = 806266155319689250;
             newSelection.MarketName = "";
@@ -98,13 +101,48 @@ namespace Platform.Betting.API.UnitTest
             newSelection.FixtureSpecifier = "sr:match:25547338";
             newSelection.SelectionSpecifier = "uof:3/sr:sport:1/18/13?total=2.5";
             newSelection.CorrelationId = "";
-            
+
 
             request.Selections.Add(newSelection);
-            var defaultJSON = JsonSerializer.Serialize(request);
-            var data = repo.PlaceBet(request);
+
+            return request;
         }
 
+        [TestMethod]
+        public void TestBetPlacement_KRW_Success()
+        {
+            BetRequestDTO request = GetRequest();
+
+            request.Stake = 1000M;
+            var defaultJSON = JsonSerializer.Serialize(request);
+            var data = repo.PlaceBet(request);
+
+            Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Success);
+        }
+
+
+        [TestMethod]
+        public void TestBetPlacement_KRW_Stake_Must_Be_Equal_Or_Higher_To_Min_Stake()
+        {
+            BetRequestDTO request = GetRequest();
+            request.Stake = 1001M;
+
+            var data = repo.PlaceBet(request);
+
+            Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake);
+        }
+
+        [TestMethod]
+        public void TestBetPlacement_KRW_Stake_Must_Be_Equal_Or_Higher_To_Max_Stake()
+        {
+            BetRequestDTO request = GetRequest();
+
+            request.Stake = 1000001M;
+            var defaultJSON = JsonSerializer.Serialize(request);
+            var data = repo.PlaceBet(request);
+
+            Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Max_Stake);
+        }
 
     }
 }

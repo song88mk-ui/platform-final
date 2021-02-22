@@ -33,9 +33,6 @@ namespace Platform.Betting.API.Repository
         }
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(BetRequestDTO request)
         {
-            //TODO: bet validation
-            var clientId = new Guid(request.ClientId);
-
             #region BET VALIDATION
             //var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == clientId && x.CurrencyCode == request.CurrencyCode.ToString()).OrderByDescending(x => x.CreatedDate).FirstOrDefault();
             //decimal minStake = 0;

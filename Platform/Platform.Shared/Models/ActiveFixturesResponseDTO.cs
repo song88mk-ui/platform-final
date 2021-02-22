@@ -23,6 +23,9 @@ namespace Platform.Shared.Models
         public string FixtureType { get; set; }
         public string FixtureId { get; set; }
         public string FixtureName { get; set; }
+        public string Home { get; set; }
+        public string Away { get; set; }
+        public string FixtureStatus { get; set; }
         public DateTime FixtureStartDate { get; set; }
     }
 }

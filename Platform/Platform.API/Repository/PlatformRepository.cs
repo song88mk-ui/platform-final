@@ -156,7 +156,7 @@ namespace Platform.API.Repository
             {
                 APIKey = apiKey,
                 OperatorToken = operatorToken,
-                ClientId = clientId,
+                ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
                 ClientCode = clientResponse.Result.ClientCode,
                 LimitId = clientResponse.Result.LimitId,
                 Endpoint = clientResponse.Result.Endpoint,
@@ -347,27 +347,27 @@ namespace Platform.API.Repository
             }
 
             #region Mock
-            //return new BaseResponseDTO<BetConfigResponseDTO>
+            //return new BaseResponseDTO<BetConfigFEResponseDTO>
             //{
             //    StatusCode = StatusCode.Success,
             //    Message = StatusCode.Success.ToString(),
-            //    Result = new BetConfigResponseDTO
+            //    Result = new BetConfigFEResponseDTO
             //    {
-            //        DefaultSportConfig = new DefaultSportConfig
+            //        DefaultSportConfig = new DefaultSportConfigFE
             //        {
             //            MinStake = 10,
             //            MaxStake = 100
             //        },
-            //        OverrideSportConfig = new List<OverrideSportConfig>
+            //        OverrideSportConfig = new List<OverrideSportConfigFE>
             //        {
-            //            new OverrideSportConfig
+            //            new OverrideSportConfigFE
             //            {
             //                SportId = 1,
             //                SportName = "Soccer",
             //                MinStake = 1,
             //                MaxStake = 100
             //            },
-            //            new OverrideSportConfig
+            //            new OverrideSportConfigFE
             //            {
             //                SportId = 21,
             //                SportName = "Cricket",
@@ -375,7 +375,7 @@ namespace Platform.API.Repository
             //                MaxStake = 100
             //            }
             //        },
-            //        Parlayconfig = new ParlayConfig
+            //        Parlayconfig = new ParlayConfigFE
             //        {
             //            MinStake = 10,
             //            MaxStake = 50
@@ -399,7 +399,7 @@ namespace Platform.API.Repository
             var payload = new BetConfigRequestDTO()
             {
                 CompanyShare = clientResponse.Result.CompanyShare,
-                ClientId = clientId,
+                ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
                 CurrencyCode = request.CurrencyCode.ToString(),
                 ExchangeRate = rate.ExchangeRate
             };
@@ -575,20 +575,7 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<OrderedLeaguesResponseDTO>> GetOrderedLeagues(string apiKey, string clientId, OrderedLeaguesRequest request)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
-
-            if (!isValidLanguageCode)
-            {
-                return new BaseResponseDTO<OrderedLeaguesResponseDTO>
-                {
-                    StatusCode = StatusCode.Unsupported_LanguageCode,
-                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
-                };
-            }
-
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
-
-            if (!IsValidLanguageCode(languageCode))
+            if (!IsValidLanguageCode(request.LanguageCode))
             {
                 return new BaseResponseDTO<OrderedLeaguesResponseDTO>
                 {
@@ -611,7 +598,8 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.GetOrderedLeagues(new OrderedLeaguesRequestDTO
             {
                 ClientId = clientResponse.Result.ClientId,
-                LanguageCode = languageCode
+                LanguageCode = request.LanguageCode,
+                SportId = request.SportId
             });
         }
 

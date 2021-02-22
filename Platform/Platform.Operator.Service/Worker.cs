@@ -70,7 +70,7 @@ namespace Platform.Operator.Service
                     case "OnBetCancellation":
                         var onBetCancellation = JsonSerializer.Deserialize<OnBetSettlement>(payload);
 
-                        _bettingRepository.ProcesssBetSettlement(onBetCancellation, _messageBroker, correlationId);
+                        _bettingRepository.ProcesssBetCancellation(onBetCancellation, _messageBroker, correlationId);
                         break;
                 }
             }

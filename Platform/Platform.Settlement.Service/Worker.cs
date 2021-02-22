@@ -56,21 +56,14 @@ namespace Platform.Settlement.Service
             {
                 switch (messageType)
                 {
-                    case "OnBetCancellation":
                     case "OnBetSettlement":
                         var onBetSettlement = JsonSerializer.Deserialize<OnUOFBetSettlement>(payload);
-
                         _bettingRepository.ProcesssBetSettlement(onBetSettlement, _messageBroker, correlationId);
+                        break;
 
-                        //var test = new OnUOFBetSettlement
-                        //{
-                        //    SelectionId = 0,
-                        //    SelectionStatus = BetStatus.Lost,
-                        //    SettlementHomeScore = "1",
-                        //    SettlementAwayScore = "0"
-                        //};
-
-                        //_bettingRepository.ProcesssBetSettlement(test, _messageBroker, correlationId);
+                    case "OnBetCancellation":
+                        var onBetCancellation = JsonSerializer.Deserialize<OnUOFBetCancellation>(payload);
+                        _bettingRepository.ProcessBetCancellation(onBetCancellation, _messageBroker, correlationId);
                         break;
                 }
             }

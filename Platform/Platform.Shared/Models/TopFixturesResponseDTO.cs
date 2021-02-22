@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Platform.Shared.Models
 {
@@ -21,5 +22,11 @@ namespace Platform.Shared.Models
         public string LeagueName { get; set; }
         public string FixtureId { get; set; }
         public string FixtureName { get; set; }
+    }
+
+    public class TempTopFixture : TopFixture
+    {
+        public DateTime FixtureStartDate { get; set; }
+        public int SortOrder { get; set; }
     }
 }

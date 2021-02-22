@@ -35,5 +35,56 @@ namespace Platform.Client.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpGet("v1/sportsbook/lookup/sports")]
+        public async Task<IActionResult> GetSportsLookup()
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _sportsbookRepository.GetSportsLookup(apiKey, clientId, LanguageCode.EN);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/sportsbook/lookup/segments")]
+        public async Task<IActionResult> GetSegmentsLookup()
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _sportsbookRepository.GetSegmentsLookup(apiKey, clientId, LanguageCode.EN);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/sportsbook/lookup/leagues")]
+        public async Task<IActionResult> GetLeaguesLookup()
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _sportsbookRepository.GetLeaguesLookup(apiKey, clientId, LanguageCode.EN);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

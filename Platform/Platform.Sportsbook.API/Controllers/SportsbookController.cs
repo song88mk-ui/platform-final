@@ -101,5 +101,47 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/sportsbook/lookup/sports")]
+        public async Task<IActionResult> GetSportsLookup([FromBody] SportsLookupRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetSportsLookup();
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/sportsbook/lookup/segments")]
+        public async Task<IActionResult> GetSegmentsLookup([FromBody] SegmentsLookupRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetSegmentsLookup();
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/sportsbook/lookup/leagues")]
+        public async Task<IActionResult> GetLeaguesLookup([FromBody] LeaguesLookupRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetLeaguesLookup();
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

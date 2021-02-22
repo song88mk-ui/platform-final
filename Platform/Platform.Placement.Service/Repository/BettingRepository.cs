@@ -132,7 +132,7 @@ namespace Platform.Placement.Service.Repository
                         scope.Complete();
 
                         messageBroker.Publish(message, "OnBetPlacement", "r.bet.operator", correlationId);
-                        ReportUtility.ReportBet(messageBroker, payload.Bet, payload.BetSelections.ToList());
+                        //ReportUtility.ReportBet(messageBroker, payload.Bet, payload.BetSelections.ToList());
                     }
                     catch (Exception ex)
                     {

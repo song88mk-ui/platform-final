@@ -13,12 +13,12 @@ namespace Platform.Shared.Utility
                 Bet = bet, 
                 BetSelections = selection 
             };
-            messageBroker.Publish(request, "Bet", "r.platform.report", Guid.NewGuid().ToString());
+            messageBroker.Publish(request, "Bet.New", "r.platform.report", Guid.NewGuid().ToString());
         }
 
         public static void ReportSelection(IMessageBroker messageBroker, BetSelection selection)
         {
-            messageBroker.Publish(selection, "SelectionUpdate", "r.platform.report", Guid.NewGuid().ToString());
+            messageBroker.Publish(selection, "SelectionUpdate.New", "r.platform.report", Guid.NewGuid().ToString());
         }        
     }
 }

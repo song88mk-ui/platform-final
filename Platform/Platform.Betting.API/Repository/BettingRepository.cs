@@ -714,87 +714,93 @@ namespace Platform.Betting.API.Repository
             try
             {
                 //TODO //Temporarily token can be save in database
-                var accessToken = string.Empty;
+                //var accessToken = string.Empty;
 
-                var authUrl = _configuration["MTSMaxBetApi:AuthApi"];
-                var authClient = _httpClientFactory.CreateClient();
+                //var authUrl = _configuration["MTSMaxBetApi:AuthApi"];
+                //var authClient = _httpClientFactory.CreateClient();
 
-                var formContent = new FormUrlEncodedContent(new[]
-                {
-                      new KeyValuePair<string, string>("client_id", "mts-edge-ext"),
-                      new KeyValuePair<string, string>("client_secret",  _configuration["MTSMaxBetApi:ClientSecret"]),
-                      new KeyValuePair<string, string>("username",  _configuration["MTSMaxBetApi:Username"]),
-                      new KeyValuePair<string, string>("password",  _configuration["MTSMaxBetApi:Password"]),
-                      new KeyValuePair<string, string>("grant_type", "password"),
-                      new KeyValuePair<string, string>("client_auth_method", "client-secret")
-                    });
+                //var formContent = new FormUrlEncodedContent(new[]
+                //{
+                //      new KeyValuePair<string, string>("client_id", "mts-edge-ext"),
+                //      new KeyValuePair<string, string>("client_secret",  _configuration["MTSMaxBetApi:ClientSecret"]),
+                //      new KeyValuePair<string, string>("username",  _configuration["MTSMaxBetApi:Username"]),
+                //      new KeyValuePair<string, string>("password",  _configuration["MTSMaxBetApi:Password"]),
+                //      new KeyValuePair<string, string>("grant_type", "password"),
+                //      new KeyValuePair<string, string>("client_auth_method", "client-secret")
+                //    });
 
-                var authResponse = authClient.PostAsync(authUrl, formContent).Result;
+                //var authResponse = authClient.PostAsync(authUrl, formContent).Result;
 
-                var authData = JsonSerializer.Deserialize<MTSMaxStakeAuthResponseDTO>(authResponse.Content.ReadAsStringAsync().Result);
+                //var authData = JsonSerializer.Deserialize<MTSMaxStakeAuthResponseDTO>(authResponse.Content.ReadAsStringAsync().Result);
 
-                accessToken = authData.AccessToken;
+                //accessToken = authData.AccessToken;
 
-                var maxStakeUrl = _configuration["MTSMaxBetApi:MaxBetApi"];
-                var maxStakeClient = _httpClient.CreateClient();
+                //var maxStakeUrl = _configuration["MTSMaxBetApi:MaxBetApi"];
+                //var maxStakeClient = _httpClient.CreateClient();
 
-                maxStakeClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+                //maxStakeClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
 
-                var betId = Guid.NewGuid().ToString();
+                //var betId = Guid.NewGuid().ToString();
 
-                var bets = new List<MTSBetDTO>();
-                bets.Add(new MTSBetDTO
-                {
-                    Id = betId,
-                    Stake = new MTSStakeDTO { Value = 0m }
-                });
+                //var bets = new List<MTSBetDTO>();
+                //bets.Add(new MTSBetDTO
+                //{
+                //    Id = betId,
+                //    Stake = new MTSStakeDTO { Value = 0m }
+                //});
 
-                var betSelections = new List<MTSBetSelectionDTO>();
-                foreach (var req in request.BetSelections)
-                {
-                    betSelections.Add(new MTSBetSelectionDTO
-                    {
-                        EventId = req.FixtureSpecifier,
-                        Id = req.SelectionSpecifier,
-                        Odds = req.Odds * 10000
-                    });
-                }
+                //var betSelections = new List<MTSBetSelectionDTO>();
+                //foreach (var req in request.BetSelections)
+                //{
+                //    betSelections.Add(new MTSBetSelectionDTO
+                //    {
+                //        EventId = req.FixtureSpecifier,
+                //        Id = req.SelectionSpecifier,
+                //        Odds = req.Odds * 10000
+                //    });
+                //}
 
-                if (request.Language.Contains("ZH"))
-                    request.Language = "ZH";
+                //if (request.Language.Contains("ZH"))
+                //    request.Language = "ZH";
 
-                var maxStakePayload = new MTSMaxStakeRequestDTO
-                {
-                    //TimeStamp = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds * 1000),
-                    TimeStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds(),
-                    Bets = bets,
-                    TicketId = betId,
-                    Selections = betSelections,
-                    Sender = new SenderDTO
-                    {
-                        BookmakerId = int.Parse(_configuration["MTSMaxBetApi:BookmakerId"]),
-                        LimitId = request.LimitId,
-                        Currency = request.Currency.ToUpper(),
-                        EndCustomer = new EndCustomerDTO
-                        {
-                            LanguageId = request.Language,
-                            Id = request.UserId,
-                            DeviceId = request.DeviceId
-                        }
-                    }
-                };
+                //var maxStakePayload = new MTSMaxStakeRequestDTO
+                //{
+                //    //TimeStamp = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds * 1000),
+                //    TimeStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds(),
+                //    Bets = bets,
+                //    TicketId = betId,
+                //    Selections = betSelections,
+                //    Sender = new SenderDTO
+                //    {
+                //        BookmakerId = int.Parse(_configuration["MTSMaxBetApi:BookmakerId"]),
+                //        LimitId = request.LimitId,
+                //        Currency = request.Currency.ToUpper(),
+                //        EndCustomer = new EndCustomerDTO
+                //        {
+                //            LanguageId = request.Language,
+                //            Id = request.UserId,
+                //            DeviceId = request.DeviceId
+                //        }
+                //    }
+                //};
 
-                var json = JsonSerializer.Serialize(maxStakePayload);
-                var data = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                //var json = JsonSerializer.Serialize(maxStakePayload);
+                //var data = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-                var maxStakeResponse = maxStakeClient.PostAsync(maxStakeUrl, data).Result;
+                //var maxStakeResponse = maxStakeClient.PostAsync(maxStakeUrl, data).Result;
 
-                var maxStakeData = JsonSerializer.Deserialize<MTSMaxStakeResponseDTO>(maxStakeResponse.Content.ReadAsStringAsync().Result);
+                //var maxStakeData = JsonSerializer.Deserialize<MTSMaxStakeResponseDTO>(maxStakeResponse.Content.ReadAsStringAsync().Result);
+
+                //return new BaseResponseDTO<decimal>
+                //{
+                //    Result = maxStakeData.MaxStake / 10000
+                //};
 
                 return new BaseResponseDTO<decimal>
                 {
-                    Result = maxStakeData.MaxStake / 10000
+                    Result = 0m
                 };
+
             }
             catch (Exception ex)
             {

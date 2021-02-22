@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
+using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
@@ -211,6 +212,10 @@ namespace Platform.Settlement.Service.Repository
                                 else
                                     messageBroker.Publish(payload, "OnBetSettlement", "r.bet.operator", string.IsNullOrEmpty(correlationId) ? Guid.NewGuid().ToString().ToUpper() : correlationId);
                             }
+
+                            var pcontext = new PlatformContext(new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]).Options);
+                            var client = ReportUtility.GetClient(pcontext, payload.Bet.ClientId);
+                            ReportUtility.ReportBet(messageBroker, ReportAdapter.ConvertToBetModel(payload.Bet, payload.BetSelections, client));
                         }
                         catch (Exception ex)
                         {

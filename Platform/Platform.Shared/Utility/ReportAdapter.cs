@@ -1,4 +1,5 @@
 ﻿using Platform.Shared.Data.Betting.Entities;
+using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Models;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ namespace Platform.Shared.Utility
 {
     public class ReportAdapter
     {
-        public static BetModelRequestDTO ConvertToBetModel(Bet bet, List<BetSelection> selections)
+        public static BetModelRequestDTO ConvertToBetModel(Bet bet, List<BetSelection> selections, Client client)
         {
             var sel = selections.FirstOrDefault();
             return new BetModelRequestDTO
@@ -16,8 +17,8 @@ namespace Platform.Shared.Utility
                 UserId = bet.UserId,
                 Username = "", // TODO: get value
                 ApplicationId = 4, // Sportsbook client
-                ClientId = 0, // TODO: bet.ClientId; needs ref
-                ClientName = "", // TODO: get value
+                ClientId = client.ClientIdRef,
+                ClientName = client.ClientName,
                 CompanyShare = bet.CompanyShare,
                 ClientShare = (decimal)1.0 - bet.CompanyShare,
                 GGR = 0, // TODO: get value
@@ -65,7 +66,7 @@ namespace Platform.Shared.Utility
                 {
                     BetId = bet.BetId,
                     BetSelectionId = b.BetSelectionId,
-                    ClientId = 0,// TODO: get value
+                    ClientId = client.ClientIdRef,
                     UserId = bet.UserId,
                     SportId = b.SportId,
                     SportName = b.SportName,
@@ -100,13 +101,13 @@ namespace Platform.Shared.Utility
                 })
             };
         }
-        public static ReportBetSelectionDTO ConvertToSelection(Bet bet, BetSelection selection)
+        public static ReportBetSelectionDTO ConvertToSelection(Bet bet, BetSelection selection, Client client)
         {
             return new ReportBetSelectionDTO()
             {
                 BetId = bet.BetId,
                 BetSelectionId = selection.BetSelectionId,
-                ClientId = 0,// TODO: get value
+                ClientId = client.ClientIdRef,
                 UserId = bet.UserId,
                 SportId = selection.SportId,
                 SportName = selection.SportName,

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
+using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
@@ -28,8 +29,7 @@ namespace Platform.Placement.Service.Repository
                 {
                     try
                     {
-                        var bet = context.Bet.Find(message.BetId);
-
+                        var bet = context.Bet.Find(message.BetId);                        
                         if (bet != null)
                         {
                             var betStatus = BetStatus.Running;
@@ -127,6 +127,11 @@ namespace Platform.Placement.Service.Repository
 
                         scope.Complete();
                         messageBroker.Publish(message, "OnBetPlacement", "r.bet.operator", Guid.NewGuid().ToString().ToUpper());
+
+                        var selections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
+                        var pcontext = new PlatformContext(new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]).Options);
+                        var client = ReportUtility.GetClient(pcontext, bet.ClientId);
+                        ReportUtility.ReportBet(messageBroker, ReportAdapter.ConvertToBetModel(bet, selections, client));
                     }
                     catch (Exception ex)
                     {

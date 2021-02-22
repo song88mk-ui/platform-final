@@ -13,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Platform.Shared.Data.Sportsbook;
+using Platform.Shared.Utility;
 using Platform.Sportsbook.API.Repository;
 
 namespace Platform.Sportsbook.API
@@ -49,6 +50,7 @@ namespace Platform.Sportsbook.API
 
             services.AddControllers();
 
+            services.AddSingleton<IMessageBroker, MessageBroker>();
             services.AddHttpClient<ISportsbookRepository, SportsbookRepository>();
 
             services.AddSwaggerGen(c =>

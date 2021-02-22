@@ -4,6 +4,7 @@ using Platform.Shared.Data.Sportsbook;
 using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
+using Platform.Shared.Utility;
 using Platform.Sportsbook.API.Models;
 using System;
 using System.Collections.Generic;
@@ -17,11 +18,12 @@ namespace Platform.Sportsbook.API.Repository
     public class SportsbookRepository : ISportsbookRepository
     {
         private readonly IMongoDatabase _db;
+        private readonly IMessageBroker _messageBroker;
         private readonly SportsbookContext _sportsbookContext;
         private IMongoCollection<Fixture> fixtureCollection;
         private readonly HttpClient _httpClient;
 
-        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient)
+        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMessageBroker messageBroker)
         {
             var client = new MongoClient("mongodb+srv://lino:fcisong88@production.n6svy.mongodb.net/sportsbook?retryWrites=true&w=0");
             _db = client.GetDatabase("Sportsbook");
@@ -30,6 +32,8 @@ namespace Platform.Sportsbook.API.Repository
 
             _sportsbookContext = sportsbookContext;
             _httpClient = httpClient;
+            _messageBroker = messageBroker;
+            _messageBroker.Connect();
             _httpClient.BaseAddress = new Uri("https://av-api.betradar.com");
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer C9SdxJm170K61OY152");
         }

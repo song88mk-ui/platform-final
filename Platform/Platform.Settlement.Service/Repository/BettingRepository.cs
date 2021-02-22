@@ -228,6 +228,9 @@ namespace Platform.Settlement.Service.Repository
 
         private bool SettleBet(OnUOFBetSettlement message, BetSelection betSelection, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, BetSelection filteredSelection)
         {
+            if (filteredSelection.BetSelectionStatusId == (int)BetStatus.Waiting)
+                return false;
+
             filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;
             filteredSelection.BetSelectionStatusName = message.SelectionStatus.ToString();
             filteredSelection.SettlementHomeScore = message.SettlementHomeScore;
@@ -401,6 +404,9 @@ namespace Platform.Settlement.Service.Repository
         }
         private bool ResettleBet(OnUOFBetSettlement message, BetSelection betSelection, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, BetSelection filteredSelection)
         {
+            if (filteredSelection.BetSelectionStatusId == (int)message.SelectionStatus)
+                return false;
+
             filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;
             filteredSelection.BetSelectionStatusName = message.SelectionStatus.ToString();
             filteredSelection.SettlementHomeScore = message.SettlementHomeScore;

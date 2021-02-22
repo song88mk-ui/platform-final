@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
+using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
@@ -210,7 +211,9 @@ namespace Platform.Settlement.Service.Repository
                                     messageBroker.Publish(payload, "OnBetCancellation", "r.bet.operator", correlationId);
                                 else
                                     messageBroker.Publish(payload, "OnBetSettlement", "r.bet.operator",  correlationId);
-                            }
+
+                                ReportUtility.ReportBet(messageBroker, ReportAdapter.ConvertToBetModel(payload.Bet, payload.BetSelections, _configuration["ConnectionStrings:Platform"]));
+                            }                            
                         }
                         catch (Exception ex)
                         {

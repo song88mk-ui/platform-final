@@ -126,7 +126,7 @@ namespace Platform.Placement.Service.Repository
                         }
 
                         scope.Complete();
-                        messageBroker.Publish(message, "OnBetPlacement", "r.bet.operator", Guid.NewGuid().ToString().ToUpper());
+                        messageBroker.Publish(message, "OnBetPlacement", "r.bet.operator", correlationId);
                     }
                     catch (Exception ex)
                     {

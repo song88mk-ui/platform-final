@@ -226,7 +226,7 @@ namespace Platform.Operator.Service.Repository
             {
                 var payload = new OperatorBetRequestDTO
                 {
-                    TransactionId = Guid.NewGuid().ToString().ToUpper(),
+                    TransactionId = correlationId,
                     BetId = betData.BetId.ToString().ToUpper(),
                     UserId = betData.UserId,
                     CurrencyCode = betData.CurrencyCode,

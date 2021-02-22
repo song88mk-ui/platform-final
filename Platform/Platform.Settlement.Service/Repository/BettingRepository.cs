@@ -207,9 +207,9 @@ namespace Platform.Settlement.Service.Repository
                             if (isPublish)
                             {
                                 if (payload.Bet.BetStatusId == (int)BetStatus.Cancelled)
-                                    messageBroker.Publish(payload, "OnBetCancellation", "r.bet.operator", string.IsNullOrEmpty(correlationId) ? Guid.NewGuid().ToString().ToUpper() : correlationId);
+                                    messageBroker.Publish(payload, "OnBetCancellation", "r.bet.operator", correlationId);
                                 else
-                                    messageBroker.Publish(payload, "OnBetSettlement", "r.bet.operator", string.IsNullOrEmpty(correlationId) ? Guid.NewGuid().ToString().ToUpper() : correlationId);
+                                    messageBroker.Publish(payload, "OnBetSettlement", "r.bet.operator",  correlationId);
                             }
                         }
                         catch (Exception ex)

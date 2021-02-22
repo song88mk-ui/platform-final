@@ -573,7 +573,17 @@ namespace Platform.Betting.API.Repository
             var highCurrencies = new List<string> { "KRW", "VND", "KHR", "IDR", "MMK" };
 
             //1. Reference Bet
-            minimumStake.Add(Math.Truncate(exchangeRate) + 1);
+            decimal referenceBet = 1;
+            if (currencyCode == CurrencyCode.EUR.ToString())
+            {
+                minimumStake.Add(1);
+            }
+            else
+            {
+                minimumStake.Add(Math.Truncate(exchangeRate * 0.0001m) + 1);
+                referenceBet = exchangeRate * 0.0001m;
+            }
+
 
             //2. High Currency add 1000 default
             if (highCurrencies.Contains(currencyCode))
@@ -584,7 +594,7 @@ namespace Platform.Betting.API.Repository
 
             //4 Reference Bet / Company Share
             if (companyShare > 0)
-                minimumStake.Add(Math.Truncate(exchangeRate / companyShare) + 1);
+                minimumStake.Add(Math.Truncate(referenceBet / companyShare) + 1);
 
             //Get Max decimal value
             return minimumStake.Max();

@@ -124,11 +124,10 @@ namespace Platform.Placement.Service.Repository
 
                             context.SaveChanges();
                         }
-
-                        scope.Complete();
-                        messageBroker.Publish(message, "OnBetPlacement", "r.bet.operator", correlationId);
-
                         var selections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
+                        scope.Complete();
+
+                        messageBroker.Publish(message, "OnBetPlacement", "r.bet.operator", correlationId);
                         ReportUtility.ReportBet(messageBroker, ReportAdapter.ConvertToBetModel(bet, selections, _configuration["ConnectionStrings:Platform"]));
                     }
                     catch (Exception ex)

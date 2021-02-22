@@ -18,7 +18,7 @@ namespace Platform.Shared.Utility
 
         public static BetModelRequestDTO ConvertToBetModel(Bet bet, List<BetSelection> selections, string connection)
         {
-            Client client = GetClient(connection, bet.ClientId);
+            //Client client = GetClient(connection, bet.ClientId);
             var sel = selections.FirstOrDefault();
             return new BetModelRequestDTO
             {
@@ -26,8 +26,8 @@ namespace Platform.Shared.Utility
                 UserId = bet.UserId,
                 Username = "", // TODO: get value
                 ApplicationId = 4, // Sportsbook client
-                ClientId = client.ClientIdRef,
-                ClientName = client.ClientName,
+                ClientId = 0, // TODO: client.ClientIdRef,
+                ClientName = "", // TODO;  client.ClientName,
                 CompanyShare = bet.CompanyShare,
                 ClientShare = (decimal)1.0 - bet.CompanyShare,
                 GGR = 0, // TODO: get value
@@ -75,7 +75,7 @@ namespace Platform.Shared.Utility
                 {
                     BetId = bet.BetId,
                     BetSelectionId = b.BetSelectionId,
-                    ClientId = client.ClientIdRef,
+                    ClientId = 0, // TODO: client.ClientIdRef,
                     UserId = bet.UserId,
                     SportId = b.SportId,
                     SportName = b.SportName,
@@ -113,12 +113,12 @@ namespace Platform.Shared.Utility
 
         public static ReportBetSelectionDTO ConvertToSelection(Bet bet, BetSelection selection, string connection)
         {
-            Client client = GetClient(connection, bet.ClientId);
+            //Client client = GetClient(connection, bet.ClientId);
             return new ReportBetSelectionDTO()
             {
                 BetId = bet.BetId,
                 BetSelectionId = selection.BetSelectionId,
-                ClientId = client.ClientIdRef,
+                ClientId = 0, // TODO: client.ClientIdRef,
                 UserId = bet.UserId,
                 SportId = selection.SportId,
                 SportName = selection.SportName,

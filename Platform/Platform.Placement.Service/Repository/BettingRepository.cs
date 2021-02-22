@@ -129,9 +129,7 @@ namespace Platform.Placement.Service.Repository
                         messageBroker.Publish(message, "OnBetPlacement", "r.bet.operator", correlationId);
 
                         var selections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
-                        var pcontext = new PlatformContext(new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]).Options);
-                        var client = ReportUtility.GetClient(pcontext, bet.ClientId);
-                        ReportUtility.ReportBet(messageBroker, ReportAdapter.ConvertToBetModel(bet, selections, client));
+                        ReportUtility.ReportBet(messageBroker, ReportAdapter.ConvertToBetModel(bet, selections, _configuration["ConnectionStrings:Platform"]));
                     }
                     catch (Exception ex)
                     {

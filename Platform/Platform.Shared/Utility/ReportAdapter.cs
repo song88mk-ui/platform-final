@@ -1,4 +1,6 @@
-﻿using Platform.Shared.Data.Betting.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using Platform.Shared.Data.Betting.Entities;
+using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Models;
 using System.Collections.Generic;
@@ -8,8 +10,15 @@ namespace Platform.Shared.Utility
 {
     public class ReportAdapter
     {
-        public static BetModelRequestDTO ConvertToBetModel(Bet bet, List<BetSelection> selections, Client client)
+        public static Client GetClient(string connection, string clientID)
         {
+            var context = new PlatformContext(new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(connection).Options);
+            return context.Client.Find(clientID);
+        }
+
+        public static BetModelRequestDTO ConvertToBetModel(Bet bet, List<BetSelection> selections, string connection)
+        {
+            Client client = GetClient(connection, bet.ClientId);
             var sel = selections.FirstOrDefault();
             return new BetModelRequestDTO
             {
@@ -101,6 +110,7 @@ namespace Platform.Shared.Utility
                 })
             };
         }
+
         public static ReportBetSelectionDTO ConvertToSelection(Bet bet, BetSelection selection, Client client)
         {
             return new ReportBetSelectionDTO()

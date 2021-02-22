@@ -211,11 +211,9 @@ namespace Platform.Settlement.Service.Repository
                                     messageBroker.Publish(payload, "OnBetCancellation", "r.bet.operator", correlationId);
                                 else
                                     messageBroker.Publish(payload, "OnBetSettlement", "r.bet.operator",  correlationId);
-                            }
 
-                            var pcontext = new PlatformContext(new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]).Options);
-                            var client = ReportUtility.GetClient(pcontext, payload.Bet.ClientId);
-                            ReportUtility.ReportBet(messageBroker, ReportAdapter.ConvertToBetModel(payload.Bet, payload.BetSelections, client));
+                                ReportUtility.ReportBet(messageBroker, ReportAdapter.ConvertToBetModel(payload.Bet, payload.BetSelections, _configuration["ConnectionStrings:Platform"]));
+                            }                            
                         }
                         catch (Exception ex)
                         {

@@ -15,8 +15,8 @@ namespace Platform.Shared.Utility
                 BetId = bet.BetId,
                 UserId = bet.UserId,
                 Username = "", // TODO: get value
-                ApplicationId = 0, // TODO: get value
-                ClientId = 0, // TODO: get value
+                ApplicationId = 4, // Sportsbook client
+                ClientId = 0, // TODO: bet.ClientId; needs ref
                 ClientName = "", // TODO: get value
                 CompanyShare = bet.CompanyShare,
                 ClientShare = (decimal)1.0 - bet.CompanyShare,
@@ -81,7 +81,7 @@ namespace Platform.Shared.Utility
                     SelectionName = sel.SelectionName,
                     FixtureStatusId = sel.FixtureStatusId,
                     FixtureStatusName = sel.FixtureStatusName,
-                    Line = 0, // TODO: get value
+                    Line = 0, // TODO: get value, current string
                     Odds = bet.Odds,
                     StatusId = bet.BetStatusId,
                     StatusName = bet.BetStatusName,
@@ -91,7 +91,7 @@ namespace Platform.Shared.Utility
                     SelectionSpecifier = b.SelectionSpecifier,
                     FixtureStartDate = b.FixtureStartDate,
                     MarketTemplateGroupId = 0,// TODO: get value
-                    MarketTemplateId = 0,// TODO: get value
+                    MarketTemplateId = 0,// TODO: get value, current string
                     SelectionTemplateId = 0,// TODO: get value
                     Score = "(Home) " + b.BetHomeScore + " " + "(Away) " + b.BetAwayScore,
                     BetScore = "", // TODO: get value

@@ -38,7 +38,6 @@ namespace Platform.Operator.Service.Repository
                     Timeout = TimeSpan.FromSeconds(5)
                 };
 
-                newHttpClient.DefaultRequestHeaders.Remove("x-operator-token");
                 newHttpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
 
                 _httpClients.Add(newHttpClient);
@@ -46,7 +45,13 @@ namespace Platform.Operator.Service.Repository
                 return newHttpClient;
             }
             else
+            {
+                result.DefaultRequestHeaders.Remove("x-operator-token");
+                result.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+
                 return result;
+            }
+
         }
         private Tuple<Bet, List<BetSelection>> GetBet(Guid betId)
         {

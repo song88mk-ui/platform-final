@@ -58,6 +58,8 @@ namespace Platform.Betting.API.UnitTest
         public BetRequestDTO GetRequest()
         {
             BetRequestDTO request = new BetRequestDTO();
+
+            request.BetDate = DateTime.Now;
             request.APIKey = "";
             request.OperatorToken = "CB2D9909-9467-EB11-89FB-00224815B68B";
             request.ClientId = "5093617A-9367-EB11-89FB-00224815B68B";
@@ -120,12 +122,26 @@ namespace Platform.Betting.API.UnitTest
             Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Success);
         }
 
+        [TestMethod]
+        public void TestBetPlacement_KRW_Maximum_Payout_Must_Be_Equal_Or_Lower()
+        {
+            BetRequestDTO request = GetRequest();
+
+            request.Stake = 1000M;
+            request.Odds = 51m;
+            var defaultJSON = JsonSerializer.Serialize(request);
+            var data = repo.PlaceBet(request);
+
+            Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower);
+        }
+        
+
 
         [TestMethod]
         public void TestBetPlacement_KRW_Stake_Must_Be_Equal_Or_Higher_To_Min_Stake()
         {
             BetRequestDTO request = GetRequest();
-            request.Stake = 1001M;
+            request.Stake = 99M;
 
             var data = repo.PlaceBet(request);
 

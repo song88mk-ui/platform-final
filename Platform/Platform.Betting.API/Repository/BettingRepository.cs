@@ -101,7 +101,8 @@ namespace Platform.Betting.API.Repository
                 }
 
                 //Total stake on fixture by player should not go beyond this amount
-                if (maxPerGame < request.Stake)
+                var payout = request.Stake * request.Odds;
+                if (maxPerGame < payout)
                 {
                     return new BaseResponseDTO<BetResponseDTO>
                     {

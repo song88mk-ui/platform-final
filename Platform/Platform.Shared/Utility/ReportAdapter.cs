@@ -1,35 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Platform.Shared.Data.Betting.Entities;
-using Platform.Shared.Data.Platform;
+﻿using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Models;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Platform.Shared.Utility
 {
-    public class ReportAdapter : IReportAdapter
+    public class ReportAdapter
     {
-        private readonly IConfiguration _configuration;
-        public ReportAdapter(IConfiguration configuration)
+        public static BetModelRequestDTO ConvertToBetModel(Bet bet, List<BetSelection> selections, Client client)
         {
-            _configuration = configuration;
-        }
-
-        private Client GetClient(Guid clientId)
-        {
-            var platformContext = new PlatformContext(
-                new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]).Options);
-            return platformContext.Client.Find(clientId);
-        }
-
-        public BetModelRequestDTO ConvertToBetModel(Bet bet, List<BetSelection> selections)
-        {
-            var client = GetClient(Guid.Parse(bet.ClientId));
-
             var sel = selections.FirstOrDefault();
             return new BetModelRequestDTO
             {
@@ -121,10 +101,8 @@ namespace Platform.Shared.Utility
                 })
             };
         }
-        public ReportBetSelectionDTO ConvertToSelection(Bet bet, BetSelection selection)
+        public static ReportBetSelectionDTO ConvertToSelection(Bet bet, BetSelection selection, Client client)
         {
-            var client = GetClient(Guid.Parse(bet.ClientId));
-
             return new ReportBetSelectionDTO()
             {
                 BetId = bet.BetId,
@@ -163,6 +141,5 @@ namespace Platform.Shared.Utility
                 HalftimeScore = "", // TODO: get value
             };
         }
-
     }
 }

@@ -15,11 +15,11 @@ namespace Platform.Placement.Service.Repository
     public class BettingRepository : IBettingRepository
     {
         private readonly IConfiguration _configuration;
-        public BettingRepository(IConfiguration configuration, IReportAdapter reportAdapter)
+        public BettingRepository(IConfiguration configuration)
         {
             _configuration = configuration;
         }
-        public void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, IReportAdapter reportAdapter, string correlationId)
+        public void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
@@ -130,8 +130,8 @@ namespace Platform.Placement.Service.Repository
 
                         var selections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
                         var pcontext = new PlatformContext(new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]).Options);
-                        //var client = ReportUtility.GetClient(pcontext, bet.ClientId);
-                        ReportUtility.ReportBet(messageBroker, reportAdapter.ConvertToBetModel(bet, selections));
+                        var client = ReportUtility.GetClient(pcontext, bet.ClientId);
+                        ReportUtility.ReportBet(messageBroker, ReportAdapter.ConvertToBetModel(bet, selections, client));
                     }
                     catch (Exception ex)
                     {

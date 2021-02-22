@@ -15,16 +15,14 @@ namespace Platform.Placement.Service
     public class Worker : BackgroundService
     {
         private readonly ILogger<Worker> _logger;
-        private readonly IReportAdapter _reportAdapter;
         private readonly IMessageBroker _messageBroker;
         private readonly IBettingRepository _bettingRepository;
 
-        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository, IReportAdapter reportAdapter)
+        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository)
         {
             _logger = logger;
             _messageBroker = messageBroker;
             _bettingRepository = bettingRepository;
-            _reportAdapter = reportAdapter;
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
@@ -60,7 +58,7 @@ namespace Platform.Placement.Service
                     case "OnBetPlacement":
                         var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
 
-                        _bettingRepository.ProcesssBetPlacement(onBetPlacement, _messageBroker, _reportAdapter, correlationId);
+                        _bettingRepository.ProcesssBetPlacement(onBetPlacement, _messageBroker, correlationId);
                         break;
                 }
             }

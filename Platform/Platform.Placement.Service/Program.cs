@@ -17,7 +17,6 @@ namespace Platform.Placement.Service
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddSingleton<IMessageBroker, MessageBroker>();
-                    services.AddSingleton<IReportAdapter, ReportAdapter>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();
                 }).UseWindowsService();

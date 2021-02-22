@@ -11,6 +11,7 @@ namespace Platform.Shared.Models
         public string LimitId { get; set; }
         public bool IsActive { get; set; }
         public string Endpoint { get; set; }
+        public decimal MonthlyFee { get; set; }
         public decimal CurrentCompanyShare { get; set; }
         public DateTime EffectiveDate { get; set; }
         public decimal NextCompanyShare { get; set; }

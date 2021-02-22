@@ -596,9 +596,6 @@ namespace Platform.Betting.API.Repository
 
             //1 Get Max from betconfig
             maximumStake.Add(maxStake);
-            maximumStake.Add(parlayMaxPayout);
-
-            
 
             //BET PLACEMENT ONLY
             if (isPlacement)

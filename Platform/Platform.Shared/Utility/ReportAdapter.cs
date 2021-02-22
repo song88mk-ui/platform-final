@@ -111,8 +111,9 @@ namespace Platform.Shared.Utility
             };
         }
 
-        public static ReportBetSelectionDTO ConvertToSelection(Bet bet, BetSelection selection, Client client)
+        public static ReportBetSelectionDTO ConvertToSelection(Bet bet, BetSelection selection, string connection)
         {
+            Client client = GetClient(connection, bet.ClientId);
             return new ReportBetSelectionDTO()
             {
                 BetId = bet.BetId,

@@ -16,5 +16,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<TopFixturesResponseDTO>> GetTopFixtures(string apiKey, string clientId, TopFixturesRequest request);
         Task<BaseResponseDTO<OrderedSportsResponseDTO>> GetOrderedSports(string apiKey, string clientId, OrderedSportsRequest request);
         Task<BaseResponseDTO<OrderedLeaguesResponseDTO>> GetOrderedLeagues(string apiKey, string clientId, OrderedLeaguesRequest request);
+        Task<BaseResponseDTO<MarketTemplateGroupResponseDTO>> GetMarketTemplateGroups(string apiKey, string clientId);
     }
 }

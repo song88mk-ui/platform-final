@@ -204,5 +204,22 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpGet("v1/sportsbook/markettemplategroups")]
+        public async Task<IActionResult> GetMarketTemplateGroups()
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetMarketTemplateGroups(apiKey, clientId);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

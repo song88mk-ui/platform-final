@@ -109,7 +109,7 @@ namespace Platform.Betting.API.Repository
                 //Total stake on fixture by player should not go beyond this amount
                 //Computed based on League and Tier
                 var payout = request.Stake * odds;
-                if (maxPerGame < payout)
+                if (maxPerGame < payout && maxPerGame != 0)
                 {
                     return new BaseResponseDTO<BetResponseDTO>
                     {
@@ -650,7 +650,8 @@ namespace Platform.Betting.API.Repository
 
                 if (tierMaxStake.Result != null)
                 {
-                    maximumStake.Add(Math.Truncate(tierMaxStake.Result.MaxStake / (totalOdds - 1)) + 1);
+                    if (tierMaxStake.Result.MaxStake > 0)
+                        maximumStake.Add(Math.Truncate(tierMaxStake.Result.MaxStake / (totalOdds - 1)) + 1);
                 }
 
                 //Get MTS maxstake
@@ -689,7 +690,8 @@ namespace Platform.Betting.API.Repository
                 //BO max Liability/Total Odds
                 if (tierMaxStake.Result != null)
                 {
-                    maximumStake.Add(Math.Truncate(tierMaxStake.Result.MaxStake / (totalOdds - 1)) + 1);
+                    if (tierMaxStake.Result.MaxStake > 0)
+                        maximumStake.Add(Math.Truncate(tierMaxStake.Result.MaxStake / (totalOdds - 1)) + 1);
                 }
 
                 //Get MTS maxstake
@@ -729,9 +731,14 @@ namespace Platform.Betting.API.Repository
                 SegmentId = request.Selections.FirstOrDefault().SegmentId,
                 SportId = request.Selections.FirstOrDefault().SportId
             });
-            maximumPerGame.Add(tierMaxStake.Result.MaxPerGame);
 
-            return maximumPerGame.Min();
+            if (tierMaxStake.Result.MaxPerGame > 0)
+                maximumPerGame.Add(tierMaxStake.Result.MaxPerGame);
+
+            if (maximumPerGame.Count > 0)
+                return maximumPerGame.Min();
+            else
+                return 0;
         }
 
         public BaseResponseDTO<decimal> GetMTSMaxStake(MTSConfigRequestDTO request)

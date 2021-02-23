@@ -304,26 +304,32 @@ namespace Platform.Sportsbook.API.Repository
             var prematch = initial.Where(c => c.FixtureStatusId == 0 && c.MarketTemplates != "0").ToList();
             var live = initial.Where(c => c.FixtureStatusId == 1 && c.MarketTemplates != "0").ToList();
 
+            var sportGroup = initial.GroupBy(g => g.SportId).Select(s => new SportMarketTemplateGroup
+            {
+                SportId = s.Key,
+                Prematch = s.Where(c => c.FixtureStatusId == (int)FixtureStatus.Prematch).Select(p => new MarketTemplateGroup
+                {
+                    MarketTemplateGroupId = p.Id,
+                    MarketTemplateGroupName = p.Name,
+                    SortOrder = p.SortOrder,
+                    MarketTemplateIds = p.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
+                }).OrderBy(o => o.MarketTemplateGroupId).ToList(),
+                Live = s.Where(c => c.FixtureStatusId == (int)FixtureStatus.Live).Select(p => new MarketTemplateGroup
+                {
+                    MarketTemplateGroupId = p.Id,
+                    MarketTemplateGroupName = p.Name,
+                    SortOrder = p.SortOrder,
+                    MarketTemplateIds = p.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
+                }).OrderBy(o => o.MarketTemplateGroupId).ToList()
+            }).OrderBy(o => o.SportId).ToList();
+
             return new BaseResponseDTO<MarketTemplateGroupResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
                 Result = new MarketTemplateGroupResponseDTO
                 {
-                    Prematch = prematch.Select(s => new MarketTemplateGroup
-                    {
-                        MarketTemplateGroupId = s.Id,
-                        MarketTemplateGroupName = s.Name,
-                        SortOrder = s.SortOrder,
-                        MarketTemplateIds = s.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
-                    }).ToList(),
-                    Live = live.Select(s => new MarketTemplateGroup
-                    {
-                        MarketTemplateGroupId = s.Id,
-                        MarketTemplateGroupName = s.Name,
-                        SortOrder = s.SortOrder,
-                        MarketTemplateIds = s.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
-                    }).ToList()
+                    Sports = sportGroup
                 }
             };
         }

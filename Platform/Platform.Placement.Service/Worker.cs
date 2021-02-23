@@ -37,6 +37,7 @@ namespace Platform.Placement.Service
             {
                 try
                 {
+                    Console.WriteLine("Starting");
                     var config = MtsSdk.GetConfiguration();
 
                     _mts = new MtsSdk(config);

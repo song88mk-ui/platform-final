@@ -182,7 +182,7 @@ namespace Platform.API.Repository
         {
             try
             {
-                var response = await _httpClient.PostAsync($"v1/sportsbook/markettemplategroups", new StringContent(null, System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.PostAsync($"v1/sportsbook/markettemplategroups", new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
                     return JsonSerializer.Deserialize<BaseResponseDTO<MarketTemplateGroupResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });

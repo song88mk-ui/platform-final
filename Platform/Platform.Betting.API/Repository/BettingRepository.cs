@@ -41,6 +41,8 @@ namespace Platform.Betting.API.Repository
             decimal maxStake = 0;
             decimal maxPerGame = 0;
             decimal stakeLimitFixtureConfig = 0;
+            var odds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+
             if (request.Selections.Count() == 1)
             {
                 //Get MTS Information
@@ -106,7 +108,7 @@ namespace Platform.Betting.API.Repository
 
                 //Total stake on fixture by player should not go beyond this amount
                 //Computed based on League and Tier
-                var payout = request.Stake * request.Odds;
+                var payout = request.Stake * odds;
                 if (maxPerGame < payout)
                 {
                     return new BaseResponseDTO<BetResponseDTO>
@@ -193,8 +195,7 @@ namespace Platform.Betting.API.Repository
                     };
                 }
 
-                var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
-                var payout = totalOdds * request.Stake;
+                var payout = odds * request.Stake;
 
                 if (parlayConfig.MaxPayout < payout)
                 {
@@ -820,11 +821,6 @@ namespace Platform.Betting.API.Repository
                 return new BaseResponseDTO<decimal>
                 {
                     Result = maxStakeReturn / 10000
-                };
-
-                return new BaseResponseDTO<decimal>
-                {
-                    Result = 0m
                 };
 
             }

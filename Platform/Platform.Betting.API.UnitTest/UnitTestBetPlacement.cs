@@ -192,7 +192,7 @@ namespace Platform.Betting.API.UnitTest
         {
             BetRequestDTO request = GetRequest();
 
-            request.Stake = 1.70M;
+            request.Stake = 1000.70M;
             var defaultJSON = JsonSerializer.Serialize(request);
             var data = repo.PlaceBet(request);
 

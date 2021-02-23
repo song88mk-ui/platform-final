@@ -47,6 +47,7 @@ namespace Platform.Betting.API.Controllers
         [HttpPost("v1/bet/config")]
         public async Task<IActionResult> GetBetHistory([FromBody] BetConfigRequestDTO request)
         {
+            //test
             var result = await _bettingRepository.GetBetConfig(request);
 
             switch (result.StatusCode)

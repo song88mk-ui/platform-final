@@ -10,5 +10,6 @@ namespace Platform.Operator.API.Repository
         Task<OperatorBetResponseDTO> BetPlacement(OperatorBetRequestDTO request, string operatorToken);
         Task<OperatorBetResponseDTO> BetSettlement(OperatorBetSettlementRequestDTO request);
         Task<OperatorBetResponseDTO> BetCancellation(OperatorBetCancellationRequestDTO request);
+        Task<BaseResponseDTO<GenerateUserResponseDTO>> AddUser(GenerateUserRequestDTO request);
     }
 }

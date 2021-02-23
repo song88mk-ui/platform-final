@@ -2,7 +2,7 @@
 
 namespace Platform.Shared.MessageModels
 {
-    public class OnBetCancellation
+    public class OnBetBackofficeCancellation
     {
         public Guid BetId { get; set; }
     }

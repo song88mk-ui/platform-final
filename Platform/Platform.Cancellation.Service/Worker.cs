@@ -1,16 +1,16 @@
 using System;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Platform.Cancellation.Service.Repository;
 using Platform.Shared.MessageModels;
+using Platform.Shared.Utility;
 using RabbitMQ.Client.Events;
 using Sportradar.MTS.SDK.API;
-using Sportradar.MTS.SDK.Entities.Builders;
-using Sportradar.MTS.SDK.Entities.Enums;
-using Platform.Shared.Utility;
 
 namespace Platform.Cancellation.Service
 {
@@ -18,31 +18,56 @@ namespace Platform.Cancellation.Service
     {
         private readonly ILogger<Worker> _logger;
         private readonly IMessageBroker _messageBroker;
-        private MtsSdk _mtsSdk;
-        private IBuilderFactory _factory;
-        private const int BookmakerId = 32290; // 25740 is original value, 32290 is for 10 bet
+        private readonly IBettingRepository _bettingRepository;
 
-        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker)
+        private IMtsSdk _mts;
+        private readonly IConfiguration _configuration;
+
+        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository, IConfiguration configuration)
         {
             _logger = logger;
             _messageBroker = messageBroker;
+            _bettingRepository = bettingRepository;
+            _configuration = configuration;
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
         {
-            var config = MtsSdk.GetConfiguration();
-            _mtsSdk = new MtsSdk(config);
-            _mtsSdk.Open();
+            if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
+            {
+                try
+                {
+                    Console.WriteLine("Starting");
+                    var config = MtsSdk.GetConfiguration();
 
-            _messageBroker.Connect();
-            _messageBroker.MessageReceived += MessageReceivedEvent;
+                    _mts = new MtsSdk(config);
+                    _mts.Open();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+
+            }
 
             return base.StartAsync(cancellationToken);
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            _mtsSdk.Close();
+            if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
+            {
+                try
+                {
+                    _mts.Close();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+
+            }
+
             _messageBroker.Dispose();
 
             return base.StopAsync(cancellationToken);
@@ -50,6 +75,9 @@ namespace Platform.Cancellation.Service
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _messageBroker.Connect();
+            _messageBroker.MessageReceived += MessageReceivedEvent;
+
             return Task.CompletedTask;
         }
 
@@ -57,50 +85,28 @@ namespace Platform.Cancellation.Service
         {
             var payload = Encoding.UTF8.GetString(e.Body);
             var messageType = e.BasicProperties.Type;
+            var correlationId = e.BasicProperties.CorrelationId;
 
             try
             {
                 switch (messageType)
                 {
-                    case "timeout":
-                        var cancellation = JsonSerializer.Deserialize<OnBetCancellation>(payload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    case "OnBetTimeout":
+                        var onBetMTSTimeout = JsonSerializer.Deserialize<OnBetTimeout>(payload);
 
-                        _factory = _mtsSdk.BuilderFactory;
-
-                        var betCancel = _factory.CreateTicketCancelBuilder().BuildTicket(cancellation.BetId.ToString().ToUpper(), BookmakerId, TicketCancellationReason.TimeoutTriggered);
-
-                        var timeoutResponse = _mtsSdk.SendTicketCancelBlocking(betCancel);
-
-                        if (timeoutResponse.Status == TicketCancelAcceptance.NotCancelled)
-                            _logger.LogInformation($"TicketId = {cancellation.BetId.ToString().ToUpper()} Reason = Contact OAM");
-                        else
-                            _logger.LogInformation($"TicketId = {cancellation.BetId.ToString().ToUpper()} Reason = 102 Successful");
+                        _bettingRepository.ProcessMTSTimeout(onBetMTSTimeout, _mts, _messageBroker, correlationId);
                         break;
-                    case "manual.cancellation":
-                        var manualCancellation = JsonSerializer.Deserialize<OnBetCancellation>(payload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                        _factory = _mtsSdk.BuilderFactory;
+                    case "OnBetBackofficeCancellation":
+                        var onBetBackofficeCancellation = JsonSerializer.Deserialize<OnBetBackofficeCancellation>(payload);
 
-                        var manualBetCancel = _factory.CreateTicketCancelBuilder().BuildTicket(manualCancellation.BetId.ToString().ToUpper(), BookmakerId, TicketCancellationReason.BookmakerBackofficeTriggered);
-
-                        var manualResponse = _mtsSdk.SendTicketCancelBlocking(manualBetCancel);
-
-                        if (manualResponse.Status == TicketCancelAcceptance.NotCancelled)
-                        {
-                            manualResponse.Acknowledge();
-                            _logger.LogInformation($"TicketId = {manualCancellation.BetId.ToString().ToUpper()} Reason = Contact OAM");
-                        }
-                        else
-                        {
-                            manualResponse.Acknowledge();
-                            _logger.LogInformation($"TicketId = {manualCancellation.BetId.ToString().ToUpper()} Reason = 103 Successful");
-                        }
+                        _bettingRepository.ProcessBackofficeCancellation(onBetBackofficeCancellation, _mts, _messageBroker, correlationId);
                         break;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(messageType, ex);
+
             }
         }
     }

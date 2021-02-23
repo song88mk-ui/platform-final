@@ -307,19 +307,19 @@ namespace Platform.Sportsbook.API.Repository
             var sportGroup = initial.GroupBy(g => g.SportId).Select(s => new SportMarketTemplateGroup
             {
                 SportId = s.Key,
-                Prematch = s.Where(c => c.FixtureStatusId == (int)FixtureStatus.Prematch).Select(p => new MarketTemplateGroup
+                Prematch = s.Where(c => c.FixtureStatusId == (int)FixtureStatus.Prematch && c.MarketTemplates != "0").Select(p => new MarketTemplateGroup
                 {
                     MarketTemplateGroupId = p.Id,
                     MarketTemplateGroupName = p.Name,
                     SortOrder = p.SortOrder,
                     MarketTemplateIds = p.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
                 }).OrderBy(o => o.MarketTemplateGroupId).ToList(),
-                Live = s.Where(c => c.FixtureStatusId == (int)FixtureStatus.Live).Select(p => new MarketTemplateGroup
+                Live = s.Where(c => c.FixtureStatusId == (int)FixtureStatus.Live && c.MarketTemplates != "0").Select(l => new MarketTemplateGroup
                 {
-                    MarketTemplateGroupId = p.Id,
-                    MarketTemplateGroupName = p.Name,
-                    SortOrder = p.SortOrder,
-                    MarketTemplateIds = p.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
+                    MarketTemplateGroupId = l.Id,
+                    MarketTemplateGroupName = l.Name,
+                    SortOrder = l.SortOrder,
+                    MarketTemplateIds = l.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
                 }).OrderBy(o => o.MarketTemplateGroupId).ToList()
             }).OrderBy(o => o.SportId).ToList();
 

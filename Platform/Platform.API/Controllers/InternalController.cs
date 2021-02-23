@@ -11,7 +11,7 @@ using Platform.Shared.Models;
 
 namespace Platform.API.Controllers
 {
-    [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(InternalAPIKeyFilter))]
+    [ApiController, ApiExplorerSettings(IgnoreApi = true), EnableCors("AllowAllOrigins"), ServiceFilter(typeof(InternalAPIKeyFilter))]
     public class InternalController : ControllerBase
     {
         private readonly IPlatformRepository _platformRepository;

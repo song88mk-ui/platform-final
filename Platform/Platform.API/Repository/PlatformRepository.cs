@@ -157,7 +157,9 @@ namespace Platform.API.Repository
                 APIKey = apiKey,
                 OperatorToken = operatorToken,
                 ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
+                ClientIdRef = clientResponse.Result.ClientIdRef,
                 ClientCode = clientResponse.Result.ClientCode,
+                ClientName = clientResponse.Result.ClientName,
                 LimitId = clientResponse.Result.LimitId,
                 Endpoint = clientResponse.Result.Endpoint,
                 CompanyShare = clientResponse.Result.CompanyShare,
@@ -271,7 +273,8 @@ namespace Platform.API.Repository
                             LimitId = result.LimitId,
                             IsActive = result.IsActive,
                             Endpoint = result.Endpoint,
-                            CompanyShare = result.EffectiveDate.Date < DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare
+                            CompanyShare = result.EffectiveDate.Date < DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare,
+                            ClientIdRef = result.ClientIdRef
                         }
                     };
                 }
@@ -307,7 +310,8 @@ namespace Platform.API.Repository
                                 LimitId = result.LimitId,
                                 IsActive = result.IsActive,
                                 Endpoint = result.Endpoint,
-                                CompanyShare = result.EffectiveDate.Date < DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare
+                                CompanyShare = result.EffectiveDate.Date < DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare,
+                                ClientIdRef = result.ClientIdRef
                             }
                         };
                     }

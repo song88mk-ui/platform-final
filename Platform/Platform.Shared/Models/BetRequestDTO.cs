@@ -14,6 +14,8 @@ namespace Platform.Shared.Models
         public string OperatorToken { get; set; }
         public string ClientId { get; set; }
         public string ClientCode { get; set; }
+        public string ClientName { get; set; }
+        public int ClientIdRef { get; set; }
         public string LimitId { get; set; }
         public string Endpoint { get; set; }
         public decimal CompanyShare { get; set; }

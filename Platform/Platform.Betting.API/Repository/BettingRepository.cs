@@ -196,6 +196,9 @@ namespace Platform.Betting.API.Repository
             #endregion
 
 
+            var betData = new Bet();
+            var betSelectionData = new List<BetSelection>();
+
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
                 try
@@ -224,7 +227,9 @@ namespace Platform.Betting.API.Repository
                         IPAddress = request.IPAddress,
                         Channel = request.Channel.ToString(),
                         ClientId = request.ClientId,
+                        ClientIdRef = request.ClientIdRef,
                         ClientCode = request.ClientCode,
+                        ClientName = request.ClientName,
                         LimitId = request.LimitId,
                         Endpoint = request.Endpoint,
                         OperatorToken = request.OperatorToken,
@@ -237,6 +242,7 @@ namespace Platform.Betting.API.Repository
                         SettlementDateOffset = request.BetDate.AddHours(-4)
                     }).Entity;
 
+                    betData = betEntity;
                     betId = betEntity.BetId;
                     request.BetId = betId;
 
@@ -260,7 +266,9 @@ namespace Platform.Betting.API.Repository
                         IPAddress = betEntity.IPAddress,
                         Channel = betEntity.Channel,
                         ClientId = betEntity.ClientId,
+                        ClientIdRef = betEntity.ClientIdRef,
                         ClientCode = betEntity.ClientCode,
+                        ClientName = betEntity.ClientName,
                         LimitId = betEntity.LimitId,
                         Endpoint = betEntity.Endpoint,
                         OperatorToken = betEntity.OperatorToken,
@@ -312,6 +320,8 @@ namespace Platform.Betting.API.Repository
                             SettlementAwayScore = string.Empty,
                             CorrelationId = selection.CorrelationId
                         }).Entity;
+
+                        betSelectionData.Add(betSelectionEntity);
 
                         var betSelectionId = betSelectionEntity.BetSelectionId;
                         selection.BetSelectionId = betSelectionId;

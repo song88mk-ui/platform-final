@@ -22,7 +22,9 @@ namespace Platform.Shared.Data.Betting.Entities
         public string IPAddress { get; set; }
         public string Channel { get; set; }
         public string ClientId { get; set; }
+        public int ClientIdRef { get; set; }
         public string ClientCode { get; set; }
+        public string ClientName { get; set; }
         public string LimitId { get; set; }
         public string Endpoint { get; set; }
         public string OperatorToken { get; set; }

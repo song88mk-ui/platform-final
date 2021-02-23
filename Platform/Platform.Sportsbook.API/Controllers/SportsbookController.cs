@@ -86,6 +86,20 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v1/sportsbook/markettemplategroups")]
+        public async Task<IActionResult> GetMarketTemplateGroups()
+        {
+            var result = await _sportsbookRepository.GetMarketTemplateGroups();
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
 
 
         [HttpPost("v1/sportsbook/activefixtures")]
@@ -142,13 +156,6 @@ namespace Platform.Sportsbook.API.Controllers
                 default:
                     return BadRequest(result);
             }
-        }
-
-        public void SettleAsWon(string selectionId)
-        {
-            //get data from SelectionMapping
-            //get data from MarketMapping
-            //
         }
     }
 }

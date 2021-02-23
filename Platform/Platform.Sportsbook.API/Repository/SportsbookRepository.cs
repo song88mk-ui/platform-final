@@ -297,6 +297,36 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+        public async Task<BaseResponseDTO<MarketTemplateGroupResponseDTO>> GetMarketTemplateGroups()
+        {
+            var initial = await _sportsbookContext.MarketTemplateGroup.ToListAsync();
+
+            var prematch = initial.Where(c => c.FixtureStatusId == 0 && c.MarketTemplates != "0").ToList();
+            var live = initial.Where(c => c.FixtureStatusId == 1 && c.MarketTemplates != "0").ToList();
+
+            return new BaseResponseDTO<MarketTemplateGroupResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new MarketTemplateGroupResponseDTO
+                {
+                    Prematch = prematch.Select(s => new MarketTemplateGroup
+                    {
+                        MarketTemplateGroupId = s.Id,
+                        MarketTemplateGroupName = s.Name,
+                        SortOrder = s.SortOrder,
+                        MarketTemplateIds = s.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
+                    }).ToList(),
+                    Live = live.Select(s => new MarketTemplateGroup
+                    {
+                        MarketTemplateGroupId = s.Id,
+                        MarketTemplateGroupName = s.Name,
+                        SortOrder = s.SortOrder,
+                        MarketTemplateIds = s.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
+                    }).ToList()
+                }
+            };
+        }
 
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(ActiveFixturesRequestDTO request)
         {

@@ -30,6 +30,7 @@ namespace Platform.Placement.Service.Repository
             var payload = new OnBetPlacement();
 
             var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ? 
+                message.BetSelections.Any(c => c.SportId > 1000) ? new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "Accepted (MTS disabled for VS)") :
                 ValidateToMTS(message, mts) : new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "Accepted (MTS disabled)");
 
             if (result.Item1 == TicketAcceptance.Accepted)

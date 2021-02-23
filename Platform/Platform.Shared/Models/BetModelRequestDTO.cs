@@ -5,11 +5,7 @@ namespace Platform.Shared.Models
 {
     public class BetModelRequestDTO
     {
-        public BetModelRequestDTO()
-        {
-            BetSelections = new List<BetSelection>();
-        }
-        public Bet Bet;
+        public Bet Bet { get; set; }
         public IEnumerable<BetSelection> BetSelections { get; set; }
     }
 }

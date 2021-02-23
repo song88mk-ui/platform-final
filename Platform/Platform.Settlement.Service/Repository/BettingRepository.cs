@@ -230,7 +230,7 @@ namespace Platform.Settlement.Service.Repository
 
         private bool SettleBet(OnUOFBetSettlement message, BetSelection betSelection, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, BetSelection filteredSelection)
         {
-            if (filteredSelection.BetSelectionStatusId == (int)BetStatus.Waiting)
+            if (filteredSelection.BetSelectionStatusId == (int)BetStatus.Waiting || filteredSelection.BetSelectionStatusId == (int)BetStatus.Rejected || filteredSelection.BetSelectionStatusId == (int)BetStatus.Cancelled)
                 return false;
 
             filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;

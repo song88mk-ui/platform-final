@@ -215,6 +215,7 @@ namespace Platform.Placement.Service.Repository
                                 {
                                     betSelection.BetSelectionStatusId = bet.BetStatusId;
                                     betSelection.BetSelectionStatusName = bet.BetStatusName;
+                                    betSelection.IsSettled = true;
 
                                     var betSelectionEntity = context.BetSelection.Update(betSelection).Entity;
                                     payload.BetSelections.Add(betSelectionEntity);
@@ -294,7 +295,7 @@ namespace Platform.Placement.Service.Repository
                     .SetLimitId(Convert.ToInt32(message.Bet.LimitId == "0" ? "2183" : message.Bet.LimitId))
                     .SetCurrency(message.Bet.CurrencyCode.ToString())
                     .SetEndCustomer(_factory.CreateEndCustomerBuilder()
-                    .SetId($"{message.Bet.ClientCode}-{message.Bet.UserId}")
+                    .SetId($"{message.Bet.ClientCode}{message.Bet.UserId.Replace("-", "")}")
                     .SetConfidence(10000)
                     .SetIp(ipAddress)
                     .SetLanguageId(message.Bet.LanguageCode.ToString())

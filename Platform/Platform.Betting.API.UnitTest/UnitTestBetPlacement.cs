@@ -127,7 +127,7 @@ namespace Platform.Betting.API.UnitTest
             request.UserId = "CA2D9909-9467-EB11-89FB-00224815B68B";
             request.Stake = 1000M;
             request.Odds = 1.05m;
-            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
+            
             request.LanguageCode = Shared.Enums.LanguageCode.EN;
             request.Channel = Shared.Enums.Channel.Internet;
             request.IPAddress = "";
@@ -193,6 +193,7 @@ namespace Platform.Betting.API.UnitTest
             BetRequestDTO request = GetRequest();
 
             request.Stake = 1000.70M;
+            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             var defaultJSON = JsonSerializer.Serialize(request);
             var data = repo.PlaceBet(request);
 
@@ -206,6 +207,7 @@ namespace Platform.Betting.API.UnitTest
 
             request.Stake = 1000M;
             request.Odds = 51m;
+            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             var defaultJSON = JsonSerializer.Serialize(request);
             var data = repo.PlaceBet(request);
 
@@ -219,7 +221,7 @@ namespace Platform.Betting.API.UnitTest
         {
             BetRequestDTO request = GetRequest();
             request.Stake = 99M;
-
+            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             var data = repo.PlaceBet(request);
 
             Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake);
@@ -231,6 +233,7 @@ namespace Platform.Betting.API.UnitTest
             BetRequestDTO request = GetRequest();
 
             request.Stake = 1000001M;
+            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             var defaultJSON = JsonSerializer.Serialize(request);
             var data = repo.PlaceBet(request);
 
@@ -259,6 +262,7 @@ namespace Platform.Betting.API.UnitTest
 
             request.Stake = 1000M;
             request.Odds = 51m;
+            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             var defaultJSON = JsonSerializer.Serialize(request);
             var data = repo.PlaceBet(request);
 
@@ -272,7 +276,7 @@ namespace Platform.Betting.API.UnitTest
         {
             BetRequestDTO request = GetRequestParlay();
             request.Stake = 99M;
-
+            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             var data = repo.PlaceBet(request);
 
             Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake);
@@ -284,6 +288,7 @@ namespace Platform.Betting.API.UnitTest
             BetRequestDTO request = GetRequestParlay();
 
             request.Stake = 1000001M;
+            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             var defaultJSON = JsonSerializer.Serialize(request);
             var data = repo.PlaceBet(request);
 

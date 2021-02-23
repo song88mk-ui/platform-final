@@ -63,7 +63,7 @@ namespace Platform.Betting.API.Repository
                     LimitId = int.Parse(request.LimitId),
                     BetSelections = mtsConfigSelectionRequest
                 };
-                var defaultJSON = JsonSerializer.Serialize(mtsConfigRequest);
+                
                 //SingleBet
                 var selection = request.Selections.FirstOrDefault();
                 //Check first if sportsId exist in Override

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Platform.Operator.API.ActionFilters;
 using Platform.Operator.API.Repository;
 using Platform.Shared.Data;
 using Platform.Shared.Data.Platform;
@@ -43,6 +44,8 @@ namespace Platform.Operator.API
             });
 
             services.AddScoped<IPlatformRepository, PlatformRepository>();
+
+            services.AddScoped<InternalAPIKeyFilter>();
 
             services.AddControllers();
 

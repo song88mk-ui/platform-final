@@ -13,6 +13,7 @@ namespace Platform.Sportsbook.API.Repository
         Task<BaseResponseDTO<MarketTemplateGroupResponseDTO>> GetMarketTemplateGroups();
 
         Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(ActiveFixturesRequestDTO request);
+        Task<BaseResponseDTO<ActiveFixtureCountResponseDTO>> GetActiveFixtureCount(ActiveFixtureCountRequestDTO request);
         Task<BaseResponseDTO<SportsLookupResponseDTO>> GetSportsLookup();
         Task<BaseResponseDTO<SegmentsLookupResponseDTO>> GetSegmentsLookup();
         Task<BaseResponseDTO<LeaguesLookupResponseDTO>> GetLeaguesLookup();

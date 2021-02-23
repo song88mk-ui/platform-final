@@ -376,6 +376,40 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+
+        public async Task<BaseResponseDTO<ActiveFixtureCountResponseDTO>> GetActiveFixtureCount(ActiveFixtureCountRequestDTO request)
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<ActiveFixtureCountResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new ActiveFixtureCountResponseDTO()
+                };
+            }
+
+            var result = fixtures.GroupBy(g => g.SpId).Select(s => new ActiveFixtureCount
+            {
+                SportId = s.Key,
+                SportName = s.Select(ss => ss.SpNa).FirstOrDefault(),
+                PrematchCount = s.Where(c => c.FiTyId == (int)FixtureStatus.Prematch).Count(),
+                LiveCount = s.Where(c => c.FiTyId == (int)FixtureStatus.Live).Count(),
+            }).OrderBy(o => o.SportId).ToList();
+
+            return new BaseResponseDTO<ActiveFixtureCountResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new ActiveFixtureCountResponseDTO
+                {
+                    Sports = result
+                }
+            };
+        }
         public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetSportsLookup()
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 12);

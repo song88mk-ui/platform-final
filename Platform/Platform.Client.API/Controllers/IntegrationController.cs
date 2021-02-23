@@ -20,12 +20,29 @@ namespace Platform.Client.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/activefixtures")]
-        public async Task<IActionResult> GetTopFixtures()
+        public async Task<IActionResult> GetActiveFixtures()
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
             var result = await _sportsbookRepository.GetActiveFixtures(apiKey, clientId, LanguageCode.EN);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/sportsbook/activefixtures/count")]
+        public async Task<IActionResult> GetActiveFixtureCount()
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _sportsbookRepository.GetActiveFixtureCount(apiKey, clientId, LanguageCode.EN);
 
             switch (result.StatusCode)
             {

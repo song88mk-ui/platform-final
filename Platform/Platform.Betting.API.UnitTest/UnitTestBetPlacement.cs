@@ -236,7 +236,7 @@ namespace Platform.Betting.API.UnitTest
             var defaultJSON = JsonSerializer.Serialize(request);
             var data = repo.PlaceBet(request);
 
-            Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Max_Stake);
+            Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake);
         }
 
 
@@ -289,7 +289,7 @@ namespace Platform.Betting.API.UnitTest
             var defaultJSON = JsonSerializer.Serialize(request);
             var data = repo.PlaceBet(request);
 
-            Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Max_Stake);
+            Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake);
         }
 
         #endregion

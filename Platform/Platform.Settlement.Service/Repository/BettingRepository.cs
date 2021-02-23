@@ -208,12 +208,16 @@ namespace Platform.Settlement.Service.Repository
                             if (isPublish)
                             {
                                 if (payload.Bet.BetStatusId == (int)BetStatus.Cancelled)
+                                {
                                     messageBroker.Publish(payload, "OnBetCancellation", "r.bet.operator", correlationId);
+                                    //ReportUtility.ReportCancellation(messageBroker, payload.Bet, payload.BetSelections);
+                                }
                                 else
-                                    messageBroker.Publish(payload, "OnBetSettlement", "r.bet.operator",  correlationId);
-
-                                //ReportUtility.ReportBet(messageBroker, payload.Bet, payload.BetSelections);
-                            }                            
+                                {
+                                    messageBroker.Publish(payload, "OnBetSettlement", "r.bet.operator", correlationId);
+                                    //ReportUtility.ReportSettlement(messageBroker, payload.Bet, payload.BetSelections);
+                                }
+                            }
                         }
                         catch (Exception ex)
                         {

@@ -573,6 +573,7 @@ namespace Platform.Betting.API.Repository
             {
                 MinStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
                 MaxStake = GetMaxStakeParlay(parlayConfig.MaxStake, parlayConfig.MaxPayout, request.CompanyShare, 0, false, null, null),
+                MaxPayout = parlayConfig.MaxPayout
             };
 
             return new BaseResponseDTO<BetConfigFEResponseDTO>

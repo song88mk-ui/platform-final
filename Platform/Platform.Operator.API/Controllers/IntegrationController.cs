@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Platform.Operator.API.ActionFilters;
 using Platform.Operator.API.Repository;
 using Platform.Shared.Models;
 
@@ -90,6 +91,21 @@ namespace Platform.Operator.API.Controllers
             switch (result.StatusId)
             {
                 case 1000:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/user")]
+        [ServiceFilter(typeof(InternalAPIKeyFilter))]
+        public async Task<IActionResult> AddUser([FromBody] GenerateUserRequestDTO request)
+        {
+            var result = await _platformRepository.AddUser(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
                     return Ok(result);
                 default:
                     return BadRequest(result);

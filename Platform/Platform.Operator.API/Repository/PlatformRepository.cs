@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Platform.Shared.Data.Platform;
+using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
 using System.Linq;
@@ -235,5 +236,50 @@ namespace Platform.Operator.API.Repository
                 }
             }
         }
+
+        public async Task<BaseResponseDTO<GenerateUserResponseDTO>> AddUser(GenerateUserRequestDTO request)
+        {
+            GenerateUserResponseDTO response = new GenerateUserResponseDTO();
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
+            {
+                try
+                {
+                    var operatorEntity = _platformContext.Operator.Update(new Shared.Data.Platform.Entities.Operator
+                    {
+                        ClientId = request.ClientId,
+                        Balance = request.Balance,
+                        CurrencyCode = request.CurrencyCode,
+                        OperatorToken = Guid.NewGuid()
+                    }).Entity;
+
+                    response.ClientId = request.ClientId;
+                    response.CurrencyCode = request.CurrencyCode;
+                    response.UserId = operatorEntity.UserId;
+                    response.OperatorToken = operatorEntity.OperatorToken;
+                    response.Balance = operatorEntity.Balance;
+
+                    await _platformContext.SaveChangesAsync();
+
+                    scope.Complete();
+                }
+                catch (Exception ex)
+                {
+                    scope.Dispose();
+                    return new BaseResponseDTO<GenerateUserResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = StatusCode.Error.ToString()
+                    };
+                }
+            }
+            return new BaseResponseDTO<GenerateUserResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = response
+            };
+        }
+
     }
 }

@@ -181,22 +181,10 @@ namespace Platform.Settlement.Service.Repository
 
                             if (filteredSelection.IsSettled == false)
                             {
-                                if (filteredSelection.BetSelectionStatusId == (int)BetStatus.Waiting)
-                                {
-                                    scope.Complete();
-                                    continue;
-                                }
-
                                 isPublish = SettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection);
                             }
                             else
                             {
-                                if (message.SelectionStatus == BetStatus.Cancelled)
-                                {
-                                    scope.Complete();
-                                    continue;
-                                }
-
                                 //TODO: resettlement here
                                 //void then apply correct status
 
@@ -230,7 +218,7 @@ namespace Platform.Settlement.Service.Repository
 
         private bool SettleBet(OnUOFBetSettlement message, BetSelection betSelection, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, BetSelection filteredSelection)
         {
-            if (filteredSelection.BetSelectionStatusId == (int)BetStatus.Waiting || filteredSelection.BetSelectionStatusId == (int)BetStatus.Rejected || filteredSelection.BetSelectionStatusId == (int)BetStatus.Cancelled)
+            if (filteredSelection.BetSelectionStatusId != (int)BetStatus.Running)
                 return false;
 
             filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;
@@ -406,7 +394,7 @@ namespace Platform.Settlement.Service.Repository
         }
         private bool ResettleBet(OnUOFBetSettlement message, BetSelection betSelection, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, BetSelection filteredSelection)
         {
-            if (filteredSelection.BetSelectionStatusId == (int)message.SelectionStatus)
+            if (filteredSelection.BetSelectionStatusId == (int)message.SelectionStatus || filteredSelection.BetSelectionStatusId == (int)BetStatus.Waiting || filteredSelection.BetSelectionStatusId == (int)BetStatus.Cancelled || filteredSelection.BetSelectionStatusId == (int)BetStatus.Rejected)
                 return false;
 
             filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;

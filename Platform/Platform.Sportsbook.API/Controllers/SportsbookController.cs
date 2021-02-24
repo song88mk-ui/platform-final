@@ -100,6 +100,21 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v1/sportsbook/betfixture")]
+        public async Task<IActionResult> GetBetFixture([FromBody] BetFixtureRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetBetFixture(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+
 
 
         [HttpPost("v1/sportsbook/activefixtures")]

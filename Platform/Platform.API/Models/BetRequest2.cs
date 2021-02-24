@@ -20,9 +20,9 @@ namespace Platform.API.Models
     public class BetSelectionRequest2
     {
         public int SportId { get; set; }
-        public long FixtureId { get; set; }
-        public long MarketId { get; set; }
-        public long SelectionId { get; set; }
+        public string FixtureId { get; set; }
+        public string MarketId { get; set; }
+        public string SelectionId { get; set; }
         public decimal Odds { get; set; }
         public string CorrelationId { get; set; }
     }

@@ -21,7 +21,8 @@ namespace Platform.Sportsbook.API.Repository
         private readonly IMessageBroker _messageBroker;
         private readonly SportsbookContext _sportsbookContext;
         private IMongoCollection<Fixture> fixtureCollection;
-        //private IMongoCollection<Market> marketCollection;
+        private IMongoCollection<Market> marketCollection;
+        private IMongoCollection<Selection> selectionCollection;
         private readonly HttpClient _httpClient;
 
         public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMessageBroker messageBroker)
@@ -30,6 +31,8 @@ namespace Platform.Sportsbook.API.Repository
             _db = client.GetDatabase("Sportsbook");
 
             fixtureCollection = _db.GetCollection<Fixture>("Fixture");
+            marketCollection = _db.GetCollection<Market>("Market");
+            selectionCollection = _db.GetCollection<Selection>("Selection");
 
             _sportsbookContext = sportsbookContext;
             _httpClient = httpClient;
@@ -334,6 +337,77 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+        private async Task<Tuple<List<Fixture>, List<Market>, List<Selection>>> GetBetFixtures(BetFixtureRequestDTO request)
+        {
+            var fixtureIds = request.Selections.Select(s => s.FixtureId).ToList();
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
+            var fixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            var marketIds = request.Selections.Select(s => s.MarketId).ToList();
+            var marketFilter = Builders<Market>.Filter.Where(c => marketIds.Contains(c.MaId));
+            var markets = marketCollection.Find(marketFilter).ToListAsync();
+
+            var selectionIds = request.Selections.Select(s => s.SelectionId).ToList();
+            var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
+            var selections = selectionCollection.Find(selectionFilter).ToListAsync();
+
+            //var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BetStop == "betstop");
+            //var bettingStatusTask = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            await Task.WhenAll(fixtures, markets, selections);
+
+            return new Tuple<List<Fixture>, List<Market>, List<Selection>>(fixtures.Result, markets.Result, selections.Result);
+        }
+        public async Task<BaseResponseDTO<BetFixtureResponseDTO>> GetBetFixture(BetFixtureRequestDTO request)
+        {
+            var result = await GetBetFixtures(request);
+
+            if (result.Item3.Count == 0)
+            {
+                return new BaseResponseDTO<BetFixtureResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new BetFixtureResponseDTO()
+                };
+            }
+
+            return new BaseResponseDTO<BetFixtureResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BetFixtureResponseDTO
+                {
+                    Selections = request.Selections.Select(s => new BetFixtureSelectionResponseDTO
+                    {
+                        SportId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SpId).FirstOrDefault(),
+                        SportName = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SpNa).FirstOrDefault(),
+                        SegmentId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SegId).FirstOrDefault(),
+                        SegmentName = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SegNa).FirstOrDefault(),
+                        LeagueId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.LeId).FirstOrDefault(),
+                        LeagueName = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.LeNa).FirstOrDefault(),
+                        FixtureId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiId).FirstOrDefault(),
+                        FixtureName = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiNa).FirstOrDefault(),
+                        FixtureType = (FixtureType)result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiTyId).FirstOrDefault(),
+                        MarketTemplateId = result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.MaTeId).FirstOrDefault(),
+                        MarketId = result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.MaId).FirstOrDefault(),
+                        MarketName = result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.MaNa).FirstOrDefault(),
+                        Line = result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.Li).FirstOrDefault(),
+                        SelectionTemplateId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeTeId).FirstOrDefault(),
+                        SelectionId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeId).FirstOrDefault(),
+                        SelectionName = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeNa).FirstOrDefault(),
+                        Odds = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.Od).FirstOrDefault(),
+                        FixtureStatus = (FixtureStatus)result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.FiStId).FirstOrDefault(),
+                        FixtureStartDate = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.FiStDa).FirstOrDefault(),
+                        Score = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.Sc).FirstOrDefault(),
+                        FixtureSpecifier = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiSp).FirstOrDefault(),
+                        SelectionSpecifier = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeSp).FirstOrDefault(),
+                        CorrelationId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.CoId).FirstOrDefault(),
+                        BetFixtureStatus = BetFixtureStatus.Success
+                    }).ToList()
+                }
+            };
+        }
 
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(ActiveFixturesRequestDTO request)
         {
@@ -377,7 +451,6 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
-
         public async Task<BaseResponseDTO<ActiveFixtureCountResponseDTO>> GetActiveFixtureCount(ActiveFixtureCountRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);

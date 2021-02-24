@@ -21,6 +21,7 @@ namespace Platform.Sportsbook.API.Repository
         private readonly IMessageBroker _messageBroker;
         private readonly SportsbookContext _sportsbookContext;
         private IMongoCollection<Fixture> fixtureCollection;
+        //private IMongoCollection<Market> marketCollection;
         private readonly HttpClient _httpClient;
 
         public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMessageBroker messageBroker)

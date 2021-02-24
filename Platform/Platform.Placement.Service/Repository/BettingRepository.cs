@@ -291,7 +291,7 @@ namespace Platform.Placement.Service.Repository
 
                 var bet = _factory.CreateTicketBuilder()
                     .SetTicketId(message.Bet.BetId.ToString().ToUpper())
-                    .SetOddsChange(OddsChangeType.None)
+                    .SetOddsChange(Sportradar.MTS.SDK.Entities.Enums.OddsChangeType.None)
                     .SetSender(_factory.CreateSenderBuilder()
                     .SetSenderChannel((SenderChannel)Enum.Parse(typeof(SenderChannel), message.Bet.Channel))
                     .SetLimitId(Convert.ToInt32(message.Bet.LimitId == "0" ? "2183" : message.Bet.LimitId))

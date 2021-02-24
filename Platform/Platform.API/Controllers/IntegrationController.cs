@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
@@ -46,6 +47,36 @@ namespace Platform.API.Controllers
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
             var result = await _platformRepository.PlaceBet(apiKey, clientId, operatorToken, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v2/bet/placement")]
+        public async Task<IActionResult> PlaceBet2([FromBody] BetRequest2 request)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+
+            var result = new BaseResponseDTO<BetResponseDTO>
+            {
+                StatusCode = Shared.Enums.StatusCode.Success,
+                Message = Shared.Enums.StatusCode.Success.ToString(),
+                Result = new BetResponseDTO
+                {
+                    BetId = Guid.NewGuid().ToString().ToUpper(),
+                    BetStatus = BetStatus.Waiting,
+                    UserId = "mock"
+                }
+            };
+
+            //var result = await _platformRepository.PlaceBet2(apiKey, clientId, operatorToken, request);
 
             switch (result.StatusCode)
             {

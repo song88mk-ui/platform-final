@@ -64,18 +64,6 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
-            //var result = new BaseResponseDTO<BetResponseDTO>
-            //{
-            //    StatusCode = Shared.Enums.StatusCode.Success,
-            //    Message = Shared.Enums.StatusCode.Success.ToString(),
-            //    Result = new BetResponseDTO
-            //    {
-            //        BetId = Guid.NewGuid().ToString().ToUpper(),
-            //        BetStatus = BetStatus.Waiting,
-            //        UserId = "mock"
-            //    }
-            //};
-
             var result = await _platformRepository.PlaceBet2(apiKey, clientId, operatorToken, request);
 
             switch (result.StatusCode)

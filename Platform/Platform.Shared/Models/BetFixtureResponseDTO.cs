@@ -40,6 +40,13 @@ namespace Platform.Shared.Models
         public string FixtureSpecifier { get; set; }
         public string SelectionSpecifier { get; set; }
         public string CorrelationId { get; set; }
+        public Temp BetSelectionStatus { get; set; }
+    }
+
+    public class Temp
+    {
         public BetFixtureStatus BetFixtureStatus { get; set; }
+        public long SelectionId { get; set; }
+        public decimal Odds { get; set; }
     }
 }

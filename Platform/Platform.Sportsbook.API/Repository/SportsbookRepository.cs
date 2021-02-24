@@ -402,11 +402,15 @@ namespace Platform.Sportsbook.API.Repository
                         Score = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.Sc).FirstOrDefault(),
                         FixtureSpecifier = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiSp).FirstOrDefault(),
                         SelectionSpecifier = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeSp).FirstOrDefault(),
-                        CorrelationId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.CoId).FirstOrDefault(),
-                        BetFixtureStatus = BetFixtureStatus.Success
+                        CorrelationId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.CoId).FirstOrDefault()
                     }).ToList()
                 }
             };
+        }
+
+        private Temp GetBetSelectionStatus(long selectionId, BetFixtureRequestDTO request, Tuple<List<Fixture>, List<Market>, List<Selection>> result)
+        {
+            return new Temp();
         }
 
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(ActiveFixturesRequestDTO request)

@@ -426,6 +426,17 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
+            if (selection.FiId != current.FixtureId || selection.MaId != current.MarketId || selection.SeId != current.SelectionId)
+            {
+                return new BetSelectionState
+                {
+                    SelectionId = current.SelectionId,
+                    Odds = current.Odds,
+                    StatusCode = StatusCode.Market_Is_Inactive,
+                    Message = StatusCode.Market_Is_Inactive.ToString().Replace('_', ' '),
+                };
+            }
+
             if (fixture.IsSu)
             {
                 return new BetSelectionState

@@ -362,15 +362,15 @@ namespace Platform.Sportsbook.API.Repository
         {
             var result = await GetBetFixtures(request);
 
-            if (result.Item3.Count == 0)
-            {
-                return new BaseResponseDTO<BetFixtureResponseDTO>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new BetFixtureResponseDTO()
-                };
-            }
+            //if (result.Item3.Count == 0)
+            //{
+            //    return new BaseResponseDTO<BetFixtureResponseDTO>
+            //    {
+            //        StatusCode = StatusCode.Success,
+            //        Message = StatusCode.Success.ToString(),
+            //        Result = new BetFixtureResponseDTO()
+            //    };
+            //}
 
             return new BaseResponseDTO<BetFixtureResponseDTO>
             {
@@ -402,15 +402,113 @@ namespace Platform.Sportsbook.API.Repository
                         Score = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.Sc).FirstOrDefault(),
                         FixtureSpecifier = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiSp).FirstOrDefault(),
                         SelectionSpecifier = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeSp).FirstOrDefault(),
-                        CorrelationId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.CoId).FirstOrDefault()
+                        CorrelationId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.CoId).FirstOrDefault(),
+                        BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, s, result)
                     }).ToList()
                 }
             };
         }
 
-        private Temp GetBetSelectionStatus(long selectionId, BetFixtureRequestDTO request, Tuple<List<Fixture>, List<Market>, List<Selection>> result)
+        private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<Selection>> result)
         {
-            return new Temp();
+            var fixture = result.Item1.Where(c => c.FiId == current.FixtureId).FirstOrDefault();
+            var market = result.Item2.Where(c => c.MaId == current.MarketId).FirstOrDefault();
+            var selection = result.Item3.Where(c => c.SeId == current.SelectionId).FirstOrDefault();
+
+            if (fixture == null || market == null || selection == null)
+            {
+                return new BetSelectionState
+                {
+                    SelectionId = current.SelectionId,
+                    Odds = current.Odds,
+                    StatusCode = StatusCode.Market_Is_Inactive,
+                    Message = StatusCode.Market_Is_Inactive.ToString().Replace('_', ' ')
+                };
+            }
+
+            if (fixture.IsSu)
+            {
+                return new BetSelectionState
+                {
+                    SelectionId = current.SelectionId,
+                    Odds = current.Odds,
+                    StatusCode = StatusCode.Betstop_On_Fixture,
+                    Message = StatusCode.Betstop_On_Fixture.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (market.MaStId == (int)MarketStatus.Suspended)
+            {
+                return new BetSelectionState
+                {
+                    SelectionId = current.SelectionId,
+                    Odds = current.Odds,
+                    StatusCode = StatusCode.Market_Is_Suspended,
+                    Message = StatusCode.Market_Is_Suspended.ToString().Replace('_', ' ')
+                };
+            }
+
+            if (market.MaStId != (int)MarketStatus.Active)
+            {
+                return new BetSelectionState
+                {
+                    SelectionId = current.SelectionId,
+                    Odds = current.Odds,
+                    StatusCode = StatusCode.Market_Is_Inactive,
+                    Message = StatusCode.Market_Is_Inactive.ToString().Replace('_', ' ')
+                };
+            }
+
+            if (selection.IsAc == false)
+            {
+                return new BetSelectionState
+                {
+                    SelectionId = current.SelectionId,
+                    Odds = current.Odds,
+                    StatusCode = StatusCode.Odds_Is_Inactive,
+                    Message = StatusCode.Odds_Is_Inactive.ToString().Replace('_', ' ')
+                };
+            }
+
+            switch (oddsChangeType)
+            {
+                case OddsChangeType.None:
+                    if (current.Odds != selection.Od)
+                    {
+                        return new BetSelectionState
+                        {
+                            SelectionId = current.SelectionId,
+                            Odds = current.Odds,
+                            StatusCode = StatusCode.Odds_Is_Stale,
+                            Message = StatusCode.Odds_Is_Stale.ToString().Replace('_', ' ')
+                        };
+                    }
+                    break;
+                case OddsChangeType.Any:
+                    break;
+                case OddsChangeType.Higher:
+                    if (current.Odds > selection.Od)
+                    {
+                        return new BetSelectionState
+                        {
+                            SelectionId = current.SelectionId,
+                            Odds = current.Odds,
+                            StatusCode = StatusCode.Odds_Is_Greater_Than_Current_Odds,
+                            Message = StatusCode.Odds_Is_Greater_Than_Current_Odds.ToString().Replace('_', ' ')
+                        };
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            return new BetSelectionState
+            {
+                SelectionId = current.SelectionId,
+                Odds = current.Odds,
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString()
+            };
         }
 
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(ActiveFixturesRequestDTO request)

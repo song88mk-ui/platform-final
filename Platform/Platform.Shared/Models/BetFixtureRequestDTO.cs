@@ -10,6 +10,7 @@ namespace Platform.Shared.Models
         {
             Selections = new List<BetFixtureSelectionRequestDTO>();
         }
+        public OddsChangeType OddsChangeType { get; set; }
         public List<BetFixtureSelectionRequestDTO> Selections { get; set; }
     }
 

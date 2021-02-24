@@ -20,7 +20,7 @@ namespace Platform.API.Repository
             _configuration = configuration;
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(_configuration["API:PlatformSportsbookAPI"]);
-            _httpClient.Timeout = TimeSpan.FromSeconds(5);
+            //_httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
         public async Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(LivestreamRequestDTO request)
         {

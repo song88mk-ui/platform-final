@@ -276,6 +276,7 @@ namespace Platform.API.Repository
 
             var result = await _sportsbookRepository.GetBetFixture(new BetFixtureRequestDTO
             {
+                OddsChangeType = request.OddsChangeType,
                 Selections = request.Selections.Select(s => new BetFixtureSelectionRequestDTO 
                 { 
                     SportId = s.SportId,
@@ -293,6 +294,21 @@ namespace Platform.API.Repository
                 {
                     StatusCode = StatusCode.Error,
                     Message = StatusCode.Error.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (result.Result.Selections.Any(s => s.BetSelectionState.StatusCode != StatusCode.Success))
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString().Replace('_', ' '),
+                    Result = new BetResponseDTO
+                    {
+                        BetId = string.Empty,
+                        UserId = string.Empty,
+                        BetSelections = result.Result.Selections.Select(s => s.BetSelectionState).ToList()
+                    }
                 };
             }
 

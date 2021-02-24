@@ -10,5 +10,14 @@ namespace Platform.Shared.Models
         public string UserId { get; set; }
         public string BetId { get; set; }
         public BetStatus BetStatus { get; set; }
+        public List<BetSelectionState> BetSelections { get; set; }
+    }
+
+    public class BetSelectionState
+    {
+        public StatusCode StatusCode { get; set; }
+        public string Message { get; set; }
+        public long SelectionId { get; set; }
+        public decimal Odds { get; set; }
     }
 }

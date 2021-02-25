@@ -341,7 +341,7 @@ namespace Platform.API.Repository
                 IPAddress = request.IPAddress,
                 Selections = request.Selections.Select(s => new BetSelectionRequestDTO
                 {
-                    SportId = s.SportId,
+                    SportId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SportId).FirstOrDefault(),
                     SportName = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SportName).FirstOrDefault(),
                     SegmentId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SegmentId).FirstOrDefault(),
                     SegmentName = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SegmentName).FirstOrDefault(),

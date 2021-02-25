@@ -62,9 +62,5 @@ namespace Platform.Shared.Models
         public DateTime FixtureStartDate { get; set; }
         public string BetScore { get; set; }
         public string SettlementScore { get; set; }
-        public string BetHomeScore { get; set; }
-        public string BetAwayScore { get; set; }
-        public string SettlementHomeScore { get; set; }
-        public string SettlementAwayScore { get; set; }
     }
 }

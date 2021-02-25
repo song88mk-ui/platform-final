@@ -55,6 +55,9 @@ namespace Platform.Operator.Service.Repository
         }
         private void CancelBet(Guid betId, string reason, string correlationId, IMessageBroker messageBroker)
         {
+            var betData = new Bet();
+            var betSelectionData = new List<BetSelection>();
+
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
                 var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
@@ -69,6 +72,7 @@ namespace Platform.Operator.Service.Repository
                         bet.Reason = $"103 - {reason}";
 
                         var betEntity = context.Bet.Update(bet).Entity;
+                        betData = betEntity;
 
                         context.BetAudit.Add(new BetAudit
                         {
@@ -114,6 +118,7 @@ namespace Platform.Operator.Service.Repository
                             betSelection.IsSettled = true;
 
                             var betSelectionEntity = context.BetSelection.Update(betSelection).Entity;
+                            betSelectionData.Add(betSelectionEntity);
 
                             context.BetSelectionAudit.Add(new BetSelectionAudit
                             {
@@ -155,18 +160,18 @@ namespace Platform.Operator.Service.Repository
 
                         context.SaveChanges();
                         scope.Complete();
-
-                        ProcesssBetCancellation(new OnBetSettlement
-                        {
-                            Bet = betEntity,
-                            BetSelections = betSelections
-                        }, messageBroker, correlationId);
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                     }
                 }
             }
+
+            ProcesssBetCancellation(new OnBetSettlement
+            {
+                Bet = betData,
+                BetSelections = betSelectionData
+            }, messageBroker, correlationId);
         }
         private void AddOperatorLog(OperatorLog operatorLog)
         {

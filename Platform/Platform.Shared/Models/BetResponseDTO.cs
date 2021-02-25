@@ -17,7 +17,7 @@ namespace Platform.Shared.Models
     {
         public StatusCode StatusCode { get; set; }
         public string Message { get; set; }
-        public long SelectionId { get; set; }
+        public string SelectionId { get; set; }
         public decimal Odds { get; set; }
     }
 }

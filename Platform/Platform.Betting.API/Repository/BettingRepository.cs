@@ -409,10 +409,10 @@ namespace Platform.Betting.API.Repository
             if (request.IsCurrent)
             {
                 var openBets = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running };
-                var openBetsResponse = _bettingContext.Bet.AsNoTracking().Where(c => openBets.Contains(c.BetStatusId)).ToList();
+                var openBetsResponse = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && openBets.Contains(c.BetStatusId)).ToList();
 
                 var cancelledRejectedBets = new List<int> { (int)BetStatus.Cancelled, (int)BetStatus.Rejected };
-                var cancelledRejectedBetsResponse = _bettingContext.Bet.AsNoTracking().Where(c => openBets.Contains(c.BetStatusId) && c.BetDate >= DateTime.UtcNow.AddMinutes(5)).ToList();
+                var cancelledRejectedBetsResponse = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && openBets.Contains(c.BetStatusId) && c.BetDate >= DateTime.UtcNow.AddMinutes(5)).ToList();
 
                 if (openBetsResponse.Count > 0)
                     transactions.AddRange(openBetsResponse);

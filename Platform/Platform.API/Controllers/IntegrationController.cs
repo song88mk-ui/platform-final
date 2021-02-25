@@ -60,7 +60,6 @@ namespace Platform.API.Controllers
         [HttpPost("v2/bet/placement")]
         public async Task<IActionResult> PlaceBet2([FromBody] BetRequest2 request)
         {
-            //test
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();

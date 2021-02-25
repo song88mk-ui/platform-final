@@ -19,5 +19,6 @@ namespace Platform.Shared.Models
         public string Message { get; set; }
         public string SelectionId { get; set; }
         public decimal Odds { get; set; }
+        public string CorrelationId { get; set; }
     }
 }

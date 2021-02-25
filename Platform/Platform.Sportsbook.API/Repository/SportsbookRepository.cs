@@ -426,12 +426,13 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            if (selection.FiId != current.FixtureId || selection.MaId != current.MarketId || selection.SeId != current.SelectionId)
+            if (selection.FiId != current.FixtureId || selection.MaId != current.MarketId || selection.SeId != current.SelectionId || selection.SpId != current.SportId)
             {
                 return new BetSelectionState
                 {
-                    SelectionId = current.SelectionId.ToString(),
-                    Odds = current.Odds,
+                    SelectionId = selection.SeId.ToString(),
+                    Odds = selection.Od,
+                    CorrelationId = selection.CoId,
                     StatusCode = StatusCode.Market_Is_Inactive,
                     Message = StatusCode.Market_Is_Inactive.ToString().Replace('_', ' '),
                 };
@@ -441,8 +442,9 @@ namespace Platform.Sportsbook.API.Repository
             {
                 return new BetSelectionState
                 {
-                    SelectionId = current.SelectionId.ToString(),
-                    Odds = current.Odds,
+                    SelectionId = selection.SeId.ToString(),
+                    Odds = selection.Od,
+                    CorrelationId = selection.CoId,
                     StatusCode = StatusCode.Market_Is_Inactive,
                     Message = StatusCode.Market_Is_Inactive.ToString().Replace('_', ' '),
                 };
@@ -452,8 +454,9 @@ namespace Platform.Sportsbook.API.Repository
             {
                 return new BetSelectionState
                 {
-                    SelectionId = current.SelectionId.ToString(),
-                    Odds = current.Odds,
+                    SelectionId = selection.SeId.ToString(),
+                    Odds = selection.Od,
+                    CorrelationId = selection.CoId,
                     StatusCode = StatusCode.Betstop_On_Fixture,
                     Message = StatusCode.Betstop_On_Fixture.ToString().Replace('_', ' '),
                 };
@@ -463,8 +466,9 @@ namespace Platform.Sportsbook.API.Repository
             {
                 return new BetSelectionState
                 {
-                    SelectionId = current.SelectionId.ToString(),
-                    Odds = current.Odds,
+                    SelectionId = selection.SeId.ToString(),
+                    Odds = selection.Od,
+                    CorrelationId = selection.CoId,
                     StatusCode = StatusCode.Market_Is_Suspended,
                     Message = StatusCode.Market_Is_Suspended.ToString().Replace('_', ' ')
                 };
@@ -474,8 +478,9 @@ namespace Platform.Sportsbook.API.Repository
             {
                 return new BetSelectionState
                 {
-                    SelectionId = current.SelectionId.ToString(),
-                    Odds = current.Odds,
+                    SelectionId = selection.SeId.ToString(),
+                    Odds = selection.Od,
+                    CorrelationId = selection.CoId,
                     StatusCode = StatusCode.Market_Is_Inactive,
                     Message = StatusCode.Market_Is_Inactive.ToString().Replace('_', ' ')
                 };
@@ -485,8 +490,9 @@ namespace Platform.Sportsbook.API.Repository
             {
                 return new BetSelectionState
                 {
-                    SelectionId = current.SelectionId.ToString(),
-                    Odds = current.Odds,
+                    SelectionId = selection.SeId.ToString(),
+                    Odds = selection.Od,
+                    CorrelationId = selection.CoId,
                     StatusCode = StatusCode.Odds_Is_Inactive,
                     Message = StatusCode.Odds_Is_Inactive.ToString().Replace('_', ' ')
                 };
@@ -499,8 +505,9 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         return new BetSelectionState
                         {
-                            SelectionId = current.SelectionId.ToString(),
-                            Odds = current.Odds,
+                            SelectionId = selection.SeId.ToString(),
+                            Odds = selection.Od,
+                            CorrelationId = selection.CoId,
                             StatusCode = StatusCode.Odds_Is_Stale,
                             Message = StatusCode.Odds_Is_Stale.ToString().Replace('_', ' ')
                         };
@@ -513,8 +520,9 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         return new BetSelectionState
                         {
-                            SelectionId = current.SelectionId.ToString(),
-                            Odds = current.Odds,
+                            SelectionId = selection.SeId.ToString(),
+                            Odds = selection.Od,
+                            CorrelationId = selection.CoId,
                             StatusCode = StatusCode.Odds_Is_Greater_Than_Current_Odds,
                             Message = StatusCode.Odds_Is_Greater_Than_Current_Odds.ToString().Replace('_', ' ')
                         };
@@ -526,8 +534,9 @@ namespace Platform.Sportsbook.API.Repository
 
             return new BetSelectionState
             {
-                SelectionId = current.SelectionId.ToString(),
-                Odds = current.Odds,
+                SelectionId = selection.SeId.ToString(),
+                Odds = selection.Od,
+                CorrelationId = selection.CoId,
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString()
             };

@@ -33,7 +33,7 @@ namespace Platform.API.Repository
 
             try
             {
-                var response = await _httpClient.PostAsync($"/v1/authentication", new StringContent(JsonSerializer.Serialize(new { Token = operatorToken }), System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.PostAsync($"/v1/authentication", new StringContent(JsonSerializer.Serialize(new TempToken { Token = operatorToken }), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -82,5 +82,10 @@ namespace Platform.API.Repository
                 };
             }
         }
+    }
+
+    public class TempToken
+    {
+        public string Token { get; set; }
     }
 }

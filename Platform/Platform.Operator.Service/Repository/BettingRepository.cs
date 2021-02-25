@@ -53,36 +53,6 @@ namespace Platform.Operator.Service.Repository
             }
 
         }
-        private Tuple<Bet, List<BetSelection>> GetBet(Guid betId)
-        {
-            var betData = new Bet();
-            var betSelectionData = new List<BetSelection>();
-
-            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
-            {
-                var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
-
-                using (var context = new BettingContext(optionsBuilder.Options))
-                {
-                    try
-                    {
-                        var bet = context.Bet.Find(betId);
-                        betData = bet;
-
-                        var betSelections = context.BetSelection.AsNoTracking().Where(c => c.BetId == bet.BetId).ToList();
-                        betSelectionData.AddRange(betSelections);
-
-                        scope.Complete();
-                    }
-                    catch (Exception)
-                    {
-                        return new Tuple<Bet, List<BetSelection>>(null, null);
-                    }
-                }
-            }
-
-            return new Tuple<Bet, List<BetSelection>>(betData, betSelectionData);
-        }
         private void CancelBet(Guid betId, string reason, string correlationId, IMessageBroker messageBroker)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
@@ -221,12 +191,8 @@ namespace Platform.Operator.Service.Repository
         {
             var uri = "/v1/bet/placement";
 
-            var betData = new Bet();
-            var betSelectionData = new List<BetSelection>();
-
-            var bet = GetBet(message.BetId);
-            betData = bet.Item1;
-            betSelectionData = bet.Item2;
+            var betData = message.Bet;
+            var betSelectionData = message.BetSelections;
 
             try
             {

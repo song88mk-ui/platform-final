@@ -43,7 +43,7 @@ namespace Platform.Placement.Service.Repository
                     {
                         try
                         {
-                            var bet = context.Bet.Find(message.BetId);
+                            var bet = context.Bet.Find(message.Bet.BetId);
                             if (bet != null)
                             {
                                 var betStatus = BetStatus.Running;
@@ -161,7 +161,7 @@ namespace Platform.Placement.Service.Repository
                     {
                         try
                         {
-                            var bet = context.Bet.Find(message.BetId);
+                            var bet = context.Bet.Find(message.Bet.BetId);
                             if (bet != null)
                             {
                                 var betStatus = BetStatus.Rejected;

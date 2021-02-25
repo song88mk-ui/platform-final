@@ -366,7 +366,6 @@ namespace Platform.Betting.API.Repository
 
                     _messageBroker.Publish(new OnBetPlacement 
                     { 
-                        BetId = betId,
                         Bet = betData,
                         BetSelections = betSelectionData
                     }, "OnBetPlacement", "r.bet.placement", Guid.NewGuid().ToString().ToUpper());

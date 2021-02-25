@@ -191,7 +191,7 @@ namespace Platform.API.Repository
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                         return JsonSerializer.Deserialize<BaseResponseDTO<MarketTemplateGroupResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     else
-                    {
+                    { 
                         return new BaseResponseDTO<MarketTemplateGroupResponseDTO>
                         {
                             StatusCode = StatusCode.Error,

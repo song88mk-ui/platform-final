@@ -98,8 +98,7 @@ namespace Platform.Betting.API.UnitTest
             newSelection.Odds = 1.71000000000000000000m;
             //newSelection.FixtureStatus = "";
             //newSelection.FixtureStartDate = "";
-            newSelection.BetHomeScore = "";
-            newSelection.BetAwayScore = "";
+            newSelection.BetScore = "0 - 0";
             newSelection.FixtureSpecifier = "sr:match:25547338";
             newSelection.SelectionSpecifier = "uof:3/sr:sport:1/18/13?total=2.5";
             newSelection.CorrelationId = "";
@@ -151,8 +150,7 @@ namespace Platform.Betting.API.UnitTest
             newSelection.SelectionId = 806266155319689252;
             newSelection.SelectionName = "";
             newSelection.Odds = 1.21000000000000000000m;
-            newSelection.BetHomeScore = "";
-            newSelection.BetAwayScore = "";
+            newSelection.BetScore = "0 - 0";
             newSelection.FixtureSpecifier = "sr:match:25547338";
             newSelection.SelectionSpecifier = "uof:3/sr:sport:1/18/13?total=2.5";
             newSelection.CorrelationId = "";
@@ -178,8 +176,7 @@ namespace Platform.Betting.API.UnitTest
             newSelection.SelectionId = 806266155319689252;
             newSelection.SelectionName = "";
             newSelection.Odds = 1.71000000000000000000m;
-            newSelection.BetHomeScore = "";
-            newSelection.BetAwayScore = "";
+            newSelection.BetScore = "0 - 0";
             newSelection.FixtureSpecifier = "sr:match:25547338";
             newSelection.SelectionSpecifier = "uof:3/sr:sport:1/18/13?total=2.5";
             newSelection.CorrelationId = "";

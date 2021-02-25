@@ -132,10 +132,8 @@ namespace Platform.Placement.Service.Repository
                                         FixtureSpecifier = betSelectionEntity.FixtureSpecifier,
                                         SelectionSpecifier = betSelectionEntity.SelectionSpecifier,
                                         FixtureStartDate = betSelectionEntity.FixtureStartDate,
-                                        BetHomeScore = betSelectionEntity.BetHomeScore,
-                                        BetAwayScore = betSelectionEntity.BetAwayScore,
-                                        SettlementHomeScore = betSelectionEntity.SettlementHomeScore,
-                                        SettlementAwayScore = betSelectionEntity.SettlementAwayScore,
+                                        BetScore = betSelectionEntity.BetScore,
+                                        SettlementScore = betSelectionEntity.SettlementScore,
                                         CorrelationId = betSelectionEntity.CorrelationId
                                     });
                                 }
@@ -253,10 +251,8 @@ namespace Platform.Placement.Service.Repository
                                         FixtureSpecifier = betSelectionEntity.FixtureSpecifier,
                                         SelectionSpecifier = betSelectionEntity.SelectionSpecifier,
                                         FixtureStartDate = betSelectionEntity.FixtureStartDate,
-                                        BetHomeScore = betSelectionEntity.BetHomeScore,
-                                        BetAwayScore = betSelectionEntity.BetAwayScore,
-                                        SettlementHomeScore = betSelectionEntity.SettlementHomeScore,
-                                        SettlementAwayScore = betSelectionEntity.SettlementAwayScore,
+                                        BetScore = betSelectionEntity.BetScore,
+                                        SettlementScore = betSelectionEntity.SettlementScore,
                                         CorrelationId = betSelectionEntity.CorrelationId
                                     });
                                 }
@@ -332,8 +328,8 @@ namespace Platform.Placement.Service.Repository
 
             var selection = _factory.CreateBetBuilder()
                                     .SetBetId(betData.BetId.ToString().ToUpper())
-                                    .SetStake((long)companyStake, StakeType.Total)
-                                    .SetEntireStake((long)(betData.TrueStake * 10000), StakeType.Total)
+                                    .SetStake(Convert.ToInt64(companyStake), StakeType.Total)
+                                    .SetEntireStake(Convert.ToInt64((betData.TrueStake * 10000)), StakeType.Total)
                                     .AddSelectedSystem(betSelectionData.Count);
 
             foreach (var betSelection in betSelectionData)

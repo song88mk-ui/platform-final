@@ -60,6 +60,8 @@ namespace Platform.Shared.Models
         public decimal Odds { get; set; }
         public FixtureStatus FixtureStatus { get; set; }
         public DateTime FixtureStartDate { get; set; }
+        public string BetScore { get; set; }
+        public string SettlementScore { get; set; }
         public string BetHomeScore { get; set; }
         public string BetAwayScore { get; set; }
         public string SettlementHomeScore { get; set; }

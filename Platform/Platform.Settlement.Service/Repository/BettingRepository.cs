@@ -223,8 +223,7 @@ namespace Platform.Settlement.Service.Repository
 
             filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;
             filteredSelection.BetSelectionStatusName = message.SelectionStatus.ToString();
-            filteredSelection.SettlementHomeScore = message.SettlementHomeScore;
-            filteredSelection.SettlementAwayScore = message.SettlementAwayScore;
+            filteredSelection.SettlementScore = message.SettlementScore;
             filteredSelection.IsSettled = true;
 
             var betSelectionEntity = context.BetSelection.Update(filteredSelection).Entity;
@@ -261,10 +260,8 @@ namespace Platform.Settlement.Service.Repository
                 FixtureSpecifier = betSelectionEntity.FixtureSpecifier,
                 SelectionSpecifier = betSelectionEntity.SelectionSpecifier,
                 FixtureStartDate = betSelectionEntity.FixtureStartDate,
-                BetHomeScore = betSelectionEntity.BetHomeScore,
-                BetAwayScore = betSelectionEntity.BetAwayScore,
-                SettlementHomeScore = message.SettlementHomeScore,
-                SettlementAwayScore = message.SettlementAwayScore,
+                BetScore = betSelectionEntity.BetScore,
+                SettlementScore = betSelectionEntity.SettlementScore,
                 CorrelationId = betSelection.CorrelationId
             });
 
@@ -399,8 +396,7 @@ namespace Platform.Settlement.Service.Repository
 
             filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;
             filteredSelection.BetSelectionStatusName = message.SelectionStatus.ToString();
-            filteredSelection.SettlementHomeScore = message.SettlementHomeScore;
-            filteredSelection.SettlementAwayScore = message.SettlementAwayScore;
+            filteredSelection.SettlementScore = message.SettlementScore;
             filteredSelection.IsSettled = true;
             filteredSelection.IsResettled = true;
 
@@ -438,10 +434,8 @@ namespace Platform.Settlement.Service.Repository
                 FixtureSpecifier = betSelectionEntity.FixtureSpecifier,
                 SelectionSpecifier = betSelectionEntity.SelectionSpecifier,
                 FixtureStartDate = betSelectionEntity.FixtureStartDate,
-                BetHomeScore = betSelectionEntity.BetHomeScore,
-                BetAwayScore = betSelectionEntity.BetAwayScore,
-                SettlementHomeScore = message.SettlementHomeScore,
-                SettlementAwayScore = message.SettlementAwayScore,
+                BetScore = betSelectionEntity.BetScore,
+                SettlementScore = betSelectionEntity.SettlementScore,
                 CorrelationId = betSelection.CorrelationId
             });
 
@@ -586,8 +580,7 @@ namespace Platform.Settlement.Service.Repository
                 {
                     SelectionId = selectionId,
                     SelectionStatus = message.MarketStatus,
-                    SettlementHomeScore = message.SettlementHomeScore,
-                    SettlementAwayScore = message.SettlementAwayScore
+                    SettlementScore = message.SettlementScore
                 };
 
                 ProcesssBetSettlement(cancellation, messageBroker, correlationId);

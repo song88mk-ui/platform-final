@@ -34,10 +34,8 @@ namespace Platform.Shared.Data.Betting.Entities
         public string FixtureSpecifier { get; set; }
         public string SelectionSpecifier { get; set; }
         public DateTime FixtureStartDate { get; set; }
-        public string BetHomeScore { get; set; }
-        public string BetAwayScore { get; set; }
-        public string SettlementHomeScore { get; set; }
-        public string SettlementAwayScore { get; set; }
+        public string BetScore { get; set; }
+        public string SettlementScore { get; set; }
         public string CorrelationId { get; set; }
     }
 }

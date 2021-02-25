@@ -193,8 +193,6 @@ namespace Platform.API.Repository
                     Odds = s.Odds,
                     FixtureStatus = s.FixtureStatus,
                     FixtureStartDate = s.FixtureStartDate,
-                    BetHomeScore = s.BetHomeScore,
-                    BetAwayScore = s.BetAwayScore,
                     FixtureSpecifier = s.FixtureSpecifier,
                     SelectionSpecifier = s.SelectionSpecifier,
                     CorrelationId = s.CorrelationId
@@ -205,6 +203,15 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet2(string apiKey, string clientId, string operatorToken, BetRequest2 request)
         {
+            if (!IsValidIPAddress(request.IPAddress))
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.IPAddress_Must_Be_IPv4,
+                    Message = StatusCode.IPAddress_Must_Be_IPv4.ToString().Replace('_', ' '),
+                };
+            }
+
             if (request.Stake <= 0)
             {
                 return new BaseResponseDTO<BetResponseDTO>
@@ -353,9 +360,7 @@ namespace Platform.API.Repository
                     Odds = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Odds).FirstOrDefault(),
                     FixtureStatus = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureStatus).FirstOrDefault(),
                     FixtureStartDate = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureStartDate).FirstOrDefault(),
-                    BetHomeScore = string.Empty,
-                    BetAwayScore = string.Empty,
-                    Score = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Score).FirstOrDefault(),
+                    BetScore = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Score).FirstOrDefault(),
                     FixtureSpecifier = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureSpecifier).FirstOrDefault(),
                     SelectionSpecifier = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SelectionSpecifier).FirstOrDefault(),
                     CorrelationId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.CorrelationId).FirstOrDefault()
@@ -910,6 +915,10 @@ namespace Platform.API.Repository
             }
 
             return true;
+        }
+        private bool IsValidIPAddress(string ipAddress)
+        {
+            return IPAddress.TryParse(ipAddress, out IPAddress ipAddresss);
         }
 
         private bool IsValidOdds(List<decimal> odds)

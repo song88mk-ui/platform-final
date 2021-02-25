@@ -78,7 +78,6 @@ namespace Platform.API.Controllers
         [HttpGet("v1/bet/config")]
         public async Task<IActionResult> GetBetConfig([FromQuery] BetConfigRequest request)
         {
-            //test
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 

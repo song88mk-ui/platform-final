@@ -32,9 +32,10 @@ namespace Platform.Shared.Models
         public decimal Payout { get; set; }
         public decimal WinLoss { get; set; }
         public decimal Commission { get; set; }
-        public BetStatus BetStatus { get; set; }
-        public OddsType OddsType { get; set; }
-        public CurrencyCode CurrencyCode { get; set; }
+        public int BetStatusId { get; set; }
+        public string BetStatusName { get; set; }
+        public string OddsType { get; set; }
+        public string CurrencyCode { get; set; }
         public DateTime TransactionDate { get; set; }
         public List<BetSelectionHistoryDTO> Selections { get; set; }
     }
@@ -58,9 +59,12 @@ namespace Platform.Shared.Models
         public string SelectionId { get; set; }
         public string SelectionName { get; set; }
         public decimal Odds { get; set; }
-        public FixtureStatus FixtureStatus { get; set; }
+        public int FixtureStatusId { get; set; }
+        public string FixtureStatusName { get; set; }
         public DateTime FixtureStartDate { get; set; }
         public string BetScore { get; set; }
         public string SettlementScore { get; set; }
+        public int BetSelectionStatusId { get; set; }
+        public string BetSelectionStatusName { get; set; }
     }
 }

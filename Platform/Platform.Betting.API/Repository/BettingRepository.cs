@@ -483,11 +483,12 @@ namespace Platform.Betting.API.Repository
                     Odds = bet.Odds,
                     Payout = bet.Payout,
                     WinLoss = bet.WinLoss,
-                    BetStatus = (BetStatus)bet.BetStatusId,
+                    BetStatusId = bet.BetStatusId,
+                    BetStatusName = bet.BetStatusName,
                     TransactionDate = bet.BetDate,
                     Commission = 0,
-                    CurrencyCode = (CurrencyCode)Enum.Parse(typeof(CurrencyCode), bet.CurrencyCode),
-                    OddsType = (OddsType)bet.OddsTypeId,
+                    CurrencyCode = bet.CurrencyCode,
+                    OddsType = bet.OddsTypeName,
                     Selections = selections.Select(s => new BetSelectionHistoryDTO
                     {
                         SportId = s.SportId,
@@ -506,11 +507,14 @@ namespace Platform.Betting.API.Repository
                         SettlementScore = s.SettlementScore,
                         BetSelectionId = s.BetSelectionId.ToString(),
                         FixtureStartDate = s.FixtureStartDate,
-                        FixtureStatus = (FixtureStatus)s.FixtureStatusId,
+                        FixtureStatusId = s.FixtureStatusId,
+                        FixtureStatusName = s.FixtureStatusName,
                         MarketTemplateId = s.MarketTemplateId,
                         SegmentId = s.SegmentId,
                         SegmentName = s.SegmentName,
-                        SelectionTemplateId = s.SelectionTemplateId
+                        SelectionTemplateId = s.SelectionTemplateId,
+                        BetSelectionStatusId = s.BetSelectionStatusId,
+                        BetSelectionStatusName = s.BetSelectionStatusName
                     }).ToList()
                 });
             }

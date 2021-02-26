@@ -70,6 +70,8 @@ namespace Platform.Operator.Service.Repository
                         bet.BetStatusId = (int)BetStatus.Cancelled;
                         bet.BetStatusName = BetStatus.Cancelled.ToString();
                         bet.Reason = $"103 - {reason}";
+                        bet.SettlementDate = DateTime.UtcNow;
+                        bet.SettlementDateOffset = bet.SettlementDate.AddHours(-4);
 
                         var betEntity = context.Bet.Update(bet).Entity;
                         betData = betEntity;
@@ -210,7 +212,7 @@ namespace Platform.Operator.Service.Repository
                     Stake = betData.Stake,
                     Odds = betData.Odds,
                     BetStatus = betData.BetStatusName,
-                    TransactionDate = betData.BetDate,
+                    TransactionDate = betData.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                     BetSelections = betSelectionData.Select(s => new OperatorBetSelectionRequestDTO
                     {
                         BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
@@ -223,7 +225,7 @@ namespace Platform.Operator.Service.Repository
                         LeagueName = s.LeagueName,
                         FixtureId = s.FixtureId.ToString(),
                         FixtureName = s.FixtureName,
-                        FixtureStartDate = s.FixtureStartDate,
+                        FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                         FixtureStatus = s.FixtureStatusName,
                         Score = s.BetScore,
                         MarketId = s.MarketId.ToString(),
@@ -346,7 +348,7 @@ namespace Platform.Operator.Service.Repository
                     Stake = message.Bet.Stake,
                     Odds = message.Bet.Odds,
                     BetStatus = message.Bet.BetStatusName,
-                    TransactionDate = message.Bet.SettlementDate,
+                    TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                     BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
                     {
                         BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
@@ -359,7 +361,7 @@ namespace Platform.Operator.Service.Repository
                         LeagueName = s.LeagueName,
                         FixtureId = s.FixtureId.ToString(),
                         FixtureName = s.FixtureName,
-                        FixtureStartDate = s.FixtureStartDate,
+                        FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                         FixtureStatus = s.FixtureStatusName,
                         Score = s.BetScore,
                         SettlementScore = s.SettlementScore,
@@ -483,7 +485,7 @@ namespace Platform.Operator.Service.Repository
                     Stake = message.Bet.Stake,
                     Odds = message.Bet.Odds,
                     BetStatus = message.Bet.BetStatusName,
-                    TransactionDate = message.Bet.SettlementDate,
+                    TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                     BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
                     {
                         BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
@@ -496,7 +498,7 @@ namespace Platform.Operator.Service.Repository
                         LeagueName = s.LeagueName,
                         FixtureId = s.FixtureId.ToString(),
                         FixtureName = s.FixtureName,
-                        FixtureStartDate = s.FixtureStartDate,
+                        FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                         FixtureStatus = s.FixtureStatusName,
                         Score = s.BetScore,
                         SettlementScore = s.SettlementScore,
@@ -627,7 +629,7 @@ namespace Platform.Operator.Service.Repository
                     Stake = message.OnBetSettlement.Bet.Stake,
                     Odds = message.OnBetSettlement.Bet.Odds,
                     BetStatus = message.OnBetSettlement.Bet.BetStatusName,
-                    TransactionDate = message.OnBetSettlement.Bet.SettlementDate,
+                    TransactionDate = message.OnBetSettlement.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                     BetSelections = message.OnBetSettlement.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
                     {
                         BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
@@ -640,7 +642,7 @@ namespace Platform.Operator.Service.Repository
                         LeagueName = s.LeagueName,
                         FixtureId = s.FixtureId.ToString(),
                         FixtureName = s.FixtureName,
-                        FixtureStartDate = s.FixtureStartDate,
+                        FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                         FixtureStatus = s.FixtureStatusName,
                         Score = s.BetScore,
                         SettlementScore = s.SettlementScore,
@@ -764,7 +766,7 @@ namespace Platform.Operator.Service.Repository
                     Stake = message.OnBetSettlement.Bet.Stake,
                     Odds = message.OnBetSettlement.Bet.Odds,
                     BetStatus = message.OnBetSettlement.Bet.BetStatusName,
-                    TransactionDate = message.OnBetSettlement.Bet.SettlementDate,
+                    TransactionDate = message.OnBetSettlement.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                     BetSelections = message.OnBetSettlement.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
                     {
                         BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
@@ -777,7 +779,7 @@ namespace Platform.Operator.Service.Repository
                         LeagueName = s.LeagueName,
                         FixtureId = s.FixtureId.ToString(),
                         FixtureName = s.FixtureName,
-                        FixtureStartDate = s.FixtureStartDate,
+                        FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                         FixtureStatus = s.FixtureStatusName,
                         Score = s.BetScore,
                         SettlementScore = s.SettlementScore,

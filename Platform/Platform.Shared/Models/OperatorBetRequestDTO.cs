@@ -34,7 +34,7 @@ namespace Platform.Shared.Models
         public string BetStatus { get; set; }
 
         [JsonPropertyName("transactionDate")]
-        public DateTime TransactionDate { get; set; }
+        public string TransactionDate { get; set; }
 
         [JsonPropertyName("betSelections")]
         public List<OperatorBetSelectionRequestDTO> BetSelections { get; set; }
@@ -73,7 +73,7 @@ namespace Platform.Shared.Models
         public string FixtureName { get; set; }
 
         [JsonPropertyName("fixtureStartDate")]
-        public DateTime FixtureStartDate { get; set; }
+        public string FixtureStartDate { get; set; }
 
         [JsonPropertyName("fixtureStatus")]
         public string FixtureStatus { get; set; }

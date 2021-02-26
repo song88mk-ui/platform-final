@@ -12,4 +12,11 @@ namespace Platform.Shared.MessageModels
         public Bet Bet { get; set; }
         public List<BetSelection> BetSelections { get; set; }
     }
+
+    public class OnBetSettlementRetry
+    {
+        public int RemainingRetries { get; set; }
+
+        public OnBetSettlement OnBetSettlement { get; set; }
+    }
 }

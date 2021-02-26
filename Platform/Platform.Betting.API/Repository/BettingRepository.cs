@@ -8,6 +8,7 @@ using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -235,10 +236,10 @@ namespace Platform.Betting.API.Repository
                         CompanyShare = request.CompanyShare,
                         IsResettled = false,
                         IsCashout = false,
-                        BetDate = request.BetDate,
-                        BetDateOffset = request.BetDate.AddHours(-4),
-                        SettlementDate = request.BetDate,
-                        SettlementDateOffset = request.BetDate.AddHours(-4)
+                        BetDate = DateTime.Parse(request.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff")),
+                        BetDateOffset = DateTime.Parse(request.BetDate.AddHours(-4).ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff")),
+                        SettlementDate = DateTime.Parse(request.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff")),
+                        SettlementDateOffset = DateTime.Parse(request.BetDate.AddHours(-4).ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"))
                     }).Entity;
 
                     betData = betEntity;
@@ -312,7 +313,7 @@ namespace Platform.Betting.API.Repository
                             IsResettled = false,
                             FixtureSpecifier = selection.FixtureSpecifier,
                             SelectionSpecifier = selection.SelectionSpecifier,
-                            FixtureStartDate = selection.FixtureStartDate,
+                            FixtureStartDate = DateTime.Parse(selection.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff")),
                             BetScore = selection.BetScore,
                             SettlementScore = selection.BetScore,
                             CorrelationId = selection.CorrelationId

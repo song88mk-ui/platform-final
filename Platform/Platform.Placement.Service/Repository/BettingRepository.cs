@@ -143,7 +143,6 @@ namespace Platform.Placement.Service.Repository
                             scope.Complete();
 
                             messageBroker.Publish(payload, "OnBetPlacement", "r.bet.operator", correlationId);
-                            messageBroker.Publish(payload, "OnBetPlacement", "r.bet.reports", correlationId);
                         }
                         catch (Exception ex)
                         {
@@ -262,6 +261,8 @@ namespace Platform.Placement.Service.Repository
                             scope.Complete();
 
                             messageBroker.Publish(payload, "OnBetTimeout", "r.bet.cancellation", correlationId);
+
+                            //publish to reports
                             messageBroker.Publish(payload, "OnBetRejection", "r.bet.reports", correlationId);
                         }
                         catch (Exception ex)

@@ -237,6 +237,9 @@ namespace Platform.Operator.Service.Repository
                     }).ToList()
                 };
 
+                //publish to reports
+                messageBroker.Publish(message, "OnBetPlacement", "r.bet.reports", correlationId);
+
                 AddOperatorLog(new OperatorLog
                 {
                     Direction = "REQUEST",
@@ -371,7 +374,7 @@ namespace Platform.Operator.Service.Repository
                     }).ToList()
                 };
 
-                //Publish to Reports
+                //publish to reports
                 messageBroker.Publish(message, "OnBetSettlement", "r.bet.reports", correlationId);
 
                 AddOperatorLog(new OperatorLog

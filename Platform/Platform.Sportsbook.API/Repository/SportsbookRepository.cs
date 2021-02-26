@@ -506,17 +506,17 @@ namespace Platform.Sportsbook.API.Repository
                 case OddsChangeType.Any:
                     break;
                 case OddsChangeType.Higher:
-                    if (current.Odds > selection.Od)
-                    {
-                        return new BetSelectionState
-                        {
-                            SelectionId = selection.SeId.ToString(),
-                            Odds = selection.Od,
-                            CorrelationId = selection.CoId,
-                            StatusCode = StatusCode.Odds_Is_Greater_Than_Current_Odds,
-                            Message = StatusCode.Odds_Is_Greater_Than_Current_Odds.ToString().Replace('_', ' ')
-                        };
-                    }
+                    //if (current.Odds > selection.Od)
+                    //{
+                    //    return new BetSelectionState
+                    //    {
+                    //        SelectionId = selection.SeId.ToString(),
+                    //        Odds = selection.Od,
+                    //        CorrelationId = selection.CoId,
+                    //        StatusCode = StatusCode.Odds_Is_Greater_Than_Current_Odds,
+                    //        Message = StatusCode.Odds_Is_Greater_Than_Current_Odds.ToString().Replace('_', ' ')
+                    //    };
+                    //}
                     break;
                 default:
                     break;

@@ -33,7 +33,7 @@
         Market_Is_Suspended = 124,
         Market_Is_Inactive = 125,
         Odds_Is_Stale = 126,
-        Odds_Is_Greater_Than_Current_Odds = 127,
+
         Odds_Is_Inactive = 128,
         Betstop_On_Fixture = 129,
         Betstop_On_Global = 130,

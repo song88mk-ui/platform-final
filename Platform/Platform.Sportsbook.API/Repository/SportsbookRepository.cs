@@ -362,16 +362,6 @@ namespace Platform.Sportsbook.API.Repository
         {
             var result = await GetBetFixtures(request);
 
-            //if (result.Item3.Count == 0)
-            //{
-            //    return new BaseResponseDTO<BetFixtureResponseDTO>
-            //    {
-            //        StatusCode = StatusCode.Success,
-            //        Message = StatusCode.Success.ToString(),
-            //        Result = new BetFixtureResponseDTO()
-            //    };
-            //}
-
             return new BaseResponseDTO<BetFixtureResponseDTO>
             {
                 StatusCode = StatusCode.Success,

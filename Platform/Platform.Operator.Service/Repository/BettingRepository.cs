@@ -232,8 +232,8 @@ namespace Platform.Operator.Service.Repository
                         SelectionId = s.SelectionId.ToString(),
                         SelectionName = s.SelectionName,
                         Odds = s.Odds,
-                        HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureTypeName.Split(" - ").First().Trim() : string.Empty,
-                        AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureTypeName.Split(" - ").Last().Trim() : string.Empty
+                        HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
+                        AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
                     }).ToList()
                 };
 
@@ -366,8 +366,8 @@ namespace Platform.Operator.Service.Repository
                         SelectionId = s.SelectionId.ToString(),
                         SelectionName = s.SelectionName,
                         Odds = s.Odds,
-                        HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureTypeName.Split(" - ").First().Trim() : string.Empty,
-                        AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureTypeName.Split(" - ").Last().Trim() : string.Empty
+                        HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
+                        AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
                     }).ToList()
                 };
 
@@ -500,8 +500,8 @@ namespace Platform.Operator.Service.Repository
                         SelectionId = s.SelectionId.ToString(),
                         SelectionName = s.SelectionName,
                         Odds = s.Odds,
-                        HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureTypeName.Split(" - ").First().Trim() : string.Empty,
-                        AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureTypeName.Split(" - ").Last().Trim() : string.Empty
+                        HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
+                        AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
                     }).ToList()
                 };
 

@@ -180,31 +180,18 @@ namespace Platform.Settlement.Service.Repository
                             }
 
                             if (filteredSelection.IsSettled == false)
-                            {
                                 isPublish = SettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection);
-                            }
                             else
-                            {
-                                //TODO: resettlement here
-                                //void then apply correct status
-
                                 isPublish = ResettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection);
-                            }
 
                             scope.Complete();
 
                             if (isPublish)
                             {
                                 if (payload.Bet.BetStatusId == (int)BetStatus.Cancelled)
-                                {
                                     messageBroker.Publish(payload, "OnBetCancellation", "r.bet.operator", correlationId);
-                                    //ReportUtility.ReportCancellation(messageBroker, payload.Bet, payload.BetSelections);
-                                }
                                 else
-                                {
                                     messageBroker.Publish(payload, "OnBetSettlement", "r.bet.operator", correlationId);
-                                    //ReportUtility.ReportSettlement(messageBroker, payload.Bet, payload.BetSelections);
-                                }
                             }
                         }
                         catch (Exception ex)

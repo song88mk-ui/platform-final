@@ -1,5 +1,4 @@
 ﻿using Platform.Shared.Enums;
-using System;
 using System.Collections.Generic;
 
 namespace Platform.API.Models
@@ -11,8 +10,8 @@ namespace Platform.API.Models
             Selections = new List<BetSelectionRequest>();
         }
         public decimal Stake { get; set; }
-        public DateTime TransactionDate { get; set; }
         public OddsType OddsType { get; set; }
+        public OddsChangeType OddsChangeType { get; set; }
         public Channel Channel { get; set; }
         public string IPAddress { get; set; }
         public List<BetSelectionRequest> Selections { get; set; }
@@ -21,28 +20,10 @@ namespace Platform.API.Models
     public class BetSelectionRequest
     {
         public int SportId { get; set; }
-        public string SportName { get; set; }
-        public int SegmentId { get; set; }
-        public string SegmentName { get; set; }
-        public int LeagueId { get; set; }
-        public string LeagueName { get; set; }
-        public long FixtureId { get; set; }
-        public string FixtureName { get; set; }
-        public FixtureType FixtureType { get; set; }
-        public string MarketTemplateId { get; set; }
-        public long MarketId { get; set; }
-        public string MarketName { get; set; }
-        public string Line { get; set; }
-        public string SelectionTemplateId { get; set; }
-        public long SelectionId { get; set; }
-        public string SelectionName { get; set; }
+        public string FixtureId { get; set; }
+        public string MarketId { get; set; }
+        public string SelectionId { get; set; }
         public decimal Odds { get; set; }
-        public FixtureStatus FixtureStatus { get; set; }
-        public DateTime FixtureStartDate { get; set; }
-        public string BetHomeScore { get; set; }
-        public string BetAwayScore { get; set; }
-        public string FixtureSpecifier { get; set; }
-        public string SelectionSpecifier { get; set; }
         public string CorrelationId { get; set; }
     }
 }

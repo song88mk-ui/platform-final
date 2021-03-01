@@ -338,7 +338,7 @@ namespace Platform.Placement.Service.Repository
                 selection.AddSelection(_factory.CreateSelectionBuilder()
                                                .SetEventId(betSelection.FixtureSpecifier)
                                                .SetId(betSelection.SelectionSpecifier)
-                                               .SetOdds(Convert.ToInt32(betData.Odds * 10000))
+                                               .SetOdds(Convert.ToInt32(betSelection.Odds * 10000))
                                                .Build());
             }
 

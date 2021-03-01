@@ -298,7 +298,7 @@ namespace Platform.Placement.Service.Repository
                     .SetConfidence(10000)
                     .SetIp(ipAddress)
                     .SetLanguageId(message.Bet.LanguageCode.ToString())
-                    .SetDeviceId($"{message.Bet.ClientCode}-{message.Bet.UserId}")
+                    .SetDeviceId($"{message.Bet.ClientCode}{message.Bet.UserId.Replace("-", "")}")
                     .Build())
                     .Build())
                     .AddBet(BuildBet(message.Bet, message.BetSelections))

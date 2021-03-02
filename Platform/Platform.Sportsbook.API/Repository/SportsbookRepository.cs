@@ -2,6 +2,7 @@
 using MongoDB.Driver;
 using Platform.Shared.Data.Sportsbook;
 using Platform.Shared.Data.Sportsbook.Entities;
+using Platform.Shared.Data.Sportsbook.SQLEntities;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
@@ -313,14 +314,14 @@ namespace Platform.Sportsbook.API.Repository
             var sportGroup = initial.GroupBy(g => g.SportId).Select(s => new SportMarketTemplateGroup
             {
                 SportId = s.Key,
-                Prematch = s.Where(c => c.FixtureStatusId == (int)FixtureStatus.Prematch && c.MarketTemplates != "0").Select(p => new MarketTemplateGroup
+                Prematch = s.Where(c => c.FixtureStatusId == (int)FixtureStatus.Prematch && c.MarketTemplates != "0").Select(p => new Shared.Models.MarketTemplateGroup
                 {
                     MarketTemplateGroupId = p.Id,
                     MarketTemplateGroupName = p.Name,
                     SortOrder = p.SortOrder,
                     MarketTemplateIds = p.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
                 }).OrderBy(o => o.MarketTemplateGroupId).ToList(),
-                Live = s.Where(c => c.FixtureStatusId == (int)FixtureStatus.Live && c.MarketTemplates != "0").Select(l => new MarketTemplateGroup
+                Live = s.Where(c => c.FixtureStatusId == (int)FixtureStatus.Live && c.MarketTemplates != "0").Select(l => new Shared.Models.MarketTemplateGroup
                 {
                     MarketTemplateGroupId = l.Id,
                     MarketTemplateGroupName = l.Name,
@@ -397,6 +398,243 @@ namespace Platform.Sportsbook.API.Repository
                         CorrelationId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.CoId).FirstOrDefault(),
                         BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, s, result)
                     }).ToList()
+                }
+            };
+        }
+        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(UserFavoriteRequestDTO request)
+        {
+            var result = new List<UserFavoriteDTO>();
+            var favorites = await _sportsbookContext.UserFavorite.Where(c => c.UserId == $"{request.ClientCode}-{request.UserId}").ToListAsync();
+
+            if (favorites.Count == 0)
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new UserFavoriteResponseDTO()
+                };
+            }
+
+            var leagueIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.League).Select(s => Convert.ToInt32(s.Id)).Distinct().ToList();
+
+            if (leagueIds.Count > 0)
+            {
+                var leagueFilter = Builders<Fixture>.Filter.Where(c => leagueIds.Contains(c.LeId) && c.FiStId < 2);
+                var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
+
+                foreach (var item in leagueResult)
+                {
+                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.LeId.ToString())) continue;
+
+                    result.Add(new UserFavoriteDTO
+                    {
+                        SportId = item.SpId,
+                        SportName = item.SpNa,
+                        HierarchyId = (int)UserFavoriteHierarchy.League,
+                        HierarchyName = UserFavoriteHierarchy.League.ToString(),
+                        Id = item.LeId.ToString(),
+                        Name = item.LeNa
+                    });
+                }
+            }
+
+            var fixtureIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.Fixture).Select(s => Convert.ToInt64(s.Id)).Distinct().ToList();
+
+            if (fixtureIds.Count > 0)
+            {
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.FiStId < 2);
+                var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+                foreach (var item in fixtureResult)
+                {
+                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.FiId.ToString())) continue;
+
+                    result.Add(new UserFavoriteDTO
+                    {
+                        SportId = item.SpId,
+                        SportName = item.SpNa,
+                        HierarchyId = (int)UserFavoriteHierarchy.Fixture,
+                        HierarchyName = UserFavoriteHierarchy.Fixture.ToString(),
+                        Id = item.FiId.ToString(),
+                        Name = item.FiNa
+                    });
+                }
+            }
+
+            return new BaseResponseDTO<UserFavoriteResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new UserFavoriteResponseDTO
+                {
+                    Favorites = result.OrderBy(o => o.Name).ToList()
+                }
+            };
+        }
+        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> AddFavorites(UserFavoriteInsertDeleteRequestDTO request)
+        {
+            var result = new List<UserFavoriteDTO>();
+
+            var favorite = await _sportsbookContext.UserFavorite.FindAsync($"{request.ClientCode}-{request.UserId}", request.Id);
+
+            if (favorite == null)
+            {
+                _sportsbookContext.UserFavorite.Add(new UserFavorite
+                {
+                    UserId = $"{request.ClientCode}-{request.UserId}",
+                    Id = request.Id,
+                    HierarchyId = (int)request.UserFavoriteHierarchy
+                });
+
+                _sportsbookContext.SaveChanges();
+            }
+
+            var favorites = await _sportsbookContext.UserFavorite.Where(c => c.UserId == $"{request.ClientCode}-{request.UserId}").ToListAsync();
+
+            if (favorites.Count == 0)
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new UserFavoriteResponseDTO()
+                };
+            }
+
+            var leagueIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.League).Select(s => Convert.ToInt32(s.Id)).Distinct().ToList();
+
+            if (leagueIds.Count > 0)
+            {
+                var leagueFilter = Builders<Fixture>.Filter.Where(c => leagueIds.Contains(c.LeId) && c.FiStId < 2);
+                var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
+
+                foreach (var item in leagueResult)
+                {
+                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.LeId.ToString())) continue;
+
+                    result.Add(new UserFavoriteDTO
+                    {
+                        SportId = item.SpId,
+                        SportName = item.SpNa,
+                        HierarchyId = (int)UserFavoriteHierarchy.League,
+                        HierarchyName = UserFavoriteHierarchy.League.ToString(),
+                        Id = item.LeId.ToString(),
+                        Name = item.LeNa
+                    });
+                }
+            }
+
+            var fixtureIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.Fixture).Select(s => Convert.ToInt64(s.Id)).Distinct().ToList();
+
+            if (fixtureIds.Count > 0)
+            {
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.FiStId < 2);
+                var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+                foreach (var item in fixtureResult)
+                {
+                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.FiId.ToString())) continue;
+
+                    result.Add(new UserFavoriteDTO
+                    {
+                        SportId = item.SpId,
+                        SportName = item.SpNa,
+                        HierarchyId = (int)UserFavoriteHierarchy.Fixture,
+                        HierarchyName = UserFavoriteHierarchy.Fixture.ToString(),
+                        Id = item.FiId.ToString(),
+                        Name = item.FiNa
+                    });
+                }
+            }
+
+            return new BaseResponseDTO<UserFavoriteResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new UserFavoriteResponseDTO
+                {
+                    Favorites = result.OrderBy(o => o.Name).ToList()
+                }
+            };
+        }
+        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> DeleteFavorites(UserFavoriteInsertDeleteRequestDTO request)
+        {
+            var result = new List<UserFavoriteDTO>();
+
+            var favorite = await _sportsbookContext.UserFavorite.FindAsync($"{request.ClientCode}-{request.UserId}", request.Id);
+
+            if (favorite != null)
+            {
+                _sportsbookContext.UserFavorite.Remove(favorite);
+                _sportsbookContext.SaveChanges();
+            }
+
+            var favorites = await _sportsbookContext.UserFavorite.Where(c => c.UserId == $"{request.ClientCode}-{request.UserId}").ToListAsync();
+
+            if (favorites.Count == 0)
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new UserFavoriteResponseDTO()
+                };
+            }
+
+            var leagueIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.League).Select(s => Convert.ToInt32(s.Id)).Distinct().ToList();
+
+            if (leagueIds.Count > 0)
+            {
+                var leagueFilter = Builders<Fixture>.Filter.Where(c => leagueIds.Contains(c.LeId) && c.FiStId < 2);
+                var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
+
+                foreach (var item in leagueResult)
+                {
+                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.LeId.ToString())) continue;
+
+                    result.Add(new UserFavoriteDTO
+                    {
+                        SportId = item.SpId,
+                        SportName = item.SpNa,
+                        HierarchyId = (int)UserFavoriteHierarchy.League,
+                        HierarchyName = UserFavoriteHierarchy.League.ToString(),
+                        Id = item.LeId.ToString(),
+                        Name = item.LeNa
+                    });
+                }
+            }
+
+            var fixtureIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.Fixture).Select(s => Convert.ToInt64(s.Id)).Distinct().ToList();
+
+            if (fixtureIds.Count > 0)
+            {
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.FiStId < 2);
+                var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+                foreach (var item in fixtureResult)
+                {
+                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.FiId.ToString())) continue;
+
+                    result.Add(new UserFavoriteDTO
+                    {
+                        SportId = item.SpId,
+                        SportName = item.SpNa,
+                        HierarchyId = (int)UserFavoriteHierarchy.Fixture,
+                        HierarchyName = UserFavoriteHierarchy.Fixture.ToString(),
+                        Id = item.FiId.ToString(),
+                        Name = item.FiNa
+                    });
+                }
+            }
+
+            return new BaseResponseDTO<UserFavoriteResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new UserFavoriteResponseDTO
+                {
+                    Favorites = result.OrderBy(o => o.Name).ToList()
                 }
             };
         }

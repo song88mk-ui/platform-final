@@ -649,6 +649,100 @@ namespace Platform.API.Repository
 
             return await _sportsbookRepository.GetMarketTemplateGroups();
         }
+        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(string apiKey, string clientId, string operatorToken)
+        {
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+
+            if (authenticationResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
+                };
+            }
+
+            return await _sportsbookRepository.GetUserFavorites(new UserFavoriteRequestDTO 
+            { 
+                UserId = authenticationResponse.Result.UserId,
+                ClientCode = clientResponse.Result.ClientCode
+            });
+        }
+        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> AddUserFavorites(string apiKey, string clientId, string operatorToken, InsertDeleteUserFavoritesRequest request)
+        {
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+
+            if (authenticationResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
+                };
+            }
+
+            return await _sportsbookRepository.AddUserFavorites(new UserFavoriteInsertDeleteRequestDTO
+            {
+                UserId = authenticationResponse.Result.UserId,
+                ClientCode = clientResponse.Result.ClientCode,
+                Id = request.Id,
+                UserFavoriteHierarchy = request.UserFavoriteHierarchy
+            });
+        }
+        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> DeleteUserFavorites(string apiKey, string clientId, string operatorToken, InsertDeleteUserFavoritesRequest request)
+        {
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+
+            if (authenticationResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
+                };
+            }
+
+            return await _sportsbookRepository.DeleteUserFavorites(new UserFavoriteInsertDeleteRequestDTO
+            {
+                UserId = authenticationResponse.Result.UserId,
+                ClientCode = clientResponse.Result.ClientCode,
+                Id = request.Id,
+                UserFavoriteHierarchy = request.UserFavoriteHierarchy
+            });
+        }
 
         public async Task<BaseResponseDTO<ClientResponseDTO>> AddOrUpdateClient(ClientRequestDTO request)
         {

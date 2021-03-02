@@ -114,6 +114,48 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpGet("v1/sportsbook/userfavorites/get")]
+        public async Task<IActionResult> GetUserFavorites([FromBody] UserFavoriteRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetUserFavorites(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/sportsbook/userfavorites/insert")]
+        public async Task<IActionResult> AddUserFavorites([FromBody] UserFavoriteInsertDeleteRequestDTO request)
+        {
+            var result = await _sportsbookRepository.AddFavorites(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpDelete("v1/sportsbook/userfavorites/delete")]
+        public async Task<IActionResult> DeleteUserFavorites([FromBody] UserFavoriteInsertDeleteRequestDTO request)
+        {
+            var result = await _sportsbookRepository.DeleteFavorites(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
 
 
 

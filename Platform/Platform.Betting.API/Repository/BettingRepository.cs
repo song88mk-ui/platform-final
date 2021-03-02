@@ -119,7 +119,7 @@ namespace Platform.Betting.API.Repository
                 }
 
             //    //TODO: Max Fixture Bet 
-            //    var remainingFixtureBet = 0m;
+                var remainingFixtureBet = 0m;
 
                 var betFixtureLimits = _bettingContext.StakeLimitFixture.Find(request.UserId, request.Selections.FirstOrDefault().FixtureId);
                 if (betFixtureLimits != null)

@@ -23,6 +23,7 @@ namespace Platform.Sportsbook.API.Repository
         private IMongoCollection<Fixture> fixtureCollection;
         private IMongoCollection<Market> marketCollection;
         private IMongoCollection<Selection> selectionCollection;
+        private IMongoCollection<BettingStatus> bettingStatusCollection;
         private readonly HttpClient _httpClient;
 
         public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMessageBroker messageBroker)
@@ -33,6 +34,7 @@ namespace Platform.Sportsbook.API.Repository
             fixtureCollection = _db.GetCollection<Fixture>("Fixture");
             marketCollection = _db.GetCollection<Market>("Market");
             selectionCollection = _db.GetCollection<Selection>("Selection");
+            bettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus");
 
             _sportsbookContext = sportsbookContext;
             _httpClient = httpClient;
@@ -337,7 +339,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
-        private async Task<Tuple<List<Fixture>, List<Market>, List<Selection>>> GetBetFixtures(BetFixtureRequestDTO request)
+        private async Task<Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>> GetBetFixtures(BetFixtureRequestDTO request)
         {
             var fixtureIds = request.Selections.Select(s => s.FixtureId).ToList();
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
@@ -351,12 +353,12 @@ namespace Platform.Sportsbook.API.Repository
             var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
             var selections = selectionCollection.Find(selectionFilter).ToListAsync();
 
-            //var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BetStop == "betstop");
-            //var bettingStatusTask = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var bettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
 
-            await Task.WhenAll(fixtures, markets, selections);
+            await Task.WhenAll(fixtures, markets, selections, bettingStatus);
 
-            return new Tuple<List<Fixture>, List<Market>, List<Selection>>(fixtures.Result, markets.Result, selections.Result);
+            return new Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>(fixtures.Result, markets.Result, selections.Result, bettingStatus.Result);
         }
         public async Task<BaseResponseDTO<BetFixtureResponseDTO>> GetBetFixture(BetFixtureRequestDTO request)
         {
@@ -399,11 +401,23 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
-        private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<Selection>> result)
+        private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus> result)
         {
             var fixture = result.Item1.Where(c => c.FiId == current.FixtureId).FirstOrDefault();
             var market = result.Item2.Where(c => c.MaId == current.MarketId).FirstOrDefault();
             var selection = result.Item3.Where(c => c.SeId == current.SelectionId).FirstOrDefault();
+            var bettingStatus = result.Item4;
+
+            if (bettingStatus != null && bettingStatus.IsBeSo == true)
+            {
+                return new BetSelectionState
+                {
+                    SelectionId = current.SelectionId.ToString(),
+                    Odds = current.Odds,
+                    StatusCode = StatusCode.Betstop_On_Global,
+                    Message = StatusCode.Betstop_On_Global.ToString().Replace('_', ' ')
+                };
+            }
 
             if (fixture == null || market == null || selection == null)
             {

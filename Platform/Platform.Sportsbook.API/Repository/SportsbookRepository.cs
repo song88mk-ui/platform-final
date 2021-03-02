@@ -30,7 +30,7 @@ namespace Platform.Sportsbook.API.Repository
         public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMessageBroker messageBroker)
         {
             var client = new MongoClient("mongodb+srv://lino:fcisong88@production.n6svy.mongodb.net/sportsbook?retryWrites=true&w=0");
-            _db = client.GetDatabase("Sportsbook");
+            _db = client.GetDatabase("Sportsbook").WithReadPreference(new ReadPreference(ReadPreferenceMode.SecondaryPreferred));
 
             fixtureCollection = _db.GetCollection<Fixture>("Fixture");
             marketCollection = _db.GetCollection<Market>("Market");

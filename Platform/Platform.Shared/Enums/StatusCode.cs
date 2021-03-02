@@ -38,6 +38,8 @@
         Betstop_On_Fixture = 129,
         Betstop_On_Global = 130,
 
+        Max_Liability_By_Tier_Not_Found = 131,
+        Mts_Error = 132,
 
         Error = 1000,
         Operator_Error = 1001

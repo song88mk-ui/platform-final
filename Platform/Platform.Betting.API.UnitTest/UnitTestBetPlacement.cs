@@ -98,8 +98,7 @@ namespace Platform.Betting.API.UnitTest
             newSelection.Odds = 1.71000000000000000000m;
             //newSelection.FixtureStatus = "";
             //newSelection.FixtureStartDate = "";
-            newSelection.BetHomeScore = "";
-            newSelection.BetAwayScore = "";
+
             newSelection.FixtureSpecifier = "sr:season:59630";
             newSelection.SelectionSpecifier = "uof:3/sr:sport:1/534/pre:outcometext:6170?variant=pre:markettext:62039";
             newSelection.CorrelationId = "";

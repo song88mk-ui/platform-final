@@ -1328,8 +1328,8 @@ namespace Platform.Sportsbook.API.Repository
                     SelectionName = s.SeNa,
                     DecimalOdds = s.Od.ToString(),
                     IsActive = s.IsAc
-                }).ToList()
-            }).ToList();
+                }).OrderBy(o => o.SelectionTemplateId).ToList()
+            }).OrderBy(o => o.MarketTemplateId).ToList();
         }
 
         private List<MarketDTO> GetMarkets(List<Market> markets, List<Selection> selections)

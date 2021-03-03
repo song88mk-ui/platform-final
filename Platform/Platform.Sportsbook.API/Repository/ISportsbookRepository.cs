@@ -21,5 +21,7 @@ namespace Platform.Sportsbook.API.Repository
         Task<BaseResponseDTO<SportsLookupResponseDTO>> GetSportsLookup();
         Task<BaseResponseDTO<SegmentsLookupResponseDTO>> GetSegmentsLookup();
         Task<BaseResponseDTO<LeaguesLookupResponseDTO>> GetLeaguesLookup();
+
+        Task<BaseResponseDTO<TWResponseDTO>> GetTopFixturesTW(TWRequestDTO request);
     }
 }

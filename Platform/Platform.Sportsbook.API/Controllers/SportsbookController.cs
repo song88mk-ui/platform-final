@@ -142,10 +142,24 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
-        [HttpDelete("v1/sportsbook/userfavorites/delete")]
+        [HttpPost("v1/sportsbook/userfavorites/delete")]
         public async Task<IActionResult> DeleteUserFavorites([FromBody] UserFavoriteInsertDeleteRequestDTO request)
         {
             var result = await _sportsbookRepository.DeleteFavorites(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v2/sportsbook/topfixtures")]
+        public async Task<IActionResult> GetTopFixturesTW([FromBody] TWRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetTopFixturesTW(request);
 
             switch (result.StatusCode)
             {

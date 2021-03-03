@@ -139,6 +139,29 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpGet("v1/sportsbook/allleagues")]
+        public async Task<IActionResult> GetAllLeagues([FromQuery] TempTopLeaguesRequest request2)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var request = new TopLeaguesRequest
+            {
+                SportId = request2.SportId,
+                LanguageCode = "EN"
+            };
+
+            var result = await _platformRepository.GetAllLeagues(apiKey, clientId, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpGet("v1/sportsbook/topfixtures")]
         public async Task<IActionResult> GetTopFixtures()
         {
@@ -258,7 +281,7 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v2/sportsbook/livefixturecount")]
+        [HttpGet("v1/sportsbook/livefixturecount")]
         public async Task<IActionResult> GetLiveFixtureCount()
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
@@ -275,7 +298,7 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v2/sportsbook/todayfixturecount")]
+        [HttpGet("v1/sportsbook/todayfixturecount")]
         public async Task<IActionResult> GetTodayFixtureCount([FromQuery] int hourUTCOffset)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
@@ -292,7 +315,7 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v2/sportsbook/livefixtures")]
+        [HttpGet("v1/sportsbook/livefixtures")]
         public async Task<IActionResult> GetLiveFixtures([FromQuery] int sportId)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
@@ -309,7 +332,7 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v2/sportsbook/todayfixtures")]
+        [HttpGet("v1/sportsbook/todayfixtures")]
         public async Task<IActionResult> GetTodayFixtures([FromQuery] int sportId, int hourUTCOffset)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();

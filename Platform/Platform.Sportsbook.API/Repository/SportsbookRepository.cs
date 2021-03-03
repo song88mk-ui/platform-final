@@ -147,7 +147,64 @@ namespace Platform.Sportsbook.API.Repository
                 if (finalResult.Any(c => c.SegmentId == item.SegmentId && c.LeagueId == item.LeagueId)) continue;
                 if (finalResult.Count == 15) break;
 
-                finalResult.Add(item);
+                finalResult.Add(new TopLeague
+                {
+                    LeagueId = item.LeagueId,
+                    LeagueName = item.LeagueName,
+                    SegmentId = item.SegmentId,
+                    SegmentName = item.SegmentName,
+                    LiveCount = fixtures.Where(c => c.SegId == item.SegmentId && c.LeId == item.LeagueId && c.FiStId == (int)FixtureStatus.Live).Count()
+                });
+            }
+
+            return new BaseResponseDTO<TopLeaguesResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new TopLeaguesResponseDTO
+                {
+                    TopLeagues = finalResult
+                }
+            };
+        }
+        public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues(TopLeaguesRequestDTO request)
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiTyId == 0 && c.FiStId < 2);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<TopLeaguesResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new TopLeaguesResponseDTO()
+                };
+            }
+
+            var result = fixtures.Select(s => new TopLeague
+            {
+                SegmentId = s.SegId,
+                SegmentName = s.SegNa,
+                LeagueId = s.LeId,
+                LeagueName = s.LeNa,
+                LiveCount = fixtures.Where(c => c.SegId == s.SegId && c.LeId == s.LeId && c.FiStId == (int)FixtureStatus.Live).Count()
+            }).OrderBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ToList();
+
+            var finalResult = new List<TopLeague>();
+
+            foreach (var item in result)
+            {
+                if (finalResult.Any(c => c.SegmentId == item.SegmentId && c.LeagueId == item.LeagueId)) continue;
+
+                finalResult.Add(new TopLeague
+                {
+                    LeagueId = item.LeagueId,
+                    LeagueName = item.LeagueName,
+                    SegmentId = item.SegmentId,
+                    SegmentName = item.SegmentName,
+                    LiveCount = fixtures.Where(c => c.SegId == item.SegmentId && c.LeId == item.LeagueId && c.FiStId == (int)FixtureStatus.Live).Count()
+                });
             }
 
             return new BaseResponseDTO<TopLeaguesResponseDTO>

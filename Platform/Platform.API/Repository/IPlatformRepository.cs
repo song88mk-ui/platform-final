@@ -13,6 +13,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<ClientResponseDTO>> AddOrUpdateClient(ClientRequestDTO request);
         Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(string apiKey, string clientId, string operatorToken, LivestreamRequest request);
         Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetTopLeagues(string apiKey, string clientId, TopLeaguesRequest request);
+        Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues(string apiKey, string clientId, TopLeaguesRequest request);
         Task<BaseResponseDTO<TopFixturesResponseDTO>> GetTopFixtures(string apiKey, string clientId, TopFixturesRequest request);
         Task<BaseResponseDTO<OrderedSportsResponseDTO>> GetOrderedSports(string apiKey, string clientId, OrderedSportsRequest request);
         Task<BaseResponseDTO<OrderedLeaguesResponseDTO>> GetOrderedLeagues(string apiKey, string clientId, OrderedLeaguesRequest request);

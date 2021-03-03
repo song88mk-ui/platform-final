@@ -44,6 +44,20 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v1/sportsbook/allleagues")]
+        public async Task<IActionResult> GetAllLeagues([FromBody] TopLeaguesRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetAllLeagues(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/sportsbook/topfixtures")]
         public async Task<IActionResult> GetTopFixtures([FromBody] TopFixturesRequestDTO request)
         {

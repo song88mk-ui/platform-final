@@ -254,6 +254,20 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v2/sportsbook/sports")]
+        public async Task<IActionResult> GetSports([FromBody] SportsRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetSports(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
 
         [HttpPost("v1/sportsbook/activefixtures")]
         public async Task<IActionResult> GetActiveFixtures([FromBody] ActiveFixturesRequestDTO request)

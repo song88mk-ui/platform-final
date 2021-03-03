@@ -269,6 +269,88 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+        public async Task<BaseResponseDTO<SportsResponseDTO>> GetSports(SportsRequestDTO request)
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<SportsResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new SportsResponseDTO()
+                };
+            }
+
+            var sportIds = fixtures.Select(s => s.SpId).Distinct().ToList();
+
+            var leagueSortOrder = _sportsbookContext.TierLeagueOrder.Where(c => sportIds.Contains(c.SportId)).ToList();
+            var sportSortOrder = _sportsbookContext.ClientSportOrder.Where(c => c.ClientId == request.ClientId).ToList();
+
+            var result = fixtures.Select(s => new TempOrderedLeague
+            {
+                SportId = s.SpId,
+                SportName = s.SpNa,
+                SegmentId = s.SegId,
+                SegmentName = s.SegNa,
+                LeagueId = s.LeId,
+                LeagueName = s.LeNa,
+                SortOrder = leagueSortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                == 0 ? 1000 : leagueSortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+            }).ToList();
+
+            var sportResult = fixtures.Select(s => new TempOrderedSport
+            {
+                SportId = s.SpId,
+                SportName = s.SpNa,
+                SortOrder = sportSortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
+                    == 0 ? 1000 : sportSortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
+            }).OrderBy(o => o.SortOrder).ThenBy(o => o.SportName).ToList();
+
+            var finalResult = new List<OrderedSport>();
+
+            foreach (var item in sportResult)
+            {
+                if (finalResult.Any(c => c.SportId == item.SportId)) continue;
+
+                finalResult.Add(item);
+            }
+
+            var final = new List<SportDTO>();
+
+            foreach (var sport in finalResult)
+            {
+                final.Add(new SportDTO
+                {
+                    SportId = sport.SportId,
+                    SportName = sport.SportName,
+                    Segments = result.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO 
+                    { 
+                        SegmentId = s.Key,
+                        SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
+                        SortOrder = s.Select(se => se.SortOrder).FirstOrDefault(),
+                        Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO 
+                        {
+                            LeagueId = l.Key,
+                            LeagueName = l.Select(le => le.LeagueName).FirstOrDefault(),
+                            SortOrder = l.Select(le => le.SortOrder).FirstOrDefault()
+                        }).OrderBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ToList()
+                    }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ToList()
+                });
+            }
+
+            return new BaseResponseDTO<SportsResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new SportsResponseDTO
+                {
+                    Sports = final
+                }
+            };
+        }
         public async Task<BaseResponseDTO<OrderedSportsResponseDTO>> GetOrderedSports(OrderedSportsRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);

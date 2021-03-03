@@ -37,4 +37,9 @@ namespace Platform.API.Models
         public int LeagueId { get; set; }
         public string LanguageCode { get; set; }
     }
+
+    public class SportRequest
+    {
+        public string LanguageCode { get; set; }
+    }
 }

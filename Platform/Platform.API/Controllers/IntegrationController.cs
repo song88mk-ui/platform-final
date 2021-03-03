@@ -365,6 +365,22 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+        [HttpGet("v1/sportsbook/sports")]
+        public async Task<IActionResult> GetSports()
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetSports(apiKey, clientId, new SportRequest { LanguageCode = LanguageCode.EN.ToString() });
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
 
         [HttpPost("v1/sportsbook/userfavorites")]
         public async Task<IActionResult> AddUserFavorites([FromQuery] InsertDeleteUserFavoritesRequest request)

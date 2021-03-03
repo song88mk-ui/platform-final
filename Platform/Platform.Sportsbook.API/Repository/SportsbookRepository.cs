@@ -767,7 +767,7 @@ namespace Platform.Sportsbook.API.Repository
                 result.Add(new FixtureCount
                 {
                     SportId = item.SportId,
-                    SportName = item.SportName,
+                    SportName = item.SportName.Trim(),
                     Count = count
                 });
             }

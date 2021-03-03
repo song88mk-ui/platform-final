@@ -1469,6 +1469,48 @@ namespace Platform.Sportsbook.API.Repository
                     return new List<string> { "186", "16", "18" };
                 case 31: //Badminton
                     return new List<string> { "186", "237", "238" };
+                case 118: //Call of Duty
+                    return new List<string> { "186" };
+                case 22: //Darts
+                    return new List<string> { "186", "188", "314" };
+                case 109: //eSport CS GO
+                    return new List<string> { "186", "327", "328" };
+                case 111: //eSport Dota 2
+                    return new List<string> { "186", "327", "328" };
+                case 134: //ESport King of Glory
+                    return new List<string> { "186" };
+                case 110: //eSport LOL
+                    return new List<string> { "186", "327", "328" };
+                case 153: //eBasketball
+                    return new List<string> { "219", "223", "225" };
+                case 113: //Hearthstone
+                    return new List<string> { "186" };
+                case 121: //Overwatch
+                    return new List<string> { "186" };
+                case 128: //Rocket League
+                    return new List<string> { "186" };
+                case 12: //Rugby
+                    return new List<string> { "1", "16", "18" };
+                case 19: //Snooker
+                    return new List<string> { "1", "186" };
+                case 112: //StarCraft
+                    return new List<string> { "186", "327", "328" };
+                case 20: //Table Tennis
+                    return new List<string> { "186", "327", "328" };
+                case 1003: //Virtual Baseball
+                    return new List<string> { "251", "256", "258" };
+                case 1002: //Virtual Basketball
+                    return new List<string> { "219", "223", "225" };
+                case 1058: //Virtual Dog Racing
+                    return new List<string> { "866" };
+                case 1055: //Virtual Horse Racing
+                    return new List<string> { "866" };
+                case 1001: //Virtual Soccer
+                    return new List<string> { "1", "16", "18" };
+                case 1005: //Virtual Tennis
+                    return new List<string> { "186", "187", "189" };
+                case 23: //Volleyball
+                    return new List<string> { "186", "237", "238" };
                 default:
                     return new List<string>();
             }

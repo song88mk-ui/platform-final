@@ -21,5 +21,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<UserFavoriteResponseDTO>> AddUserFavorites(string apiKey, string clientId, string operatorToken, InsertDeleteUserFavoritesRequest request);
         Task<BaseResponseDTO<UserFavoriteResponseDTO>> DeleteUserFavorites(string apiKey, string clientId, string operatorToken, InsertDeleteUserFavoritesRequest request);
         Task<BaseResponseDTO<TWResponseDTO>> GetTopFixtures2(string apiKey, string clientId, TopFixturesRequest request);
+        Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(string apiKey, string clientId, FixtureCountRequest request);
+        Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixtures(string apiKey, string clientId, FixtureRequest request);
     }
 }

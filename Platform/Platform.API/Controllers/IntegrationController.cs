@@ -246,9 +246,42 @@ namespace Platform.API.Controllers
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
             var result = await _platformRepository.GetTopFixtures2(apiKey, clientId, new TopFixturesRequest { LanguageCode = LanguageCode.EN.ToString() });
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v2/sportsbook/livefixturecount")]
+        public async Task<IActionResult> GetLiveFixtureCount()
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetLiveFixtureCount(apiKey, clientId, new FixtureCountRequest { LanguageCode = LanguageCode.EN.ToString() });
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v2/sportsbook/livefixtures")]
+        public async Task<IActionResult> GetLiveFixtures([FromQuery] int sportId)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetLiveFixtures(apiKey, clientId, new FixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId });
 
             switch (result.StatusCode)
             {

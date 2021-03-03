@@ -4,6 +4,38 @@ using System.Collections.Generic;
 
 namespace Platform.Shared.Models
 {
+    public class TWLiveFixtureRequestDTO
+    {
+        public int SportId { get; set; }
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+    }
+    public class TWFixtureCountRequestDTO
+    {
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+    }
+    public class TWFixtureCountResponseDTO
+    {
+        public TWFixtureCountResponseDTO()
+        {
+            Sports = new List<FixtureCount>();
+        }
+        public List<FixtureCount> Sports { get; set; }
+    }
+
+    public class FixtureCount
+    {
+        public int SportId { get; set; }
+        public string SportName { get; set; }
+        public int Count { get; set; }
+    }
+
+    public class TempFixtureCount : FixtureCount
+    {
+        public int SortOrder { get; set; }
+    }
+
     public class TWRequestDTO
     {
         public Guid ClientId { get; set; }
@@ -18,29 +50,6 @@ namespace Platform.Shared.Models
         }
         public List<FixtureDTO> Fixtures { get; set; }
     }
-
-    //public class SportDTO
-    //{
-    //    public SportDTO()
-    //    {
-    //        Leagues = new List<LeagueDTO>();
-    //    }
-    //    public int SportId { get; set; }
-    //    public string SportName { get; set; }
-    //    public List<LeagueDTO> Leagues { get; set; }
-    //}
-
-    //public class LeagueDTO
-    //{
-    //    public LeagueDTO()
-    //    {
-    //        Fixtures = new List<FixtureDTO>();
-    //    }
-    //    public int SportId { get; set; }
-    //    public string SportName { get; set; }
-    //    public string SegmentName { get; set; }
-    //    public List<FixtureDTO> Fixtures { get; set; }
-    //}
 
     public class FixtureDTO
     {

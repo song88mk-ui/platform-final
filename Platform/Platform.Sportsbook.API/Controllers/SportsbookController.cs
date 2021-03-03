@@ -170,7 +170,33 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v2/sportsbook/livefixturecount")]
+        public async Task<IActionResult> GetLiveFixtureCount([FromBody] TWFixtureCountRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetLiveFixtureCount(request);
 
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v2/sportsbook/livefixtures")]
+        public async Task<IActionResult> GetLiveFixtures([FromBody] TWLiveFixtureRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetLiveFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
 
 
         [HttpPost("v1/sportsbook/activefixtures")]

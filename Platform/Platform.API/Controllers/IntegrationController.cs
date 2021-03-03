@@ -365,6 +365,7 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+
         [HttpGet("v1/sportsbook/sports")]
         public async Task<IActionResult> GetSports()
         {
@@ -372,6 +373,23 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
             var result = await _platformRepository.GetSports(apiKey, clientId, new SportRequest { LanguageCode = LanguageCode.EN.ToString() });
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/sportsbook/fixturedetails")]
+        public async Task<IActionResult> GetFixtureDetails([FromQuery] string fixtureId)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetFixtureDetails(apiKey, clientId, new FixtureDetailsRequest { LanguageCode = LanguageCode.EN.ToString(), FixtureId = fixtureId });
 
             switch (result.StatusCode)
             {

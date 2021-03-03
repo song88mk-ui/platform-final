@@ -42,4 +42,10 @@ namespace Platform.API.Models
     {
         public string LanguageCode { get; set; }
     }
+
+    public class FixtureDetailsRequest
+    {
+        public string FixtureId { get; set; }
+        public string LanguageCode { get; set; }
+    }
 }

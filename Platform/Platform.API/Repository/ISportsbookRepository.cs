@@ -24,5 +24,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(TWTodayFixtureRequestDTO request);
         Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWFixtureRequestDTO request);
         Task<BaseResponseDTO<SportsResponseDTO>> GetSports(SportsRequestDTO request);
+        Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(TWFixtureDetailsRequestDTO request);
     }
 }

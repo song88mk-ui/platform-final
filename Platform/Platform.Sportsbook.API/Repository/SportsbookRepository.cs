@@ -1223,6 +1223,91 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(TWFixtureDetailsRequestDTO request)
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == Convert.ToInt64(request.FixtureId));
+            var fixture = await fixtureCollection.Find(fixtureFilter).FirstOrDefaultAsync();
+
+            if (fixture == null)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new TWResponseDTO()
+                };
+            }
+
+            var marketFilter = Builders<Market>.Filter.Where(c => fixture.FiId == fixture.FiId && c.MaStId == (int)MarketStatus.Active);
+            var markets = marketCollection.Find(marketFilter).ToListAsync();
+
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixture.FiId == fixture.FiId && c.MaStId == (int)MarketStatus.Active);
+            var selections = selectionCollection.Find(selectionFilter).ToListAsync();
+
+            await Task.WhenAll(markets, selections);
+
+            var initial = await _sportsbookContext.MarketTemplateGroup.Where(c => c.SportId == fixture.SpId).ToListAsync();
+
+            var prematch = initial.Where(c => c.FixtureStatusId == 0 && c.MarketTemplates != "0").ToList();
+            var live = initial.Where(c => c.FixtureStatusId == 1 && c.MarketTemplates != "0").ToList();
+
+            var marketTemplateGroups = new SportMarketTemplateGroup
+            {
+                SportId = fixture.SpId,
+                Prematch = prematch.Select(p => new Shared.Models.MarketTemplateGroup
+                {
+                    MarketTemplateGroupId = p.Id,
+                    MarketTemplateGroupName = p.Name,
+                    SortOrder = p.SortOrder,
+                    MarketTemplateIds = p.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
+                }).OrderBy(o => o.MarketTemplateGroupId).ToList(),
+                Live = live.Select(l => new Shared.Models.MarketTemplateGroup
+                {
+                    MarketTemplateGroupId = l.Id,
+                    MarketTemplateGroupName = l.Name,
+                    SortOrder = l.SortOrder,
+                    MarketTemplateIds = l.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
+                }).OrderBy(o => o.MarketTemplateGroupId).ToList()
+            };
+
+            var result = new List<FixtureDTO>
+            {
+                new FixtureDTO
+                {
+                    SportId = fixture.SpId,
+                    SportName = fixture.SpNa,
+                    SegmentId = fixture.SegId,
+                    SegmentName = fixture.SegNa,
+                    LeagueId = fixture.LeId,
+                    LeagueName = fixture.LeNa,
+                    ProviderFixtureId = fixture.PrFiId,
+                    FixtureId = fixture.FiId.ToString(),
+                    FixtureName = fixture.FiNa,
+                    HomeName = fixture.FiTyId == (int)FixtureType.Match ? fixture.FiNa.Split(" vs. ").First().Trim() : string.Empty,
+                    AwayName = fixture.FiTyId == (int)FixtureType.Match ? fixture.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
+                    FixtureStartDate = fixture.FiStDa,
+                    IsLive = fixture.IsOfLi,
+                    MarketCount = 0,
+                    SMSCode = string.Empty,
+                    StatisticsURL = $"https://s5.sir.sportradar.com/igaholding2{fixture.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                    Score = fixture.Sc,
+                    CurrentPeriod = CurrentPeriodHelper.ToShortName(fixture.CuPe),
+                    CurrentMinute = fixture.CuMi.ToString(),
+                    MarketTemplateGroups = marketTemplateGroups,
+                    Markets = GetMarkets(fixture.SpId, markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList())
+                }
+            };
+
+            return new BaseResponseDTO<TWResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new TWResponseDTO
+                {
+                    Fixtures = result
+                }
+            };
+        }
         private List<MarketDTO> GetMarkets(int sportId, List<Market> markets, List<Selection> selections)
         {
             var marketTemplates = GetMainMarketTemplates(sportId);

@@ -4,6 +4,12 @@ using System.Collections.Generic;
 
 namespace Platform.Shared.Models
 {
+    public class TWFixtureDetailsRequestDTO
+    {
+        public string FixtureId { get; set; }
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+    }
     public class TWFixtureRequestDTO
     {
         public int SportId { get; set; }
@@ -98,6 +104,7 @@ namespace Platform.Shared.Models
         public string Score { get; set; }
         public string CurrentPeriod { get; set; }
         public string CurrentMinute { get; set; }
+        public SportMarketTemplateGroup MarketTemplateGroups { get; set; }
         public List<MarketDTO> Markets { get; set; }
     }
 

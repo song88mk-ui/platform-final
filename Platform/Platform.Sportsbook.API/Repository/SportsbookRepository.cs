@@ -739,7 +739,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
-        public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(TWFixtureCountRequestDTO request)
+        public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(TWFLiveFixtureCountRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Live);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
@@ -782,9 +782,152 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+        public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetTodayFixtureCount(TWFTodayFixtureCountRequestDTO request)
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiStDa > DateTime.UtcNow && c.FiStDa < DateTime.UtcNow.AddDays(1));
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<TWFixtureCountResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new TWFixtureCountResponseDTO()
+                };
+            }
+
+            var sortOrder = await _sportsbookContext.ClientSportOrder.Where(c => c.ClientId == request.ClientId).ToListAsync();
+
+            var result = new List<FixtureCount>();
+
+            foreach (var item in sortOrder.OrderBy(o => o.SortOrder).ToList())
+            {
+                var count = fixtures.Where(c => c.SpId == item.SportId).Count();
+
+                if (count == 0) continue;
+
+                result.Add(new FixtureCount
+                {
+                    SportId = item.SportId,
+                    SportName = item.SportName.Trim(),
+                    Count = count
+                });
+            }
+
+            return new BaseResponseDTO<TWFixtureCountResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new TWFixtureCountResponseDTO
+                {
+                    Sports = result
+                }
+            };
+        }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixtures(TWLiveFixtureRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiStId == 1);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiStId == (int)FixtureStatus.Live);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new TWResponseDTO()
+                };
+            }
+
+            var sortOrder = await _sportsbookContext.TierLeagueOrder.ToListAsync();
+
+            var result = fixtures.Select(s => new TempFixtureDTO
+            {
+                SportId = s.SpId,
+                SportName = s.SpNa,
+                SegmentId = s.SegId,
+                SegmentName = s.SegNa,
+                LeagueId = s.LeId,
+                LeagueName = s.LeNa,
+                ProviderFixtureId = s.PrFiId,
+                FixtureId = s.FiId.ToString(),
+                FixtureName = s.FiNa,
+                HomeName = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").First().Trim() : string.Empty,
+                AwayName = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
+                FixtureStartDate = s.FiStDa,
+                IsLive = s.IsOfLi,
+                MarketCount = 0,
+                SMSCode = string.Empty,
+                StatisticsURL = $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                Score = s.Sc,
+                CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
+                CurrentMinute = s.CuMi.ToString(),
+                SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+            }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+
+            var initialResult = new List<TempFixtureDTO>();
+
+            foreach (var item in result)
+            {
+                if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
+
+                initialResult.Add(item);
+            }
+
+            var finalResult = new List<FixtureDTO>();
+
+            var fixtureIds = initialResult.Select(s => Convert.ToInt64(s.FixtureId)).ToList();
+
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
+            var markets = marketCollection.Find(marketFilter).ToListAsync();
+
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
+            var selections = selectionCollection.Find(selectionFilter).ToListAsync();
+
+            await Task.WhenAll(markets, selections);
+
+            foreach (var item in initialResult)
+            {
+                finalResult.Add(new FixtureDTO
+                {
+                    SportId = item.SportId,
+                    SportName = item.SportName,
+                    SegmentId = item.SegmentId,
+                    SegmentName = item.SegmentName,
+                    LeagueId = item.LeagueId,
+                    LeagueName = item.LeagueName,
+                    FixtureId = item.FixtureId,
+                    ProviderFixtureId = item.ProviderFixtureId,
+                    FixtureName = item.FixtureName,
+                    HomeName = item.HomeName,
+                    AwayName = item.AwayName,
+                    FixtureStartDate = item.FixtureStartDate,
+                    IsLive = item.IsLive,
+                    MarketCount = markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).Count(),
+                    SMSCode = string.Empty,
+                    StatisticsURL = item.StatisticsURL,
+                    Score = item.Score,
+                    CurrentPeriod = item.CurrentPeriod,
+                    CurrentMinute = item.CurrentMinute,
+                    Markets = GetMarkets(item.SportId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
+                });
+            }
+
+            return new BaseResponseDTO<TWResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new TWResponseDTO
+                {
+                    Fixtures = finalResult
+                }
+            };
+        }
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(TWTodayFixtureRequestDTO request)
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiStId == (int)FixtureStatus.Prematch && c.FiStDa > DateTime.UtcNow && c.FiStDa < DateTime.UtcNow.AddDays(1));
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)

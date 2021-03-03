@@ -10,11 +10,25 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }
-    public class TWFixtureCountRequestDTO
+    public class TWTodayFixtureRequestDTO
+    {
+        public int HourUTCOffset { get; set; }
+        public int SportId { get; set; }
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+    }
+    public class TWFTodayFixtureCountRequestDTO
+    {
+        public int HourUTCOffset { get; set; }
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+    }
+    public class TWFLiveFixtureCountRequestDTO
     {
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }
+
     public class TWFixtureCountResponseDTO
     {
         public TWFixtureCountResponseDTO()

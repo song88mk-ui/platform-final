@@ -275,6 +275,23 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpGet("v2/sportsbook/todayfixturecount")]
+        public async Task<IActionResult> GetTodayFixtureCount([FromQuery] int hourUTCOffset)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetTodayFixtureCount(apiKey, clientId, new TodayFixtureCountRequest { LanguageCode = LanguageCode.EN.ToString(), HourUTCOffset = hourUTCOffset });
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpGet("v2/sportsbook/livefixtures")]
         public async Task<IActionResult> GetLiveFixtures([FromQuery] int sportId)
         {
@@ -282,6 +299,23 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
             var result = await _platformRepository.GetLiveFixtures(apiKey, clientId, new FixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId });
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v2/sportsbook/todayfixtures")]
+        public async Task<IActionResult> GetTodayFixtures([FromQuery] int sportId, int hourUTCOffset)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetTodayFixtures(apiKey, clientId, new TodayFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId, HourUTCOffset = hourUTCOffset });
 
             switch (result.StatusCode)
             {

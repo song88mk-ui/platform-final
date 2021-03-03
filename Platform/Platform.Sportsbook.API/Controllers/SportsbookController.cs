@@ -170,8 +170,22 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v2/sportsbook/todayfixturecount")]
+        public async Task<IActionResult> GetLiveFixtureCount([FromBody] TWFTodayFixtureCountRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetTodayFixtureCount(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v2/sportsbook/livefixturecount")]
-        public async Task<IActionResult> GetLiveFixtureCount([FromBody] TWFixtureCountRequestDTO request)
+        public async Task<IActionResult> GetLiveFixtureCount([FromBody] TWFLiveFixtureCountRequestDTO request)
         {
             var result = await _sportsbookRepository.GetLiveFixtureCount(request);
 
@@ -188,6 +202,20 @@ namespace Platform.Sportsbook.API.Controllers
         public async Task<IActionResult> GetLiveFixtures([FromBody] TWLiveFixtureRequestDTO request)
         {
             var result = await _sportsbookRepository.GetLiveFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v2/sportsbook/todayfixtures")]
+        public async Task<IActionResult> GetTodayFixtures([FromBody] TWTodayFixtureRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetTodayFixtures(request);
 
             switch (result.StatusCode)
             {

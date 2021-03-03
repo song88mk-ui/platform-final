@@ -4,6 +4,14 @@ using System.Collections.Generic;
 
 namespace Platform.Shared.Models
 {
+    public class TWFixtureRequestDTO
+    {
+        public int SportId { get; set; }
+        public int SegmentId { get; set; }
+        public int LeagueId { get; set; }
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+    }
     public class TWLiveFixtureRequestDTO
     {
         public int SportId { get; set; }

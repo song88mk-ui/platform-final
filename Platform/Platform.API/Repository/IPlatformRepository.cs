@@ -26,5 +26,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetTodayFixtureCount(string apiKey, string clientId, TodayFixtureCountRequest request);
         Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixtures(string apiKey, string clientId, FixtureRequest request);
         Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(string apiKey, string clientId, TodayFixtureRequest request);
+        Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(string apiKey, string clientId, LeagueFixtureRequest request);
     }
 }

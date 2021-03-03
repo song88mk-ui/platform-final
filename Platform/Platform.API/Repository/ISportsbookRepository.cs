@@ -22,5 +22,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetTodayFixtureCount(TWFTodayFixtureCountRequestDTO request);
         Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixtures(TWLiveFixtureRequestDTO request);
         Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(TWTodayFixtureRequestDTO request);
+        Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWFixtureRequestDTO request);
     }
 }

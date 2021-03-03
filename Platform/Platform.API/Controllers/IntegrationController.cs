@@ -116,7 +116,7 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v1/sportsbook/topleagues")]
+        [HttpGet("v1/sportsbook/sports/topleagues")]
         public async Task<IActionResult> GetTopLeagues([FromQuery] TempTopLeaguesRequest request2)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
@@ -139,7 +139,7 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v1/sportsbook/allleagues")]
+        [HttpGet("v1/sportsbook/sports/allleagues")]
         public async Task<IActionResult> GetAllLeagues([FromQuery] TempTopLeaguesRequest request2)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
@@ -162,72 +162,72 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v1/sportsbook/topfixtures")]
-        public async Task<IActionResult> GetTopFixtures()
-        {
-            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+        //[HttpGet("v1/sportsbook/topfixtures")]
+        //public async Task<IActionResult> GetTopFixtures()
+        //{
+        //    var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+        //    var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-            var request = new TopFixturesRequest
-            {
-                LanguageCode = "EN"
-            };
+        //    var request = new TopFixturesRequest
+        //    {
+        //        LanguageCode = "EN"
+        //    };
 
-            var result = await _platformRepository.GetTopFixtures(apiKey, clientId, request);
+        //    var result = await _platformRepository.GetTopFixtures(apiKey, clientId, request);
 
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
+        //    switch (result.StatusCode)
+        //    {
+        //        case Shared.Enums.StatusCode.Success:
+        //            return Ok(result);
+        //        default:
+        //            return BadRequest(result);
+        //    }
+        //}
 
-        [HttpGet("v1/sportsbook/orderedsports")]
-        public async Task<IActionResult> GetOrderedSports()
-        {
-            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+        //[HttpGet("v1/sportsbook/orderedsports")]
+        //public async Task<IActionResult> GetOrderedSports()
+        //{
+        //    var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+        //    var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-            var request = new OrderedSportsRequest
-            {
-                LanguageCode = "EN"
-            };
+        //    var request = new OrderedSportsRequest
+        //    {
+        //        LanguageCode = "EN"
+        //    };
 
-            var result = await _platformRepository.GetOrderedSports(apiKey, clientId, request);
+        //    var result = await _platformRepository.GetOrderedSports(apiKey, clientId, request);
 
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
+        //    switch (result.StatusCode)
+        //    {
+        //        case Shared.Enums.StatusCode.Success:
+        //            return Ok(result);
+        //        default:
+        //            return BadRequest(result);
+        //    }
+        //}
 
-        [HttpGet("v1/sportsbook/orderedleagues")]
-        public async Task<IActionResult> GetOrderedLeagues([FromQuery] TempOrderedLeaguesRequest request2)
-        {
-            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+        //[HttpGet("v1/sportsbook/orderedleagues")]
+        //public async Task<IActionResult> GetOrderedLeagues([FromQuery] TempOrderedLeaguesRequest request2)
+        //{
+        //    var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+        //    var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-            var request = new OrderedLeaguesRequest
-            {
-                SportId = request2.SportId,
-                LanguageCode = LanguageCode.EN
-            };
+        //    var request = new OrderedLeaguesRequest
+        //    {
+        //        SportId = request2.SportId,
+        //        LanguageCode = LanguageCode.EN
+        //    };
 
-            var result = await _platformRepository.GetOrderedLeagues(apiKey, clientId, request);
+        //    var result = await _platformRepository.GetOrderedLeagues(apiKey, clientId, request);
 
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
+        //    switch (result.StatusCode)
+        //    {
+        //        case Shared.Enums.StatusCode.Success:
+        //            return Ok(result);
+        //        default:
+        //            return BadRequest(result);
+        //    }
+        //}
 
         [HttpGet("v1/sportsbook/markettemplategroups")]
         public async Task<IActionResult> GetMarketTemplateGroups()
@@ -315,7 +315,7 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v1/sportsbook/livefixtures")]
+        [HttpGet("v1/sportsbook/sports/livefixtures")]
         public async Task<IActionResult> GetLiveFixtures([FromQuery] int sportId)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
@@ -332,8 +332,25 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v1/sportsbook/todayfixtures")]
+        [HttpGet("v1/sportsbook/sports/todayfixtures")]
         public async Task<IActionResult> GetTodayFixtures([FromQuery] int sportId, int hourUTCOffset)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetTodayFixtures(apiKey, clientId, new TodayFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId, HourUTCOffset = hourUTCOffset });
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/sportsbook/sports/segments/leagues/fixtures")]
+        public async Task<IActionResult> GetFixtures([FromQuery] int sportId, int hourUTCOffset)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();

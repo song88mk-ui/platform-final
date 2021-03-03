@@ -1294,7 +1294,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(fixture.CuPe),
                     CurrentMinute = fixture.CuMi.ToString(),
                     MarketTemplateGroups = marketTemplateGroups,
-                    Markets = GetMarkets(fixture.SpId, markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList())
+                    Markets = GetMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList())
                 }
             };
 
@@ -1323,6 +1323,28 @@ namespace Platform.Sportsbook.API.Repository
                 MarketStatusName = m.MaStNa,
                 Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO 
                 { 
+                    SelectionTemplateId = s.SeTeId,
+                    SelectionId = s.SeId.ToString(),
+                    SelectionName = s.SeNa,
+                    DecimalOdds = s.Od.ToString(),
+                    IsActive = s.IsAc
+                }).ToList()
+            }).ToList();
+        }
+
+        private List<MarketDTO> GetMarkets(List<Market> markets, List<Selection> selections)
+        {
+            return markets.Select(m => new MarketDTO
+            {
+                MarketTemplateId = m.MaTeId,
+                MarketId = m.MaId.ToString(),
+                MarketName = m.MaNa,
+                Line = m.Li,
+                IsCashout = false,
+                MarketStatusId = m.MaStId,
+                MarketStatusName = m.MaStNa,
+                Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+                {
                     SelectionTemplateId = s.SeTeId,
                     SelectionId = s.SeId.ToString(),
                     SelectionName = s.SeNa,

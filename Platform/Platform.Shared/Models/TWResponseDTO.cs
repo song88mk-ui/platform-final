@@ -24,6 +24,12 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }
+    public class TWOutrightFixtureRequestDTO
+    {
+        public int SportId { get; set; }
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+    }
     public class TWTodayFixtureRequestDTO
     {
         public int HourUTCOffset { get; set; }

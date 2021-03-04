@@ -23,6 +23,12 @@ namespace Platform.API.Models
         public string LanguageCode { get; set; }
     }
 
+    public class OutrightFixtureRequest
+    {
+        public int SportId { get; set; }
+        public string LanguageCode { get; set; }
+    }
+
     public class TodayFixtureRequest
     {
         public int HourUTCOffset { get; set; }

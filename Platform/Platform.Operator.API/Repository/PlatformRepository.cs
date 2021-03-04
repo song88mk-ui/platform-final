@@ -257,7 +257,8 @@ namespace Platform.Operator.API.Repository
                         ClientId = request.ClientId,
                         Balance = request.Balance,
                         CurrencyCode = request.CurrencyCode,
-                        OperatorToken = Guid.NewGuid()
+                        OperatorToken = Guid.NewGuid(),
+                        CreatedDate = DateTime.UtcNow
                     }).Entity;
 
                     response.ClientId = request.ClientId;

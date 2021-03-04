@@ -20,7 +20,7 @@
         Stake_Must_Be_Greater_Than_Zero = 113,
         Stake_Must_Be_Equal_Or_Higher_To_Min_Stake = 114,
         Stake_Must_Be_Equal_Or_Lower_To_Max_Stake = 115,
-        Maximum_Stake_Limit_On_Fixture_Reached = 116,
+        Maximum_Bet_Limit_On_Fixture_Reached = 116,
         Maximum_Payout_Must_Be_Equal_Or_Lower = 117,
         Betting_Restricted = 118,
         Sport_Betting_Restricted = 119,
@@ -38,6 +38,8 @@
         Betstop_On_Fixture = 129,
         Betstop_On_Global = 130,
 
+        Max_Liability_By_Tier_Not_Found = 131,
+        Mts_Error = 132,
 
         Error = 1000,
         Operator_Error = 1001

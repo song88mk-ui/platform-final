@@ -64,7 +64,7 @@ namespace Platform.Betting.API.UnitTest
             request.OperatorToken = "CB2D9909-9467-EB11-89FB-00224815B68B";
             request.ClientId = "5093617A-9367-EB11-89FB-00224815B68B";
             request.ClientCode = "10C";
-            request.LimitId = "0";
+            request.LimitId = "2183";
             request.Endpoint = "https://preprod-operatorapi.song88.com";
             request.CompanyShare = 0.1m;
             request.ExchangeRate = 1336.98252800m;
@@ -98,9 +98,9 @@ namespace Platform.Betting.API.UnitTest
             newSelection.Odds = 1.71000000000000000000m;
             //newSelection.FixtureStatus = "";
             //newSelection.FixtureStartDate = "";
-            newSelection.BetScore = "0 - 0";
-            newSelection.FixtureSpecifier = "sr:match:25547338";
-            newSelection.SelectionSpecifier = "uof:3/sr:sport:1/18/13?total=2.5";
+
+            newSelection.FixtureSpecifier = "sr:season:59630";
+            newSelection.SelectionSpecifier = "uof:3/sr:sport:1/534/pre:outcometext:6170?variant=pre:markettext:62039";
             newSelection.CorrelationId = "";
 
 
@@ -118,7 +118,7 @@ namespace Platform.Betting.API.UnitTest
             request.OperatorToken = "CB2D9909-9467-EB11-89FB-00224815B68B";
             request.ClientId = "5093617A-9367-EB11-89FB-00224815B68B";
             request.ClientCode = "10C";
-            request.LimitId = "0";
+            request.LimitId = "2183";
             request.Endpoint = "https://preprod-operatorapi.song88.com";
             request.CompanyShare = 0.1m;
             request.ExchangeRate = 1336.98252800m;
@@ -126,7 +126,7 @@ namespace Platform.Betting.API.UnitTest
             request.UserId = "CA2D9909-9467-EB11-89FB-00224815B68B";
             request.Stake = 1000M;
             request.Odds = 1.05m;
-            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
+            
             request.LanguageCode = Shared.Enums.LanguageCode.EN;
             request.Channel = Shared.Enums.Channel.Internet;
             request.IPAddress = "";
@@ -191,7 +191,8 @@ namespace Platform.Betting.API.UnitTest
         {
             BetRequestDTO request = GetRequest();
 
-            request.Stake = 1000M;
+            request.Stake = 1000.70M;
+            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             var defaultJSON = JsonSerializer.Serialize(request);
             var data = repo.PlaceBet(request);
 
@@ -205,6 +206,7 @@ namespace Platform.Betting.API.UnitTest
 
             request.Stake = 1000M;
             request.Odds = 51m;
+            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             var defaultJSON = JsonSerializer.Serialize(request);
             var data = repo.PlaceBet(request);
 
@@ -218,7 +220,7 @@ namespace Platform.Betting.API.UnitTest
         {
             BetRequestDTO request = GetRequest();
             request.Stake = 99M;
-
+            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             var data = repo.PlaceBet(request);
 
             Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake);
@@ -230,6 +232,7 @@ namespace Platform.Betting.API.UnitTest
             BetRequestDTO request = GetRequest();
 
             request.Stake = 1000001M;
+            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             var defaultJSON = JsonSerializer.Serialize(request);
             var data = repo.PlaceBet(request);
 
@@ -258,6 +261,7 @@ namespace Platform.Betting.API.UnitTest
 
             request.Stake = 1000M;
             request.Odds = 51m;
+            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             var defaultJSON = JsonSerializer.Serialize(request);
             var data = repo.PlaceBet(request);
 
@@ -271,7 +275,7 @@ namespace Platform.Betting.API.UnitTest
         {
             BetRequestDTO request = GetRequestParlay();
             request.Stake = 99M;
-
+            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             var data = repo.PlaceBet(request);
 
             Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake);
@@ -283,6 +287,7 @@ namespace Platform.Betting.API.UnitTest
             BetRequestDTO request = GetRequestParlay();
 
             request.Stake = 1000001M;
+            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             var defaultJSON = JsonSerializer.Serialize(request);
             var data = repo.PlaceBet(request);
 

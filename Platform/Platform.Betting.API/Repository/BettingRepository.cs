@@ -22,7 +22,6 @@ namespace Platform.Betting.API.Repository
         private readonly BettingContext _bettingContext;
         private readonly IMessageBroker _messageBroker;
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly IHttpClientFactory _httpClient;
         private readonly IConfiguration _configuration;
         public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IMessageBroker messageBroker, IHttpClientFactory httpClientFactory)
         {
@@ -32,170 +31,9 @@ namespace Platform.Betting.API.Repository
             _messageBroker = messageBroker;
             _messageBroker.Connect();
         }
+
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(BetRequestDTO request)
         {
-            #region BET VALIDATION
-            //Guid clientid = new Guid(request.ClientId);
-            //var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == clientid && x.CurrencyCode == request.CurrencyCode.ToString()).OrderByDescending(x => x.CreatedDate).FirstOrDefault();
-            //decimal minStake = 0;
-            //decimal maxStake = 0;
-            //decimal maxPerGame = 0;
-            //if (request.Selections.Count() == 1)
-            //{
-            //    //Get MTS Information
-            //    var mtsConfigSelectionRequest = new List<MTSConfigSelectionRequestDTO>();
-            //    mtsConfigSelectionRequest.Add(new MTSConfigSelectionRequestDTO
-            //    {
-            //        FixtureSpecifier = request.Selections.FirstOrDefault().FixtureSpecifier,
-            //        SelectionSpecifier = request.Selections.FirstOrDefault().SelectionSpecifier,
-            //        Odds = request.Selections.FirstOrDefault().Odds
-            //    });
-
-            //    var mtsConfigRequest = new MTSConfigRequestDTO
-            //    {
-            //        UserId = request.UserId,
-            //        Currency = request.CurrencyCode.ToString(),
-            //        Language = request.LanguageCode.ToString(),
-            //        DeviceId = request.Channel.ToString(),
-            //        LimitId = int.Parse(request.LimitId),
-            //        BetSelections = mtsConfigSelectionRequest
-            //    };
-
-            //    //SingleBet
-            //    var selection = request.Selections.FirstOrDefault();
-            //    //Check first if sportsId exist in Override
-            //    List<OverrideSportConfig> overrideSportConfig = JsonSerializer.Deserialize<List<OverrideSportConfig>>(betConfig.OverrideConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-            //    var checkOverride = overrideSportConfig.Where(a => a.SportId == selection.SportId).FirstOrDefault();
-            //    if (checkOverride != null)
-            //    {
-            //        minStake = GetMinStake(checkOverride.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
-            //        maxStake = GetMaxStakeSingleBet(checkOverride.MaxStake, request.CompanyShare, true, mtsConfigRequest, request);
-            //        maxPerGame = GetMaxPerGame(checkOverride.MaxPerGame, request);
-            //    }
-            //    else
-            //    {
-            //        DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-            //        minStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
-            //        maxStake = GetMaxStakeSingleBet(defaultSportConfig.MaxStake, request.CompanyShare, true, mtsConfigRequest, request);
-            //        maxPerGame = GetMaxPerGame(defaultSportConfig.MaxPerGame, request);
-            //    }
-
-            //    //Actual validation occur after getting min/max
-            //    if (minStake > request.Stake)
-            //    {
-            //        return new BaseResponseDTO<BetResponseDTO>
-            //        {
-            //            StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake,
-            //            Message = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake.ToString()
-
-            //        };
-            //    }
-
-            //    if (maxStake < request.Stake)
-            //    {
-            //        return new BaseResponseDTO<BetResponseDTO>
-            //        {
-            //            StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake,
-            //            Message = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake.ToString()
-
-            //        };
-            //    }
-
-            //    //Total stake on fixture by player should not go beyond this amount
-            //    var payout = request.Stake * request.Odds;
-            //    if (maxPerGame < payout)
-            //    {
-            //        return new BaseResponseDTO<BetResponseDTO>
-            //        {
-            //            StatusCode = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower,
-            //            Message = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower.ToString()
-            //        };
-            //    }
-
-            //    //TODO: Max Fixture Bet 
-            //    var remainingFixtureBet = 0m;
-
-            //    var betFixtureLimits = _bettingContext.StakeLimitFixture.Find(request.ClientId, request.Selections.FirstOrDefault().FixtureId);
-            //    if (betFixtureLimits != null)
-            //    {
-            //        remainingFixtureBet = betFixtureLimits.Remaining - request.Stake;
-
-            //        if (remainingFixtureBet < 0)
-            //        {
-            //            return new BaseResponseDTO<BetResponseDTO>
-            //            {
-            //                StatusCode = StatusCode.Maximum_Stake_Limit_On_Fixture_Reached,
-            //                Message = StatusCode.Maximum_Stake_Limit_On_Fixture_Reached.ToString()
-            //            };
-            //        }
-            //    }
-
-            //}
-            //else
-            //{
-            //    //Parlay
-            //    //Get MTS Information
-            //    var mtsConfigSelectionRequest = new List<MTSConfigSelectionRequestDTO>();
-            //    foreach (var betSelection in request.Selections)
-            //    {
-            //        mtsConfigSelectionRequest.Add(new MTSConfigSelectionRequestDTO
-            //        {
-            //            FixtureSpecifier = betSelection.FixtureSpecifier,
-            //            SelectionSpecifier = betSelection.SelectionSpecifier,
-            //            Odds = betSelection.Odds
-            //        });
-            //    }
-
-            //    var mtsConfigRequest = new MTSConfigRequestDTO
-            //    {
-            //        UserId = request.UserId,
-            //        Currency = request.CurrencyCode.ToString(),
-            //        Language = request.LanguageCode.ToString(),
-            //        DeviceId = request.Channel.ToString(),
-            //        LimitId = int.Parse(request.LimitId),
-            //        BetSelections = mtsConfigSelectionRequest
-            //    };
-
-            //    ParlayConfig parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-            //    minStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
-            //    maxStake = GetMaxStakeParlay(parlayConfig.MaxStake, parlayConfig.MaxPayout, request.CompanyShare, 0, true, mtsConfigRequest, request);
-
-
-            //    //Actual validation occur after getting min/max
-            //    if (minStake > request.Stake)
-            //    {
-            //        return new BaseResponseDTO<BetResponseDTO>
-            //        {
-            //            StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake,
-            //            Message = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake.ToString()
-
-            //        };
-            //    }
-
-            //    if (maxStake < request.Stake)
-            //    {
-            //        return new BaseResponseDTO<BetResponseDTO>
-            //        {
-            //            StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake,
-            //            Message = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake.ToString()
-
-            //        };
-            //    }
-
-            //    var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
-            //    var payout = totalOdds * request.Stake;
-
-            //    if (parlayConfig.MaxPayout < payout)
-            //    {
-            //        return new BaseResponseDTO<BetResponseDTO>
-            //        {
-            //            StatusCode = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower,
-            //            Message = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower.ToString()
-            //        };
-            //    }
-            //}
-            #endregion
-
             var betData = new Bet();
             var betSelectionData = new List<BetSelection>();
 
@@ -365,8 +203,384 @@ namespace Platform.Betting.API.Repository
                     _bettingContext.SaveChanges();
                     scope.Complete();
 
-                    _messageBroker.Publish(new OnBetPlacement 
-                    { 
+                    _messageBroker.Publish(new OnBetPlacement
+                    {
+                        Bet = betData,
+                        BetSelections = betSelectionData
+                    }, "OnBetPlacement", "r.bet.placement", Guid.NewGuid().ToString().ToUpper());
+                }
+                catch (Exception ex)
+                {
+                    scope.Dispose();
+                    return new BaseResponseDTO<BetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                    };
+                }
+            }
+
+            return new BaseResponseDTO<BetResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BetResponseDTO
+                {
+                    UserId = request.UserId,
+                    BetId = request.BetId.ToString().ToUpper(),
+                    BetStatus = BetStatus.Waiting
+                }
+            };
+        }
+        public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBetWithValidation(BetRequestDTO request)
+        {
+            #region BET VALIDATION
+            var remainingFixtureBet = 0m;
+            //MTS Check
+            //Get MTS Information
+
+            var mtsConfigSelectionRequest = new List<MTSConfigSelectionRequestDTO>();
+            foreach (var betSelection in request.Selections)
+            {
+                mtsConfigSelectionRequest.Add(new MTSConfigSelectionRequestDTO
+                {
+                    FixtureSpecifier = betSelection.FixtureSpecifier,
+                    SelectionSpecifier = betSelection.SelectionSpecifier,
+                    Odds = betSelection.Odds
+                });
+            }
+           
+            var mtsConfigRequest = new MTSConfigRequestDTO
+            {
+                UserId = request.UserId,
+                Currency = request.CurrencyCode.ToString(),
+                Language = request.LanguageCode.ToString(),
+                DeviceId = request.Channel.ToString(),
+                LimitId = int.Parse(request.LimitId),
+                BetSelections = mtsConfigSelectionRequest
+            };
+            var mtsMaxStake = GetMTSMaxStake(mtsConfigRequest);
+            if (mtsMaxStake.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = mtsMaxStake.StatusCode,
+                    Message = mtsMaxStake.Message
+                };
+            }
+            Guid clientid = new Guid(request.ClientId);
+            var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == clientid && x.CurrencyCode == request.CurrencyCode.ToString()).OrderByDescending(x => x.CreatedDate).FirstOrDefault();
+            decimal minStake = 0;
+            decimal maxStake = 0;
+            decimal maxPerGame = 0;
+            decimal stakeLimitFixtureConfig = 0;
+            var odds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+
+            if (request.Selections.Count() == 1)
+            {
+                //Get Max Liability by Tier from Backoffice database
+                var tierMaxStake = GetTierMaxStake(new BetConfigLeagueRequestDTO()
+                {
+                    LeagueId = request.Selections.FirstOrDefault().LeagueId,
+                    SegmentId = request.Selections.FirstOrDefault().SegmentId,
+                    SportId = request.Selections.FirstOrDefault().SportId
+                });
+
+                //SingleBet
+                var selection = request.Selections.FirstOrDefault();
+                //Check first if sportsId exist in Override
+                List<OverrideSportConfig> overrideSportConfig = JsonSerializer.Deserialize<List<OverrideSportConfig>>(betConfig.OverrideConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                var checkOverride = overrideSportConfig.Where(a => a.SportId == selection.SportId).FirstOrDefault();
+                if (checkOverride != null)
+                {
+                    minStake = GetMinStake(checkOverride.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
+                    maxStake = GetMaxStakeSingleBet(checkOverride.MaxStake, request.CompanyShare, true, tierMaxStake.Result.MaxStake, mtsMaxStake.Result, request);
+                    maxPerGame = tierMaxStake.Result.MaxPerGame;
+                    stakeLimitFixtureConfig = checkOverride.StakeLimitFixture;
+                }
+                else
+                {
+                    DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    minStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
+                    maxStake = GetMaxStakeSingleBet(defaultSportConfig.MaxStake, request.CompanyShare, true, tierMaxStake.Result.MaxStake, mtsMaxStake.Result, request);
+                    maxPerGame = tierMaxStake.Result.MaxPerGame;
+                    stakeLimitFixtureConfig = defaultSportConfig.StakeLimitFixture;
+                }
+
+                //Actual validation occur after getting min/max
+                if (minStake > request.Stake)
+                {
+                    return new BaseResponseDTO<BetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake,
+                        Message = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake.ToString().Replace('_', ' ')
+
+                    };
+                }
+
+                if (maxStake < request.Stake)
+                {
+                    return new BaseResponseDTO<BetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake,
+                        Message = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake.ToString().Replace('_', ' ')
+
+                    };
+                }
+
+                //Total stake on fixture by player should not go beyond this amount
+                //Computed based on League and Tier
+                //var payout = request.Stake * odds;
+                //if (maxPerGame < payout && maxPerGame != 0)
+                //{
+                //    return new BaseResponseDTO<BetResponseDTO>
+                //    {
+                //        StatusCode = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower,
+                //        Message = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower.ToString()
+                //    };
+                //}
+
+                //TODO: Max Fixture Bet 
+                var betFixtureLimits = _bettingContext.StakeLimitFixture.AsNoTracking().Where(a=> a.UserId== request.UserId && a.FixtureId== request.Selections.FirstOrDefault().FixtureId).FirstOrDefault();
+                if (betFixtureLimits != null)
+                {
+                    remainingFixtureBet = betFixtureLimits.Remaining - request.Stake;
+                    betFixtureLimits.Remaining = remainingFixtureBet;
+                    _bettingContext.StakeLimitFixture.Update(betFixtureLimits);
+                }
+                else
+                {
+                    remainingFixtureBet = stakeLimitFixtureConfig - request.Stake;
+                    _bettingContext.StakeLimitFixture.Add(new StakeLimitFixture { 
+                        FixtureId = request.Selections.FirstOrDefault().FixtureId,
+                        Remaining = remainingFixtureBet,
+                        UserId = request.UserId
+                    });
+                }
+                if (remainingFixtureBet < 0)
+                {
+                    return new BaseResponseDTO<BetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Maximum_Bet_Limit_On_Fixture_Reached,
+                        Message = StatusCode.Maximum_Bet_Limit_On_Fixture_Reached.ToString().Replace('_', ' ')
+                    };
+                }
+            }
+            else
+            {
+                //Parlay
+
+                ParlayConfig parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                minStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
+                maxStake = GetMaxStakeParlay(parlayConfig.MaxStake, parlayConfig.MaxPayout, request.CompanyShare, 0, true, mtsMaxStake.Result, request);
+
+                //Actual validation occur after getting min/max
+                if (minStake > request.Stake)
+                {
+                    return new BaseResponseDTO<BetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake,
+                        Message = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake.ToString().Replace('_', ' ')
+
+                    };
+                }
+
+                if (maxStake < request.Stake)
+                {
+                    return new BaseResponseDTO<BetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake,
+                        Message = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake.ToString().Replace('_', ' ')
+
+                    };
+                }
+
+                var payout = odds * request.Stake;
+
+                if (parlayConfig.MaxPayout < payout)
+                {
+                    return new BaseResponseDTO<BetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower,
+                        Message = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower.ToString().Replace('_', ' ')
+                    };
+                }
+            }
+            #endregion
+
+            var betData = new Bet();
+            var betSelectionData = new List<BetSelection>();
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                try
+                {
+                    Guid betId;
+
+                    var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+                    var stake = request.Stake;
+
+                    var betEntity = _bettingContext.Bet.Update(new Bet
+                    {
+                        UserId = request.UserId,
+                        Stake = request.Stake,
+                        TrueStake = stake,
+                        Odds = totalOdds,
+                        OddsTypeId = (int)request.OddsType,
+                        OddsTypeName = request.OddsType.ToString(),
+                        Payout = stake == request.Stake ? stake * totalOdds : stake + request.Stake,
+                        WinLoss = 0m,
+                        BetStatusId = (int)BetStatus.Waiting,
+                        BetStatusName = BetStatus.Waiting.ToString(),
+                        Reason = string.Empty,
+                        CurrencyCode = request.CurrencyCode.ToString(),
+                        LanguageCode = request.LanguageCode.ToString(),
+                        ExchangeRate = request.ExchangeRate,
+                        IPAddress = request.IPAddress,
+                        Channel = request.Channel.ToString(),
+                        ClientId = request.ClientId,
+                        ClientIdRef = request.ClientIdRef,
+                        ClientCode = request.ClientCode,
+                        ClientName = request.ClientName,
+                        LimitId = request.LimitId,
+                        Endpoint = request.Endpoint,
+                        OperatorToken = request.OperatorToken,
+                        CompanyShare = request.CompanyShare,
+                        IsResettled = false,
+                        IsCashout = false,
+                        BetDate = request.BetDate,
+                        BetDateOffset = request.BetDate.AddHours(-4),
+                        SettlementDate = request.BetDate,
+                        SettlementDateOffset = request.BetDate.AddHours(-4)
+                    }).Entity;
+
+                    betData = betEntity;
+                    betId = betEntity.BetId;
+                    request.BetId = betId;
+
+                    _bettingContext.BetAudit.Add(new BetAudit
+                    {
+                        BetId = betEntity.BetId,
+                        UserId = betEntity.UserId,
+                        Stake = betEntity.Stake,
+                        TrueStake = betEntity.TrueStake,
+                        Odds = betEntity.Odds,
+                        OddsTypeId = betEntity.OddsTypeId,
+                        OddsTypeName = betEntity.OddsTypeName,
+                        Payout = betEntity.Payout,
+                        WinLoss = betEntity.WinLoss,
+                        BetStatusId = betEntity.BetStatusId,
+                        BetStatusName = betEntity.BetStatusName,
+                        Reason = betEntity.Reason,
+                        CurrencyCode = betEntity.CurrencyCode,
+                        LanguageCode = betEntity.LanguageCode,
+                        ExchangeRate = betEntity.ExchangeRate,
+                        IPAddress = betEntity.IPAddress,
+                        Channel = betEntity.Channel,
+                        ClientId = betEntity.ClientId,
+                        ClientIdRef = betEntity.ClientIdRef,
+                        ClientCode = betEntity.ClientCode,
+                        ClientName = betEntity.ClientName,
+                        LimitId = betEntity.LimitId,
+                        Endpoint = betEntity.Endpoint,
+                        OperatorToken = betEntity.OperatorToken,
+                        CompanyShare = betEntity.CompanyShare,
+                        IsResettled = betEntity.IsResettled,
+                        IsCashout = betEntity.IsCashout,
+                        BetDate = betEntity.BetDate,
+                        BetDateOffset = betEntity.BetDateOffset,
+                        SettlementDate = betEntity.SettlementDate,
+                        SettlementDateOffset = betEntity.SettlementDateOffset
+                    });
+
+                    foreach (var selection in request.Selections)
+                    {
+                        var betSelectionEntity = _bettingContext.BetSelection.Update(new BetSelection
+                        {
+                            BetId = betId,
+                            UserId = request.UserId,
+                            SportId = selection.SportId,
+                            SportName = selection.SportName,
+                            SegmentId = selection.SegmentId,
+                            SegmentName = selection.SegmentName,
+                            LeagueId = selection.LeagueId,
+                            LeagueName = selection.LeagueName,
+                            FixtureId = selection.FixtureId,
+                            FixtureName = selection.FixtureName,
+                            FixtureTypeId = (int)selection.FixtureType,
+                            FixtureTypeName = selection.FixtureType.ToString(),
+                            MarketTemplateId = selection.MarketTemplateId,
+                            MarketId = selection.MarketId,
+                            MarketName = selection.MarketName,
+                            SelectionId = selection.SelectionId,
+                            SelectionName = selection.SelectionName,
+                            FixtureStatusId = (int)selection.FixtureStatus,
+                            FixtureStatusName = selection.FixtureStatus.ToString(),
+                            Line = selection.Line,
+                            SelectionTemplateId = selection.SelectionTemplateId,
+                            Odds = selection.Odds,
+                            BetSelectionStatusId = betEntity.BetStatusId,
+                            BetSelectionStatusName = betEntity.BetStatusName,
+                            IsSettled = false,
+                            IsResettled = false,
+                            FixtureSpecifier = selection.FixtureSpecifier,
+                            SelectionSpecifier = selection.SelectionSpecifier,
+                            FixtureStartDate = selection.FixtureStartDate,
+                            BetScore = selection.BetScore,
+                            SettlementScore = selection.BetScore,
+                            CorrelationId = selection.CorrelationId
+                        }).Entity;
+
+                        betSelectionData.Add(betSelectionEntity);
+
+                        var betSelectionId = betSelectionEntity.BetSelectionId;
+                        selection.BetSelectionId = betSelectionId;
+
+                        _bettingContext.BetSelectionAudit.Add(new BetSelectionAudit
+                        {
+                            BetId = betSelectionEntity.BetId,
+                            BetSelectionId = betSelectionEntity.BetSelectionId,
+                            UserId = betSelectionEntity.UserId,
+                            SportId = betSelectionEntity.SportId,
+                            SportName = betSelectionEntity.SportName,
+                            SegmentId = betSelectionEntity.SegmentId,
+                            SegmentName = betSelectionEntity.SegmentName,
+                            LeagueId = betSelectionEntity.LeagueId,
+                            LeagueName = betSelectionEntity.LeagueName,
+                            FixtureId = betSelectionEntity.FixtureId,
+                            FixtureName = betSelectionEntity.FixtureName,
+                            FixtureTypeId = betSelectionEntity.FixtureTypeId,
+                            FixtureTypeName = betSelectionEntity.FixtureTypeName,
+                            MarketTemplateId = betSelectionEntity.MarketTemplateId,
+                            MarketId = betSelectionEntity.MarketId,
+                            MarketName = betSelectionEntity.MarketName,
+                            SelectionTemplateId = betSelectionEntity.SelectionTemplateId,
+                            SelectionId = betSelectionEntity.SelectionId,
+                            SelectionName = betSelectionEntity.SelectionName,
+                            FixtureStatusId = betSelectionEntity.FixtureStatusId,
+                            FixtureStatusName = betSelectionEntity.FixtureStatusName,
+                            Line = betSelectionEntity.Line,
+                            Odds = betSelectionEntity.Odds,
+                            BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
+                            BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
+                            IsSettled = betSelectionEntity.IsSettled,
+                            IsResettled = betSelectionEntity.IsResettled,
+                            FixtureSpecifier = betSelectionEntity.FixtureSpecifier,
+                            SelectionSpecifier = betSelectionEntity.SelectionSpecifier,
+                            FixtureStartDate = betSelectionEntity.FixtureStartDate,
+                            BetScore = betSelectionEntity.BetScore,
+                            SettlementScore = betSelectionEntity.SettlementScore,
+                            CorrelationId = selection.CorrelationId
+                        });
+                    }
+
+                    //todo FixtureLimit
+
+                    _bettingContext.SaveChanges();
+                    scope.Complete();
+
+                    _messageBroker.Publish(new OnBetPlacement
+                    {
                         Bet = betData,
                         BetSelections = betSelectionData
                     }, "OnBetPlacement", "r.bet.placement", Guid.NewGuid().ToString().ToUpper());
@@ -552,7 +766,7 @@ namespace Platform.Betting.API.Repository
             result.DefaultSportConfig = new DefaultSportConfigFE()
             {
                 MinStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
-                MaxStake = GetMaxStakeSingleBet(defaultSportConfig.MaxStake, request.CompanyShare, false, null, null),
+                MaxStake = GetMaxStakeSingleBet(defaultSportConfig.MaxStake, request.CompanyShare, false, 0, 0, null),
             };
 
             result.OverrideSportConfig = new List<OverrideSportConfigFE>();
@@ -562,14 +776,14 @@ namespace Platform.Betting.API.Repository
                 newOverrideSport.SportId = overRide.SportId;
                 newOverrideSport.SportName = overRide.SportName;
                 newOverrideSport.MinStake = GetMinStake(overRide.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode);
-                newOverrideSport.MaxStake = GetMaxStakeSingleBet(overRide.MaxStake, request.CompanyShare, false, null, null);
+                newOverrideSport.MaxStake = GetMaxStakeSingleBet(overRide.MaxStake, request.CompanyShare, false, 0, 0, null);
                 result.OverrideSportConfig.Add(newOverrideSport);
             }
 
             result.Parlayconfig = new ParlayConfigFE()
             {
                 MinStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
-                MaxStake = GetMaxStakeParlay(parlayConfig.MaxStake, parlayConfig.MaxPayout, request.CompanyShare, 0, false, null, null),
+                MaxStake = GetMaxStakeParlay(parlayConfig.MaxStake, parlayConfig.MaxPayout, request.CompanyShare, 0, false, 0, null),
                 MaxPayout = parlayConfig.MaxPayout
             };
 
@@ -580,6 +794,8 @@ namespace Platform.Betting.API.Repository
                 Result = result
             };
         }
+
+        #region Methods
 
         public decimal GetMinStake(decimal minStake, decimal exchangeRate, decimal companyShare, string currencyCode)
         {
@@ -614,7 +830,7 @@ namespace Platform.Betting.API.Repository
             return minimumStake.Max();
         }
 
-        public decimal GetMaxStakeParlay(decimal maxStake, decimal parlayMaxPayout, decimal companyShare, decimal odds, bool isPlacement, MTSConfigRequestDTO mtsConfigRequest, BetRequestDTO request)
+        public decimal GetMaxStakeParlay(decimal maxStake, decimal parlayMaxPayout, decimal companyShare, decimal odds, bool isPlacement, decimal mtsMaxStake, BetRequestDTO request)
         {
             List<decimal> maximumStake = new List<decimal>();
 
@@ -628,33 +844,19 @@ namespace Platform.Betting.API.Repository
                 var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
                 maximumStake.Add(Math.Truncate(parlayMaxPayout / totalOdds) + 1);
 
-                //Get Max Liability by Tier from Backoffice database
-                var tierMaxStake = GetTierMaxStake(new BetConfigLeagueRequestDTO()
-                {
-                    LeagueId = request.Selections.FirstOrDefault().LeagueId,
-                    SegmentId = request.Selections.FirstOrDefault().SegmentId,
-                    SportId = request.Selections.FirstOrDefault().SportId
-                });
-
-                if (tierMaxStake.Result != null)
-                {
-                    maximumStake.Add(Math.Truncate(tierMaxStake.Result.MaxStake / (totalOdds - 1)) + 1);
-                }
-
                 //Get MTS maxstake
                 //(**) For Max Bet: If Company Share > 0%, do not consider MTS Max Stake value from Max Stake API in Max bet logic (i.e. whichever is lowest).  
                 //Difference from [MTS Max Stake/Company Share] is required.
-                var mtsMaxStake = GetMTSMaxStake(mtsConfigRequest);
-                if (mtsMaxStake.Result > 0)
-                    //MTS Max Stake from Max Stake API
-                    maximumStake.Add(Math.Truncate(mtsMaxStake.Result / companyShare) + 1);
 
+                if (mtsMaxStake > 0)
+                    //MTS Max Stake from Max Stake API
+                    maximumStake.Add(Math.Truncate(mtsMaxStake / companyShare) + 1);
             }
 
             //Get min decimal value
             return maximumStake.Min();
         }
-        public decimal GetMaxStakeSingleBet(decimal maxStake, decimal companyShare, bool isPlacement, MTSConfigRequestDTO mtsConfigRequest, BetRequestDTO request)
+        public decimal GetMaxStakeSingleBet(decimal maxStake, decimal companyShare, bool isPlacement, decimal tierMaxStake, decimal mtsMaxStake, BetRequestDTO request)
         {
             List<decimal> maximumStake = new List<decimal>();
 
@@ -666,35 +868,25 @@ namespace Platform.Betting.API.Repository
             {
                 var totalOdds = request.Selections.FirstOrDefault().Odds;
 
-                //Get Max Liability by Tier from Backoffice database
-                var tierMaxStake = GetTierMaxStake(new BetConfigLeagueRequestDTO()
-                {
-                    LeagueId = request.Selections.FirstOrDefault().LeagueId,
-                    SegmentId = request.Selections.FirstOrDefault().SegmentId,
-                    SportId = request.Selections.FirstOrDefault().SportId
-                });
-
                 //BO max Liability/Total Odds
-                if (tierMaxStake.Result != null)
-                {
-                    maximumStake.Add(Math.Truncate(tierMaxStake.Result.MaxStake / (totalOdds - 1)) + 1);
-                }
+                if (tierMaxStake > 0)
+                    maximumStake.Add(Math.Truncate(tierMaxStake / (totalOdds - 1)) + 1);
 
                 //Get MTS maxstake
                 //(**) For Max Bet: If Company Share > 0%, do not consider MTS Max Stake value from Max Stake API in Max bet logic (i.e. whichever is lowest).  
                 //Difference from [MTS Max Stake/Company Share] is required.
-                var mtsMaxStake = GetMTSMaxStake(mtsConfigRequest);
+
                 if (companyShare == 0)
                 {
-                    if (mtsMaxStake.Result > 0)
+                    if (mtsMaxStake > 0)
                         //MTS Max Stake from Max Stake API
-                        maximumStake.Add(mtsMaxStake.Result);
+                        maximumStake.Add(mtsMaxStake);
                 }
                 else
                 {
-                    if (mtsMaxStake.Result > 0)
+                    if (mtsMaxStake > 0)
                         //MTS Max Stake from Max Stake API
-                        maximumStake.Add(Math.Truncate(mtsMaxStake.Result / companyShare) + 1);
+                        maximumStake.Add(Math.Truncate(mtsMaxStake / companyShare) + 1);
                 }
 
             }
@@ -703,12 +895,12 @@ namespace Platform.Betting.API.Repository
             return maximumStake.Min();
         }
 
-        public decimal GetMaxPerGame(decimal maxPerGame, BetRequestDTO request)
+        public decimal GetMaxPerGame(BetRequestDTO request)
         {
             List<decimal> maximumPerGame = new List<decimal>();
 
             //Admin(Client Profile Settings)
-            maximumPerGame.Add(maxPerGame);
+            //maximumPerGame.Add(maxPerGame);
 
             //Admin (BO Max Per Game Amount based on tier settings of selection)
             var tierMaxStake = GetTierMaxStake(new BetConfigLeagueRequestDTO()
@@ -717,101 +909,128 @@ namespace Platform.Betting.API.Repository
                 SegmentId = request.Selections.FirstOrDefault().SegmentId,
                 SportId = request.Selections.FirstOrDefault().SportId
             });
-            maximumPerGame.Add(tierMaxStake.Result.MaxPerGame);
 
-            return maximumPerGame.Min();
+            if (tierMaxStake.Result.MaxPerGame > 0)
+                maximumPerGame.Add(tierMaxStake.Result.MaxPerGame);
+
+            if (maximumPerGame.Count > 0)
+                return maximumPerGame.Min();
+            else
+                return 0;
         }
 
         public BaseResponseDTO<decimal> GetMTSMaxStake(MTSConfigRequestDTO request)
         {
             try
             {
-                //TODO //Temporarily token can be save in database
-                //var accessToken = string.Empty;
-
-                //var authUrl = _configuration["MTSMaxBetApi:AuthApi"];
-                //var authClient = _httpClientFactory.CreateClient();
-
-                //var formContent = new FormUrlEncodedContent(new[]
-                //{
-                //      new KeyValuePair<string, string>("client_id", "mts-edge-ext"),
-                //      new KeyValuePair<string, string>("client_secret",  _configuration["MTSMaxBetApi:ClientSecret"]),
-                //      new KeyValuePair<string, string>("username",  _configuration["MTSMaxBetApi:Username"]),
-                //      new KeyValuePair<string, string>("password",  _configuration["MTSMaxBetApi:Password"]),
-                //      new KeyValuePair<string, string>("grant_type", "password"),
-                //      new KeyValuePair<string, string>("client_auth_method", "client-secret")
-                //    });
-
-                //var authResponse = authClient.PostAsync(authUrl, formContent).Result;
-
-                //var authData = JsonSerializer.Deserialize<MTSMaxStakeAuthResponseDTO>(authResponse.Content.ReadAsStringAsync().Result);
-
-                //accessToken = authData.AccessToken;
-
-                //var maxStakeUrl = _configuration["MTSMaxBetApi:MaxBetApi"];
-                //var maxStakeClient = _httpClient.CreateClient();
-
-                //maxStakeClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
-
-                //var betId = Guid.NewGuid().ToString();
-
-                //var bets = new List<MTSBetDTO>();
-                //bets.Add(new MTSBetDTO
-                //{
-                //    Id = betId,
-                //    Stake = new MTSStakeDTO { Value = 0m }
-                //});
-
-                //var betSelections = new List<MTSBetSelectionDTO>();
-                //foreach (var req in request.BetSelections)
-                //{
-                //    betSelections.Add(new MTSBetSelectionDTO
-                //    {
-                //        EventId = req.FixtureSpecifier,
-                //        Id = req.SelectionSpecifier,
-                //        Odds = req.Odds * 10000
-                //    });
-                //}
-
-                //if (request.Language.Contains("ZH"))
-                //    request.Language = "ZH";
-
-                //var maxStakePayload = new MTSMaxStakeRequestDTO
-                //{
-                //    //TimeStamp = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds * 1000),
-                //    TimeStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds(),
-                //    Bets = bets,
-                //    TicketId = betId,
-                //    Selections = betSelections,
-                //    Sender = new SenderDTO
-                //    {
-                //        BookmakerId = int.Parse(_configuration["MTSMaxBetApi:BookmakerId"]),
-                //        LimitId = request.LimitId,
-                //        Currency = request.Currency.ToUpper(),
-                //        EndCustomer = new EndCustomerDTO
-                //        {
-                //            LanguageId = request.Language,
-                //            Id = request.UserId,
-                //            DeviceId = request.DeviceId
-                //        }
-                //    }
-                //};
-
-                //var json = JsonSerializer.Serialize(maxStakePayload);
-                //var data = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-
-                //var maxStakeResponse = maxStakeClient.PostAsync(maxStakeUrl, data).Result;
-
-                //var maxStakeData = JsonSerializer.Deserialize<MTSMaxStakeResponseDTO>(maxStakeResponse.Content.ReadAsStringAsync().Result);
-
-                //return new BaseResponseDTO<decimal>
-                //{
-                //    Result = maxStakeData.MaxStake / 10000
-                //};
 
                 return new BaseResponseDTO<decimal>
                 {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
                     Result = 0m
+                };
+
+                //All virtual sports will not have mts
+                if (request.BetSelections.FirstOrDefault().SportId >= 1000)
+                {
+                    return new BaseResponseDTO<decimal>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString(),
+                        Result = 0m
+                    };
+                }
+
+                //TODO //Temporarily token can be save in database
+                var accessToken = string.Empty;
+
+                var authUrl = _configuration["MTSMaxBetApi:AuthApi"];
+                using (var authClient = _httpClientFactory.CreateClient())
+                {
+                    var formContent = new FormUrlEncodedContent(new[]
+                    {
+                      new KeyValuePair<string, string>("client_id", "mts-edge-ext"),
+                      new KeyValuePair<string, string>("client_secret",  _configuration["MTSMaxBetApi:ClientSecret"]),
+                      new KeyValuePair<string, string>("username",  _configuration["MTSMaxBetApi:Username"]),
+                      new KeyValuePair<string, string>("password",  _configuration["MTSMaxBetApi:Password"]),
+                      new KeyValuePair<string, string>("grant_type", "password"),
+                      new KeyValuePair<string, string>("client_auth_method", "client-secret")
+                    });
+
+                    using (HttpResponseMessage authResponse = authClient.PostAsync(authUrl, formContent).Result)
+                    {
+                        if (authResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                        {
+                            var authData = JsonSerializer.Deserialize<MTSMaxStakeAuthResponseDTO>(authResponse.Content.ReadAsStringAsync().Result);
+                            accessToken = authData.AccessToken;
+                        }
+                    }
+                }
+
+                var maxStakeUrl = _configuration["MTSMaxBetApi:MaxBetApi"];
+                var maxStakeClient = _httpClientFactory.CreateClient();
+
+                maxStakeClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+
+                var betId = Guid.NewGuid().ToString();
+
+                var bets = new List<MTSBetDTO>();
+                bets.Add(new MTSBetDTO
+                {
+                    Id = betId,
+                    Stake = new MTSStakeDTO { Value = 0m }
+                });
+
+                var betSelections = new List<MTSBetSelectionDTO>();
+                foreach (var req in request.BetSelections)
+                {
+                    betSelections.Add(new MTSBetSelectionDTO
+                    {
+                        EventId = req.FixtureSpecifier,
+                        Id = req.SelectionSpecifier,
+                        Odds = req.Odds * 10000
+                    });
+                }
+
+                if (request.Language.Contains("ZH"))
+                    request.Language = "ZH";
+
+                var maxStakePayload = new MTSMaxStakeRequestDTO
+                {
+                    //TimeStamp = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds * 1000),
+                    TimeStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds(),
+                    Bets = bets,
+                    TicketId = betId,
+                    Selections = betSelections,
+                    Sender = new SenderDTO
+                    {
+                        BookmakerId = int.Parse(_configuration["MTSMaxBetApi:BookmakerId"]),
+                        LimitId = request.LimitId,
+                        Currency = request.Currency.ToUpper(),
+                        EndCustomer = new EndCustomerDTO
+                        {
+                            LanguageId = request.Language,
+                            Id = request.UserId,
+                            DeviceId = request.DeviceId
+                        }
+                    }
+                };
+
+                var json = JsonSerializer.Serialize(maxStakePayload);
+                var data = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+                var maxStakeResponse = maxStakeClient.PostAsync(maxStakeUrl, data).Result;
+
+                var maxStakeData = JsonSerializer.Deserialize<MTSMaxStakeResponseDTO>(maxStakeResponse.Content.ReadAsStringAsync().Result);
+
+                long maxStakeReturn = 0;
+                long.TryParse(maxStakeData.MaxStake, out maxStakeReturn);
+                return new BaseResponseDTO<decimal>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = maxStakeReturn / 10000
                 };
 
             }
@@ -821,6 +1040,8 @@ namespace Platform.Betting.API.Repository
 
                 return new BaseResponseDTO<decimal>
                 {
+                    StatusCode = StatusCode.Mts_Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
                     Result = 0m
                 };
             }
@@ -833,17 +1054,22 @@ namespace Platform.Betting.API.Repository
 
             var response = client.GetAsync($"tier/maxstake?SegmentId=" + request.SegmentId + "&LeagueId=" + request.LeagueId + "&SportId=" + request.SportId).Result;
 
-            if (response.IsSuccessStatusCode)
+            if (!response.IsSuccessStatusCode)
             {
+                return new BaseResponseDTO<BetConfigLeagueResponse>()
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString(),
+                    Result = new BetConfigLeagueResponse()
+                };
+            }
+            else
+            {
+                //Return if success
                 return JsonSerializer.Deserialize<BaseResponseDTO<BetConfigLeagueResponse>>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
             }
-
-            return new BaseResponseDTO<BetConfigLeagueResponse>()
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = new BetConfigLeagueResponse()
-            };
         }
+
+        #endregion
     }
 }

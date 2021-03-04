@@ -19,10 +19,10 @@ namespace Platform.Shared.Models
         public string TicketId { get; set; }
 
         [JsonProperty("maxStake")]
-        public decimal MaxStake { get; set; }
+        public string MaxStake { get; set; }
 
-        [JsonProperty("timestampUtc")]
-        public long timestampUtc { get; set; }
+        //[JsonProperty("timestampUtc")]
+        //public long timestampUtc { get; set; }
     }
 
     public class MTSMaxStakeRequestDTO

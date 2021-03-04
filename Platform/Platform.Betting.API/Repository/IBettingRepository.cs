@@ -6,6 +6,9 @@ namespace Platform.Betting.API.Repository
     public interface IBettingRepository
     {
         Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(BetRequestDTO request);
+
+        Task<BaseResponseDTO<BetResponseDTO>> PlaceBetWithValidation(BetRequestDTO request);
+
         Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(BetHistoryRequestDTO request);
 
         Task<BaseResponseDTO<BetConfigFEResponseDTO>> GetBetConfig(BetConfigRequestDTO request);

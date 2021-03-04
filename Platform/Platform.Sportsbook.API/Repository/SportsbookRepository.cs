@@ -1338,10 +1338,12 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var marketFilter = Builders<Market>.Filter.Where(c => fixture.FiId == fixture.FiId && c.MaStId == (int)MarketStatus.Active);
+            var fixtureIds = new List<long> { fixture.FiId };
+
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
-            var selectionFilter = Builders<Selection>.Filter.Where(c => fixture.FiId == fixture.FiId && c.MaStId == (int)MarketStatus.Active);
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
             var selections = selectionCollection.Find(selectionFilter).ToListAsync();
 
             await Task.WhenAll(markets, selections);

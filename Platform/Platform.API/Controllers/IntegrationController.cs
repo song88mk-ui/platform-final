@@ -386,6 +386,7 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/fixturedetails")]
         public async Task<IActionResult> GetFixtureDetails([FromQuery] string fixtureId)
         {
+            //force deploy
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 

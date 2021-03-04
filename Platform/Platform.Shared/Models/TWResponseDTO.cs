@@ -131,6 +131,7 @@ namespace Platform.Shared.Models
         public string SelectionName { get; set; }
         public string DecimalOdds { get; set; }
         public bool IsActive { get; set; }
+        public string CorrelationId { get; set; }
     }
 
 

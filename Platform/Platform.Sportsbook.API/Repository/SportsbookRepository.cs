@@ -1327,7 +1327,8 @@ namespace Platform.Sportsbook.API.Repository
                     SelectionId = s.SeId.ToString(),
                     SelectionName = s.SeNa,
                     DecimalOdds = s.Od.ToString(),
-                    IsActive = s.IsAc
+                    IsActive = s.IsAc,
+                    CorrelationId = s.CoId
                 }).OrderBy(o => o.SelectionTemplateId).ToList()
             }).OrderBy(o => o.MarketTemplateId).ToList();
         }
@@ -1349,7 +1350,8 @@ namespace Platform.Sportsbook.API.Repository
                     SelectionId = s.SeId.ToString(),
                     SelectionName = s.SeNa,
                     DecimalOdds = s.Od.ToString(),
-                    IsActive = s.IsAc
+                    IsActive = s.IsAc,
+                    CorrelationId = s.CoId
                 }).ToList()
             }).ToList();
         }

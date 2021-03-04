@@ -3,6 +3,7 @@ using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -98,6 +99,24 @@ namespace Platform.Operator.API.Repository
                     StatusId = 1002
                 };
             }
+
+            //TODO: Delete after test
+            #region FCI-5385 FOR Testing Purpose ONLY
+            var operatorTokenForCancellation = new List<string>
+            {
+                "A81E009B-7E55-434E-A206-602A879C022F",
+                "DC2DCE74-B208-4142-B04F-6ABFFEF67BCD",
+                "F655DF6D-A8BA-420E-A45E-A852F4B5D622"
+            };
+            if (operatorTokenForCancellation.Contains(operatorToken))
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003
+                };
+            }
+            #endregion
+
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {

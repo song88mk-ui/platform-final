@@ -29,9 +29,23 @@ namespace Platform.Placement.Service.Repository
         {
             var payload = new OnBetPlacement();
 
-            var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ? 
+            var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
                 message.BetSelections.Any(c => c.SportId > 1000) ? new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "Accepted (MTS disabled for VS)") :
                 ValidateToMTS(message, mts) : new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "Accepted (MTS disabled)");
+
+            //TODO: Delete after test
+            #region FCI-5381 FOR Testing Purpose ONLY
+            var clientIdForcedReject = new List<string>
+            {
+                "F7F157EE-2430-411F-0950-08D8D7A4B570",
+                "9D113F1B-DE8E-4D44-094D-08D8D7A4B570",
+                "D6D3BF24-120B-4B67-68C7-08D8D4A3138C"
+            };
+            if (clientIdForcedReject.Contains(message.Bet.ClientId))
+            {
+                result = new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"Forced Reject for testing purposes");
+            }
+            #endregion
 
             if (result.Item1 == TicketAcceptance.Accepted)
             {

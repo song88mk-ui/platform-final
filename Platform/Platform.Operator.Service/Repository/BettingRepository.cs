@@ -261,9 +261,9 @@ namespace Platform.Operator.Service.Repository
                 #region FCI-5385 FOR Testing Purpose ONLY
                 var clientIdForcedCancel = new List<string>
                 {
-                    "F7F157EE-2430-411F-0950-08D8D7A4B570",
-                    "9D113F1B-DE8E-4D44-094D-08D8D7A4B570",
-                    "D6D3BF24-120B-4B67-68C7-08D8D4A3138C"
+                    "B81F4A25-6102-4CC1-AC12-08D8D88F016E",
+                    "868D1EEB-B3AC-41CF-AC13-08D8D88F016E",
+                    "2CBF448E-EB86-418B-8184-08D8DB2249CE"
                 };
                 if (clientIdForcedCancel.Contains(message.Bet.ClientId))
                 {

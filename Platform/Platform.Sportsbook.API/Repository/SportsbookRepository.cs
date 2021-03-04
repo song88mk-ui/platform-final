@@ -1250,7 +1250,7 @@ namespace Platform.Sportsbook.API.Repository
                     Score = item.Score,
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
-                    Markets = GetMarkets(item.SportId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
+                    Markets = GetMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
                 });
             }
 

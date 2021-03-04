@@ -779,7 +779,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopFixturesTW(TWRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == 21 && c.FiTyId == 0 && c.FiStId == 0);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiTyId == 0 && c.FiStId == 0);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)

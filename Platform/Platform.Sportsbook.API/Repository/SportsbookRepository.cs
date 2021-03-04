@@ -821,12 +821,17 @@ namespace Platform.Sportsbook.API.Repository
 
             var initialResult = new List<TempFixtureDTO>();
 
-            initialResult.AddRange(result.Where(c => c.SportId == 21).ToList());
+            if (request.ClientId == Guid.Parse("5093617A-9367-EB11-89FB-00224815B68B"))
+                initialResult.AddRange(result.Where(c => c.SportId == 21).ToList());
 
             foreach (var item in result)
             {
                 if (initialResult.Any(c => c.FixtureId == item.FixtureId && c.SportId != 21)) continue;
-                if (initialResult.Count == 30) break;
+
+                if (request.ClientId == Guid.Parse("5093617A-9367-EB11-89FB-00224815B68B"))
+                    if (initialResult.Count == 30) break;
+                else
+                    if (initialResult.Count == 10) break;
 
                 initialResult.Add(item);
             }

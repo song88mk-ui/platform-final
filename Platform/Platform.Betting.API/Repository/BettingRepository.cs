@@ -22,7 +22,6 @@ namespace Platform.Betting.API.Repository
         private readonly BettingContext _bettingContext;
         private readonly IMessageBroker _messageBroker;
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly IHttpClientFactory _httpClient;
         private readonly IConfiguration _configuration;
         public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IMessageBroker messageBroker, IHttpClientFactory httpClientFactory)
         {
@@ -250,7 +249,7 @@ namespace Platform.Betting.API.Repository
                     Odds = betSelection.Odds
                 });
             }
-
+           
             var mtsConfigRequest = new MTSConfigRequestDTO
             {
                 UserId = request.UserId,
@@ -269,7 +268,6 @@ namespace Platform.Betting.API.Repository
                     Message = mtsMaxStake.Message
                 };
             }
-
             Guid clientid = new Guid(request.ClientId);
             var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == clientid && x.CurrencyCode == request.CurrencyCode.ToString()).OrderByDescending(x => x.CreatedDate).FirstOrDefault();
             decimal minStake = 0;
@@ -315,7 +313,7 @@ namespace Platform.Betting.API.Repository
                     return new BaseResponseDTO<BetResponseDTO>
                     {
                         StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake,
-                        Message = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake.ToString()
+                        Message = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake.ToString().Replace('_', ' ')
 
                     };
                 }
@@ -325,22 +323,22 @@ namespace Platform.Betting.API.Repository
                     return new BaseResponseDTO<BetResponseDTO>
                     {
                         StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake,
-                        Message = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake.ToString()
+                        Message = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake.ToString().Replace('_', ' ')
 
                     };
                 }
 
                 //Total stake on fixture by player should not go beyond this amount
                 //Computed based on League and Tier
-                var payout = request.Stake * odds;
-                if (maxPerGame < payout && maxPerGame != 0)
-                {
-                    return new BaseResponseDTO<BetResponseDTO>
-                    {
-                        StatusCode = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower,
-                        Message = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower.ToString()
-                    };
-                }
+                //var payout = request.Stake * odds;
+                //if (maxPerGame < payout && maxPerGame != 0)
+                //{
+                //    return new BaseResponseDTO<BetResponseDTO>
+                //    {
+                //        StatusCode = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower,
+                //        Message = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower.ToString()
+                //    };
+                //}
 
                 //TODO: Max Fixture Bet 
                 var betFixtureLimits = _bettingContext.StakeLimitFixture.AsNoTracking().Where(a=> a.UserId== request.UserId && a.FixtureId== request.Selections.FirstOrDefault().FixtureId).FirstOrDefault();
@@ -359,13 +357,12 @@ namespace Platform.Betting.API.Repository
                         UserId = request.UserId
                     });
                 }
-
                 if (remainingFixtureBet < 0)
                 {
                     return new BaseResponseDTO<BetResponseDTO>
                     {
                         StatusCode = StatusCode.Maximum_Bet_Limit_On_Fixture_Reached,
-                        Message = StatusCode.Maximum_Bet_Limit_On_Fixture_Reached.ToString()
+                        Message = StatusCode.Maximum_Bet_Limit_On_Fixture_Reached.ToString().Replace('_', ' ')
                     };
                 }
             }
@@ -383,7 +380,7 @@ namespace Platform.Betting.API.Repository
                     return new BaseResponseDTO<BetResponseDTO>
                     {
                         StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake,
-                        Message = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake.ToString()
+                        Message = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake.ToString().Replace('_', ' ')
 
                     };
                 }
@@ -393,7 +390,7 @@ namespace Platform.Betting.API.Repository
                     return new BaseResponseDTO<BetResponseDTO>
                     {
                         StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake,
-                        Message = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake.ToString()
+                        Message = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake.ToString().Replace('_', ' ')
 
                     };
                 }
@@ -405,7 +402,7 @@ namespace Platform.Betting.API.Repository
                     return new BaseResponseDTO<BetResponseDTO>
                     {
                         StatusCode = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower,
-                        Message = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower.ToString()
+                        Message = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower.ToString().Replace('_', ' ')
                     };
                 }
             }
@@ -798,6 +795,8 @@ namespace Platform.Betting.API.Repository
             };
         }
 
+        #region Methods
+
         public decimal GetMinStake(decimal minStake, decimal exchangeRate, decimal companyShare, string currencyCode)
         {
             List<decimal> minimumStake = new List<decimal>();
@@ -1070,5 +1069,7 @@ namespace Platform.Betting.API.Repository
                 return JsonSerializer.Deserialize<BaseResponseDTO<BetConfigLeagueResponse>>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
             }
         }
+
+        #endregion
     }
 }

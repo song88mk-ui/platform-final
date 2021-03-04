@@ -257,20 +257,6 @@ namespace Platform.Operator.Service.Repository
 
                 var response = GetHttpClient(betData.Endpoint, betData.OperatorToken).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
-                //TODO: Delete after test
-                #region FCI-5385 FOR Testing Purpose ONLY
-                var clientIdForcedCancel = new List<string>
-                {
-                    "B81F4A25-6102-4CC1-AC12-08D8D88F016E",
-                    "868D1EEB-B3AC-41CF-AC13-08D8D88F016E",
-                    "2CBF448E-EB86-418B-8184-08D8DB2249CE"
-                };
-                if (clientIdForcedCancel.Contains(message.Bet.ClientId))
-                {
-                    response.StatusCode = HttpStatusCode.BadRequest;
-                }
-                #endregion
-
                 if (response.IsSuccessStatusCode)
                 {
                     var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
@@ -544,20 +530,6 @@ namespace Platform.Operator.Service.Repository
                 });
 
                 var response = GetHttpClient(message.Bet.Endpoint, message.Bet.OperatorToken).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
-
-                //TODO: Delete after test
-                #region FCI-5385 FOR Testing Purpose ONLY
-                var clientIdForcedCancel = new List<string>
-                {
-                    "F7F157EE-2430-411F-0950-08D8D7A4B570",
-                    "9D113F1B-DE8E-4D44-094D-08D8D7A4B570",
-                    "D6D3BF24-120B-4B67-68C7-08D8D4A3138C"
-                };
-                if (clientIdForcedCancel.Contains(message.Bet.ClientId))
-                {
-                    response.StatusCode = HttpStatusCode.BadRequest;
-                }
-                #endregion
 
                 if (response.IsSuccessStatusCode)
                 {

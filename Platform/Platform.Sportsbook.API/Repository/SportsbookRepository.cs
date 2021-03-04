@@ -821,10 +821,12 @@ namespace Platform.Sportsbook.API.Repository
 
             var initialResult = new List<TempFixtureDTO>();
 
+            initialResult.AddRange(result.Where(c => c.SportId == 21).ToList());
+
             foreach (var item in result)
             {
-                if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
-                if (initialResult.Count == 10) break;
+                if (initialResult.Any(c => c.FixtureId == item.FixtureId && c.SportId != 21)) continue;
+                if (initialResult.Count == 30) break;
 
                 initialResult.Add(item);
             }
@@ -843,6 +845,10 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in initialResult)
             {
+                var currentMarkets = GetMarkets(item.SportId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList());
+
+                if (currentMarkets.Count == 0) continue;
+
                 finalResult.Add(new FixtureDTO
                 {
                     SportId = item.SportId,
@@ -864,8 +870,10 @@ namespace Platform.Sportsbook.API.Repository
                     Score = item.Score,
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
-                    Markets = GetMarkets(item.SportId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
+                    Markets = currentMarkets
                 });
+
+                if (finalResult.Count == 10) break;
             }
 
             return new BaseResponseDTO<TWResponseDTO>

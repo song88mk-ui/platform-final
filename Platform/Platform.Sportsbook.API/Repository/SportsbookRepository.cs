@@ -1827,7 +1827,7 @@ namespace Platform.Sportsbook.API.Repository
                 case 6: //handball
                     return new List<string> { "1", "16", "18" };
                 case 21: //cricket
-                    return new List<string> { "1", "11" };
+                    return new List<string> { "1", "340" };
                 case 16: //American Football
                     return new List<string> { "219", "223", "225" };
                 case 13: //Aussie Rules

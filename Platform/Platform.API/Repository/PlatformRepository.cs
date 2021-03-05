@@ -198,7 +198,7 @@ namespace Platform.API.Repository
                 BetDate = DateTime.UtcNow,
                 OddsType = request.OddsType,
                 CurrencyCode = (CurrencyCode)Enum.Parse(typeof(CurrencyCode), authenticationResponse.Result.CurrencyCode),
-                LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode),
+                LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode) == LanguageCode.ZHT ? LanguageCode.ZH : (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode),
                 Channel = request.Channel,
                 IPAddress = request.IPAddress,
                 Selections = request.Selections.Select(s => new BetSelectionRequestDTO

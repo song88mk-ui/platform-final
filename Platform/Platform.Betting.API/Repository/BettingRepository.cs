@@ -235,7 +235,6 @@ namespace Platform.Betting.API.Repository
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBetWithValidation(BetRequestDTO request)
         {
             #region BET VALIDATION
-            var remainingFixtureBet = 0m;
             //MTS Check
             //Get MTS Information
 
@@ -252,14 +251,16 @@ namespace Platform.Betting.API.Repository
            
             var mtsConfigRequest = new MTSConfigRequestDTO
             {
-                UserId = request.UserId,
+                UserId = $"{request.ClientCode}{request.UserId.Replace("-", "")}",
                 Currency = request.CurrencyCode.ToString(),
                 Language = request.LanguageCode.ToString(),
-                DeviceId = request.Channel.ToString(),
-                LimitId = int.Parse(request.LimitId),
+                DeviceId = $"{request.ClientCode}{request.UserId.Replace("-", "")}",
+                LimitId = Convert.ToInt32(request.LimitId == "0" ? "2183" : request.LimitId),
                 BetSelections = mtsConfigSelectionRequest
             };
+
             var mtsMaxStake = GetMTSMaxStake(mtsConfigRequest);
+
             if (mtsMaxStake.StatusCode != StatusCode.Success)
             {
                 return new BaseResponseDTO<BetResponseDTO>
@@ -268,18 +269,19 @@ namespace Platform.Betting.API.Repository
                     Message = mtsMaxStake.Message
                 };
             }
-            Guid clientid = new Guid(request.ClientId);
-            var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == clientid && x.CurrencyCode == request.CurrencyCode.ToString()).OrderByDescending(x => x.CreatedDate).FirstOrDefault();
+
+            var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == Guid.Parse(request.ClientId) && x.CurrencyCode == request.CurrencyCode.ToString()).FirstOrDefault();
+
             decimal minStake = 0;
             decimal maxStake = 0;
             decimal maxPerGame = 0;
-            decimal stakeLimitFixtureConfig = 0;
+            decimal stakeFixtureLimit = 0;
             var odds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
 
-            if (request.Selections.Count() == 1)
+            if (request.Selections.Count == 1)
             {
                 //Get Max Liability by Tier from Backoffice database
-                var tierMaxStake = GetTierMaxStake(new BetConfigLeagueRequestDTO()
+                var tierMaxStake = GetTierMaxStake(new BetConfigLeagueRequestDTO
                 {
                     LeagueId = request.Selections.FirstOrDefault().LeagueId,
                     SegmentId = request.Selections.FirstOrDefault().SegmentId,
@@ -296,7 +298,7 @@ namespace Platform.Betting.API.Repository
                     minStake = GetMinStake(checkOverride.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
                     maxStake = GetMaxStakeSingleBet(checkOverride.MaxStake, request.CompanyShare, true, tierMaxStake.Result.MaxStake, mtsMaxStake.Result, request);
                     maxPerGame = tierMaxStake.Result.MaxPerGame;
-                    stakeLimitFixtureConfig = checkOverride.StakeLimitFixture;
+                    stakeFixtureLimit = checkOverride.StakeLimitFixture;
                 }
                 else
                 {
@@ -304,7 +306,7 @@ namespace Platform.Betting.API.Repository
                     minStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
                     maxStake = GetMaxStakeSingleBet(defaultSportConfig.MaxStake, request.CompanyShare, true, tierMaxStake.Result.MaxStake, mtsMaxStake.Result, request);
                     maxPerGame = tierMaxStake.Result.MaxPerGame;
-                    stakeLimitFixtureConfig = defaultSportConfig.StakeLimitFixture;
+                    stakeFixtureLimit = defaultSportConfig.StakeLimitFixture;
                 }
 
                 //Actual validation occur after getting min/max
@@ -328,42 +330,21 @@ namespace Platform.Betting.API.Repository
                     };
                 }
 
-                //Total stake on fixture by player should not go beyond this amount
-                //Computed based on League and Tier
-                //var payout = request.Stake * odds;
-                //if (maxPerGame < payout && maxPerGame != 0)
-                //{
-                //    return new BaseResponseDTO<BetResponseDTO>
-                //    {
-                //        StatusCode = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower,
-                //        Message = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower.ToString()
-                //    };
-                //}
-
                 //TODO: Max Fixture Bet 
-                var betFixtureLimits = _bettingContext.StakeLimitFixture.AsNoTracking().Where(a=> a.UserId== request.UserId && a.FixtureId== request.Selections.FirstOrDefault().FixtureId).FirstOrDefault();
-                if (betFixtureLimits != null)
+                var stakeFixtureLimitResult = _bettingContext.StakeLimitFixture.AsNoTracking().Where(a => a.UserId == $"{request.ClientCode}{request.UserId.Replace("-", "")}" && a.FixtureId== request.Selections.FirstOrDefault().FixtureId).FirstOrDefault();
+                
+                if (stakeFixtureLimitResult != null)
                 {
-                    remainingFixtureBet = betFixtureLimits.Remaining - request.Stake;
-                    betFixtureLimits.Remaining = remainingFixtureBet;
-                    _bettingContext.StakeLimitFixture.Update(betFixtureLimits);
-                }
-                else
-                {
-                    remainingFixtureBet = stakeLimitFixtureConfig - request.Stake;
-                    _bettingContext.StakeLimitFixture.Add(new StakeLimitFixture { 
-                        FixtureId = request.Selections.FirstOrDefault().FixtureId,
-                        Remaining = remainingFixtureBet,
-                        UserId = request.UserId
-                    });
-                }
-                if (remainingFixtureBet < 0)
-                {
-                    return new BaseResponseDTO<BetResponseDTO>
+                    var remainingFixtureBet = stakeFixtureLimitResult.Remaining - request.Stake;
+
+                    if (remainingFixtureBet < 0)
                     {
-                        StatusCode = StatusCode.Maximum_Bet_Limit_On_Fixture_Reached,
-                        Message = StatusCode.Maximum_Bet_Limit_On_Fixture_Reached.ToString().Replace('_', ' ')
-                    };
+                        return new BaseResponseDTO<BetResponseDTO>
+                        {
+                            StatusCode = StatusCode.Maximum_Bet_Limit_On_Fixture_Reached,
+                            Message = StatusCode.Maximum_Bet_Limit_On_Fixture_Reached.ToString().Replace('_', ' ')
+                        };
+                    }
                 }
             }
             else
@@ -415,6 +396,26 @@ namespace Platform.Betting.API.Repository
             {
                 try
                 {
+                    if (request.Selections.Count == 1)
+                    {
+                        var stakeLimit = _bettingContext.StakeLimitFixture.Find($"{request.ClientCode}{request.UserId.Replace("-", "")}", request.Selections.First().FixtureId);
+
+                        if (stakeLimit == null)
+                        {
+                            _bettingContext.StakeLimitFixture.Add(new StakeLimitFixture
+                            {
+                                UserId = $"{request.ClientCode}{request.UserId.Replace("-", "")}",
+                                FixtureId = request.Selections.First().FixtureId,
+                                Remaining = stakeFixtureLimit - request.Stake
+                            });
+                        }
+                        else
+                        {
+                            stakeLimit.Remaining -= request.Stake;
+                            _bettingContext.StakeLimitFixture.Update(stakeLimit);
+                        }
+                    }
+
                     Guid betId;
 
                     var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);

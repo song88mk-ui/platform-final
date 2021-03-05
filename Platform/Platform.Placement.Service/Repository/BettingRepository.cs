@@ -270,6 +270,8 @@ namespace Platform.Placement.Service.Repository
                                     });
                                 }
 
+                                ProcessStakeFixtureLimit(payload, context);
+
                                 context.SaveChanges();
                             }
                             scope.Complete();
@@ -286,6 +288,22 @@ namespace Platform.Placement.Service.Repository
                 }
             }
         }
+
+        private static void ProcessStakeFixtureLimit(OnBetPlacement payload, BettingContext context)
+        {
+            if (payload.BetSelections.Count == 1)
+            {
+                var stakeLimitFixture = context.StakeLimitFixture.Find($"{payload.Bet.ClientCode}-{payload.Bet.UserId}", payload.BetSelections.First().FixtureId);
+
+                if (stakeLimitFixture != null)
+                {
+                    stakeLimitFixture.Remaining += payload.Bet.TrueStake;
+
+                    context.StakeLimitFixture.Update(stakeLimitFixture);
+                }
+            }
+        }
+
         private Tuple<TicketAcceptance, string> ValidateToMTS(OnBetPlacement message, IMtsSdk mts)
         {
             try

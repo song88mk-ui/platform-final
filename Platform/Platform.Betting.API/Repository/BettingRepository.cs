@@ -331,7 +331,7 @@ namespace Platform.Betting.API.Repository
                 }
 
                 //TODO: Max Fixture Bet 
-                var stakeFixtureLimitResult = _bettingContext.StakeLimitFixture.AsNoTracking().Where(a => a.UserId == $"{request.ClientCode}{request.UserId.Replace("-", "")}" && a.FixtureId== request.Selections.FirstOrDefault().FixtureId).FirstOrDefault();
+                var stakeFixtureLimitResult = _bettingContext.StakeLimitFixture.AsNoTracking().Where(a => a.UserId == $"{request.ClientCode}-{request.UserId}" && a.FixtureId== request.Selections.FirstOrDefault().FixtureId).FirstOrDefault();
                 
                 if (stakeFixtureLimitResult != null)
                 {
@@ -404,7 +404,7 @@ namespace Platform.Betting.API.Repository
                         {
                             _bettingContext.StakeLimitFixture.Add(new StakeLimitFixture
                             {
-                                UserId = $"{request.ClientCode}{request.UserId.Replace("-", "")}",
+                                UserId = $"{request.ClientCode}-{request.UserId}",
                                 FixtureId = request.Selections.First().FixtureId,
                                 Remaining = stakeFixtureLimit - request.Stake
                             });

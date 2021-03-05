@@ -240,6 +240,20 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v2/sportsbook/dailyfixtures")]
+        public async Task<IActionResult> GetDailyFixtures([FromBody] TWDailyFixtureRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetDailyFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v2/sportsbook/outrightfixtures")]
         public async Task<IActionResult> GetOutrightFixtures([FromBody] TWOutrightFixtureRequestDTO request)
         {

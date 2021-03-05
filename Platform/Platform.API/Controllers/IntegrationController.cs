@@ -349,6 +349,23 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpGet("v1/sportsbook/sports/dailyfixtures")]
+        public async Task<IActionResult> GetDailyFixtures([FromQuery] int sportId, DateTime dateUTC, int hourUTCOffset)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetDailyFixtures(apiKey, clientId, new DailyFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId, DateUTC = dateUTC, HourUTCOffset = hourUTCOffset });
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpGet("v1/sportsbook/sports/outrightfixtures")]
         public async Task<IActionResult> GetOutrightFixtures([FromQuery] int sportId)
         {

@@ -160,6 +160,8 @@ namespace Platform.Operator.Service.Repository
                             });
                         }
 
+                        ProcessStakeFixtureLimit(betSelectionData, context, betEntity);
+
                         context.SaveChanges();
                         scope.Complete();
                     }
@@ -175,6 +177,22 @@ namespace Platform.Operator.Service.Repository
                 BetSelections = betSelectionData
             }, messageBroker, correlationId);
         }
+
+        private static void ProcessStakeFixtureLimit(List<BetSelection> betSelectionData, BettingContext context, Bet betEntity)
+        {
+            if (betSelectionData.Count == 1)
+            {
+                var stakeLimitFixture = context.StakeLimitFixture.Find($"{betEntity.ClientCode}-{betEntity.UserId}", betSelectionData.First().FixtureId);
+
+                if (stakeLimitFixture != null)
+                {
+                    stakeLimitFixture.Remaining += betEntity.TrueStake;
+
+                    context.StakeLimitFixture.Update(stakeLimitFixture);
+                }
+            }
+        }
+
         private void AddOperatorLog(OperatorLog operatorLog)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))

@@ -798,7 +798,7 @@ namespace Platform.Betting.API.Repository
             };
         }
 
-        public async Task<BaseResponseDTO<BetModifyResponseDTO>> VoidBets(BetModifyRequestDTO request)
+        public async Task<BaseResponseDTO<BetModifyResponseDTO>> CancelBets(BetModifyRequestDTO request)
         {
             BetModifyResponseDTO response = new BetModifyResponseDTO()
             {
@@ -833,7 +833,7 @@ namespace Platform.Betting.API.Repository
                         data.IsSuccess = false;
                         data.Message = "Bet ID not found";
                     }
-                    else if (bet.BetStatusId != (int)BetStatus.Running && IsSettled(bet.ClientId, bet.BetDate.Month, bet.BetDate.Year))
+                    else if (bet.BetStatusId != (int)BetStatus.Running && IsSettled(bet.ClientIdRef, bet.BetDate.Month, bet.BetDate.Year))
                     {
                         data.IsSuccess = false;
                         data.Message = "Bet Cancellation cannot be processed on highlighted Bet ID. Either Payment Transfer or Settlement has been made after bet settled or player wallet is 0.00.";
@@ -877,8 +877,8 @@ namespace Platform.Betting.API.Repository
                             var finalPayout = bet.TrueStake != bet.Stake ? stake : 0m;
 
                             bet.WinLoss = 0;
-                            bet.BetStatusId = (int)request.NewStatus;
-                            bet.BetStatusName = request.NewStatus.ToString();
+                            bet.BetStatusId = (int)BetStatus.Cancelled;
+                            bet.BetStatusName = BetStatus.Cancelled.ToString();
                             bet.Reason = request.Reason;
 
                             var betEntity = _bettingContext.Bet.Update(bet).Entity;
@@ -918,6 +918,8 @@ namespace Platform.Betting.API.Repository
                                 SettlementDateOffset = betEntity.SettlementDateOffset
                             });
 
+                            var betSelectionList = new List<BetSelection>();
+
                             foreach (var betSelection in selectedBetSelections.Where(m => !unsettledBetStatus.Contains(m.BetSelectionStatusId)).ToList())
                             {
                                 betSelection.BetSelectionStatusId = bet.BetStatusId;
@@ -925,6 +927,7 @@ namespace Platform.Betting.API.Repository
                                 betSelection.IsSettled = true;
 
                                 var betSelectionEntity = _bettingContext.BetSelection.Update(betSelection).Entity;
+                                betSelectionList.Add(betSelectionEntity);
 
                                 _bettingContext.BetSelectionAudit.Add(new BetSelectionAudit
                                 {
@@ -962,79 +965,14 @@ namespace Platform.Betting.API.Repository
                                     SettlementScore = betSelectionEntity.SettlementScore,
                                     CorrelationId = betSelection.CorrelationId
                                 });
-                            }
+                            }                          
+                            _bettingContext.SaveChanges();
 
-                            // Reports
-                            var reportsPayload = bet.Adapt<BetModelRequest>();
-
-                            reportsPayload.SettlementDate = null;
-                            reportsPayload.SettlementDateOffset = null;
-                            reportsPayload.BetDate = dateTime;
-                            reportsPayload.MarketTypeId = bet.MarketTypeId;
-                            reportsPayload.BetSelections = selectedBetSelections;
-
-                            var reportsResponse = ProcessReportsHelper(reportsPayload).Result;
-
-                            if (reportsResponse.BetStatusId == (int)ResultType.Success)
+                            _messageBroker.Publish(new OnBetSettlement
                             {
-                                await _bettingContext.SaveChangesAsync();
-
-                                var fixtureSplitter = " vs. ";
-
-                                var operatorSettlementPayload = new OnBetSettlement()
-                                {
-                                    Bet = new Bet()
-                                    {
-                                        BetId = bet.BetId,
-                                        UserId = bet.UserId.Remove(0, 3),
-                                        CurrencyCode = bet.CurrencyCode,
-                                        Payout = bet.Payout,
-                                        Stake = bet.TrueStake,
-                                        Odds = bet.Odds,
-                                        BetStatusName = bet.BetStatusName,
-                                        BetDate = DateTime.UtcNow.AddHours(-4),
-                                    },
-                                    BetSelections = selectedBetSelections.Select(s => new BetSelection()
-                                    {
-                                        BetSelectionId = s.BetSelectionId,
-                                        Odds = s.Odds,
-                                        SelectionId = s.SelectionId,
-                                        SelectionName = s.SelectionName,
-                                        FixtureId = s.FixtureId,
-                                        FixtureName = s.FixtureName,
-                                        FixtureStatusId = s.FixtureStatusId,
-                                        Line = s.Line,
-                                        MarketName = s.MarketName,
-                                        SportName = s.SportName,
-                                        MarketId = s.MarketId,
-
-                                        // ADDITIONAL
-                                        FixtureStartDate = s.FixtureStartDate,
-                                        LeagueId = s.LeagueId,
-                                        LeagueName = s.LeagueName,
-                                        BetScore = s.BetScore,
-                                        SportId = s.SportId,
-                                        SegmentId = s.SegmentId,
-                                        SegmentName = s.SegmentName
-                                    }).ToList()
-                                };
-
-                                _messageBroker.Publish(operatorSettlementPayload, "BetSettlement", $"r.bets.settlement.operator.{bet.ClientId}", Guid.NewGuid().ToString());
-
-                                var payload = new
-                                {
-                                    bet.BetId,
-                                    bet.UserId,
-                                    bet.Reason
-                                };
-
-                                _logger.LogInformation(JsonConvert.SerializeObject(new { MTS = payload }));
-
-                                // MTS
-                                _messageBroker.Publish(payload, "manual.cancellation", "r.platform.cancellation", bet.BetId.ToString().ToUpper());
-
-                                data.Message = "Bet Cancellation completed. See Cancel Bet History for details";
-                            }
+                                Bet = betEntity,
+                                BetSelections = betSelectionList
+                            }, "OnBetCancellation", "r.bet.operator", Guid.NewGuid().ToString().ToUpper());
                         }
                     }
                     catch (Exception ex)
@@ -1072,32 +1010,7 @@ namespace Platform.Betting.API.Repository
             var client = _httpClientFactory.CreateClient();
             var response = client.PostAsJsonAsync(url, new { }).Result;
 
-            return JsonConvert.DeserializeObject<bool>(response.Content.ReadAsStringAsync().Result);
-        }
-
-        private BaseResponse<StatusResponse> ProcessReportsHelper(BetModelRequest betPayload)
-        {
-            var url = $"{_platformReportUrl}bets/resettlement";
-
-            var client = _httpClientFactory.CreateClient();
-
-            var response = client.PostAsJsonAsync(url, betPayload).Result;
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return new BaseResponse<StatusResponse>()
-                {
-                    Result = new StatusResponse()
-                    {
-                        StatusId = (int)response.StatusCode,
-                        StatusName = response.StatusCode.ToString()
-                    },
-                    StatusCode = (int)response.StatusCode,
-                    StatusName = response.StatusCode.ToString()
-                };
-            }
-
-            return response.Content.ReadAsAsync<BaseResponse<StatusResponse>>().Result;
+            return JsonSerializer.Deserialize<bool>(response.Content.ReadAsStringAsync().Result);
         }
 
         public decimal GetMinStake(decimal minStake, decimal exchangeRate, decimal companyShare, string currencyCode)

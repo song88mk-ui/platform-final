@@ -60,10 +60,10 @@ namespace Platform.Betting.API.Controllers
             }
         }
 
-        [HttpPost("v1/bet/voidbets")]
-        public async Task<IActionResult> VoidBets([FromBody] BetModifyRequestDTO request)
+        [HttpPost("v1/bet/cancelbets")]
+        public async Task<IActionResult> CancelBets([FromBody] BetModifyRequestDTO request)
         {
-            var result = await _bettingRepository.VoidBets(request);
+            var result = await _bettingRepository.CancelBets(request);
 
             switch (result.StatusCode)
             {

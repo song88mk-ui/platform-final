@@ -13,6 +13,6 @@ namespace Platform.Betting.API.Repository
 
         Task<BaseResponseDTO<BetConfigFEResponseDTO>> GetBetConfig(BetConfigRequestDTO request);
 
-        Task<BaseResponseDTO<BetModifyResponseDTO>> VoidBets(BetModifyRequestDTO request);
+        Task<BaseResponseDTO<BetModifyResponseDTO>> CancelBets(BetModifyRequestDTO request);
     }
 }

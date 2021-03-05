@@ -841,7 +841,9 @@ namespace Platform.Sportsbook.API.Repository
 
             var fixtureIds = initialResult.Select(s => Convert.ToInt64(s.FixtureId)).ToList();
 
-            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
+            var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
@@ -1034,7 +1036,9 @@ namespace Platform.Sportsbook.API.Repository
 
             var fixtureIds = initialResult.Select(s => Convert.ToInt64(s.FixtureId)).ToList();
 
-            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
+            var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
@@ -1135,7 +1139,9 @@ namespace Platform.Sportsbook.API.Repository
 
             var fixtureIds = initialResult.Select(s => Convert.ToInt64(s.FixtureId)).ToList();
 
-            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
+            var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
@@ -1236,7 +1242,9 @@ namespace Platform.Sportsbook.API.Repository
 
             var fixtureIds = initialResult.Select(s => Convert.ToInt64(s.FixtureId)).ToList();
 
-            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
+            var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
@@ -1336,7 +1344,9 @@ namespace Platform.Sportsbook.API.Repository
 
             var fixtureIds = initialResult.Select(s => Convert.ToInt64(s.FixtureId)).ToList();
 
-            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
+            var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
@@ -1398,7 +1408,9 @@ namespace Platform.Sportsbook.API.Repository
 
             var fixtureIds = fixtures.Select(s => Convert.ToInt64(s.FiId)).ToList();
 
-            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
+            var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
@@ -1457,7 +1469,9 @@ namespace Platform.Sportsbook.API.Repository
 
             var fixtureIds = new List<long> { fixture.FiId };
 
-            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
+            var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);

@@ -384,12 +384,12 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/sports/segments/leagues/fixtures")]
-        public async Task<IActionResult> GetFixtures([FromQuery] int sportId, int hourUTCOffset)
+        public async Task<IActionResult> GetFixtures([FromQuery] int sportId, int segmentId, int leagueId)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-            var result = await _platformRepository.GetTodayFixtures(apiKey, clientId, new TodayFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId, HourUTCOffset = hourUTCOffset });
+            var result = await _platformRepository.GetFixtures(apiKey, clientId, new LeagueFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId, SegmentId = segmentId, LeagueId = leagueId });
 
             switch (result.StatusCode)
             {

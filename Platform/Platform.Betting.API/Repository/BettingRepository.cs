@@ -808,6 +808,7 @@ namespace Platform.Betting.API.Repository
                     BetId = m,
                     IsSuccess = true
                 }).ToList(),
+                IsSuccess = false
             };
 
             try
@@ -974,6 +975,8 @@ namespace Platform.Betting.API.Repository
                                 Bet = betEntity,
                                 BetSelections = betSelectionList
                             }, "OnBetCancellation", "r.bet.operator", Guid.NewGuid().ToString().ToUpper());
+
+                            data.Message = "Bet Cancellation completed. See Cancel Bet History for details";
                         }
                     }
                     catch (Exception ex)
@@ -984,6 +987,7 @@ namespace Platform.Betting.API.Repository
                 }
 
                 bool success = response.Data.Any(m => m.IsSuccess);
+                response.IsSuccess = response.Data.Any(m => m.IsSuccess);
                 return new BaseResponseDTO<BetModifyResponseDTO>
                 {
                     StatusCode = success ? StatusCode.Success : StatusCode.Error,
@@ -993,6 +997,8 @@ namespace Platform.Betting.API.Repository
             }
             catch (Exception ex)
             {
+                response.IsSuccess = false;
+                response.Message = ex.Message;
                 return new BaseResponseDTO<BetModifyResponseDTO>
                 {
                     StatusCode = StatusCode.Error,

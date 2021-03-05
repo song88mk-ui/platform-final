@@ -6,6 +6,8 @@ namespace Platform.Shared.Models
     public class BetModifyResponseDTO
     {
         public List<BetModifyResponse> Data { get; set; }
+        public string Message { get; set; }
+        public bool IsSuccess { get; set; }
 
         public BetModifyResponseDTO()
         {

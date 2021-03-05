@@ -398,7 +398,7 @@ namespace Platform.Betting.API.Repository
                 {
                     if (request.Selections.Count == 1)
                     {
-                        var stakeLimit = _bettingContext.StakeLimitFixture.Find($"{request.ClientCode}{request.UserId.Replace("-", "")}", request.Selections.First().FixtureId);
+                        var stakeLimit = _bettingContext.StakeLimitFixture.Find($"{request.ClientCode}-{request.UserId}", request.Selections.First().FixtureId);
 
                         if (stakeLimit == null)
                         {

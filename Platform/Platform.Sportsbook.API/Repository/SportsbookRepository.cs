@@ -1486,6 +1486,67 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWSegmentFixtureRequestDTO request)
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.SegId == request.SegmentId && c.FiStId < 2);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new TWResponseDTO()
+                };
+            }
+
+            var fixtureIds = fixtures.Select(s => Convert.ToInt64(s.FiId)).ToList();
+
+            var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+            var markets = marketCollection.Find(marketFilter).ToListAsync();
+
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+            var selections = selectionCollection.Find(selectionFilter).ToListAsync();
+
+            await Task.WhenAll(markets, selections);
+
+            var result = fixtures.Select(s => new FixtureDTO
+            {
+                SportId = s.SpId,
+                SportName = s.SpNa,
+                SegmentId = s.SegId,
+                SegmentName = s.SegNa,
+                LeagueId = s.LeId,
+                LeagueName = s.LeNa,
+                ProviderFixtureId = s.PrFiId,
+                FixtureId = s.FiId.ToString(),
+                FixtureName = s.FiNa,
+                HomeName = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").First().Trim() : string.Empty,
+                AwayName = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
+                FixtureStartDate = s.FiStDa,
+                IsLive = s.IsOfLi,
+                MarketCount = 0,
+                SMSCode = string.Empty,
+                StatisticsURL = $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                Score = s.Sc,
+                CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
+                CurrentMinute = s.CuMi.ToString(),
+                Markets = GetMarkets(s.SpId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList())
+            }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+
+            return new BaseResponseDTO<TWResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new TWResponseDTO
+                {
+                    Fixtures = result
+                }
+            };
+        }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWFixtureRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.SegId == request.SegmentId && c.LeId == request.LeagueId && c.FiStId < 2);

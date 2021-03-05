@@ -28,6 +28,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(string apiKey, string clientId, TodayFixtureRequest request);
         Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixtures(string apiKey, string clientId, DailyFixtureRequest request);
         Task<BaseResponseDTO<TWResponseDTO>> GetTopLeagueFixtures(string apiKey, string clientId, TopLeagueFixtureRequest request);
+        Task<BaseResponseDTO<TWResponseDTO>> GetSegmentFixtures(string apiKey, string clientId, SegmentFixtureRequest request);
         Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(string apiKey, string clientId, LeagueFixtureRequest request);
         Task<BaseResponseDTO<SportsResponseDTO>> GetSports(string apiKey, string clientId, SportRequest request);
         Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(string apiKey, string clientId, FixtureDetailsRequest request);

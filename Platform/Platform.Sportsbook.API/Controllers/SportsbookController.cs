@@ -282,6 +282,20 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v2/sportsbook/segments/fixtures")]
+        public async Task<IActionResult> GetSegmentFixtures([FromBody] TWSegmentFixtureRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v2/sportsbook/fixtures")]
         public async Task<IActionResult> GetFixtures([FromBody] TWFixtureRequestDTO request)
         {

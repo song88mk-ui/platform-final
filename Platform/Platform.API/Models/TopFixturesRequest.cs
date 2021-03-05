@@ -48,6 +48,12 @@ namespace Platform.API.Models
         public int SportId { get; set; }
         public string LanguageCode { get; set; }
     }
+    public class SegmentFixtureRequest
+    {
+        public int SportId { get; set; }
+        public int SegmentId { get; set; }
+        public string LanguageCode { get; set; }
+    }
     public class LeagueFixtureRequest
     {
         public int SportId { get; set; }

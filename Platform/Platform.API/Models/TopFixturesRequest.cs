@@ -43,6 +43,11 @@ namespace Platform.API.Models
         public string LanguageCode { get; set; }
     }
 
+    public class TopLeagueFixtureRequest
+    {
+        public int SportId { get; set; }
+        public string LanguageCode { get; set; }
+    }
     public class LeagueFixtureRequest
     {
         public int SportId { get; set; }

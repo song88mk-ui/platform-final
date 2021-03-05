@@ -268,6 +268,20 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v2/sportsbook/topleaguefixtures")]
+        public async Task<IActionResult> GetFixtures([FromBody] TWTopLeagueFixtureRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetTopLeagueFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v2/sportsbook/fixtures")]
         public async Task<IActionResult> GetFixtures([FromBody] TWFixtureRequestDTO request)
         {

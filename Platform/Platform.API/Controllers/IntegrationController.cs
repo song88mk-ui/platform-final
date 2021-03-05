@@ -383,6 +383,23 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpGet("v1/sportsbook/sports/topleaguefixtures")]
+        public async Task<IActionResult> GetFixtures([FromQuery] int sportId)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetTopLeagueFixtures(apiKey, clientId, new TopLeagueFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId });
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpGet("v1/sportsbook/sports/segments/leagues/fixtures")]
         public async Task<IActionResult> GetFixtures([FromQuery] int sportId, int segmentId, int leagueId)
         {

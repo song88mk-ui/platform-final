@@ -846,7 +846,7 @@ namespace Platform.Sportsbook.API.Repository
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
-            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var selections = selectionCollection.Find(selectionFilter).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -1041,7 +1041,7 @@ namespace Platform.Sportsbook.API.Repository
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
-            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var selections = selectionCollection.Find(selectionFilter).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -1144,7 +1144,7 @@ namespace Platform.Sportsbook.API.Repository
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
-            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var selections = selectionCollection.Find(selectionFilter).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -1247,7 +1247,7 @@ namespace Platform.Sportsbook.API.Repository
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
-            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var selections = selectionCollection.Find(selectionFilter).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -1349,7 +1349,7 @@ namespace Platform.Sportsbook.API.Repository
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
-            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var selections = selectionCollection.Find(selectionFilter).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -1391,6 +1391,101 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetTopLeagueFixtures(TWTopLeagueFixtureRequestDTO request)
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiStId < 2);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new TWResponseDTO()
+                };
+            }
+
+            var sortOrder = await _sportsbookContext.TierLeagueOrder.Where(c => c.SportId == request.SportId).ToListAsync();
+
+            var resultInitial = fixtures.Select(s => new TempTopLeague
+            {
+                SegmentId = s.SegId,
+                SegmentName = s.SegNa,
+                LeagueId = s.LeId,
+                LeagueName = s.LeNa,
+                SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+            }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ToList();
+
+            var finalResult = new List<TopLeague>();
+
+            foreach (var item in resultInitial)
+            {
+                if (finalResult.Any(c => c.SegmentId == item.SegmentId && c.LeagueId == item.LeagueId)) continue;
+                if (finalResult.Count == 15) break;
+
+                finalResult.Add(new TopLeague
+                {
+                    LeagueId = item.LeagueId,
+                    LeagueName = item.LeagueName,
+                    SegmentId = item.SegmentId,
+                    SegmentName = item.SegmentName,
+                    LiveCount = fixtures.Where(c => c.SegId == item.SegmentId && c.LeId == item.LeagueId && c.FiStId == (int)FixtureStatus.Live).Count()
+                });
+            }
+
+            var leagueIds = finalResult.Select(s => s.LeagueId).Distinct().ToList();
+
+            var fixtureFilter2 = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && leagueIds.Contains(c.LeId) && c.FiStId < 2);
+            var fixtures2 = await fixtureCollection.Find(fixtureFilter2).ToListAsync();
+
+            var fixtureIds = fixtures2.Select(s => Convert.ToInt64(s.FiId)).ToList();
+
+            var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+            var markets = marketCollection.Find(marketFilter).ToListAsync();
+
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+            var selections = selectionCollection.Find(selectionFilter).ToListAsync();
+
+            await Task.WhenAll(markets, selections);
+
+            var result = fixtures2.Select(s => new FixtureDTO
+            {
+                SportId = s.SpId,
+                SportName = s.SpNa,
+                SegmentId = s.SegId,
+                SegmentName = s.SegNa,
+                LeagueId = s.LeId,
+                LeagueName = s.LeNa,
+                ProviderFixtureId = s.PrFiId,
+                FixtureId = s.FiId.ToString(),
+                FixtureName = s.FiNa,
+                HomeName = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").First().Trim() : string.Empty,
+                AwayName = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
+                FixtureStartDate = s.FiStDa,
+                IsLive = s.IsOfLi,
+                MarketCount = 0,
+                SMSCode = string.Empty,
+                StatisticsURL = $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                Score = s.Sc,
+                CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
+                CurrentMinute = s.CuMi.ToString(),
+                Markets = GetMarkets(s.SpId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList())
+            }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+
+            return new BaseResponseDTO<TWResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new TWResponseDTO
+                {
+                    Fixtures = result
+                }
+            };
+        }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWFixtureRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.SegId == request.SegmentId && c.LeId == request.LeagueId && c.FiStId < 2);
@@ -1413,7 +1508,7 @@ namespace Platform.Sportsbook.API.Repository
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
-            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var selections = selectionCollection.Find(selectionFilter).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -1474,7 +1569,7 @@ namespace Platform.Sportsbook.API.Repository
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
-            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == (int)MarketStatus.Active);
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var selections = selectionCollection.Find(selectionFilter).ToListAsync();
 
             await Task.WhenAll(markets, selections);

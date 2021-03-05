@@ -59,5 +59,19 @@ namespace Platform.Betting.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/bet/voidbets")]
+        public async Task<IActionResult> VoidBets([FromBody] BetModifyRequestDTO request)
+        {
+            var result = await _bettingRepository.VoidBets(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

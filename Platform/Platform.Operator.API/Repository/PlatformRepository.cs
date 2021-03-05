@@ -102,19 +102,36 @@ namespace Platform.Operator.API.Repository
 
             //TODO: Delete after test
             #region FCI-5385 FOR Testing Purpose ONLY
-            var operatorTokenForCancellation = new List<string>
+            var operatorTokenForCancellation1001 = new List<string>
+            {
+                "F73F7DD8-5E90-4097-B397-E5C73FF5382F"
+            };
+            var operatorTokenForCancellation1002 = new List<string>
+            {
+                "17018203-CCCB-4CFB-808E-0ABB9C3FAE48"
+            };
+            var operatorTokenForCancellation1003 = new List<string>
             {
                 "A81E009B-7E55-434E-A206-602A879C022F",
                 "DC2DCE74-B208-4142-B04F-6ABFFEF67BCD",
                 "F655DF6D-A8BA-420E-A45E-A852F4B5D622"
             };
-            if (operatorTokenForCancellation.Contains(operatorToken))
-            {
+
+            if (operatorTokenForCancellation1001.Contains(operatorToken))
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1001
+                };
+            else if (operatorTokenForCancellation1002.Contains(operatorToken))
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1002
+                };
+            else if (operatorTokenForCancellation1003.Contains(operatorToken))
                 return new OperatorBetResponseDTO
                 {
                     StatusId = 1003
                 };
-            }
             #endregion
 
 

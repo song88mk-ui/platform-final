@@ -1141,10 +1141,10 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == 1);
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
-            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == 1);
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var selections = selectionCollection.Find(selectionFilter).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -2162,16 +2162,16 @@ namespace Platform.Sportsbook.API.Repository
             if (hourUTCOffset >= 0)
             {
                 var utc = utcDate.Date;
-                var startTime = utc.AddHours(hourUTCOffset * -1);
-                var endTime = utc.AddHours(hourUTCOffset).Date.AddDays(1).AddMilliseconds(-1).AddHours(hourUTCOffset * -1);
+                var startTime = utc.AddHours(hourUTCOffset * -1).AddMilliseconds(-1);
+                var endTime = utc.AddHours(hourUTCOffset).Date.AddDays(1).AddHours(hourUTCOffset * -1);
 
                 return new Tuple<DateTime, DateTime>(startTime, endTime);
             }
             else
             {
                 var utc = utcDate.Date;
-                var startTime = utc.AddHours(hourUTCOffset * -1);
-                var endTime = startTime.AddDays(1).AddMilliseconds(-1);
+                var startTime = utc.AddHours(hourUTCOffset * -1).AddMilliseconds(-1);
+                var endTime = startTime.AddDays(1);
 
                 return new Tuple<DateTime, DateTime>(startTime, endTime);
             }

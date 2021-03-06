@@ -296,7 +296,7 @@ namespace Platform.Betting.API.Repository
                 if (checkOverride != null)
                 {
                     minStake = GetMinStake(checkOverride.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
-                    maxStake = GetMaxStakeSingleBet(checkOverride.MaxStake, request.CompanyShare, true, tierMaxStake.Result.MaxStake, mtsMaxStake.Result, request);
+                    maxStake = GetMaxStakeSingleBet(checkOverride.MaxStake, request.ExchangeRate, request.CompanyShare, true, tierMaxStake.Result.MaxStake, mtsMaxStake.Result, request);
                     maxPerGame = tierMaxStake.Result.MaxPerGame;
                     stakeFixtureLimit = checkOverride.StakeLimitFixture;
                 }
@@ -304,7 +304,7 @@ namespace Platform.Betting.API.Repository
                 {
                     DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     minStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
-                    maxStake = GetMaxStakeSingleBet(defaultSportConfig.MaxStake, request.CompanyShare, true, tierMaxStake.Result.MaxStake, mtsMaxStake.Result, request);
+                    maxStake = GetMaxStakeSingleBet(defaultSportConfig.MaxStake, request.ExchangeRate, request.CompanyShare, true, tierMaxStake.Result.MaxStake, mtsMaxStake.Result, request);
                     maxPerGame = tierMaxStake.Result.MaxPerGame;
                     stakeFixtureLimit = defaultSportConfig.StakeLimitFixture;
                 }
@@ -767,7 +767,7 @@ namespace Platform.Betting.API.Repository
             result.DefaultSportConfig = new DefaultSportConfigFE()
             {
                 MinStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
-                MaxStake = GetMaxStakeSingleBet(defaultSportConfig.MaxStake, request.CompanyShare, false, 0, 0, null),
+                MaxStake = GetMaxStakeSingleBet(defaultSportConfig.MaxStake, request.ExchangeRate, request.CompanyShare, false, 0, 0, null),
             };
 
             result.OverrideSportConfig = new List<OverrideSportConfigFE>();
@@ -777,7 +777,7 @@ namespace Platform.Betting.API.Repository
                 newOverrideSport.SportId = overRide.SportId;
                 newOverrideSport.SportName = overRide.SportName;
                 newOverrideSport.MinStake = GetMinStake(overRide.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode);
-                newOverrideSport.MaxStake = GetMaxStakeSingleBet(overRide.MaxStake, request.CompanyShare, false, 0, 0, null);
+                newOverrideSport.MaxStake = GetMaxStakeSingleBet(overRide.MaxStake, request.ExchangeRate, request.CompanyShare, false, 0, 0, null);
                 result.OverrideSportConfig.Add(newOverrideSport);
             }
 
@@ -857,21 +857,24 @@ namespace Platform.Betting.API.Repository
             //Get min decimal value
             return maximumStake.Min();
         }
-        public decimal GetMaxStakeSingleBet(decimal maxStake, decimal companyShare, bool isPlacement, decimal tierMaxStake, decimal mtsMaxStake, BetRequestDTO request)
+        public decimal GetMaxStakeSingleBet(decimal maxStake, decimal exchangeRate,decimal companyShare, bool isPlacement, decimal tierMaxStake, decimal mtsMaxStake, BetRequestDTO request)
         {
             List<decimal> maximumStake = new List<decimal>();
 
-            //1 Get Max from betconfig
+            //Max stake from BO
             maximumStake.Add(maxStake);
 
             //BET PLACEMENT ONLY
             if (isPlacement)
             {
+                //1 Get Max from betconfig * exchange rate
+                maximumStake.Add(Math.Truncate(tierMaxStake * exchangeRate) + 1);
+
                 var totalOdds = request.Selections.FirstOrDefault().Odds;
 
                 //BO max Liability/Total Odds
                 if (tierMaxStake > 0)
-                    maximumStake.Add(Math.Truncate(tierMaxStake / (totalOdds - 1)) + 1);
+                    maximumStake.Add(Math.Truncate((tierMaxStake * exchangeRate) / (totalOdds - 1)) + 1);
 
                 //Get MTS maxstake
                 //(**) For Max Bet: If Company Share > 0%, do not consider MTS Max Stake value from Max Stake API in Max bet logic (i.e. whichever is lowest).  

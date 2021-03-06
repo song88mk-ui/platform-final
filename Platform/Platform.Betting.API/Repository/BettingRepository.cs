@@ -924,14 +924,6 @@ namespace Platform.Betting.API.Repository
         {
             try
             {
-
-                return new BaseResponseDTO<decimal>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = 0m
-                };
-
                 //All virtual sports will not have mts
                 if (request.BetSelections.FirstOrDefault().SportId >= 1000)
                 {

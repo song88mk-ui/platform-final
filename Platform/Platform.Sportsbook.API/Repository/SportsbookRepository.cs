@@ -115,7 +115,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetTopLeagues(TopLeaguesRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiTyId == 0 && c.FiStId < 2);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.SpId == request.SportId && c.FiTyId == 0);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -169,7 +169,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues(TopLeaguesRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiTyId == 0 && c.FiStId < 2);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.SpId == request.SportId && c.FiTyId == 0);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -219,7 +219,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TopFixturesResponseDTO>> GetTopFixtures(TopFixturesRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiTyId == 0 && c.FiStId < 1);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 1 && c.FiTyId == 0);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -397,7 +397,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<OrderedLeaguesResponseDTO>> GetOrderedLeagues(OrderedLeaguesRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiStId < 2);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.SpId == request.SportId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -559,7 +559,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (leagueIds.Count > 0)
             {
-                var leagueFilter = Builders<Fixture>.Filter.Where(c => leagueIds.Contains(c.LeId) && c.FiStId < 2);
+                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && leagueIds.Contains(c.LeId));
                 var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
 
                 foreach (var item in leagueResult)
@@ -582,7 +582,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (fixtureIds.Count > 0)
             {
-                var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.FiStId < 2);
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && fixtureIds.Contains(c.FiId));
                 var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
                 foreach (var item in fixtureResult)
@@ -645,7 +645,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (leagueIds.Count > 0)
             {
-                var leagueFilter = Builders<Fixture>.Filter.Where(c => leagueIds.Contains(c.LeId) && c.FiStId < 2);
+                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && leagueIds.Contains(c.LeId));
                 var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
 
                 foreach (var item in leagueResult)
@@ -668,7 +668,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (fixtureIds.Count > 0)
             {
-                var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.FiStId < 2);
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && fixtureIds.Contains(c.FiId));
                 var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
                 foreach (var item in fixtureResult)
@@ -725,7 +725,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (leagueIds.Count > 0)
             {
-                var leagueFilter = Builders<Fixture>.Filter.Where(c => leagueIds.Contains(c.LeId) && c.FiStId < 2);
+                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && leagueIds.Contains(c.LeId));
                 var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
 
                 foreach (var item in leagueResult)
@@ -748,7 +748,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (fixtureIds.Count > 0)
             {
-                var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.FiStId < 2);
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && fixtureIds.Contains(c.FiId));
                 var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
                 foreach (var item in fixtureResult)
@@ -779,7 +779,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopFixturesTW(TWRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiTyId == 0 && c.FiStId == 0);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 0 && c.FiTyId == 0);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -983,7 +983,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixtures(TWLiveFixtureRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiStId == (int)FixtureStatus.Live);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Live && c.SpId == request.SportId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -1086,7 +1086,7 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(TWTodayFixtureRequestDTO request)
         {
             var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.HourUTCOffset);
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiStId == (int)FixtureStatus.Prematch && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -1141,10 +1141,10 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == 1);
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
-            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && c.MaStId == 1);
             var selections = selectionCollection.Find(selectionFilter).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -1189,7 +1189,7 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixtures(TWDailyFixtureRequestDTO request)
         {
             var dateTimeRange = GetDateTimeRange(request.DateUTC, request.HourUTCOffset);
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiStId == (int)FixtureStatus.Prematch && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -1291,7 +1291,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetOutrightFixtures(TWOutrightFixtureRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiTyId == (int)FixtureType.Outright && c.FiStId == (int)FixtureStatus.Prematch);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.SpId == request.SportId && c.FiTyId == (int)FixtureType.Outright);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -1393,7 +1393,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopLeagueFixtures(TWTopLeagueFixtureRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiStId < 2);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.SpId == request.SportId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -1431,7 +1431,7 @@ namespace Platform.Sportsbook.API.Repository
                     LeagueName = item.LeagueName,
                     SegmentId = item.SegmentId,
                     SegmentName = item.SegmentName,
-                    LiveCount = fixtures.Where(c => c.SegId == item.SegmentId && c.LeId == item.LeagueId && c.FiStId == (int)FixtureStatus.Live).Count()
+                    LiveCount = fixtures.Where(c => c.FiStId == (int)FixtureStatus.Live && c.SegId == item.SegmentId && c.LeId == item.LeagueId).Count()
                 });
             }
 
@@ -1488,7 +1488,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWSegmentFixtureRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.SegId == request.SegmentId && c.FiStId < 2);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.SpId == request.SportId && c.SegId == request.SegmentId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -1549,7 +1549,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWFixtureRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.SegId == request.SegmentId && c.LeId == request.LeagueId && c.FiStId < 2);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.SpId == request.SportId && c.SegId == request.SegmentId && c.LeId == request.LeagueId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)

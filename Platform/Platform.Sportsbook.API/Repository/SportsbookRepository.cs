@@ -848,7 +848,7 @@ namespace Platform.Sportsbook.API.Repository
             var markets = marketCollection.Find(marketFilter).Project<Market>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
             var selections = selectionCollection.Find(selectionFilter).Project<Selection>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -1045,7 +1045,7 @@ namespace Platform.Sportsbook.API.Repository
             var markets = marketCollection.Find(marketFilter).Project<Market>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
             var selections = selectionCollection.Find(selectionFilter).Project<Selection>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -1135,6 +1135,7 @@ namespace Platform.Sportsbook.API.Repository
             foreach (var item in result)
             {
                 if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
+                if (initialResult.Count == 100) break;
 
                 initialResult.Add(item);
             }
@@ -1150,7 +1151,7 @@ namespace Platform.Sportsbook.API.Repository
             var markets = marketCollection.Find(marketFilter).Project<Market>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
             var selections = selectionCollection.Find(selectionFilter).Project<Selection>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -1255,7 +1256,7 @@ namespace Platform.Sportsbook.API.Repository
             var markets = marketCollection.Find(marketFilter).Project<Market>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
             var selections = selectionCollection.Find(selectionFilter).Project<Selection>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -1359,7 +1360,7 @@ namespace Platform.Sportsbook.API.Repository
             var markets = marketCollection.Find(marketFilter).Project<Market>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
             var selections = selectionCollection.Find(selectionFilter).Project<Selection>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -1459,7 +1460,7 @@ namespace Platform.Sportsbook.API.Repository
             var markets = marketCollection.Find(marketFilter).Project<Market>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
             var selections = selectionCollection.Find(selectionFilter).Project<Selection>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -1522,7 +1523,7 @@ namespace Platform.Sportsbook.API.Repository
             var markets = marketCollection.Find(marketFilter).Project<Market>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
             var selections = selectionCollection.Find(selectionFilter).Project<Selection>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -1585,7 +1586,7 @@ namespace Platform.Sportsbook.API.Repository
             var markets = marketCollection.Find(marketFilter).Project<Market>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
             var selections = selectionCollection.Find(selectionFilter).Project<Selection>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -1648,7 +1649,7 @@ namespace Platform.Sportsbook.API.Repository
             var markets = marketCollection.Find(marketFilter).Project<Market>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
             var selections = selectionCollection.Find(selectionFilter).Project<Selection>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(markets, selections);

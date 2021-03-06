@@ -19,6 +19,7 @@ namespace Platform.Sportsbook.API.Repository
     public class SportsbookRepository : ISportsbookRepository
     {
         private readonly IMongoDatabase _db;
+        private readonly IMemCache _memCache;
         private readonly IMessageBroker _messageBroker;
         private readonly SportsbookContext _sportsbookContext;
         private IMongoCollection<Fixture> fixtureCollection;
@@ -27,7 +28,7 @@ namespace Platform.Sportsbook.API.Repository
         private IMongoCollection<BettingStatus> bettingStatusCollection;
         private readonly HttpClient _httpClient;
 
-        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMessageBroker messageBroker)
+        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMessageBroker messageBroker, IMemCache memCache)
         {
             var client = new MongoClient("mongodb+srv://lino:fcisong88@production.n6svy.mongodb.net/sportsbook?retryWrites=true&w=0");
             _db = client.GetDatabase("Sportsbook").WithReadPreference(new ReadPreference(ReadPreferenceMode.SecondaryPreferred));
@@ -40,6 +41,7 @@ namespace Platform.Sportsbook.API.Repository
             _sportsbookContext = sportsbookContext;
             _httpClient = httpClient;
             _messageBroker = messageBroker;
+            _memCache = memCache;
             _messageBroker.Connect();
             _httpClient.BaseAddress = new Uri("https://av-api.betradar.com");
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer C9SdxJm170K61OY152");
@@ -128,7 +130,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = await _sportsbookContext.TierLeagueOrder.Where(c => c.SportId == request.SportId).ToListAsync();
+            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
 
             var result = fixtures.Select(s => new TempTopLeague 
             {
@@ -232,7 +234,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = await _sportsbookContext.TierLeagueOrder.ToListAsync();
+            var sortOrder = GetTierLeagueOrder();
 
             var result = fixtures.Select(s => new TempTopFixture
             {
@@ -410,7 +412,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = await _sportsbookContext.TierLeagueOrder.Where(c => c.SportId == request.SportId).ToListAsync();
+            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
 
             var result = fixtures.Select(s => new TempOrderedLeague
             {
@@ -792,7 +794,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = await _sportsbookContext.TierLeagueOrder.ToListAsync();
+            var sortOrder = GetTierLeagueOrder();
 
             var result = fixtures.Select(s => new TempFixtureDTO
             {
@@ -998,7 +1000,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = await _sportsbookContext.TierLeagueOrder.Where(c => c.SportId == request.SportId).ToListAsync();
+            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
 
             var result = fixtures.Select(s => new TempFixtureDTO
             {
@@ -1103,7 +1105,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = await _sportsbookContext.TierLeagueOrder.Where(c => c.SportId == request.SportId).ToListAsync();
+            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
 
             var result = fixtures.Select(s => new TempFixtureDTO
             {
@@ -1209,7 +1211,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = await _sportsbookContext.TierLeagueOrder.Where(c => c.SportId == request.SportId).ToListAsync();
+            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
 
             var result = fixtures.Select(s => new TempFixtureDTO
             {
@@ -1314,7 +1316,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = await _sportsbookContext.TierLeagueOrder.Where(c => c.SportId == request.SportId).ToListAsync();
+            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
 
             var result = fixtures.Select(s => new TempFixtureDTO
             {
@@ -1418,7 +1420,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = await _sportsbookContext.TierLeagueOrder.Where(c => c.SportId == request.SportId).ToListAsync();
+            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
 
             var resultInitial = fixtures.Select(s => new TempTopLeague
             {
@@ -2199,6 +2201,11 @@ namespace Platform.Sportsbook.API.Repository
                 return new Tuple<DateTime, DateTime>(startTime, endTime);
             }
         } 
+
+        private List<TierLeagueOrder> GetTierLeagueOrder()
+        {
+            return _memCache.GetCache($"tlo", () => _sportsbookContext.TierLeagueOrder.ToList(), 24);
+        }
     }
 
     public static class CurrentPeriodHelper

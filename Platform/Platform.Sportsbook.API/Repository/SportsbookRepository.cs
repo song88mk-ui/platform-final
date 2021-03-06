@@ -996,7 +996,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = await _sportsbookContext.TierLeagueOrder.ToListAsync();
+            var sortOrder = await _sportsbookContext.TierLeagueOrder.Where(c => c.SportId == request.SportId).ToListAsync();
 
             var result = fixtures.Select(s => new TempFixtureDTO
             {
@@ -1202,7 +1202,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = await _sportsbookContext.TierLeagueOrder.ToListAsync();
+            var sortOrder = await _sportsbookContext.TierLeagueOrder.Where(c => c.SportId == request.SportId).ToListAsync();
 
             var result = fixtures.Select(s => new TempFixtureDTO
             {
@@ -1304,7 +1304,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = await _sportsbookContext.TierLeagueOrder.ToListAsync();
+            var sortOrder = await _sportsbookContext.TierLeagueOrder.Where(c => c.SportId == request.SportId).ToListAsync();
 
             var result = fixtures.Select(s => new TempFixtureDTO
             {

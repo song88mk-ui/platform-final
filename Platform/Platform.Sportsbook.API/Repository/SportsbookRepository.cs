@@ -940,7 +940,7 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetTodayFixtureCount(TWFTodayFixtureCountRequestDTO request)
         {
             var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.HourUTCOffset);
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiStDa > dateTimeRange.Item1 && c.FiStDa <= dateTimeRange.Item2);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -1086,7 +1086,7 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(TWTodayFixtureRequestDTO request)
         {
             var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.HourUTCOffset);
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiStId == (int)FixtureStatus.Prematch && c.FiStDa > dateTimeRange.Item1 && c.FiStDa <= dateTimeRange.Item2);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiStId == (int)FixtureStatus.Prematch && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -1189,7 +1189,7 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixtures(TWDailyFixtureRequestDTO request)
         {
             var dateTimeRange = GetDateTimeRange(request.DateUTC, request.HourUTCOffset);
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiStId == (int)FixtureStatus.Prematch && c.FiStDa > dateTimeRange.Item1 && c.FiStDa <= dateTimeRange.Item2);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && c.FiStId == (int)FixtureStatus.Prematch && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)

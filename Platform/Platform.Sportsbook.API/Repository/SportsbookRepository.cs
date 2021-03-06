@@ -1437,7 +1437,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var leagueIds = finalResult.Select(s => s.LeagueId).Distinct().ToList();
 
-            var fixtureFilter2 = Builders<Fixture>.Filter.Where(c => c.SpId == request.SportId && leagueIds.Contains(c.LeId) && c.FiStId < 2);
+            var fixtureFilter2 = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.SpId == request.SportId && leagueIds.Contains(c.LeId));
             var fixtures2 = await fixtureCollection.Find(fixtureFilter2).ToListAsync();
 
             var fixtureIds = fixtures2.Select(s => Convert.ToInt64(s.FiId)).ToList();

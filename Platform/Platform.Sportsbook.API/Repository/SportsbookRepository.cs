@@ -1099,7 +1099,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = await _sportsbookContext.TierLeagueOrder.ToListAsync();
+            var sortOrder = await _sportsbookContext.TierLeagueOrder.Where(c => c.SportId == request.SportId).ToListAsync();
 
             var result = fixtures.Select(s => new TempFixtureDTO
             {
@@ -1141,12 +1141,10 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketFilter = Builders<Market>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2 && marketStatusIds.Contains(c.MaStId));
-            //var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa);
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var markets = marketCollection.Find(marketFilter).ToListAsync();
 
-            var selectionFilter = Builders<Selection>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2 && marketStatusIds.Contains(c.MaStId));
-            //var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var selections = selectionCollection.Find(selectionFilter).ToListAsync();
 
             await Task.WhenAll(markets, selections);

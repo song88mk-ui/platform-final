@@ -2179,20 +2179,21 @@ namespace Platform.Sportsbook.API.Repository
 
         private Tuple<DateTime,DateTime> GetDateTimeRange(DateTime utcDate, int minuteUTCOffset)
         {
-            var hourUTCOffset = Convert.ToInt32(Math.Truncate(Convert.ToDecimal(minuteUTCOffset / 60)));
+            var hours = minuteUTCOffset / 60;
+            var remainderMinutes = minuteUTCOffset % 60;
 
-            if (hourUTCOffset >= 0)
+            if (hours >= 0)
             {
                 var utc = utcDate.Date;
-                var startTime = utc.AddHours(hourUTCOffset * -1).AddMilliseconds(-1);
-                var endTime = utc.AddHours(hourUTCOffset).Date.AddDays(1).AddHours(hourUTCOffset * -1);
+                var startTime = utc.AddHours(hours * -1).AddMinutes(remainderMinutes * -1).AddMilliseconds(-1);
+                var endTime = utc.AddHours(hours).Date.AddDays(1).AddHours(hours * -1).AddMinutes(remainderMinutes * -1);
 
                 return new Tuple<DateTime, DateTime>(startTime, endTime);
             }
             else
             {
                 var utc = utcDate.Date;
-                var startTime = utc.AddHours(hourUTCOffset * -1).AddMilliseconds(-1);
+                var startTime = utc.AddHours(hours * -1).AddMinutes(remainderMinutes * -1).AddMilliseconds(-1);
                 var endTime = startTime.AddDays(1);
 
                 return new Tuple<DateTime, DateTime>(startTime, endTime);

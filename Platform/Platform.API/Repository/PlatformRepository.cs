@@ -810,7 +810,7 @@ namespace Platform.API.Repository
 
             return await _sportsbookRepository.GetTodayFixtureCount(new TWFTodayFixtureCountRequestDTO
             {
-                HourUTCOffset = request.HourUTCOffset,
+                MinuteUTCOffset = request.MinuteUTCOffset,
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
             });
@@ -894,7 +894,7 @@ namespace Platform.API.Repository
 
             return await _sportsbookRepository.GetTodayFixtures(new TWTodayFixtureRequestDTO
             {
-                HourUTCOffset = request.HourUTCOffset,
+                MinuteUTCOffset = request.MinuteUTCOffset,
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
                 SportId = request.SportId
@@ -938,7 +938,7 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.GetDailyFixtures(new TWDailyFixtureRequestDTO
             {
                 DateUTC = request.DateUTC,
-                HourUTCOffset = request.HourUTCOffset,
+                MinuteUTCOffset = request.MinuteUTCOffset,
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
                 SportId = request.SportId

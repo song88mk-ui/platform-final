@@ -941,7 +941,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetTodayFixtureCount(TWFTodayFixtureCountRequestDTO request)
         {
-            var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.HourUTCOffset);
+            var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset);
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
@@ -1089,7 +1089,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(TWTodayFixtureRequestDTO request)
         {
-            var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.HourUTCOffset);
+            var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset);
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
@@ -1195,7 +1195,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixtures(TWDailyFixtureRequestDTO request)
         {
-            var dateTimeRange = GetDateTimeRange(request.DateUTC, request.HourUTCOffset);
+            var dateTimeRange = GetDateTimeRange(request.DateUTC, request.MinuteUTCOffset);
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
@@ -1241,6 +1241,7 @@ namespace Platform.Sportsbook.API.Repository
             foreach (var item in result)
             {
                 if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
+                if (initialResult.Count == 100) break;
 
                 initialResult.Add(item);
             }
@@ -2176,8 +2177,10 @@ namespace Platform.Sportsbook.API.Repository
             }
         }
 
-        private Tuple<DateTime,DateTime> GetDateTimeRange(DateTime utcDate, int hourUTCOffset)
+        private Tuple<DateTime,DateTime> GetDateTimeRange(DateTime utcDate, int minuteUTCOffset)
         {
+            var hourUTCOffset = Convert.ToInt32(Math.Truncate(Convert.ToDecimal(minuteUTCOffset / 60)));
+
             if (hourUTCOffset >= 0)
             {
                 var utc = utcDate.Date;

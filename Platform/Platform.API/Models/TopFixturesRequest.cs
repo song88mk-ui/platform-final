@@ -14,7 +14,7 @@ namespace Platform.API.Models
     }
     public class TodayFixtureCountRequest
     {
-        public int HourUTCOffset { get; set; }
+        public int MinuteUTCOffset { get; set; }
         public string LanguageCode { get; set; }
     }
     public class FixtureRequest
@@ -31,14 +31,14 @@ namespace Platform.API.Models
     public class DailyFixtureRequest
     {
         public DateTime DateUTC { get; set; }
-        public int HourUTCOffset { get; set; }
+        public int MinuteUTCOffset { get; set; }
         public int SportId { get; set; }
         public string LanguageCode { get; set; }
     }
 
     public class TodayFixtureRequest
     {
-        public int HourUTCOffset { get; set; }
+        public int MinuteUTCOffset { get; set; }
         public int SportId { get; set; }
         public string LanguageCode { get; set; }
     }

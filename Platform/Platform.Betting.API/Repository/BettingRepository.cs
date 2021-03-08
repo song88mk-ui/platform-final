@@ -810,69 +810,70 @@ namespace Platform.Betting.API.Repository
                 }).ToList(),
                 IsSuccess = false
             };
-            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            
+            try 
             {
-                try
+                var betIds = response.Data.Select(m => Guid.Parse(m.BetId)).ToList();
+
+                var bets = _bettingContext.Bet.Where(x => betIds.Contains(x.BetId)).ToList();
+                var betSelections = bets.Any() ? _bettingContext.BetSelection.Where(x => betIds.Contains(x.BetId)).ToList() : new List<BetSelection>();
+
+                #region Validate Request
+
+                var settledBetStatus = new int[] { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost, (int)BetStatus.Rejected };
+                var unsettledBetStatus = new int[] { (int)BetStatus.Waiting };
+
+                foreach (var data in response.Data)
                 {
-                    var betIds = response.Data.Select(m => Guid.Parse(m.BetId)).ToList();
+                    var betId = Guid.Parse(data.BetId);
+                    var bet = bets.SingleOrDefault(m => m.BetId == betId);
 
-                    var bets = _bettingContext.Bet.Where(x => betIds.Contains(x.BetId)).ToList();
-                    var betSelections = bets.Any() ? _bettingContext.BetSelection.Where(x => betIds.Contains(x.BetId)).ToList() : new List<BetSelection>();
+                    data.OldBetStatus = bet != null ? bet.BetStatusName : string.Empty;
 
-                    #region Validate Request
-
-                    var settledBetStatus = new int[] { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost, (int)BetStatus.Rejected };
-                    var unsettledBetStatus = new int[] { (int)BetStatus.Waiting };
-
-                    foreach (var data in response.Data)
+                    if (bet == null)
                     {
-                        var betId = Guid.Parse(data.BetId);
-                        var bet = bets.SingleOrDefault(m => m.BetId == betId);
-
-                        data.OldBetStatus = bet != null ? bet.BetStatusName : string.Empty;
-
-                        if (bet == null)
-                        {
-                            data.IsSuccess = false;
-                            data.Message = "Bet ID not found";
-                        }
-                        else if (bet.BetStatusId != (int)BetStatus.Running && IsSettled(bet.ClientIdRef, bet.BetDate.Month, bet.BetDate.Year))
-                        {
-                            data.IsSuccess = false;
-                            data.Message = "Bet Cancellation cannot be processed on highlighted Bet ID. Either Payment Transfer or Settlement has been made after bet settled or player wallet is 0.00.";
-                        }
-                        else if (!unsettledBetStatus.Contains(bet.BetStatusId) && settledBetStatus.Contains(bet.BetStatusId))
-                        {
-                            data.IsSuccess = false;
-                            data.Message = "Bet ID is already settled and can no longer be cancelled.";
-                        }
-                        else if (bet.BetStatusId == (int)BetStatus.Void)
-                        {
-                            data.IsSuccess = false;
-                            data.Message = "Bet Reference ID entered has been cancelled previously.";
-                        }
-                        else if (bet.BetStatusId == (int)BetStatus.Cancelled)
-                        {
-                            data.IsSuccess = false;
-                            data.Message = "Bet Reference ID entered has been cancelled previously.";
-                        }
+                        data.IsSuccess = false;
+                        data.Message = "Bet ID not found";
                     }
+                    else if (bet.BetStatusId != (int)BetStatus.Running && IsSettled(bet.ClientIdRef, bet.BetDate.Month, bet.BetDate.Year))
+                    {
+                        data.IsSuccess = false;
+                        data.Message = "Bet Cancellation cannot be processed on highlighted Bet ID. Either Payment Transfer or Settlement has been made after bet settled or player wallet is 0.00.";
+                    }
+                    else if (!unsettledBetStatus.Contains(bet.BetStatusId) && settledBetStatus.Contains(bet.BetStatusId))
+                    {
+                        data.IsSuccess = false;
+                        data.Message = "Bet ID is already settled and can no longer be cancelled.";
+                    }
+                    else if (bet.BetStatusId == (int)BetStatus.Void)
+                    {
+                        data.IsSuccess = false;
+                        data.Message = "Bet Reference ID entered has been cancelled previously.";
+                    }
+                    else if (bet.BetStatusId == (int)BetStatus.Cancelled)
+                    {
+                        data.IsSuccess = false;
+                        data.Message = "Bet Reference ID entered has been cancelled previously.";
+                    }
+                }
 
-                    // check if there are any bets that failed the validation
-                    // if yes, then don't proceed to the next step
-                    if (response.Data.Count(m => !m.IsSuccess) > 0)
-                        return new BaseResponseDTO<BetModifyResponseDTO>
-                        {
-                            StatusCode = StatusCode.Error,
-                            Message = StatusCode.Error.ToString(),
-                            Result = response
-                        };
+                // check if there are any bets that failed the validation
+                // if yes, then don't proceed to the next step
+                if (response.Data.Count(m => !m.IsSuccess) > 0)
+                    return new BaseResponseDTO<BetModifyResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = StatusCode.Error.ToString(),
+                        Result = response
+                    };
 
-                    #endregion
+                #endregion
 
-                    var dateTime = DateTime.UtcNow;
+                var dateTime = DateTime.UtcNow;
 
-                    foreach (var data in response.Data.Where(m => m.IsSuccess))
+                foreach (var data in response.Data.Where(m => m.IsSuccess))
+                {
+                    using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
                     {
                         try
                         {
@@ -974,9 +975,10 @@ namespace Platform.Betting.API.Repository
                                         CorrelationId = betSelection.CorrelationId
                                     });
                                 }
-                                _bettingContext.SaveChanges();                               
+                                _bettingContext.SaveChanges();
+                                scope.Complete();
 
-                                _messageBroker.Publish(new OnBetSettlement
+                            _messageBroker.Publish(new OnBetSettlement
                                 {
                                     Bet = betEntity,
                                     BetSelections = betSelectionList
@@ -987,34 +989,33 @@ namespace Platform.Betting.API.Repository
                         }
                         catch (Exception ex)
                         {
+                            scope.Dispose();
                             data.IsSuccess = false;
                             data.Message = ex.Message;
                         }
                     }
-
-                    scope.Complete();
-                    bool success = response.Data.Any(m => m.IsSuccess);
-                    response.IsSuccess = success;
-                    return new BaseResponseDTO<BetModifyResponseDTO>
-                    {
-                        StatusCode = success ? StatusCode.Success : StatusCode.Error,
-                        Message = success ? String.Empty : StatusCode.Error.ToString(),
-                        Result = response
-                    };
-
                 }
-                catch (Exception ex)
+                    
+                bool success = response.Data.Any(m => m.IsSuccess);
+                response.IsSuccess = success;
+                return new BaseResponseDTO<BetModifyResponseDTO>
                 {
-                    scope.Dispose();
-                    response.IsSuccess = false;
-                    response.Message = ex.Message;
-                    return new BaseResponseDTO<BetModifyResponseDTO>
-                    {
-                        StatusCode = StatusCode.Error,
-                        Message = ex.Message,
-                        Result = response
-                    };
-                }
+                    StatusCode = success ? StatusCode.Success : StatusCode.Error,
+                    Message = success ? String.Empty : StatusCode.Error.ToString(),
+                    Result = response
+                };
+
+            }
+            catch (Exception ex)
+            {                    
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return new BaseResponseDTO<BetModifyResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = ex.Message,
+                    Result = response
+                };
             }
         }
 

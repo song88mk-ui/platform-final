@@ -97,7 +97,7 @@ namespace Platform.Cancellation.Service
                         _bettingRepository.ProcessMTSTimeout(onBetMTSTimeout, _mts, _messageBroker, correlationId);
                         break;
 
-                    case "OnBetBackofficeCancellation":
+                    case "OnBetBackOfficeCancellation":
                         var onBetBackofficeCancellation = JsonSerializer.Deserialize<OnBetBackofficeCancellation>(payload);
 
                         _bettingRepository.ProcessBackofficeCancellation(onBetBackofficeCancellation, _mts, _messageBroker, correlationId);

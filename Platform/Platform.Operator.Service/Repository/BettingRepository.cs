@@ -533,6 +533,7 @@ namespace Platform.Operator.Service.Repository
 
                 //publish to reports
                 messageBroker.Publish(message, "OnBetCancellation", "r.bet.reports", correlationId);
+                messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackOfficeCancellation", "r.bet.cancellation", correlationId);
 
                 AddOperatorLog(new OperatorLog
                 {

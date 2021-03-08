@@ -66,7 +66,7 @@ namespace Platform.Settlement.Service
                         _bettingRepository.ProcessBetCancellation(onBetCancellation, _messageBroker, correlationId);
                         break;
 
-                    case "OnBOBetCancellation":
+                    case "OnBetBackOfficeCancellation":
                         var onBOBetCancellation = JsonSerializer.Deserialize<OnBOBetCancellaton>(payload);
                         _bettingRepository.ProcessBackOfficeBetCancellation(onBOBetCancellation, _messageBroker, correlationId);
                         break;

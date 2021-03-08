@@ -60,7 +60,7 @@ namespace Platform.Betting.API.Controllers
             }
         }
 
-        [HttpPost("v1/bet/cancelbets")]
+        [HttpPost("v1/bet/cancel")]
         public async Task<IActionResult> CancelBets([FromBody] BetModifyRequestDTO request)
         {
             var result = await _bettingRepository.CancelBets(request);

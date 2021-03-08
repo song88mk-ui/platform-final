@@ -877,7 +877,7 @@ namespace Platform.Betting.API.Repository
                 _messageBroker.Publish(new OnBOBetCancellaton
                 {
                     Bets = betList
-                }, "OnBOBetCancellaton", "r.bet.settlement", Guid.NewGuid().ToString().ToUpper());
+                }, "OnBetBackOfficeCancellation", "r.bet.settlement", Guid.NewGuid().ToString().ToUpper());
 
                 bool success = response.Data.Any(m => m.IsSuccess);
                 response.IsSuccess = success;

@@ -59,5 +59,19 @@ namespace Platform.Betting.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/bet/cancelbets")]
+        public async Task<IActionResult> CancelBets([FromBody] BetModifyRequestDTO request)
+        {
+            var result = await _bettingRepository.CancelBets(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

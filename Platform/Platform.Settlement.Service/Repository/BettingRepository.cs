@@ -20,6 +20,33 @@ namespace Platform.Settlement.Service.Repository
         {
             _configuration = configuration;
         }
+        private List<BetSelection> GetBetId(long marketId)
+        {
+            var result = new List<BetSelection>();
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+
+                using (var context = new BettingContext(optionsBuilder.Options))
+                {
+                    try
+                    {
+                        var betSelections = context.BetSelection.AsNoTracking().Where(c => c.MarketId == marketId).ToList();
+                        if (betSelections.Count > 0)
+                            result.AddRange(betSelections);
+
+                        scope.Complete();
+                    }
+                    catch (Exception)
+                    {
+                        return result;
+                    }
+                }
+            }
+
+            return result;
+        }
         private List<BetSelection> GetBetSelectionsByMarketId(long marketId)
         {
             var result = new List<BetSelection>();
@@ -591,5 +618,24 @@ namespace Platform.Settlement.Service.Repository
                 ProcesssBetSettlement(cancellation, messageBroker, correlationId);
             }
         }
+
+        //public void ProcessBackOfficeBetCancellation(OnBOBetCancellaton message, IMessageBroker messageBroker, string correlationId)
+        //{
+        //    var betSelections = GetBetSelectionsByMarketId(message.MarketId);
+
+        //    var selectionIds = betSelections.Select(s => s.SelectionId).Distinct().ToList();
+
+        //    foreach (var selectionId in selectionIds)
+        //    {
+        //        var cancellation = new OnUOFBetSettlement
+        //        {
+        //            SelectionId = selectionId,
+        //            SelectionStatus = message.MarketStatus,
+        //            SettlementScore = message.SettlementScore
+        //        };
+
+        //        ProcesssBetSettlement(cancellation, messageBroker, correlationId);
+        //    }
+        //}
     }
 }

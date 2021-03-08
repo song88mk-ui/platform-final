@@ -125,6 +125,7 @@ namespace Platform.Shared.Models
         public string AwayName { get; set; }
         public DateTime FixtureStartDate { get; set; }
         public bool IsLive { get; set; }
+        public bool IsLiveStream { get; set; }
         public int MarketCount { get; set; }
         public string SMSCode { get; set; }
         public string StatisticsURL { get; set; }
@@ -178,6 +179,7 @@ namespace Platform.Shared.Models
         public string AwayName { get; set; }
         public DateTime FixtureStartDate { get; set; }
         public bool IsLive { get; set; }
+        public bool IsLiveStream { get; set; }
         public int MarketCount { get; set; }
         public string SMSCode { get; set; }
         public string StatisticsURL { get; set; }

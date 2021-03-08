@@ -10,11 +10,24 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }
+    public class TWTopLeagueFixtureRequestDTO
+    {
+        public int SportId { get; set; }
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+    }
     public class TWFixtureRequestDTO
     {
         public int SportId { get; set; }
         public int SegmentId { get; set; }
         public int LeagueId { get; set; }
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+    }
+    public class TWSegmentFixtureRequestDTO
+    {
+        public int SportId { get; set; }
+        public int SegmentId { get; set; }
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }
@@ -32,7 +45,7 @@ namespace Platform.Shared.Models
     }
     public class TWTodayFixtureRequestDTO
     {
-        public int HourUTCOffset { get; set; }
+        public int MinuteUTCOffset { get; set; }
         public int SportId { get; set; }
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
@@ -40,14 +53,14 @@ namespace Platform.Shared.Models
     public class TWDailyFixtureRequestDTO
     {
         public DateTime DateUTC { get; set; }
-        public int HourUTCOffset { get; set; }
+        public int MinuteUTCOffset { get; set; }
         public int SportId { get; set; }
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }
     public class TWFTodayFixtureCountRequestDTO
     {
-        public int HourUTCOffset { get; set; }
+        public int MinuteUTCOffset { get; set; }
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }

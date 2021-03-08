@@ -20,4 +20,11 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public DateTime FiStDa { get; set; }
         public int FiStId { get; set; }
     }
+
+    public class MarketCount
+    {
+        [BsonId]
+        public long MaId { get; set; }
+        public long FiId { get; set; }
+    }
 }

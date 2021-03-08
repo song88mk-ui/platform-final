@@ -366,6 +366,8 @@ namespace Platform.Settlement.Service.Repository
                             SettlementDateOffset = betEntity.SettlementDateOffset
                         });
 
+                        ProcessStakeFixtureLimit(message, betSelection, context, selections, betEntity);
+
                         isPublish = true;
                         payload.Bet = betEntity;
                         payload.BetSelections = selections;
@@ -376,6 +378,22 @@ namespace Platform.Settlement.Service.Repository
             context.SaveChanges();
             return isPublish;
         }
+
+        private static void ProcessStakeFixtureLimit(OnUOFBetSettlement message, BetSelection betSelection, BettingContext context, List<BetSelection> selections, Bet betEntity)
+        {
+            if (selections.Count == 1 && message.SelectionStatus == BetStatus.Cancelled)
+            {
+                var stakeLimitFixture = context.StakeLimitFixture.Find($"{betEntity.ClientCode}-{betEntity.UserId}", betSelection.FixtureId);
+
+                if (stakeLimitFixture != null)
+                {
+                    stakeLimitFixture.Remaining += betEntity.TrueStake;
+
+                    context.StakeLimitFixture.Update(stakeLimitFixture);
+                }
+            }
+        }
+
         private bool ResettleBet(OnUOFBetSettlement message, BetSelection betSelection, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, BetSelection filteredSelection)
         {
             if (filteredSelection.BetSelectionStatusId == (int)message.SelectionStatus || filteredSelection.BetSelectionStatusId == (int)BetStatus.Waiting || filteredSelection.BetSelectionStatusId == (int)BetStatus.Cancelled || filteredSelection.BetSelectionStatusId == (int)BetStatus.Rejected)

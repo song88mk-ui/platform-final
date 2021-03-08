@@ -1,14 +1,13 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Cors;
+﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Platform.API.ActionFilters;
 using Platform.API.Models;
 using Platform.API.Repository;
 using Platform.Shared.Enums;
-using Platform.Shared.Models;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Platform.API.Controllers
 {
@@ -299,12 +298,12 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/todayfixturecount")]
-        public async Task<IActionResult> GetTodayFixtureCount([FromQuery] int hourUTCOffset)
+        public async Task<IActionResult> GetTodayFixtureCount([FromQuery] int minuteUTCOffset)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-            var result = await _platformRepository.GetTodayFixtureCount(apiKey, clientId, new TodayFixtureCountRequest { LanguageCode = LanguageCode.EN.ToString(), HourUTCOffset = hourUTCOffset });
+            var result = await _platformRepository.GetTodayFixtureCount(apiKey, clientId, new TodayFixtureCountRequest { LanguageCode = LanguageCode.EN.ToString(), MinuteUTCOffset = minuteUTCOffset });
 
             switch (result.StatusCode)
             {
@@ -333,12 +332,12 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/sports/todayfixtures")]
-        public async Task<IActionResult> GetTodayFixtures([FromQuery] int sportId, int hourUTCOffset)
+        public async Task<IActionResult> GetTodayFixtures([FromQuery] int sportId, int minuteUTCOffset)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-            var result = await _platformRepository.GetTodayFixtures(apiKey, clientId, new TodayFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId, HourUTCOffset = hourUTCOffset });
+            var result = await _platformRepository.GetTodayFixtures(apiKey, clientId, new TodayFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId, MinuteUTCOffset = minuteUTCOffset });
 
             switch (result.StatusCode)
             {
@@ -350,12 +349,12 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/sports/dailyfixtures")]
-        public async Task<IActionResult> GetDailyFixtures([FromQuery] int sportId, DateTime dateUTC, int hourUTCOffset)
+        public async Task<IActionResult> GetDailyFixtures([FromQuery] int sportId, DateTime dateUTC, int minuteUTCOffset)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-            var result = await _platformRepository.GetDailyFixtures(apiKey, clientId, new DailyFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId, DateUTC = dateUTC, HourUTCOffset = hourUTCOffset });
+            var result = await _platformRepository.GetDailyFixtures(apiKey, clientId, new DailyFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId, DateUTC = dateUTC, MinuteUTCOffset = minuteUTCOffset });
 
             switch (result.StatusCode)
             {
@@ -383,13 +382,47 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v1/sportsbook/sports/segments/leagues/fixtures")]
-        public async Task<IActionResult> GetFixtures([FromQuery] int sportId, int hourUTCOffset)
+        [HttpGet("v1/sportsbook/sports/topleaguefixtures")]
+        public async Task<IActionResult> GetFixtures([FromQuery] int sportId)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-            var result = await _platformRepository.GetTodayFixtures(apiKey, clientId, new TodayFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId, HourUTCOffset = hourUTCOffset });
+            var result = await _platformRepository.GetTopLeagueFixtures(apiKey, clientId, new TopLeagueFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId });
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/sportsbook/sports/segments/fixtures")]
+        public async Task<IActionResult> GetFixtures([FromQuery] int sportId, int segmentId)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetSegmentFixtures(apiKey, clientId, new SegmentFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId, SegmentId = segmentId });
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/sportsbook/sports/segments/leagues/fixtures")]
+        public async Task<IActionResult> GetFixtures([FromQuery] int sportId, int segmentId, int leagueId)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetFixtures(apiKey, clientId, new LeagueFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId, SegmentId = segmentId, LeagueId = leagueId });
 
             switch (result.StatusCode)
             {

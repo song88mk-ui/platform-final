@@ -1198,6 +1198,37 @@ namespace Platform.API.Repository
                 SportId = request.SportId
             });
         }
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetUserFavorites2(string apiKey, string clientId, string operatorToken)
+        {
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+
+            if (authenticationResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
+                };
+            }
+
+            return await _sportsbookRepository.GetUserFavorites2(new UserFavoriteRequestDTO
+            {
+                UserId = authenticationResponse.Result.UserId,
+                ClientCode = clientResponse.Result.ClientCode,
+                LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode)
+            });
+        }
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(string apiKey, string clientId, string operatorToken)
         {
             var clientResponse = await GetClient(clientId);

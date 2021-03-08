@@ -542,6 +542,141 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetUserFavorites2(UserFavoriteRequestDTO request)
+        {
+            var result = new List<FixtureDTO>();
+            var favorites = await _sportsbookContext.UserFavorite.Where(c => c.UserId == $"{request.ClientCode}-{request.UserId}").ToListAsync();
+
+            if (favorites.Count == 0)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new TWResponseDTO()
+                };
+            }
+
+            var leagues = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.League).Select(s => Convert.ToInt32(s.Id)).Distinct().ToList();
+
+            if (leagues.Count > 0)
+            {
+                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && leagues.Contains(c.LeId));
+                var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
+
+                if (leagueResult.Count > 0)
+                {
+                    var fixtureIds = leagueResult.Select(s => Convert.ToInt64(s.FiId)).ToList();
+                    var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+                    var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+                    var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
+                    var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
+
+                    var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+                    var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa);
+                    var markets = marketCollection.Find(marketFilter).Project<Market>(marketProjection).ToListAsync();
+
+                    var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+                    var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
+                    var selections = selectionCollection.Find(selectionFilter).Project<Selection>(selectionProjection).ToListAsync();
+
+                    foreach (var item in leagueResult)
+                    {
+                        if (result.Any(c => c.FixtureId == item.FiId.ToString())) continue;
+
+                        result.Add(new FixtureDTO
+                        {
+                            SportId = item.SpId,
+                            SportName = item.SpNa,
+                            SegmentId = item.SegId,
+                            SegmentName = item.SegNa,
+                            LeagueId = item.LeId,
+                            LeagueName = item.LeNa,
+                            ProviderFixtureId = item.PrFiId,
+                            FixtureId = item.FiId.ToString(),
+                            FixtureName = item.FiNa,
+                            HomeName = item.FiTyId == (int)FixtureType.Match ? item.FiNa.Split(" vs. ").First().Trim() : string.Empty,
+                            AwayName = item.FiTyId == (int)FixtureType.Match ? item.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
+                            FixtureStartDate = item.FiStDa,
+                            IsLive = item.IsOfLi,
+                            MarketCount = marketCount.Result.Where(c => c.FiId == item.FiId).Count(),
+                            SMSCode = string.Empty,
+                            StatisticsURL = $"https://s5.sir.sportradar.com/igaholding2{item.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                            Score = item.Sc,
+                            CurrentPeriod = CurrentPeriodHelper.ToShortName(item.CuPe),
+                            CurrentMinute = item.CuMi.ToString(),
+                            Markets = GetMarkets(item.SpId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList())
+                        });
+                    }
+                }
+            }
+
+            var fixtures = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.Fixture).Select(s => Convert.ToInt64(s.Id)).Distinct().ToList();
+
+            if (fixtures.Count > 0)
+            {
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && fixtures.Contains(c.FiId));
+                var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+                if (fixtureResult.Count > 0)
+                {
+                    var fixtureIds = fixtureResult.Select(s => Convert.ToInt64(s.FiId)).ToList();
+                    var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+                    var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+                    var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
+                    var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
+
+                    var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+                    var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa);
+                    var markets = marketCollection.Find(marketFilter).Project<Market>(marketProjection).ToListAsync();
+
+                    var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+                    var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
+                    var selections = selectionCollection.Find(selectionFilter).Project<Selection>(selectionProjection).ToListAsync();
+
+                    foreach (var item in fixtureResult)
+                    {
+                        if (result.Any(c => c.FixtureId == item.FiId.ToString())) continue;
+
+                        result.Add(new FixtureDTO
+                        {
+                            SportId = item.SpId,
+                            SportName = item.SpNa,
+                            SegmentId = item.SegId,
+                            SegmentName = item.SegNa,
+                            LeagueId = item.LeId,
+                            LeagueName = item.LeNa,
+                            ProviderFixtureId = item.PrFiId,
+                            FixtureId = item.FiId.ToString(),
+                            FixtureName = item.FiNa,
+                            HomeName = item.FiTyId == (int)FixtureType.Match ? item.FiNa.Split(" vs. ").First().Trim() : string.Empty,
+                            AwayName = item.FiTyId == (int)FixtureType.Match ? item.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
+                            FixtureStartDate = item.FiStDa,
+                            IsLive = item.IsOfLi,
+                            MarketCount = marketCount.Result.Where(c => c.FiId == item.FiId).Count(),
+                            SMSCode = string.Empty,
+                            StatisticsURL = $"https://s5.sir.sportradar.com/igaholding2{item.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                            Score = item.Sc,
+                            CurrentPeriod = CurrentPeriodHelper.ToShortName(item.CuPe),
+                            CurrentMinute = item.CuMi.ToString(),
+                            Markets = GetMarkets(item.SpId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList())
+                        });
+                    }
+                }
+            }
+
+            return new BaseResponseDTO<TWResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new TWResponseDTO
+                {
+                    Fixtures = result
+                }
+            };
+        }
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(UserFavoriteRequestDTO request)
         {
             var result = new List<UserFavoriteDTO>();

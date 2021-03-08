@@ -128,6 +128,20 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v1/sportsbook/userfavorites/get/all")]
+        public async Task<IActionResult> GetUserFavorites2([FromBody] UserFavoriteRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetUserFavorites(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/sportsbook/userfavorites/get")]
         public async Task<IActionResult> GetUserFavorites([FromBody] UserFavoriteRequestDTO request)
         {

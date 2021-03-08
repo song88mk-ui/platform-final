@@ -245,6 +245,24 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpGet("v1/sportsbook/userfavorites/fixtures")]
+        public async Task<IActionResult> GetUserFavorites2()
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+
+            var result = await _platformRepository.GetUserFavorites2(apiKey, clientId, operatorToken);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpGet("v1/sportsbook/userfavorites")]
         public async Task<IActionResult> GetUserFavorites()
         {

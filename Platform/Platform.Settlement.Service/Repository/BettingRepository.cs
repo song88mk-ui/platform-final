@@ -755,7 +755,7 @@ namespace Platform.Settlement.Service.Repository
                             context.SaveChanges();
                             scope.Complete();
 
-                            messageBroker.Publish(payload, "OnBOBetCancellation", "r.bet.operator", correlationId);
+                            messageBroker.Publish(payload, "OnBetCancellation", "r.bet.operator", correlationId);
                         }
                         catch (Exception ex)
                         {

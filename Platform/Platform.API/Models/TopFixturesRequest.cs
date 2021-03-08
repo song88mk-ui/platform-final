@@ -28,6 +28,12 @@ namespace Platform.API.Models
         public int SportId { get; set; }
         public string LanguageCode { get; set; }
     }
+
+    public class SearchResultRequest
+    {
+        public string SearchText { get; set; }
+        public string LanguageCode { get; set; }
+    }
     public class DailyFixtureRequest
     {
         public DateTime DateUTC { get; set; }

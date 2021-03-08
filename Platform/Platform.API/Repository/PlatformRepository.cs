@@ -1229,6 +1229,35 @@ namespace Platform.API.Repository
                 LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode)
             });
         }
+        public async Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(string apiKey, string clientId, SearchResultRequest request)
+        {
+            if (string.IsNullOrEmpty(request.SearchText) || string.IsNullOrWhiteSpace(request.SearchText) || request.SearchText.Length < 3)
+            {
+                return new BaseResponseDTO<TWSearchResponseDTO>
+                {
+                    StatusCode = StatusCode.Search_Text_Needs_To_Be_3_Characters_Or_Above,
+                    Message = StatusCode.Search_Text_Needs_To_Be_3_Characters_Or_Above.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<TWSearchResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetSearchResults(new TWSearchRequestDTO
+            {
+                SearchText = request.SearchText,
+                ClientId = clientResponse.Result.ClientId,
+                LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper())
+            });
+        }
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(string apiKey, string clientId, string operatorToken)
         {
             var clientResponse = await GetClient(clientId);

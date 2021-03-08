@@ -34,5 +34,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<SportsResponseDTO>> GetSports(string apiKey, string clientId, SportRequest request);
         Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(string apiKey, string clientId, FixtureDetailsRequest request);
         Task<BaseResponseDTO<TWResponseDTO>> GetOutrightFixtures(string apiKey, string clientId, OutrightFixtureRequest request);
+        Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(string apiKey, string clientId, SearchResultRequest request);
     }
 }

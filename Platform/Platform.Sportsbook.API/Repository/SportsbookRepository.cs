@@ -1811,6 +1811,49 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+        public async Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(TWSearchRequestDTO request)
+        {
+            var result = new List<SearchResponse>();
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && (c.LeNa.Contains(request.SearchText) || c.FiNa.Contains(request.SearchText)));
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<TWSearchResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new TWSearchResponseDTO()
+                };
+            }
+
+            foreach (var fixture in fixtures)
+            {
+                if (result.Any(c => c.FixtureId == fixture.FiId.ToString())) continue;
+
+                result.Add(new SearchResponse
+                {
+                    SportId = fixture.SpId,
+                    SportName = fixture.SpNa,
+                    SegmentId = fixture.SegId,
+                    SegmentName = fixture.SegNa,
+                    LeagueId = fixture.LeId,
+                    LeagueName = fixture.LeNa,
+                    FixtureId = fixture.FiId.ToString(),
+                    FixtureName = fixture.FiNa
+                });
+            }
+
+            return new BaseResponseDTO<TWSearchResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new TWSearchResponseDTO
+                {
+                    SearchResult = result
+                }
+            };
+        }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(TWFixtureDetailsRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == Convert.ToInt64(request.FixtureId));

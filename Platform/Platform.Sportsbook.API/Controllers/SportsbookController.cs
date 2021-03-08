@@ -367,6 +367,20 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v1/sportsbook/search")]
+        public async Task<IActionResult> GetSearchResult([FromBody] TWSearchRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetSearchResults(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
 
 
         [HttpPost("v1/sportsbook/activefixtures/count")]

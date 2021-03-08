@@ -450,7 +450,24 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
-        //force deploy
+
+        [HttpGet("v1/sportsbook/search")]
+        public async Task<IActionResult> GetSearchResults([FromQuery] string searchText, string languageCode)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetSearchResults(apiKey, clientId, new SearchResultRequest { LanguageCode = languageCode, SearchText = searchText});
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpGet("v1/sportsbook/sports")]
         public async Task<IActionResult> GetSports()
         {

@@ -41,6 +41,8 @@
         Max_Liability_By_Tier_Not_Found = 131,
         Mts_Error = 132,
 
+        Search_Text_Needs_To_Be_3_Characters_Or_Above = 133,
+
         Error = 1000,
         Operator_Error = 1001
     }

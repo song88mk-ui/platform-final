@@ -16,6 +16,31 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }
+    public class TWSearchRequestDTO
+    {
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+        public string SearchText { get; set; }
+    }
+    public class TWSearchResponseDTO
+    {
+        public TWSearchResponseDTO()
+        {
+            SearchResult = new List<SearchResponse>();
+        }
+        public List<SearchResponse> SearchResult { get; set; }
+    }
+    public class SearchResponse
+    {
+        public int SportId { get; set; }
+        public string SportName { get; set; }
+        public int SegmentId { get; set; }
+        public string SegmentName { get; set; }
+        public int LeagueId { get; set; }
+        public string LeagueName { get; set; }
+        public string FixtureId { get; set; }
+        public string FixtureName { get; set; }
+    }
     public class TWFixtureRequestDTO
     {
         public int SportId { get; set; }

@@ -38,5 +38,7 @@ namespace Platform.Sportsbook.API.Repository
         Task<BaseResponseDTO<SportsResponseDTO>> GetSports(SportsRequestDTO request);
         Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(TWFixtureDetailsRequestDTO request);
         Task<BaseResponseDTO<TWResponseDTO>> GetOutrightFixtures(TWOutrightFixtureRequestDTO request);
+
+        Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(TWSearchRequestDTO request);
     }
 }

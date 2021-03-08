@@ -978,7 +978,7 @@ namespace Platform.Betting.API.Repository
                                 _bettingContext.SaveChanges();
                                 scope.Complete();
 
-                            _messageBroker.Publish(new OnBetSettlement
+                                _messageBroker.Publish(new OnBetSettlement
                                 {
                                     Bet = betEntity,
                                     BetSelections = betSelectionList

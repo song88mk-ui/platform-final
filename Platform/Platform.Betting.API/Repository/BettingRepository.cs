@@ -882,9 +882,6 @@ namespace Platform.Betting.API.Repository
 
                             if (bet.BetStatusId == (int)BetStatus.Running)
                             {
-                                var stake = bet.TrueStake;
-                                var finalPayout = bet.TrueStake != bet.Stake ? stake : 0m;
-
                                 bet.WinLoss = 0;
                                 bet.BetStatusId = (int)BetStatus.Cancelled;
                                 bet.BetStatusName = BetStatus.Cancelled.ToString();
@@ -1004,7 +1001,6 @@ namespace Platform.Betting.API.Repository
                     Message = success ? String.Empty : StatusCode.Error.ToString(),
                     Result = response
                 };
-
             }
             catch (Exception ex)
             {                    

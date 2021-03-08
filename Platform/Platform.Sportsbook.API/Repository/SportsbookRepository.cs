@@ -2225,6 +2225,8 @@ namespace Platform.Sportsbook.API.Repository
 
             var result = fixtures.Select(s => new SegmentLookup
             {
+                SportId = s.SpId,
+                SportName = s.SpNa,
                 SegmentId = s.SegId,
                 SegmentName = s.SegNa
             }).OrderBy(o => o.SegmentId).ToList();
@@ -2265,6 +2267,10 @@ namespace Platform.Sportsbook.API.Repository
 
             var result = fixtures.Select(s => new LeagueLookup
             {
+                SportId = s.SpId,
+                SportName = s.SpNa,
+                SegmentId = s.SegId,
+                SegmentName = s.SegNa,
                 LeagueId = s.LeId,
                 LeagueName = s.LeNa
             }).OrderBy(o => o.LeagueId).ToList();

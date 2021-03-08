@@ -92,7 +92,7 @@ namespace Platform.Client.API.Controllers
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-
+            //force deploy
             var result = await _sportsbookRepository.GetLeaguesLookup(apiKey, clientId, LanguageCode.EN);
 
             switch (result.StatusCode)

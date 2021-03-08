@@ -28,6 +28,8 @@ namespace Platform.Shared.Models
 
     public class SegmentLookup
     {
+        public int SportId { get; set; }
+        public string SportName { get; set; }
         public int SegmentId { get; set; }
         public string SegmentName { get; set; }
     }
@@ -43,6 +45,10 @@ namespace Platform.Shared.Models
 
     public class LeagueLookup
     {
+        public int SportId { get; set; }
+        public string SportName { get; set; }
+        public int SegmentId { get; set; }
+        public string SegmentName { get; set; }
         public int LeagueId { get; set; }
         public string LeagueName { get; set; }
     }

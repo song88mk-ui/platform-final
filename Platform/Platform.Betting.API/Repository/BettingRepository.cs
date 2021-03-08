@@ -815,16 +815,23 @@ namespace Platform.Betting.API.Repository
             {
                 var betIds = response.Data.Select(m => Guid.Parse(m.BetId)).ToList();
                 var bets = _bettingContext.Bet.Where(x => betIds.Contains(x.BetId)).ToList();
+                List<BetCancel> betList = new List<BetCancel>();
 
                 #region Validate Request
 
                 var settledBetStatus = new int[] { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost, (int)BetStatus.Rejected };
                 var unsettledBetStatus = new int[] { (int)BetStatus.Waiting };
-
+                
                 foreach (var data in response.Data)
                 {
                     var betId = Guid.Parse(data.BetId);
                     var bet = bets.SingleOrDefault(m => m.BetId == betId);
+
+                    betList.Add(new BetCancel
+                    {
+                        BetId = betId,
+                        Reason = request.Reason
+                    });
 
                     data.OldBetStatus = bet != null ? bet.BetStatusName : string.Empty;
 
@@ -865,12 +872,12 @@ namespace Platform.Betting.API.Repository
                         Result = response
                     };
 
-                #endregion
+                #endregion                
 
-                //_messageBroker.Publish(new OnBOBetCancellaton
-                //{
-                //    BetIds = betIds
-                //}, "OnBOBetCancellaton", "r.bet.settlement", Guid.NewGuid().ToString().ToUpper());
+                _messageBroker.Publish(new OnBOBetCancellaton
+                {
+                    Bets = betList
+                }, "OnBOBetCancellaton", "r.bet.settlement", Guid.NewGuid().ToString().ToUpper());
 
                 bool success = response.Data.Any(m => m.IsSuccess);
                 response.IsSuccess = success;

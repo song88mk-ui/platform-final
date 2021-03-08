@@ -65,6 +65,11 @@ namespace Platform.Settlement.Service
                         var onBetCancellation = JsonSerializer.Deserialize<OnUOFBetCancellation>(payload);
                         _bettingRepository.ProcessBetCancellation(onBetCancellation, _messageBroker, correlationId);
                         break;
+
+                    case "OnBOBetCancellation":
+                        var onBOBetCancellation = JsonSerializer.Deserialize<OnBOBetCancellaton>(payload);
+                        _bettingRepository.ProcessBackOfficeBetCancellation(onBOBetCancellation, _messageBroker, correlationId);
+                        break;
                 }
             }
             catch (Exception)

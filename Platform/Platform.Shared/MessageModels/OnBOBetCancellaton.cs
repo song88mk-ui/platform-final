@@ -7,8 +7,14 @@ namespace Platform.Shared.MessageModels
     {
         public OnBOBetCancellaton()
         {
-            BetIds = new List<Guid>();
+            Bets = new List<BetCancel>();
         }
-        public List<Guid> BetIds { get; set; }
+        public List<BetCancel> Bets { get; set; }
+    }
+
+    public class BetCancel
+    {
+        public Guid BetId { get; set; }
+        public string Reason { get; set; }
     }
 }

@@ -867,10 +867,10 @@ namespace Platform.Betting.API.Repository
 
                 #endregion
 
-                _messageBroker.Publish(new OnBOBetCancellaton
-                {
-                    BetIds = betIds
-                }, "OnBOBetCancellaton", "r.bet.settlement", Guid.NewGuid().ToString().ToUpper());
+                //_messageBroker.Publish(new OnBOBetCancellaton
+                //{
+                //    BetIds = betIds
+                //}, "OnBOBetCancellaton", "r.bet.settlement", Guid.NewGuid().ToString().ToUpper());
 
                 bool success = response.Data.Any(m => m.IsSuccess);
                 response.IsSuccess = success;

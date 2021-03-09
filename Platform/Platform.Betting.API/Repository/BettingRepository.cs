@@ -951,14 +951,14 @@ namespace Platform.Betting.API.Repository
             List<decimal> maximumStake = new List<decimal>();
 
             //1 Get Max from betconfig
-            maximumStake.Add(maxStake);
+            maximumStake.Add(RoundUpDecimalValue(maxStake));
 
             //BET PLACEMENT ONLY
             if (isPlacement)
             {
                 //Max Payout/Total Odds
                 var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
-                maximumStake.Add(Math.Truncate(parlayMaxPayout / totalOdds) + 1);
+                maximumStake.Add(RoundUpDecimalValue(parlayMaxPayout / totalOdds));
 
                 //Get MTS maxstake
                 //(**) For Max Bet: If Company Share > 0%, do not consider MTS Max Stake value from Max Stake API in Max bet logic (i.e. whichever is lowest).  
@@ -966,7 +966,7 @@ namespace Platform.Betting.API.Repository
 
                 if (mtsMaxStake > 0)
                     //MTS Max Stake from Max Stake API
-                    maximumStake.Add(Math.Truncate(mtsMaxStake / companyShare) + 1);
+                    maximumStake.Add(RoundUpDecimalValue(mtsMaxStake / companyShare));
             }
 
             //Get min decimal value
@@ -977,19 +977,19 @@ namespace Platform.Betting.API.Repository
             List<decimal> maximumStake = new List<decimal>();
 
             //Max stake from BO
-            maximumStake.Add(maxStake);
+            maximumStake.Add(RoundUpDecimalValue(maxStake));
 
             //BET PLACEMENT ONLY
             if (isPlacement)
             {
                 //1 Get Max from betconfig * exchange rate
-                maximumStake.Add(Math.Truncate(tierMaxStake * exchangeRate) + 1);
+                maximumStake.Add(RoundUpDecimalValue(tierMaxStake * exchangeRate));
 
                 var totalOdds = request.Selections.FirstOrDefault().Odds;
 
                 //BO max Liability/Total Odds
                 if (tierMaxStake > 0)
-                    maximumStake.Add(Math.Truncate((tierMaxStake * exchangeRate) / (totalOdds - 1)) + 1);
+                    maximumStake.Add(RoundUpDecimalValue((tierMaxStake * exchangeRate) / (totalOdds - 1)));
 
                 //Get MTS maxstake
                 //(**) For Max Bet: If Company Share > 0%, do not consider MTS Max Stake value from Max Stake API in Max bet logic (i.e. whichever is lowest).  
@@ -1005,7 +1005,7 @@ namespace Platform.Betting.API.Repository
                 {
                     if (mtsMaxStake > 0)
                         //MTS Max Stake from Max Stake API
-                        maximumStake.Add(Math.Truncate(mtsMaxStake / companyShare) + 1);
+                        maximumStake.Add(RoundUpDecimalValue(mtsMaxStake / companyShare));
                 }
 
             }
@@ -1030,7 +1030,7 @@ namespace Platform.Betting.API.Repository
             });
 
             if (tierMaxStake.Result.MaxPerGame > 0)
-                maximumPerGame.Add(tierMaxStake.Result.MaxPerGame);
+                maximumPerGame.Add(RoundUpDecimalValue(tierMaxStake.Result.MaxPerGame));
 
             if (maximumPerGame.Count > 0)
                 return maximumPerGame.Min();
@@ -1179,6 +1179,11 @@ namespace Platform.Betting.API.Repository
                 //Return if success
                 return JsonSerializer.Deserialize<BaseResponseDTO<BetConfigLeagueResponse>>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
             }
+        }
+
+        public decimal RoundUpDecimalValue(decimal value)
+        {
+            return (value % 1m != 0) ? Math.Truncate(value) + 1 : value;
         }
 
         #endregion

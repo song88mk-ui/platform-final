@@ -126,16 +126,16 @@ namespace Platform.Settlement.Service.Repository
                 result = BetStatus.Void;
 
             if (halfLost == 1)
-                result = (payout - stake) > 0 ? BetStatus.HalfLost : BetStatus.Lost;
+                result = BetStatus.HalfLost;
 
             if (halfLost > 1)
                 result = BetStatus.Lost;
 
             if (halfWon == 1)
-                result = (payout - stake) > 0 ? BetStatus.HalfWon : BetStatus.Lost;
+                result = BetStatus.HalfWon;
 
             if (halfWon > 1)
-                result = (payout - stake) > 0 ? BetStatus.Won : BetStatus.Lost;
+                result = BetStatus.Won;
 
             if (won > 0)
                 result = BetStatus.Won;

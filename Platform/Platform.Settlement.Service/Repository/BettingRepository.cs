@@ -622,14 +622,8 @@ namespace Platform.Settlement.Service.Repository
 
         public void ProcessBackOfficeBetCancellation(OnBOBetCancellaton message, IMessageBroker messageBroker, string correlationId)
         {
-            var bets = GetBetIds(message.Bets.Select(s => s.BetId).ToList());
-
-            foreach (var betItem in bets)
+            foreach (var betItem in message.Bets)
             {
-                if (betItem.BetStatusId != (int)BetStatus.Running) continue;
-
-                var payload = new OnBetSettlement();
-
                 var betData = new Bet();
                 var betSelectionData = new List<BetSelection>();
 
@@ -643,7 +637,7 @@ namespace Platform.Settlement.Service.Repository
                         {
                             var bet = context.Bet.Find(betItem.BetId);
 
-                            if (bet == null)
+                            if (bet == null || bet.BetStatusId != (int)BetStatus.Running)
                             {
                                 scope.Complete();
                                 continue;
@@ -657,7 +651,7 @@ namespace Platform.Settlement.Service.Repository
                                 continue;
                             }
 
-                            var reason = string.IsNullOrEmpty(bet.Reason) ? "Cancelled by Backoffice" : bet.Reason;
+                            var reason = string.IsNullOrEmpty(betItem.Reason) ? "Cancelled by Backoffice" : betItem.Reason;
 
                             bet.BetStatusId = (int)BetStatus.Cancelled;
                             bet.BetStatusName = BetStatus.Cancelled.ToString();
@@ -755,7 +749,11 @@ namespace Platform.Settlement.Service.Repository
                             context.SaveChanges();
                             scope.Complete();
 
-                            messageBroker.Publish(payload, "OnBetCancellation", "r.bet.operator", correlationId);
+                            messageBroker.Publish(new OnBetSettlement
+                            {
+                                Bet = bet,
+                                BetSelections = betSelectionData
+                            }, "OnBetCancellation", "r.bet.operator", correlationId);
                         }
                         catch (Exception ex)
                         {

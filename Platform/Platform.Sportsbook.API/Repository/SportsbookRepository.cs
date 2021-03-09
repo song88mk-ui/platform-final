@@ -1968,7 +1968,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsActive = s.IsAc,
                     CorrelationId = s.CoId
                 }).OrderBy(o => o.SelectionTemplateId).ToList()
-            }).OrderBy(o => o.MarketTemplateId).ToList();
+            }).OrderBy(o => o.MarketTemplateId).ThenBy(o => o.MarketName).ToList();
         }
         private List<MarketDTO> GetMarkets(List<Market> markets, List<Selection> selections)
         {
@@ -1990,7 +1990,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsActive = s.IsAc,
                     CorrelationId = s.CoId,
                 }).OrderBy(o => o.SelectionTemplateId).ToList()
-            }).OrderBy(o => o.MarketTemplateId).ToList();
+            }).OrderBy(o => o.MarketTemplateId).ThenBy(o => o.MarketName).ToList();
         }
 
         private List<MarketDTO> GetOutrightMarkets(List<Market> markets, List<Selection> selections)
@@ -2013,7 +2013,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsActive = s.IsAc,
                     CorrelationId = s.CoId,
                 }).OrderBy(o => o.SelectionTemplateId).ToList()
-            }).OrderBy(o => o.MarketTemplateId).ToList();
+            }).OrderBy(o => o.MarketTemplateId).ThenBy(o => o.MarketName).ToList();
         }
         private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus> result)
         {

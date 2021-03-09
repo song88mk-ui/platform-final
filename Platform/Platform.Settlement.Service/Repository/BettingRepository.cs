@@ -132,7 +132,7 @@ namespace Platform.Settlement.Service.Repository
                 result = BetStatus.Lost;
 
             if (halfWon == 1)
-                result = (payout - stake) > stake ? BetStatus.HalfWon : BetStatus.Lost;
+                result = (payout - stake) > 0 ? BetStatus.HalfWon : BetStatus.Lost;
 
             if (halfWon > 1)
                 result = (payout - stake) > stake ? BetStatus.Won : BetStatus.Lost;

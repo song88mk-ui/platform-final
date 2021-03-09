@@ -1556,7 +1556,7 @@ namespace Platform.Sportsbook.API.Repository
                     Score = item.Score,
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
-                    Markets = GetMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
+                    Markets = GetOutrightMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
                 });
             }
 
@@ -1988,7 +1988,30 @@ namespace Platform.Sportsbook.API.Repository
                     SelectionName = s.SeNa,
                     DecimalOdds = s.Od.ToString(),
                     IsActive = s.IsAc,
-                    CorrelationId = s.CoId
+                    CorrelationId = s.CoId,
+                }).OrderBy(o => o.SelectionTemplateId).ToList()
+            }).OrderBy(o => o.MarketTemplateId).ToList();
+        }
+
+        private List<MarketDTO> GetOutrightMarkets(List<Market> markets, List<Selection> selections)
+        {
+            return markets.Select(m => new MarketDTO
+            {
+                MarketTemplateId = m.MaTeId,
+                MarketId = m.MaId.ToString(),
+                MarketName = m.MaNa,
+                Line = m.Li,
+                IsCashout = false,
+                MarketStatusId = m.MaStId,
+                MarketStatusName = m.MaStNa,
+                Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+                {
+                    SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
+                    SelectionId = s.SeId.ToString(),
+                    SelectionName = s.SeNa,
+                    DecimalOdds = s.Od.ToString(),
+                    IsActive = s.IsAc,
+                    CorrelationId = s.CoId,
                 }).OrderBy(o => o.SelectionTemplateId).ToList()
             }).OrderBy(o => o.MarketTemplateId).ToList();
         }

@@ -42,5 +42,6 @@ namespace Platform.Sportsbook.API.Repository
         Task<BaseResponseDTO<StatusCode>> ManualSettlement(BetSettlementRequestDTO request);
 
         Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(TWSearchRequestDTO request);
+        Task<BaseResponseDTO<StatusCode>> ManualCancellation(BetCancellationRequestDTO request);
     }
 }

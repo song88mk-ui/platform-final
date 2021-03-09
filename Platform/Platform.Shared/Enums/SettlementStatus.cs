@@ -7,6 +7,7 @@
         Won = 2,
         Void = 3,
         HalfWon = 4,
-        HalfLost = 5
+        HalfLost = 5,
+        Cancelled = 6
     }
 }

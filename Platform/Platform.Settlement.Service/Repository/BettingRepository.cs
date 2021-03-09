@@ -119,23 +119,23 @@ namespace Platform.Settlement.Service.Repository
             var voidd = bets.Where(c => c == BetStatus.Void).Count();
             var cancelled = bets.Where(c => c == BetStatus.Cancelled).Count();
 
-            if (cancelled > 0)
+            if (cancelled > 0 && bets.Count == 1)
                 result = BetStatus.Cancelled;
 
             if (voidd > 0)
                 result = BetStatus.Void;
 
-            if (halfLost == 1)
+            if (halfLost == 1 && bets.Count == 1)
                 result = BetStatus.HalfLost;
 
-            if (halfLost > 1)
-                result = BetStatus.Lost;
+            if (halfLost >= 1 && bets.Count > 1)
+                result = payout - stake < 0 ? BetStatus.Lost : BetStatus.Won;
 
-            if (halfWon == 1)
+            if (halfWon == 1 && bets.Count == 1)
                 result = BetStatus.HalfWon;
 
-            if (halfWon > 1)
-                result = BetStatus.Won;
+            if (halfWon >= 1 && bets.Count > 1)
+                result = payout - stake < 0 ? BetStatus.Lost : BetStatus.Won;
 
             if (won > 0)
                 result = BetStatus.Won;

@@ -1989,8 +1989,8 @@ namespace Platform.Sportsbook.API.Repository
                     DecimalOdds = s.Od.ToString(),
                     IsActive = s.IsAc,
                     CorrelationId = s.CoId
-                }).ToList()
-            }).ToList();
+                }).OrderBy(o => o.SelectionTemplateId).ToList()
+            }).OrderBy(o => o.MarketTemplateId).ToList();
         }
         private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus> result)
         {

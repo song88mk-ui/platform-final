@@ -20,34 +20,6 @@ namespace Platform.Settlement.Service.Repository
         {
             _configuration = configuration;
         }
-        private List<Bet> GetBetIds(List<Guid> betIds)
-        {
-            var result = new List<Bet>();
-
-            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
-            {
-                var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
-
-                using (var context = new BettingContext(optionsBuilder.Options))
-                {
-                    try
-                    {
-                        var bets = context.Bet.AsNoTracking().Where(c => betIds.Contains(c.BetId)).ToList();
-
-                        if (bets.Count > 0)
-                            result.AddRange(bets);
-
-                        scope.Complete();
-                    }
-                    catch (Exception)
-                    {
-                        return result;
-                    }
-                }
-            }
-
-            return result;
-        }
         private List<BetSelection> GetBetSelectionsByMarketId(long marketId)
         {
             var result = new List<BetSelection>();
@@ -626,6 +598,7 @@ namespace Platform.Settlement.Service.Repository
             {
                 var betData = new Bet();
                 var betSelectionData = new List<BetSelection>();
+                var settledDate = DateTime.UtcNow;
 
                 using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
                 {
@@ -653,11 +626,15 @@ namespace Platform.Settlement.Service.Repository
 
                             var reason = string.IsNullOrEmpty(betItem.Reason) ? "Cancelled by Backoffice" : betItem.Reason;
 
+                            var payout = GetPayout(betSelections.Select(s => new Tuple<BetStatus, decimal>(BetStatus.Cancelled, s.Odds)).ToList(), bet.TrueStake);
+
+                            bet.Reason = $"103 - {reason}";
+                            bet.WinLoss = payout == 0 ? -bet.Stake : payout - bet.Stake;
                             bet.BetStatusId = (int)BetStatus.Cancelled;
                             bet.BetStatusName = BetStatus.Cancelled.ToString();
-                            bet.Reason = $"103 - {reason}";
-                            bet.SettlementDate = DateTime.UtcNow;
-                            bet.SettlementDateOffset = bet.SettlementDate.AddHours(-4);
+                            bet.Payout = payout;
+                            bet.SettlementDate = settledDate;
+                            bet.SettlementDateOffset = settledDate.AddHours(-4);
 
                             var betEntity = context.Bet.Update(bet).Entity;
                             betData = betEntity;

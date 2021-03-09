@@ -216,7 +216,7 @@ namespace Platform.Operator.API.Repository
                         };
                     }
 
-                    result.Balance += request.Payout;
+                    result.Balance += request.Stake;
                     _platformContext.Operator.Update(result);
 
                     _platformContext.SaveChanges();

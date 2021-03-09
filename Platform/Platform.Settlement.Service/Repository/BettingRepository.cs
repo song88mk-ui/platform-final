@@ -126,7 +126,7 @@ namespace Platform.Settlement.Service.Repository
                 result = BetStatus.Void;
 
             if (halfLost == 1)
-                result = payout == (stake / 2) ? BetStatus.HalfLost : BetStatus.Lost;
+                result = (payout - stake) > 0 ? BetStatus.HalfLost : BetStatus.Lost;
 
             if (halfLost > 1)
                 result = BetStatus.Lost;
@@ -135,7 +135,7 @@ namespace Platform.Settlement.Service.Repository
                 result = (payout - stake) > 0 ? BetStatus.HalfWon : BetStatus.Lost;
 
             if (halfWon > 1)
-                result = (payout - stake) > stake ? BetStatus.Won : BetStatus.Lost;
+                result = (payout - stake) > 0 ? BetStatus.Won : BetStatus.Lost;
 
             if (won > 0)
                 result = BetStatus.Won;

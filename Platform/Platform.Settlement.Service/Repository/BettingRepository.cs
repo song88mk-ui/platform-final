@@ -751,7 +751,7 @@ namespace Platform.Settlement.Service.Repository
 
                             messageBroker.Publish(new OnBetSettlement
                             {
-                                Bet = bet,
+                                Bet = betData,
                                 BetSelections = betSelectionData
                             }, "OnBetCancellation", "r.bet.operator", correlationId);
                         }

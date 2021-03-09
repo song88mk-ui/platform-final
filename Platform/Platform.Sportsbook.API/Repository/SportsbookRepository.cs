@@ -2460,6 +2460,23 @@ namespace Platform.Sportsbook.API.Repository
         {
             return _memCache.GetCache($"tlo", () => _sportsbookContext.TierLeagueOrder.ToList(), 24);
         }
+
+        public async Task<BaseResponseDTO<StatusCode>> ManualSettlement(BetSettlementRequestDTO request)
+        {
+            var digit = Convert.ToString(request.FixtureId);
+            var lastDigit = digit.Substring(digit.Length - 1);
+
+            if (request.Selections.Count > 0)
+            {
+                _messageBroker.Publish(request, "OnBetSettlement", $"r.sb.adapter.{lastDigit}.onbetsettlement", Guid.NewGuid().ToString());
+            }
+
+            return new BaseResponseDTO<StatusCode>
+            {
+                StatusCode = StatusCode.Error,
+                Message = StatusCode.Success.ToString()
+            };
+        }
     }
 
     public static class CurrentPeriodHelper

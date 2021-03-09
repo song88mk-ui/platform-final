@@ -438,5 +438,19 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/sportsbook/manualsettlement")]
+        public async Task<IActionResult> ManualSettlement([FromBody] BetSettlementRequestDTO request)
+        {
+            var result = await _sportsbookRepository.ManualSettlement(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

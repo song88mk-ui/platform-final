@@ -109,39 +109,44 @@ namespace Platform.Settlement.Service.Repository
         {
             var result = BetStatus.Lost;
 
-            var bets = statuses;
-            bets.Add(status);
+            var betSelections = statuses;
+            betSelections.Add(status);
 
-            var lost = bets.Where(c => c == BetStatus.Lost).Count();
-            var won = bets.Where(c => c == BetStatus.Won).Count();
-            var halfWon = bets.Where(c => c == BetStatus.HalfWon).Count();
-            var halfLost = bets.Where(c => c == BetStatus.HalfLost).Count();
-            var voidd = bets.Where(c => c == BetStatus.Void).Count();
-            var cancelled = bets.Where(c => c == BetStatus.Cancelled).Count();
+            var lost = betSelections.Where(c => c == BetStatus.Lost).Count();
+            var won = betSelections.Where(c => c == BetStatus.Won).Count();
+            var halfWon = betSelections.Where(c => c == BetStatus.HalfWon).Count();
+            var halfLost = betSelections.Where(c => c == BetStatus.HalfLost).Count();
+            var voidd = betSelections.Where(c => c == BetStatus.Void).Count();
+            var cancelled = betSelections.Where(c => c == BetStatus.Cancelled).Count();
 
-            if (cancelled > 0 && bets.Count == 1)
-                result = BetStatus.Cancelled;
+            decimal winLoss = payout - stake;
 
-            if (voidd > 0)
-                result = BetStatus.Void;
+            if (betSelections.Contains(BetStatus.Lost))
+                return BetStatus.Lost;
 
-            if (halfLost == 1 && bets.Count == 1)
-                result = BetStatus.HalfLost;
+            if (winLoss == 0 && voidd >= 1)
+                return BetStatus.Void;
 
-            if (halfLost >= 1 && bets.Count > 1)
-                result = payout - stake < 0 ? BetStatus.Lost : BetStatus.Won;
+            if (winLoss == 0 && cancelled >= 1)
+                return BetStatus.Cancelled;
 
-            if (halfWon == 1 && bets.Count == 1)
-                result = BetStatus.HalfWon;
+            if (halfWon == 1 && betSelections.Count == 1)
+                return BetStatus.HalfWon;
 
-            if (halfWon >= 1 && bets.Count > 1)
-                result = payout - stake < 0 ? BetStatus.Lost : BetStatus.Won;
+            if (halfLost == 1 && betSelections.Count == 1)
+                return BetStatus.HalfLost;
 
-            if (won > 0)
-                result = BetStatus.Won;
+            if (halfWon == 1 && betSelections.Where(c => c == BetStatus.Void).Count() == betSelections.Count - 1)
+                return BetStatus.HalfWon;
 
-            if (lost > 0)
-                result = BetStatus.Lost;
+            if (halfLost == 1 && betSelections.Where(c => c == BetStatus.Void).Count() == betSelections.Count - 1)
+                return BetStatus.HalfLost;
+
+            if (winLoss <= 0)
+                return BetStatus.Lost;
+
+            if (winLoss > 0)
+                return BetStatus.Won;
 
             return result;
         }

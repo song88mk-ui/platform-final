@@ -3,6 +3,14 @@ using System.Collections.Generic;
 
 namespace Platform.Shared.Models
 {
+    public class TopFixturesIdsResponseDTO
+    {
+        public TopFixturesIdsResponseDTO()
+        {
+            TopFixtures = new List<string>();
+        }
+        public List<string> TopFixtures { get; set; }
+    }
     public class TopFixturesResponseDTO
     {
         public TopFixturesResponseDTO()

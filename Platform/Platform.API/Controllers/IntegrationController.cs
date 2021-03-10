@@ -161,27 +161,27 @@ namespace Platform.API.Controllers
             }
         }
 
-        //[HttpGet("v1/sportsbook/topfixtures")]
-        //public async Task<IActionResult> GetTopFixtures()
-        //{
-        //    var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-        //    var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+        [HttpGet("v2/sportsbook/topfixtures/id")]
+        public async Task<IActionResult> GetTopFixtures()
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-        //    var request = new TopFixturesRequest
-        //    {
-        //        LanguageCode = "EN"
-        //    };
+            var request = new TopFixturesRequest
+            {
+                LanguageCode = "EN"
+            };
 
-        //    var result = await _platformRepository.GetTopFixtures(apiKey, clientId, request);
+            var result = await _platformRepository.GetTopFixtures(apiKey, clientId, request);
 
-        //    switch (result.StatusCode)
-        //    {
-        //        case Shared.Enums.StatusCode.Success:
-        //            return Ok(result);
-        //        default:
-        //            return BadRequest(result);
-        //    }
-        //}
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
 
         //[HttpGet("v1/sportsbook/orderedsports")]
         //public async Task<IActionResult> GetOrderedSports()

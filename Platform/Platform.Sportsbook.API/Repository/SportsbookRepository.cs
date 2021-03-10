@@ -271,6 +271,58 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+        public async Task<BaseResponseDTO<TopFixturesIdsResponseDTO>> GetTopFixturesIds(TopFixturesRequestDTO request)
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 1 && c.FiTyId == 0);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<TopFixturesIdsResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new TopFixturesIdsResponseDTO()
+                };
+            }
+
+            var sortOrder = GetTierLeagueOrder();
+
+            var result = fixtures.Select(s => new TempTopFixture
+            {
+                SportId = s.SpId,
+                SportName = s.SpNa,
+                SegmentId = s.SegId,
+                SegmentName = s.SegNa,
+                LeagueId = s.LeId,
+                LeagueName = s.LeNa,
+                FixtureId = s.FiId.ToString(),
+                FixtureName = s.FiNa,
+                FixtureStartDate = s.FiStDa,
+                SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+            }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+
+            var finalResult = new List<string>();
+
+            foreach (var item in result)
+            {
+                if (finalResult.Contains(item.FixtureId)) continue;
+                if (finalResult.Count == 10) break;
+
+                finalResult.Add(item.FixtureId);
+            }
+
+            return new BaseResponseDTO<TopFixturesIdsResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new TopFixturesIdsResponseDTO
+                {
+                    TopFixtures = finalResult
+                }
+            };
+        }
         public async Task<BaseResponseDTO<SportsResponseDTO>> GetSports(SportsRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
@@ -1814,7 +1866,7 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(TWSearchRequestDTO request)
         {
             var result = new List<SearchResponse>();
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && (c.LeNa.Contains(request.SearchText) || c.FiNa.Contains(request.SearchText)));
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && (c.LeNa.ToLower().Contains(request.SearchText.ToLower()) || c.FiNa.ToLower().Contains(request.SearchText.ToLower())));
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)

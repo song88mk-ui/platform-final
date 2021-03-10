@@ -302,7 +302,7 @@ namespace Platform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<TopFixturesIdsResponseDTO>> GetTopFixturesIds(TWRequestDTO request)
+        public async Task<BaseResponseDTO<TopFixturesIdsResponseDTO>> GetTopFixtureIds(TWRequestDTO request)
         {
             try
             {

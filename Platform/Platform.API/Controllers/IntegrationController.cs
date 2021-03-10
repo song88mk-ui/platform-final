@@ -161,7 +161,7 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v2/sportsbook/topfixtures/id")]
+        [HttpGet("v2/sportsbook/topfixtures/fixtureId")]
         public async Task<IActionResult> GetTopFixtures()
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
@@ -172,7 +172,7 @@ namespace Platform.API.Controllers
                 LanguageCode = "EN"
             };
 
-            var result = await _platformRepository.GetTopFixtures(apiKey, clientId, request);
+            var result = await _platformRepository.GetTopFixtureIds(apiKey, clientId, request);
 
             switch (result.StatusCode)
             {

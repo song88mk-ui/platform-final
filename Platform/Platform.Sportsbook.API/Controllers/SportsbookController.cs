@@ -73,9 +73,9 @@ namespace Platform.Sportsbook.API.Controllers
         }
 
         [HttpPost("v1/sportsbook/topfixtures/fixtureId")]
-        public async Task<IActionResult> GetTopFixturesIds([FromBody] TopFixturesRequestDTO request)
+        public async Task<IActionResult> GetTopFixtureIds([FromBody] TopFixturesRequestDTO request)
         {
-            var result = await _sportsbookRepository.GetTopFixturesIds(request);
+            var result = await _sportsbookRepository.GetTopFixtureIds(request);
 
             switch (result.StatusCode)
             {

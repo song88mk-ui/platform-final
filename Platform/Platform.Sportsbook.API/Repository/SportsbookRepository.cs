@@ -271,7 +271,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
-        public async Task<BaseResponseDTO<TopFixturesIdsResponseDTO>> GetTopFixturesIds(TopFixturesRequestDTO request)
+        public async Task<BaseResponseDTO<TopFixturesIdsResponseDTO>> GetTopFixtureIds(TopFixturesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 1 && c.FiTyId == 0);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();

@@ -606,7 +606,7 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode
             });
         }
-        public async Task<BaseResponseDTO<TopFixturesIdsResponseDTO>> GetTopFixturesIds(string apiKey, string clientId, TopFixturesRequest request)
+        public async Task<BaseResponseDTO<TopFixturesIdsResponseDTO>> GetTopFixtureIds(string apiKey, string clientId, TopFixturesRequest request)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
 
@@ -641,7 +641,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            return await _sportsbookRepository.GetTopFixturesIds(new TWRequestDTO
+            return await _sportsbookRepository.GetTopFixtureIds(new TWRequestDTO
             {
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode

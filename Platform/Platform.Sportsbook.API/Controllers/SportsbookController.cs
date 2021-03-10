@@ -438,5 +438,101 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/sportsbook/manualsettlement/won")]
+        public async Task<IActionResult> ManualSettlementWon([FromBody] BetSettlementRequestDTO request)
+        {
+            foreach (InternalSelectionSettlementMessage row in request.Selections)
+            {
+                row.SettlementStatus = Shared.Enums.SettlementStatus.Won;
+            }
+
+            var result = await _sportsbookRepository.ManualSettlement(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/sportsbook/manualsettlement/lost")]
+        public async Task<IActionResult> ManualSettlementLost([FromBody] BetSettlementRequestDTO request)
+        {
+            foreach (InternalSelectionSettlementMessage row in request.Selections)
+            {
+                row.SettlementStatus = Shared.Enums.SettlementStatus.Lost;
+            }
+
+            var result = await _sportsbookRepository.ManualSettlement(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+
+        [HttpPost("v1/sportsbook/manualsettlement/halfwon")]
+        public async Task<IActionResult> ManualSettlementHalfWon([FromBody] BetSettlementRequestDTO request)
+        {
+            foreach (InternalSelectionSettlementMessage row in request.Selections)
+            {
+                row.SettlementStatus = Shared.Enums.SettlementStatus.HalfWon;
+            }
+
+            var result = await _sportsbookRepository.ManualSettlement(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/sportsbook/manualsettlement/halflost")]
+        public async Task<IActionResult> ManualSettlementHalfLost([FromBody] BetSettlementRequestDTO request)
+        {
+            foreach (InternalSelectionSettlementMessage row in request.Selections)
+            {
+                row.SettlementStatus = Shared.Enums.SettlementStatus.HalfLost;
+            }
+
+            var result = await _sportsbookRepository.ManualSettlement(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        //[HttpPost("v1/sportsbook/manualsettlement/cancellation")]
+        //public async Task<IActionResult> ManualCancellation([FromBody] BetCancellationRequestDTO request)
+        //{
+        //    foreach (InternalMarketCancellationMessage row in request.Markets)
+        //    {
+        //        row.SettlementStatus = Shared.Enums.SettlementStatus.Cancelled;
+        //    }
+
+        //    var result = await _sportsbookRepository.ManualCancellation(request);
+
+        //    switch (result.StatusCode)
+        //    {
+        //        case Shared.Enums.StatusCode.Success:
+        //            return Ok(result);
+        //        default:
+        //            return BadRequest(result);
+        //    }
+        //}
     }
 }

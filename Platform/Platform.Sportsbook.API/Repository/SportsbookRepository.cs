@@ -132,7 +132,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
 
-            var result = fixtures.Select(s => new TempTopLeague 
+            var result = fixtures.Select(s => new TempTopLeague
             {
                 SegmentId = s.SegId,
                 SegmentName = s.SegNa,
@@ -328,12 +328,12 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     SportId = sport.SportId,
                     SportName = sport.SportName,
-                    Segments = result.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO 
-                    { 
+                    Segments = result.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
+                    {
                         SegmentId = s.Key,
                         SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
                         SortOrder = s.Select(se => se.SortOrder).FirstOrDefault(),
-                        Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO 
+                        Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
                         {
                             LeagueId = l.Key,
                             LeagueName = l.Select(le => le.LeagueName).FirstOrDefault(),
@@ -1959,8 +1959,8 @@ namespace Platform.Sportsbook.API.Repository
                 IsCashout = false,
                 MarketStatusId = m.MaStId,
                 MarketStatusName = m.MaStNa,
-                Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO 
-                { 
+                Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+                {
                     SelectionTemplateId = s.SeTeId,
                     SelectionId = s.SeId.ToString(),
                     SelectionName = s.SeNa,
@@ -2249,7 +2249,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var result = fixtures.Select(s => new SportLookup 
+            var result = fixtures.Select(s => new SportLookup
             {
                 SportId = s.SpId,
                 SportName = s.SpNa
@@ -2365,7 +2365,7 @@ namespace Platform.Sportsbook.API.Repository
             switch (sportId)
             {
                 case 1: //soccer
-                    return new List<string> { "1", "16", "18"};
+                    return new List<string> { "1", "16", "18" };
                 case 2: //basketball
                     return new List<string> { "219", "223", "225" };
                 case 3: //baseball
@@ -2433,7 +2433,7 @@ namespace Platform.Sportsbook.API.Repository
             }
         }
 
-        private Tuple<DateTime,DateTime> GetDateTimeRange(DateTime utcDate, int minuteUTCOffset)
+        private Tuple<DateTime, DateTime> GetDateTimeRange(DateTime utcDate, int minuteUTCOffset)
         {
             var hours = minuteUTCOffset / 60;
             var remainderMinutes = minuteUTCOffset % 60;
@@ -2454,11 +2454,80 @@ namespace Platform.Sportsbook.API.Repository
 
                 return new Tuple<DateTime, DateTime>(startTime, endTime);
             }
-        } 
+        }
 
         private List<TierLeagueOrder> GetTierLeagueOrder()
         {
             return _memCache.GetCache($"tlo", () => _sportsbookContext.TierLeagueOrder.ToList(), 24);
+        }
+
+        public async Task<BaseResponseDTO<StatusCode>> ManualSettlement(BetSettlementRequestDTO request)
+        {
+            var digit = Convert.ToString(request.FixtureId);
+            var lastDigit = digit.Substring(digit.Length - 1);
+            var selections = new List<InternalSelectionSettlementMessagePayload>();
+
+            foreach (var selection in request.Selections)
+            {
+                selections.Add(new InternalSelectionSettlementMessagePayload
+                {
+                    MarketId = long.Parse(selection.MarketId),
+                    SelectionId = long.Parse(selection.SelectionId),
+                    SettlementStatus = selection.SettlementStatus
+                });
+            }
+
+            if (request.Selections.Count > 0)
+            {
+                var payload = new BetSettlementRequestPayloadDTO
+                {
+                    FixtureId = long.Parse(request.FixtureId),
+                    Selections = selections
+                };
+
+                _messageBroker.Publish(payload, "OnBetSettlement", $"r.sb.adapter.{lastDigit}.onbetsettlement", Guid.NewGuid().ToString());
+            }
+
+            return new BaseResponseDTO<StatusCode>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString()
+            };
+        }
+
+        public async Task<BaseResponseDTO<StatusCode>> ManualCancellation(BetCancellationRequestDTO request)
+        {
+            var digit = Convert.ToString(request.FixtureId);
+            var lastDigit = digit.Substring(digit.Length - 1);
+
+            var markets = new List<InternalMarketCancellationMessagePayload>();
+
+            foreach (var market in request.Markets)
+            {
+                markets.Add(new InternalMarketCancellationMessagePayload
+                {
+                    MarketId = long.Parse(market.MarketId),
+                    Reason = market.Reason,
+                    SettlementStatus = SettlementStatus.Cancelled
+                });
+            }
+
+            if (request.Markets.Count > 0)
+            {
+                var payload = new BetCancellationRequestPayloadDTO
+                {
+                    FixtureId = long.Parse(request.FixtureId),
+                    Markets = markets
+                };
+
+                _messageBroker.Publish(payload, "OnBetCancellation", $"r.sb.adapter.{lastDigit}.onbetcancellation", Guid.NewGuid().ToString());
+            }
+
+            return new BaseResponseDTO<StatusCode>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString()
+            };
         }
     }
 

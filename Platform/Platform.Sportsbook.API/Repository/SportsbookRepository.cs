@@ -1896,10 +1896,19 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(TWSearchRequestDTO request)
         {
             var result = new List<SearchResponse>();
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && (c.LeNa.ToLower().Contains(request.SearchText.ToLower()) || c.FiNa.ToLower().Contains(request.SearchText.ToLower())));
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
-            if (fixtures.Count == 0)
+            var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.LeNa.ToLower().Contains(request.SearchText.ToLower()));
+            var leagues = fixtureCollection.Find(leagueFilter).ToListAsync();
+
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiNa.ToLower().Contains(request.SearchText.ToLower()));
+            var fixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            await Task.WhenAll(leagues, fixtures);
+
+            var finalLeagues = leagues.Result;
+            var finalFixtures = fixtures.Result;
+
+            if (finalLeagues.Count == 0 && finalFixtures.Count == 0)
             {
                 return new BaseResponseDTO<TWSearchResponseDTO>
                 {
@@ -1909,21 +1918,160 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            foreach (var fixture in fixtures)
-            {
-                if (result.Any(c => c.FixtureId == fixture.FiId.ToString())) continue;
+            var leagueListStartsWith = new List<SearchResponse>();
+            var leagueListNotStartsWith = new List<SearchResponse>();
 
-                result.Add(new SearchResponse
+            var fixtureListStartsWith = new List<SearchResponse>();
+            var fixtureListNotStartsWith = new List<SearchResponse>();
+
+            var sortOrder = GetTierLeagueOrder();
+
+            foreach (var league in finalLeagues)
+            {
+                if (leagueListStartsWith.Any(c => c.SportId == league.SpId && c.SegmentId == league.SegId && c.LeagueId == league.LeId)) continue;
+                if (leagueListNotStartsWith.Any(c => c.SportId == league.SpId && c.SegmentId == league.SegId && c.LeagueId == league.LeId)) continue;
+
+                if (league.LeNa.ToLower().StartsWith(request.SearchText.ToLower()))
                 {
-                    SportId = fixture.SpId,
-                    SportName = fixture.SpNa,
-                    SegmentId = fixture.SegId,
-                    SegmentName = fixture.SegNa,
-                    LeagueId = fixture.LeId,
-                    LeagueName = fixture.LeNa,
-                    FixtureId = fixture.FiId.ToString(),
-                    FixtureName = fixture.FiNa
-                });
+                    leagueListStartsWith.Add(new SearchResponse
+                    {
+                        SportId = league.SpId,
+                        SportName = league.SpNa,
+                        SegmentId = league.SegId,
+                        SegmentName = league.SegNa,
+                        LeagueId = league.LeId,
+                        LeagueName = league.LeNa,
+                        FixtureId = string.Empty,
+                        FixtureName = string.Empty
+                    });
+                }
+                else
+                {
+                    if (league.LeNa.ToLower().Contains(request.SearchText.ToLower()))
+                    {
+                        leagueListNotStartsWith.Add(new SearchResponse
+                        {
+                            SportId = league.SpId,
+                            SportName = league.SpNa,
+                            SegmentId = league.SegId,
+                            SegmentName = league.SegNa,
+                            LeagueId = league.LeId,
+                            LeagueName = league.LeNa,
+                            FixtureId = string.Empty,
+                            FixtureName = string.Empty
+                        });
+                    }
+                }
+            }
+
+            foreach (var fixture in finalFixtures)
+            {
+                if (fixtureListStartsWith.Any(c => c.FixtureId == fixture.FiId.ToString())) continue;
+                if (fixtureListNotStartsWith.Any(c => c.FixtureId == fixture.FiId.ToString())) continue;
+
+                if (fixture.FiNa.Split(" vs. ").First().ToLower().StartsWith(request.SearchText.ToLower()) || fixture.FiNa.Split(" vs. ").Last().ToLower().StartsWith(request.SearchText.ToLower()))
+                {
+                    fixtureListStartsWith.Add(new SearchResponse
+                    {
+                        SportId = fixture.SpId,
+                        SportName = fixture.SpNa,
+                        SegmentId = fixture.SegId,
+                        SegmentName = fixture.SegNa,
+                        LeagueId = fixture.LeId,
+                        LeagueName = fixture.LeNa,
+                        FixtureId = fixture.FiId.ToString(),
+                        FixtureName = fixture.FiNa
+                    });
+                }
+                else
+                {
+                    if (fixture.FiNa.ToLower().Contains(request.SearchText.ToLower()))
+                    {
+                        fixtureListNotStartsWith.Add(new SearchResponse
+                        {
+                            SportId = fixture.SpId,
+                            SportName = fixture.SpNa,
+                            SegmentId = fixture.SegId,
+                            SegmentName = fixture.SegNa,
+                            LeagueId = fixture.LeId,
+                            LeagueName = fixture.LeNa,
+                            FixtureId = fixture.FiId.ToString(),
+                            FixtureName = fixture.FiNa
+                        });
+                    }
+                }
+            }
+
+            var startsWith = new List<SearchResponse>();
+            var notStartsWith = new List<SearchResponse>();
+
+            startsWith.AddRange(leagueListStartsWith);
+            startsWith.AddRange(fixtureListStartsWith);
+            notStartsWith.AddRange(leagueListNotStartsWith);
+            notStartsWith.AddRange(fixtureListNotStartsWith);
+
+            var final1 = startsWith.Select(s => new TempSearchResponse
+            {
+                SportId = s.SportId,
+                SportName = s.SportName,
+                SegmentId = s.SegmentId,
+                SegmentName = s.SegmentName,
+                LeagueId = s.LeagueId,
+                LeagueName = s.LeagueName,
+                FixtureId = s.FixtureId,
+                FixtureName = s.FixtureName,
+                SortOrder = sortOrder.Where(c => c.SportId == s.SportId && c.SegmentId == s.SegmentId && c.LeagueId == s.LeagueId).Select(s => s.SortOrder).FirstOrDefault()
+                == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SportId && c.SegmentId == s.SegmentId && c.LeagueId == s.LeagueId).Select(s => s.SortOrder).FirstOrDefault()
+            }).OrderBy(o => o.SortOrder).ToList();
+
+            var final2 = notStartsWith.Select(s => new TempSearchResponse
+            {
+                SportId = s.SportId,
+                SportName = s.SportName,
+                SegmentId = s.SegmentId,
+                SegmentName = s.SegmentName,
+                LeagueId = s.LeagueId,
+                LeagueName = s.LeagueName,
+                FixtureId = s.FixtureId,
+                FixtureName = s.FixtureName,
+                SortOrder = sortOrder.Where(c => c.SportId == s.SportId && c.SegmentId == s.SegmentId && c.LeagueId == s.LeagueId).Select(s => s.SortOrder).FirstOrDefault()
+                == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SportId && c.SegmentId == s.SegmentId && c.LeagueId == s.LeagueId).Select(s => s.SortOrder).FirstOrDefault()
+            }).OrderBy(o => o.SortOrder).ToList();
+
+            if (final1.Count > 0)
+            {
+                foreach (var item in final1)
+                {
+                    result.Add(new SearchResponse
+                    {
+                        SportId = item.SportId,
+                        SportName = item.SportName,
+                        SegmentId = item.SegmentId,
+                        SegmentName = item.SegmentName,
+                        LeagueId = item.LeagueId,
+                        LeagueName = item.LeagueName,
+                        FixtureId = item.FixtureId,
+                        FixtureName = item.FixtureName
+                    });
+                }
+            }
+
+            if (final2.Count > 0)
+            {
+                foreach (var item in final2)
+                {
+                    result.Add(new SearchResponse
+                    {
+                        SportId = item.SportId,
+                        SportName = item.SportName,
+                        SegmentId = item.SegmentId,
+                        SegmentName = item.SegmentName,
+                        LeagueId = item.LeagueId,
+                        LeagueName = item.LeagueName,
+                        FixtureId = item.FixtureId,
+                        FixtureName = item.FixtureName
+                    });
+                }
             }
 
             return new BaseResponseDTO<TWSearchResponseDTO>

@@ -41,6 +41,11 @@ namespace Platform.Shared.Models
         public string FixtureId { get; set; }
         public string FixtureName { get; set; }
     }
+
+    public class TempSearchResponse : SearchResponse
+    {
+        public int SortOrder { get; set; }
+    }
     public class TWFixtureRequestDTO
     {
         public int SportId { get; set; }

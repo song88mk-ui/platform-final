@@ -530,23 +530,23 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
-        //[HttpPost("v1/sportsbook/manualsettlement/cancellation")]
-        //public async Task<IActionResult> ManualCancellation([FromBody] BetCancellationRequestDTO request)
-        //{
-        //    foreach (InternalMarketCancellationMessage row in request.Markets)
-        //    {
-        //        row.SettlementStatus = Shared.Enums.SettlementStatus.Cancelled;
-        //    }
+        [HttpPost("v1/sportsbook/manualsettlement/cancellation")]
+        public async Task<IActionResult> ManualCancellation([FromBody] BetCancellationRequestDTO request)
+        {
+            foreach (InternalMarketCancellationMessage row in request.Markets)
+            {
+                row.SettlementStatus = Shared.Enums.SettlementStatus.Cancelled;
+            }
 
-        //    var result = await _sportsbookRepository.ManualCancellation(request);
+            var result = await _sportsbookRepository.ManualCancellation(request);
 
-        //    switch (result.StatusCode)
-        //    {
-        //        case Shared.Enums.StatusCode.Success:
-        //            return Ok(result);
-        //        default:
-        //            return BadRequest(result);
-        //    }
-        //}
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

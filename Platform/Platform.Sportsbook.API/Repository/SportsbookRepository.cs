@@ -1306,6 +1306,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(TWTodayFixtureRequestDTO request)
         {
+            //tst
             var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset);
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
@@ -2664,7 +2665,6 @@ namespace Platform.Sportsbook.API.Repository
                     return new List<string>();
             }
         }
-
         private Tuple<DateTime, DateTime> GetDateTimeRange(DateTime utcDate, int minuteUTCOffset)
         {
             var hours = minuteUTCOffset / 60;
@@ -2687,12 +2687,10 @@ namespace Platform.Sportsbook.API.Repository
                 return new Tuple<DateTime, DateTime>(startTime, endTime);
             }
         }
-
         private List<TierLeagueOrder> GetTierLeagueOrder()
         {
             return _memCache.GetCache($"tlo", () => _sportsbookContext.TierLeagueOrder.ToList(), 24);
         }
-
         public async Task<BaseResponseDTO<StatusCode>> ManualSettlement(BetSettlementRequestDTO request)
         {
             var digit = Convert.ToString(request.FixtureId);
@@ -2726,7 +2724,6 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString()
             };
         }
-
         public async Task<BaseResponseDTO<StatusCode>> ManualCancellation(BetCancellationRequestDTO request)
         {
             var digit = Convert.ToString(request.FixtureId);

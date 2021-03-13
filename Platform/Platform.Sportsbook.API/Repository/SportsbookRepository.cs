@@ -1264,7 +1264,7 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
-            foreach (var item in initialResult)
+            Parallel.ForEach(initialResult, item =>
             {
                 finalResult.Add(new FixtureDTO
                 {
@@ -1292,7 +1292,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentMinute = item.CurrentMinute,
                     Markets = GetMarkets(item.SportId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
                 });
-            }
+            });
 
             return new BaseResponseDTO<TWResponseDTO>
             {
@@ -1380,7 +1380,7 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
-            foreach (var item in initialResult)
+            Parallel.ForEach(initialResult, item =>
             {
                 finalResult.Add(new FixtureDTO
                 {
@@ -1408,7 +1408,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentMinute = item.CurrentMinute,
                     Markets = GetMarkets(item.SportId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
                 });
-            }
+            });
 
             return new BaseResponseDTO<TWResponseDTO>
             {
@@ -1496,7 +1496,7 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
-            foreach (var item in initialResult)
+            Parallel.ForEach(initialResult, item =>
             {
                 finalResult.Add(new FixtureDTO
                 {
@@ -1524,7 +1524,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentMinute = item.CurrentMinute,
                     Markets = GetMarkets(item.SportId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
                 });
-            }
+            });
 
             return new BaseResponseDTO<TWResponseDTO>
             {
@@ -1606,7 +1606,7 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(markets, selections);
 
-            foreach (var item in initialResult)
+            Parallel.ForEach(initialResult, item =>
             {
                 finalResult.Add(new FixtureDTO
                 {
@@ -1634,7 +1634,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentMinute = item.CurrentMinute,
                     Markets = GetOutrightMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
                 });
-            }
+            });
 
             return new BaseResponseDTO<TWResponseDTO>
             {

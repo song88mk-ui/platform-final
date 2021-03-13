@@ -26,4 +26,16 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public int MaStId { get; set; }
         public string CoId { get; set; }
     }
+    public class SelectionFilter
+    {
+        [BsonId]
+        public long SeId { get; set; }
+        public long FiId { get; set; }
+        public long MaId { get; set; }
+        public string SeTeId { get; set; }
+        public string SeNa { get; set; }
+        public decimal Od { get; set; }
+        public bool IsAc { get; set; }
+        public string CoId { get; set; }
+    }
 }

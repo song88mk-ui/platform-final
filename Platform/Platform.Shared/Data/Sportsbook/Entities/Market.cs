@@ -21,6 +21,18 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public int FiStId { get; set; }
     }
 
+    public class MarketFilter
+    {
+        [BsonId]
+        public long MaId { get; set; }
+        public long FiId { get; set; }
+        public string MaTeId { get; set; }
+        public string MaNa { get; set; }
+        public string Li { get; set; }
+        public int MaStId { get; set; }
+        public string MaStNa { get; set; }
+    }
+
     public class MarketCount
     {
         [BsonId]

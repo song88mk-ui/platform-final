@@ -2670,7 +2670,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (hours >= 0)
             {
-                var utc = utcDate.Date;
+                var utc = utcDate;
                 var startTime = utc.AddHours(hours * -1).AddMinutes(remainderMinutes * -1).AddMilliseconds(-1);
                 var endTime = utc.AddHours(hours).Date.AddDays(1).AddHours(hours * -1).AddMinutes(remainderMinutes * -1);
 
@@ -2678,7 +2678,7 @@ namespace Platform.Sportsbook.API.Repository
             }
             else
             {
-                var utc = utcDate.Date;
+                var utc = utcDate;
                 var startTime = utc.AddHours(hours * -1).AddMinutes(remainderMinutes * -1).AddMilliseconds(-1);
                 var endTime = startTime.AddDays(1);
 

@@ -145,7 +145,7 @@ namespace Platform.Sportsbook.API.Controllers
         [HttpPost("v1/sportsbook/userfavorites/get/all")]
         public async Task<IActionResult> GetUserFavorites2([FromBody] UserFavoriteRequestDTO request)
         {
-            var result = await _sportsbookRepository.GetUserFavorites(request);
+            var result = await _sportsbookRepository.GetUserFavorites2(request);
 
             switch (result.StatusCode)
             {

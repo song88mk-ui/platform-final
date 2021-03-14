@@ -633,6 +633,8 @@ namespace Platform.Sportsbook.API.Repository
                     var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
                     var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
+                    await Task.WhenAll(marketCount, markets, selections);
+
                     foreach (var item in leagueResult)
                     {
                         if (result.Any(c => c.FixtureId == item.FiId.ToString())) continue;
@@ -690,6 +692,8 @@ namespace Platform.Sportsbook.API.Repository
                     var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
                     var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.CoId);
                     var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
+
+                    await Task.WhenAll(marketCount, markets, selections);
 
                     foreach (var item in fixtureResult)
                     {

@@ -964,9 +964,18 @@ namespace Platform.Betting.API.Repository
                 //(**) For Max Bet: If Company Share > 0%, do not consider MTS Max Stake value from Max Stake API in Max bet logic (i.e. whichever is lowest).  
                 //Difference from [MTS Max Stake/Company Share] is required.
 
-                if (mtsMaxStake > 0)
-                    //MTS Max Stake from Max Stake API
-                    maximumStake.Add(RoundUpDecimalValue(mtsMaxStake / companyShare));
+                if (companyShare == 0)
+                {
+                    if (mtsMaxStake > 0)
+                        //MTS Max Stake from Max Stake API
+                        maximumStake.Add(mtsMaxStake);
+                }
+                else
+                {
+                    if (mtsMaxStake > 0)
+                        //MTS Max Stake from Max Stake API
+                        maximumStake.Add(RoundUpDecimalValue(mtsMaxStake / companyShare));
+                }
             }
 
             //Get min decimal value

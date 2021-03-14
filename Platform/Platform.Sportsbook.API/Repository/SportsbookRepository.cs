@@ -594,7 +594,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetUserFavorites2(UserFavoriteRequestDTO request)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetUserFavoritesAll(UserFavoriteRequestDTO request)
         {
             var result = new List<FixtureDTO>();
             var favorites = await _sportsbookContext.UserFavorite.Where(c => c.UserId == $"{request.ClientCode}-{request.UserId}").ToListAsync();
@@ -659,7 +659,7 @@ namespace Platform.Sportsbook.API.Repository
                             FixtureStatusName = item.FiStNa,
                             MarketCount = marketCount.Result.Where(c => c.FiId == item.FiId).Count(),
                             SMSCode = string.Empty,
-                            StatisticsURL = $"https://s5.sir.sportradar.com/igaholding2{item.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                            StatisticsURL = string.IsNullOrEmpty(item.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{item.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
                             Score = item.Sc,
                             CurrentPeriod = CurrentPeriodHelper.ToShortName(item.CuPe),
                             CurrentMinute = item.CuMi.ToString(),
@@ -719,7 +719,7 @@ namespace Platform.Sportsbook.API.Repository
                             FixtureStatusName = item.FiStNa,
                             MarketCount = marketCount.Result.Where(c => c.FiId == item.FiId).Count(),
                             SMSCode = string.Empty,
-                            StatisticsURL = $"https://s5.sir.sportradar.com/igaholding2{item.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                            StatisticsURL = string.IsNullOrEmpty(item.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{item.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
                             Score = item.Sc,
                             CurrentPeriod = CurrentPeriodHelper.ToShortName(item.CuPe),
                             CurrentMinute = item.CuMi.ToString(),

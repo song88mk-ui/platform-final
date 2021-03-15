@@ -35,7 +35,7 @@ namespace Platform.Sportsbook.API.Repository
         Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixtures(TWDailyFixtureRequestDTO request);
         Task<BaseResponseDTO<TWResponseDTO>> GetTopLeagueFixtures(TWTopLeagueFixtureRequestDTO request);
         Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWSegmentFixtureRequestDTO request);
-        Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWFixtureRequestDTO request);
+        Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWLeagueFixtureRequestDTO request);
 
         Task<BaseResponseDTO<SportsResponseDTO>> GetSports(SportsRequestDTO request);
         Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(TWFixtureDetailsRequestDTO request);

@@ -550,7 +550,7 @@ namespace Platform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWFixtureRequestDTO request)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWLeagueFixtureRequestDTO request)
         {
             try
             {

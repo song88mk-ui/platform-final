@@ -46,7 +46,7 @@ namespace Platform.Shared.Models
     {
         public int SortOrder { get; set; }
     }
-    public class TWFixtureRequestDTO
+    public class TWLeagueFixtureRequestDTO
     {
         public int SportId { get; set; }
         public int SegmentId { get; set; }

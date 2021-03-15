@@ -1105,7 +1105,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            return await _sportsbookRepository.GetFixtures(new TWFixtureRequestDTO
+            return await _sportsbookRepository.GetFixtures(new TWLeagueFixtureRequestDTO
             {
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,

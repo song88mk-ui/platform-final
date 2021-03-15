@@ -325,7 +325,7 @@ namespace Platform.Sportsbook.API.Controllers
         }
 
         [HttpPost("v2/sportsbook/fixtures")]
-        public async Task<IActionResult> GetFixtures([FromBody] TWFixtureRequestDTO request)
+        public async Task<IActionResult> GetFixtures([FromBody] TWLeagueFixtureRequestDTO request)
         {
             var result = await _sportsbookRepository.GetFixtures(request);
 

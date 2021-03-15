@@ -3288,7 +3288,7 @@ namespace Platform.Sportsbook.API.Repository
                     result = "9th inning";
                     break;
                 default:
-                    result = "None";
+                    result = string.Empty;
                     break;
             }
 

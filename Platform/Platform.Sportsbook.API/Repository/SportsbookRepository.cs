@@ -1712,7 +1712,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var leagueIds = finalResult.Select(s => s.LeagueId).Distinct().ToList();
 
-            var fixtureFilter2 = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.SpId == request.SportId && leagueIds.Contains(c.LeId));
+            var fixtureFilter2 = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && leagueIds.Contains(c.LeId));
             var fixtures2 = await fixtureCollection.Find(fixtureFilter2).ToListAsync();
 
             var fixtureIds = fixtures2.Select(s => Convert.ToInt64(s.FiId)).ToList();
@@ -2638,7 +2638,7 @@ namespace Platform.Sportsbook.API.Repository
                 case 118: //Call of Duty
                     return new List<string> { "186" };
                 case 22: //Darts
-                    return new List<string> { "186", "188", "314" };
+                    return new List<string> { "1", "186", "188", "314" };
                 case 109: //eSport CS GO
                     return new List<string> { "186", "327", "328" };
                 case 111: //eSport Dota 2

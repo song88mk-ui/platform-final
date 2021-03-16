@@ -156,7 +156,7 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
-        [HttpPost("v1/sportsbook/userfavorites/delete")]
+        [HttpPost("v1/sportsbook/userfavorites/remove")]
         public async Task<IActionResult> DeleteUserFavorites([FromBody] UserFavoriteInsertDeleteRequestDTO request)
         {
             var result = await _sportsbookRepository.DeleteFavorites(request);

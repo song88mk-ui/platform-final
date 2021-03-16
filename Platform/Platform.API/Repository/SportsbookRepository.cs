@@ -740,7 +740,7 @@ namespace Platform.API.Repository
         {
             try
             {
-                var response = await _httpClient.PostAsync($"v1/sportsbook/userfavorites/delete", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.PostAsync($"v1/sportsbook/userfavorites/remove", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
                     return JsonSerializer.Deserialize<BaseResponseDTO<UserFavoriteResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });

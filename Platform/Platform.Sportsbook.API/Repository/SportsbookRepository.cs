@@ -117,7 +117,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetTopLeagues(TopLeaguesRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.SpId == request.SportId && c.FiTyId == 0);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -171,7 +171,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues(TopLeaguesRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.SpId == request.SportId && c.FiTyId == 0);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -221,7 +221,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TopFixturesResponseDTO>> GetTopFixtures(TopFixturesRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 1 && c.FiTyId == 0);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 1 && c.FiTyId == (int)FixtureType.Match);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -273,7 +273,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TopFixturesIdsResponseDTO>> GetTopFixtureIds(TopFixturesRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 1 && c.FiTyId == 0);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 1 && c.FiTyId == (int)FixtureType.Match);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -402,98 +402,6 @@ namespace Platform.Sportsbook.API.Repository
                 Result = new SportsResponseDTO
                 {
                     Sports = final
-                }
-            };
-        }
-        public async Task<BaseResponseDTO<OrderedSportsResponseDTO>> GetOrderedSports(OrderedSportsRequestDTO request)
-        {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-
-            if (fixtures.Count == 0)
-            {
-                return new BaseResponseDTO<OrderedSportsResponseDTO>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new OrderedSportsResponseDTO()
-                };
-            }
-
-            var sortOrder = await _sportsbookContext.ClientSportOrder.Where(c => c.ClientId == request.ClientId).ToListAsync();
-
-            var result = fixtures.Select(s => new TempOrderedSport
-            {
-                SportId = s.SpId,
-                SportName = s.SpNa,
-                SortOrder = sortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
-                    == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
-            }).OrderBy(o => o.SortOrder).ThenBy(o => o.SportName).ToList();
-
-            var finalResult = new List<OrderedSport>();
-
-            foreach (var item in result)
-            {
-                if (finalResult.Any(c => c.SportId == item.SportId)) continue;
-
-                finalResult.Add(item);
-            }
-
-            return new BaseResponseDTO<OrderedSportsResponseDTO>
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = new OrderedSportsResponseDTO
-                {
-                    Sports = finalResult
-                }
-            };
-        }
-        public async Task<BaseResponseDTO<OrderedLeaguesResponseDTO>> GetOrderedLeagues(OrderedLeaguesRequestDTO request)
-        {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.SpId == request.SportId);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-
-            if (fixtures.Count == 0)
-            {
-                return new BaseResponseDTO<OrderedLeaguesResponseDTO>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new OrderedLeaguesResponseDTO()
-                };
-            }
-
-            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
-
-            var result = fixtures.Select(s => new TempOrderedLeague
-            {
-                SportId = s.SpId,
-                SportName = s.SpNa,
-                SegmentId = s.SegId,
-                SegmentName = s.SegNa,
-                LeagueId = s.LeId,
-                LeagueName = s.LeNa,
-                SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-            }).OrderBy(o => o.SortOrder).ThenBy(o => o.SportName).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ToList();
-
-            var finalResult = new List<OrderedLeague>();
-
-            foreach (var item in result)
-            {
-                if (finalResult.Any(c => c.SportId == item.SportId && c.SegmentId == item.SegmentId && c.LeagueId == item.LeagueId)) continue;
-
-                finalResult.Add(item);
-            }
-
-            return new BaseResponseDTO<OrderedLeaguesResponseDTO>
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = new OrderedLeaguesResponseDTO
-                {
-                    Leagues = finalResult
                 }
             };
         }
@@ -978,7 +886,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopFixturesTW(TWRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 0 && c.FiTyId == (int)FixtureType.Match);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)

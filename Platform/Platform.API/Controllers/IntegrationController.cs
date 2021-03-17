@@ -24,6 +24,7 @@ namespace Platform.API.Controllers
         [HttpGet("v1/wallet/balance")]
         public async Task<IActionResult> GetWalletBalance()
         {
+            //test commit
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 

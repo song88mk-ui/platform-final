@@ -28,6 +28,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWLeagueFixtureRequestDTO request);
         Task<BaseResponseDTO<SportsResponseDTO>> GetSports(SportsRequestDTO request);
         Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(TWFixtureDetailsRequestDTO request);
+        Task<BaseResponseDTO<TWResponseDTO>> GetSelectionDetails(TWFixtureMarketSelectionDetailsRequestDTO request);
         Task<BaseResponseDTO<TWResponseDTO>> GetOutrightFixtures(TWOutrightFixtureRequestDTO request);
         Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(TWSearchRequestDTO request);
     }

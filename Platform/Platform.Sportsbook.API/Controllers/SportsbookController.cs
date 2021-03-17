@@ -339,6 +339,19 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v2/sportsbook/fixtures/markets/selections/details")]
+        public async Task<IActionResult> GetSelectionDetails([FromBody] TWFixtureMarketSelectionDetailsRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetFixtureMarketSelectionDetails(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
 
         [HttpPost("v1/sportsbook/activefixtures")]
         public async Task<IActionResult> GetActiveFixtures([FromBody] ActiveFixturesRequestDTO request)

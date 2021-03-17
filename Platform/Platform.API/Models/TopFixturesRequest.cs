@@ -78,4 +78,12 @@ namespace Platform.API.Models
         public string FixtureId { get; set; }
         public string LanguageCode { get; set; }
     }
+
+    public class FixtureMarketSelectionDetailsRequest
+    {
+        public string FixtureId { get; set; }
+        public string MarketId { get; set; }
+        public string SelectionId { get; set; }
+        public string LanguageCode { get; set; }
+    }
 }

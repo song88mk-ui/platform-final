@@ -459,6 +459,24 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpGet("v1/sportsbook/selectiondetails")]
+        public async Task<IActionResult> GetSelectionDetails([FromQuery] string fixtureId, string marketId, string selectionId)
+        {
+            //force deploy
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetSelectionDetails(apiKey, clientId, new FixtureMarketSelectionDetailsRequest { LanguageCode = LanguageCode.EN.ToString(), FixtureId = fixtureId, MarketId = marketId, SelectionId = selectionId });
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/sportsbook/userfavorites")]
         public async Task<IActionResult> AddUserFavorites([FromQuery] InsertDeleteUserFavoritesRequest request)
         {

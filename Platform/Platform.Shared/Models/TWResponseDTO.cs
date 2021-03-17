@@ -10,6 +10,14 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }
+    public class TWFixtureMarketSelectionDetailsRequestDTO
+    {
+        public string FixtureId { get; set; }
+        public string MarketId { get; set; }
+        public string SelectionId { get; set; }
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+    }
     public class TWTopLeagueFixtureRequestDTO
     {
         public int SportId { get; set; }

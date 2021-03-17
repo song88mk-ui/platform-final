@@ -35,3 +35,4 @@ packages/
 *.pubxml
 Ctrl.Web/.config/dotnet-tools.json
 Ctrl.Web2/.config/dotnet-tools.json
+Platform/Platform.Sportsbook.API/.config/dotnet-tools.json

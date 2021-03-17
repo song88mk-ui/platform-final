@@ -1255,35 +1255,69 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+            List<TierLeagueOrder> sortOrder;
+            List<TempFixtureDTO> result;
 
-            var result = fixtures.Select(s => new TempFixtureDTO
+            if (request.SportId == 1055 || request.SportId == 1058)
             {
-                SportId = s.SpId,
-                SportName = s.SpNa,
-                SegmentId = s.SegId,
-                SegmentName = s.SegNa,
-                LeagueId = s.LeId,
-                LeagueName = s.LeNa,
-                ProviderFixtureId = s.PrFiId,
-                FixtureId = s.FiId.ToString(),
-                FixtureName = s.FiNa,
-                HomeName = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").First().Trim() : string.Empty,
-                AwayName = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
-                FixtureStartDate = s.FiStDa,
-                IsLive = s.IsOfLi,
-                IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                FixtureStatusId = s.FiStId,
-                FixtureStatusName = s.FiStNa,
-                MarketCount = 0,
-                SMSCode = string.Empty,
-                StatisticsURL = string.IsNullOrEmpty(s.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
-                Score = s.Sc,
-                CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
-                CurrentMinute = s.CuMi.ToString(),
-                SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-            }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+                result = fixtures.Select(s => new TempFixtureDTO
+                {
+                    SportId = s.SpId,
+                    SportName = s.SpNa,
+                    SegmentId = s.SegId,
+                    SegmentName = s.SegNa,
+                    LeagueId = s.LeId,
+                    LeagueName = s.LeNa,
+                    ProviderFixtureId = s.PrFiId,
+                    FixtureId = s.FiId.ToString(),
+                    FixtureName = s.FiNa,
+                    HomeName = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").First().Trim() : string.Empty,
+                    AwayName = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
+                    FixtureStartDate = s.FiStDa,
+                    IsLive = s.IsOfLi,
+                    IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
+                    FixtureStatusId = s.FiStId,
+                    FixtureStatusName = s.FiStNa,
+                    MarketCount = 0,
+                    SMSCode = string.Empty,
+                    StatisticsURL = string.IsNullOrEmpty(s.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                    Score = s.Sc,
+                    CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
+                    CurrentMinute = s.CuMi.ToString()
+                }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+            }
+            else
+            {
+                sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+
+                result = fixtures.Select(s => new TempFixtureDTO
+                {
+                    SportId = s.SpId,
+                    SportName = s.SpNa,
+                    SegmentId = s.SegId,
+                    SegmentName = s.SegNa,
+                    LeagueId = s.LeId,
+                    LeagueName = s.LeNa,
+                    ProviderFixtureId = s.PrFiId,
+                    FixtureId = s.FiId.ToString(),
+                    FixtureName = s.FiNa,
+                    HomeName = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").First().Trim() : string.Empty,
+                    AwayName = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
+                    FixtureStartDate = s.FiStDa,
+                    IsLive = s.IsOfLi,
+                    IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
+                    FixtureStatusId = s.FiStId,
+                    FixtureStatusName = s.FiStNa,
+                    MarketCount = 0,
+                    SMSCode = string.Empty,
+                    StatisticsURL = string.IsNullOrEmpty(s.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                    Score = s.Sc,
+                    CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
+                    CurrentMinute = s.CuMi.ToString(),
+                    SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                    == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+            }
 
             var initialResult = new List<TempFixtureDTO>();
 

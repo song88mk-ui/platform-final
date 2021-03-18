@@ -52,7 +52,7 @@ namespace Platform.Betting.API.Repository
                             },
                             new OverrideSportConfig
                             {
-                                SportId = 2,
+                                SportId = 21,
                                 SportName = "Cricket",
                                 MinStake = config.Cricket.MinBet,
                                 MaxStake = config.Cricket.MaxBet,

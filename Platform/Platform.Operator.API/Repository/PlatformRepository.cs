@@ -123,7 +123,7 @@ namespace Platform.Operator.API.Repository
                         };
                     }
 
-                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, request.Stake, request.BetStatus);
+                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, 0, request.Stake, request.BetStatus);
 
                     result.Balance = operatorAudit.PostBalance;
                     _platformContext.Operator.Update(result);
@@ -173,7 +173,7 @@ namespace Platform.Operator.API.Repository
                         };
                     }
 
-                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, request.Payout, request.BetStatus);
+                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, request.Payout, request.Stake, request.BetStatus);
 
                     result.Balance = operatorAudit.PostBalance;
                     _platformContext.Operator.Update(result);
@@ -222,7 +222,9 @@ namespace Platform.Operator.API.Repository
                         };
                     }
 
-                    result.Balance += request.Payout;
+                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, request.Payout, request.Stake, request.BetStatus);
+
+                    result.Balance = operatorAudit.PostBalance;
                     _platformContext.Operator.Update(result);
 
                     _platformContext.SaveChanges();
@@ -297,14 +299,24 @@ namespace Platform.Operator.API.Repository
         }
 
         #region Private Method
-        private OperatorAudit AddOrUpdateOperatorAudit(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal amount, string betStatus)
+        private OperatorAudit AddOrUpdateOperatorAudit(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal payout, decimal stake, string betStatus)
         {
+            var amount = payout;
             if ((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Running)
-                amount *= -1;
+                amount = stake * -1;
 
+            var postBalance = _operator.Balance;
             var prevOperatorAudit = _platformContext.OperatorAudit.AsNoTracking().Where(o => o.UserId == _operator.UserId && o.BetId == Guid.Parse(betId)).FirstOrDefault();
-            if (prevOperatorAudit != null && (int)Enum.Parse(typeof(BetStatus), betStatus) != (int)BetStatus.Void)
+
+            if (prevOperatorAudit != null)
             {
+
+                if (prevOperatorAudit.TransactionTypeId == (int)Enum.Parse(typeof(BetStatus), betStatus))
+                    return new OperatorAudit()
+                    {
+                        PostBalance = postBalance
+                    };
+
                 switch (prevOperatorAudit.TransactionTypeId)
                 {
                     case (int)BetStatus.Void:
@@ -312,7 +324,37 @@ namespace Platform.Operator.API.Repository
                     case (int)BetStatus.Won:
                     case (int)BetStatus.HalfLost:
                     case (int)BetStatus.HalfWon:
-                        amount += (prevOperatorAudit.Amount * -1);
+
+                        if((int)Enum.Parse(typeof(BetStatus), betStatus) != (int)BetStatus.Void && prevOperatorAudit.TransactionTypeId != (int)BetStatus.Void)
+                        {
+                            
+                            var voidoperatorAuditEntity = _platformContext.OperatorAudit.Update(new OperatorAudit()
+                            {
+                                BetId = Guid.Parse(betId),
+                                UserId = _operator.UserId,
+                                ClientId = _operator.ClientId,
+                                OperatorToken = _operator.OperatorToken,
+                                CreatedDate = DateTime.UtcNow,
+                                CurrencyCode = _operator.CurrencyCode,
+                                TransactionTypeId = (int)BetStatus.Void,
+                                TransactionTypeName = BetStatus.Void.ToString(),
+                                PreBalance = postBalance,
+                                Amount = prevOperatorAudit.Amount*-1,
+                                PostBalance = postBalance + (prevOperatorAudit.Amount * -1),
+                            }).Entity;
+                            postBalance += voidoperatorAuditEntity.Amount;
+
+                            if ((int)prevOperatorAudit.TransactionTypeId != (int)BetStatus.Lost)
+                                amount = payout - stake;
+                        }
+                        else if((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Void)
+                        {
+                            amount = payout + (prevOperatorAudit.Amount * -1);
+                        }
+                        else
+                        {
+                            amount = payout - stake;
+                        }
                         break;
                     default:
                         break;
@@ -330,9 +372,9 @@ namespace Platform.Operator.API.Repository
                 CurrencyCode = _operator.CurrencyCode,
                 TransactionTypeId = (int)Enum.Parse(typeof(BetStatus), betStatus),
                 TransactionTypeName = betStatus,
-                PreBalance = prevOperatorAudit == null ? _operator.Balance : prevOperatorAudit.PostBalance,
+                PreBalance = postBalance,
                 Amount = amount,
-                PostBalance = prevOperatorAudit == null ? _operator.Balance + amount : prevOperatorAudit.PostBalance + amount,
+                PostBalance = postBalance + amount,
             }).Entity;
 
             _platformContext.SaveChanges();

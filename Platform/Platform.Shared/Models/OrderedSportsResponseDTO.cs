@@ -19,6 +19,7 @@ namespace Platform.Shared.Models
 
     public class TempOrderedSport : OrderedSport
     {
+        public bool HasOutrights { get; set; }
         public int SortOrder { get; set; }
     }
 

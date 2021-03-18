@@ -346,7 +346,7 @@ namespace Platform.Sportsbook.API.Repository
             var leagueSortOrder = _sportsbookContext.TierLeagueOrder.Where(c => sportIds.Contains(c.SportId)).ToList();
             var sportSortOrder = _sportsbookContext.ClientSportOrder.Where(c => c.ClientId == request.ClientId).ToList();
 
-            var result = fixtures.Select(s => new TempOrderedLeague
+            var result = fixtures.Where(c => c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
             {
                 SportId = s.SpId,
                 SportName = s.SpNa,
@@ -362,6 +362,7 @@ namespace Platform.Sportsbook.API.Repository
             {
                 SportId = s.SpId,
                 SportName = s.SpNa,
+                HasOutrights = fixtures.Any(c => c.SpId == s.SpId && c.FiTyId == (int)FixtureType.Outright),
                 SortOrder = sportSortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
                     == 0 ? 1000 : sportSortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SportName).ToList();
@@ -373,29 +374,73 @@ namespace Platform.Sportsbook.API.Repository
                 if (finalResult.Any(c => c.SportId == item.SportId)) continue;
 
                 finalResult.Add(item);
+
+                if (item.HasOutrights)
+                {
+                    result.Add(new TempOrderedLeague
+                    {
+                        SportId = item.SportId,
+                        SportName = string.Empty,
+                        SegmentId = 999999,
+                        SegmentName = "Outrights",
+                        LeagueId = 0,
+                        LeagueName = string.Empty,
+                        SortOrder = 9999
+                    });
+                }
             }
 
             var final = new List<SportDTO>();
 
             foreach (var sport in finalResult)
             {
-                final.Add(new SportDTO
+                var hasOutrights = sportResult.Where(c => c.SportId == sport.SportId).FirstOrDefault().HasOutrights;
+
+                var segment = new SegmentDTO
                 {
-                    SportId = sport.SportId,
-                    SportName = sport.SportName,
-                    Segments = result.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
+                    SegmentName = "Outrights"
+                };
+
+                if (hasOutrights)
+                {
+                    final.Add(new SportDTO
                     {
-                        SegmentId = s.Key,
-                        SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
-                        SortOrder = s.Select(se => se.SortOrder).FirstOrDefault(),
-                        Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
+                        SportId = sport.SportId,
+                        SportName = sport.SportName,
+                        Segments = result.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
                         {
-                            LeagueId = l.Key,
-                            LeagueName = l.Select(le => le.LeagueName).FirstOrDefault(),
-                            SortOrder = l.Select(le => le.SortOrder).FirstOrDefault()
-                        }).OrderBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ToList()
-                    }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ToList()
-                });
+                            SegmentId = s.Key,
+                            SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
+                            SortOrder = s.Select(se => se.SortOrder).FirstOrDefault(),
+                            Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
+                            {
+                                LeagueId = l.Key,
+                                LeagueName = l.Select(le => le.LeagueName).FirstOrDefault(),
+                                SortOrder = l.Select(le => le.SortOrder).FirstOrDefault()
+                            }).OrderBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ToList()
+                        }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ToList()
+                    });
+                }
+                else
+                {
+                    final.Add(new SportDTO
+                    {
+                        SportId = sport.SportId,
+                        SportName = sport.SportName,
+                        Segments = result.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
+                        {
+                            SegmentId = s.Key,
+                            SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
+                            SortOrder = s.Select(se => se.SortOrder).FirstOrDefault(),
+                            Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
+                            {
+                                LeagueId = l.Key,
+                                LeagueName = l.Select(le => le.LeagueName).FirstOrDefault(),
+                                SortOrder = l.Select(le => le.SortOrder).FirstOrDefault()
+                            }).OrderBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ToList()
+                        }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ToList()
+                    });
+                }
             }
 
             return new BaseResponseDTO<SportsResponseDTO>

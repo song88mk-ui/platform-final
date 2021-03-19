@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Platform.Shared.Data.Platform;
+using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
@@ -122,7 +123,9 @@ namespace Platform.Operator.API.Repository
                         };
                     }
 
-                    result.Balance -= request.Stake;
+                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, 0, request.Stake, request.BetStatus);
+
+                    result.Balance = operatorAudit.PostBalance;
                     _platformContext.Operator.Update(result);
 
                     _platformContext.SaveChanges();
@@ -143,6 +146,7 @@ namespace Platform.Operator.API.Repository
                 }
             }
         }
+
         public async Task<OperatorBetResponseDTO> BetSettlement(OperatorBetSettlementRequestDTO request)
         {
             var isGuid = Guid.TryParse(request.UserId, out Guid guid);
@@ -169,7 +173,9 @@ namespace Platform.Operator.API.Repository
                         };
                     }
 
-                    result.Balance += request.Payout;
+                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, request.Payout, request.Stake, request.BetStatus);
+
+                    result.Balance = operatorAudit.PostBalance;
                     _platformContext.Operator.Update(result);
 
                     _platformContext.SaveChanges();
@@ -216,7 +222,9 @@ namespace Platform.Operator.API.Repository
                         };
                     }
 
-                    result.Balance += request.Payout;
+                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, request.Payout, request.Stake, request.BetStatus);
+
+                    result.Balance = operatorAudit.PostBalance;
                     _platformContext.Operator.Update(result);
 
                     _platformContext.SaveChanges();
@@ -289,6 +297,78 @@ namespace Platform.Operator.API.Repository
                 Result = response
             };
         }
+
+        #region Private Method
+        private OperatorAudit AddOrUpdateOperatorAudit(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal payout, decimal stake, string betStatus)
+        {
+            var amount = payout;
+            if ((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Running)
+                amount = stake * -1;
+
+            var postBalance = _operator.Balance;
+            var prevOperatorAudit = _platformContext.OperatorAudit.AsNoTracking().Where(o => o.UserId == _operator.UserId && o.BetId == Guid.Parse(betId)).FirstOrDefault();
+
+            if (prevOperatorAudit != null)
+            {
+
+                if (prevOperatorAudit.TransactionTypeId == (int)Enum.Parse(typeof(BetStatus), betStatus))
+                    return new OperatorAudit()
+                    {
+                        PostBalance = postBalance
+                    };
+
+                switch (prevOperatorAudit.TransactionTypeId)
+                {
+                    case (int)BetStatus.Void:
+                    case (int)BetStatus.Lost:
+                    case (int)BetStatus.Won:
+                    case (int)BetStatus.HalfLost:
+                    case (int)BetStatus.HalfWon:
+
+                        if((int)Enum.Parse(typeof(BetStatus), betStatus) != (int)BetStatus.Void && prevOperatorAudit.TransactionTypeId != (int)BetStatus.Void)
+                        {
+                            postBalance += (prevOperatorAudit.Amount * -1);
+
+                            var hasVoid = _platformContext.OperatorAudit.AsNoTracking().Any(o => o.UserId == _operator.UserId && o.BetId == Guid.Parse(betId) && o.TransactionTypeId == (int)BetStatus.Void);
+                            if(hasVoid)
+                                amount = payout - stake;
+
+                        }
+                        else if((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Void)
+                        {
+                            amount = payout + (prevOperatorAudit.Amount * -1);
+                        }
+                        else
+                        {
+                            amount = payout - stake;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+            
+            var operatorAuditEntity = _platformContext.OperatorAudit.Update(new OperatorAudit()
+            {
+                BetId = Guid.Parse(betId),
+                UserId = _operator.UserId,
+                ClientId = _operator.ClientId,
+                OperatorToken = _operator.OperatorToken,
+                CreatedDate = DateTime.UtcNow,
+                CurrencyCode = _operator.CurrencyCode,
+                TransactionTypeId = (int)Enum.Parse(typeof(BetStatus), betStatus),
+                TransactionTypeName = betStatus,
+                PreBalance = postBalance,
+                Amount = amount,
+                PostBalance = postBalance + amount,
+            }).Entity;
+
+            _platformContext.SaveChanges();
+
+            return operatorAuditEntity;
+        }
+
+        #endregion
 
     }
 }

@@ -327,25 +327,12 @@ namespace Platform.Operator.API.Repository
 
                         if((int)Enum.Parse(typeof(BetStatus), betStatus) != (int)BetStatus.Void && prevOperatorAudit.TransactionTypeId != (int)BetStatus.Void)
                         {
-                            
-                            var voidoperatorAuditEntity = _platformContext.OperatorAudit.Update(new OperatorAudit()
-                            {
-                                BetId = Guid.Parse(betId),
-                                UserId = _operator.UserId,
-                                ClientId = _operator.ClientId,
-                                OperatorToken = _operator.OperatorToken,
-                                CreatedDate = DateTime.UtcNow,
-                                CurrencyCode = _operator.CurrencyCode,
-                                TransactionTypeId = (int)BetStatus.Void,
-                                TransactionTypeName = BetStatus.Void.ToString(),
-                                PreBalance = postBalance,
-                                Amount = prevOperatorAudit.Amount*-1,
-                                PostBalance = postBalance + (prevOperatorAudit.Amount * -1),
-                            }).Entity;
-                            postBalance += voidoperatorAuditEntity.Amount;
+                            postBalance += (prevOperatorAudit.Amount * -1);
 
-                            if ((int)prevOperatorAudit.TransactionTypeId != (int)BetStatus.Lost)
+                            var hasVoid = _platformContext.OperatorAudit.AsNoTracking().Any(o => o.UserId == _operator.UserId && o.BetId == Guid.Parse(betId) && o.TransactionTypeId == (int)BetStatus.Void);
+                            if(hasVoid)
                                 amount = payout - stake;
+
                         }
                         else if((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Void)
                         {
@@ -360,7 +347,6 @@ namespace Platform.Operator.API.Repository
                         break;
                 }
             }
-            
             
             var operatorAuditEntity = _platformContext.OperatorAudit.Update(new OperatorAudit()
             {

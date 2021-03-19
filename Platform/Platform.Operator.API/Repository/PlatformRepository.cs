@@ -325,18 +325,21 @@ namespace Platform.Operator.API.Repository
                     case (int)BetStatus.HalfLost:
                     case (int)BetStatus.HalfWon:
 
-                        if((int)Enum.Parse(typeof(BetStatus), betStatus) != (int)BetStatus.Void && prevOperatorAudit.TransactionTypeId != (int)BetStatus.Void)
+                        var hasVoid = _platformContext.OperatorAudit.AsNoTracking().Any(o => o.UserId == _operator.UserId && o.BetId == Guid.Parse(betId) && o.TransactionTypeId == (int)BetStatus.Void);
+                        if ((int)Enum.Parse(typeof(BetStatus), betStatus) != (int)BetStatus.Void && prevOperatorAudit.TransactionTypeId != (int)BetStatus.Void)
                         {
                             postBalance += (prevOperatorAudit.Amount * -1);
 
-                            var hasVoid = _platformContext.OperatorAudit.AsNoTracking().Any(o => o.UserId == _operator.UserId && o.BetId == Guid.Parse(betId) && o.TransactionTypeId == (int)BetStatus.Void);
                             if(hasVoid)
                                 amount = payout - stake;
 
                         }
                         else if((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Void)
                         {
-                            amount = payout + (prevOperatorAudit.Amount * -1);
+                            if(hasVoid)
+                                amount = (payout-stake) + (prevOperatorAudit.Amount * -1);
+                            else
+                                amount = payout + (prevOperatorAudit.Amount * -1);
                         }
                         else
                         {

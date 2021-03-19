@@ -143,6 +143,13 @@ namespace Platform.Placement.Service.Repository
                             scope.Complete();
 
                             messageBroker.Publish(payload, "OnBetPlacement", "r.bet.operator", correlationId);
+                            messageBroker.Publish(new OnBetStatus 
+                            {
+                                ClientId = payload.Bet.ClientId.ToString().ToUpper(),
+                                UserId = payload.Bet.UserId,
+                                BetId = payload.Bet.BetId.ToString().ToUpper(),
+                                BetStatus = (BetStatus)payload.Bet.BetStatusId
+                            }, "OnBetStatus", "r.bet.operator", correlationId);
                         }
                         catch (Exception ex)
                         {
@@ -266,6 +273,14 @@ namespace Platform.Placement.Service.Repository
 
                             //publish to reports
                             messageBroker.Publish(payload, "OnBetRejection", "r.bet.reports", correlationId);
+
+                            messageBroker.Publish(new OnBetStatus
+                            {
+                                ClientId = payload.Bet.ClientId.ToString().ToUpper(),
+                                UserId = payload.Bet.UserId,
+                                BetId = payload.Bet.BetId.ToString().ToUpper(),
+                                BetStatus = (BetStatus)payload.Bet.BetStatusId
+                            }, "OnBetStatus", "r.bet.operator", correlationId);
                         }
                         catch (Exception ex)
                         {

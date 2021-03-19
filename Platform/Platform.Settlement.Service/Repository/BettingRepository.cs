@@ -194,9 +194,29 @@ namespace Platform.Settlement.Service.Repository
                             if (isPublish)
                             {
                                 if (payload.Bet.BetStatusId == (int)BetStatus.Cancelled)
+                                {
                                     messageBroker.Publish(payload, "OnBetCancellation", "r.bet.operator", correlationId);
+
+                                    messageBroker.Publish(new OnBetStatus
+                                    {
+                                        ClientId = payload.Bet.ClientId.ToString().ToUpper(),
+                                        UserId = payload.Bet.UserId,
+                                        BetId = payload.Bet.BetId.ToString().ToUpper(),
+                                        BetStatus = (BetStatus)payload.Bet.BetStatusId
+                                    }, "OnBetStatus", "r.bet.betstatus", correlationId);
+                                }
                                 else
+                                {
                                     messageBroker.Publish(payload, "OnBetSettlement", "r.bet.operator", correlationId);
+
+                                    messageBroker.Publish(new OnBetStatus
+                                    {
+                                        ClientId = payload.Bet.ClientId.ToString().ToUpper(),
+                                        UserId = payload.Bet.UserId,
+                                        BetId = payload.Bet.BetId.ToString().ToUpper(),
+                                        BetStatus = (BetStatus)payload.Bet.BetStatusId
+                                    }, "OnBetStatus", "r.bet.betstatus", correlationId);
+                                }
                             }
                         }
                         catch (Exception ex)
@@ -740,6 +760,14 @@ namespace Platform.Settlement.Service.Repository
                                 Bet = betData,
                                 BetSelections = betSelectionData
                             }, "OnBetCancellation", "r.bet.operator", correlationId);
+
+                            messageBroker.Publish(new OnBetStatus
+                            {
+                                ClientId = betData.ClientId.ToString().ToUpper(),
+                                UserId = betData.UserId,
+                                BetId = betData.BetId.ToString().ToUpper(),
+                                BetStatus = (BetStatus)betData.BetStatusId
+                            }, "OnBetStatus", "r.bet.betstatus", correlationId);
                         }
                         catch (Exception ex)
                         {

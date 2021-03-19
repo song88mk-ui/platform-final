@@ -149,7 +149,7 @@ namespace Platform.Placement.Service.Repository
                                 UserId = payload.Bet.UserId,
                                 BetId = payload.Bet.BetId.ToString().ToUpper(),
                                 BetStatus = (BetStatus)payload.Bet.BetStatusId
-                            }, "OnBetStatus", "r.bet.operator", correlationId);
+                            }, "OnBetStatus", "r.bet.betstatus", correlationId);
                         }
                         catch (Exception ex)
                         {
@@ -280,7 +280,7 @@ namespace Platform.Placement.Service.Repository
                                 UserId = payload.Bet.UserId,
                                 BetId = payload.Bet.BetId.ToString().ToUpper(),
                                 BetStatus = (BetStatus)payload.Bet.BetStatusId
-                            }, "OnBetStatus", "r.bet.operator", correlationId);
+                            }, "OnBetStatus", "r.bet.betstatus", correlationId);
                         }
                         catch (Exception ex)
                         {

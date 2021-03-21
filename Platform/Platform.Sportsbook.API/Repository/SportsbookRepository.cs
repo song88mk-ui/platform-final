@@ -1262,6 +1262,7 @@ namespace Platform.Sportsbook.API.Repository
                     Score = item.Score,
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
+                    SortOrder = item.SortOrder,
                     Markets = GetMarkets(item.SportId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
                 });
             });
@@ -1272,8 +1273,8 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new TWResponseDTO
                 {
-                    Fixtures = finalResult
-                }
+                    Fixtures = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList()
+        }
             };
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(TWTodayFixtureRequestDTO request)
@@ -1423,6 +1424,7 @@ namespace Platform.Sportsbook.API.Repository
                     Score = item.Score,
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
+                    SortOrder = item.SortOrder,
                     Markets = GetMarkets(item.SportId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
                 });
             });
@@ -1433,8 +1435,8 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new TWResponseDTO
                 {
-                    Fixtures = finalResult
-                }
+                    Fixtures = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList()
+        }
             };
 
             //if (finalResult.Count > 0)
@@ -1544,6 +1546,7 @@ namespace Platform.Sportsbook.API.Repository
                     Score = item.Score,
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
+                    SortOrder = item.SortOrder,
                     Markets = GetMarkets(item.SportId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
                 });
             });
@@ -1554,7 +1557,7 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new TWResponseDTO
                 {
-                    Fixtures = finalResult
+                    Fixtures = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList()
                 }
             };
         }
@@ -1654,6 +1657,7 @@ namespace Platform.Sportsbook.API.Repository
                     Score = item.Score,
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
+                    SortOrder = item.SortOrder,
                     Markets = GetOutrightMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
                 });
             });
@@ -1664,7 +1668,7 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new TWResponseDTO
                 {
-                    Fixtures = finalResult
+                    Fixtures = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList()
                 }
             };
         }
@@ -1760,8 +1764,9 @@ namespace Platform.Sportsbook.API.Repository
                 Score = s.Sc,
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
+                SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault(),
                 Markets = GetMarkets(s.SpId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList())
-            }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+            }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             return new BaseResponseDTO<TWResponseDTO>
             {
@@ -1787,6 +1792,8 @@ namespace Platform.Sportsbook.API.Repository
                     Result = new TWResponseDTO()
                 };
             }
+
+            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId && c.SegmentId == request.SegmentId).ToList();
 
             var fixtureIds = fixtures.Select(s => Convert.ToInt64(s.FiId)).ToList();
             var marketTemplateIds = GetMainMarketTemplates(request.SportId);
@@ -1831,8 +1838,9 @@ namespace Platform.Sportsbook.API.Repository
                 Score = s.Sc,
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
+                SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault(),
                 Markets = GetMarkets(s.SpId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList())
-            }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+            }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             return new BaseResponseDTO<TWResponseDTO>
             {

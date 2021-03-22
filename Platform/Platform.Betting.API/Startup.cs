@@ -58,7 +58,7 @@ namespace Platform.Betting.API
             services.AddHttpClient();
             services.AddHttpClient("BackOffice", a =>
             {
-                a.BaseAddress = new Uri(Configuration["API:BackOffice"]);
+                a.BaseAddress = new Uri(Configuration["API:BackOfficeAPI"]);
             });
 
             services.AddDbContext<BettingContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Betting"]));

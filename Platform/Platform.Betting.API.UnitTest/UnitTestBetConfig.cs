@@ -32,7 +32,7 @@ namespace Platform.Betting.API.UnitTest
             services.AddHttpClient();
             services.AddHttpClient("BackOffice", a =>
             {
-                a.BaseAddress = new Uri(Configuration["API:BackOffice"]);
+                a.BaseAddress = new Uri(Configuration["API:BackOfficeAPI"]);
             });
 
 

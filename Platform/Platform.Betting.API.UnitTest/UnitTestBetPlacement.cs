@@ -28,7 +28,7 @@ namespace Platform.Betting.API.UnitTest
             services.AddHttpClient();
             services.AddHttpClient("BackOffice", a =>
             {
-                a.BaseAddress = new Uri(Configuration["API:BackOffice"]);
+                a.BaseAddress = new Uri(Configuration["API:BackOfficeAPI"]);
             });
 
 
@@ -194,7 +194,7 @@ namespace Platform.Betting.API.UnitTest
             request.Stake = 1000.70M;
             request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             var defaultJSON = JsonSerializer.Serialize(request);
-            var data = repo.PlaceBet(request);
+            var data = repo.PlaceBetWithValidation(request);
 
             Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Success);
         }

@@ -553,5 +553,71 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+
+
+        /// <summary>
+        /// Get list of all top fixtures per client ids that are included in the request.
+        /// </summary>
+        [HttpPost("v1/sportsbook/client/topfixtures/all")]
+        public async Task<IActionResult> GetAllClientTopFixtures([FromBody] AllClientTopFixtureRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetClientTopFixturesByClientIds(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        /// <summary>
+        /// Get the list of top fixtures of a certain client
+        /// </summary>
+        [HttpPost("v1/sportsbook/client/topfixtures")]
+        public async Task<IActionResult> GetClientTopFixtures([FromBody] ClientTopFixtureRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetClientTopFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        /// <summary>
+        /// Get list of sports along with the following: Segments, Leagues, and Fixtures. Doesn't include virtual sports and outrights. 
+        /// </summary>
+        [HttpPost("v1/sportsbook/sports/details")]
+        public async Task<IActionResult> GetSportstreeDetails([FromBody] BackofficeSportsRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetSportstreeDetails(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/sportsbook/client/topfixtures/post")]
+        public async Task<IActionResult> PostClientTopFixtures([FromBody] PostClientTopFixtureRequestDTO request)
+        {
+            var result = await _sportsbookRepository.PostClientTopFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

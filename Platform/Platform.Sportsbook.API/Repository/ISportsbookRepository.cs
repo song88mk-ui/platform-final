@@ -43,5 +43,10 @@ namespace Platform.Sportsbook.API.Repository
 
         Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(TWSearchRequestDTO request);
         Task<BaseResponseDTO<StatusCode>> ManualCancellation(BetCancellationRequestDTO request);
+
+        Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixturesByClientIds(AllClientTopFixtureRequestDTO request);
+        Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures(ClientTopFixtureRequestDTO request);
+        Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(BackofficeSportsRequestDTO request);
+        Task<BaseResponseDTO<StatusCode>> PostClientTopFixtures(PostClientTopFixtureRequestDTO request);
     }
 }

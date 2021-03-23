@@ -2993,6 +2993,206 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString()
             };
         }
+
+        public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixturesByClientIds(AllClientTopFixtureRequestDTO request)
+        {
+            var topFixtures = _sportsbookContext.ClientTopFixture
+                .Where(c => request.ClientIds.Contains(c.ClientId))
+                .OrderBy(o => o.ClientId).ThenBy(o => o.SortOrder).ToList();
+
+            var fixtureIds = topFixtures.Select(m => m.FixtureId).Distinct().ToList();
+
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<ClientTopFixtureResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new ClientTopFixtureResponseDTO()
+                };
+            }
+
+            var fixturesResult = new List<OrderedTopFixture>();
+
+            foreach (var topfixture in topFixtures)
+            {
+                var fixture = fixtures.FirstOrDefault(f => f.FiId == topfixture.FixtureId);
+
+                if (fixture != null)
+                {
+                    fixturesResult.Add(new OrderedTopFixture
+                    {
+                        ClientId = topfixture.ClientId,
+                        SportId = fixture.SpId,
+                        SportName = fixture.SpNa,
+                        SegmentId = fixture.SegId,
+                        SegmentName = fixture.SegNa,
+                        LeagueId = fixture.LeId,
+                        LeagueName = fixture.LeNa,
+                        FixtureId = fixture.FiId.ToString(),
+                        FixtureName = fixture.FiNa,
+                        SortOrder = topfixture.SortOrder                        
+                    });
+                }
+            }
+
+            return new BaseResponseDTO<ClientTopFixtureResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new ClientTopFixtureResponseDTO()
+                {
+                    TopFixtures = fixturesResult
+                }
+            };
+        }
+
+        public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures(ClientTopFixtureRequestDTO request)
+        {
+            var clientTopFixturesRequest = new AllClientTopFixtureRequestDTO()
+            {
+                ClientIds = new List<Guid>() { request.ClientId },
+                LanguageCode = request.LanguageCode
+            };
+
+            var result = await GetClientTopFixturesByClientIds(clientTopFixturesRequest);
+
+            return result;
+        }
+
+        public async Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(BackofficeSportsRequestDTO request)
+        {
+            var virtualSportIds = new List<int> { 1001, 1002, 1003, 1005, 1055, 1058 };
+
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && !virtualSportIds.Contains(c.SpId) && c.FiStDa >= request.StartDate && c.FiStDa < request.EndDate);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<BackofficeSportsResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new BackofficeSportsResponseDTO()
+                };
+            }
+
+            var sportIds = fixtures.Select(s => s.SpId).Distinct().ToList();
+
+            var leagueSortOrder = _sportsbookContext.TierLeagueOrder.Where(c => sportIds.Contains(c.SportId)).ToList();
+            var sportSortOrder = _sportsbookContext.ClientSportOrder.Where(c => c.ClientId == request.ClientId).ToList();
+
+            var fixtureResult = fixtures.Where(c => c.FiTyId == (int)FixtureType.Match)
+                .Select(s => new TempOrderedFixture
+                {
+                    SportId = s.SpId,
+                    SportName = s.SpNa,
+                    SegmentId = s.SegId,
+                    SegmentName = s.SegNa,
+                    LeagueId = s.LeId,
+                    LeagueName = s.LeNa,
+                    FixtureId = s.FiId,
+                    FixtureName = s.FiNa,
+                    StartDate = s.FiStDa,
+                    SortOrder = leagueSortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() 
+                    == 0 ? 1000 : leagueSortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                }).ToList();
+
+            var sportResult = fixtures.Select(s => new TempDistinctOrderedSport
+            {
+                SportId = s.SpId,
+                SportName = s.SpNa,
+                HasOutrights = fixtures.Any(c => c.SpId == s.SpId && c.FiTyId == (int)FixtureType.Outright),
+                SortOrder = sportSortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
+                    == 0 ? 1000 : sportSortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
+            }).Distinct().OrderBy(o => o.SortOrder).ThenBy(o => o.SportName).ToList();
+
+            var finalResult = sportResult.Select(s => new OrderedSport
+            { 
+                SportId = s.SportId,
+                SportName = s.SportName
+            }).ToList();
+
+            //foreach (var item in sportResult)
+            //{
+            //    if (finalResult.Any(c => c.SportId == item.SportId)) continue;
+
+            //    finalResult.Add(new OrderedSport
+            //    {
+            //        SportId = item.SportId,
+            //        SportName = item.SportName
+            //    });
+            //}
+
+            var final = new List<BackofficeSportDTO>();
+
+            foreach (var sport in finalResult)
+            {
+                final.Add(new BackofficeSportDTO
+                {
+                    SportId = sport.SportId,
+                    SportName = sport.SportName,
+                    Segments = fixtureResult.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new BackofficeSegmentDTO
+                    {
+                        SegmentId = s.Key,
+                        SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
+                        SortOrder = s.Select(se => se.SortOrder).FirstOrDefault(),
+                        Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new BackofficeLeagueDTO
+                        {
+                            LeagueId = l.Key,
+                            LeagueName = l.Select(le => le.LeagueName).FirstOrDefault(),
+                            SortOrder = l.Select(le => le.SortOrder).FirstOrDefault(),
+                            Fixtures = l.Select(f => new BackofficeFixtureDTO
+                            {
+                                FixtureId = f.FixtureId,
+                                FixtureName = f.FixtureName,
+                                StartDate = f.StartDate,
+                                SortOrder = f.SortOrder
+                            }).OrderBy(o => o.SortOrder).ThenBy(o => o.FixtureName).ToList()
+                        }).OrderBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ToList()
+                    }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ToList()
+                });
+            }
+
+            return new BaseResponseDTO<BackofficeSportsResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BackofficeSportsResponseDTO
+                {
+                    Sports = final
+                }
+            };
+        }
+
+        public async Task<BaseResponseDTO<StatusCode>> PostClientTopFixtures(PostClientTopFixtureRequestDTO request)
+        {
+            // delete existing records
+            var currentTopFixtures = _sportsbookContext.ClientTopFixture.Where(c => c.ClientId == request.ClientId).ToList();
+
+            _sportsbookContext.RemoveRange(currentTopFixtures);
+
+            // insert new records
+            var newTopFixtures = request.TopFixtures.Select(s => new ClientTopFixture
+            {
+                ClientId = request.ClientId,
+                FixtureId = s.FixtureId,
+                SortOrder = s.SortOrder
+            });
+
+            _sportsbookContext.AddRange(newTopFixtures);
+
+            await _sportsbookContext.SaveChangesAsync();
+
+            return new BaseResponseDTO<StatusCode>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString()
+            };
+        }
     }
 
     public static class CurrentPeriodHelper

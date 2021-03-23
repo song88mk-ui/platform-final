@@ -59,7 +59,7 @@ namespace Platform.BetStatus.Service
                     case "OnBetStatus":
                         var onBetStatus = JsonSerializer.Deserialize<OnBetStatus>(payload);
 
-                        _messageBrokerExternal.Publish(onBetStatus, "OnBetStatus", $"r.bet.onbetstatus.{onBetStatus.ClientId}", correlationId);
+                        _messageBrokerExternal.ExternalPublish(onBetStatus, "OnBetStatus", $"r.bet.onbetstatus.{onBetStatus.ClientId}", correlationId);
                         break;
                 }
             }

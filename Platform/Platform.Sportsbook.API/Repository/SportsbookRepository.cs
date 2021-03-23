@@ -578,7 +578,7 @@ namespace Platform.Sportsbook.API.Repository
                 await Task.WhenAll(tempLeagueResult, tempBettingStatus);
 
                 var leagueResult = tempLeagueResult.Result;
-                var bettingStatus = tempBettingStatus.Result;
+                var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : new BettingStatus { IsBeSo = true };
 
                 if (leagueResult.Count > 0)
                 {
@@ -648,7 +648,7 @@ namespace Platform.Sportsbook.API.Repository
                 await Task.WhenAll(tempFixtureResult, tempBettingStatus);
 
                 var fixtureResult = tempFixtureResult.Result;
-                var bettingStatus = tempBettingStatus.Result;
+                var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : new BettingStatus { IsBeSo = true };
 
                 if (fixtureResult.Count > 0)
                 {
@@ -963,7 +963,7 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
             var fixtures = tempFixtures.Result;
-            var bettingStatus = tempBettingStatus.Result;
+            var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : new BettingStatus { IsBeSo = true };
 
             if (fixtures.Count == 0)
             {
@@ -1204,7 +1204,7 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
             var fixtures = tempFixtures.Result;
-            var bettingStatus = tempBettingStatus.Result;
+            var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : new BettingStatus { IsBeSo = true };
 
             if (fixtures.Count == 0)
             {
@@ -1344,7 +1344,7 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
             var fixtures = tempFixtures.Result;
-            var bettingStatus = tempBettingStatus.Result;
+            var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : new BettingStatus { IsBeSo = true };
 
             if (fixtures.Count == 0)
             {
@@ -1514,7 +1514,7 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
             var fixtures = tempFixtures.Result;
-            var bettingStatus = tempBettingStatus.Result;
+            var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : new BettingStatus { IsBeSo = true };
 
             if (fixtures.Count == 0)
             {
@@ -1642,7 +1642,7 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
             var fixtures = tempFixtures.Result;
-            var bettingStatus = tempBettingStatus.Result;
+            var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : new BettingStatus { IsBeSo = true };
 
             if (fixtures.Count == 0)
             {
@@ -1765,7 +1765,7 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
             var fixtures = tempFixtures.Result;
-            var bettingStatus = tempBettingStatus.Result;
+            var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : new BettingStatus { IsBeSo = true };
 
             if (fixtures.Count == 0)
             {
@@ -1881,7 +1881,7 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
             var fixtures = tempFixtures.Result;
-            var bettingStatus = tempBettingStatus.Result;
+            var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : new BettingStatus { IsBeSo = true };
 
             if (fixtures.Count == 0)
             {
@@ -1965,7 +1965,7 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
             var fixtures = tempFixtures.Result;
-            var bettingStatus = tempBettingStatus.Result;
+            var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : new BettingStatus { IsBeSo = true };
 
             if (fixtures.Count == 0)
             {
@@ -2237,7 +2237,7 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(tempFixture, tempBettingStatus);
 
             var fixture = tempFixture.Result;
-            var bettingStatus = tempBettingStatus.Result;
+            var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : new BettingStatus { IsBeSo = true };
 
             if (fixture == null)
             {
@@ -2341,7 +2341,7 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(tempFixture, tempBettingStatus);
 
             var fixture = tempFixture.Result;
-            var bettingStatus = tempBettingStatus.Result;
+            var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : new BettingStatus { IsBeSo = true };
 
             if (fixture == null)
             {

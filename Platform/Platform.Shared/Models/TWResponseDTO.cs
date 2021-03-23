@@ -172,6 +172,8 @@ namespace Platform.Shared.Models
         public string Score { get; set; }
         public string CurrentPeriod { get; set; }
         public string CurrentMinute { get; set; }
+        public List<int> BetStop { get; set; }
+        public bool IsBetStopGlobal { get; set; }
         public int SortOrder { get; set; }
         public SportMarketTemplateGroup MarketTemplateGroups { get; set; }
         public List<MarketDTO> Markets { get; set; }
@@ -229,6 +231,8 @@ namespace Platform.Shared.Models
         public string Score { get; set; }
         public string CurrentPeriod { get; set; }
         public string CurrentMinute { get; set; }
+        public List<int> BetStop { get; set; }
+        public bool IsBetStopGlobal { get; set; }
         public int SortOrder { get; set; }
     }
 }

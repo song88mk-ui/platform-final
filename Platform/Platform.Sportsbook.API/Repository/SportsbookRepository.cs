@@ -570,7 +570,15 @@ namespace Platform.Sportsbook.API.Repository
             if (leagues.Count > 0)
             {
                 var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && leagues.Contains(c.LeId));
-                var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
+                var tempLeagueResult = fixtureCollection.Find(leagueFilter).ToListAsync();
+
+                var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+                var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+                await Task.WhenAll(tempLeagueResult, tempBettingStatus);
+
+                var leagueResult = tempLeagueResult.Result;
+                var bettingStatus = tempBettingStatus.Result;
 
                 if (leagueResult.Count > 0)
                 {
@@ -619,6 +627,8 @@ namespace Platform.Sportsbook.API.Repository
                             Score = item.Sc,
                             CurrentPeriod = CurrentPeriodHelper.ToShortName(item.CuPe),
                             CurrentMinute = item.CuMi.ToString(),
+                            BetStop = item.IsSu ? new List<int> { 1 } : new List<int> { },
+                            IsBetStopGlobal = bettingStatus.IsBeSo,
                             Markets = GetMarkets(item.SpId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList())
                         });
                     }
@@ -630,7 +640,15 @@ namespace Platform.Sportsbook.API.Repository
             if (fixtures.Count > 0)
             {
                 var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && fixtures.Contains(c.FiId));
-                var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+                var tempFixtureResult = fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+                var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+                var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+                await Task.WhenAll(tempFixtureResult, tempBettingStatus);
+
+                var fixtureResult = tempFixtureResult.Result;
+                var bettingStatus = tempBettingStatus.Result;
 
                 if (fixtureResult.Count > 0)
                 {
@@ -679,6 +697,8 @@ namespace Platform.Sportsbook.API.Repository
                             Score = item.Sc,
                             CurrentPeriod = CurrentPeriodHelper.ToShortName(item.CuPe),
                             CurrentMinute = item.CuMi.ToString(),
+                            BetStop = item.IsSu ? new List<int> { 1 } : new List<int> { },
+                            IsBetStopGlobal = bettingStatus.IsBeSo,
                             Markets = GetMarkets(item.SpId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList())
                         });
                     }
@@ -935,7 +955,15 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopFixturesTW(TWRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            await Task.WhenAll(tempFixtures, tempBettingStatus);
+
+            var fixtures = tempFixtures.Result;
+            var bettingStatus = tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
             {
@@ -973,6 +1001,8 @@ namespace Platform.Sportsbook.API.Repository
                 Score = s.Sc,
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
+                BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -1058,6 +1088,8 @@ namespace Platform.Sportsbook.API.Repository
                     Score = item.Score,
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
+                    BetStop = item.BetStop,
+                    IsBetStopGlobal = item.IsBetStopGlobal,
                     Markets = currentMarkets
                 });
 
@@ -1164,7 +1196,15 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixtures(TWLiveFixtureRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Live && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            await Task.WhenAll(tempFixtures, tempBettingStatus);
+
+            var fixtures = tempFixtures.Result;
+            var bettingStatus = tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
             {
@@ -1202,6 +1242,8 @@ namespace Platform.Sportsbook.API.Repository
                 Score = s.Sc,
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
+                BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -1262,6 +1304,8 @@ namespace Platform.Sportsbook.API.Repository
                     Score = item.Score,
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
+                    BetStop = item.BetStop,
+                    IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
                     Markets = GetMarkets(item.SportId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
                 });
@@ -1292,7 +1336,15 @@ namespace Platform.Sportsbook.API.Repository
             else
                 fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
 
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            await Task.WhenAll(tempFixtures, tempBettingStatus);
+
+            var fixtures = tempFixtures.Result;
+            var bettingStatus = tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
             {
@@ -1332,7 +1384,9 @@ namespace Platform.Sportsbook.API.Repository
                     StatisticsURL = string.IsNullOrEmpty(s.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
                     Score = s.Sc,
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
-                    CurrentMinute = s.CuMi.ToString()
+                    CurrentMinute = s.CuMi.ToString(),
+                    BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                    IsBetStopGlobal = bettingStatus.IsBeSo
                 }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             }
             else
@@ -1363,6 +1417,8 @@ namespace Platform.Sportsbook.API.Repository
                     Score = s.Sc,
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                     CurrentMinute = s.CuMi.ToString(),
+                    BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                    IsBetStopGlobal = bettingStatus.IsBeSo,
                     SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                     == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -1424,6 +1480,8 @@ namespace Platform.Sportsbook.API.Repository
                     Score = item.Score,
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
+                    BetStop = item.BetStop,
+                    IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
                     Markets = GetMarkets(item.SportId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
                 });
@@ -1448,7 +1506,15 @@ namespace Platform.Sportsbook.API.Repository
         {
             var dateTimeRange = GetDateTimeRange(request.DateUTC, request.MinuteUTCOffset);
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            await Task.WhenAll(tempFixtures, tempBettingStatus);
+
+            var fixtures = tempFixtures.Result;
+            var bettingStatus = tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
             {
@@ -1486,6 +1552,8 @@ namespace Platform.Sportsbook.API.Repository
                 Score = s.Sc,
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
+                BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -1546,6 +1614,8 @@ namespace Platform.Sportsbook.API.Repository
                     Score = item.Score,
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
+                    BetStop = item.BetStop,
+                    IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
                     Markets = GetMarkets(item.SportId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
                 });
@@ -1564,7 +1634,15 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWResponseDTO>> GetOutrightFixtures(TWOutrightFixtureRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Outright && c.SpId == request.SportId);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            await Task.WhenAll(tempFixtures, tempBettingStatus);
+
+            var fixtures = tempFixtures.Result;
+            var bettingStatus = tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
             {
@@ -1602,6 +1680,8 @@ namespace Platform.Sportsbook.API.Repository
                 Score = s.Sc,
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
+                BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -1657,6 +1737,8 @@ namespace Platform.Sportsbook.API.Repository
                     Score = item.Score,
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
+                    BetStop = item.BetStop,
+                    IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
                     Markets = GetOutrightMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList())
                 });
@@ -1675,7 +1757,15 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopLeagueFixtures(TWTopLeagueFixtureRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            await Task.WhenAll(tempFixtures, tempBettingStatus);
+
+            var fixtures = tempFixtures.Result;
+            var bettingStatus = tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
             {
@@ -1764,6 +1854,8 @@ namespace Platform.Sportsbook.API.Repository
                 Score = s.Sc,
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
+                BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault(),
                 Markets = GetMarkets(s.SpId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList())
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -1781,7 +1873,15 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWSegmentFixtureRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.SegId == request.SegmentId);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            await Task.WhenAll(tempFixtures, tempBettingStatus);
+
+            var fixtures = tempFixtures.Result;
+            var bettingStatus = tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
             {
@@ -1838,6 +1938,8 @@ namespace Platform.Sportsbook.API.Repository
                 Score = s.Sc,
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
+                BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault(),
                 Markets = GetMarkets(s.SpId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList())
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -1855,7 +1957,15 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWLeagueFixtureRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.SegId == request.SegmentId && c.LeId == request.LeagueId);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            await Task.WhenAll(tempFixtures, tempBettingStatus);
+
+            var fixtures = tempFixtures.Result;
+            var bettingStatus = tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
             {
@@ -1910,6 +2020,8 @@ namespace Platform.Sportsbook.API.Repository
                 Score = s.Sc,
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
+                BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStopGlobal = bettingStatus.IsBeSo,
                 Markets = GetMarkets(s.SpId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList())
             }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
@@ -2117,7 +2229,15 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(TWFixtureDetailsRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == Convert.ToInt64(request.FixtureId));
-            var fixture = await fixtureCollection.Find(fixtureFilter).FirstOrDefaultAsync();
+            var tempFixture = fixtureCollection.Find(fixtureFilter).FirstOrDefaultAsync();
+
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            await Task.WhenAll(tempFixture, tempBettingStatus);
+
+            var fixture = tempFixture.Result;
+            var bettingStatus = tempBettingStatus.Result;
 
             if (fixture == null)
             {
@@ -2193,6 +2313,8 @@ namespace Platform.Sportsbook.API.Repository
                     Score = fixture.Sc,
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(fixture.CuPe),
                     CurrentMinute = fixture.CuMi.ToString(),
+                    BetStop = fixture.IsSu ? new List<int> { 1 } : new List<int> { },
+                    IsBetStopGlobal = bettingStatus.IsBeSo,
                     MarketTemplateGroups = marketTemplateGroups,
                     Markets = GetMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList())
                 }
@@ -2211,7 +2333,15 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtureMarketSelectionDetails(TWFixtureMarketSelectionDetailsRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == Convert.ToInt64(request.FixtureId));
-            var fixture = await fixtureCollection.Find(fixtureFilter).FirstOrDefaultAsync();
+            var tempFixture = fixtureCollection.Find(fixtureFilter).FirstOrDefaultAsync();
+
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            await Task.WhenAll(tempFixture, tempBettingStatus);
+
+            var fixture = tempFixture.Result;
+            var bettingStatus = tempBettingStatus.Result;
 
             if (fixture == null)
             {
@@ -2263,6 +2393,8 @@ namespace Platform.Sportsbook.API.Repository
                     Score = fixture.Sc,
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(fixture.CuPe),
                     CurrentMinute = fixture.CuMi.ToString(),
+                    BetStop = fixture.IsSu ? new List<int> { 1 } : new List<int> { },
+                    IsBetStopGlobal = bettingStatus.IsBeSo,
                     Markets = GetMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList())
                 }
             };

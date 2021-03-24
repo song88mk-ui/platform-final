@@ -92,26 +92,4 @@ namespace Platform.Shared.Models
             return (SportId + SportName + HasOutrights + SortOrder).GetHashCode();
         }
     }
-
-    //public class TempOrderedSportEquals : IEqualityComparer<TempOrderedSport>
-    //{
-    //    public bool Equals(TempOrderedSport left, TempOrderedSport right)
-    //    {
-    //        if ((object)left == null && (object)right == null)
-    //        {
-    //            return true;
-    //        }
-    //        if ((object)left == null || (object)right == null)
-    //        {
-    //            return false;
-    //        }
-
-    //        return left.SportId == right.SportId && left.SportName == right.SportName && left.HasOutrights == right.HasOutrights && left.SortOrder == right.SortOrder;
-    //    }
-
-    //    public int GetHashCode(TempOrderedSport author)
-    //    {
-    //        return (author.SportId + author.SportName + author.HasOutrights + author.SortOrder).GetHashCode();
-    //    }
-    //}
 }

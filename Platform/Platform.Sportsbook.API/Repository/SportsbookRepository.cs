@@ -3116,17 +3116,6 @@ namespace Platform.Sportsbook.API.Repository
                 SportName = s.SportName
             }).ToList();
 
-            //foreach (var item in sportResult)
-            //{
-            //    if (finalResult.Any(c => c.SportId == item.SportId)) continue;
-
-            //    finalResult.Add(new OrderedSport
-            //    {
-            //        SportId = item.SportId,
-            //        SportName = item.SportName
-            //    });
-            //}
-
             var final = new List<BackofficeSportDTO>();
 
             foreach (var sport in finalResult)

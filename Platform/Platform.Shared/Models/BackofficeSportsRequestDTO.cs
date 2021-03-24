@@ -1,6 +1,5 @@
 ﻿using Platform.Shared.Enums;
 using System;
-using System.Collections.Generic;
 
 namespace Platform.Shared.Models
 {

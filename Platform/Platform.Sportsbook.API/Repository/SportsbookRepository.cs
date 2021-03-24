@@ -184,17 +184,13 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
-
             var result = fixtures.Select(s => new TempTopLeague
             {
                 SegmentId = s.SegId,
                 SegmentName = s.SegNa,
                 LeagueId = s.LeId,
-                LeagueName = s.LeNa,
-                SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-            }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ToList();
+                LeagueName = s.LeNa
+            }).OrderBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ToList();
 
             var finalResult = new List<TopLeague>();
 

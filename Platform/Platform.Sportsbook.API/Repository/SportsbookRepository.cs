@@ -1011,7 +1011,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var limit = 10;
 
-            if (request.ClientId == Guid.Parse("5093617A-9367-EB11-89FB-00224815B68B"))
+            if (request.ClientId == Guid.Parse("5093617A-9367-EB11-89FB-00224815B68B") || request.ClientId == Guid.Parse("BFED6DA4-D1B5-4437-665D-08D8EE99AC1C"))
             {
                 initialResult.AddRange(result.Where(c => c.SportId == 21).ToList());
                 limit = initialResult.Count + 10;

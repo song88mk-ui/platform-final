@@ -3170,6 +3170,63 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString()
             };
         }
+
+        public async Task<BaseResponseDTO<ClientIdsTopLeaguesResponseDTO>> GetClientIdsTopLeagues(ClientIdsTopLeaguesRequestDTO request)
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<ClientIdsTopLeaguesResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new ClientIdsTopLeaguesResponseDTO()
+                };
+            }
+
+            var finalResult = new List<ClientTopLeague>();
+
+            var sortOrder = _sportsbookContext.ClientLeagueOrder.ToList().Where(c => c.SportId == request.SportId).ToList();
+
+            var result = fixtures.Select(s => new TempTopLeague
+            {
+                SegmentId = s.SegId,
+                SegmentName = s.SegNa,
+                LeagueId = s.LeId,
+                LeagueName = s.LeNa,
+                SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+            }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ToList();
+
+            
+            foreach (var item in result)
+            {
+                if (finalResult.Any(c => c.SegmentId == item.SegmentId && c.LeagueId == item.LeagueId)) continue;
+                if (finalResult.Count == 15) break;
+
+                finalResult.Add(new ClientTopLeague
+                {
+                    clientId = request.ClientIds.SingleOrDefault(),
+                    LeagueId = item.LeagueId,
+                    LeagueName = item.LeagueName,
+                    SegmentId = item.SegmentId,
+                    SegmentName = item.SegmentName,
+                    LiveCount = fixtures.Where(c => c.SegId == item.SegmentId && c.LeId == item.LeagueId && c.FiStId == (int)FixtureStatus.Live).Count()
+                });
+            }
+
+            return new BaseResponseDTO<ClientIdsTopLeaguesResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new ClientIdsTopLeaguesResponseDTO
+                {
+                    ClientTopLeagues = finalResult
+                }
+            };
+        }
     }
 
     public static class CurrentPeriodHelper

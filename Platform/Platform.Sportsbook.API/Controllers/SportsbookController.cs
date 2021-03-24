@@ -605,5 +605,22 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        /// <summary>
+        /// Get top leagues of a client ids.
+        /// </summary>
+        [HttpPost("v1/sportsbook/client/topleagues")]
+        public async Task<IActionResult> GetClientTopLeagues([FromBody] ClientIdsTopLeaguesRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetTopLeagues(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

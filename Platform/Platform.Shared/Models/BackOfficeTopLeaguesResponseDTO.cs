@@ -6,8 +6,14 @@ namespace Platform.Shared.Models
     {
         public BackOfficeTopLeaguesResponseDTO()
         {
-            ClientTopLeagues = new List<ClientTopLeague>();
+            ClientTopLeagues = new List<BackOfficeClientTopLeague>();
         }
-        public List<ClientTopLeague> ClientTopLeagues { get; set; }
+        public List<BackOfficeClientTopLeague> ClientTopLeagues { get; set; }
+    }
+
+    public class BackOfficeClientTopLeague
+    {
+        public int ClientId { get; set; }
+        public List<SportLeague> TopLeagues { get; set; }
     }
 }

@@ -629,7 +629,7 @@ namespace Platform.Sportsbook.API.Controllers
         [HttpPost("v1/sportsbook/client/topleagues/post")]
         public async Task<IActionResult> AddorUpdateTopLeagues([FromBody] ClientTopLeague request)
         {
-            var result = await _sportsbookRepository.PostClientTopFixtures(request);
+            var result = await _sportsbookRepository.AddOrUpdateTopLeagues(request);
 
             switch (result.StatusCode)
             {

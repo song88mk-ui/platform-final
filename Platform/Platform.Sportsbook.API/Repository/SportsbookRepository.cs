@@ -3184,23 +3184,28 @@ namespace Platform.Sportsbook.API.Repository
             {
                 var clientTopLeague = new ClientTopLeague()
                 {
-                    ClientId = clientId
+                    ClientId = clientId,
+                    TopLeagues = new List<SportLeague>()
                 };
 
-                var sportLeague = await _sportsbookContext.ClientLeagueOrder
+                var sportLeague = _sportsbookContext.ClientLeagueOrder
                     .Where(c => c.ClientId == clientId && c.SportId == request.SportId)
-                    .OrderBy(c => c.SortOrder)
-                    .Select(c => new SportLeague()
+                    .OrderBy(c => c.SortOrder).ToList();
+
+                foreach (var item in sportLeague)
+                {
+                    var sportLeagueItem = new SportLeague()
                     {
-                        LeagueId = c.LeagueId,
-                        LeagueName = c.LeagueName,
-                        SegmentId = c.SegmentId,
-                        SegmentName = c.SegmentName,
-                        SportId = c.SportId,
-                        SportName = c.SportName,
-                        Status = fixtures.Where(f => f.SegId == c.SegmentId && f.LeId == c.LeagueId && f.SpId == c.SportId).Count() > 0 ? true : false
-                    }).ToListAsync();
-                clientTopLeague.TopLeagues = sportLeague;
+                        LeagueId = item.LeagueId,
+                        LeagueName = item.LeagueName,
+                        SegmentId = item.SegmentId,
+                        SegmentName = item.SegmentName,
+                        SportId = item.SportId,
+                        SportName = item.SportName,
+                        Status = fixtures.Where(f => f.SegId == item.SegmentId && f.LeId == item.LeagueId && f.SpId == item.SportId).Count() > 0 ? true : false
+                    };
+                    clientTopLeague.TopLeagues.Add(sportLeagueItem);
+                }
 
                 finalResult.Add(clientTopLeague);
             }

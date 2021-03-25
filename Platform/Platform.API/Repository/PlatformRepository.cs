@@ -1523,21 +1523,34 @@ namespace Platform.API.Repository
             };
 
             var clientTopLeaguesResponse = await _sportsbookRepository.GetClientTopLeagues(sportsbookRequest);
-            var backOfficeResponse = new BackOfficeTopLeaguesResponseDTO()
+            if(clientTopLeaguesResponse.StatusCode == StatusCode.Success)
             {
-                ClientTopLeagues = clientTopLeaguesResponse.Result.ClientTopLeagues.Select(c => new BackOfficeClientTopLeague()
+                var backOfficeResponse = new BackOfficeTopLeaguesResponseDTO()
                 {
-                    ClientId = clientResult.Where(o => o.ClientId == c.ClientId).FirstOrDefault().ClientIdRef,
-                    TopLeagues = c.TopLeagues
-                }).ToList()
-            };
+                    ClientTopLeagues = clientTopLeaguesResponse.Result.ClientTopLeagues.Select(c => new BackOfficeClientTopLeague()
+                    {
+                        ClientId = clientResult.Where(o => o.ClientId == c.ClientId).FirstOrDefault().ClientIdRef,
+                        TopLeagues = c.TopLeagues
+                    }).ToList()
+                };
 
-            return new BaseResponseDTO<BackOfficeTopLeaguesResponseDTO>
+                return new BaseResponseDTO<BackOfficeTopLeaguesResponseDTO>
+                {
+                    StatusCode = clientTopLeaguesResponse.StatusCode,
+                    Message = clientTopLeaguesResponse.Message,
+                    Result = backOfficeResponse
+                };
+            }
+            else
             {
-                StatusCode = clientTopLeaguesResponse.StatusCode,
-                Message = clientTopLeaguesResponse.Message,
-                Result = backOfficeResponse
-            };
+                return new BaseResponseDTO<BackOfficeTopLeaguesResponseDTO>
+                {
+                    StatusCode = clientTopLeaguesResponse.StatusCode,
+                    Message = clientTopLeaguesResponse.Message
+                };
+
+            }
+
         }
 
         private DateTime GetFirstDayOfNextMonth()

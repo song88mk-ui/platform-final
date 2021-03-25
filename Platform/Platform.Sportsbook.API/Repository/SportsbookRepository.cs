@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
+using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Sportsbook;
 using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Data.Sportsbook.SQLEntities;
@@ -13,6 +14,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace Platform.Sportsbook.API.Repository
 {
@@ -3171,60 +3173,82 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
-        public async Task<BaseResponseDTO<ClientIdsTopLeaguesResponseDTO>> GetClientIdsTopLeagues(ClientIdsTopLeaguesRequestDTO request)
+        public async Task<BaseResponseDTO<ClientTopLeaguesResponseDTO>> GetClientIdsTopLeagues(ClientTopLeaguesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
-            if (fixtures.Count == 0)
-            {
-                return new BaseResponseDTO<ClientIdsTopLeaguesResponseDTO>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new ClientIdsTopLeaguesResponseDTO()
-                };
-            }
-
             var finalResult = new List<ClientTopLeague>();
 
-            var sortOrder = _sportsbookContext.ClientLeagueOrder.ToList().Where(c => c.SportId == request.SportId).ToList();
-
-            var result = fixtures.Select(s => new TempTopLeague
+            foreach(var clientId in request.ClientIds)
             {
-                SegmentId = s.SegId,
-                SegmentName = s.SegNa,
-                LeagueId = s.LeId,
-                LeagueName = s.LeNa,
-                SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-            }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ToList();
-
-            
-            foreach (var item in result)
-            {
-                if (finalResult.Any(c => c.SegmentId == item.SegmentId && c.LeagueId == item.LeagueId)) continue;
-                if (finalResult.Count == 15) break;
-
-                finalResult.Add(new ClientTopLeague
+                var clientTopLeague = new ClientTopLeague()
                 {
-                    clientId = request.ClientIds.SingleOrDefault(),
-                    LeagueId = item.LeagueId,
-                    LeagueName = item.LeagueName,
-                    SegmentId = item.SegmentId,
-                    SegmentName = item.SegmentName,
-                    LiveCount = fixtures.Where(c => c.SegId == item.SegmentId && c.LeId == item.LeagueId && c.FiStId == (int)FixtureStatus.Live).Count()
-                });
+                    ClientId = clientId
+                };
+
+                var sportLeague = await _sportsbookContext.ClientLeagueOrder
+                    .Where(c => c.ClientId == clientId && c.SportId == request.SportId)
+                    .OrderBy(c => c.SortOrder)
+                    .Select(c => new SportLeague()
+                        {
+                            LeagueId = c.LeagueId,
+                            LeagueName = c.LeagueName,
+                            SegmentId = c.SegmentId,
+                            SegmentName = c.SegmentName,
+                            SportId = c.SportId,
+                            SportName = c.SportName,
+                            Status = fixtures.Where(f => f.SegId == c.SegmentId && f.LeId == c.LeagueId && f.SpId == c.SportId).Count() > 0 ? true : false
+                    }).ToListAsync();
+                clientTopLeague.TopLeagues = sportLeague;
+
+                finalResult.Add(clientTopLeague);
             }
 
-            return new BaseResponseDTO<ClientIdsTopLeaguesResponseDTO>
+            return new BaseResponseDTO<ClientTopLeaguesResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new ClientIdsTopLeaguesResponseDTO
+                Result = new ClientTopLeaguesResponseDTO
                 {
                     ClientTopLeagues = finalResult
                 }
+            };
+        }
+
+        public async Task<BaseResponseDTO<StatusCode>> AddOrUpdateTopLeagues(ClientTopLeague request)
+        {
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new System.Transactions.TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
+            {
+                // delete existing records
+                var currentTopLeagues = _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == request.ClientId).ToList();
+
+                _sportsbookContext.RemoveRange(currentTopLeagues);
+
+                // insert new records
+                var newTopLeagues = request.TopLeagues.Select(s => new ClientLeagueOrder
+                {
+                    ClientId = request.ClientId,
+                    LeagueId = s.LeagueId,
+                    LeagueName = s.LeagueName,
+                    SegmentId = s.SegmentId,
+                    SegmentName = s.SegmentName,
+                    SportId = s.SportId,
+                    SportName = s.SportName,
+                    SortOrder = s.SortOrder
+                });
+
+                _sportsbookContext.AddRange(newTopLeagues);
+
+                await _sportsbookContext.SaveChangesAsync();
+
+                scope.Complete();
+            }
+
+            return new BaseResponseDTO<StatusCode>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString()
             };
         }
     }

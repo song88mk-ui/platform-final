@@ -47,5 +47,8 @@ namespace Platform.Sportsbook.API.Repository
         Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures(ClientTopFixtureRequestDTO request);
         Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(BackofficeSportsRequestDTO request);
         Task<BaseResponseDTO<StatusCode>> PostClientTopFixtures(PostClientTopFixtureRequestDTO request);
+
+        Task<BaseResponseDTO<ClientTopLeaguesResponseDTO>> GetClientIdsTopLeagues(ClientTopLeaguesRequestDTO request);
+        Task<BaseResponseDTO<StatusCode>> AddOrUpdateTopLeagues(ClientTopLeague request);
     }
 }

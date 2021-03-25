@@ -10,11 +10,4 @@ namespace Platform.Shared.Models
         }
         public List<ClientTopLeague> ClientTopLeagues { get; set; }
     }
-
-    public class ClientTopLeague
-    {
-        public int clientId { get; set; }
-        public int SportId { get; set; }
-        public List<TempTopLeague> TopLeagues { get; set; }
-    }
 }

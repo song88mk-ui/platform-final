@@ -1436,6 +1436,64 @@ namespace Platform.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixturesByClientIds(AllClientTopFixtureRequest request)
+        {
+            var clientIds = _platformContext.Client.Where(c => request.ClientIds.Contains(c.ClientIdRef)).Select(s => s.ClientId).ToList();
+
+            var sportsbookRequest = new AllClientTopFixtureRequestDTO()
+            {
+                ClientIds = clientIds,
+                LanguageCode = LanguageCode.EN
+            };
+
+            return await _sportsbookRepository.GetClientTopFixturesByClientIds(sportsbookRequest);
+        }
+
+        public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures(int clientIdRef)
+        {
+            var client = _platformContext.Client.FirstOrDefault(c => c.ClientIdRef == clientIdRef);
+
+            var sportsbookRequest = new ClientTopFixtureRequestDTO()
+            {
+                ClientId = client.ClientId,
+                LanguageCode = LanguageCode.EN
+            };
+
+            return await _sportsbookRepository.GetClientTopFixtures(sportsbookRequest);
+        }
+
+        public async Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(SportsRequest request)
+        {
+            var client = _platformContext.Client.FirstOrDefault(c => c.ClientIdRef == request.ClientId);
+
+            var sportsbookRequest = new BackofficeSportsRequestDTO()
+            {
+                ClientId = client.ClientId,
+                LanguageCode = LanguageCode.EN,
+                StartDate = request.StartDate,
+                EndDate = request.EndDate
+            };
+
+            return await _sportsbookRepository.GetSportstreeDetails(sportsbookRequest);
+        }
+
+        public async Task<BaseResponseDTO<StatusCode>> PostClientTopFixtures(PostClientTopFixtureRequest request)
+        {
+            var client = _platformContext.Client.FirstOrDefault(c => c.ClientIdRef == request.ClientId);
+
+            var sportsbookRequest = new PostClientTopFixtureRequestDTO()
+            {
+                ClientId = client.ClientId,
+                TopFixtures = request.TopFixtures.Select(s => new Shared.Models.ClientTopFixtureSetup
+                { 
+                    FixtureId = s.FixtureId,
+                    SortOrder = s.SortOrder
+                }).ToList()
+            };
+
+            return await _sportsbookRepository.PostClientTopFixtures(sportsbookRequest);
+        }
+
         private DateTime GetFirstDayOfNextMonth()
         {
             DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
@@ -1511,6 +1569,5 @@ namespace Platform.API.Repository
 
             return true;
         }
-
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Platform.API.Models;
+using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System.Threading.Tasks;
 
@@ -35,5 +36,9 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<TWResponseDTO>> GetSelectionDetails(string apiKey, string clientId, FixtureMarketSelectionDetailsRequest request);
         Task<BaseResponseDTO<TWResponseDTO>> GetOutrightFixtures(string apiKey, string clientId, OutrightFixtureRequest request);
         Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(string apiKey, string clientId, SearchResultRequest request);
+        Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixturesByClientIds(AllClientTopFixtureRequest request);
+        Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures(int clientIdRef);
+        Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(SportsRequest request);
+        Task<BaseResponseDTO<StatusCode>> PostClientTopFixtures(PostClientTopFixtureRequest request);
     }
 }

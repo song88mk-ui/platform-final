@@ -3256,6 +3256,7 @@ namespace Platform.Sportsbook.API.Repository
                         SegmentName = item.SegmentName,
                         SportId = item.SportId,
                         SportName = item.SportName,
+                        SortOrder = item.SortOrder,
                         Status = fixtures.Where(f => f.SegId == item.SegmentId && f.LeId == item.LeagueId && f.SpId == item.SportId).Count() > 0 ? true : false
                     };
                     clientTopLeague.TopLeagues.Add(sportLeagueItem);

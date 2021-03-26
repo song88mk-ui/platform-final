@@ -40,5 +40,8 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures(string clientRefIds);
         Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(int clientRefId);
         Task<BaseResponseDTO<StatusCode>> PostClientTopFixtures(ClientTopFixtureRequest request);
+        Task<BaseResponseDTO<StatusCode>> AddOrUpdateTopLeagues(BackOfficeClientTopLeague request);
+        Task<BaseResponseDTO<BackOfficeTopLeaguesResponseDTO>> GetClientTopLeagues(BackOfficeTopLeaguesRequestDTO request);
+        Task<BaseResponseDTO<SportsLookupResponseDTO>> GetSportsLookup(BackofficeClientSportsRequestDTO request);
     }
 }

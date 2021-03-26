@@ -13,7 +13,7 @@ namespace Platform.Shared.Models
 
     public class BackOfficeClientTopLeague
     {
-        public int ClientId { get; set; }
+        public int ClientIdRef { get; set; }
         public List<SportLeague> TopLeagues { get; set; }
     }
 }

@@ -2457,25 +2457,79 @@ namespace Platform.Sportsbook.API.Repository
         }
         private List<MarketDTO> GetOutrightMarkets(List<MarketFilter> markets, List<SelectionFilter> selections)
         {
-            return markets.Select(m => new MarketDTO
+            var result = new List<MarketDTO>();
+
+            foreach (var market in markets.OrderBy(o => o.MaTeId).ThenBy(o => o.MaNa).ToList())
             {
-                MarketTemplateId = m.MaTeId,
-                MarketId = m.MaId.ToString(),
-                MarketName = m.MaNa,
-                Line = m.Li,
-                IsCashout = false,
-                MarketStatusId = m.MaStId,
-                MarketStatusName = m.MaStNa,
-                Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+                var selectionsToAdd = selections.Where(c => c.MaId == market.MaId).ToList();
+
+                if (selectionsToAdd.Count > 3)
                 {
-                    SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
-                    SelectionId = s.SeId.ToString(),
-                    SelectionName = s.SeNa,
-                    DecimalOdds = s.Od.ToString(),
-                    IsActive = s.IsAc,
-                    CorrelationId = s.CoId,
-                }).OrderBy(o => o.SelectionTemplateId).ToList()
-            }).OrderBy(o => o.MarketTemplateId).ThenBy(o => o.MarketName).ToList();
+                    result.Add(new MarketDTO
+                    {
+                        MarketTemplateId = market.MaTeId,
+                        MarketId = market.MaId.ToString(),
+                        MarketName = market.MaNa,
+                        Line = market.Li,
+                        IsCashout = false,
+                        MarketStatusId = market.MaStId,
+                        MarketStatusName = market.MaStNa,
+                        Selections = selectionsToAdd.Select(s => new SelectionDTO
+                        {
+                            SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
+                            SelectionId = s.SeId.ToString(),
+                            SelectionName = s.SeNa,
+                            DecimalOdds = s.Od.ToString(),
+                            IsActive = s.IsAc,
+                            CorrelationId = s.CoId,
+                        }).OrderBy(o => o.DecimalOdds).ToList()
+                    });
+                }
+                else
+                {
+                    result.Add(new MarketDTO
+                    {
+                        MarketTemplateId = market.MaTeId,
+                        MarketId = market.MaId.ToString(),
+                        MarketName = market.MaNa,
+                        Line = market.Li,
+                        IsCashout = false,
+                        MarketStatusId = market.MaStId,
+                        MarketStatusName = market.MaStNa,
+                        Selections = selectionsToAdd.Select(s => new SelectionDTO
+                        {
+                            SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
+                            SelectionId = s.SeId.ToString(),
+                            SelectionName = s.SeNa,
+                            DecimalOdds = s.Od.ToString(),
+                            IsActive = s.IsAc,
+                            CorrelationId = s.CoId,
+                        }).OrderBy(o => o.SelectionTemplateId).ToList()
+                    });
+                }
+            }
+
+            return result;
+
+            //return markets.Select(m => new MarketDTO
+            //{
+            //    MarketTemplateId = m.MaTeId,
+            //    MarketId = m.MaId.ToString(),
+            //    MarketName = m.MaNa,
+            //    Line = m.Li,
+            //    IsCashout = false,
+            //    MarketStatusId = m.MaStId,
+            //    MarketStatusName = m.MaStNa,
+            //    Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+            //    {
+            //        SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
+            //        SelectionId = s.SeId.ToString(),
+            //        SelectionName = s.SeNa,
+            //        DecimalOdds = s.Od.ToString(),
+            //        IsActive = s.IsAc,
+            //        CorrelationId = s.CoId,
+            //    }).OrderBy(o => o.SelectionTemplateId).ToList()
+            //}).OrderBy(o => o.MarketTemplateId).ThenBy(o => o.MarketName).ToList();
         }
         private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus> result)
         {

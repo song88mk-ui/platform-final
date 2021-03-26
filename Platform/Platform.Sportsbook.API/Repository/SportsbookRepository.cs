@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Sportsbook;
@@ -24,15 +25,17 @@ namespace Platform.Sportsbook.API.Repository
         private readonly IMemCache _memCache;
         private readonly IMessageBroker _messageBroker;
         private readonly SportsbookContext _sportsbookContext;
+        private readonly IConfiguration _configuration;
         private IMongoCollection<Fixture> fixtureCollection;
         private IMongoCollection<Market> marketCollection;
         private IMongoCollection<Selection> selectionCollection;
         private IMongoCollection<BettingStatus> bettingStatusCollection;
         private readonly HttpClient _httpClient;
 
-        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMessageBroker messageBroker, IMemCache memCache)
+        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMessageBroker messageBroker, IMemCache memCache, IConfiguration configuration)
         {
-            var client = new MongoClient("mongodb+srv://lino:fcisong88@production.n6svy.mongodb.net/sportsbook?retryWrites=true&w=0");
+            _configuration = configuration;
+            var client = new MongoClient(_configuration["Custom:MongoDB-Sportsbook"]);
             _db = client.GetDatabase("Sportsbook").WithReadPreference(new ReadPreference(ReadPreferenceMode.SecondaryPreferred));
 
             fixtureCollection = _db.GetCollection<Fixture>("Fixture");
@@ -44,6 +47,7 @@ namespace Platform.Sportsbook.API.Repository
             _httpClient = httpClient;
             _messageBroker = messageBroker;
             _memCache = memCache;
+
             _messageBroker.Connect();
             _httpClient.BaseAddress = new Uri("https://av-api.betradar.com");
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer C9SdxJm170K61OY152");

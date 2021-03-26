@@ -35,7 +35,7 @@ namespace Platform.Sportsbook.API.Repository
         public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMessageBroker messageBroker, IMemCache memCache, IConfiguration configuration)
         {
             _configuration = configuration;
-            var client = new MongoClient(_configuration["Custom:MongoDB-Sportsbook"]);
+            var client = new MongoClient(_configuration["ConnectionStrings:MongoDB-Sportsbook"]);
             _db = client.GetDatabase("Sportsbook").WithReadPreference(new ReadPreference(ReadPreferenceMode.SecondaryPreferred));
 
             fixtureCollection = _db.GetCollection<Fixture>("Fixture");

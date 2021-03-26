@@ -1436,48 +1436,35 @@ namespace Platform.API.Repository
             };
         }
 
-        public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixturesByClientIds(AllClientTopFixtureRequest request)
+        public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures(string strClientRefIds)
         {
-            var clientIds = _platformContext.Client.Where(c => request.ClientIds.Contains(c.ClientIdRef)).Select(s => s.ClientId).ToList();
+            var clientRefIds = strClientRefIds.Split(',').ToList().ConvertAll(int.Parse);
 
-            var sportsbookRequest = new AllClientTopFixtureRequestDTO()
-            {
-                ClientIds = clientIds,
-                LanguageCode = LanguageCode.EN
-            };
-
-            return await _sportsbookRepository.GetClientTopFixturesByClientIds(sportsbookRequest);
-        }
-
-        public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures(int clientIdRef)
-        {
-            var client = _platformContext.Client.FirstOrDefault(c => c.ClientIdRef == clientIdRef);
+            var clientIds = _platformContext.Client.Where(c => clientRefIds.Contains(c.ClientIdRef)).Select(s => s.ClientId).ToList();
 
             var sportsbookRequest = new ClientTopFixtureRequestDTO()
             {
-                ClientId = client.ClientId,
+                ClientIds = clientIds,
                 LanguageCode = LanguageCode.EN
             };
 
             return await _sportsbookRepository.GetClientTopFixtures(sportsbookRequest);
         }
 
-        public async Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(SportsRequest request)
+        public async Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(int clientRefId)
         {
-            var client = _platformContext.Client.FirstOrDefault(c => c.ClientIdRef == request.ClientId);
+            var client = _platformContext.Client.FirstOrDefault(c => c.ClientIdRef == clientRefId);
 
             var sportsbookRequest = new BackofficeSportsRequestDTO()
             {
                 ClientId = client.ClientId,
-                LanguageCode = LanguageCode.EN,
-                StartDate = request.StartDate,
-                EndDate = request.EndDate
+                LanguageCode = LanguageCode.EN
             };
 
             return await _sportsbookRepository.GetSportstreeDetails(sportsbookRequest);
         }
 
-        public async Task<BaseResponseDTO<StatusCode>> PostClientTopFixtures(PostClientTopFixtureRequest request)
+        public async Task<BaseResponseDTO<StatusCode>> PostClientTopFixtures(ClientTopFixtureRequest request)
         {
             var client = _platformContext.Client.FirstOrDefault(c => c.ClientIdRef == request.ClientId);
 

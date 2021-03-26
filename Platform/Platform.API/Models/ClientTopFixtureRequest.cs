@@ -2,9 +2,9 @@
 
 namespace Platform.API.Models
 {
-    public class PostClientTopFixtureRequest
+    public class ClientTopFixtureRequest
     {
-        public PostClientTopFixtureRequest()
+        public ClientTopFixtureRequest()
         {
             TopFixtures = new List<ClientTopFixtureSetup>();
         }

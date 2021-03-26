@@ -4,6 +4,7 @@ using Platform.API.ActionFilters;
 using Platform.API.Models;
 using Platform.API.Repository;
 using Platform.Shared.Models;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Platform.API.Controllers
@@ -32,10 +33,10 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpPost("v1/client/topfixtures/all")]
-        public async Task<IActionResult> GetAllClientTopFixtures([FromBody] AllClientTopFixtureRequest request)
+        [HttpGet("v1/client/topfixtures")]
+        public async Task<IActionResult> GetClientTopFixtures([FromQuery] string clientRefIds)
         {
-            var result = await _platformRepository.GetClientTopFixturesByClientIds(request);
+            var result = await _platformRepository.GetClientTopFixtures(clientRefIds);
 
             switch (result.StatusCode)
             {
@@ -46,10 +47,10 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v1/client/topfixtures/{clientRefId}")]
-        public async Task<IActionResult> GetClientTopFixturesByClientId(int clientRefId)
+        [HttpGet("v1/client/topfixtures/sportstree")]
+        public async Task<IActionResult> GetSportstree([FromQuery] int clientRefId)
         {
-            var result = await _platformRepository.GetClientTopFixtures(clientRefId);
+            var result = await _platformRepository.GetSportstreeDetails(clientRefId);
 
             switch (result.StatusCode)
             {
@@ -60,22 +61,8 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpPost("v1/client/topfixtures/sportstree")]
-        public async Task<IActionResult> GetSportstreeByClientId([FromBody] SportsRequest request)
-        {
-            var result = await _platformRepository.GetSportstreeDetails(request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
-        [HttpPost("client/topfixtures/post")]
-        public async Task<IActionResult> PostClientTopFixtures([FromBody] PostClientTopFixtureRequest request)
+        [HttpPost("v1/client/topfixtures")]
+        public async Task<IActionResult> PostClientTopFixtures([FromBody] ClientTopFixtureRequest request)
         {
             var result = await _platformRepository.PostClientTopFixtures(request);
 

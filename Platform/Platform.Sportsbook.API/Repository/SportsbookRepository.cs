@@ -2992,7 +2992,7 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
-        public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixturesByClientIds(AllClientTopFixtureRequestDTO request)
+        public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures(ClientTopFixtureRequestDTO request)
         {
             var topFixtures = _sportsbookContext.ClientTopFixture
                 .Where(c => request.ClientIds.Contains(c.ClientId))
@@ -3048,24 +3048,11 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
-        public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures(ClientTopFixtureRequestDTO request)
-        {
-            var clientTopFixturesRequest = new AllClientTopFixtureRequestDTO()
-            {
-                ClientIds = new List<Guid>() { request.ClientId },
-                LanguageCode = request.LanguageCode
-            };
-
-            var result = await GetClientTopFixturesByClientIds(clientTopFixturesRequest);
-
-            return result;
-        }
-
         public async Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(BackofficeSportsRequestDTO request)
         {
             var virtualSportIds = new List<int> { 1001, 1002, 1003, 1005, 1055, 1058 };
 
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && !virtualSportIds.Contains(c.SpId) && c.FiStDa >= request.StartDate && c.FiStDa < request.EndDate);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && !virtualSportIds.Contains(c.SpId));
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -3160,7 +3147,10 @@ namespace Platform.Sportsbook.API.Repository
             // delete existing records
             var currentTopFixtures = _sportsbookContext.ClientTopFixture.Where(c => c.ClientId == request.ClientId).ToList();
 
-            _sportsbookContext.RemoveRange(currentTopFixtures);
+            if (currentTopFixtures.Count > 0)
+            {
+                _sportsbookContext.RemoveRange(currentTopFixtures);
+            }
 
             // insert new records
             var newTopFixtures = request.TopFixtures.Select(s => new ClientTopFixture

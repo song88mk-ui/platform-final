@@ -557,23 +557,6 @@ namespace Platform.Sportsbook.API.Controllers
         /// <summary>
         /// Get list of all top fixtures per client ids that are included in the request.
         /// </summary>
-        [HttpPost("v1/sportsbook/client/topfixtures/all")]
-        public async Task<IActionResult> GetAllClientTopFixtures([FromBody] AllClientTopFixtureRequestDTO request)
-        {
-            var result = await _sportsbookRepository.GetClientTopFixturesByClientIds(request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
-        /// <summary>
-        /// Get the list of top fixtures of a certain client
-        /// </summary>
         [HttpPost("v1/sportsbook/client/topfixtures")]
         public async Task<IActionResult> GetClientTopFixtures([FromBody] ClientTopFixtureRequestDTO request)
         {

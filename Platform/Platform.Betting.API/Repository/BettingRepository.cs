@@ -1026,6 +1026,12 @@ namespace Platform.Betting.API.Repository
 
         public BaseResponseDTO<decimal> GetMTSMaxStake(MTSConfigRequestDTO request)
         {
+            return new BaseResponseDTO<decimal>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = 0m
+            };
             try
             {
                 if (!Convert.ToBoolean(_configuration["Custom:IsMTSMaxBetEnabled"]))
@@ -1155,6 +1161,13 @@ namespace Platform.Betting.API.Repository
 
         public BaseResponseDTO<BetConfigLeagueResponse> GetTierMaxStake(BetConfigLeagueRequestDTO request)
         {
+            return new BaseResponseDTO<BetConfigLeagueResponse>()
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BetConfigLeagueResponse()
+            };
+
             if (!Convert.ToBoolean(_configuration["Custom:IsMaxStakeTierEnabled"]))
             {
                 return new BaseResponseDTO<BetConfigLeagueResponse>()

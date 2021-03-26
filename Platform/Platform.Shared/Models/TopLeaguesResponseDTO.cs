@@ -24,4 +24,12 @@ namespace Platform.Shared.Models
     {
         public int SortOrder { get; set; }
     }
+
+    public class SportLeague : TopLeague
+    {
+        public int SportId { get; set; }
+        public string SportName { get; set; }
+        public bool Status { get; set; }
+        public int SortOrder { get; set; }
+    }
 }

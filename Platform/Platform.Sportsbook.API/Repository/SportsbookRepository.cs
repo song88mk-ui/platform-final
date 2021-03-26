@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
+using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Sportsbook;
 using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Data.Sportsbook.SQLEntities;
@@ -13,6 +14,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace Platform.Sportsbook.API.Repository
 {
@@ -3170,6 +3172,91 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString()
             };
         }
+
+        public async Task<BaseResponseDTO<ClientTopLeaguesResponseDTO>> GetClientIdsTopLeagues(ClientTopLeaguesRequestDTO request)
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            var finalResult = new List<ClientTopLeague>();
+
+            foreach (var clientId in request.ClientIds)
+            {
+                var clientTopLeague = new ClientTopLeague()
+                {
+                    ClientId = clientId,
+                    TopLeagues = new List<SportLeague>()
+                };
+
+                var sportLeague = _sportsbookContext.ClientLeagueOrder
+                    .Where(c => c.ClientId == clientId && c.SportId == request.SportId)
+                    .OrderBy(c => c.SortOrder).ToList();
+
+                foreach (var item in sportLeague)
+                {
+                    var sportLeagueItem = new SportLeague()
+                    {
+                        LeagueId = item.LeagueId,
+                        LeagueName = item.LeagueName,
+                        SegmentId = item.SegmentId,
+                        SegmentName = item.SegmentName,
+                        SportId = item.SportId,
+                        SportName = item.SportName,
+                        Status = fixtures.Where(f => f.SegId == item.SegmentId && f.LeId == item.LeagueId && f.SpId == item.SportId).Count() > 0 ? true : false
+                    };
+                    clientTopLeague.TopLeagues.Add(sportLeagueItem);
+                }
+
+                finalResult.Add(clientTopLeague);
+            }
+
+            return new BaseResponseDTO<ClientTopLeaguesResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new ClientTopLeaguesResponseDTO
+                {
+                    ClientTopLeagues = finalResult
+                }
+            };
+        }
+
+        public async Task<BaseResponseDTO<StatusCode>> AddOrUpdateTopLeagues(ClientTopLeague request)
+        {
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new System.Transactions.TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
+            {
+                // delete existing records
+                var currentTopLeagues = _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == request.ClientId).ToList();
+
+                _sportsbookContext.RemoveRange(currentTopLeagues);
+
+                // insert new records
+                var newTopLeagues = request.TopLeagues.Select(s => new ClientLeagueOrder
+                {
+                    ClientId = request.ClientId,
+                    LeagueId = s.LeagueId,
+                    LeagueName = s.LeagueName,
+                    SegmentId = s.SegmentId,
+                    SegmentName = s.SegmentName,
+                    SportId = s.SportId,
+                    SportName = s.SportName,
+                    SortOrder = s.SortOrder
+                });
+
+                _sportsbookContext.AddRange(newTopLeagues);
+
+                await _sportsbookContext.SaveChangesAsync();
+
+                scope.Complete();
+            }
+
+            return new BaseResponseDTO<StatusCode>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString()
+            };
+        }
+
     }
 
     public static class CurrentPeriodHelper

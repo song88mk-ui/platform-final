@@ -75,5 +75,67 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpGet("v1/client/topleagues")]
+        public async Task<IActionResult> GetClientTopLeagues([FromQuery] BackOfficeTopLeaguesRequestDTO request)
+        {
+            var result = await _platformRepository.GetClientTopLeagues(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/client/topleagues")]
+        public async Task<IActionResult> AddOrUpdateTopLeagues([FromBody] BackOfficeClientTopLeague request)
+        {
+            var result = await _platformRepository.AddOrUpdateTopLeagues(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/client/sports")]
+        public async Task<IActionResult> GetClientSports([FromQuery] BackofficeClientSportsRequestDTO request)
+        {
+            var result = await _platformRepository.GetSportsLookup(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/client/allleagues")]
+        public async Task<IActionResult> GetClientAllLeagues([FromQuery] BackofficeClientAllLeaguesRequestDTO request2)
+        {
+            var request = new TopLeaguesRequest
+            {
+                SportId = request2.SportId,
+                LanguageCode = "EN"
+            };
+
+            var result = await _platformRepository.GetAllLeagues(string.Empty, request2.ClientIdRef.ToString(), request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
     }
 }

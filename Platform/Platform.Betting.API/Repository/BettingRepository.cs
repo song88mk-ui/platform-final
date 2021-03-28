@@ -1168,7 +1168,7 @@ namespace Platform.Betting.API.Repository
             var client = _httpClientFactory.CreateClient("BackOffice");
             client.DefaultRequestHeaders.Add("x-api-key", _configuration["Custom:BackOfficeAPIKey"].ToString());
 
-            var response = client.GetAsync($"tier/maxstake?SegmentId=" + request.SegmentId + "&LeagueId=" + request.LeagueId + "&SportId=" + request.SportId).Result;
+            var response = client.GetAsync($"api/v1/tier/maxstake?SegmentId=" + request.SegmentId + "&LeagueId=" + request.LeagueId + "&SportId=" + request.SportId).Result;
 
             if (!response.IsSuccessStatusCode)
             {

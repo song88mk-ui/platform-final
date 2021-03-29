@@ -7,15 +7,22 @@ namespace Platform.Shared.Models
     {
         public ClientTopFixtureResponseDTO()
         {
-            TopFixtures = new List<OrderedTopFixture>();
+            TopFixtures = new List<OrderedClientTopFixture>();
         }
 
+        public List<OrderedClientTopFixture> TopFixtures { get; set; }
+    }
+
+    public class OrderedClientTopFixture
+    {
+        public Guid ClientId { get; set; }
+        public int ClientIdRef { get; set; }
+        public string ClientName { get; set; }
         public List<OrderedTopFixture> TopFixtures { get; set; }
     }
 
     public class OrderedTopFixture : TopFixture
     {
-        public Guid ClientId { get; set; }
         public DateTime FixtureStartDate { get; set; }
         public string FixtureStatus { get; set; }
         public int SortOrder { get; set; }

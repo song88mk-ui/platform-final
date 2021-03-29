@@ -3073,30 +3073,43 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var fixturesResult = new List<OrderedTopFixture>();
+            var clientIds = topFixtures.Select(s => s.ClientId).Distinct().ToList();
 
-            foreach (var topfixture in topFixtures)
+            var result = new List<OrderedClientTopFixture>();
+
+            foreach (var clientId in clientIds)
             {
-                var fixture = fixtures.FirstOrDefault(f => f.FiId == topfixture.FixtureId);
+                var currentTopFixtures = topFixtures.Where(c => c.ClientId == clientId).ToList();
+                var fixtureResult = new List<OrderedTopFixture>();
 
-                if (fixture != null)
+                foreach (var topfixture in currentTopFixtures)
                 {
-                    fixturesResult.Add(new OrderedTopFixture
+                    var fixture = fixtures.FirstOrDefault(f => f.FiId == topfixture.FixtureId);
+
+                    if (fixture != null)
                     {
-                        ClientId = topfixture.ClientId,
-                        SportId = fixture.SpId,
-                        SportName = fixture.SpNa,
-                        SegmentId = fixture.SegId,
-                        SegmentName = fixture.SegNa,
-                        LeagueId = fixture.LeId,
-                        LeagueName = fixture.LeNa,
-                        FixtureId = fixture.FiId.ToString(),
-                        FixtureName = fixture.FiNa,
-                        FixtureStartDate = fixture.FiStDa,
-                        FixtureStatus = fixture.FiStNa,
-                        SortOrder = topfixture.SortOrder                        
-                    });
+                        fixtureResult.Add(new OrderedTopFixture
+                        {
+                            SportId = fixture.SpId,
+                            SportName = fixture.SpNa,
+                            SegmentId = fixture.SegId,
+                            SegmentName = fixture.SegNa,
+                            LeagueId = fixture.LeId,
+                            LeagueName = fixture.LeNa,
+                            FixtureId = fixture.FiId.ToString(),
+                            FixtureName = fixture.FiNa,
+                            FixtureStartDate = fixture.FiStDa,
+                            FixtureStatus = fixture.FiStNa,
+                            SortOrder = topfixture.SortOrder
+                        });
+                    }
                 }
+
+                result.Add(new OrderedClientTopFixture
+                {
+                    ClientId = clientId,
+                    TopFixtures = fixtureResult.OrderBy(o => o.SortOrder).ToList()
+                });
             }
 
             return new BaseResponseDTO<ClientTopFixtureResponseDTO>
@@ -3105,7 +3118,7 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new ClientTopFixtureResponseDTO()
                 {
-                    TopFixtures = fixturesResult
+                    TopFixtures = result
                 }
             };
         }

@@ -50,5 +50,10 @@ namespace Platform.Shared.Utility
 
             return result;
         }
+
+        public void DeleteCache(string key)
+        {
+            MemoryCache.Default.Remove(key);
+        }
     }
 }

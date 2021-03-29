@@ -14,5 +14,6 @@ namespace Platform.Shared.Utility
         T GetCache<T>(string key) where T : class;
 
         KeyValuePair<bool, long> GetCache(string key);
+        void DeleteCache(string key);
     }
 }

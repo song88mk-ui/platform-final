@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Platform.Shared.Data.Betting.Entities
 {
@@ -7,18 +8,24 @@ namespace Platform.Shared.Data.Betting.Entities
         public long Id { get; set; }
         public Guid BetId { get; set; }
         public string UserId { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Stake { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
         public decimal TrueStake { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Odds { get; set; }
         public int OddsTypeId { get; set; }
         public string OddsTypeName { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Payout { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
         public decimal WinLoss { get; set; }
         public int BetStatusId { get; set; }
         public string BetStatusName { get; set; }
         public string Reason { get; set; }
         public string CurrencyCode { get; set; }
         public string LanguageCode { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
         public decimal ExchangeRate { get; set; }
         public string IPAddress { get; set; }
         public string Channel { get; set; }

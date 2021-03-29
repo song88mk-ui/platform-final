@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Platform.Shared.Data.Betting.Entities
 {
@@ -27,6 +28,7 @@ namespace Platform.Shared.Data.Betting.Entities
         public int FixtureStatusId { get; set; }
         public string FixtureStatusName { get; set; }
         public string Line { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Odds { get; set; }
         public int BetSelectionStatusId { get; set; }
         public string BetSelectionStatusName { get; set; }

@@ -10,7 +10,7 @@ using Platform.Operator.API.Repository;
 using Platform.Shared.Models;
 
 namespace Platform.Operator.API.Controllers
-{
+{//
     [ApiController, EnableCors("AllowAllOrigins")]
     public class IntegrationController : ControllerBase
     {

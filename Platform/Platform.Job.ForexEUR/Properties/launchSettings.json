@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "Platform.Job.ForexEUR": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

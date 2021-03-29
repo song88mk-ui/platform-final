@@ -25,6 +25,7 @@ namespace Platform.Shared.Utility
         private string _queue = string.Empty;
         private string _consumerName = string.Empty;
         private string _routingKey = string.Empty;
+        private string _prefetchCount = string.Empty;
 
         public MessageBroker(IConfiguration configuration)
         {
@@ -41,6 +42,7 @@ namespace Platform.Shared.Utility
             _queue = _configuration["MessageBroker:Queue"];
             _consumerName = _configuration["MessageBroker:Consumer"];
             _routingKey = _configuration["MessageBroker:RoutingKey"];
+            _prefetchCount = string.IsNullOrEmpty(_configuration["MessageBroker:PrefetchCount"]) ? "1000" : _configuration["MessageBroker:PrefetchCount"];
 
             if (_connection == null)
             {
@@ -69,7 +71,7 @@ namespace Platform.Shared.Utility
                     foreach (var routingKey in _routingKey.Split('|'))
                         _model.QueueBind(_queue, _exchange, routingKey.ToLower(), null);
 
-                    _model.BasicQos(0, 1000, false);
+                    _model.BasicQos(0, Convert.ToUInt16(_prefetchCount), false);
                     _consumer = new EventingBasicConsumer(_model);
                     _consumer.Received += HandleMessage;
 

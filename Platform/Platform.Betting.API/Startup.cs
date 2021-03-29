@@ -51,7 +51,8 @@ namespace Platform.Betting.API
             services.AddScoped<IBettingRepository, BettingRepository>();
             services.AddScoped<IBetConfigRepository, BetConfigRepository>();
             services.AddHttpClient<IMTSAuthRepository, MTSAuthRepository>();
-            
+            services.AddHttpClient<IMTSMaxStakeRepository, MTSMaxStakeRepository>();
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Platform Betting API", Version = "v1" });

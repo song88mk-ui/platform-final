@@ -24,11 +24,24 @@ namespace Platform.Betting.API.Repository
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(_configuration["API:MTSAuthAPI"]);
         }
-        public async Task<BaseResponseDTO<MTSAuthResponse>> GetMTSAuthorizationToken()
+        public async Task<BaseResponseDTO<MTSAuthResponseDTO>> GetMTSAuthorizationToken()
         {
+            if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) == false)
+            {
+                return new BaseResponseDTO<MTSAuthResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new MTSAuthResponseDTO
+                    {
+                        Token = string.Empty
+                    }
+                };
+            }
+
             var cacheKey = $"mts:auth";
 
-            var cache = _memCache.GetCache<BaseResponseDTO<MTSAuthResponse>>(cacheKey);
+            var cache = _memCache.GetCache<BaseResponseDTO<MTSAuthResponseDTO>>(cacheKey);
 
             if (cache != null)
                 return cache;
@@ -38,9 +51,9 @@ namespace Platform.Betting.API.Repository
                 var formContent = new FormUrlEncodedContent(new[]
                 {
                   new KeyValuePair<string, string>("client_id", "mts-edge-ext"),
-                  new KeyValuePair<string, string>("client_secret",  _configuration["MTSMaxBetApi:ClientSecret"]),
-                  new KeyValuePair<string, string>("username",  _configuration["MTSMaxBetApi:Username"]),
-                  new KeyValuePair<string, string>("password",  _configuration["MTSMaxBetApi:Password"]),
+                  new KeyValuePair<string, string>("client_secret",  _configuration["Custom:MTSClientSecret"]),
+                  new KeyValuePair<string, string>("username",  _configuration["Custom:MTSUsername"]),
+                  new KeyValuePair<string, string>("password",  _configuration["Custom:MTSPassword"]),
                   new KeyValuePair<string, string>("grant_type", "password"),
                   new KeyValuePair<string, string>("client_auth_method", "client-secret")
                 });
@@ -51,11 +64,11 @@ namespace Platform.Betting.API.Repository
                 {
                     var initialResult = JsonSerializer.Deserialize<MTSMaxStakeAuthResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     
-                    var result = new BaseResponseDTO<MTSAuthResponse>
+                    var result = new BaseResponseDTO<MTSAuthResponseDTO>
                     {
                         StatusCode = StatusCode.Success,
                         Message = StatusCode.Success.ToString(),
-                        Result = new MTSAuthResponse
+                        Result = new MTSAuthResponseDTO
                         {
                             Token = initialResult.AccessToken
                         }
@@ -69,19 +82,18 @@ namespace Platform.Betting.API.Repository
                 {
                     _memCache.DeleteCache(cacheKey);
 
-                    return new BaseResponseDTO<MTSAuthResponse>
+                    return new BaseResponseDTO<MTSAuthResponseDTO>
                     {
                         StatusCode = StatusCode.Error,
                         Message = StatusCode.Error.ToString()
                     };
                 }
-
             }
             catch (Exception ex)
             {
                 _memCache.DeleteCache(cacheKey);
 
-                return new BaseResponseDTO<MTSAuthResponse>
+                return new BaseResponseDTO<MTSAuthResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"

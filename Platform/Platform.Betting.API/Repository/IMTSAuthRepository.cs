@@ -5,6 +5,6 @@ namespace Platform.Betting.API.Repository
 {
     public interface IMTSAuthRepository
     {
-        Task<BaseResponseDTO<MTSAuthResponse>> GetMTSAuthorizationToken();
+        Task<BaseResponseDTO<MTSAuthResponseDTO>> GetMTSAuthorizationToken();
     }
 }

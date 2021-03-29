@@ -19,6 +19,14 @@
         PHP = 15,
         AED = 16,
         TRY = 17,
-        TWD = 18
+        TWD = 18,
+        NZD = 19,
+        ZAR = 20,
+        KES = 21,
+        TSH = 22,
+        GHS = 23,
+        ZMW = 24,
+        MZN = 25,
+        CDF = 26
     }
 }

@@ -16,6 +16,8 @@ namespace Platform.Shared.Models
     public class OrderedTopFixture : TopFixture
     {
         public Guid ClientId { get; set; }
+        public DateTime FixtureStartDate { get; set; }
+        public string FixtureStatus { get; set; }
         public int SortOrder { get; set; }
     }
 }

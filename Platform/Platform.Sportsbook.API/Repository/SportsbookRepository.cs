@@ -3092,6 +3092,8 @@ namespace Platform.Sportsbook.API.Repository
                         LeagueName = fixture.LeNa,
                         FixtureId = fixture.FiId.ToString(),
                         FixtureName = fixture.FiNa,
+                        FixtureStartDate = fixture.FiStDa,
+                        FixtureStatus = fixture.FiStNa,
                         SortOrder = topfixture.SortOrder                        
                     });
                 }

@@ -199,100 +199,100 @@ namespace Platform.Betting.API.UnitTest
             Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Success);
         }
 
-        [TestMethod]
-        public void TestBetPlacement_KRW_Maximum_Payout_Must_Be_Equal_Or_Lower()
-        {
-            BetRequestDTO request = GetRequest();
+        //[TestMethod]
+        //public void TestBetPlacement_KRW_Maximum_Payout_Must_Be_Equal_Or_Lower()
+        //{
+        //    BetRequestDTO request = GetRequest();
 
-            request.Stake = 1000M;
-            request.Odds = 51m;
-            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
-            var defaultJSON = JsonSerializer.Serialize(request);
-            var data = repo.PlaceBet(request);
+        //    request.Stake = 1000M;
+        //    request.Odds = 51m;
+        //    request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
+        //    var defaultJSON = JsonSerializer.Serialize(request);
+        //    var data = repo.PlaceBet(request);
 
-            Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower);
-        }
+        //    Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower);
+        //}
         
 
 
-        [TestMethod]
-        public void TestBetPlacement_KRW_Stake_Must_Be_Equal_Or_Higher_To_Min_Stake()
-        {
-            BetRequestDTO request = GetRequest();
-            request.Stake = 99M;
-            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
-            var data = repo.PlaceBet(request);
+        //[TestMethod]
+        //public void TestBetPlacement_KRW_Stake_Must_Be_Equal_Or_Higher_To_Min_Stake()
+        //{
+        //    BetRequestDTO request = GetRequest();
+        //    request.Stake = 99M;
+        //    request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
+        //    var data = repo.PlaceBet(request);
 
-            Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake);
-        }
+        //    Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake);
+        //}
 
-        [TestMethod]
-        public void TestBetPlacement_KRW_Stake_Must_Be_Equal_Or_Higher_To_Max_Stake()
-        {
-            BetRequestDTO request = GetRequest();
+        //[TestMethod]
+        //public void TestBetPlacement_KRW_Stake_Must_Be_Equal_Or_Higher_To_Max_Stake()
+        //{
+        //    BetRequestDTO request = GetRequest();
 
-            request.Stake = 1000001M;
-            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
-            var defaultJSON = JsonSerializer.Serialize(request);
-            var data = repo.PlaceBet(request);
+        //    request.Stake = 1000001M;
+        //    request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
+        //    var defaultJSON = JsonSerializer.Serialize(request);
+        //    var data = repo.PlaceBet(request);
 
-            Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake);
-        }
+        //    Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake);
+        //}
 
 
         #region Parlay
 
-        [TestMethod]
-        public void TestBetPlacement_KRW_Success_PARLAY()
-        {
-            BetRequestDTO request = GetRequestParlay();
+        //[TestMethod]
+        //public void TestBetPlacement_KRW_Success_PARLAY()
+        //{
+        //    BetRequestDTO request = GetRequestParlay();
 
-            request.Stake = 1000M;
-            var defaultJSON = JsonSerializer.Serialize(request);
-            var data = repo.PlaceBet(request);
+        //    request.Stake = 1000M;
+        //    var defaultJSON = JsonSerializer.Serialize(request);
+        //    var data = repo.PlaceBet(request);
 
-            Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Success);
-        }
+        //    Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Success);
+        //}
 
-        [TestMethod]
-        public void TestBetPlacement_KRW_Maximum_Payout_Must_Be_Equal_Or_Lower_PARLAY()
-        {
-            BetRequestDTO request = GetRequestParlay();
+        //[TestMethod]
+        //public void TestBetPlacement_KRW_Maximum_Payout_Must_Be_Equal_Or_Lower_PARLAY()
+        //{
+        //    BetRequestDTO request = GetRequestParlay();
 
-            request.Stake = 1000M;
-            request.Odds = 51m;
-            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
-            var defaultJSON = JsonSerializer.Serialize(request);
-            var data = repo.PlaceBet(request);
+        //    request.Stake = 1000M;
+        //    request.Odds = 51m;
+        //    request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
+        //    var defaultJSON = JsonSerializer.Serialize(request);
+        //    var data = repo.PlaceBet(request);
 
-            Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower);
-        }
+        //    Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower);
+        //}
 
 
 
-        [TestMethod]
-        public void TestBetPlacement_KRW_Stake_Must_Be_Equal_Or_Higher_To_Min_Stake_PARLAY()
-        {
-            BetRequestDTO request = GetRequestParlay();
-            request.Stake = 99M;
-            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
-            var data = repo.PlaceBet(request);
+        //[TestMethod]
+        //public void TestBetPlacement_KRW_Stake_Must_Be_Equal_Or_Higher_To_Min_Stake_PARLAY()
+        //{
+        //    BetRequestDTO request = GetRequestParlay();
+        //    request.Stake = 99M;
+        //    request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
+        //    var data = repo.PlaceBet(request);
 
-            Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake);
-        }
+        //    Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake);
+        //}
 
-        [TestMethod]
-        public void TestBetPlacement_KRW_Stake_Must_Be_Equal_Or_Higher_To_Max_Stake_PARLAY()
-        {
-            BetRequestDTO request = GetRequestParlay();
+        //[TestMethod]
+        //public void TestBetPlacement_KRW_Stake_Must_Be_Equal_Or_Higher_To_Max_Stake_PARLAY()
+        //{
+        //    BetRequestDTO request = GetRequestParlay();
 
-            request.Stake = 1000001M;
-            request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
-            var defaultJSON = JsonSerializer.Serialize(request);
-            var data = repo.PlaceBet(request);
+        //    request.Stake = 1000001M;
+        //    request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
+        //    var defaultJSON = JsonSerializer.Serialize(request);
+        //    var data = repo.PlaceBet(request);
 
-            Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake);
-        }
+        //    Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake);
+        //}
 
         #endregion
     }

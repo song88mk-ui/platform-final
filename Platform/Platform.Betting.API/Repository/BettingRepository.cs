@@ -23,7 +23,6 @@ namespace Platform.Betting.API.Repository
         private readonly IMessageBroker _messageBroker;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
-        private static string _platformReportUrl = string.Empty;
 
         private readonly IMTSAuthRepository _mtsAuthRepository;
         private readonly IMTSMaxStakeRepository _mtsMaxStakeRepository;
@@ -38,15 +37,10 @@ namespace Platform.Betting.API.Repository
             _backOfficeRepository = backOfficeRepository;
             _configuration = configuration;
             _messageBroker = messageBroker;
-            _platformReportUrl = _configuration["API:PlatformReportAPI"];
             _messageBroker.Connect();
         }
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBetWithValidation(BetRequestDTO request)
         {
-            #region BET VALIDATION
-            //MTS Check
-            //Get MTS Information
-
             if (request.LimitId == "0" || string.IsNullOrEmpty(request.LimitId) || string.IsNullOrWhiteSpace(request.LimitId))
             {
                 return new BaseResponseDTO<BetResponseDTO>
@@ -216,7 +210,6 @@ namespace Platform.Betting.API.Repository
                     };
                 }
             }
-            #endregion
 
             var betData = new Bet();
             var betSelectionData = new List<BetSelection>();
@@ -438,7 +431,6 @@ namespace Platform.Betting.API.Repository
                 }
             };
         }
-
         public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(BetHistoryRequestDTO request)
         {
             request.Page = request.Page <= 0 ? 1 : request.Page;
@@ -581,7 +573,6 @@ namespace Platform.Betting.API.Repository
                 }
             };
         }
-
         public async Task<BaseResponseDTO<BetConfigFEResponseDTO>> GetBetConfig(BetConfigRequestDTO request)
         {
             var result = new BetConfigFEResponseDTO();
@@ -624,7 +615,6 @@ namespace Platform.Betting.API.Repository
                 Result = result
             };
         }
-
         public async Task<BaseResponseDTO<BetModifyResponseDTO>> CancelBets(BetModifyRequestDTO request)
         {
             BetModifyResponseDTO response = new BetModifyResponseDTO()
@@ -666,7 +656,7 @@ namespace Platform.Betting.API.Repository
                         data.IsSuccess = false;
                         data.Message = "Bet ID not found";
                     }
-                    else if (bet.BetStatusId != (int)BetStatus.Running && IsSettled(bet.ClientIdRef, bet.BetDate.Month, bet.BetDate.Year))
+                    else if (bet.BetStatusId != (int)BetStatus.Running)
                     {
                         data.IsSuccess = false;
                         data.Message = "Bet Cancellation cannot be processed on highlighted Bet ID. Either Payment Transfer or Settlement has been made after bet settled or player wallet is 0.00.";
@@ -726,20 +716,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
         }
-
-        #region Methods
-
-        private bool IsSettled(long clientId, int month, int year)
-        {
-            var url = $"{_platformReportUrl}report/revenue/{clientId}/{month}/{year}/issettled";
-
-            var client = _httpClientFactory.CreateClient();
-            var response = client.PostAsJsonAsync(url, new { }).Result;
-
-            return JsonSerializer.Deserialize<bool>(response.Content.ReadAsStringAsync().Result);
-        }
-
-        public decimal GetMinStake(decimal minStake, decimal exchangeRate, decimal companyShare, string currencyCode)
+        private decimal GetMinStake(decimal minStake, decimal exchangeRate, decimal companyShare, string currencyCode)
         {
             List<decimal> minimumStake = new List<decimal>();
             var highCurrencies = new List<string> { "KRW", "VND", "KHR", "IDR", "MMK" };
@@ -771,8 +748,7 @@ namespace Platform.Betting.API.Repository
             //Get Max decimal value
             return minimumStake.Max();
         }
-
-        public decimal GetMaxStakeParlay(decimal maxStake, decimal parlayMaxPayout, decimal companyShare, decimal odds, bool isPlacement, decimal mtsMaxStake, BetRequestDTO request)
+        private decimal GetMaxStakeParlay(decimal maxStake, decimal parlayMaxPayout, decimal companyShare, decimal odds, bool isPlacement, decimal mtsMaxStake, BetRequestDTO request)
         {
             List<decimal> maximumStake = new List<decimal>();
 
@@ -807,7 +783,7 @@ namespace Platform.Betting.API.Repository
             //Get min decimal value
             return maximumStake.Min();
         }
-        public decimal GetMaxStakeSingleBet(decimal maxStake, decimal exchangeRate, decimal companyShare, bool isPlacement, decimal tierMaxStake, decimal mtsMaxStake, BetRequestDTO request)
+        private decimal GetMaxStakeSingleBet(decimal maxStake, decimal exchangeRate, decimal companyShare, bool isPlacement, decimal tierMaxStake, decimal mtsMaxStake, BetRequestDTO request)
         {
             List<decimal> maximumStake = new List<decimal>();
 
@@ -849,177 +825,9 @@ namespace Platform.Betting.API.Repository
             //Get min decimal value
             return maximumStake.Min();
         }
-
-        public BaseResponseDTO<decimal> GetMTSMaxStake(MTSConfigRequestDTO request)
-        {
-            try
-            {
-                if (!Convert.ToBoolean(_configuration["Custom:IsMTSMaxBetEnabled"]))
-                {
-                    return new BaseResponseDTO<decimal>
-                    {
-                        StatusCode = StatusCode.Success,
-                        Message = StatusCode.Success.ToString(),
-                        Result = 0m
-                    };
-                }
-                //All virtual sports will not have mts
-                if (request.BetSelections.FirstOrDefault().SportId >= 1000)
-                {
-                    return new BaseResponseDTO<decimal>
-                    {
-                        StatusCode = StatusCode.Success,
-                        Message = StatusCode.Success.ToString(),
-                        Result = 0m
-                    };
-                }
-
-                //TODO //Temporarily token can be save in database
-                var accessToken = string.Empty;
-
-                var authUrl = _configuration["MTSMaxBetApi:AuthApi"];
-                using (var authClient = _httpClientFactory.CreateClient())
-                {
-                    var formContent = new FormUrlEncodedContent(new[]
-                    {
-                      new KeyValuePair<string, string>("client_id", "mts-edge-ext"),
-                      new KeyValuePair<string, string>("client_secret",  _configuration["MTSMaxBetApi:ClientSecret"]),
-                      new KeyValuePair<string, string>("username",  _configuration["MTSMaxBetApi:Username"]),
-                      new KeyValuePair<string, string>("password",  _configuration["MTSMaxBetApi:Password"]),
-                      new KeyValuePair<string, string>("grant_type", "password"),
-                      new KeyValuePair<string, string>("client_auth_method", "client-secret")
-                    });
-
-                    using (HttpResponseMessage authResponse = authClient.PostAsync(authUrl, formContent).Result)
-                    {
-                        if (authResponse.StatusCode == System.Net.HttpStatusCode.OK)
-                        {
-                            var authData = JsonSerializer.Deserialize<MTSMaxStakeAuthResponseDTO>(authResponse.Content.ReadAsStringAsync().Result);
-                            accessToken = authData.AccessToken;
-                        }
-                    }
-                }
-
-                var maxStakeUrl = _configuration["MTSMaxBetApi:MaxBetApi"];
-                var maxStakeClient = _httpClientFactory.CreateClient();
-
-                maxStakeClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
-
-                var betId = Guid.NewGuid().ToString();
-
-                var bets = new List<MTSBetDTO>();
-                bets.Add(new MTSBetDTO
-                {
-                    Id = betId,
-                    Stake = new MTSStakeDTO { Value = 0m }
-                });
-
-                var betSelections = new List<MTSBetSelectionDTO>();
-                foreach (var req in request.BetSelections)
-                {
-                    betSelections.Add(new MTSBetSelectionDTO
-                    {
-                        EventId = req.FixtureSpecifier,
-                        Id = req.SelectionSpecifier,
-                        Odds = req.Odds * 10000
-                    });
-                }
-
-                if (request.Language.Contains("ZH"))
-                    request.Language = "ZH";
-
-                var maxStakePayload = new MTSMaxStakeRequestDTO
-                {
-                    //TimeStamp = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds * 1000),
-                    TimeStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds(),
-                    Bets = bets,
-                    TicketId = betId,
-                    Selections = betSelections,
-                    Sender = new SenderDTO
-                    {
-                        BookmakerId = int.Parse(_configuration["MTSMaxBetApi:BookmakerId"]),
-                        LimitId = request.LimitId,
-                        Currency = request.Currency.ToUpper(),
-                        EndCustomer = new EndCustomerDTO
-                        {
-                            LanguageId = request.Language,
-                            Id = request.UserId,
-                            DeviceId = request.DeviceId
-                        }
-                    }
-                };
-
-                var json = JsonSerializer.Serialize(maxStakePayload);
-                var data = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-
-                var maxStakeResponse = maxStakeClient.PostAsync(maxStakeUrl, data).Result;
-
-                var maxStakeData = JsonSerializer.Deserialize<MTSMaxStakeResponseDTO>(maxStakeResponse.Content.ReadAsStringAsync().Result);
-
-                long maxStakeReturn = 0;
-                long.TryParse(maxStakeData.MaxStake, out maxStakeReturn);
-                return new BaseResponseDTO<decimal>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = maxStakeReturn / 10000
-                };
-
-            }
-            catch (Exception ex)
-            {
-                // _logger.LogError(ex.Message);
-
-                return new BaseResponseDTO<decimal>
-                {
-                    StatusCode = StatusCode.Mts_Error,
-                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
-                    Result = 0m
-                };
-            }
-        }
-
-        public BaseResponseDTO<BetConfigLeagueResponse> GetTierMaxStake(BetConfigLeagueRequestDTO request)
-        {
-            if (!Convert.ToBoolean(_configuration["Custom:IsMaxStakeTierEnabled"]))
-            {
-                return new BaseResponseDTO<BetConfigLeagueResponse>()
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new BetConfigLeagueResponse()
-                };
-            }
-
-            var client = _httpClientFactory.CreateClient("BackOffice");
-            client.DefaultRequestHeaders.Add("x-api-key", _configuration["Custom:BackOfficeAPIKey"].ToString());
-
-            var response = client.GetAsync($"api/v1/tier/maxstake?SegmentId=" + request.SegmentId + "&LeagueId=" + request.LeagueId + "&SportId=" + request.SportId).Result;
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return new BaseResponseDTO<BetConfigLeagueResponse>()
-                {
-                    StatusCode = StatusCode.Error,
-                    Message = StatusCode.Error.ToString(),
-                    Result = new BetConfigLeagueResponse()
-                };
-            }
-            else
-            {
-                //Return if success
-                return JsonSerializer.Deserialize<BaseResponseDTO<BetConfigLeagueResponse>>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-            }
-
-
-
-        }
-
-        public decimal RoundUpDecimalValue(decimal value)
+        private decimal RoundUpDecimalValue(decimal value)
         {
             return (value % 1m != 0) ? Math.Truncate(value) + 1 : value;
         }
-
-        #endregion
     }
 }

@@ -15,12 +15,9 @@ namespace Platform.Betting.API.Repository
     public class BetConfigRepository : IBetConfigRepository
     {
         private readonly BettingContext _bettingContext;
-        private readonly IMessageBroker _messageBroker;
-        public BetConfigRepository(BettingContext bettingContext, IMessageBroker messageBroker)
+        public BetConfigRepository(BettingContext bettingContext)
         {
             _bettingContext = bettingContext;
-            _messageBroker = messageBroker;
-            _messageBroker.Connect();
         }
 
         public async Task<BaseResponseDTO<StatusCode>> ProcessBetConfig(BackOfficeBetConfigPayloadDTO payload)

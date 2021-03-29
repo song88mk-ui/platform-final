@@ -25,10 +25,17 @@ namespace Platform.Betting.API.Repository
         private readonly IConfiguration _configuration;
         private static string _platformReportUrl = string.Empty;
 
-        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IMessageBroker messageBroker, IHttpClientFactory httpClientFactory)
+        private readonly IMTSAuthRepository _mtsAuthRepository;
+        private readonly IMTSMaxStakeRepository _mtsMaxStakeRepository;
+        private readonly IBackOfficeRepository _backOfficeRepository;
+
+        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IMessageBroker messageBroker, IHttpClientFactory httpClientFactory, IMTSAuthRepository mtsAuthRepository, IMTSMaxStakeRepository mtsMaxStakeRepository, IBackOfficeRepository backOfficeRepository)
         {
             _bettingContext = bettingContext;
             _httpClientFactory = httpClientFactory;
+            _mtsAuthRepository = mtsAuthRepository;
+            _mtsMaxStakeRepository = mtsMaxStakeRepository;
+            _backOfficeRepository = backOfficeRepository;
             _configuration = configuration;
             _messageBroker = messageBroker;
             _platformReportUrl = _configuration["API:PlatformReportAPI"];
@@ -39,6 +46,15 @@ namespace Platform.Betting.API.Repository
             #region BET VALIDATION
             //MTS Check
             //Get MTS Information
+
+            if (request.LimitId == "0" || string.IsNullOrEmpty(request.LimitId) || string.IsNullOrWhiteSpace(request.LimitId))
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString()} - Missing LimitId",
+                };
+            }
 
             var mtsConfigSelectionRequest = new List<MTSConfigSelectionRequestDTO>();
             foreach (var betSelection in request.Selections)
@@ -57,18 +73,29 @@ namespace Platform.Betting.API.Repository
                 Currency = request.CurrencyCode.ToString(),
                 Language = request.LanguageCode.ToString(),
                 DeviceId = $"{request.ClientCode}{request.UserId.Replace("-", "")}",
-                LimitId = Convert.ToInt32(request.LimitId == "0" ? "2183" : request.LimitId),
+                LimitId = Convert.ToInt32(request.LimitId),
                 BetSelections = mtsConfigSelectionRequest
             };
 
-            var mtsMaxStake = GetMTSMaxStake(mtsConfigRequest);
+            var mtsAuthToken = await _mtsAuthRepository.GetMTSAuthorizationToken();
+
+            if (mtsAuthToken.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString()} - MTS MaxStake Authentication failed",
+                };
+            }
+
+            var mtsMaxStake = await _mtsMaxStakeRepository.GetMTSMaxStake(mtsAuthToken.Result.Token, mtsConfigRequest);
 
             if (mtsMaxStake.StatusCode != StatusCode.Success)
             {
                 return new BaseResponseDTO<BetResponseDTO>
                 {
                     StatusCode = mtsMaxStake.StatusCode,
-                    Message = mtsMaxStake.Message
+                    Message = $"{mtsMaxStake.Message} - MTS MaxStake failed"
                 };
             }
 
@@ -83,7 +110,7 @@ namespace Platform.Betting.API.Repository
             if (request.Selections.Count == 1)
             {
                 //Get Max Liability by Tier from Backoffice database
-                var tierMaxStake = GetTierMaxStake(new BetConfigLeagueRequestDTO
+                var tierMaxStake = await _backOfficeRepository.GetTierMaxStake(new BetConfigLeagueRequestDTO
                 {
                     LeagueId = request.Selections.FirstOrDefault().LeagueId,
                     SegmentId = request.Selections.FirstOrDefault().SegmentId,
@@ -98,7 +125,7 @@ namespace Platform.Betting.API.Repository
                 if (checkOverride != null)
                 {
                     minStake = GetMinStake(checkOverride.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
-                    maxStake = GetMaxStakeSingleBet(checkOverride.MaxStake, request.ExchangeRate, request.CompanyShare, true, tierMaxStake.Result.MaxStake, mtsMaxStake.Result, request);
+                    maxStake = GetMaxStakeSingleBet(checkOverride.MaxStake, request.ExchangeRate, request.CompanyShare, true, tierMaxStake.Result.MaxStake, mtsMaxStake.Result.Stake, request);
                     maxPerGame = tierMaxStake.Result.MaxPerGame;
                     stakeFixtureLimit = checkOverride.StakeLimitFixture;
                 }
@@ -106,7 +133,7 @@ namespace Platform.Betting.API.Repository
                 {
                     DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     minStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
-                    maxStake = GetMaxStakeSingleBet(defaultSportConfig.MaxStake, request.ExchangeRate, request.CompanyShare, true, tierMaxStake.Result.MaxStake, mtsMaxStake.Result, request);
+                    maxStake = GetMaxStakeSingleBet(defaultSportConfig.MaxStake, request.ExchangeRate, request.CompanyShare, true, tierMaxStake.Result.MaxStake, mtsMaxStake.Result.Stake, request);
                     maxPerGame = tierMaxStake.Result.MaxPerGame;
                     stakeFixtureLimit = defaultSportConfig.StakeLimitFixture;
                 }
@@ -155,7 +182,7 @@ namespace Platform.Betting.API.Repository
 
                 ParlayConfig parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 minStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
-                maxStake = GetMaxStakeParlay(parlayConfig.MaxStake, parlayConfig.MaxPayout, request.CompanyShare, 0, true, mtsMaxStake.Result, request);
+                maxStake = GetMaxStakeParlay(parlayConfig.MaxStake, parlayConfig.MaxPayout, request.CompanyShare, 0, true, mtsMaxStake.Result.Stake, request);
 
                 //Actual validation occur after getting min/max
                 if (minStake > request.Stake)

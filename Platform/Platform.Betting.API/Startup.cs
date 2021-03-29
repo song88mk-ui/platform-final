@@ -52,6 +52,7 @@ namespace Platform.Betting.API
             services.AddScoped<IBetConfigRepository, BetConfigRepository>();
             services.AddHttpClient<IMTSAuthRepository, MTSAuthRepository>();
             services.AddHttpClient<IMTSMaxStakeRepository, MTSMaxStakeRepository>();
+            services.AddHttpClient<IBackOfficeRepository, BackOfficeRepository>();
 
             services.AddSwaggerGen(c =>
             {

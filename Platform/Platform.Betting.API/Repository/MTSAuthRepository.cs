@@ -85,7 +85,11 @@ namespace Platform.Betting.API.Repository
                     return new BaseResponseDTO<MTSAuthResponseDTO>
                     {
                         StatusCode = StatusCode.Error,
-                        Message = StatusCode.Error.ToString()
+                        Message = StatusCode.Error.ToString(),
+                        Result = new MTSAuthResponseDTO
+                        {
+                            Token = string.Empty
+                        }
                     };
                 }
             }
@@ -96,7 +100,11 @@ namespace Platform.Betting.API.Repository
                 return new BaseResponseDTO<MTSAuthResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
-                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
+                    Result = new MTSAuthResponseDTO
+                    {
+                        Token = string.Empty
+                    }
                 };
             }
         }

@@ -23,7 +23,7 @@
         NZD = 19,
         ZAR = 20,
         KES = 21,
-        TSH = 22,
+        TZS = 22,
         GHS = 23,
         ZMW = 24,
         MZN = 25,

@@ -3211,7 +3211,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (currentTopFixtures.Count > 0)
             {
-                _sportsbookContext.RemoveRange(currentTopFixtures);
+                _sportsbookContext.ClientTopFixture.RemoveRange(currentTopFixtures);
             }
 
             // insert new records
@@ -3222,7 +3222,7 @@ namespace Platform.Sportsbook.API.Repository
                 SortOrder = s.SortOrder
             });
 
-            _sportsbookContext.AddRange(newTopFixtures);
+            _sportsbookContext.ClientTopFixture.AddRange(newTopFixtures);
 
             await _sportsbookContext.SaveChangesAsync();
 

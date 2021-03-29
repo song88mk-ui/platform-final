@@ -59,12 +59,6 @@ namespace Platform.Betting.API
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Platform Betting API", Version = "v1" });
             });
 
-            services.AddHttpClient();
-            services.AddHttpClient("BackOffice", a =>
-            {
-                a.BaseAddress = new Uri(Configuration["API:BackOfficeAPI"]);
-            });
-
             services.AddDbContext<BettingContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Betting"]));
         }
 

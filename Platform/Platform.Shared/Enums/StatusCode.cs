@@ -43,6 +43,9 @@
 
         Search_Text_Needs_To_Be_3_Characters_Or_Above = 133,
 
+        Duplicate_Client_Top_Fixture_Entries = 134,
+        Duplicate_Sort_Order_Entries = 135,
+
         Error = 1000,
         Operator_Error = 1001
     }

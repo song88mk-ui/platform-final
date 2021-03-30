@@ -3219,6 +3219,32 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<StatusCode>> PostClientTopFixtures(PostClientTopFixtureRequestDTO request)
         {
+            // validate requests
+
+            // check if fixtures requests are duplicate
+            var duplicateFixtures = request.TopFixtures.GroupBy(g => g.FixtureId).Where(c => c.Count() > 1).ToList();
+
+            if (duplicateFixtures.Count > 0)
+            {
+                return new BaseResponseDTO<StatusCode>
+                {
+                    StatusCode = StatusCode.Duplicate_Client_Top_Fixture_Entries,
+                    Message = StatusCode.Duplicate_Client_Top_Fixture_Entries.ToString()
+                };
+            }
+
+            // check if sort order requests are duplicate
+            var duplicateSortOrders = request.TopFixtures.GroupBy(g => g.SortOrder).Where(c => c.Count() > 1).ToList();
+
+            if (duplicateSortOrders.Count > 0)
+            {
+                return new BaseResponseDTO<StatusCode>
+                {
+                    StatusCode = StatusCode.Duplicate_Sort_Order_Entries,
+                    Message = StatusCode.Duplicate_Sort_Order_Entries.ToString()
+                };
+            }
+
             // delete existing records
             var currentTopFixtures = _sportsbookContext.ClientTopFixture.Where(c => c.ClientId == request.ClientId).ToList();
 

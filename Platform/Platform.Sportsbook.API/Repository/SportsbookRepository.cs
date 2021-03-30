@@ -2334,6 +2334,73 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+        public async Task<BaseResponseDTO<TWLimitedResponseDTO>> GetFixtureDetailsLimited(TWFixtureDetailsRequestDTO request)
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == Convert.ToInt64(request.FixtureId));
+            var tempFixture = fixtureCollection.Find(fixtureFilter).FirstOrDefaultAsync();
+
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            await Task.WhenAll(tempFixture, tempBettingStatus);
+
+            var fixture = tempFixture.Result;
+            var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
+
+            if (fixture == null)
+            {
+                return new BaseResponseDTO<TWLimitedResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new TWLimitedResponseDTO()
+                };
+            }
+
+            var fixtureIds = new List<long> { fixture.FiId };
+
+            var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+            var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa);
+            var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
+
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId);
+            var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
+
+            await Task.WhenAll(markets, selections);
+
+            var result = new List<FixtureLimitedDTO>
+            {
+                new FixtureLimitedDTO
+                {
+                    SportId = fixture.SpId,
+                    SportName = fixture.SpNa,
+                    SegmentId = fixture.SegId,
+                    SegmentName = fixture.SegNa,
+                    LeagueId = fixture.LeId,
+                    LeagueName = fixture.LeNa,
+                    FixtureId = fixture.FiId.ToString(),
+                    FixtureName = fixture.FiNa,
+                    Home = fixture.FiTyId == (int)FixtureType.Match ? fixture.FiNa.Split(" vs. ").First().Trim() : string.Empty,
+                    Away = fixture.FiTyId == (int)FixtureType.Match ? fixture.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
+                    FixtureStartDate = fixture.FiStDa,
+                    FixtureStatus = fixture.FiStNa,
+                    Markets = GetMarketsLimited(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList())
+                }
+            };
+
+            return new BaseResponseDTO<TWLimitedResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new TWLimitedResponseDTO
+                {
+                    Fixtures = result
+                }
+            };
+        }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtureMarketSelectionDetails(TWFixtureMarketSelectionDetailsRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == Convert.ToInt64(request.FixtureId));
@@ -2412,6 +2479,23 @@ namespace Platform.Sportsbook.API.Repository
                     Fixtures = result
                 }
             };
+        }
+        private List<MarketLimitedDTO> GetMarketsLimited(List<MarketFilter> markets, List<SelectionFilter> selections)
+        {
+            return markets.Select(m => new MarketLimitedDTO
+            {
+                MarketTemplateId = m.MaTeId,
+                MarketId = m.MaId.ToString(),
+                MarketName = m.MaNa,
+                Line = m.Li,
+                MarketStatus = m.MaStNa,
+                Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionLimitedDTO
+                {
+                    SelectionId = s.SeId.ToString(),
+                    SelectionName = s.SeNa,
+                    Odds = s.Od.ToString(),
+                }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
+            }).OrderBy(o => o.MarketTemplateId).ThenBy(o => o.MarketName).ToList();
         }
         private List<MarketDTO> GetMarkets(int sportId, List<MarketFilter> markets, List<SelectionFilter> selections)
         {

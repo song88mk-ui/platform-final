@@ -236,4 +236,55 @@ namespace Platform.Shared.Models
         public bool IsBetStopGlobal { get; set; }
         public int SortOrder { get; set; }
     }
+
+    public class TWLimitedResponseDTO
+    {
+        public TWLimitedResponseDTO()
+        {
+            Fixtures = new List<FixtureLimitedDTO>();
+        }
+        public List<FixtureLimitedDTO> Fixtures { get; set; }
+    }
+    public class FixtureLimitedDTO
+    {
+        public FixtureLimitedDTO()
+        {
+            Markets = new List<MarketLimitedDTO>();
+        }
+        public int SportId { get; set; }
+        public string SportName { get; set; }
+        public int SegmentId { get; set; }
+        public string SegmentName { get; set; }
+        public int LeagueId { get; set; }
+        public string LeagueName { get; set; }
+        public string FixtureType { get; set; }
+        public string FixtureId { get; set; }
+        public string FixtureName { get; set; }
+        public string Home { get; set; }
+        public string Away { get; set; }
+        public string FixtureStatus { get; set; }
+        public DateTime FixtureStartDate { get; set; }
+        public List<MarketLimitedDTO> Markets { get; set; }
+    }
+
+    public class MarketLimitedDTO
+    {
+        public MarketLimitedDTO()
+        {
+            Selections = new List<SelectionLimitedDTO>();
+        }
+        public string MarketTemplateId { get; set; }
+        public string MarketId { get; set; }
+        public string MarketName { get; set; }
+        public string Line { get; set; }
+        public string MarketStatus { get; set; }
+        public List<SelectionLimitedDTO> Selections { get; set; }
+    }
+
+    public class SelectionLimitedDTO
+    {
+        public string SelectionId { get; set; }
+        public string SelectionName { get; set; }
+        public string Odds { get; set; }
+    }
 }

@@ -3229,7 +3229,7 @@ namespace Platform.Sportsbook.API.Repository
                 return new BaseResponseDTO<StatusCode>
                 {
                     StatusCode = StatusCode.Duplicate_Client_Top_Fixture_Entries,
-                    Message = StatusCode.Duplicate_Client_Top_Fixture_Entries.ToString()
+                    Message = StatusCode.Duplicate_Client_Top_Fixture_Entries.ToString().Replace('_', ' ')
                 };
             }
 
@@ -3241,7 +3241,16 @@ namespace Platform.Sportsbook.API.Repository
                 return new BaseResponseDTO<StatusCode>
                 {
                     StatusCode = StatusCode.Duplicate_Sort_Order_Entries,
-                    Message = StatusCode.Duplicate_Sort_Order_Entries.ToString()
+                    Message = StatusCode.Duplicate_Sort_Order_Entries.ToString().Replace('_', ' ')
+                };
+            }
+
+            if (request.TopFixtures.Count > 50)
+            {
+                return new BaseResponseDTO<StatusCode>
+                {
+                    StatusCode = StatusCode.Top_Fixture_Entries_Must_Be_Equal_Or_Lower_50,
+                    Message = StatusCode.Top_Fixture_Entries_Must_Be_Equal_Or_Lower_50.ToString().ToString().Replace('_', ' ')
                 };
             }
 
@@ -3325,10 +3334,48 @@ namespace Platform.Sportsbook.API.Repository
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new System.Transactions.TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
             {
+                // validate requests
+
+                // check if league entries are duplicate
+                var duplicateLeagues = request.TopLeagues.GroupBy(g => g.LeagueId).Where(c => c.Count() > 1).ToList();
+
+                if (duplicateLeagues.Count > 0)
+                {
+                    return new BaseResponseDTO<StatusCode>
+                    {
+                        StatusCode = StatusCode.Duplicate_Client_Top_League_Entries,
+                        Message = StatusCode.Duplicate_Client_Top_League_Entries.ToString().ToString().Replace('_', ' ')
+                    };
+                }
+
+                // check if sort order requests are duplicate
+                var duplicateSortOrders = request.TopLeagues.GroupBy(g => g.SortOrder).Where(c => c.Count() > 1).ToList();
+
+                if (duplicateSortOrders.Count > 0)
+                {
+                    return new BaseResponseDTO<StatusCode>
+                    {
+                        StatusCode = StatusCode.Duplicate_Sort_Order_Entries,
+                        Message = StatusCode.Duplicate_Sort_Order_Entries.ToString().ToString().Replace('_', ' ')
+                    };
+                }
+
+                if (request.TopLeagues.Count > 50)
+                {
+                    return new BaseResponseDTO<StatusCode>
+                    {
+                        StatusCode = StatusCode.Top_League_Entries_Must_Be_Equal_Or_Lower_50,
+                        Message = StatusCode.Top_League_Entries_Must_Be_Equal_Or_Lower_50.ToString().ToString().Replace('_', ' ')
+                    };
+                }
+
                 // delete existing records
                 var currentTopLeagues = _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == request.ClientId).ToList();
 
-                _sportsbookContext.RemoveRange(currentTopLeagues);
+                if(currentTopLeagues.Count > 0)
+                {
+                    _sportsbookContext.ClientLeagueOrder.RemoveRange(currentTopLeagues);
+                }
 
                 // insert new records
                 var newTopLeagues = request.TopLeagues.Select(s => new ClientLeagueOrder
@@ -3343,7 +3390,7 @@ namespace Platform.Sportsbook.API.Repository
                     SortOrder = s.SortOrder
                 });
 
-                _sportsbookContext.AddRange(newTopLeagues);
+                _sportsbookContext.ClientLeagueOrder.AddRange(newTopLeagues);
 
                 await _sportsbookContext.SaveChangesAsync();
 

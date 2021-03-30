@@ -2486,7 +2486,7 @@ namespace Platform.Sportsbook.API.Repository
                             DecimalOdds = s.Od.ToString(),
                             IsActive = s.IsAc,
                             CorrelationId = s.CoId,
-                        }).OrderBy(o => o.DecimalOdds).ToList()
+                        }).OrderBy(o => Convert.ToDecimal(o.DecimalOdds)).ToList()
                     });
                 }
                 else

@@ -36,6 +36,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public string SeNa { get; set; }
         public decimal Od { get; set; }
         public bool IsAc { get; set; }
+        public int SeSoOr { get; set; }
         public string CoId { get; set; }
     }
 }

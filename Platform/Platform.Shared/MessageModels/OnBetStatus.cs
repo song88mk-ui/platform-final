@@ -8,5 +8,6 @@ namespace Platform.Shared.MessageModels
         public string UserId { get; set; }
         public string BetId { get; set; }
         public BetStatus BetStatus { get; set; }
+        public string Message { get; set; }
     }
 }

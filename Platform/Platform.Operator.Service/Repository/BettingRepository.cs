@@ -174,7 +174,8 @@ namespace Platform.Operator.Service.Repository
             ProcesssBetCancellation(new OnBetSettlement
             {
                 Bet = betData,
-                BetSelections = betSelectionData
+                BetSelections = betSelectionData,
+                Message = reason
             }, messageBroker, correlationId);
         }
 
@@ -311,7 +312,18 @@ namespace Platform.Operator.Service.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        CancelBet(betData.BetId, JsonSerializer.Serialize(result), Guid.NewGuid().ToString().ToUpper(), messageBroker);
+                        var betMessage = string.Empty;
+
+                        if (result.StatusId == 1001)
+                            betMessage = "Insufficient Funds";
+                        else if (result.StatusId == 1002)
+                            betMessage = "Insufficient Funds";
+                        else if (result.StatusId == 1003)
+                            betMessage = "Operator Error";
+                        else
+                            betMessage = result.Message;
+
+                        CancelBet(betData.BetId, betMessage, Guid.NewGuid().ToString().ToUpper(), messageBroker);
                     }
                     else
                     {
@@ -328,7 +340,7 @@ namespace Platform.Operator.Service.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        CancelBet(betData.BetId, JsonSerializer.Serialize(response.ReasonPhrase), Guid.NewGuid().ToString().ToUpper(), messageBroker);
+                        CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker);
                     }
                 }
             }
@@ -347,7 +359,7 @@ namespace Platform.Operator.Service.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                CancelBet(betData.BetId, JsonSerializer.Serialize(ex.Message), Guid.NewGuid().ToString().ToUpper(), messageBroker);
+                CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker);
             }
         }
         public void ProcesssBetSettlement(OnBetSettlement message, IMessageBroker messageBroker, string correlationId)
@@ -530,6 +542,15 @@ namespace Platform.Operator.Service.Repository
                         AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
                     }).ToList()
                 };
+
+                messageBroker.Publish(new OnBetStatus
+                {
+                    ClientId = message.Bet.ClientId.ToString().ToUpper(),
+                    UserId = message.Bet.UserId,
+                    BetId = message.Bet.BetId.ToString().ToUpper(),
+                    BetStatus = (BetStatus)message.Bet.BetStatusId,
+                    Message = message.Message
+                }, "OnBetStatus", "r.bet.betstatus", correlationId);
 
                 //publish to reports
                 messageBroker.Publish(message, "OnBetCancellation", "r.bet.reports", correlationId);

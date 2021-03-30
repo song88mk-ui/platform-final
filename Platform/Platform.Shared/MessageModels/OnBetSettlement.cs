@@ -11,6 +11,7 @@ namespace Platform.Shared.MessageModels
         }    
         public Bet Bet { get; set; }
         public List<BetSelection> BetSelections { get; set; }
+        public string Message { get; set; }
     }
 
     public class OnBetSettlementRetry

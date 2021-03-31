@@ -51,7 +51,7 @@ namespace Platform.API.Controllers
         }
 
         /// <summary>
-        /// Get list of sports along with the following: Segments, Leagues, and Fixtures. Doesn't include virtual sports and outrights. 
+        /// Get list of sports along with the following: Segments, Leagues, and Fixtures. Doesn't include virtual sports and outrights 
         /// </summary>
         [HttpGet("v1/client/topfixtures/sportstree")]
         public async Task<IActionResult> GetSportstree([FromQuery] int clientRefId)

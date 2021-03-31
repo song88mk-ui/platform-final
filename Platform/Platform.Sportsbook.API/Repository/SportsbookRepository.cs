@@ -3160,7 +3160,8 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var clientIds = topFixtures.Select(s => s.ClientId).Distinct().ToList();
+            //var clientIds = topFixtures.Select(s => s.ClientId).Distinct().ToList();
+            var clientIds = request.ClientIds.Distinct().ToList();
 
             var result = new List<OrderedClientTopFixture>();
 

@@ -1456,8 +1456,11 @@ namespace Platform.API.Repository
             {
                 var client = clients.FirstOrDefault(c => c.ClientId == topFixture.ClientId);
 
-                topFixture.ClientIdRef = client.ClientIdRef;
-                topFixture.ClientName = client.ClientName;
+                if (client != null)
+                {
+                    topFixture.ClientIdRef = client.ClientIdRef;
+                    topFixture.ClientName = client.ClientName;
+                }
             }
 
             return response;

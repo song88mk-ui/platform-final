@@ -49,6 +49,8 @@
         Top_Fixture_Entries_Must_Be_Equal_Or_Lower_50 = 137,
         Top_League_Entries_Must_Be_Equal_Or_Lower_50 = 138,
 
+        No_Record = 139,
+
         Error = 1000,
         Operator_Error = 1001
     }

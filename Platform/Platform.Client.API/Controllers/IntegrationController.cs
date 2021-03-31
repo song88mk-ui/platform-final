@@ -122,5 +122,22 @@ namespace Platform.Client.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpGet("v1/sportsbook/ccf")]
+        public async Task<IActionResult> GetCCF([FromQuery] string userId)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            //force deploy
+            var result = await _sportsbookRepository.GetCustomerConfidenceFactor(apiKey, clientId, userId);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

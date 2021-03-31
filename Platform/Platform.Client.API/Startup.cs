@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Platform.Client.API.ActionFilters;
 using Platform.Client.API.Repository;
+using Platform.Shared.Utility;
 
 namespace Platform.Client.API
 {
@@ -50,6 +51,9 @@ namespace Platform.Client.API
 
             services.AddControllers();
 
+            services.AddSingleton<IMemCache, MemCache>();
+            services.AddHttpClient<IMTSAuthRepository, MTSAuthRepository>();
+            services.AddHttpClient<IMTSCCFRepository, MTSCCFRepository>();
             services.AddHttpClient<ISportsbookRepository, SportsbookRepository>();
 
             services.AddSwaggerGen(c =>

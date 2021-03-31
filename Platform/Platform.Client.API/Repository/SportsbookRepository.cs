@@ -14,12 +14,17 @@ namespace Platform.Client.API.Repository
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
 
-        public SportsbookRepository(HttpClient httpClient, IConfiguration configuration)
+        private readonly IMTSAuthRepository _mtsAuthRepository;
+        private readonly IMTSCCFRepository _mtsCCFRepository;
+
+        public SportsbookRepository(HttpClient httpClient, IConfiguration configuration, IMTSAuthRepository mtsAuthRepository, IMTSCCFRepository mtsCCFRepository)
         {
             _configuration = configuration;
+            _mtsAuthRepository = mtsAuthRepository;
+            _mtsCCFRepository = mtsCCFRepository;
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(_configuration["API:PlatformSportsbookAPI"]);
-            _httpClient.Timeout = TimeSpan.FromSeconds(5);
+            //_httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(string apiKey, string clientId, LanguageCode languageCode)
         {
@@ -237,6 +242,12 @@ namespace Platform.Client.API.Repository
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
                 };
             }
+        }
+        public async Task<BaseResponseDTO<CustomerConfidenceFactorResponseDTO>> GetCustomerConfidenceFactor(string apiKey, string clientId, string userId)
+        {
+            var mtsAuthToken = await _mtsAuthRepository.GetMTSAuthorizationToken();
+
+            return await _mtsCCFRepository.GetCustomerConfidenceFactor(mtsAuthToken.Result.Token, userId);
         }
     }
 }

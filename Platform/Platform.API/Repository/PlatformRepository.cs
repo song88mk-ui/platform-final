@@ -260,7 +260,7 @@ namespace Platform.API.Repository
             {
                 APIKey = apiKey,
                 OperatorToken = operatorToken,
-                ClientId = clientId,
+                ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
                 UserId = authenticationResponse.Result.UserId,
                 FromDate = request.FromDate,
                 ToDate = request.ToDate,

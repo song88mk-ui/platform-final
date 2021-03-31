@@ -22,6 +22,14 @@ namespace Platform.Client.API.Repository
             _httpClient.BaseAddress = new Uri(_configuration["API:MTSCCFAPI"]);
         }
 
+        private string GetDoubleDigit(int number)
+        {
+            if (number < 10)
+                return $"0{number}";
+            else
+                return number.ToString();
+        }
+
         public async Task<BaseResponseDTO<CustomerConfidenceFactorResponseDTO>> GetCustomerConfidenceFactor(string authToken, string userId)
         {
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");

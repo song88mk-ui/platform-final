@@ -26,19 +26,6 @@ namespace Platform.Client.API.Repository
         }
         public async Task<BaseResponseDTO<MTSAuthResponseDTO>> GetMTSAuthorizationToken()
         {
-            if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) == false)
-            {
-                return new BaseResponseDTO<MTSAuthResponseDTO>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new MTSAuthResponseDTO
-                    {
-                        Token = string.Empty
-                    }
-                };
-            }
-
             var cacheKey = $"mts:auth";
 
             var cache = _memCache.GetCache<BaseResponseDTO<MTSAuthResponseDTO>>(cacheKey);

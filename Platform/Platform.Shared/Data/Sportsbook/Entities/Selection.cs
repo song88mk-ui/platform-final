@@ -25,6 +25,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public int FiStId { get; set; }
         public int MaStId { get; set; }
         public string CoId { get; set; }
+        public double Pr { get; set; }
     }
     public class SelectionFilter
     {

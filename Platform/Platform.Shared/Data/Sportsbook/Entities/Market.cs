@@ -19,6 +19,8 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public int MaSoOr { get; set; }
         public DateTime FiStDa { get; set; }
         public int FiStId { get; set; }
+        public int CaStId { get; set; }
+        public string CaStNa { get; set; }
     }
 
     public class MarketFilter

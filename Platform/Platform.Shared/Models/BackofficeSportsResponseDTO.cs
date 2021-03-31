@@ -50,9 +50,16 @@ namespace Platform.Shared.Models
 
     public class BackofficeFixtureDTO
     {
+        public int SportId { get; set; }
+        public string SportName { get; set; }
+        public int SegmentId { get; set; }
+        public string SegmentName { get; set; }
+        public int LeagueId { get; set; }
+        public string LeagueName { get; set; }
         public string FixtureId { get; set; }
         public string FixtureName { get; set; }
         public DateTime StartDate { get; set; }
+        public string FixtureStatus { get; set; }
         public int SortOrder { get; set; }
     }
 
@@ -71,6 +78,7 @@ namespace Platform.Shared.Models
     public class TempOrderedFixture : OrderedFixture
     {
         public DateTime StartDate { get; set; }
+        public string FixtureStatus { get; set; }
         public int SortOrder { get; set; }
     }
 

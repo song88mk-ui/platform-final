@@ -3245,6 +3245,7 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureId = s.FiId,
                     FixtureName = s.FiNa,
                     StartDate = s.FiStDa,
+                    FixtureStatus = s.FiStNa,
                     SortOrder = leagueSortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() 
                     == 0 ? 1000 : leagueSortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 }).ToList();
@@ -3284,9 +3285,16 @@ namespace Platform.Sportsbook.API.Repository
                             SortOrder = l.Select(le => le.SortOrder).FirstOrDefault(),
                             Fixtures = l.Select(f => new BackofficeFixtureDTO
                             {
+                                SportId = f.SportId,
+                                SportName = f.SportName,
+                                SegmentId = f.SegmentId,
+                                SegmentName = f.SegmentName,
+                                LeagueId = f.LeagueId,
+                                LeagueName = f.LeagueName,
                                 FixtureId = f.FixtureId.ToString(),
                                 FixtureName = f.FixtureName,
                                 StartDate = f.StartDate,
+                                FixtureStatus = f.FixtureStatus,
                                 SortOrder = f.SortOrder
                             }).OrderBy(o => o.SortOrder).ThenBy(o => o.FixtureName).ToList()
                         }).OrderBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ToList()

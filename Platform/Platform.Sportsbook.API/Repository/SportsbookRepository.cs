@@ -3283,7 +3283,7 @@ namespace Platform.Sportsbook.API.Repository
                             SortOrder = l.Select(le => le.SortOrder).FirstOrDefault(),
                             Fixtures = l.Select(f => new BackofficeFixtureDTO
                             {
-                                FixtureId = f.FixtureId,
+                                FixtureId = f.FixtureId.ToString(),
                                 FixtureName = f.FixtureName,
                                 StartDate = f.StartDate,
                                 SortOrder = f.SortOrder

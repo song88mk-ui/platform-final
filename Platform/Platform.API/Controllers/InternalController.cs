@@ -33,6 +33,9 @@ namespace Platform.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Get list of all top fixtures per client ids that are included in the request.
+        /// </summary>
         [HttpGet("v1/client/topfixtures")]
         public async Task<IActionResult> GetClientTopFixtures([FromQuery] string clientRefIds)
         {
@@ -47,6 +50,9 @@ namespace Platform.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Get list of sports along with the following: Segments, Leagues, and Fixtures. Doesn't include virtual sports and outrights. 
+        /// </summary>
         [HttpGet("v1/client/topfixtures/sportstree")]
         public async Task<IActionResult> GetSportstree([FromQuery] int clientRefId)
         {
@@ -61,6 +67,9 @@ namespace Platform.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Update top fixtures of a client.
+        /// </summary>
         [HttpPost("v1/client/topfixtures")]
         public async Task<IActionResult> PostClientTopFixtures([FromBody] ClientTopFixtureRequest request)
         {

@@ -602,7 +602,6 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
-
         /// <summary>
         /// Update top fixtures of a client.
         /// </summary>

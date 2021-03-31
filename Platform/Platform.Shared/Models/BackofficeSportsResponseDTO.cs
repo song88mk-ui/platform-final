@@ -50,7 +50,7 @@ namespace Platform.Shared.Models
 
     public class BackofficeFixtureDTO
     {
-        public long FixtureId { get; set; }
+        public string FixtureId { get; set; }
         public string FixtureName { get; set; }
         public DateTime StartDate { get; set; }
         public int SortOrder { get; set; }

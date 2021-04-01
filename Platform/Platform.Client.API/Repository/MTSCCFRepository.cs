@@ -45,6 +45,15 @@ namespace Platform.Client.API.Repository
                 var result = initialResult.Split("\n");
                 var length = result.Length;
 
+                if (length <= 2)
+                {
+                    return new BaseResponseDTO<CustomerConfidenceFactorResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                    };
+                }
+
                 var result2 = result[length - 2];
 
                 var split = result2.Split(",");
@@ -68,8 +77,8 @@ namespace Platform.Client.API.Repository
 
             return new BaseResponseDTO<CustomerConfidenceFactorResponseDTO>
             {
-                StatusCode = StatusCode.No_Record,
-                Message = StatusCode.No_Record.ToString()
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
             };
         }
     }

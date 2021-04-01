@@ -43,10 +43,10 @@
 
         Search_Text_Needs_To_Be_3_Characters_Or_Above = 133,
 
-        Duplicate_Client_Top_Fixture_Entries = 134,
+        Cannot_Have_Duplicate_Top_Fixture_Entries = 134,
         Duplicate_Client_Top_League_Entries = 135,
-        Duplicate_Sort_Order_Entries = 136,
-        Top_Fixture_Entries_Must_Be_Equal_Or_Lower_50 = 137,
+        Cannot_Have_Duplicate_Sort_Order_Entries = 136,
+        Top_Fixture_Entries_Must_Be_Equal_Or_Lower_Than_50 = 137,
         Top_League_Entries_Must_Be_Equal_Or_Lower_50 = 138,
 
         No_Record_Found = 139,

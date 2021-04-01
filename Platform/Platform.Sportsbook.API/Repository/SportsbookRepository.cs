@@ -3313,7 +3313,7 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
-        public async Task<BaseResponseDTO<StatusCode>> PostClientTopFixtures(PostClientTopFixtureRequestDTO request)
+        public async Task<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>> PostClientTopFixtures(PostClientTopFixtureRequestDTO request)
         {
             // validate requests
 
@@ -3322,10 +3322,14 @@ namespace Platform.Sportsbook.API.Repository
 
             if (duplicateFixtures.Count > 0)
             {
-                return new BaseResponseDTO<StatusCode>
+                return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
                 {
-                    StatusCode = StatusCode.Duplicate_Client_Top_Fixture_Entries,
-                    Message = StatusCode.Duplicate_Client_Top_Fixture_Entries.ToString().Replace('_', ' ')
+                    StatusCode = StatusCode.Success,
+                    Result = new ClientTopFixtureMessageResponseDTO()
+                    {
+                        StatusCode = StatusCode.Cannot_Have_Duplicate_Top_Fixture_Entries,
+                        Message = StatusCode.Cannot_Have_Duplicate_Top_Fixture_Entries.ToString().Replace('_', ' ')
+                    }
                 };
             }
 
@@ -3334,19 +3338,27 @@ namespace Platform.Sportsbook.API.Repository
 
             if (duplicateSortOrders.Count > 0)
             {
-                return new BaseResponseDTO<StatusCode>
+                return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
                 {
-                    StatusCode = StatusCode.Duplicate_Sort_Order_Entries,
-                    Message = StatusCode.Duplicate_Sort_Order_Entries.ToString().Replace('_', ' ')
+                    StatusCode = StatusCode.Success,
+                    Result = new ClientTopFixtureMessageResponseDTO()
+                    {
+                        StatusCode = StatusCode.Cannot_Have_Duplicate_Sort_Order_Entries,
+                        Message = StatusCode.Cannot_Have_Duplicate_Sort_Order_Entries.ToString().Replace('_', ' ')
+                    }
                 };
             }
 
             if (request.TopFixtures.Count > 50)
             {
-                return new BaseResponseDTO<StatusCode>
+                return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
                 {
-                    StatusCode = StatusCode.Top_Fixture_Entries_Must_Be_Equal_Or_Lower_50,
-                    Message = StatusCode.Top_Fixture_Entries_Must_Be_Equal_Or_Lower_50.ToString().ToString().Replace('_', ' ')
+                    StatusCode = StatusCode.Success,
+                    Result = new ClientTopFixtureMessageResponseDTO()
+                    {
+                        StatusCode = StatusCode.Top_Fixture_Entries_Must_Be_Equal_Or_Lower_Than_50,
+                        Message = StatusCode.Top_Fixture_Entries_Must_Be_Equal_Or_Lower_Than_50.ToString().ToString().Replace('_', ' ')
+                    }
                 };
             }
 
@@ -3370,7 +3382,7 @@ namespace Platform.Sportsbook.API.Repository
 
             await _sportsbookContext.SaveChangesAsync();
 
-            return new BaseResponseDTO<StatusCode>
+            return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString()
@@ -3451,8 +3463,8 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     return new BaseResponseDTO<StatusCode>
                     {
-                        StatusCode = StatusCode.Duplicate_Sort_Order_Entries,
-                        Message = StatusCode.Duplicate_Sort_Order_Entries.ToString().ToString().Replace('_', ' ')
+                        StatusCode = StatusCode.Cannot_Have_Duplicate_Sort_Order_Entries,
+                        Message = StatusCode.Cannot_Have_Duplicate_Sort_Order_Entries.ToString().ToString().Replace('_', ' ')
                     };
                 }
 

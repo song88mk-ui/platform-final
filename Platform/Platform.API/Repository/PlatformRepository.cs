@@ -1479,7 +1479,7 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.GetSportstreeDetails(sportsbookRequest);
         }
 
-        public async Task<BaseResponseDTO<StatusCode>> PostClientTopFixtures(ClientTopFixtureRequest request)
+        public async Task<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>> PostClientTopFixtures(ClientTopFixtureRequest request)
         {
             var client = _platformContext.Client.FirstOrDefault(c => c.ClientIdRef == request.ClientId);
 

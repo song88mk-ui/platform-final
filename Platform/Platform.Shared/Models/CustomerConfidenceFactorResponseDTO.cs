@@ -1,6 +1,17 @@
-﻿namespace Platform.Shared.Models
+﻿using System.Collections.Generic;
+
+namespace Platform.Shared.Models
 {
     public class CustomerConfidenceFactorResponseDTO
+    {
+        public CustomerConfidenceFactorResponseDTO()
+        {
+            Values = new List<CustomerConfidenceFactor>();
+        }
+        public List<CustomerConfidenceFactor> Values { get; set; }
+    }
+
+    public class CustomerConfidenceFactor
     {
         public double Timestamp { get; set; }
         public double CurrentCCF { get; set; }

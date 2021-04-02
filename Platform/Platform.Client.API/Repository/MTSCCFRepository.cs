@@ -35,9 +35,9 @@ namespace Platform.Client.API.Repository
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
 
             var year = DateTime.UtcNow.Year;
-            var startDate = $"{year}{GetDoubleDigit(DateTime.UtcNow.Month)}01000000";
-            var endDate = $"{year}1231000000";
-            var response = await _httpClient.GetAsync($"edge/proxy/ReportingCcf/external/api/report/export/history/ccf/changes/client/api?startDatetime={startDate}&endDatetime={endDate}&bookmakerId=32290&sourceId={_configuration["Custom:ClientCode"]}{userId.Replace("-", string.Empty)}");
+            var startDate = $"{year}0305000000";
+            var endDate = $"{year}0630000000";
+            var response = await _httpClient.GetAsync($"edge/proxy/ReportingCcf/external/api/report/export/history/ccf/changes/client/api?startDatetime={startDate}&endDatetime={endDate}&bookmakerId=32290&sourceId=10C{userId.Replace("-", string.Empty)}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -54,15 +54,14 @@ namespace Platform.Client.API.Repository
                     };
                 }
 
-                var result2 = result[length - 2];
+                var final = new CustomerConfidenceFactorResponseDTO();
 
-                var split = result2.Split(",");
-
-                return new BaseResponseDTO<CustomerConfidenceFactorResponseDTO>
+                for (int i = 1; i < length - 1; i++)
                 {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new CustomerConfidenceFactorResponseDTO
+                    var temp = result[i];
+                    var split = temp.Split(",");
+
+                    final.Values.Add(new CustomerConfidenceFactor
                     {
                         Timestamp = Convert.ToDouble(split[0]),
                         CurrentCCF = Convert.ToDouble(split[5]),
@@ -71,7 +70,14 @@ namespace Platform.Client.API.Repository
                         SportId = string.IsNullOrEmpty(split[7]) ? string.Empty : split[7].Split(":").Last(),
                         SportName = string.IsNullOrEmpty(split[8]) ? string.Empty : split[8],
                         AppliedTo = string.IsNullOrEmpty(split[9]) ? "Both" : split[9].ToLower() == "true" ? "Live" : "Prematch"
-                    }
+                    });
+                }
+
+                return new BaseResponseDTO<CustomerConfidenceFactorResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = final
                 };
             }
 

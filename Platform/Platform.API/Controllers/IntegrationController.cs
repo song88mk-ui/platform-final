@@ -10,12 +10,11 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace Platform.API.Controllers
-{//
+{
     [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(APIKeyFilter))]
     public class IntegrationController : ControllerBase
     {
         private readonly IPlatformRepository _platformRepository;
-        //force deploy
         public IntegrationController(IPlatformRepository platformRepository)
         {
             _platformRepository = platformRepository;

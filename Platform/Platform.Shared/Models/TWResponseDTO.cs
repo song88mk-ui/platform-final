@@ -201,7 +201,7 @@ namespace Platform.Shared.Models
         public string SelectionId { get; set; }
         public string SelectionName { get; set; }
         public string DecimalOdds { get; set; }
-        public int SelectionSortOrder { get; set; }
+        public int SortOrder { get; set; }
         public bool IsActive { get; set; }
         public string CorrelationId { get; set; }
     }

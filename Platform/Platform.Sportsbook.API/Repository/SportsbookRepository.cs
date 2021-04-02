@@ -2518,8 +2518,8 @@ namespace Platform.Sportsbook.API.Repository
                     DecimalOdds = s.Od.ToString(),
                     IsActive = s.IsAc,
                     CorrelationId = s.CoId,
-                    SelectionSortOrder = s.SeSoOr
-                }).OrderBy(o => o.SelectionSortOrder).ToList()
+                    SortOrder = s.SeSoOr
+                }).OrderBy(o => o.SortOrder).ToList()
             }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
         }
         private List<MarketDTO> GetMarkets(List<MarketFilter> markets, List<SelectionFilter> selections)
@@ -2541,8 +2541,8 @@ namespace Platform.Sportsbook.API.Repository
                     DecimalOdds = s.Od.ToString(),
                     IsActive = s.IsAc,
                     CorrelationId = s.CoId,
-                    SelectionSortOrder = s.SeSoOr
-                }).OrderBy(o => o.SelectionSortOrder).ToList()
+                    SortOrder = s.SeSoOr
+                }).OrderBy(o => o.SortOrder).ToList()
             }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
         }
         private List<MarketDTO> GetOutrightMarkets(List<MarketFilter> markets, List<SelectionFilter> selections)
@@ -2594,8 +2594,8 @@ namespace Platform.Sportsbook.API.Repository
                             DecimalOdds = s.Od.ToString(),
                             IsActive = s.IsAc,
                             CorrelationId = s.CoId,
-                            SelectionSortOrder = s.SeSoOr
-                        }).OrderBy(o => o.SelectionSortOrder).ToList()
+                            SortOrder = s.SeSoOr
+                        }).OrderBy(o => o.SortOrder).ToList()
                     });
                 }
             }

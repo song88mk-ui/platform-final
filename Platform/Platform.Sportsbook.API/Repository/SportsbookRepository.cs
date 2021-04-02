@@ -2495,7 +2495,7 @@ namespace Platform.Sportsbook.API.Repository
                     SelectionName = s.SeNa,
                     Odds = s.Od.ToString(),
                 }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
-            }).OrderBy(o => o.MarketTemplateId).ThenBy(o => o.MarketName).ToList();
+            }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.MarketName).ToList();
         }
         private List<MarketDTO> GetMarkets(int sportId, List<MarketFilter> markets, List<SelectionFilter> selections)
         {
@@ -2520,7 +2520,7 @@ namespace Platform.Sportsbook.API.Repository
                     CorrelationId = s.CoId,
                     SelectionSortOrder = s.SeSoOr
                 }).OrderBy(o => o.SelectionSortOrder).ToList()
-            }).OrderBy(o => o.MarketTemplateId).ThenBy(o => o.MarketName).ToList();
+            }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.MarketName).ToList();
         }
         private List<MarketDTO> GetMarkets(List<MarketFilter> markets, List<SelectionFilter> selections)
         {
@@ -2543,7 +2543,7 @@ namespace Platform.Sportsbook.API.Repository
                     CorrelationId = s.CoId,
                     SelectionSortOrder = s.SeSoOr
                 }).OrderBy(o => o.SelectionSortOrder).ToList()
-            }).OrderBy(o => o.MarketTemplateId).ThenBy(o => o.MarketName).ToList();
+            }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.MarketName).ToList();
         }
         private List<MarketDTO> GetOutrightMarkets(List<MarketFilter> markets, List<SelectionFilter> selections)
         {
@@ -2600,7 +2600,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
             }
 
-            return result;
+            return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.MarketName).ToList();;
 
             //return markets.Select(m => new MarketDTO
             //{

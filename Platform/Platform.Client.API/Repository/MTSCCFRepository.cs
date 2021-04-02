@@ -37,7 +37,7 @@ namespace Platform.Client.API.Repository
             var year = DateTime.UtcNow.Year;
             var startDate = $"{year}{GetDoubleDigit(DateTime.UtcNow.Month)}01000000";
             var endDate = $"{year}1231000000";
-            var response = await _httpClient.GetAsync($"edge/proxy/ReportingCcf/external/api/report/export/history/ccf/changes/client/api?startDatetime={startDate}&endDatetime={endDate}&bookmakerId=32290&sourceId=10I{userId.Replace("-", string.Empty)}");
+            var response = await _httpClient.GetAsync($"edge/proxy/ReportingCcf/external/api/report/export/history/ccf/changes/client/api?startDatetime={startDate}&endDatetime={endDate}&bookmakerId=32290&sourceId={_configuration["Custom:ClientCode"]}{userId.Replace("-", string.Empty)}");
 
             if (response.IsSuccessStatusCode)
             {

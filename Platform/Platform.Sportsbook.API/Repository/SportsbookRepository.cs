@@ -2827,8 +2827,8 @@ namespace Platform.Sportsbook.API.Repository
             {
                 SportId = s.Key,
                 SportName = s.Select(ss => ss.SpNa).FirstOrDefault(),
-                PrematchCount = s.Where(c => c.FiTyId == (int)FixtureStatus.Prematch).Count(),
-                LiveCount = s.Where(c => c.FiTyId == (int)FixtureStatus.Live).Count(),
+                PrematchCount = s.Where(c => c.FiStId == (int)FixtureStatus.Prematch).Count(),
+                LiveCount = s.Where(c => c.FiStId == (int)FixtureStatus.Live).Count(),
             }).OrderBy(o => o.SportId).ToList();
 
             return new BaseResponseDTO<ActiveFixtureCountResponseDTO>

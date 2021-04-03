@@ -569,7 +569,7 @@ namespace Platform.Betting.API.Repository
                     TotalCommission = 0,
                     TotalWinLoss = winLoss,
                     TotalWLC = winLoss,
-                    Bets = result
+                    Bets = result.OrderByDescending(o => o.TransactionDate).ToList()
                 }
             };
         }

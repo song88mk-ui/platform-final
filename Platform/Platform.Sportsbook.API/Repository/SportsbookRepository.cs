@@ -956,7 +956,21 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopFixturesTW(TWRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match);
+            var clientFixtures = await _sportsbookContext.ClientTopFixture.Where(c => c.ClientId == request.ClientId).ToListAsync();
+
+            if (clientFixtures.Count == 0)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new TWResponseDTO()
+                };
+            }
+
+            var tempFixtureIds = clientFixtures.Select(s => s.FixtureId).ToList();
+
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => tempFixtureIds.Contains(c.FiId));
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
@@ -964,7 +978,7 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
-            var fixtures = tempFixtures.Result;
+            var fixtures = tempFixtures.Result.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match).ToList();
             var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
@@ -1013,7 +1027,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var limit = 10;
 
-            if (request.ClientId == Guid.Parse("5093617A-9367-EB11-89FB-00224815B68B") || 
+            if (request.ClientId == Guid.Parse("5093617A-9367-EB11-89FB-00224815B68B") ||
                 request.ClientId == Guid.Parse("BFED6DA4-D1B5-4437-665D-08D8EE99AC1C") ||
                 request.ClientId == Guid.Parse("F5251362-64F1-4BF4-28E9-08D8EE99CA8E"))
             {
@@ -1110,6 +1124,162 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+        //public async Task<BaseResponseDTO<TWResponseDTO>> GetTopFixturesTW(TWRequestDTO request)
+        //{
+        //    var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match);
+        //    var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+        //    var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+        //    var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+        //    await Task.WhenAll(tempFixtures, tempBettingStatus);
+
+        //    var fixtures = tempFixtures.Result;
+        //    var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
+
+        //    if (fixtures.Count == 0)
+        //    {
+        //        return new BaseResponseDTO<TWResponseDTO>
+        //        {
+        //            StatusCode = StatusCode.Success,
+        //            Message = StatusCode.Success.ToString(),
+        //            Result = new TWResponseDTO()
+        //        };
+        //    }
+
+        //    var sortOrder = GetTierLeagueOrder();
+
+        //    var result = fixtures.Select(s => new TempFixtureDTO
+        //    {
+        //        SportId = s.SpId,
+        //        SportName = s.SpNa,
+        //        SegmentId = s.SegId,
+        //        SegmentName = s.SegNa,
+        //        LeagueId = s.LeId,
+        //        LeagueName = s.LeNa,
+        //        ProviderFixtureId = s.PrFiId,
+        //        FixtureId = s.FiId.ToString(),
+        //        FixtureName = s.FiNa,
+        //        HomeName = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").First().Trim() : string.Empty,
+        //        AwayName = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
+        //        FixtureStartDate = s.FiStDa,
+        //        IsLive = s.IsOfLi,
+        //        IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
+        //        FixtureStatusId = s.FiStId,
+        //        FixtureStatusName = s.FiStNa,
+        //        MarketCount = 0,
+        //        SMSCode = string.Empty,
+        //        StatisticsURL = string.IsNullOrEmpty(s.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+        //        Score = s.Sc,
+        //        CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
+        //        CurrentMinute = s.CuMi.ToString(),
+        //        BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+        //        IsBetStopGlobal = bettingStatus.IsBeSo,
+        //        SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+        //        == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+        //    }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+
+        //    var initialResult = new List<TempFixtureDTO>();
+
+        //    var limit = 10;
+
+        //    if (request.ClientId == Guid.Parse("5093617A-9367-EB11-89FB-00224815B68B") || 
+        //        request.ClientId == Guid.Parse("BFED6DA4-D1B5-4437-665D-08D8EE99AC1C") ||
+        //        request.ClientId == Guid.Parse("F5251362-64F1-4BF4-28E9-08D8EE99CA8E"))
+        //    {
+        //        initialResult.AddRange(result.Where(c => c.SportId == 21).ToList());
+        //        limit = initialResult.Count + 10;
+        //    }
+
+        //    foreach (var item in result)
+        //    {
+        //        if (initialResult.Any(c => c.FixtureId == item.FixtureId && c.SportId != 21)) continue;
+        //        if (initialResult.Count == limit) break;
+
+        //        initialResult.Add(item);
+        //    }
+
+        //    var finalResult = new List<FixtureDTO>();
+
+        //    var fixtureIds = initialResult.Select(s => Convert.ToInt64(s.FixtureId)).ToList();
+        //    var marketTemplateIds = new List<string>();
+
+        //    foreach (var item in initialResult)
+        //    {
+        //        var templates = GetMainMarketTemplates(item.SportId);
+
+        //        foreach (var template in templates)
+        //        {
+        //            if (marketTemplateIds.Any(c => c == template)) continue;
+
+        //            marketTemplateIds.Add(template);
+        //        }
+        //    }
+
+        //    var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+        //    var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+        //    var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
+        //    var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
+
+        //    var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
+        //    var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa);
+        //    var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
+
+        //    var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
+        //    var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId);
+        //    var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
+
+        //    await Task.WhenAll(marketCount, markets, selections);
+
+        //    foreach (var item in initialResult)
+        //    {
+        //        var currentMarkets = GetMarkets(item.SportId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList());
+
+        //        if (currentMarkets.Count == 0) continue;
+
+        //        finalResult.Add(new FixtureDTO
+        //        {
+        //            SportId = item.SportId,
+        //            SportName = item.SportName,
+        //            SegmentId = item.SegmentId,
+        //            SegmentName = item.SegmentName,
+        //            LeagueId = item.LeagueId,
+        //            LeagueName = item.LeagueName,
+        //            FixtureId = item.FixtureId,
+        //            ProviderFixtureId = item.ProviderFixtureId,
+        //            FixtureName = item.FixtureName,
+        //            HomeName = item.HomeName,
+        //            AwayName = item.AwayName,
+        //            FixtureStartDate = item.FixtureStartDate,
+        //            IsLive = item.IsLive,
+        //            IsLiveStream = item.IsLiveStream,
+        //            FixtureStatusId = item.FixtureStatusId,
+        //            FixtureStatusName = item.FixtureStatusName,
+        //            MarketCount = marketCount.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).Count(),
+        //            SMSCode = string.Empty,
+        //            StatisticsURL = item.StatisticsURL,
+        //            Score = item.Score,
+        //            CurrentPeriod = item.CurrentPeriod,
+        //            CurrentMinute = item.CurrentMinute,
+        //            BetStop = item.BetStop,
+        //            IsBetStopGlobal = item.IsBetStopGlobal,
+        //            Markets = currentMarkets
+        //        });
+
+        //        if (finalResult.Count == 10) break;
+        //    }
+
+        //    return new BaseResponseDTO<TWResponseDTO>
+        //    {
+        //        StatusCode = StatusCode.Success,
+        //        Message = StatusCode.Success.ToString(),
+        //        Result = new TWResponseDTO
+        //        {
+        //            Fixtures = finalResult
+        //        }
+        //    };
+        //}
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(TWFLiveFixtureCountRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Live && c.FiTyId == (int)FixtureType.Match);

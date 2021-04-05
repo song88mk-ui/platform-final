@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Enums;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Platform.Client.API.ActionFilters
@@ -9,24 +11,78 @@ namespace Platform.Client.API.ActionFilters
     public class APIKeyFilter : ActionFilterAttribute
     {
         private readonly IConfiguration _configuration;
+        private List<Tuple<string, string, List<string>>> _allowed = new List<Tuple<string, string, List<string>>>();
 
         public APIKeyFilter(IConfiguration configuration)
         {
             _configuration = configuration;
+            _allowed = GetAllowedIPs();
         }
         public override void OnActionExecuting(ActionExecutingContext context)
         {
+            var passKey = context.HttpContext.Request.Headers["x-pass-key"].FirstOrDefault();
             var apiKey = context.HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var ipAddress = context.HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
 
-            if (string.IsNullOrEmpty(apiKey) || string.IsNullOrWhiteSpace(apiKey) || _configuration["Custom:APIKey"] != apiKey)
+            if (!string.IsNullOrEmpty(passKey) && !string.IsNullOrWhiteSpace(passKey))
             {
-                context.Result = new BadRequestObjectResult(new
+                if (passKey != "fcisong88")
                 {
-                    StatusCode = StatusCode.Missing_Or_Unsupported_APIKey_In_Request_Headers,
-                    Message = StatusCode.Missing_Or_Unsupported_APIKey_In_Request_Headers.ToString().Replace('_', ' ')
-                });
-                return;
+                    context.Result = new UnauthorizedObjectResult(new
+                    {
+                        StatusCode = StatusCode.Not_Authorized,
+                        Message = StatusCode.Not_Authorized.ToString().Replace('_', ' ')
+                    });
+                    return;
+                }
             }
+            else
+            {
+                if (string.IsNullOrEmpty(apiKey) || string.IsNullOrWhiteSpace(apiKey) || ValidateCaller(ipAddress, apiKey))
+                {
+                    context.Result = new UnauthorizedObjectResult(new
+                    {
+                        StatusCode = StatusCode.Not_Authorized,
+                        Message = StatusCode.Not_Authorized.ToString().Replace('_', ' ')
+                    });
+                    return;
+                }
+            }
+        }
+
+        private bool ValidateCaller(string ipAddress, string apiKey)
+        {
+            var isAllowed = false;
+
+            foreach (var item in _allowed)
+            {
+                if (item.Item3.Contains(ipAddress))
+                {
+                    if (item.Item2 == apiKey)
+                    {
+                        isAllowed = true;
+                        break;
+                    }
+                }
+            }
+
+            return isAllowed;
+        }
+        private List<Tuple<string, string, List<string>>> GetAllowedIPs()
+        {
+            var result = new List<Tuple<string, string, List<string>>>
+            {
+                new Tuple<string, string, List<string>>("Lino", "hK3UUgRrTz5rZ5mP", new List<string> { "180.191.190.163" }),
+                new Tuple<string, string, List<string>>("10BET", "8LKvrh6C2fe8mKXZ", new List<string> { "35.200.250.0", "34.93.179.235", "34.93.30.117" }),
+                new Tuple<string, string, List<string>>("lolTRICKEDu", "aYKn7A2SmxzageU8", new List<string> { "15.206.238.120", "13.127.42.155" }),
+                new Tuple<string, string, List<string>>("casinomobiltbankid", "j6uh5E2W74neCXrv", new List<string> { "111.118.215.154" }),
+                new Tuple<string, string, List<string>>("BilalAlim", "2J8DtUe8ugT3wM7x", new List<string> { "35.244.36.155" }),
+                new Tuple<string, string, List<string>>("betrallyindia", "44MRNepFKUr6tzp9", new List<string> { "67.227.164.101", "67.227.164.102", "67.227.164.103", "104.27.154.210", "104.27.155.210", "172.67.170.132" }),
+                new Tuple<string, string, List<string>>("riviera", "nq737zHSdqyu9VFY", new List<string> { "54.228.183.109", "93.171.241.132", "176.37.75.85", "54.195.248.219" }),
+                new Tuple<string, string, List<string>>("sportspunter", "TTFjKkXJsDke4ubu", new List<string> { "207.228.252.8", "207.228.252.24" })
+            };
+
+            return result;
         }
     }
 }

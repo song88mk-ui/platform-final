@@ -51,6 +51,8 @@
 
         No_Record_Found = 139,
 
+        Not_Authorized = 140,
+
         Error = 1000,
         Operator_Error = 1001
     }

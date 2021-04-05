@@ -22,7 +22,7 @@ namespace Platform.Client.API.ActionFilters
         {
             var passKey = context.HttpContext.Request.Headers["x-pass-key"].FirstOrDefault();
             var apiKey = context.HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-            var ipAddress = context.HttpContext.Connection.RemoteIpAddress;
+            var ipAddress = context.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
 
             if (!string.IsNullOrEmpty(passKey) && !string.IsNullOrWhiteSpace(passKey))
             {
@@ -38,7 +38,7 @@ namespace Platform.Client.API.ActionFilters
             }
             else
             {
-                if (string.IsNullOrEmpty(apiKey) || string.IsNullOrWhiteSpace(apiKey) || IsNotAllowed(ipAddress.ToString(), apiKey))
+                if (string.IsNullOrEmpty(apiKey) || string.IsNullOrWhiteSpace(apiKey) || IsNotAllowed(ipAddress, apiKey))
                 {
                     context.Result = new UnauthorizedObjectResult(new
                     {

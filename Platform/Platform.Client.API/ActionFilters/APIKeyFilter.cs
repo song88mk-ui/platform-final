@@ -38,7 +38,7 @@ namespace Platform.Client.API.ActionFilters
             }
             else
             {
-                if (string.IsNullOrEmpty(apiKey) || string.IsNullOrWhiteSpace(apiKey) || ValidateCaller(ipAddress.ToString(), apiKey))
+                if (string.IsNullOrEmpty(apiKey) || string.IsNullOrWhiteSpace(apiKey) || IsNotAllowed(ipAddress.ToString(), apiKey))
                 {
                     context.Result = new UnauthorizedObjectResult(new
                     {
@@ -50,9 +50,9 @@ namespace Platform.Client.API.ActionFilters
             }
         }
 
-        private bool ValidateCaller(string ipAddress, string apiKey)
+        private bool IsNotAllowed(string ipAddress, string apiKey)
         {
-            var isAllowed = false;
+            var isNotAllowed = true;
 
             foreach (var item in _allowed)
             {
@@ -60,13 +60,13 @@ namespace Platform.Client.API.ActionFilters
                 {
                     if (item.Item2 == apiKey)
                     {
-                        isAllowed = true;
+                        isNotAllowed = false;
                         break;
                     }
                 }
             }
 
-            return isAllowed;
+            return isNotAllowed;
         }
         private List<Tuple<string, string, List<string>>> GetAllowedIPs()
         {

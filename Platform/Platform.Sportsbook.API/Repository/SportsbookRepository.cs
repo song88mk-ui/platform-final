@@ -3606,7 +3606,7 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
-        public async Task<BaseResponseDTO<StatusCode>> AddOrUpdateTopLeagues(ClientTopLeague request)
+        public async Task<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>> AddOrUpdateTopLeagues(ClientTopLeague request)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new System.Transactions.TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
             {
@@ -3617,10 +3617,14 @@ namespace Platform.Sportsbook.API.Repository
 
                 if (duplicateLeagues.Count > 0)
                 {
-                    return new BaseResponseDTO<StatusCode>
+                    return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
                     {
-                        StatusCode = StatusCode.Duplicate_Client_Top_League_Entries,
-                        Message = StatusCode.Duplicate_Client_Top_League_Entries.ToString().ToString().Replace('_', ' ')
+                        StatusCode = StatusCode.Success,
+                        Result = new ClientTopLeaguesMessageResponseDTO()
+                        {
+                            StatusCode = StatusCode.Cannot_Have_Duplicate_Top_Fixture_Entries,
+                            Message = StatusCode.Cannot_Have_Duplicate_Top_Fixture_Entries.ToString().Replace('_', ' ')
+                        }
                     };
                 }
 
@@ -3629,19 +3633,23 @@ namespace Platform.Sportsbook.API.Repository
 
                 if (duplicateSortOrders.Count > 0)
                 {
-                    return new BaseResponseDTO<StatusCode>
+                    return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
                     {
-                        StatusCode = StatusCode.Cannot_Have_Duplicate_Sort_Order_Entries,
-                        Message = StatusCode.Cannot_Have_Duplicate_Sort_Order_Entries.ToString().ToString().Replace('_', ' ')
+                        StatusCode = StatusCode.Success,
+                        Result = new ClientTopLeaguesMessageResponseDTO()
+                        {
+                            StatusCode = StatusCode.Cannot_Have_Duplicate_Sort_Order_Entries,
+                            Message = StatusCode.Cannot_Have_Duplicate_Sort_Order_Entries.ToString().Replace('_', ' ')
+                        }
                     };
                 }
 
                 if (request.TopLeagues.Count > 50)
                 {
-                    return new BaseResponseDTO<StatusCode>
+                    return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
                     {
                         StatusCode = StatusCode.Top_League_Entries_Must_Be_Equal_Or_Lower_50,
-                        Message = StatusCode.Top_League_Entries_Must_Be_Equal_Or_Lower_50.ToString().ToString().Replace('_', ' ')
+                        Message = StatusCode.Top_League_Entries_Must_Be_Equal_Or_Lower_50.ToString().Replace('_', ' ')
                     };
                 }
 
@@ -3673,7 +3681,7 @@ namespace Platform.Sportsbook.API.Repository
                 scope.Complete();
             }
 
-            return new BaseResponseDTO<StatusCode>
+            return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString()

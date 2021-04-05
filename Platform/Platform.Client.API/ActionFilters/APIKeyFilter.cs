@@ -5,6 +5,7 @@ using Platform.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 
 namespace Platform.Client.API.ActionFilters
 {
@@ -22,7 +23,14 @@ namespace Platform.Client.API.ActionFilters
         {
             var passKey = context.HttpContext.Request.Headers["x-pass-key"].FirstOrDefault();
             var apiKey = context.HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-            var ipAddress = context.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
+            var ip = context.HttpContext.Connection.RemoteIpAddress;
+
+            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+            {
+                ip = Dns.GetHostEntry(ip).AddressList.First(s => s.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+            }
+
+            var ipAddress = ip.ToString();
 
             if (!string.IsNullOrEmpty(passKey) && !string.IsNullOrWhiteSpace(passKey))
             {

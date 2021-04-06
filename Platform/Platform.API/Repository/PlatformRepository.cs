@@ -30,6 +30,15 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<WalletBalanceResponseDTO>> GetWalletBalance(string clientId, string operatorToken)
         {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<WalletBalanceResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
             var clientResponse = await GetClient(clientId);
 
             if (clientResponse.StatusCode != StatusCode.Success)
@@ -66,6 +75,15 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(string apiKey, string clientId, string operatorToken, BetRequest request)
         {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
             if (!IsValidIPAddress(request.IPAddress))
             {
                 return new BaseResponseDTO<BetResponseDTO>
@@ -234,6 +252,15 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(string apiKey, string clientId, string operatorToken, BetHistoryRequest request)
         {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<BetHistoryResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
             var clientResponse = await GetClient(clientId);
 
             if (clientResponse.StatusCode != StatusCode.Success)
@@ -442,6 +469,15 @@ namespace Platform.API.Repository
 
         public async Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(string apiKey, string clientId, string operatorToken, LivestreamRequest request)
         {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<LivestreamResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
             var isIPAddress = IPAddress.TryParse(request.IPAddress, out IPAddress ipAddress);
 
             if (!isIPAddress)
@@ -1216,6 +1252,15 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetUserFavorites2(string apiKey, string clientId, string operatorToken)
         {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
             var clientResponse = await GetClient(clientId);
 
             if (clientResponse.StatusCode != StatusCode.Success)
@@ -1276,6 +1321,15 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(string apiKey, string clientId, string operatorToken)
         {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
             var clientResponse = await GetClient(clientId);
 
             if (clientResponse.StatusCode != StatusCode.Success)
@@ -1306,6 +1360,15 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> AddUserFavorites(string apiKey, string clientId, string operatorToken, InsertDeleteUserFavoritesRequest request)
         {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
             var clientResponse = await GetClient(clientId);
 
             if (clientResponse.StatusCode != StatusCode.Success)
@@ -1338,6 +1401,15 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> DeleteUserFavorites(string apiKey, string clientId, string operatorToken, InsertDeleteUserFavoritesRequest request)
         {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
             var clientResponse = await GetClient(clientId);
 
             if (clientResponse.StatusCode != StatusCode.Success)

@@ -1024,17 +1024,8 @@ namespace Platform.Sportsbook.API.Repository
 
             var limit = 10;
 
-            if (request.ClientId == Guid.Parse("5093617A-9367-EB11-89FB-00224815B68B") ||
-                request.ClientId == Guid.Parse("BFED6DA4-D1B5-4437-665D-08D8EE99AC1C") ||
-                request.ClientId == Guid.Parse("F5251362-64F1-4BF4-28E9-08D8EE99CA8E"))
-            {
-                initialResult.AddRange(result.Where(c => c.SportId == 21).ToList());
-                limit = initialResult.Count + 10;
-            }
-
             foreach (var item in result)
             {
-                if (initialResult.Any(c => c.FixtureId == item.FixtureId && c.SportId != 21)) continue;
                 if (initialResult.Count == limit) break;
 
                 initialResult.Add(item);

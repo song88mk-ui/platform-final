@@ -77,6 +77,7 @@ namespace Platform.Client.API.ActionFilters
             var result = new List<Tuple<string, string, List<string>>>
             {
                 new Tuple<string, string, List<string>>("Lino", "hK3UUgRrTz5rZ5mP", new List<string> { "180.191.190.179" }),
+                new Tuple<string, string, List<string>>("10BET-dev", "8LKvrh6C2fe8mKXZ", new List<string> { "104.248.44.186" }),
                 new Tuple<string, string, List<string>>("10BET-STAGING", "8LKvrh6C2fe8mKXZ", new List<string> { "104.155.9.8", "104.155.35.27", "34.93.30.117", "34.78.253.228", "34.76.95.115" }),
                 new Tuple<string, string, List<string>>("10BET", "8LKvrh6C2fe8mKXZ", new List<string> { "35.200.250.0", "34.93.179.235", "34.93.30.117", "35.187.221.222", "34.84.241.22", "34.85.72.185" }),
                 new Tuple<string, string, List<string>>("lolTRICKEDu", "aYKn7A2SmxzageU8", new List<string> { "15.206.238.120", "13.127.42.155" }),

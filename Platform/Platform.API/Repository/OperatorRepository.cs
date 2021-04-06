@@ -33,7 +33,7 @@ namespace Platform.API.Repository
 
             try
             {
-                var response = await _httpClient.PostAsync($"/v1/authentication", new StringContent(JsonSerializer.Serialize(new { token = operatorToken }), System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.PostAsync($"/v1/authentication", new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
                 {

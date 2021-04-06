@@ -30,18 +30,28 @@ namespace Platform.Sportsbook.API.Repository
         private IMongoCollection<Market> marketCollection;
         private IMongoCollection<Selection> selectionCollection;
         private IMongoCollection<BettingStatus> bettingStatusCollection;
+
+        private IMongoCollection<Fixture> primaryFixtureCollection;
+        private IMongoCollection<Market> primaryMarketCollection;
+        private IMongoCollection<Selection> primarySelectionCollection;
+        private IMongoCollection<BettingStatus> primaryBettingStatusCollection;
         private readonly HttpClient _httpClient;
 
         public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMessageBroker messageBroker, IMemCache memCache, IConfiguration configuration)
         {
             _configuration = configuration;
             var client = new MongoClient(_configuration["ConnectionStrings:MongoDB-Sportsbook"]);
-            _db = client.GetDatabase("Sportsbook").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
+            _db = client.GetDatabase("Sportsbook");
 
-            fixtureCollection = _db.GetCollection<Fixture>("Fixture");
-            marketCollection = _db.GetCollection<Market>("Market");
-            selectionCollection = _db.GetCollection<Selection>("Selection");
-            bettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus");
+            fixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
+            marketCollection = _db.GetCollection<Market>("Market").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
+            selectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
+            bettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
+
+            primaryFixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+            primaryMarketCollection = _db.GetCollection<Market>("Market").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+            primarySelectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+            primaryBettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
 
             _sportsbookContext = sportsbookContext;
             _httpClient = httpClient;
@@ -495,18 +505,18 @@ namespace Platform.Sportsbook.API.Repository
         {
             var fixtureIds = request.Selections.Select(s => s.FixtureId).ToList();
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
-            var fixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+            var fixtures = primaryFixtureCollection.Find(fixtureFilter).ToListAsync();
 
             var marketIds = request.Selections.Select(s => s.MarketId).ToList();
             var marketFilter = Builders<Market>.Filter.Where(c => marketIds.Contains(c.MaId));
-            var markets = marketCollection.Find(marketFilter).ToListAsync();
+            var markets = primaryMarketCollection.Find(marketFilter).ToListAsync();
 
             var selectionIds = request.Selections.Select(s => s.SelectionId).ToList();
             var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
-            var selections = selectionCollection.Find(selectionFilter).ToListAsync();
+            var selections = primarySelectionCollection.Find(selectionFilter).ToListAsync();
 
             var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
-            var bettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+            var bettingStatus = primaryBettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
 
             await Task.WhenAll(fixtures, markets, selections, bettingStatus);
 

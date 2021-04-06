@@ -355,7 +355,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var sportIds = fixtures.Select(s => s.SpId).Distinct().ToList();
 
-            var leagueSortOrder = _sportsbookContext.TierLeagueOrder.Where(c => sportIds.Contains(c.SportId)).ToList();
+            var leagueSortOrder = GetTierLeagueOrder().Where(c => sportIds.Contains(c.SportId)).ToList();
             var sportSortOrder = _sportsbookContext.ClientSportOrder.Where(c => c.ClientId == request.ClientId).ToList();
 
             var result = fixtures.Where(c => c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
@@ -3381,9 +3381,7 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(BackofficeSportsRequestDTO request)
         {
-            var virtualSportIds = new List<int> { 1001, 1002, 1003, 1005, 1055, 1058 };
-
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && !virtualSportIds.Contains(c.SpId));
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.SpId < 1000);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             if (fixtures.Count == 0)
@@ -3398,7 +3396,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var sportIds = fixtures.Select(s => s.SpId).Distinct().ToList();
 
-            var leagueSortOrder = _sportsbookContext.TierLeagueOrder.Where(c => sportIds.Contains(c.SportId)).ToList();
+            var leagueSortOrder = GetTierLeagueOrder().Where(c => sportIds.Contains(c.SportId)).ToList();
             var sportSortOrder = _sportsbookContext.ClientSportOrder.Where(c => c.ClientId == request.ClientId).ToList();
 
             var fixtureResult = fixtures.Where(c => c.FiTyId == (int)FixtureType.Match)

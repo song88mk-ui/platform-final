@@ -78,8 +78,8 @@ namespace Platform.Client.API.ActionFilters
             {
                 new Tuple<string, string, List<string>>("Lino", "hK3UUgRrTz5rZ5mP", new List<string> { "180.191.190.179" }),
                 new Tuple<string, string, List<string>>("10BET-dev", "8LKvrh6C2fe8mKXZ", new List<string> { "104.248.44.186" }),
-                new Tuple<string, string, List<string>>("10BET-STAGING", "8LKvrh6C2fe8mKXZ", new List<string> { "104.155.9.8", "104.155.35.27", "34.93.30.117", "34.78.253.228", "34.76.95.115" }),
-                new Tuple<string, string, List<string>>("10BET", "8LKvrh6C2fe8mKXZ", new List<string> { "35.200.250.0", "34.93.179.235", "34.93.30.117", "35.187.221.222", "34.84.241.22", "34.85.72.185" }),
+                new Tuple<string, string, List<string>>("10BET-STAGING", "8LKvrh6C2fe8mKXZ", new List<string> { "104.155.9.8", "104.155.35.27", "34.78.253.228", "34.76.95.115" }),
+                new Tuple<string, string, List<string>>("10BET", "8LKvrh6C2fe8mKXZ", new List<string> { "35.200.240.0", "34.93.179.235", "34.93.30.117", "35.187.221.222", "34.84.241.22", "34.85.72.185" }),
                 new Tuple<string, string, List<string>>("lolTRICKEDu", "aYKn7A2SmxzageU8", new List<string> { "15.206.238.120", "13.127.42.155" }),
                 new Tuple<string, string, List<string>>("casinomobiltbankid", "j6uh5E2W74neCXrv", new List<string> { "111.118.215.154" }),
                 new Tuple<string, string, List<string>>("BilalAlim", "2J8DtUe8ugT3wM7x", new List<string> { "35.244.36.155" }),

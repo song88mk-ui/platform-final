@@ -24,7 +24,7 @@ namespace Platform.Betting.API.Repository
 
         public async Task<BaseResponseDTO<MTSStakeResponseDTO>> GetMTSMaxStake(string authToken, MTSConfigRequestDTO request)
         {
-            if (request.BetSelections.FirstOrDefault().SportId >= 1000)
+            if (request.BetSelections.Any(c => c.SportId > 1000))
             {
                 return new BaseResponseDTO<MTSStakeResponseDTO>
                 {

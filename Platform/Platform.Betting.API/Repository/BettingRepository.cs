@@ -43,7 +43,12 @@ namespace Platform.Betting.API.Repository
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(BetRequestDTO request)
         {
             if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) == true)
-                return await PlaceBetWithMTS(request);
+            {
+                if (request.Selections.Any(c => c.SportId > 1000))
+                    return await PlaceBetWithBackOffice(request);
+                else
+                    return await PlaceBetWithMTS(request);
+            }
             else
                 return await PlaceBetWithBackOffice(request);
         }

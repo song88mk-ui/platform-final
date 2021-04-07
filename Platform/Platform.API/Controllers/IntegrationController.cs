@@ -56,6 +56,24 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpPost("v1/bet/maxstake")]
+        public async Task<IActionResult> GetMaxStake([FromBody] BetRequest request)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+
+            var result = await _platformRepository.GetMaxStake(apiKey, clientId, operatorToken, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpGet("v1/bet/config")]
         public async Task<IActionResult> GetBetConfig([FromQuery] BetConfigRequest request)
         {

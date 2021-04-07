@@ -250,6 +250,182 @@ namespace Platform.API.Repository
 
             return await _bettingRepository.PlaceBet(payload);
         }
+        public async Task<BaseResponseDTO<MaxStakeResponseDTO>> GetMaxStake(string apiKey, string clientId, string operatorToken, BetRequest request)
+        {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<MaxStakeResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                    Result = new MaxStakeResponseDTO
+                    {
+                        Stake = 0
+                    }
+                };
+            }
+
+            if (!IsValidIPAddress(request.IPAddress))
+            {
+                return new BaseResponseDTO<MaxStakeResponseDTO>
+                {
+                    StatusCode = StatusCode.IPAddress_Must_Be_IPv4,
+                    Message = StatusCode.IPAddress_Must_Be_IPv4.ToString().Replace('_', ' '),
+                    Result = new MaxStakeResponseDTO
+                    {
+                        Stake = 0
+                    }
+                };
+            }
+
+            if (!IsValidOddsType(request.OddsType))
+            {
+                return new BaseResponseDTO<MaxStakeResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_OddsType,
+                    Message = StatusCode.Unsupported_OddsType.ToString().Replace('_', ' '),
+                    Result = new MaxStakeResponseDTO
+                    {
+                        Stake = 0
+                    }
+                };
+            }
+
+            if (!IsValidChannel(request.Channel))
+            {
+                return new BaseResponseDTO<MaxStakeResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_Channel,
+                    Message = StatusCode.Unsupported_Channel.ToString().Replace('_', ' '),
+                    Result = new MaxStakeResponseDTO
+                    {
+                        Stake = 0
+                    }
+                };
+            }
+
+            if (!IsValidOdds(request.Selections.Select(s => s.Odds).ToList()))
+            {
+                return new BaseResponseDTO<MaxStakeResponseDTO>
+                {
+                    StatusCode = StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1,
+                    Message = StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1.ToString().Replace('_', ' '),
+                    Result = new MaxStakeResponseDTO
+                    {
+                        Stake = 0
+                    }
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<MaxStakeResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message,
+                    Result = new MaxStakeResponseDTO
+                    {
+                        Stake = 0
+                    }
+                };
+            }
+
+            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+
+            if (authenticationResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<MaxStakeResponseDTO>
+                {
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
+                    Result = new MaxStakeResponseDTO
+                    {
+                        Stake = 0
+                    }
+                };
+            }
+
+            var rate = await GetExchangeRate(authenticationResponse.Result.CurrencyCode);
+
+            var result = await _sportsbookRepository.GetBetFixture(new BetFixtureRequestDTO
+            {
+                OddsChangeType = request.OddsChangeType,
+                Selections = request.Selections.Select(s => new BetFixtureSelectionRequestDTO
+                {
+                    SportId = s.SportId,
+                    FixtureId = Convert.ToInt64(s.FixtureId),
+                    MarketId = Convert.ToInt64(s.MarketId),
+                    SelectionId = Convert.ToInt64(s.SelectionId),
+                    Odds = s.Odds,
+                    CorrelationId = s.CorrelationId
+                }).ToList()
+            });
+
+            if (result.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<MaxStakeResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString().Replace('_', ' '),
+                    Result = new MaxStakeResponseDTO
+                    {
+                        Stake = 0
+                    }
+                };
+            }
+
+            var payload = new BetRequestDTO
+            {
+                APIKey = apiKey,
+                OperatorToken = operatorToken,
+                ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
+                ClientIdRef = clientResponse.Result.ClientIdRef,
+                ClientCode = clientResponse.Result.ClientCode,
+                ClientName = clientResponse.Result.ClientName,
+                LimitId = clientResponse.Result.LimitId,
+                Endpoint = clientResponse.Result.Endpoint,
+                CompanyShare = clientResponse.Result.CompanyShare,
+                ExchangeRate = rate.ExchangeRate,
+                UserId = authenticationResponse.Result.UserId,
+                Stake = request.Stake,
+                BetDate = DateTime.UtcNow,
+                OddsType = request.OddsType,
+                CurrencyCode = (CurrencyCode)Enum.Parse(typeof(CurrencyCode), authenticationResponse.Result.CurrencyCode),
+                LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode) == LanguageCode.ZHT ? LanguageCode.ZH : (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode),
+                Channel = request.Channel,
+                IPAddress = request.IPAddress,
+                Selections = request.Selections.Select(s => new BetSelectionRequestDTO
+                {
+                    SportId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SportId).FirstOrDefault(),
+                    SportName = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SportName).FirstOrDefault(),
+                    SegmentId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SegmentId).FirstOrDefault(),
+                    SegmentName = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SegmentName).FirstOrDefault(),
+                    LeagueId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.LeagueId).FirstOrDefault(),
+                    LeagueName = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.LeagueName).FirstOrDefault(),
+                    FixtureId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureId).FirstOrDefault(),
+                    FixtureName = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureName).FirstOrDefault(),
+                    FixtureType = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureType).FirstOrDefault(),
+                    MarketTemplateId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.MarketTemplateId).FirstOrDefault(),
+                    MarketId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.MarketId).FirstOrDefault(),
+                    MarketName = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.MarketName).FirstOrDefault(),
+                    Line = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Line).FirstOrDefault(),
+                    SelectionTemplateId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SelectionTemplateId).FirstOrDefault(),
+                    SelectionId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SelectionId).FirstOrDefault(),
+                    SelectionName = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SelectionName).FirstOrDefault(),
+                    Odds = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Odds).FirstOrDefault(),
+                    FixtureStatus = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureStatus).FirstOrDefault(),
+                    FixtureStartDate = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureStartDate).FirstOrDefault(),
+                    BetScore = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Score).FirstOrDefault(),
+                    FixtureSpecifier = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureSpecifier).FirstOrDefault(),
+                    SelectionSpecifier = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SelectionSpecifier).FirstOrDefault(),
+                    CorrelationId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.CorrelationId).FirstOrDefault()
+                }).ToList()
+            };
+
+            return await _bettingRepository.GetMaxStake(payload);
+        }
         public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(string apiKey, string clientId, string operatorToken, BetHistoryRequest request)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))

@@ -194,7 +194,7 @@ namespace Platform.Betting.API.UnitTest
             request.Stake = 1000.70M;
             request.CurrencyCode = Shared.Enums.CurrencyCode.KRW;
             var defaultJSON = JsonSerializer.Serialize(request);
-            var data = repo.PlaceBetWithValidation(request);
+            var data = repo.PlaceBet(request);
 
             Assert.IsTrue(data.Result.StatusCode == Shared.Enums.StatusCode.Success);
         }

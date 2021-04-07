@@ -19,9 +19,21 @@ namespace Platform.Betting.API.Controllers
         [HttpPost("v1/bet/placement")]
         public async Task<IActionResult> PlaceBet([FromBody] BetRequestDTO request)
         {
-            //test commit 001 platform betting api
-            //Replace with _bettingRepository.PlaceBet to remove validation
-            var result = await _bettingRepository.PlaceBetWithValidation(request);
+            var result = await _bettingRepository.PlaceBet(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/bet/maxstake")]
+        public async Task<IActionResult> GetMaxStake([FromBody] BetRequestDTO request)
+        {
+            var result = await _bettingRepository.GetMaxStake(request);
 
             switch (result.StatusCode)
             {

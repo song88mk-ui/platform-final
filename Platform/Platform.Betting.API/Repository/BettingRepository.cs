@@ -882,7 +882,7 @@ namespace Platform.Betting.API.Repository
                             Message = StatusCode.Success.ToString(),
                             Result = new MaxStakeResponseDTO
                             {
-                                Stake = stakeFixtureLimit
+                                Stake = stakeFixtureLimit < 0 ? 0 : stakeFixtureLimit
                             }
                         };
                     }

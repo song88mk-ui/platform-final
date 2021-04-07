@@ -1632,15 +1632,19 @@ namespace Platform.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<StatusCode>> AddOrUpdateTopLeagues(BackOfficeClientTopLeague request)
+        public async Task<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>> AddOrUpdateTopLeagues(BackOfficeClientTopLeague request)
         {
             var result = await _platformContext.Client.Where(c => c.ClientIdRef == request.ClientIdRef).FirstOrDefaultAsync();
-            if (result == null || result.IsActive == false)
+            if (result == null)
             {
-                return new BaseResponseDTO<StatusCode>
+                return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
                 {
-                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
-                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                    StatusCode = StatusCode.Success,
+                    Result = new ClientTopLeaguesMessageResponseDTO()
+                    {
+                        StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                        Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                    }
                 };
             }
 

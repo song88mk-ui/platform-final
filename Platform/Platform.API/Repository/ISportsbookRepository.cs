@@ -36,7 +36,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(BackofficeSportsRequestDTO request);
         Task<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>> PostClientTopFixtures(PostClientTopFixtureRequestDTO request);
         Task<BaseResponseDTO<ClientTopLeaguesResponseDTO>> GetClientTopLeagues(ClientTopLeaguesRequestDTO request);
-        Task<BaseResponseDTO<StatusCode>> AddOrUpdateTopLeagues(ClientTopLeague request);
+        Task<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>> AddOrUpdateTopLeagues(ClientTopLeague request);
         Task<BaseResponseDTO<SportsLookupResponseDTO>> GetSportsLookup(SportsLookupRequestDTO request);
     }
 }

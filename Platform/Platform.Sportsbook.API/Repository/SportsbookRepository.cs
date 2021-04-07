@@ -3646,8 +3646,12 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
                     {
-                        StatusCode = StatusCode.Top_League_Entries_Must_Be_Equal_Or_Lower_Than_50,
-                        Message = StatusCode.Top_League_Entries_Must_Be_Equal_Or_Lower_Than_50.ToString().Replace('_', ' ')
+                        StatusCode = StatusCode.Success,
+                        Result = new ClientTopLeaguesMessageResponseDTO()
+                        {
+                            StatusCode = StatusCode.Top_League_Entries_Must_Be_Equal_Or_Lower_Than_50,
+                            Message = StatusCode.Top_League_Entries_Must_Be_Equal_Or_Lower_Than_50.ToString().Replace('_', ' ')
+                        }
                     };
                 }
 

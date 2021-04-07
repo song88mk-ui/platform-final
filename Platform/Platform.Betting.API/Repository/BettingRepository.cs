@@ -149,6 +149,11 @@ namespace Platform.Betting.API.Repository
                         };
                     }
                 }
+                else
+                {
+                    if (stakeFixtureLimit > maxStake)
+                        stakeFixtureLimit = maxStake;
+                }
             }
             else
             {
@@ -510,9 +515,10 @@ namespace Platform.Betting.API.Repository
 
                 var stakeFixtureLimitResult = _bettingContext.StakeLimitFixture.AsNoTracking().Where(a => a.UserId == $"{request.ClientCode}-{request.UserId}" && a.FixtureId == request.Selections.FirstOrDefault().FixtureId).FirstOrDefault();
 
-                if (stakeFixtureLimitResult != null)
+                if (stakeFixtureLimitResult == null)
                 {
-                    var remainingFixtureBet = stakeFixtureLimitResult.Remaining - request.Stake;
+                    if (stakeFixtureLimit > maxStake)
+                        stakeFixtureLimit = maxStake;
                 }
             }
             else

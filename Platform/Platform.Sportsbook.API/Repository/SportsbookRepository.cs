@@ -387,18 +387,39 @@ namespace Platform.Sportsbook.API.Repository
 
                 finalResult.Add(item);
 
-                if (item.HasOutrights)
+                if (item.SportId == 1055 || item.SportId == 1058)
                 {
-                    result.Add(new TempOrderedLeague
+                    var temp = fixtures.Where(c => c.SpId == item.SportId).FirstOrDefault();
+
+                    if (temp != null)
                     {
-                        SportId = item.SportId,
-                        SportName = string.Empty,
-                        SegmentId = 999999,
-                        SegmentName = "Outrights",
-                        LeagueId = 0,
-                        LeagueName = string.Empty,
-                        SortOrder = 9999
-                    });
+                        result.Add(new TempOrderedLeague
+                        {
+                            SportId = temp.SpId,
+                            SportName = temp.SpNa,
+                            SegmentId = temp.SegId,
+                            SegmentName = temp.SegNa,
+                            LeagueId = temp.LeId,
+                            LeagueName = temp.LeNa,
+                            SortOrder = 1000
+                        });
+                    }
+                }
+                else
+                {
+                    if (item.HasOutrights)
+                    {
+                        result.Add(new TempOrderedLeague
+                        {
+                            SportId = item.SportId,
+                            SportName = string.Empty,
+                            SegmentId = 999999,
+                            SegmentName = "Outrights",
+                            LeagueId = 0,
+                            LeagueName = string.Empty,
+                            SortOrder = 9999
+                        });
+                    }
                 }
             }
 

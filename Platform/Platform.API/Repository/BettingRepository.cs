@@ -20,7 +20,6 @@ namespace Platform.API.Repository
             _configuration = configuration;
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(_configuration["API:PlatformBettingAPI"]);
-            _httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(BetRequestDTO request)
         {

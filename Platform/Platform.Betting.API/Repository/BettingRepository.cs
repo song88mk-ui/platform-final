@@ -868,7 +868,7 @@ namespace Platform.Betting.API.Repository
                         Message = StatusCode.Success.ToString(),
                         Result = new MaxStakeResponseDTO
                         {
-                            Stake = remainingStake
+                            Stake = remainingStake < 0 ? 0 : remainingStake
                         }
                     };
                 }
@@ -882,7 +882,7 @@ namespace Platform.Betting.API.Repository
                             Message = StatusCode.Success.ToString(),
                             Result = new MaxStakeResponseDTO
                             {
-                                Stake = stakeFixtureLimit < 0 ? 0 : stakeFixtureLimit
+                                Stake = stakeFixtureLimit
                             }
                         };
                     }

@@ -88,7 +88,6 @@ namespace Platform.API.Repository
                 };
             }
         }
-
         public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(BetHistoryRequestDTO request)
         {
             _httpClient.DefaultRequestHeaders.Add("x-operator-token", request.OperatorToken);
@@ -122,7 +121,6 @@ namespace Platform.API.Repository
                 };
             }
         }
-
         public async Task<BaseResponseDTO<BetConfigFEResponseDTO>> BetConfig(BetConfigRequestDTO request)
         {
             //_httpClient.DefaultRequestHeaders.Add("x-operator-token", request.OperatorToken);

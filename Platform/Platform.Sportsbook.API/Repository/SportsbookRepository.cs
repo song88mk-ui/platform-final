@@ -3620,8 +3620,8 @@ namespace Platform.Sportsbook.API.Repository
                         StatusCode = StatusCode.Success,
                         Result = new ClientTopLeaguesMessageResponseDTO()
                         {
-                            StatusCode = StatusCode.Cannot_Have_Duplicate_Top_Fixture_Entries,
-                            Message = StatusCode.Cannot_Have_Duplicate_Top_Fixture_Entries.ToString().Replace('_', ' ')
+                            StatusCode = StatusCode.Cannot_Have_Duplicate_Top_League_Entries,
+                            Message = StatusCode.Cannot_Have_Duplicate_Top_League_Entries.ToString().Replace('_', ' ')
                         }
                     };
                 }

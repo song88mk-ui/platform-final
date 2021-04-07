@@ -860,7 +860,7 @@ namespace Platform.Betting.API.Repository
 
                 if (stakeFixtureLimitResult != null)
                 {
-                    var remainingStake = Math.Abs(stakeFixtureLimitResult.Remaining - maxStake);
+                    var remainingStake = stakeFixtureLimitResult.Remaining;
 
                     return new BaseResponseDTO<MaxStakeResponseDTO>
                     {

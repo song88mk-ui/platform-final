@@ -100,16 +100,16 @@ namespace Platform.Betting.API.Repository
                 {
                     minStake = GetMinStake(checkOverride.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
                     maxStake = GetMaxStakeForSingleBetWithoutMTS(checkOverride.MaxStake, tierMaxStake.Result.MaxStake, request.ExchangeRate, odds);
-                    maxPerGame = tierMaxStake.Result.MaxPerGame;
-                    stakeFixtureLimit = checkOverride.StakeLimitFixture;
+                    maxPerGame = tierMaxStake.Result.MaxPerGame * request.ExchangeRate;
+                    stakeFixtureLimit = checkOverride.StakeLimitFixture < maxPerGame ? checkOverride.StakeLimitFixture : maxPerGame;
                 }
                 else
                 {
                     DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     minStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
                     maxStake = GetMaxStakeForSingleBetWithoutMTS(defaultSportConfig.MaxStake, tierMaxStake.Result.MaxStake, request.ExchangeRate, odds);
-                    maxPerGame = tierMaxStake.Result.MaxPerGame;
-                    stakeFixtureLimit = defaultSportConfig.StakeLimitFixture;
+                    maxPerGame = tierMaxStake.Result.MaxPerGame * request.ExchangeRate;
+                    stakeFixtureLimit = defaultSportConfig.StakeLimitFixture < maxPerGame ? defaultSportConfig.StakeLimitFixture  : maxPerGame;
                 }
 
                 if (minStake > request.Stake)
@@ -477,7 +477,7 @@ namespace Platform.Betting.API.Repository
                     minStake = GetMinStake(checkOverride.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
                     maxStake = GetMaxStakeForSingleBetWithMTS(checkOverride.MaxStake, tierMaxStake.Result.MaxStake, mtsMaxStake.Result.Stake, request.ExchangeRate, odds, request.CompanyShare);
                     maxPerGame = tierMaxStake.Result.MaxPerGame;
-                    stakeFixtureLimit = checkOverride.StakeLimitFixture;
+                    stakeFixtureLimit = checkOverride.StakeLimitFixture < maxPerGame ? checkOverride.StakeLimitFixture : maxPerGame;
                 }
                 else
                 {
@@ -485,7 +485,7 @@ namespace Platform.Betting.API.Repository
                     minStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
                     maxStake = GetMaxStakeForSingleBetWithMTS(defaultSportConfig.MaxStake, tierMaxStake.Result.MaxStake, mtsMaxStake.Result.Stake, request.ExchangeRate, odds, request.CompanyShare);
                     maxPerGame = tierMaxStake.Result.MaxPerGame;
-                    stakeFixtureLimit = defaultSportConfig.StakeLimitFixture;
+                    stakeFixtureLimit = defaultSportConfig.StakeLimitFixture < maxPerGame ? defaultSportConfig.StakeLimitFixture : maxPerGame;
                 }
 
                 if (minStake > request.Stake)
@@ -846,14 +846,14 @@ namespace Platform.Betting.API.Repository
                 {
                     maxStake = GetMaxStakeForSingleBetWithoutMTS(checkOverride.MaxStake, tierMaxStake.Result.MaxStake, request.ExchangeRate, odds);
                     maxPerGame = tierMaxStake.Result.MaxPerGame;
-                    stakeFixtureLimit = checkOverride.StakeLimitFixture;
+                    stakeFixtureLimit = checkOverride.StakeLimitFixture < maxPerGame ? checkOverride.StakeLimitFixture : maxPerGame;
                 }
                 else
                 {
                     DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     maxStake = GetMaxStakeForSingleBetWithoutMTS(defaultSportConfig.MaxStake, tierMaxStake.Result.MaxStake, request.ExchangeRate, odds);
                     maxPerGame = tierMaxStake.Result.MaxPerGame;
-                    stakeFixtureLimit = defaultSportConfig.StakeLimitFixture;
+                    stakeFixtureLimit = defaultSportConfig.StakeLimitFixture < maxPerGame ? defaultSportConfig.StakeLimitFixture : maxPerGame;
                 }
 
                 var stakeFixtureLimitResult = _bettingContext.StakeLimitFixture.AsNoTracking().Where(a => a.UserId == $"{request.ClientCode}-{request.UserId}" && a.FixtureId == request.Selections.FirstOrDefault().FixtureId).FirstOrDefault();

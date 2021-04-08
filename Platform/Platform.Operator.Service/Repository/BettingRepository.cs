@@ -178,6 +178,130 @@ namespace Platform.Operator.Service.Repository
                 Message = reason
             }, messageBroker, correlationId);
         }
+        private void AcceptBet(Guid betId, string correlationId, IMessageBroker messageBroker)
+        {
+            var payload = new OnBetPlacement();
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+
+                using (var context = new BettingContext(optionsBuilder.Options))
+                {
+                    try
+                    {
+                        var bet = context.Bet.Find(betId);
+
+                        var betStatus = BetStatus.Running;
+
+                        bet.BetStatusId = (int)betStatus;
+                        bet.BetStatusName = betStatus.ToString();
+                        bet.Reason = $"1024 - Ticket accepted (Operator)";
+
+                        var betEntity = context.Bet.Update(bet).Entity;
+                        payload.Bet = betEntity;
+
+                        context.BetAudit.Add(new BetAudit
+                        {
+                            BetId = betEntity.BetId,
+                            UserId = betEntity.UserId,
+                            Stake = betEntity.Stake,
+                            TrueStake = betEntity.TrueStake,
+                            Odds = betEntity.Odds,
+                            OddsTypeId = betEntity.OddsTypeId,
+                            OddsTypeName = betEntity.OddsTypeName,
+                            Payout = betEntity.Payout,
+                            WinLoss = betEntity.WinLoss,
+                            BetStatusId = betEntity.BetStatusId,
+                            BetStatusName = betEntity.BetStatusName,
+                            Reason = betEntity.Reason,
+                            CurrencyCode = betEntity.CurrencyCode,
+                            LanguageCode = betEntity.LanguageCode,
+                            ExchangeRate = betEntity.ExchangeRate,
+                            IPAddress = betEntity.IPAddress,
+                            Channel = betEntity.Channel,
+                            ClientId = betEntity.ClientId,
+                            ClientIdRef = betEntity.ClientIdRef,
+                            ClientCode = betEntity.ClientCode,
+                            ClientName = betEntity.ClientName,
+                            LimitId = betEntity.LimitId,
+                            Endpoint = betEntity.Endpoint,
+                            OperatorToken = betEntity.OperatorToken,
+                            CompanyShare = betEntity.CompanyShare,
+                            IsResettled = betEntity.IsResettled,
+                            IsCashout = betEntity.IsCashout,
+                            BetDate = betEntity.BetDate,
+                            BetDateOffset = betEntity.BetDateOffset,
+                            SettlementDate = betEntity.SettlementDate,
+                            SettlementDateOffset = betEntity.SettlementDateOffset
+                        });
+
+                        var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
+
+                        foreach (var betSelection in betSelections)
+                        {
+                            betSelection.BetSelectionStatusId = betEntity.BetStatusId;
+                            betSelection.BetSelectionStatusName = betEntity.BetStatusName;
+
+                            var betSelectionEntity = context.BetSelection.Update(betSelection).Entity;
+                            payload.BetSelections.Add(betSelectionEntity);
+
+                            context.BetSelectionAudit.Add(new BetSelectionAudit
+                            {
+                                BetId = betSelectionEntity.BetId,
+                                BetSelectionId = betSelectionEntity.BetSelectionId,
+                                UserId = betSelectionEntity.UserId,
+                                SportId = betSelectionEntity.SportId,
+                                SportName = betSelectionEntity.SportName,
+                                SegmentId = betSelectionEntity.SegmentId,
+                                SegmentName = betSelectionEntity.SegmentName,
+                                LeagueId = betSelectionEntity.LeagueId,
+                                LeagueName = betSelectionEntity.LeagueName,
+                                FixtureId = betSelectionEntity.FixtureId,
+                                FixtureName = betSelectionEntity.FixtureName,
+                                FixtureTypeId = betSelectionEntity.FixtureTypeId,
+                                FixtureTypeName = betSelectionEntity.FixtureTypeName,
+                                MarketTemplateId = betSelectionEntity.MarketTemplateId,
+                                MarketId = betSelectionEntity.MarketId,
+                                MarketName = betSelectionEntity.MarketName,
+                                SelectionTemplateId = betSelectionEntity.SelectionTemplateId,
+                                SelectionId = betSelectionEntity.SelectionId,
+                                SelectionName = betSelectionEntity.SelectionName,
+                                FixtureStatusId = betSelectionEntity.FixtureStatusId,
+                                FixtureStatusName = betSelectionEntity.FixtureStatusName,
+                                Line = betSelectionEntity.Line,
+                                Odds = betSelectionEntity.Odds,
+                                BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
+                                BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
+                                IsSettled = betSelectionEntity.IsSettled,
+                                IsResettled = betSelectionEntity.IsResettled,
+                                FixtureSpecifier = betSelectionEntity.FixtureSpecifier,
+                                SelectionSpecifier = betSelectionEntity.SelectionSpecifier,
+                                FixtureStartDate = betSelectionEntity.FixtureStartDate,
+                                BetScore = betSelectionEntity.BetScore,
+                                SettlementScore = betSelectionEntity.SettlementScore,
+                                CorrelationId = betSelectionEntity.CorrelationId
+                            });
+                        }
+
+                        context.SaveChanges();
+                        scope.Complete();
+
+                        messageBroker.Publish(payload, "OnBetPlacement", "r.bet.reports", correlationId);
+                        messageBroker.Publish(new OnBetStatus
+                        {
+                            ClientId = payload.Bet.ClientId.ToString().ToUpper(),
+                            UserId = payload.Bet.UserId,
+                            BetId = payload.Bet.BetId.ToString().ToUpper(),
+                            BetStatus = (BetStatus)payload.Bet.BetStatusId
+                        }, "OnBetStatus", "r.bet.betstatus", correlationId);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+            }
+        }
 
         private static void ProcessStakeFixtureLimit(List<BetSelection> betSelectionData, BettingContext context, Bet betEntity)
         {
@@ -230,12 +354,12 @@ namespace Platform.Operator.Service.Repository
                     CurrencyCode = betData.CurrencyCode,
                     Stake = betData.Stake,
                     Odds = betData.Odds,
-                    BetStatus = betData.BetStatusName,
+                    BetStatus = BetStatus.Running.ToString(),
                     TransactionDate = betData.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                     BetSelections = betSelectionData.Select(s => new OperatorBetSelectionRequestDTO
                     {
                         BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
-                        BetSelectionStatus = s.BetSelectionStatusName,
+                        BetSelectionStatus = BetStatus.Running.ToString(),
                         SportId = s.SportId,
                         SportName = s.SportName,
                         SegmentId = s.SegmentId,
@@ -257,9 +381,6 @@ namespace Platform.Operator.Service.Repository
                         AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
                     }).ToList()
                 };
-
-                //publish to reports
-                messageBroker.Publish(message, "OnBetPlacement", "r.bet.reports", correlationId);
 
                 AddOperatorLog(new OperatorLog
                 {
@@ -292,6 +413,8 @@ namespace Platform.Operator.Service.Repository
                         CorrelationId = correlationId,
                         Timestamp = DateTime.UtcNow
                     });
+
+                    AcceptBet(message.Bet.BetId, correlationId, messageBroker);
                 }
                 else
                 {

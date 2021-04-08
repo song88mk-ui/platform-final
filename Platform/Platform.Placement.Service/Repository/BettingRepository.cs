@@ -46,11 +46,7 @@ namespace Platform.Placement.Service.Repository
                             var bet = context.Bet.Find(message.Bet.BetId);
                             if (bet != null)
                             {
-                                var betStatus = BetStatus.Running;
-
-                                bet.BetStatusId = (int)betStatus;
-                                bet.BetStatusName = betStatus.ToString();
-                                bet.Reason = result.Item2;
+                                bet.Reason = $"{result.Item2} (MTS)";
 
                                 var betEntity = context.Bet.Update(bet).Entity;
                                 payload.Bet = betEntity;
@@ -143,13 +139,13 @@ namespace Platform.Placement.Service.Repository
                             scope.Complete();
 
                             messageBroker.Publish(payload, "OnBetPlacement", "r.bet.operator", correlationId);
-                            messageBroker.Publish(new OnBetStatus 
-                            {
-                                ClientId = payload.Bet.ClientId.ToString().ToUpper(),
-                                UserId = payload.Bet.UserId,
-                                BetId = payload.Bet.BetId.ToString().ToUpper(),
-                                BetStatus = (BetStatus)payload.Bet.BetStatusId
-                            }, "OnBetStatus", "r.bet.betstatus", correlationId);
+                            //messageBroker.Publish(new OnBetStatus 
+                            //{
+                            //    ClientId = payload.Bet.ClientId.ToString().ToUpper(),
+                            //    UserId = payload.Bet.UserId,
+                            //    BetId = payload.Bet.BetId.ToString().ToUpper(),
+                            //    BetStatus = (BetStatus)payload.Bet.BetStatusId
+                            //}, "OnBetStatus", "r.bet.betstatus", correlationId);
                         }
                         catch (Exception ex)
                         {

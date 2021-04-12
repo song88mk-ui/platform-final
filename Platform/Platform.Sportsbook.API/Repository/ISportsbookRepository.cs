@@ -51,5 +51,6 @@ namespace Platform.Sportsbook.API.Repository
 
         Task<BaseResponseDTO<ClientTopLeaguesResponseDTO>> GetClientIdsTopLeagues(ClientTopLeaguesRequestDTO request);
         Task<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>> AddOrUpdateTopLeagues(ClientTopLeague request);
+        Task<BaseResponseDTO<SportsLookupResponseDTO>> GetClientSportsLookup();
     }
 }

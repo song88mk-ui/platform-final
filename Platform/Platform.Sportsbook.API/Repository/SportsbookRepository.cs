@@ -3793,6 +3793,47 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetClientSportsLookup()
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 12 && c.SpId < 1000);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<SportsLookupResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new SportsLookupResponseDTO()
+                };
+            }
+
+            var result = fixtures.Select(s => new SportLookup
+            {
+                SportId = s.SpId,
+                SportName = s.SpNa
+            }).OrderBy(o => o.SportId).ToList();
+
+            var finalResult = new List<SportLookup>();
+
+            foreach (var item in result)
+            {
+                if (finalResult.Any(c => c.SportId == item.SportId)) continue;
+
+                finalResult.Add(item);
+            }
+
+            return new BaseResponseDTO<SportsLookupResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new SportsLookupResponseDTO
+                {
+                    Sports = finalResult
+                }
+            };
+        }
+
     }
 
     public static class CurrentPeriodHelper

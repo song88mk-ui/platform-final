@@ -637,6 +637,23 @@ namespace Platform.Sportsbook.API.Controllers
         }
 
         /// <summary>
+        /// Get list of sports, excluding virtual sport
+        /// </summary>
+        [HttpPost("v1/sportsbook/client/sports")]
+        public async Task<IActionResult> GetClientSports([FromBody] SportsLookupRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetClientSportsLookup();
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        /// <summary>
         /// Add or update top leagues of a client.
         /// </summary>
         [HttpPost("v1/sportsbook/client/topleagues/post")]

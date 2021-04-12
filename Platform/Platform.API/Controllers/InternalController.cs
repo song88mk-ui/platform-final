@@ -115,7 +115,7 @@ namespace Platform.API.Controllers
         [HttpGet("v1/client/sports")]
         public async Task<IActionResult> GetClientSports([FromQuery] BackofficeClientSportsRequestDTO request)
         {
-            var result = await _platformRepository.GetSportsLookup(request);
+            var result = await _platformRepository.GetClientSportsLookup(request);
 
             switch (result.StatusCode)
             {

@@ -1834,7 +1834,7 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.AddOrUpdateTopLeagues(sportsbookRequest);
         }
 
-        public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetSportsLookup(BackofficeClientSportsRequestDTO request)
+        public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetClientSportsLookup(BackofficeClientSportsRequestDTO request)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
 
@@ -1858,7 +1858,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            return await _sportsbookRepository.GetSportsLookup(new SportsLookupRequestDTO
+            return await _sportsbookRepository.GetClientSportsLookup(new SportsLookupRequestDTO
             {
                 LanguageCode = languageCode
             });

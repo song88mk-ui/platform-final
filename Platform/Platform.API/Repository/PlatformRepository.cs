@@ -1827,6 +1827,7 @@ namespace Platform.API.Repository
             var sportsbookRequest = new ClientTopLeague()
             {
                 ClientId = result.ClientId,
+                SportId = request.SportId,
                 TopLeagues = request.TopLeagues
             };
 

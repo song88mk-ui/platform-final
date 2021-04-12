@@ -15,6 +15,7 @@ namespace Platform.Shared.Models
     public class ClientTopLeague
     {
         public Guid ClientId { get; set; }
+        public int SportId { get; set; }
         public List<SportLeague> TopLeagues { get; set; }
     }
 }

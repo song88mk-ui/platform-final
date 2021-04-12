@@ -3677,8 +3677,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
 
                 // delete existing records
-                var sportId = request.TopLeagues.Count == 0 ? 0 : request.TopLeagues.FirstOrDefault().SportId;
-                var currentTopLeagues = _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == request.ClientId && c.SportId == sportId).ToList();
+                var currentTopLeagues = _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == request.ClientId && c.SportId == request.SportId).ToList();
 
                 if(currentTopLeagues.Count > 0)
                 {

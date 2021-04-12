@@ -2011,17 +2011,58 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+            var resultInitial = new List<TempTopLeague>();
 
-            var resultInitial = fixtures.Select(s => new TempTopLeague
+            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+            var clientTopLeagues = await _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == request.ClientId).ToListAsync();
+
+            if (clientTopLeagues.Count == 0)
             {
-                SegmentId = s.SegId,
-                SegmentName = s.SegNa,
-                LeagueId = s.LeId,
-                LeagueName = s.LeNa,
-                SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-            }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ToList();
+                resultInitial = fixtures.Select(s => new TempTopLeague
+                {
+                    SegmentId = s.SegId,
+                    SegmentName = s.SegNa,
+                    LeagueId = s.LeId,
+                    LeagueName = s.LeNa,
+                    SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                    == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ToList();
+            }
+            else
+            {
+                foreach (var league in clientTopLeagues.OrderBy(o => o.SortOrder).ToList())
+                {
+                    var res = fixtures.Where(c => c.SegId == league.SegmentId && c.LeId == league.LeagueId).FirstOrDefault();
+
+                    if (res != null)
+                    {
+                        if (!resultInitial.Any(c => c.SegmentId == res.SegId && c.LeagueId == res.LeId))
+                        {
+                            resultInitial.Add(new TempTopLeague
+                            {
+                                SegmentId = res.SegId,
+                                SegmentName = res.SegNa,
+                                LeagueId = res.LeId,
+                                LeagueName = res.LeNa,
+                                SortOrder = league.SortOrder
+                            });
+                        }
+                    }
+                }
+
+                if (resultInitial.Count == 0)
+                {
+                    resultInitial = fixtures.Select(s => new TempTopLeague
+                    {
+                        SegmentId = s.SegId,
+                        SegmentName = s.SegNa,
+                        LeagueId = s.LeId,
+                        LeagueName = s.LeNa,
+                        SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                         == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                    }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ToList();
+                }
+            }
 
             var finalResult = new List<TopLeague>();
 

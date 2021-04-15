@@ -83,9 +83,9 @@ namespace Platform.Job.CCF.Repository
 
                         using (var context = new PlatformContext(optionsBuilder.Options))
                         {
-                            var currency = context.ConfidenceFactor.Find(Convert.ToInt64(ccf.Timestamp), ccf.UserId);
+                            var confidence = context.ConfidenceFactor.Find(Convert.ToInt64(ccf.Timestamp), ccf.UserId);
 
-                            if (currency == null)
+                            if (confidence == null)
                             {
                                 context.ConfidenceFactor.Add(new Shared.Data.Platform.Entities.ConfidenceFactor
                                 {
@@ -105,7 +105,6 @@ namespace Platform.Job.CCF.Repository
                     }
                     catch (Exception ex)
                     {
-                        var message = ex.Message;
                     }
                 }
             }

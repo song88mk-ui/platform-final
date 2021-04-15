@@ -1,7 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
@@ -17,11 +20,14 @@ namespace Platform.Client.API.Repository
         private readonly IMTSAuthRepository _mtsAuthRepository;
         private readonly IMTSCCFRepository _mtsCCFRepository;
 
-        public SportsbookRepository(HttpClient httpClient, IConfiguration configuration, IMTSAuthRepository mtsAuthRepository, IMTSCCFRepository mtsCCFRepository)
+        private readonly PlatformContext _platformContext;
+
+        public SportsbookRepository(HttpClient httpClient, IConfiguration configuration, IMTSAuthRepository mtsAuthRepository, IMTSCCFRepository mtsCCFRepository, PlatformContext platformContext)
         {
             _configuration = configuration;
             _mtsAuthRepository = mtsAuthRepository;
             _mtsCCFRepository = mtsCCFRepository;
+            _platformContext = platformContext;
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(_configuration["API:PlatformSportsbookAPI"]);
             //_httpClient.Timeout = TimeSpan.FromSeconds(5);
@@ -245,9 +251,35 @@ namespace Platform.Client.API.Repository
         }
         public async Task<BaseResponseDTO<CustomerConfidenceFactorResponseDTO>> GetCustomerConfidenceFactor(string apiKey, string clientId, string userId)
         {
-            var mtsAuthToken = await _mtsAuthRepository.GetMTSAuthorizationToken();
+            var result = await _platformContext.ConfidenceFactor.Where(c => c.UserId == $"{ _configuration["Custom:ClientCode"]}{ userId.Replace("-", string.Empty)}").ToListAsync();
 
-            return await _mtsCCFRepository.GetCustomerConfidenceFactor(mtsAuthToken.Result.Token, userId);
+            if (result.Count == 0)
+            {
+                return new BaseResponseDTO<CustomerConfidenceFactorResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                };
+            }
+
+            return new BaseResponseDTO<CustomerConfidenceFactorResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new CustomerConfidenceFactorResponseDTO
+                {
+                    Values = result.Select(s => new CustomerConfidenceFactor
+                    {
+                        Timestamp = s.Timestamp,
+                        CurrentCCF = s.CurrentCCF,
+                        PreviousCCF = s.PreviousCCF,
+                        IsSpecificSport = s.IsSpecificSport,
+                        SportId = s.SportId,
+                        SportName = s.SportName,
+                        AppliedTo = s.AppliedTo
+                    }).ToList()
+                }
+            };
         }
     }
 }

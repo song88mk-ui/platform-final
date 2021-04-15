@@ -15,13 +15,13 @@ namespace Platform.Job.CCF.Repository
 {
     public class PlatformRepository : IPlatformRepository
     {
+        private readonly IMTSAuthRepository _mtsAuthRepository;
         private readonly IConfiguration _configuration;
-        private readonly IMemCache _memCache;
         private readonly HttpClient _httpClient;
-        public PlatformRepository(IConfiguration configuration, IMemCache memCache, HttpClient httpClient)
+        public PlatformRepository(IMTSAuthRepository mtsAuthRepository, IConfiguration configuration, HttpClient httpClient)
         {
+            _mtsAuthRepository = mtsAuthRepository;
             _configuration = configuration;
-            _memCache = memCache;
 
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(_configuration["API:MTSCCFAPI"]);
@@ -33,86 +33,16 @@ namespace Platform.Job.CCF.Repository
             else
                 return number.ToString();
         }
-        public async Task<BaseResponseDTO<MTSAuthResponseDTO>> GetMTSAuthorizationToken()
-        {
-            var cacheKey = $"mts:auth";
 
-            var cache = _memCache.GetCache<BaseResponseDTO<MTSAuthResponseDTO>>(cacheKey);
-
-            if (cache != null)
-                return cache;
-
-            try
-            {
-                var formContent = new FormUrlEncodedContent(new[]
-                {
-                  new KeyValuePair<string, string>("client_id", "mts-edge-ext"),
-                  new KeyValuePair<string, string>("client_secret",  _configuration["Custom:MTSClientSecret"]),
-                  new KeyValuePair<string, string>("username",  _configuration["Custom:MTSUsername"]),
-                  new KeyValuePair<string, string>("password",  _configuration["Custom:MTSPassword"]),
-                  new KeyValuePair<string, string>("grant_type", "password"),
-                  new KeyValuePair<string, string>("client_auth_method", "client-secret")
-                });
-
-                var response = await _httpClient.PostAsync($"auth/realms/mts/protocol/openid-connect/token", formContent);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var initialResult = JsonSerializer.Deserialize<MTSMaxStakeAuthResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-
-                    var result = new BaseResponseDTO<MTSAuthResponseDTO>
-                    {
-                        StatusCode = StatusCode.Success,
-                        Message = StatusCode.Success.ToString(),
-                        Result = new MTSAuthResponseDTO
-                        {
-                            Token = initialResult.AccessToken
-                        }
-                    };
-
-                    _memCache.AddOrUpdateCache(cacheKey, result, DateTimeOffset.UtcNow.AddMinutes(55));
-
-                    return result;
-                }
-                else
-                {
-                    _memCache.DeleteCache(cacheKey);
-
-                    return new BaseResponseDTO<MTSAuthResponseDTO>
-                    {
-                        StatusCode = StatusCode.Error,
-                        Message = StatusCode.Error.ToString(),
-                        Result = new MTSAuthResponseDTO
-                        {
-                            Token = string.Empty
-                        }
-                    };
-                }
-            }
-            catch (Exception ex)
-            {
-                _memCache.DeleteCache(cacheKey);
-
-                return new BaseResponseDTO<MTSAuthResponseDTO>
-                {
-                    StatusCode = StatusCode.Error,
-                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
-                    Result = new MTSAuthResponseDTO
-                    {
-                        Token = string.Empty
-                    }
-                };
-            }
-        }
         public async Task ProcessCCF()
         {
-            var authToken = await GetMTSAuthorizationToken();
+            var authToken = await _mtsAuthRepository.GetMTSAuthorizationToken();
 
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken.Result.Token}");
 
             var year = DateTime.UtcNow.Year;
             var lastMonth = DateTime.UtcNow.AddMonths(-1);
-            var startDate = $"{year}{GetDoubleDigit(lastMonth.Month)}{GetDoubleDigit(lastMonth.Day)}000000";
+            var startDate = $"{year}{GetDoubleDigit(lastMonth.Month)}{GetDoubleDigit(lastMonth.Day + 1)}000000";
             var endDate = $"{year}1231000000";
             var response = await _httpClient.GetAsync($"edge/proxy/ReportingCcf/external/api/report/export/history/ccf/changes/client/api?startDatetime={startDate}&endDatetime={endDate}&bookmakerId=32290");
 
@@ -153,7 +83,7 @@ namespace Platform.Job.CCF.Repository
 
                         using (var context = new PlatformContext(optionsBuilder.Options))
                         {
-                            var currency = context.ConfidenceFactor.Find(ccf.Timestamp, ccf.UserId);
+                            var currency = context.ConfidenceFactor.Find(Convert.ToInt64(ccf.Timestamp), ccf.UserId);
 
                             if (currency == null)
                             {
@@ -164,7 +94,7 @@ namespace Platform.Job.CCF.Repository
                                     CurrentCCF = ccf.CurrentCCF,
                                     PreviousCCF = ccf.PreviousCCF,
                                     IsSpecificSport = ccf.IsSpecificSport,
-                                    SportId = Convert.ToInt32(ccf.SportId),
+                                    SportId = ccf.SportId,
                                     SportName = ccf.SportName,
                                     AppliedTo = ccf.AppliedTo
                                 });

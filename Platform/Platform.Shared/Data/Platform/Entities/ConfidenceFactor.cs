@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Platform.Shared.Data.Platform.Entities
+﻿namespace Platform.Shared.Data.Platform.Entities
 {
     public class ConfidenceFactor
     {
@@ -11,7 +7,7 @@ namespace Platform.Shared.Data.Platform.Entities
         public double CurrentCCF { get; set; }
         public double PreviousCCF { get; set; }
         public bool IsSpecificSport { get; set; }
-        public int SportId { get; set; }
+        public string SportId { get; set; }
         public string SportName { get; set; }
         public string AppliedTo { get; set; }
     }

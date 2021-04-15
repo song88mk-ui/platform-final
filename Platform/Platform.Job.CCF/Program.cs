@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Platform.Job.CCF.Repository;
+using Platform.Shared.Utility;
 
 namespace Platform.Job.CCF
 {
@@ -20,6 +21,8 @@ namespace Platform.Job.CCF
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddHttpClient();
+                    services.AddSingleton<IMemCache, MemCache>();
+                    services.AddHttpClient<IMTSAuthRepository, MTSAuthRepository>();
                     services.AddSingleton<IPlatformRepository, PlatformRepository>();
                     services.AddHostedService<Worker>();
                 }).UseWindowsService();

@@ -30,7 +30,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Sportsbook.API", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.BetStatus.Service", "Platform.BetStatus.Service\Platform.BetStatus.Service.csproj", "{96B43FC8-6229-4352-B136-6103AD42F304}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Job.ForexEUR", "Platform.Job.ForexEUR\Platform.Job.ForexEUR.csproj", "{E191B343-9AE0-4C02-A322-7EEE379A6AAD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Job.ForexEUR", "Platform.Job.ForexEUR\Platform.Job.ForexEUR.csproj", "{E191B343-9AE0-4C02-A322-7EEE379A6AAD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Job.CCF", "Platform.Job.CCF\Platform.Job.CCF.csproj", "{34FF97E0-E27B-46FB-884E-29033FABD8AE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -90,6 +92,10 @@ Global
 		{E191B343-9AE0-4C02-A322-7EEE379A6AAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E191B343-9AE0-4C02-A322-7EEE379A6AAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E191B343-9AE0-4C02-A322-7EEE379A6AAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34FF97E0-E27B-46FB-884E-29033FABD8AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34FF97E0-E27B-46FB-884E-29033FABD8AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34FF97E0-E27B-46FB-884E-29033FABD8AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34FF97E0-E27B-46FB-884E-29033FABD8AE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

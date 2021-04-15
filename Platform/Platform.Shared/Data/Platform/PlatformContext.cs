@@ -17,6 +17,7 @@ namespace Platform.Shared.Data.Platform
             modelBuilder.Entity<ForexEUR>().HasKey(k => new { k.CurrencyCode });
             modelBuilder.Entity<OperatorLog>().HasKey(k => new { k.Id });
             modelBuilder.Entity<OperatorAudit>().HasKey(k => new { k.Id });
+            modelBuilder.Entity<ConfidenceFactor>().HasKey(k => new { k.Timestamp, k.UserId });
         }
 
         public DbSet<Client> Client { get; set; }
@@ -24,5 +25,6 @@ namespace Platform.Shared.Data.Platform
         public DbSet<ForexEUR> ForexEUR { get; set; }
         public DbSet<OperatorLog> OperatorLog { get; set; }
         public DbSet<OperatorAudit> OperatorAudit { get; set; }
+        public DbSet<ConfidenceFactor> ConfidenceFactor { get; set; }
     }
 }

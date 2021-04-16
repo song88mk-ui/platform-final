@@ -32,7 +32,7 @@ namespace Platform.Settlement.Service.Repository
                 {
                     try
                     {
-                        var betSelections = context.BetSelection.AsNoTracking().Where(c => c.MarketId == marketId && c.IsSettled == false).ToList();
+                        var betSelections = context.BetSelection.AsNoTracking().Where(c => c.MarketId == marketId).ToList();
                         if (betSelections.Count > 0)
                             result.AddRange(betSelections);
 
@@ -60,6 +60,33 @@ namespace Platform.Settlement.Service.Repository
                     try
                     {
                         var betSelections = context.BetSelection.AsNoTracking().Where(c => c.SelectionId == selectionId).ToList();
+                        if (betSelections.Count > 0)
+                            result.AddRange(betSelections);
+
+                        scope.Complete();
+                    }
+                    catch (Exception)
+                    {
+                        return result;
+                    }
+                }
+            }
+
+            return result;
+        }
+        private List<BetSelection> GetBetSelectionsForCancellation(long selectionId)
+        {
+            var result = new List<BetSelection>();
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+
+                using (var context = new BettingContext(optionsBuilder.Options))
+                {
+                    try
+                    {
+                        var betSelections = context.BetSelection.AsNoTracking().Where(c => c.SelectionId == selectionId && c.IsSettled == false).ToList();
                         if (betSelections.Count > 0)
                             result.AddRange(betSelections);
 
@@ -188,6 +215,140 @@ namespace Platform.Settlement.Service.Repository
                                 isPublish = SettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection);
                             else
                                 isPublish = ResettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection);
+
+                            scope.Complete();
+
+                            if (isPublish)
+                            {
+                                if (payload.Bet.BetStatusId == (int)BetStatus.Cancelled)
+                                {
+                                    messageBroker.Publish(payload, "OnBetCancellation", "r.bet.operator", correlationId);
+
+                                    messageBroker.Publish(new OnBetStatus
+                                    {
+                                        ClientId = payload.Bet.ClientId.ToString().ToUpper(),
+                                        UserId = payload.Bet.UserId,
+                                        BetId = payload.Bet.BetId.ToString().ToUpper(),
+                                        BetStatus = (BetStatus)payload.Bet.BetStatusId
+                                    }, "OnBetStatus", "r.bet.betstatus", correlationId);
+                                }
+                                else
+                                {
+                                    messageBroker.Publish(payload, "OnBetSettlement", "r.bet.operator", correlationId);
+
+                                    messageBroker.Publish(new OnBetStatus
+                                    {
+                                        ClientId = payload.Bet.ClientId.ToString().ToUpper(),
+                                        UserId = payload.Bet.UserId,
+                                        BetId = payload.Bet.BetId.ToString().ToUpper(),
+                                        BetStatus = (BetStatus)payload.Bet.BetStatusId
+                                    }, "OnBetStatus", "r.bet.betstatus", correlationId);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+                    }
+                }
+            }
+        }
+        private DateTime ConvertToDateTime(double timestamp)
+        {
+            DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+            return dtDateTime.AddMilliseconds(timestamp).ToUniversalTime();
+        }
+        public void ProcesssBetSettlementForCancellation(OnUOFBetSettlement message, IMessageBroker messageBroker, string correlationId)
+        {
+            var betSelections = GetBetSelectionsForCancellation(message.SelectionId);
+
+            foreach (var betSelection in betSelections)
+            {
+                var isPublish = false;
+                var payload = new OnBetSettlement();
+                var settledDate = DateTime.UtcNow;
+
+                using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+                {
+                    var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+
+                    using (var context = new BettingContext(optionsBuilder.Options))
+                    {
+                        try
+                        {
+                            var bet = context.Bet.AsNoTracking().Where(c => c.BetId == betSelection.BetId).FirstOrDefault();
+
+                            var betDate = bet.BetDate;
+
+                            var isStartTimeIncluded = false;
+                            var isEndTimeIncluded = false;
+
+                            var startTime = DateTime.UtcNow;
+                            var endTime = DateTime.UtcNow;
+
+                            if (message.StartTime > 0)
+                            {
+                                isStartTimeIncluded = true;
+                                startTime = ConvertToDateTime(message.StartTime);
+                            }
+
+                            if (message.EndTime > 0)
+                            {
+                                isEndTimeIncluded = true;
+                                endTime = ConvertToDateTime(message.EndTime);
+                            }
+
+                            if (isStartTimeIncluded == true && isEndTimeIncluded == true)
+                            {
+                                if (betDate < startTime)
+                                {
+                                    scope.Complete();
+                                    continue;
+                                }
+
+                                if (betDate > endTime)
+                                {
+                                    scope.Complete();
+                                    continue;
+                                }
+                            }
+
+                            if (isStartTimeIncluded == true && isEndTimeIncluded == false)
+                            {
+                                if (betDate < startTime)
+                                {
+                                    scope.Complete();
+                                    continue;
+                                }
+                            }
+
+                            if (isStartTimeIncluded == false && isEndTimeIncluded == true)
+                            {
+                                if (betDate > endTime)
+                                {
+                                    scope.Complete();
+                                    continue;
+                                }
+                            }
+
+                            var selections = context.BetSelection.Where(c => c.BetId == betSelection.BetId).ToList();
+
+                            if (selections.Count == 0)
+                            {
+                                scope.Complete();
+                                continue;
+                            }
+
+                            var filteredSelection = selections.Where(c => c.SelectionId == message.SelectionId).FirstOrDefault();
+
+                            if (filteredSelection == null)
+                            {
+                                scope.Complete();
+                                continue;
+                            }
+
+                            isPublish = SettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection);
 
                             scope.Complete();
 
@@ -614,10 +775,12 @@ namespace Platform.Settlement.Service.Repository
                 {
                     SelectionId = selectionId,
                     SelectionStatus = message.MarketStatus,
-                    SettlementScore = message.SettlementScore
+                    SettlementScore = message.SettlementScore,
+                    StartTime = message.StartTime,
+                    EndTime = message.EndTime
                 };
 
-                ProcesssBetSettlement(cancellation, messageBroker, correlationId);
+                ProcesssBetSettlementForCancellation(cancellation, messageBroker, correlationId);
             }
         }
 

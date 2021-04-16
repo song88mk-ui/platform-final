@@ -7,5 +7,7 @@ namespace Platform.Shared.MessageModels
         public long SelectionId { get; set; }
         public BetStatus SelectionStatus { get; set; }
         public string SettlementScore { get; set; }
+        public long StartTime { get; set; }
+        public long EndTime { get; set; }
     }
 }

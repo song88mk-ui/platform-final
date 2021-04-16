@@ -8,5 +8,7 @@ namespace Platform.Shared.MessageModels
         public string Reason { get; set; }
         public string SettlementScore { get; set; }
         public BetStatus MarketStatus { get; set; }
+        public long StartTime { get; set; }
+        public long EndTime { get; set; }
     }
 }

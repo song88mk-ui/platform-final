@@ -32,7 +32,7 @@ namespace Platform.Settlement.Service.Repository
                 {
                     try
                     {
-                        var betSelections = context.BetSelection.AsNoTracking().Where(c => c.MarketId == marketId).ToList();
+                        var betSelections = context.BetSelection.AsNoTracking().Where(c => c.MarketId == marketId && c.IsSettled == false).ToList();
                         if (betSelections.Count > 0)
                             result.AddRange(betSelections);
 

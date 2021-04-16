@@ -440,7 +440,7 @@ namespace Platform.Operator.Service.Repository
                         if (result.StatusId == 1001)
                             betMessage = "Insufficient Funds";
                         else if (result.StatusId == 1002)
-                            betMessage = "Insufficient Funds";
+                            betMessage = "Invalid Token";
                         else if (result.StatusId == 1003)
                             betMessage = "Operator Error";
                         else

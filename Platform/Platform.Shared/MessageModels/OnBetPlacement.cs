@@ -13,4 +13,12 @@ namespace Platform.Shared.MessageModels
         public Bet Bet { get; set; }
         public List<BetSelection> BetSelections { get; set; }
     }
+
+    public class OnBetPlacementError
+    {
+        public string BetId { get; set; }
+        public string Error { get; set; }
+        public string StackTrace { get; set; }
+        public string InnerException { get; set; }
+    }
 }

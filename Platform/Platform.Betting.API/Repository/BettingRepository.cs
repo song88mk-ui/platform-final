@@ -383,13 +383,14 @@ namespace Platform.Betting.API.Repository
                     }
 
                     _bettingContext.SaveChanges();
-                    scope.Complete();
 
                     _messageBroker.Publish(new OnBetPlacement
                     {
                         Bet = betData,
                         BetSelections = betSelectionData
                     }, "OnBetPlacement", "r.bet.placement", Guid.NewGuid().ToString().ToUpper());
+
+                    scope.Complete();
                 }
                 catch (Exception ex)
                 {

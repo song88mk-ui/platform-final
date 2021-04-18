@@ -937,10 +937,10 @@ namespace Platform.Betting.API.Repository
 
             if (request.IsCurrent)
             {
-                var openBets = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running };
+                var openBets = new List<int> { (int)BetStatus.Running };
                 var openBetsResponse = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && openBets.Contains(c.BetStatusId)).ToList();
 
-                var cancelledRejectedBets = new List<int> { (int)BetStatus.Cancelled, (int)BetStatus.Rejected };
+                var cancelledRejectedBets = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Cancelled, (int)BetStatus.Rejected };
                 var cancelledRejectedBetsResponse = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && cancelledRejectedBets.Contains(c.BetStatusId) && c.BetDate.AddMinutes(5) >= DateTime.UtcNow).ToList();
 
                 if (openBetsResponse.Count > 0)

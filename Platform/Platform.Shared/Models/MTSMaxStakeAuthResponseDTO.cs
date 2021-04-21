@@ -73,13 +73,13 @@ namespace Platform.Shared.Models
         public string Id { get; set; }
 
         [JsonProperty("odds")]
-        public decimal Odds { get; set; }
+        public int Odds { get; set; }
     }
 
     public class MTSStakeDTO
     {
         [JsonProperty("value")]
-        public decimal Value { get; set; }
+        public long Value { get; set; }
 
         [JsonProperty("type")]
         public string Type { get; set; } = "total";

@@ -60,7 +60,7 @@ namespace Platform.Betting.API.Repository
                 bets.Add(new MTSBetDTO
                 {
                     Id = betId,
-                    Stake = new MTSStakeDTO { Value = 0m }
+                    Stake = new MTSStakeDTO { Value = 10000 }
                 });
 
                 var betSelections = new List<MTSBetSelectionDTO>();
@@ -70,7 +70,7 @@ namespace Platform.Betting.API.Repository
                     {
                         EventId = req.FixtureSpecifier,
                         Id = req.SelectionSpecifier,
-                        Odds = req.Odds * 10000
+                        Odds = Convert.ToInt32(req.Odds * 10000)
                     });
                 }
 

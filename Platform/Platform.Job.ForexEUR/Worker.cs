@@ -24,9 +24,15 @@ namespace Platform.Job.ForexEUR
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                await _platformRepository.ProcessForex();
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                await Task.Delay(3600000, stoppingToken);
+                try
+                {
+                    await Task.Delay(3600000, stoppingToken);
+                    await _platformRepository.ProcessForex();
+                    _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                }
+                catch (Exception)
+                {
+                }
             }
         }
     }

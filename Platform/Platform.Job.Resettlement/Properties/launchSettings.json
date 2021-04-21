@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "Platform.Job.Resettlement": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

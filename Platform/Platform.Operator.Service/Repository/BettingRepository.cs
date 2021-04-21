@@ -1047,5 +1047,10 @@ namespace Platform.Operator.Service.Repository
                 RetryBetCancellation(message, messageBroker, correlationId);
             }
         }
+
+        private void AddOrUpdateOperatorSettlementRetry(OperatorBetSettlementRequestDTO payload)
+        {
+
+        }
     }
 }

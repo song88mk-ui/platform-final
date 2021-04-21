@@ -42,7 +42,10 @@ namespace Platform.Job.CCF.Repository
 
             var year = DateTime.UtcNow.Year;
             var lastMonth = DateTime.UtcNow.AddMonths(-1);
-            var startDate = $"{year}{GetDoubleDigit(lastMonth.Month)}{GetDoubleDigit(lastMonth.Day + 1)}000000";
+
+            var DayAfter = lastMonth.AddDays(1);
+
+            var startDate = $"{year}{GetDoubleDigit(DayAfter.Month)}{GetDoubleDigit(DayAfter.Day)}000000";
             var endDate = $"{year}1231000000";
             var response = await _httpClient.GetAsync($"edge/proxy/ReportingCcf/external/api/report/export/history/ccf/changes/client/api?startDatetime={startDate}&endDatetime={endDate}&bookmakerId=32290");
 

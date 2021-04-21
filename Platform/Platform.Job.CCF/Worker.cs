@@ -24,9 +24,15 @@ namespace Platform.Job.CCF
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                await _platformRepository.ProcessCCF();
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                await Task.Delay(300000, stoppingToken);
+                try
+                {
+                    await Task.Delay(300000, stoppingToken);
+                    await _platformRepository.ProcessCCF();
+                    _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                }
+                catch (Exception)
+                {
+                }
             }
         }
     }

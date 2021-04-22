@@ -22,7 +22,7 @@ namespace Platform.Betting.API.Repository
             _httpClient.BaseAddress = new Uri(_configuration["API:MTSMaxStakeAPI"]);
         }
 
-        public async Task<BaseResponseDTO<MTSStakeResponseDTO>> GetMTSMaxStake(string authToken, MTSConfigRequestDTO request)
+        public async Task<BaseResponseDTO<MTSStakeResponseDTO>> GetMTSMaxStake(string authToken, MTSConfigRequestDTO request, decimal companyShare)
         {
             if (request.BetSelections.Any(c => c.SportId > 1000))
             {
@@ -111,7 +111,7 @@ namespace Platform.Betting.API.Repository
                         Message = StatusCode.Success.ToString(),
                         Result = new MTSStakeResponseDTO
                         {
-                            Stake = maxStakeReturn
+                            Stake = maxStakeReturn / companyShare
                         }
                     };
                 }

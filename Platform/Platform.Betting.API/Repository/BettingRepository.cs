@@ -452,7 +452,7 @@ namespace Platform.Betting.API.Repository
             if (mtsAuthToken.StatusCode != StatusCode.Success)
                 return await PlaceBetWithoutMTS(request);
 
-            var mtsMaxStake = await _mtsMaxStakeRepository.GetMTSMaxStake(mtsAuthToken.Result.Token, mtsConfigRequest);
+            var mtsMaxStake = await _mtsMaxStakeRepository.GetMTSMaxStake(mtsAuthToken.Result.Token, mtsConfigRequest, request.CompanyShare);
 
             if (mtsMaxStake.StatusCode != StatusCode.Success)
                 return await PlaceBetWithoutMTS(request);
@@ -807,7 +807,7 @@ namespace Platform.Betting.API.Repository
             if (mtsAuthToken.StatusCode != StatusCode.Success)
                 return await GetMaxStakeWithoutMTS(request);
 
-            var mtsMaxStake = await _mtsMaxStakeRepository.GetMTSMaxStake(mtsAuthToken.Result.Token, mtsConfigRequest);
+            var mtsMaxStake = await _mtsMaxStakeRepository.GetMTSMaxStake(mtsAuthToken.Result.Token, mtsConfigRequest, request.CompanyShare);
 
             if (mtsMaxStake.StatusCode != StatusCode.Success)
                 return await GetMaxStakeWithoutMTS(request);

@@ -111,7 +111,7 @@ namespace Platform.Betting.API.Repository
                         Message = StatusCode.Success.ToString(),
                         Result = new MTSStakeResponseDTO
                         {
-                            Stake = maxStakeReturn / 10000
+                            Stake = companyShare == 0m ?  maxStakeReturn / 10000 : (maxStakeReturn / 10000) / companyShare
                         }
                     };
                 }

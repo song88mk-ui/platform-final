@@ -394,7 +394,14 @@ namespace Platform.Betting.API.Repository
                 }
                 catch (Exception ex)
                 {
-                    scope.Dispose();
+                    _messageBroker.Publish(new OnBetPlacementError
+                    {
+                        BetId = betData.BetId.ToString(),
+                        Error = ex.Message,
+                        StackTrace = ex.StackTrace,
+                        InnerException = ex.InnerException.ToString()
+                    }, "OnBetPlacementError", "r.bet.placement.error", Guid.NewGuid().ToString().ToUpper());
+
                     return new BaseResponseDTO<BetResponseDTO>
                     {
                         StatusCode = StatusCode.Error,

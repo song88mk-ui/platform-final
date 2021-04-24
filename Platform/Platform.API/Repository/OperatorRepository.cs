@@ -1,4 +1,5 @@
-﻿using Platform.Shared.Enums;
+﻿using Microsoft.ApplicationInsights;
+using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
 using System.Net;
@@ -15,7 +16,7 @@ namespace Platform.API.Repository
         public OperatorRepository(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _httpClient.Timeout = TimeSpan.FromSeconds(5);
+            //_httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
         public async Task<BaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string operatorToken, string endpoint)
         {
@@ -29,7 +30,14 @@ namespace Platform.API.Repository
             }
 
             _httpClient.BaseAddress = new Uri(endpoint);
-            _httpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+
+            if (_httpClient.DefaultRequestHeaders.Contains("x-operator-token"))
+            {
+                _httpClient.DefaultRequestHeaders.Remove("x-operator-token");
+                _httpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+            }
+            else
+                _httpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
 
             try
             {

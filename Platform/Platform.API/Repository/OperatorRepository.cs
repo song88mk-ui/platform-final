@@ -2,6 +2,7 @@
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
@@ -12,10 +13,12 @@ namespace Platform.API.Repository
     public class OperatorRepository : IOperatorRepository
     {
         private readonly HttpClient _httpClient;
+        private readonly TelemetryClient _telemetryClient;
 
-        public OperatorRepository(HttpClient httpClient)
+        public OperatorRepository(HttpClient httpClient, TelemetryClient telemetryClient)
         {
             _httpClient = httpClient;
+            _telemetryClient = telemetryClient;
             //_httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
         public async Task<BaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string operatorToken, string endpoint)
@@ -65,6 +68,23 @@ namespace Platform.API.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
+                        try
+                        {
+                            var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                            var properties = new Dictionary<string, string>
+                            {
+                                { "x-operator-token", operatorToken },
+                                { "endpoint", endpoint },
+                                { "response", result.StatusId.ToString() }
+                            };
+
+                            _telemetryClient.TrackEvent("Authenticate", properties);
+                        }
+                        catch (Exception)
+                        {
+                        }
+
                         return new BaseResponseDTO<AuthenticationResponseDTO>
                         {
                             StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,

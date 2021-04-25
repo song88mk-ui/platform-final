@@ -199,9 +199,9 @@ namespace Platform.Betting.API.Repository
             var betData = new Bet();
             var betSelectionData = new List<BetSelection>();
 
-            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            try
             {
-                try
+                using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
                 {
                     if (request.Selections.Count == 1)
                     {
@@ -392,23 +392,25 @@ namespace Platform.Betting.API.Repository
 
                     scope.Complete();
                 }
-                catch (Exception ex)
-                {
-                    _messageBroker.Publish(new OnBetPlacementError
-                    {
-                        BetId = betData.BetId.ToString(),
-                        Error = ex.Message,
-                        StackTrace = ex.StackTrace,
-                        InnerException = ex.InnerException.ToString()
-                    }, "OnBetPlacementError", "r.bet.placement.error", Guid.NewGuid().ToString().ToUpper());
-
-                    return new BaseResponseDTO<BetResponseDTO>
-                    {
-                        StatusCode = StatusCode.Error,
-                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
-                    };
-                }
             }
+            catch (Exception ex)
+            {
+                _messageBroker.Publish(new OnBetPlacementError
+                {
+                    BetId = betData.BetId.ToString(),
+                    Error = ex.Message,
+                    StackTrace = ex.StackTrace,
+                    InnerException = ex.InnerException.ToString()
+                }, "OnBetPlacementError", "r.bet.placement.error", Guid.NewGuid().ToString().ToUpper());
+
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
+            }
+
+
 
             return new BaseResponseDTO<BetResponseDTO>
             {
@@ -566,9 +568,9 @@ namespace Platform.Betting.API.Repository
             var betData = new Bet();
             var betSelectionData = new List<BetSelection>();
 
-            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            try
             {
-                try
+                using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
                 {
                     if (request.Selections.Count == 1)
                     {
@@ -759,22 +761,22 @@ namespace Platform.Betting.API.Repository
 
                     scope.Complete();
                 }
-                catch (Exception ex)
+            }
+            catch (Exception ex)
+            {
+                _messageBroker.Publish(new OnBetPlacementError
                 {
-                    _messageBroker.Publish(new OnBetPlacementError
-                    {
-                        BetId = betData.BetId.ToString(),
-                        Error = ex.Message,
-                        StackTrace = ex.StackTrace,
-                        InnerException = ex.InnerException.ToString()
-                    }, "OnBetPlacementError", "r.bet.placement.error", Guid.NewGuid().ToString().ToUpper());
+                    BetId = betData.BetId.ToString(),
+                    Error = ex.Message,
+                    StackTrace = ex.StackTrace,
+                    InnerException = ex.InnerException.ToString()
+                }, "OnBetPlacementError", "r.bet.placement.error", Guid.NewGuid().ToString().ToUpper());
 
-                    return new BaseResponseDTO<BetResponseDTO>
-                    {
-                        StatusCode = StatusCode.Error,
-                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
-                    };
-                }
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
             }
 
             return new BaseResponseDTO<BetResponseDTO>

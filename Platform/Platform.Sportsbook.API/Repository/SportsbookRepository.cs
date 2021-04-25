@@ -529,6 +529,11 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<MarketTemplateGroupResponseDTO>> GetMarketTemplateGroups()
         {
+            var result = _memCache.GetCache<BaseResponseDTO<MarketTemplateGroupResponseDTO>>("mtg");
+
+            if (result != null)
+                return result;
+
             var initial = await _sportsbookContext.MarketTemplateGroup.ToListAsync();
 
             var prematch = initial.Where(c => c.FixtureStatusId == 0 && c.MarketTemplates != "0").ToList();
@@ -553,7 +558,7 @@ namespace Platform.Sportsbook.API.Repository
                 }).OrderBy(o => o.MarketTemplateGroupId).ToList()
             }).OrderBy(o => o.SportId).ToList();
 
-            return new BaseResponseDTO<MarketTemplateGroupResponseDTO>
+            var initialResult = new BaseResponseDTO<MarketTemplateGroupResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
@@ -562,6 +567,11 @@ namespace Platform.Sportsbook.API.Repository
                     Sports = sportGroup
                 }
             };
+
+            if (initial.Count > 0)
+                _memCache.AddOrUpdateCache("mtg", initialResult, DateTimeOffset.UtcNow.AddDays(1));
+
+            return initialResult;
         }
         private async Task<Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>> GetBetFixtures(BetFixtureRequestDTO request)
         {

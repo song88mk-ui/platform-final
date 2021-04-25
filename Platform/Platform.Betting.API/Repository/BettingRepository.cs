@@ -489,7 +489,7 @@ namespace Platform.Betting.API.Repository
                 {
                     minStake = GetMinStake(checkOverride.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
                     maxStake = GetMaxStakeForSingleBetWithMTS(checkOverride.MaxStake, tierMaxStake.Result.MaxStake, mtsMaxStake.Result.Stake, request.ExchangeRate, odds, request.CompanyShare);
-                    maxPerGame = tierMaxStake.Result.MaxPerGame;
+                    maxPerGame = tierMaxStake.Result.MaxPerGame * request.ExchangeRate;
                     stakeFixtureLimit = checkOverride.StakeLimitFixture < maxPerGame ? checkOverride.StakeLimitFixture : maxPerGame;
                 }
                 else
@@ -497,7 +497,7 @@ namespace Platform.Betting.API.Repository
                     DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     minStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
                     maxStake = GetMaxStakeForSingleBetWithMTS(defaultSportConfig.MaxStake, tierMaxStake.Result.MaxStake, mtsMaxStake.Result.Stake, request.ExchangeRate, odds, request.CompanyShare);
-                    maxPerGame = tierMaxStake.Result.MaxPerGame;
+                    maxPerGame = tierMaxStake.Result.MaxPerGame * request.ExchangeRate;
                     stakeFixtureLimit = defaultSportConfig.StakeLimitFixture < maxPerGame ? defaultSportConfig.StakeLimitFixture : maxPerGame;
                 }
 
@@ -516,8 +516,11 @@ namespace Platform.Betting.API.Repository
                     return new BaseResponseDTO<BetResponseDTO>
                     {
                         StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake,
-                        Message = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake.ToString().Replace('_', ' ') + " " + Convert.ToDecimal(maxStake).ToString("#,##0.00")
-
+                        Message = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake.ToString().Replace('_', ' ') + " " + Convert.ToDecimal(maxStake).ToString("#,##0.00"),
+                        Result = new BetResponseDTO
+                        {
+                            Stake = Convert.ToDecimal(maxStake)
+                        }
                     };
                 }
 

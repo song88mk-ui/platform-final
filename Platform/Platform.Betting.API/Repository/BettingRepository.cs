@@ -383,14 +383,13 @@ namespace Platform.Betting.API.Repository
                     }
 
                     _bettingContext.SaveChanges();
+                    scope.Complete();
 
                     _messageBroker.Publish(new OnBetPlacement
                     {
                         Bet = betData,
                         BetSelections = betSelectionData
                     }, "OnBetPlacement", "r.bet.placement", Guid.NewGuid().ToString().ToUpper());
-
-                    scope.Complete();
                 }
             }
             catch (Exception ex)
@@ -409,8 +408,6 @@ namespace Platform.Betting.API.Repository
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
                 };
             }
-
-
 
             return new BaseResponseDTO<BetResponseDTO>
             {
@@ -752,14 +749,13 @@ namespace Platform.Betting.API.Repository
                     }
 
                     _bettingContext.SaveChanges();
+                    scope.Complete();
 
                     _messageBroker.Publish(new OnBetPlacement
                     {
                         Bet = betData,
                         BetSelections = betSelectionData
                     }, "OnBetPlacement", "r.bet.placement", Guid.NewGuid().ToString().ToUpper());
-
-                    scope.Complete();
                 }
             }
             catch (Exception ex)

@@ -2548,7 +2548,7 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(markets, selections);
 
-            var initial = await _sportsbookContext.MarketTemplateGroup.Where(c => c.SportId == fixture.SpId).ToListAsync();
+            var initial = GetMarketTemplateGroup();
 
             var prematch = initial.Where(c => c.FixtureStatusId == 0 && c.MarketTemplates != "0").ToList();
             var live = initial.Where(c => c.FixtureStatusId == 1 && c.MarketTemplates != "0").ToList();
@@ -3351,6 +3351,10 @@ namespace Platform.Sportsbook.API.Repository
         private List<TierLeagueOrder> GetTierLeagueOrder()
         {
             return _memCache.GetCache($"tlo", () => _sportsbookContext.TierLeagueOrder.ToList(), 24);
+        }
+        private List<Platform.Shared.Data.Sportsbook.SQLEntities.MarketTemplateGroup> GetMarketTemplateGroup()
+        {
+            return _memCache.GetCache($"mtg2", () => _sportsbookContext.MarketTemplateGroup.ToList(), 24);
         }
         public async Task<BaseResponseDTO<StatusCode>> ManualSettlement(BetSettlementRequestDTO request)
         {

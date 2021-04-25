@@ -23,7 +23,6 @@ namespace Platform.Sportsbook.API.Repository
     {
         private readonly IMongoDatabase _db;
         private readonly IMemCache _memCache;
-        private readonly IMessageBroker _messageBroker;
         private readonly SportsbookContext _sportsbookContext;
         private readonly IConfiguration _configuration;
         private IMongoCollection<Fixture> fixtureCollection;
@@ -37,7 +36,7 @@ namespace Platform.Sportsbook.API.Repository
         private IMongoCollection<BettingStatus> primaryBettingStatusCollection;
         private readonly HttpClient _httpClient;
 
-        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMessageBroker messageBroker, IMemCache memCache, IConfiguration configuration)
+        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMemCache memCache, IConfiguration configuration)
         {
             _configuration = configuration;
             var client = new MongoClient(_configuration["ConnectionStrings:MongoDB-Sportsbook"]);
@@ -55,10 +54,8 @@ namespace Platform.Sportsbook.API.Repository
 
             _sportsbookContext = sportsbookContext;
             _httpClient = httpClient;
-            _messageBroker = messageBroker;
             _memCache = memCache;
 
-            _messageBroker.Connect();
             _httpClient.BaseAddress = new Uri("https://av-api.betradar.com");
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer C9SdxJm170K61OY152");
         }
@@ -3380,7 +3377,8 @@ namespace Platform.Sportsbook.API.Repository
                     Selections = selections
                 };
 
-                _messageBroker.Publish(payload, "OnBetSettlement", $"r.sb.adapter.{lastDigit}.onbetsettlement", Guid.NewGuid().ToString());
+                //TODO: call another API to sends to rabbitmq
+                //_messageBroker.Publish(payload, "OnBetSettlement", $"r.sb.adapter.{lastDigit}.onbetsettlement", Guid.NewGuid().ToString());
             }
 
             return new BaseResponseDTO<StatusCode>
@@ -3414,7 +3412,8 @@ namespace Platform.Sportsbook.API.Repository
                     Markets = markets
                 };
 
-                _messageBroker.Publish(payload, "OnBetCancellation", $"r.sb.adapter.{lastDigit}.onbetcancellation", Guid.NewGuid().ToString());
+                //TODO: call another API to sends to rabbitmq
+                //_messageBroker.Publish(payload, "OnBetCancellation", $"r.sb.adapter.{lastDigit}.onbetcancellation", Guid.NewGuid().ToString());
             }
 
             return new BaseResponseDTO<StatusCode>

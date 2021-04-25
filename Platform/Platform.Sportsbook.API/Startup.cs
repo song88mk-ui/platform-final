@@ -51,7 +51,6 @@ namespace Platform.Sportsbook.API
             services.AddControllers();
 
             services.AddSingleton<IMemCache, MemCache>();
-            services.AddSingleton<IMessageBroker, MessageBroker>();
             services.AddHttpClient<ISportsbookRepository, SportsbookRepository>();
 
             services.AddSwaggerGen(c =>

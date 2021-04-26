@@ -34,7 +34,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Job.ForexEUR", "Pl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Job.CCF", "Platform.Job.CCF\Platform.Job.CCF.csproj", "{34FF97E0-E27B-46FB-884E-29033FABD8AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Job.Resettlement", "Platform.Job.Resettlement\Platform.Job.Resettlement.csproj", "{99E8E52F-B364-47F4-A83E-EE512563AE60}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Job.Resettlement", "Platform.Job.Resettlement\Platform.Job.Resettlement.csproj", "{99E8E52F-B364-47F4-A83E-EE512563AE60}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.RabbitMQ.API", "Platform.RabbitMQ.API\Platform.RabbitMQ.API.csproj", "{3D796408-C4F8-455E-A2F7-5C50033AEBCF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -102,6 +104,10 @@ Global
 		{99E8E52F-B364-47F4-A83E-EE512563AE60}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99E8E52F-B364-47F4-A83E-EE512563AE60}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{99E8E52F-B364-47F4-A83E-EE512563AE60}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D796408-C4F8-455E-A2F7-5C50033AEBCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D796408-C4F8-455E-A2F7-5C50033AEBCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D796408-C4F8-455E-A2F7-5C50033AEBCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D796408-C4F8-455E-A2F7-5C50033AEBCF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

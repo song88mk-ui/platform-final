@@ -5,7 +5,7 @@ using Platform.Shared.Models;
 using System.Threading.Tasks;
 
 namespace Platform.Betting.API.Controllers
-{//
+{
     [ApiController, EnableCors("AllowAllOrigins")]
     public class BetController : ControllerBase
     {

@@ -2545,7 +2545,7 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(markets, selections);
 
-            var initial = GetMarketTemplateGroup();
+            var initial = GetMarketTemplateGroup().Where(c => c.SportId == fixture.SpId).ToList();
 
             var prematch = initial.Where(c => c.FixtureStatusId == 0 && c.MarketTemplates != "0").ToList();
             var live = initial.Where(c => c.FixtureStatusId == 1 && c.MarketTemplates != "0").ToList();

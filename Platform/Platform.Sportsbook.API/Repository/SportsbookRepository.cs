@@ -394,7 +394,7 @@ namespace Platform.Sportsbook.API.Repository
             var sportIds = fixtures.Select(s => s.SpId).Distinct().ToList();
 
             var leagueSortOrder = GetTierLeagueOrder().Where(c => sportIds.Contains(c.SportId)).ToList();
-            var sportSortOrder = _sportsbookContext.ClientSportOrder.Where(c => c.ClientId == request.ClientId).ToList();
+            var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
 
             var result = fixtures.Where(c => c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
             {
@@ -1362,7 +1362,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = await _sportsbookContext.ClientSportOrder.Where(c => c.ClientId == request.ClientId).ToListAsync();
+            var sortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
 
             var result = new List<FixtureCount>();
 
@@ -1406,7 +1406,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = await _sportsbookContext.ClientSportOrder.Where(c => c.ClientId == request.ClientId).ToListAsync();
+            var sortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
 
             var result = new List<FixtureCount>();
 
@@ -3349,9 +3349,13 @@ namespace Platform.Sportsbook.API.Repository
         {
             return _memCache.GetCache($"tlo", () => _sportsbookContext.TierLeagueOrder.ToList(), 24);
         }
-        private List<Platform.Shared.Data.Sportsbook.SQLEntities.MarketTemplateGroup> GetMarketTemplateGroup()
+        private List<Shared.Data.Sportsbook.SQLEntities.MarketTemplateGroup> GetMarketTemplateGroup()
         {
             return _memCache.GetCache($"mtg2", () => _sportsbookContext.MarketTemplateGroup.ToList(), 24);
+        }
+        private List<ClientSportOrder> GetSportOrder()
+        {
+            return _memCache.GetCache($"so", () => _sportsbookContext.ClientSportOrder.ToList(), 24);
         }
         public async Task<BaseResponseDTO<StatusCode>> ManualSettlement(BetSettlementRequestDTO request)
         {
@@ -3513,7 +3517,7 @@ namespace Platform.Sportsbook.API.Repository
             var sportIds = fixtures.Select(s => s.SpId).Distinct().ToList();
 
             var leagueSortOrder = GetTierLeagueOrder().Where(c => sportIds.Contains(c.SportId)).ToList();
-            var sportSortOrder = _sportsbookContext.ClientSportOrder.Where(c => c.ClientId == request.ClientId).ToList();
+            var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
 
             var fixtureResult = fixtures.Where(c => c.FiTyId == (int)FixtureType.Match)
                 .Select(s => new TempOrderedFixture

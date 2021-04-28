@@ -259,6 +259,7 @@ namespace Platform.Shared.Models
         public string LeagueName { get; set; }
         public string FixtureType { get; set; }
         public string FixtureId { get; set; }
+        public string ProviderFixtureId { get; set; }
         public string FixtureName { get; set; }
         public string Home { get; set; }
         public string Away { get; set; }

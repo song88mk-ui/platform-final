@@ -2665,6 +2665,8 @@ namespace Platform.Sportsbook.API.Repository
                     Away = fixture.FiTyId == (int)FixtureType.Match ? fixture.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
                     FixtureStartDate = fixture.FiStDa,
                     FixtureStatus = fixture.FiStNa,
+                    IsLive = fixture.SpId == 21 ? fixture.FiStId == (int)FixtureStatus.Live ? true : false : fixture.IsOfLi,
+                    IsLiveStream = string.IsNullOrEmpty(fixture.LiId) ? false : true,
                     Markets = GetMarketsLimited(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList())
                 }
             };
@@ -3073,7 +3075,9 @@ namespace Platform.Sportsbook.API.Repository
                 Home = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").First().Trim() : string.Empty,
                 Away = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
                 FixtureStatus = s.FiStNa,
-                FixtureStartDate = s.FiStDa
+                FixtureStartDate = s.FiStDa,
+                IsLive = s.SpId == 21 ? s.FiStId == (int)FixtureStatus.Live ? true : false : s.IsOfLi,
+                IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
             }).ToList();
 
             return new BaseResponseDTO<ActiveFixturesResponseDTO>

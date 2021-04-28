@@ -264,6 +264,8 @@ namespace Platform.Shared.Models
         public string Away { get; set; }
         public string FixtureStatus { get; set; }
         public DateTime FixtureStartDate { get; set; }
+        public bool IsLiveStream { get; set; }
+        public bool IsLive { get; set; }
         public List<MarketLimitedDTO> Markets { get; set; }
     }
 

@@ -11,7 +11,7 @@ namespace Platform.Client.API.Controllers
 {
     [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(APIKeyFilter))]
     public class IntegrationController : ControllerBase
-    {
+    {//fd
         private readonly ISportsbookRepository _sportsbookRepository;
 
         public IntegrationController(ISportsbookRepository sportsbookRepository)

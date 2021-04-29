@@ -1369,12 +1369,7 @@ namespace Platform.Betting.API.Repository
             if (maxStakeMTS == 0)
                 maximumStake.Add(GetMaxStakeForSingleBetWithoutMTS(maxStakeBackOffice, maxStakeTier, exchangeRate, odds));
             else
-            {
-                if (companyShare == 0)
-                    maximumStake.Add(maxStakeMTS);
-                else
-                    maximumStake.Add(RoundUpDecimalValue(maxStakeMTS / companyShare));
-            }
+                maximumStake.Add(maxStakeMTS);
 
             return maximumStake.Min();
         }
@@ -1385,12 +1380,7 @@ namespace Platform.Betting.API.Repository
             if (maxStakeMTS == 0)
                 maximumStake.Add(GetMaxStakeForParlayBetWithoutMTS(maxStakeBackOffice, parlayMaxPayout, odds));
             else
-            {
-                if (companyShare == 0)
-                    maximumStake.Add(maxStakeMTS);
-                else
-                    maximumStake.Add(RoundUpDecimalValue(maxStakeMTS / companyShare));
-            }
+                maximumStake.Add(maxStakeMTS);
 
             return maximumStake.Min();
         }

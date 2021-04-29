@@ -228,6 +228,13 @@ namespace Platform.Sportsbook.API.Repository
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
+            //Addtional Filter
+            if (request.SegmentId > 0)
+                fixtures = fixtures.Where(s => s.SegId == request.SegmentId).ToList();
+
+            if (request.LeagueId > 0)
+                fixtures = fixtures.Where(s => s.LeId == request.LeagueId).ToList();
+
             if (fixtures.Count == 0)
             {
                 return new BaseResponseDTO<TopLeaguesResponseDTO>
@@ -3509,6 +3516,7 @@ namespace Platform.Sportsbook.API.Repository
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.SpId < 1000);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
 
             if (fixtures.Count == 0)
             {

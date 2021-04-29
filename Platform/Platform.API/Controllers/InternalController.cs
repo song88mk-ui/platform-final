@@ -132,7 +132,10 @@ namespace Platform.API.Controllers
             var request = new TopLeaguesRequest
             {
                 SportId = request2.SportId,
-                LanguageCode = "EN"
+                LanguageCode = "EN",
+                LeagueId = request2.LeagueId,
+                SegmentId = request2.SegmentId
+
             };
 
             var result = await _platformRepository.GetAllLeagues(string.Empty, request2.ClientIdRef.ToString(), request);

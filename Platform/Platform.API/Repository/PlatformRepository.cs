@@ -775,7 +775,9 @@ namespace Platform.API.Repository
             {
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
-                SportId = request.SportId
+                SportId = request.SportId,
+                LeagueId = request.LeagueId,
+                SegmentId = request.SegmentId
             });
         }
         public async Task<BaseResponseDTO<TopFixturesResponseDTO>> GetTopFixtures(string apiKey, string clientId, TopFixturesRequest request)

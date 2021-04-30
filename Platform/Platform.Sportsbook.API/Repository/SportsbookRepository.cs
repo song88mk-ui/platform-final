@@ -3568,7 +3568,6 @@ namespace Platform.Sportsbook.API.Repository
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.SpId < 1000);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
-
             if (fixtures.Count == 0)
             {
                 return new BaseResponseDTO<BackofficeSportsResponseDTO>

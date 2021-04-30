@@ -132,30 +132,10 @@ namespace Platform.API.Controllers
             var request = new TopLeaguesRequest
             {
                 SportId = request2.SportId,
-                LanguageCode = "EN",
-                LeagueId = request2.LeagueId,
-                SegmentId = request2.SegmentId
-
+                LanguageCode = "EN"
             };
 
             var result = await _platformRepository.GetAllLeagues(string.Empty, request2.ClientIdRef.ToString(), request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
-        /// <summary>
-        /// Get list of all top fixtures buy clientId that are included in the request with filters
-        /// </summary>
-        [HttpGet("v1/client/topfixtures/filter")]
-        public async Task<IActionResult> GetClientTopFixturesFilter([FromQuery] ClientTopFixtureFilterRequest request)
-        {
-            var result = await _platformRepository.GetClientTopFixturesFilter(request);
 
             switch (result.StatusCode)
             {

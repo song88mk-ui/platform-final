@@ -22,7 +22,7 @@ namespace Platform.Job.CCF
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            while (true)
             {
                 try
                 {

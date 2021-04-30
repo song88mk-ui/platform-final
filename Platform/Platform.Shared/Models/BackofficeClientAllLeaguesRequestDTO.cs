@@ -8,6 +8,13 @@ namespace Platform.Shared.Models
         public int ClientIdRef { get; set; }
         public int SportId { get; set; }
         public string LanguageCode { get; set; }
+    }
+
+    public class BackofficeClientAllLeaguesRequest2DTO
+    {
+        public int ClientIdRef { get; set; }
+        public int SportId { get; set; }
+        public string LanguageCode { get; set; }
         public int LeagueId { get; set; }
         public int SegmentId { get; set; }
     }

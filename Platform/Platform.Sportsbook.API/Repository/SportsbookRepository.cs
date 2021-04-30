@@ -228,6 +228,56 @@ namespace Platform.Sportsbook.API.Repository
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<TopLeaguesResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new TopLeaguesResponseDTO()
+                };
+            }
+
+            var result = fixtures.Select(s => new TempTopLeague
+            {
+                SegmentId = s.SegId,
+                SegmentName = s.SegNa,
+                LeagueId = s.LeId,
+                LeagueName = s.LeNa
+            }).OrderBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ToList();
+
+            var finalResult = new List<TopLeague>();
+
+            foreach (var item in result)
+            {
+                if (finalResult.Any(c => c.SegmentId == item.SegmentId && c.LeagueId == item.LeagueId)) continue;
+
+                finalResult.Add(new TopLeague
+                {
+                    LeagueId = item.LeagueId,
+                    LeagueName = item.LeagueName,
+                    SegmentId = item.SegmentId,
+                    SegmentName = item.SegmentName,
+                    LiveCount = fixtures.Where(c => c.SegId == item.SegmentId && c.LeId == item.LeagueId && c.FiStId == (int)FixtureStatus.Live).Count()
+                });
+            }
+
+            return new BaseResponseDTO<TopLeaguesResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new TopLeaguesResponseDTO
+                {
+                    TopLeagues = finalResult
+                }
+            };
+        }
+
+        public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues2(TopLeaguesRequest2DTO request)
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
             //Addtional Filter
             if (request.SegmentId > 0)
                 fixtures = fixtures.Where(s => s.SegId == request.SegmentId).ToList();
@@ -279,6 +329,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+
         public async Task<BaseResponseDTO<TopFixturesResponseDTO>> GetTopFixtures(TopFixturesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 1 && c.FiTyId == (int)FixtureType.Match);

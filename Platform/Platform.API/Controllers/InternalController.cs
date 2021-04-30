@@ -132,13 +132,32 @@ namespace Platform.API.Controllers
             var request = new TopLeaguesRequest
             {
                 SportId = request2.SportId,
-                LanguageCode = "EN",
-                LeagueId = request2.LeagueId,
-                SegmentId = request2.SegmentId
-
+                LanguageCode = "EN"
             };
 
             var result = await _platformRepository.GetAllLeagues(string.Empty, request2.ClientIdRef.ToString(), request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v2/client/allleagues")]
+        public async Task<IActionResult> GetClientAllLeagues2([FromQuery] BackofficeClientAllLeaguesRequest2DTO request2)
+        {
+            var request = new TopLeaguesRequest2
+            {
+                SportId = request2.SportId,
+                LanguageCode = "EN",
+                LeagueId = request2.LeagueId,
+                SegmentId = request2.SegmentId
+            };
+
+            var result = await _platformRepository.GetAllLeagues2(string.Empty, request2.ClientIdRef.ToString(), request);
 
             switch (result.StatusCode)
             {

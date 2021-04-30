@@ -17,6 +17,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(string apiKey, string clientId, string operatorToken, LivestreamRequest request);
         Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetTopLeagues(string apiKey, string clientId, TopLeaguesRequest request);
         Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues(string apiKey, string clientId, TopLeaguesRequest request);
+        Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues2(string apiKey, string clientId, TopLeaguesRequest2 request);
         Task<BaseResponseDTO<TopFixturesResponseDTO>> GetTopFixtures(string apiKey, string clientId, TopFixturesRequest request);
         Task<BaseResponseDTO<TopFixturesIdsResponseDTO>> GetTopFixtureIds(string apiKey, string clientId, TopFixturesRequest request);
         Task<BaseResponseDTO<MarketTemplateGroupResponseDTO>> GetMarketTemplateGroups(string apiKey, string clientId);
@@ -44,5 +45,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>> AddOrUpdateTopLeagues(BackOfficeClientTopLeague request);
         Task<BaseResponseDTO<BackOfficeTopLeaguesResponseDTO>> GetClientTopLeagues(BackOfficeTopLeaguesRequestDTO request);
         Task<BaseResponseDTO<SportsLookupResponseDTO>> GetClientSportsLookup(BackofficeClientSportsRequestDTO request);
+        Task<BaseResponseDTO<List<OrderedTopFixture>>> GetClientTopFixturesFilter(ClientTopFixtureFilterRequest request);
     }
 }

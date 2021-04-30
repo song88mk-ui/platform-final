@@ -778,6 +778,53 @@ namespace Platform.API.Repository
                 SportId = request.SportId
             });
         }
+
+        public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues2(string apiKey, string clientId, TopLeaguesRequest2 request)
+        {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<TopLeaguesResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<TopLeaguesResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<TopLeaguesResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetAllLeagues2(new TopLeaguesRequest2DTO
+            {
+                ClientId = clientResponse.Result.ClientId,
+                LanguageCode = languageCode,
+                SportId = request.SportId,
+                LeagueId = request.LeagueId,
+                SegmentId = request.SegmentId
+            });
+        }
+
+
         public async Task<BaseResponseDTO<TopFixturesResponseDTO>> GetTopFixtures(string apiKey, string clientId, TopFixturesRequest request)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
@@ -1862,6 +1909,42 @@ namespace Platform.API.Repository
             {
                 LanguageCode = languageCode
             });
+        }
+
+        public async Task<BaseResponseDTO<List<OrderedTopFixture>>> GetClientTopFixturesFilter(ClientTopFixtureFilterRequest request)
+        {
+            var response = await GetClientTopFixtures(request.ClientIdRef.ToString());
+
+            //Add filter
+            var filter = response.Result.TopFixtures.Where(s => s.ClientIdRef == request.ClientIdRef).FirstOrDefault().TopFixtures.ToList();
+
+            if (request.SportId > 0)
+                filter = filter.Where(s => s.SportId == request.SportId).ToList();
+
+            if (request.SegmentId > 0)
+                filter = filter.Where(s => s.SegmentId == request.SegmentId).ToList();
+
+            if (request.FixtureId > 0)
+                filter = filter.Where(s => s.FixtureId == request.FixtureId.ToString()).ToList();
+
+            if (request.LeagueId > 0)
+                filter = filter.Where(s => s.LeagueId == request.LeagueId).ToList();
+
+            if (request.SortOrder == Shared.Enums.SortDirection.Ascending)
+            {
+                filter = filter.OrderBy(o => o.FixtureStartDate).ToList();
+            }
+            else if (request.SortOrder == Shared.Enums.SortDirection.Descending)
+            {
+                filter = filter.OrderByDescending(o => o.FixtureStartDate).ToList();
+            }
+
+            return new BaseResponseDTO<List<OrderedTopFixture>>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = filter
+            };
         }
 
         private DateTime GetFirstDayOfNextMonth()

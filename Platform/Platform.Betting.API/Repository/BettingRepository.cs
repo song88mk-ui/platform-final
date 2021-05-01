@@ -203,26 +203,6 @@ namespace Platform.Betting.API.Repository
             {
                 using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
                 {
-                    if (request.Selections.Count == 1)
-                    {
-                        var stakeLimit = _bettingContext.StakeLimitFixture.Find($"{request.ClientCode}-{request.UserId}", request.Selections.First().FixtureId);
-
-                        if (stakeLimit == null)
-                        {
-                            _bettingContext.StakeLimitFixture.Add(new StakeLimitFixture
-                            {
-                                UserId = $"{request.ClientCode}-{request.UserId}",
-                                FixtureId = request.Selections.First().FixtureId,
-                                Remaining = stakeFixtureLimit - request.Stake
-                            });
-                        }
-                        else
-                        {
-                            stakeLimit.Remaining -= request.Stake;
-                            _bettingContext.StakeLimitFixture.Update(stakeLimit);
-                        }
-                    }
-
                     Guid betId;
 
                     var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
@@ -380,6 +360,26 @@ namespace Platform.Betting.API.Repository
                             SettlementScore = betSelectionEntity.SettlementScore,
                             CorrelationId = selection.CorrelationId
                         });
+                    }
+
+                    if (request.Selections.Count == 1)
+                    {
+                        var stakeLimit = _bettingContext.StakeLimitFixture.Find($"{request.ClientCode}-{request.UserId}", request.Selections.First().FixtureId);
+
+                        if (stakeLimit == null)
+                        {
+                            _bettingContext.StakeLimitFixture.Add(new StakeLimitFixture
+                            {
+                                UserId = $"{request.ClientCode}-{request.UserId}",
+                                FixtureId = request.Selections.First().FixtureId,
+                                Remaining = stakeFixtureLimit - request.Stake
+                            });
+                        }
+                        else
+                        {
+                            stakeLimit.Remaining -= request.Stake;
+                            _bettingContext.StakeLimitFixture.Update(stakeLimit);
+                        }
                     }
 
                     _bettingContext.SaveChanges();
@@ -569,26 +569,6 @@ namespace Platform.Betting.API.Repository
             {
                 using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
                 {
-                    if (request.Selections.Count == 1)
-                    {
-                        var stakeLimit = _bettingContext.StakeLimitFixture.Find($"{request.ClientCode}-{request.UserId}", request.Selections.First().FixtureId);
-
-                        if (stakeLimit == null)
-                        {
-                            _bettingContext.StakeLimitFixture.Add(new StakeLimitFixture
-                            {
-                                UserId = $"{request.ClientCode}-{request.UserId}",
-                                FixtureId = request.Selections.First().FixtureId,
-                                Remaining = stakeFixtureLimit - request.Stake
-                            });
-                        }
-                        else
-                        {
-                            stakeLimit.Remaining -= request.Stake;
-                            _bettingContext.StakeLimitFixture.Update(stakeLimit);
-                        }
-                    }
-
                     Guid betId;
 
                     var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
@@ -746,6 +726,26 @@ namespace Platform.Betting.API.Repository
                             SettlementScore = betSelectionEntity.SettlementScore,
                             CorrelationId = selection.CorrelationId
                         });
+                    }
+
+                    if (request.Selections.Count == 1)
+                    {
+                        var stakeLimit = _bettingContext.StakeLimitFixture.Find($"{request.ClientCode}-{request.UserId}", request.Selections.First().FixtureId);
+
+                        if (stakeLimit == null)
+                        {
+                            _bettingContext.StakeLimitFixture.Add(new StakeLimitFixture
+                            {
+                                UserId = $"{request.ClientCode}-{request.UserId}",
+                                FixtureId = request.Selections.First().FixtureId,
+                                Remaining = stakeFixtureLimit - request.Stake
+                            });
+                        }
+                        else
+                        {
+                            stakeLimit.Remaining -= request.Stake;
+                            _bettingContext.StakeLimitFixture.Update(stakeLimit);
+                        }
                     }
 
                     _bettingContext.SaveChanges();

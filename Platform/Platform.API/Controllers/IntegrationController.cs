@@ -109,12 +109,6 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpPost("v1/sportsbook/recovery")]
-        public async Task<IActionResult> RecoverOdds()
-        {
-            return Ok();
-        }
-
         [HttpGet("v1/sportsbook/livestream")]
         public async Task<IActionResult> GetLivestream([FromQuery] LivestreamRequest request)
         {
@@ -255,12 +249,12 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v2/sportsbook/topfixtures")]
-        public async Task<IActionResult> GetTopFixtures2()
+        public async Task<IActionResult> GetTopFixtures()
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-            var result = await _platformRepository.GetTopFixtures2(apiKey, clientId, new TopFixturesRequest { LanguageCode = LanguageCode.EN.ToString() });
+            var result = await _platformRepository.GetTopFixtures(apiKey, clientId, new TopFixturesRequest { LanguageCode = LanguageCode.EN.ToString() });
 
             switch (result.StatusCode)
             {

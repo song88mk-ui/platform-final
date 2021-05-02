@@ -249,7 +249,7 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v2/sportsbook/topfixtures")]
-        public async Task<IActionResult> GetTopFixtures()
+        public async Task<IActionResult> GetTopFixtures2()
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();

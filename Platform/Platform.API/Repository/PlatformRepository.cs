@@ -1781,7 +1781,9 @@ namespace Platform.API.Repository
             {
                 ClientIds = clientResult.Select(c => c.ClientId).ToList(),
                 SportId = request.SportId,
-                LanguageCode = languageCode
+                LanguageCode = languageCode,
+                LeagueId = request.LeagueId,
+                SegmentId = request.SegmentId
             };
 
             var clientTopLeaguesResponse = await _sportsbookRepository.GetClientTopLeagues(sportsbookRequest);

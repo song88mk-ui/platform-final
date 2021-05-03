@@ -38,6 +38,7 @@ namespace Platform.Job.CCF.Repository
         {
             var authToken = await _mtsAuthRepository.GetMTSAuthorizationToken();
 
+            _httpClient.DefaultRequestHeaders.Remove("Authorization");
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken.Result.Token}");
 
             var year = DateTime.UtcNow.Year;
@@ -108,6 +109,7 @@ namespace Platform.Job.CCF.Repository
                     }
                     catch (Exception ex)
                     {
+                        Console.WriteLine($"{ex.Message}");
                     }
                 }
             }

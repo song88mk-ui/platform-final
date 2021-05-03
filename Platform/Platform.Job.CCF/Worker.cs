@@ -26,12 +26,14 @@ namespace Platform.Job.CCF
             {
                 try
                 {
-                    await Task.Delay(300000, stoppingToken);
+
                     await _platformRepository.ProcessCCF();
                     _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                    await Task.Delay(300000, stoppingToken);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    Console.WriteLine($"{ex.Message}");
                 }
             }
         }

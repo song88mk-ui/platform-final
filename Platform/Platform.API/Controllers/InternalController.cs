@@ -168,22 +168,5 @@ namespace Platform.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Get list of all top fixtures buy clientId that are included in the request with filters
-        /// </summary>
-        [HttpGet("v1/client/topfixtures/filter")]
-        public async Task<IActionResult> GetClientTopFixturesFilter([FromQuery] ClientTopFixtureFilterRequest request)
-        {
-            var result = await _platformRepository.GetClientTopFixturesFilter(request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
     }
 }

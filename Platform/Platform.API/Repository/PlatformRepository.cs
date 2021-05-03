@@ -1870,42 +1870,6 @@ namespace Platform.API.Repository
             });
         }
 
-        public async Task<BaseResponseDTO<List<OrderedTopFixture>>> GetClientTopFixturesFilter(ClientTopFixtureFilterRequest request)
-        {
-            var response = await GetClientTopFixtures(request.ClientIdRef.ToString());
-
-            //Add filter
-            var filter = response.Result.TopFixtures.Where(s => s.ClientIdRef == request.ClientIdRef).FirstOrDefault().TopFixtures.ToList();
-
-            if (request.SportId > 0)
-                filter = filter.Where(s => s.SportId == request.SportId).ToList();
-
-            if (request.SegmentId > 0)
-                filter = filter.Where(s => s.SegmentId == request.SegmentId).ToList();
-
-            if (request.FixtureId > 0)
-                filter = filter.Where(s => s.FixtureId == request.FixtureId.ToString()).ToList();
-
-            if (request.LeagueId > 0)
-                filter = filter.Where(s => s.LeagueId == request.LeagueId).ToList();
-
-            if (request.SortOrder == Shared.Enums.SortDirection.Ascending)
-            {
-                filter = filter.OrderBy(o => o.FixtureStartDate).ToList();
-            }
-            else if (request.SortOrder == Shared.Enums.SortDirection.Descending)
-            {
-                filter = filter.OrderByDescending(o => o.FixtureStartDate).ToList();
-            }
-
-            return new BaseResponseDTO<List<OrderedTopFixture>>
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = filter
-            };
-        }
-
         private DateTime GetFirstDayOfNextMonth()
         {
             DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);

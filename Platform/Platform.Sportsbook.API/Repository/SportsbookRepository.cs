@@ -3758,6 +3758,16 @@ namespace Platform.Sportsbook.API.Repository
                     .Where(c => c.ClientId == clientId && c.SportId == request.SportId)
                     .OrderBy(c => c.SortOrder).ToList();
 
+                if (request.SegmentId > 0)
+                {
+                    sportLeague = sportLeague.Where(c => c.SegmentId == request.SegmentId).ToList();
+                }
+
+                if (request.LeagueId > 0)
+                {
+                    sportLeague = sportLeague.Where(c => c.LeagueId == request.LeagueId).ToList();
+                }
+
                 foreach (var item in sportLeague)
                 {
                     var sportLeagueItem = new SportLeague()

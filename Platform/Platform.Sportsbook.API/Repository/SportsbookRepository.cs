@@ -708,7 +708,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (leagues.Count > 0)
             {
-                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && leagues.Contains(c.LeId));
+                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && leagues.Contains(c.LeId));
                 var tempLeagueResult = fixtureCollection.Find(leagueFilter).ToListAsync();
 
                 var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
@@ -778,7 +778,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (fixtures.Count > 0)
             {
-                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && fixtures.Contains(c.FiId));
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && fixtures.Contains(c.FiId));
                 var tempFixtureResult = fixtureCollection.Find(fixtureFilter).ToListAsync();
 
                 var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
@@ -873,7 +873,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (leagueIds.Count > 0)
             {
-                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && leagueIds.Contains(c.LeId));
+                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && leagueIds.Contains(c.LeId));
                 var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
 
                 foreach (var item in leagueResult)
@@ -896,7 +896,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (fixtureIds.Count > 0)
             {
-                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && fixtureIds.Contains(c.FiId));
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && fixtureIds.Contains(c.FiId));
                 var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
                 foreach (var item in fixtureResult)
@@ -959,7 +959,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (leagueIds.Count > 0)
             {
-                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && leagueIds.Contains(c.LeId));
+                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && leagueIds.Contains(c.LeId));
                 var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
 
                 foreach (var item in leagueResult)
@@ -982,7 +982,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (fixtureIds.Count > 0)
             {
-                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && fixtureIds.Contains(c.FiId));
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && fixtureIds.Contains(c.FiId));
                 var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
                 foreach (var item in fixtureResult)
@@ -1039,7 +1039,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (leagueIds.Count > 0)
             {
-                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && leagueIds.Contains(c.LeId));
+                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && leagueIds.Contains(c.LeId));
                 var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
 
                 foreach (var item in leagueResult)
@@ -1062,7 +1062,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (fixtureIds.Count > 0)
             {
-                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && fixtureIds.Contains(c.FiId));
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && fixtureIds.Contains(c.FiId));
                 var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
                 foreach (var item in fixtureResult)

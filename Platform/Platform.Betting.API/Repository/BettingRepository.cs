@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
@@ -28,13 +29,16 @@ namespace Platform.Betting.API.Repository
         private readonly IMTSMaxStakeRepository _mtsMaxStakeRepository;
         private readonly IBackOfficeRepository _backOfficeRepository;
 
-        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IMessageBroker messageBroker, IHttpClientFactory httpClientFactory, IMTSAuthRepository mtsAuthRepository, IMTSMaxStakeRepository mtsMaxStakeRepository, IBackOfficeRepository backOfficeRepository)
+        private readonly TelemetryClient _telemetryClient;
+
+        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IMessageBroker messageBroker, IHttpClientFactory httpClientFactory, IMTSAuthRepository mtsAuthRepository, IMTSMaxStakeRepository mtsMaxStakeRepository, IBackOfficeRepository backOfficeRepository, TelemetryClient telemetryClient)
         {
             _bettingContext = bettingContext;
             _httpClientFactory = httpClientFactory;
             _mtsAuthRepository = mtsAuthRepository;
             _mtsMaxStakeRepository = mtsMaxStakeRepository;
             _backOfficeRepository = backOfficeRepository;
+            _telemetryClient = telemetryClient;
             _configuration = configuration;
             _messageBroker = messageBroker;
             _messageBroker.Connect();
@@ -394,6 +398,14 @@ namespace Platform.Betting.API.Repository
             }
             catch (Exception ex)
             {
+                var properties = new Dictionary<string, string>
+                            {
+                                { "BetId", betData.BetId.ToString().ToUpper() },
+                                { "Error", ex.Message }
+                            };
+
+                _telemetryClient.TrackEvent("BetWithoutMTS", properties);
+
                 _messageBroker.Publish(new OnBetPlacementError
                 {
                     BetId = betData.BetId.ToString(),
@@ -760,6 +772,14 @@ namespace Platform.Betting.API.Repository
             }
             catch (Exception ex)
             {
+                var properties = new Dictionary<string, string>
+                            {
+                                { "BetId", betData.BetId.ToString().ToUpper() },
+                                { "Error", ex.Message }
+                            };
+
+                _telemetryClient.TrackEvent("BetWithMTS", properties);
+
                 _messageBroker.Publish(new OnBetPlacementError
                 {
                     BetId = betData.BetId.ToString(),

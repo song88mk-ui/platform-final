@@ -30,269 +30,276 @@ namespace Platform.Placement.Service.Repository
         {
             var payload = new OnBetPlacement();
 
-            try
+            var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
+                message.BetSelections.Any(c => c.SportId > 1000) ? new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled for VS)") :
+                ValidateToMTS(message, mts) : new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled)");
+
+            if (result.Item1 == TicketAcceptance.Accepted)
             {
-                var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
-                    message.BetSelections.Any(c => c.SportId > 1000) ? new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled for VS)") :
-                    ValidateToMTS(message, mts) : new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled)");
-
-                if (result.Item1 == TicketAcceptance.Accepted)
+                try
                 {
-                    try
+                    using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
                     {
-                        using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+                        var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+
+                        using (var context = new BettingContext(optionsBuilder.Options))
                         {
-                            var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
-
-                            using (var context = new BettingContext(optionsBuilder.Options))
+                            var bet = context.Bet.Find(message.Bet.BetId);
+                            if (bet != null)
                             {
-                                var bet = context.Bet.Find(message.Bet.BetId);
-                                if (bet != null)
+                                bet.Reason = $"{result.Item2} (MTS)";
+
+                                var betEntity = context.Bet.Update(bet).Entity;
+                                payload.Bet = betEntity;
+
+                                context.BetAudit.Add(new BetAudit
                                 {
-                                    bet.Reason = $"{result.Item2} (MTS)";
+                                    BetId = betEntity.BetId,
+                                    UserId = betEntity.UserId,
+                                    Stake = betEntity.Stake,
+                                    TrueStake = betEntity.TrueStake,
+                                    Odds = betEntity.Odds,
+                                    OddsTypeId = betEntity.OddsTypeId,
+                                    OddsTypeName = betEntity.OddsTypeName,
+                                    Payout = betEntity.Payout,
+                                    WinLoss = betEntity.WinLoss,
+                                    BetStatusId = betEntity.BetStatusId,
+                                    BetStatusName = betEntity.BetStatusName,
+                                    Reason = betEntity.Reason,
+                                    CurrencyCode = betEntity.CurrencyCode,
+                                    LanguageCode = betEntity.LanguageCode,
+                                    ExchangeRate = betEntity.ExchangeRate,
+                                    IPAddress = betEntity.IPAddress,
+                                    Channel = betEntity.Channel,
+                                    ClientId = betEntity.ClientId,
+                                    ClientIdRef = betEntity.ClientIdRef,
+                                    ClientCode = betEntity.ClientCode,
+                                    ClientName = betEntity.ClientName,
+                                    LimitId = betEntity.LimitId,
+                                    Endpoint = betEntity.Endpoint,
+                                    OperatorToken = betEntity.OperatorToken,
+                                    CompanyShare = betEntity.CompanyShare,
+                                    IsResettled = betEntity.IsResettled,
+                                    IsCashout = betEntity.IsCashout,
+                                    BetDate = betEntity.BetDate,
+                                    BetDateOffset = betEntity.BetDateOffset,
+                                    SettlementDate = betEntity.SettlementDate,
+                                    SettlementDateOffset = betEntity.SettlementDateOffset
+                                });
 
-                                    var betEntity = context.Bet.Update(bet).Entity;
-                                    payload.Bet = betEntity;
+                                var betSelections = context.BetSelection.Where(c => c.BetId == betEntity.BetId).ToList();
 
-                                    context.BetAudit.Add(new BetAudit
+                                foreach (var betSelection in betSelections)
+                                {
+                                    betSelection.BetSelectionStatusId = betEntity.BetStatusId;
+                                    betSelection.BetSelectionStatusName = betEntity.BetStatusName;
+
+                                    var betSelectionEntity = context.BetSelection.Update(betSelection).Entity;
+                                    payload.BetSelections.Add(betSelectionEntity);
+
+                                    context.BetSelectionAudit.Add(new BetSelectionAudit
                                     {
-                                        BetId = betEntity.BetId,
-                                        UserId = betEntity.UserId,
-                                        Stake = betEntity.Stake,
-                                        TrueStake = betEntity.TrueStake,
-                                        Odds = betEntity.Odds,
-                                        OddsTypeId = betEntity.OddsTypeId,
-                                        OddsTypeName = betEntity.OddsTypeName,
-                                        Payout = betEntity.Payout,
-                                        WinLoss = betEntity.WinLoss,
-                                        BetStatusId = betEntity.BetStatusId,
-                                        BetStatusName = betEntity.BetStatusName,
-                                        Reason = betEntity.Reason,
-                                        CurrencyCode = betEntity.CurrencyCode,
-                                        LanguageCode = betEntity.LanguageCode,
-                                        ExchangeRate = betEntity.ExchangeRate,
-                                        IPAddress = betEntity.IPAddress,
-                                        Channel = betEntity.Channel,
-                                        ClientId = betEntity.ClientId,
-                                        ClientIdRef = betEntity.ClientIdRef,
-                                        ClientCode = betEntity.ClientCode,
-                                        ClientName = betEntity.ClientName,
-                                        LimitId = betEntity.LimitId,
-                                        Endpoint = betEntity.Endpoint,
-                                        OperatorToken = betEntity.OperatorToken,
-                                        CompanyShare = betEntity.CompanyShare,
-                                        IsResettled = betEntity.IsResettled,
-                                        IsCashout = betEntity.IsCashout,
-                                        BetDate = betEntity.BetDate,
-                                        BetDateOffset = betEntity.BetDateOffset,
-                                        SettlementDate = betEntity.SettlementDate,
-                                        SettlementDateOffset = betEntity.SettlementDateOffset
+                                        BetId = betSelectionEntity.BetId,
+                                        BetSelectionId = betSelectionEntity.BetSelectionId,
+                                        UserId = betSelectionEntity.UserId,
+                                        SportId = betSelectionEntity.SportId,
+                                        SportName = betSelectionEntity.SportName,
+                                        SegmentId = betSelectionEntity.SegmentId,
+                                        SegmentName = betSelectionEntity.SegmentName,
+                                        LeagueId = betSelectionEntity.LeagueId,
+                                        LeagueName = betSelectionEntity.LeagueName,
+                                        FixtureId = betSelectionEntity.FixtureId,
+                                        FixtureName = betSelectionEntity.FixtureName,
+                                        FixtureTypeId = betSelectionEntity.FixtureTypeId,
+                                        FixtureTypeName = betSelectionEntity.FixtureTypeName,
+                                        MarketTemplateId = betSelectionEntity.MarketTemplateId,
+                                        MarketId = betSelectionEntity.MarketId,
+                                        MarketName = betSelectionEntity.MarketName,
+                                        SelectionTemplateId = betSelectionEntity.SelectionTemplateId,
+                                        SelectionId = betSelectionEntity.SelectionId,
+                                        SelectionName = betSelectionEntity.SelectionName,
+                                        FixtureStatusId = betSelectionEntity.FixtureStatusId,
+                                        FixtureStatusName = betSelectionEntity.FixtureStatusName,
+                                        Line = betSelectionEntity.Line,
+                                        Odds = betSelectionEntity.Odds,
+                                        BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
+                                        BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
+                                        IsSettled = betSelectionEntity.IsSettled,
+                                        IsResettled = betSelectionEntity.IsResettled,
+                                        FixtureSpecifier = betSelectionEntity.FixtureSpecifier,
+                                        SelectionSpecifier = betSelectionEntity.SelectionSpecifier,
+                                        FixtureStartDate = betSelectionEntity.FixtureStartDate,
+                                        BetScore = betSelectionEntity.BetScore,
+                                        SettlementScore = betSelectionEntity.SettlementScore,
+                                        CorrelationId = betSelectionEntity.CorrelationId
                                     });
-
-                                    var betSelections = context.BetSelection.Where(c => c.BetId == betEntity.BetId).ToList();
-
-                                    foreach (var betSelection in betSelections)
-                                    {
-                                        betSelection.BetSelectionStatusId = betEntity.BetStatusId;
-                                        betSelection.BetSelectionStatusName = betEntity.BetStatusName;
-
-                                        var betSelectionEntity = context.BetSelection.Update(betSelection).Entity;
-                                        payload.BetSelections.Add(betSelectionEntity);
-
-                                        context.BetSelectionAudit.Add(new BetSelectionAudit
-                                        {
-                                            BetId = betSelectionEntity.BetId,
-                                            BetSelectionId = betSelectionEntity.BetSelectionId,
-                                            UserId = betSelectionEntity.UserId,
-                                            SportId = betSelectionEntity.SportId,
-                                            SportName = betSelectionEntity.SportName,
-                                            SegmentId = betSelectionEntity.SegmentId,
-                                            SegmentName = betSelectionEntity.SegmentName,
-                                            LeagueId = betSelectionEntity.LeagueId,
-                                            LeagueName = betSelectionEntity.LeagueName,
-                                            FixtureId = betSelectionEntity.FixtureId,
-                                            FixtureName = betSelectionEntity.FixtureName,
-                                            FixtureTypeId = betSelectionEntity.FixtureTypeId,
-                                            FixtureTypeName = betSelectionEntity.FixtureTypeName,
-                                            MarketTemplateId = betSelectionEntity.MarketTemplateId,
-                                            MarketId = betSelectionEntity.MarketId,
-                                            MarketName = betSelectionEntity.MarketName,
-                                            SelectionTemplateId = betSelectionEntity.SelectionTemplateId,
-                                            SelectionId = betSelectionEntity.SelectionId,
-                                            SelectionName = betSelectionEntity.SelectionName,
-                                            FixtureStatusId = betSelectionEntity.FixtureStatusId,
-                                            FixtureStatusName = betSelectionEntity.FixtureStatusName,
-                                            Line = betSelectionEntity.Line,
-                                            Odds = betSelectionEntity.Odds,
-                                            BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
-                                            BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
-                                            IsSettled = betSelectionEntity.IsSettled,
-                                            IsResettled = betSelectionEntity.IsResettled,
-                                            FixtureSpecifier = betSelectionEntity.FixtureSpecifier,
-                                            SelectionSpecifier = betSelectionEntity.SelectionSpecifier,
-                                            FixtureStartDate = betSelectionEntity.FixtureStartDate,
-                                            BetScore = betSelectionEntity.BetScore,
-                                            SettlementScore = betSelectionEntity.SettlementScore,
-                                            CorrelationId = betSelectionEntity.CorrelationId
-                                        });
-                                    }
-
-                                    context.SaveChanges();
                                 }
-                                scope.Complete();
 
-                                messageBroker.Publish(payload, "OnBetPlacement", "r.bet.operator", correlationId);
+                                context.SaveChanges();
                             }
+                            scope.Complete();
+
+                            messageBroker.Publish(payload, "OnBetPlacement", "r.bet.operator", correlationId);
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        RejectBetOnError(message, messageBroker, correlationId, payload, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10001 - {ex.Message}"), 1);
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    try
+                    messageBroker.Publish(new OnBetPlacementError
                     {
-                        using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
-                        {
-                            var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+                        BetId = $"{message.Bet.BetId.ToString().ToUpper()} - Accepted Exception",
+                        Error = ex.Message,
+                        StackTrace = ex.StackTrace,
+                        InnerException = ex.InnerException.ToString()
+                    }, "OnBetPlacementError", "r.bet.placement.error", Guid.NewGuid().ToString().ToUpper());
 
-                            using (var context = new BettingContext(optionsBuilder.Options))
-                            {
-                                var bet = context.Bet.Find(message.Bet.BetId);
-                                if (bet != null)
-                                {
-                                    var betStatus = BetStatus.Rejected;
-
-                                    bet.BetStatusId = (int)betStatus;
-                                    bet.BetStatusName = betStatus.ToString();
-                                    bet.Reason = result.Item2;
-
-                                    var betEntity = context.Bet.Update(bet).Entity;
-                                    payload.Bet = betEntity;
-
-                                    context.BetAudit.Add(new BetAudit
-                                    {
-                                        BetId = betEntity.BetId,
-                                        UserId = betEntity.UserId,
-                                        Stake = betEntity.Stake,
-                                        TrueStake = betEntity.TrueStake,
-                                        Odds = betEntity.Odds,
-                                        OddsTypeId = betEntity.OddsTypeId,
-                                        OddsTypeName = betEntity.OddsTypeName,
-                                        Payout = betEntity.Payout,
-                                        WinLoss = betEntity.WinLoss,
-                                        BetStatusId = betEntity.BetStatusId,
-                                        BetStatusName = betEntity.BetStatusName,
-                                        Reason = betEntity.Reason,
-                                        CurrencyCode = betEntity.CurrencyCode,
-                                        LanguageCode = betEntity.LanguageCode,
-                                        ExchangeRate = betEntity.ExchangeRate,
-                                        IPAddress = betEntity.IPAddress,
-                                        Channel = betEntity.Channel,
-                                        ClientId = betEntity.ClientId,
-                                        ClientIdRef = betEntity.ClientIdRef,
-                                        ClientCode = betEntity.ClientCode,
-                                        ClientName = betEntity.ClientName,
-                                        LimitId = betEntity.LimitId,
-                                        Endpoint = betEntity.Endpoint,
-                                        OperatorToken = betEntity.OperatorToken,
-                                        CompanyShare = betEntity.CompanyShare,
-                                        IsResettled = betEntity.IsResettled,
-                                        IsCashout = betEntity.IsCashout,
-                                        BetDate = betEntity.BetDate,
-                                        BetDateOffset = betEntity.BetDateOffset,
-                                        SettlementDate = betEntity.SettlementDate,
-                                        SettlementDateOffset = betEntity.SettlementDateOffset
-                                    });
-
-                                    var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
-
-                                    foreach (var betSelection in betSelections)
-                                    {
-                                        betSelection.BetSelectionStatusId = bet.BetStatusId;
-                                        betSelection.BetSelectionStatusName = bet.BetStatusName;
-                                        betSelection.IsSettled = true;
-
-                                        var betSelectionEntity = context.BetSelection.Update(betSelection).Entity;
-                                        payload.BetSelections.Add(betSelectionEntity);
-
-                                        context.BetSelectionAudit.Add(new BetSelectionAudit
-                                        {
-                                            BetId = betSelectionEntity.BetId,
-                                            BetSelectionId = betSelectionEntity.BetSelectionId,
-                                            UserId = betSelectionEntity.UserId,
-                                            SportId = betSelectionEntity.SportId,
-                                            SportName = betSelectionEntity.SportName,
-                                            SegmentId = betSelectionEntity.SegmentId,
-                                            SegmentName = betSelectionEntity.SegmentName,
-                                            LeagueId = betSelectionEntity.LeagueId,
-                                            LeagueName = betSelectionEntity.LeagueName,
-                                            FixtureId = betSelectionEntity.FixtureId,
-                                            FixtureName = betSelectionEntity.FixtureName,
-                                            FixtureTypeId = betSelectionEntity.FixtureTypeId,
-                                            FixtureTypeName = betSelectionEntity.FixtureTypeName,
-                                            MarketTemplateId = betSelectionEntity.MarketTemplateId,
-                                            MarketId = betSelectionEntity.MarketId,
-                                            MarketName = betSelectionEntity.MarketName,
-                                            SelectionTemplateId = betSelectionEntity.SelectionTemplateId,
-                                            SelectionId = betSelectionEntity.SelectionId,
-                                            SelectionName = betSelectionEntity.SelectionName,
-                                            FixtureStatusId = betSelectionEntity.FixtureStatusId,
-                                            FixtureStatusName = betSelectionEntity.FixtureStatusName,
-                                            Line = betSelectionEntity.Line,
-                                            Odds = betSelectionEntity.Odds,
-                                            BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
-                                            BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
-                                            IsSettled = betSelectionEntity.IsSettled,
-                                            IsResettled = betSelectionEntity.IsResettled,
-                                            FixtureSpecifier = betSelectionEntity.FixtureSpecifier,
-                                            SelectionSpecifier = betSelectionEntity.SelectionSpecifier,
-                                            FixtureStartDate = betSelectionEntity.FixtureStartDate,
-                                            BetScore = betSelectionEntity.BetScore,
-                                            SettlementScore = betSelectionEntity.SettlementScore,
-                                            CorrelationId = betSelectionEntity.CorrelationId
-                                        });
-                                    }
-
-                                    ProcessStakeFixtureLimit(payload, context);
-
-                                    context.SaveChanges();
-                                }
-                                scope.Complete();
-
-                                messageBroker.Publish(payload, "OnBetTimeout", "r.bet.cancellation", correlationId);
-
-                                //publish to reports
-                                messageBroker.Publish(payload, "OnBetRejection", "r.bet.reports", correlationId);
-
-                                messageBroker.Publish(new OnBetStatus
-                                {
-                                    ClientId = payload.Bet.ClientId.ToString().ToUpper(),
-                                    UserId = payload.Bet.UserId,
-                                    BetId = payload.Bet.BetId.ToString().ToUpper(),
-                                    BetStatus = (BetStatus)payload.Bet.BetStatusId
-                                }, "OnBetStatus", "r.bet.betstatus", correlationId);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        RejectBetOnError(message, messageBroker, correlationId, payload, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10002 - {ex.Message}"), 2);
-                    }
+                    RejectBetOnError(message, messageBroker, correlationId, payload, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10001 - {ex.Message}"), 2);
                 }
             }
-            catch (Exception ex)
+            else
             {
-                RejectBetOnError(message, messageBroker, correlationId, payload, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10002 - {ex.Message}"), 2);
+                try
+                {
+                    using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+                    {
+                        var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+
+                        using (var context = new BettingContext(optionsBuilder.Options))
+                        {
+                            var bet = context.Bet.Find(message.Bet.BetId);
+                            if (bet != null)
+                            {
+                                var betStatus = BetStatus.Rejected;
+
+                                bet.BetStatusId = (int)betStatus;
+                                bet.BetStatusName = betStatus.ToString();
+                                bet.Reason = result.Item2;
+
+                                var betEntity = context.Bet.Update(bet).Entity;
+                                payload.Bet = betEntity;
+
+                                context.BetAudit.Add(new BetAudit
+                                {
+                                    BetId = betEntity.BetId,
+                                    UserId = betEntity.UserId,
+                                    Stake = betEntity.Stake,
+                                    TrueStake = betEntity.TrueStake,
+                                    Odds = betEntity.Odds,
+                                    OddsTypeId = betEntity.OddsTypeId,
+                                    OddsTypeName = betEntity.OddsTypeName,
+                                    Payout = betEntity.Payout,
+                                    WinLoss = betEntity.WinLoss,
+                                    BetStatusId = betEntity.BetStatusId,
+                                    BetStatusName = betEntity.BetStatusName,
+                                    Reason = betEntity.Reason,
+                                    CurrencyCode = betEntity.CurrencyCode,
+                                    LanguageCode = betEntity.LanguageCode,
+                                    ExchangeRate = betEntity.ExchangeRate,
+                                    IPAddress = betEntity.IPAddress,
+                                    Channel = betEntity.Channel,
+                                    ClientId = betEntity.ClientId,
+                                    ClientIdRef = betEntity.ClientIdRef,
+                                    ClientCode = betEntity.ClientCode,
+                                    ClientName = betEntity.ClientName,
+                                    LimitId = betEntity.LimitId,
+                                    Endpoint = betEntity.Endpoint,
+                                    OperatorToken = betEntity.OperatorToken,
+                                    CompanyShare = betEntity.CompanyShare,
+                                    IsResettled = betEntity.IsResettled,
+                                    IsCashout = betEntity.IsCashout,
+                                    BetDate = betEntity.BetDate,
+                                    BetDateOffset = betEntity.BetDateOffset,
+                                    SettlementDate = betEntity.SettlementDate,
+                                    SettlementDateOffset = betEntity.SettlementDateOffset
+                                });
+
+                                var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
+
+                                foreach (var betSelection in betSelections)
+                                {
+                                    betSelection.BetSelectionStatusId = bet.BetStatusId;
+                                    betSelection.BetSelectionStatusName = bet.BetStatusName;
+                                    betSelection.IsSettled = true;
+
+                                    var betSelectionEntity = context.BetSelection.Update(betSelection).Entity;
+                                    payload.BetSelections.Add(betSelectionEntity);
+
+                                    context.BetSelectionAudit.Add(new BetSelectionAudit
+                                    {
+                                        BetId = betSelectionEntity.BetId,
+                                        BetSelectionId = betSelectionEntity.BetSelectionId,
+                                        UserId = betSelectionEntity.UserId,
+                                        SportId = betSelectionEntity.SportId,
+                                        SportName = betSelectionEntity.SportName,
+                                        SegmentId = betSelectionEntity.SegmentId,
+                                        SegmentName = betSelectionEntity.SegmentName,
+                                        LeagueId = betSelectionEntity.LeagueId,
+                                        LeagueName = betSelectionEntity.LeagueName,
+                                        FixtureId = betSelectionEntity.FixtureId,
+                                        FixtureName = betSelectionEntity.FixtureName,
+                                        FixtureTypeId = betSelectionEntity.FixtureTypeId,
+                                        FixtureTypeName = betSelectionEntity.FixtureTypeName,
+                                        MarketTemplateId = betSelectionEntity.MarketTemplateId,
+                                        MarketId = betSelectionEntity.MarketId,
+                                        MarketName = betSelectionEntity.MarketName,
+                                        SelectionTemplateId = betSelectionEntity.SelectionTemplateId,
+                                        SelectionId = betSelectionEntity.SelectionId,
+                                        SelectionName = betSelectionEntity.SelectionName,
+                                        FixtureStatusId = betSelectionEntity.FixtureStatusId,
+                                        FixtureStatusName = betSelectionEntity.FixtureStatusName,
+                                        Line = betSelectionEntity.Line,
+                                        Odds = betSelectionEntity.Odds,
+                                        BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
+                                        BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
+                                        IsSettled = betSelectionEntity.IsSettled,
+                                        IsResettled = betSelectionEntity.IsResettled,
+                                        FixtureSpecifier = betSelectionEntity.FixtureSpecifier,
+                                        SelectionSpecifier = betSelectionEntity.SelectionSpecifier,
+                                        FixtureStartDate = betSelectionEntity.FixtureStartDate,
+                                        BetScore = betSelectionEntity.BetScore,
+                                        SettlementScore = betSelectionEntity.SettlementScore,
+                                        CorrelationId = betSelectionEntity.CorrelationId
+                                    });
+                                }
+
+                                ProcessStakeFixtureLimit(payload, context);
+
+                                context.SaveChanges();
+                            }
+                            scope.Complete();
+
+                            messageBroker.Publish(payload, "OnBetTimeout", "r.bet.cancellation", correlationId);
+
+                            //publish to reports
+                            messageBroker.Publish(payload, "OnBetRejection", "r.bet.reports", correlationId);
+
+                            messageBroker.Publish(new OnBetStatus
+                            {
+                                ClientId = payload.Bet.ClientId.ToString().ToUpper(),
+                                UserId = payload.Bet.UserId,
+                                BetId = payload.Bet.BetId.ToString().ToUpper(),
+                                BetStatus = (BetStatus)payload.Bet.BetStatusId
+                            }, "OnBetStatus", "r.bet.betstatus", correlationId);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    messageBroker.Publish(new OnBetPlacementError
+                    {
+                        BetId = $"{message.Bet.BetId.ToString().ToUpper()} - Rejected Exception",
+                        Error = ex.Message,
+                        StackTrace = ex.StackTrace,
+                        InnerException = ex.InnerException.ToString()
+                    }, "OnBetPlacementError", "r.bet.placement.error", Guid.NewGuid().ToString().ToUpper());
+
+                    RejectBetOnError(message, messageBroker, correlationId, payload, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10002 - {ex.Message}"), 2);
+                }
             }
         }
 
         private void RejectBetOnError(OnBetPlacement message, IMessageBroker messageBroker, string correlationId, OnBetPlacement payload, Tuple<TicketAcceptance, string> result, int remainingRetries)
         {
-            Thread.Sleep(1000);
-
             if (remainingRetries == 0) return;
             remainingRetries -= 1;
 

@@ -393,7 +393,7 @@ namespace Platform.Betting.API.Repository
                     {
                         Bet = betData,
                         BetSelections = betSelectionData
-                    }, "OnBetPlacement", "r.bet.placement", Guid.NewGuid().ToString().ToUpper());
+                    }, "OnBetPlacement", request.Selections.Any(c => c.SportId > 1000) ? "r.bet.placement.vs" : "r.bet.placement", Guid.NewGuid().ToString().ToUpper());
                 }
             }
             catch (Exception ex)

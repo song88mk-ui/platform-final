@@ -28,6 +28,8 @@ namespace Platform.Placement.Service.Repository
         }
         public void ProcesssBetPlacement(OnBetPlacement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
         {
+            Console.WriteLine($"{DateTime.UtcNow} - BEG - {message.Bet.BetId.ToString().ToUpper()}");
+
             var payload = new OnBetPlacement();
 
             var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
@@ -36,6 +38,9 @@ namespace Platform.Placement.Service.Repository
 
             if (result.Item1 == TicketAcceptance.Accepted)
             {
+                var isReprocess = false;
+                Console.WriteLine($"{DateTime.UtcNow} - BEG - Accepted - {message.Bet.BetId.ToString().ToUpper()}");
+
                 try
                 {
                     using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
@@ -44,7 +49,8 @@ namespace Platform.Placement.Service.Repository
 
                         using (var context = new BettingContext(optionsBuilder.Options))
                         {
-                            var bet = context.Bet.Find(message.Bet.BetId);
+                            var bet = context.Bet.Where(c => c.BetId == message.Bet.BetId).FirstOrDefault();
+
                             if (bet != null)
                             {
                                 bet.Reason = $"{result.Item2} (MTS)";
@@ -135,16 +141,35 @@ namespace Platform.Placement.Service.Repository
                                     });
                                 }
 
-                                context.SaveChanges();
+                                var contextResult = context.SaveChanges();
+
+                                if (contextResult == 0)
+                                    Console.WriteLine($"{DateTime.UtcNow} - Not Saved - Accepted - {message.Bet.BetId.ToString().ToUpper()}");
+                                else
+                                    Console.WriteLine($"{DateTime.UtcNow} - Saved - Accepted - {message.Bet.BetId.ToString().ToUpper()}");
                             }
+                            else
+                            {
+                                isReprocess = true;
+                                Console.WriteLine($"{DateTime.UtcNow} - Bet Not Found - Accepted - {message.Bet.BetId.ToString().ToUpper()}");
+                                Console.WriteLine($"{DateTime.UtcNow} - Re-process Bet - Accepted - {message.Bet.BetId.ToString().ToUpper()}");
+                            }
+
                             scope.Complete();
 
                             messageBroker.Publish(payload, "OnBetPlacement", "r.bet.operator", correlationId);
                         }
                     }
+
+                    Console.WriteLine($"{DateTime.UtcNow} - END - Accepted - {message.Bet.BetId.ToString().ToUpper()}");
+
+                    if (isReprocess)
+                        ProcesssBetPlacement(message, mts, messageBroker, correlationId);
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine($"{DateTime.UtcNow} - END - Error Accepted - {message.Bet.BetId.ToString().ToUpper()} - {ex.Message}");
+
                     messageBroker.Publish(new OnBetPlacementError
                     {
                         BetId = $"{message.Bet.BetId.ToString().ToUpper()} - Accepted Exception",
@@ -158,6 +183,8 @@ namespace Platform.Placement.Service.Repository
             }
             else
             {
+                Console.WriteLine($"{DateTime.UtcNow} - BEG - Rejected - {message.Bet.BetId.ToString().ToUpper()}");
+
                 try
                 {
                     using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
@@ -166,7 +193,8 @@ namespace Platform.Placement.Service.Repository
 
                         using (var context = new BettingContext(optionsBuilder.Options))
                         {
-                            var bet = context.Bet.Find(message.Bet.BetId);
+                            var bet = context.Bet.Where(c => c.BetId == message.Bet.BetId).FirstOrDefault();
+
                             if (bet != null)
                             {
                                 var betStatus = BetStatus.Rejected;
@@ -282,9 +310,13 @@ namespace Platform.Placement.Service.Repository
                             }, "OnBetStatus", "r.bet.betstatus", correlationId);
                         }
                     }
+
+                    Console.WriteLine($"{DateTime.UtcNow} - END - Rejected - {message.Bet.BetId.ToString().ToUpper()}");
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine($"{DateTime.UtcNow} - END - Error Rejected - {message.Bet.BetId.ToString().ToUpper()} - {ex.Message}");
+
                     messageBroker.Publish(new OnBetPlacementError
                     {
                         BetId = $"{message.Bet.BetId.ToString().ToUpper()} - Rejected Exception",
@@ -311,7 +343,8 @@ namespace Platform.Placement.Service.Repository
 
                     using (var context = new BettingContext(optionsBuilder.Options))
                     {
-                        var bet = context.Bet.Find(message.Bet.BetId);
+                        var bet = context.Bet.Where(c => c.BetId == message.Bet.BetId).FirstOrDefault();
+
                         if (bet != null)
                         {
                             var betStatus = BetStatus.Rejected;

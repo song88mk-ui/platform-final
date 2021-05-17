@@ -35,8 +35,9 @@ namespace Platform.Sportsbook.API.Repository
         private IMongoCollection<Selection> primarySelectionCollection;
         private IMongoCollection<BettingStatus> primaryBettingStatusCollection;
         private readonly HttpClient _httpClient;
+        private readonly IRabbitMQRepository _rabbitMQRepository;
 
-        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMemCache memCache, IConfiguration configuration)
+        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMemCache memCache, IConfiguration configuration, IRabbitMQRepository rabbitMQRepository)
         {
             _configuration = configuration;
             var client = new MongoClient(_configuration["ConnectionStrings:MongoDB-Sportsbook"]);
@@ -55,6 +56,8 @@ namespace Platform.Sportsbook.API.Repository
             _sportsbookContext = sportsbookContext;
             _httpClient = httpClient;
             _memCache = memCache;
+
+            _rabbitMQRepository = rabbitMQRepository;
 
             _httpClient.BaseAddress = new Uri("https://av-api.betradar.com");
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer C9SdxJm170K61OY152");
@@ -3445,8 +3448,13 @@ namespace Platform.Sportsbook.API.Repository
                     Selections = selections
                 };
 
-                //TODO: call another API to sends to rabbitmq
-                //_messageBroker.Publish(payload, "OnBetSettlement", $"r.sb.adapter.{lastDigit}.onbetsettlement", Guid.NewGuid().ToString());
+                await _rabbitMQRepository.Settlebet(new MessageRequestDTO()
+                {
+                    CorrelationId = Guid.NewGuid().ToString(),
+                    MessageType = "OnBetSettlement",
+                    RoutingKey = $"r.sb.adapter.{lastDigit}.onbetsettlement",
+                    Payload = JsonSerializer.Serialize(payload)
+                });
             }
 
             return new BaseResponseDTO<StatusCode>

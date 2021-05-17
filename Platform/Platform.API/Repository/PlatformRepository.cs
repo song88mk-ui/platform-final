@@ -1872,6 +1872,78 @@ namespace Platform.API.Repository
             });
         }
 
+        public async Task<BaseResponseDTO<bool>> CashoutBet(string apiKey, string clientId, string operatorToken, CashoutBetRequest request)
+        {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (!IsValidIPAddress(request.IPAddress))
+            {
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.IPAddress_Must_Be_IPv4,
+                    Message = StatusCode.IPAddress_Must_Be_IPv4.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (!IsValidChannel(request.Channel))
+            {
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.Unsupported_Channel,
+                    Message = StatusCode.Unsupported_Channel.ToString().Replace('_', ' '),
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+
+            if (authenticationResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
+                };
+            }
+
+            return await _bettingRepository.CashoutBet(new CashoutBetRequestDTO()
+            {
+                APIKey = apiKey,
+                OperatorToken = operatorToken,
+                ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
+                ClientIdRef = clientResponse.Result.ClientIdRef,
+                ClientCode = clientResponse.Result.ClientCode,
+                ClientName = clientResponse.Result.ClientName,
+                LimitId = clientResponse.Result.LimitId,
+                Endpoint = clientResponse.Result.Endpoint,
+                CompanyShare = clientResponse.Result.CompanyShare,
+                BetId = Guid.Parse(request.BetId),
+                UserId = authenticationResponse.Result.UserId,
+                Cashout = request.Cashout,
+                Selections = request.BetSelectionIds.Select(s => new BetSelectionRequestDTO
+                {
+                    BetSelectionId = Guid.Parse(s.BetSelectionId)
+                }).ToList()
+            });
+        }
+
         private DateTime GetFirstDayOfNextMonth()
         {
             DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);

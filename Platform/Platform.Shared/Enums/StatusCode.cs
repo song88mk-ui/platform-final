@@ -49,6 +49,10 @@
         Top_Fixture_Entries_Must_Be_Equal_Or_Lower_Than_50 = 137,
         Top_League_Entries_Must_Be_Equal_Or_Lower_Than_50 = 138,
 
+        Bet_Status_Must_Be_Running = 139,
+        Cashout_Must_Be_Less_Than_Potential_Payout = 140,
+        Cashout_Must_Be_Greater_Than_Stake = 141,
+
         No_Record_Found = 139,
 
         Not_Authorized = 140,

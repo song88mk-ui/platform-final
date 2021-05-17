@@ -8,9 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.Betting.API.Repository;
 using Platform.Shared.Data.Betting;
-using Platform.Shared.Data.Platform;
 using Platform.Shared.Utility;
-using System;
 
 namespace Platform.Betting.API
 {
@@ -50,6 +48,7 @@ namespace Platform.Betting.API
             services.AddSingleton<IMessageBroker, MessageBroker>();
             services.AddScoped<IBettingRepository, BettingRepository>();
             services.AddScoped<IBetConfigRepository, BetConfigRepository>();
+            services.AddScoped<ICashoutRepository, CashoutRepository>();
             services.AddHttpClient<IMTSAuthRepository, MTSAuthRepository>();
             services.AddHttpClient<IMTSMaxStakeRepository, MTSMaxStakeRepository>();
             services.AddHttpClient<IBackOfficeRepository, BackOfficeRepository>();

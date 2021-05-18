@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using System;
+using System.Collections.Generic;
 
 namespace Platform.Shared.Data.Sportsbook.Entities
 {
@@ -59,5 +60,36 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public string StUr { get; set; }
 
         public bool IsSu { get; set; }
+        public List<SportTranslationMDB> SpNaTr { get; set; }
+        public List<SegmentTranslationMDB> SegNaTr { get; set; }
+        public List<LeagueTranslationMDB> LeNaTr { get; set; }
+        public List<FixtureTranslationMDB> FiNaTr { get; set; }
+    }
+    public class SportTranslationMDB
+    {
+        [BsonId]
+        public string LaCo { get; set; }
+        public string SpNa { get; set; }
+    }
+
+    public class SegmentTranslationMDB
+    {
+        [BsonId]
+        public string LaCo { get; set; }
+        public string SegNa { get; set; }
+    }
+
+    public class LeagueTranslationMDB
+    {
+        [BsonId]
+        public string LaCo { get; set; }
+        public string LeNa { get; set; }
+    }
+
+    public class FixtureTranslationMDB
+    {
+        [BsonId]
+        public string LaCo { get; set; }
+        public string FiNa { get; set; }
     }
 }

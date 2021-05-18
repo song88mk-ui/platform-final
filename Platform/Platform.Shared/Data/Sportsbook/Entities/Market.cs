@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using System;
+using System.Collections.Generic;
 
 namespace Platform.Shared.Data.Sportsbook.Entities
 {
@@ -21,6 +22,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public int FiStId { get; set; }
         public int CaStId { get; set; }
         public string CaStNa { get; set; }
+        public List<MarketTranslation> MaNaTr { get; set; }
     }
 
     public class MarketFilter
@@ -33,6 +35,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public string Li { get; set; }
         public int MaStId { get; set; }
         public string MaStNa { get; set; }
+        public List<MarketTranslation> MaNaTr { get; set; }
     }
 
     public class MarketCount
@@ -40,5 +43,12 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         [BsonId]
         public long MaId { get; set; }
         public long FiId { get; set; }
+    }
+
+    public class MarketTranslation
+    {
+        [BsonId]
+        public string LaCo { get; set; }
+        public string MaNa { get; set; }
     }
 }

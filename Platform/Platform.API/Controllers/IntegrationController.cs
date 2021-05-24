@@ -417,12 +417,13 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/search")]
-        public async Task<IActionResult> GetSearchResults([FromQuery] string searchText, string languageCode)
+        public async Task<IActionResult> GetSearchResults([FromQuery] string searchText)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetSearchResults(apiKey, clientId, new SearchResultRequest { LanguageCode = languageCode, SearchText = searchText});
+            var result = await _platformRepository.GetSearchResults(apiKey, clientId, languageCode, new SearchResultRequest { SearchText = searchText});
 
             switch (result.StatusCode)
             {

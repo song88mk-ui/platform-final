@@ -37,7 +37,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(string apiKey, string clientId, string langCode, FixtureDetailsRequest request);
         Task<BaseResponseDTO<TWResponseDTO>> GetSelectionDetails(string apiKey, string clientId, string langCode, FixtureMarketSelectionDetailsRequest request);
         Task<BaseResponseDTO<TWResponseDTO>> GetOutrightFixtures(string apiKey, string clientId, string langCode, OutrightFixtureRequest request);
-        Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(string apiKey, string clientId, SearchResultRequest request);
+        Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(string apiKey, string clientId, string langCode, SearchResultRequest request);
         Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures(string clientRefIds);
         Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(int clientRefId);
         Task<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>> PostClientTopFixtures(ClientTopFixtureRequest request);

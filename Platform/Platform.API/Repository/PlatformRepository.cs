@@ -1494,8 +1494,30 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode
             });
         }
-        public async Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(string apiKey, string clientId, SearchResultRequest request)
+        public async Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(string apiKey, string clientId, string langCode, SearchResultRequest request)
         {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<TWSearchResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<TWSearchResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
             if (string.IsNullOrEmpty(request.SearchText) || string.IsNullOrWhiteSpace(request.SearchText) || request.SearchText.Length < 3)
             {
                 return new BaseResponseDTO<TWSearchResponseDTO>
@@ -1520,7 +1542,7 @@ namespace Platform.API.Repository
             {
                 SearchText = request.SearchText,
                 ClientId = clientResponse.Result.ClientId,
-                LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper())
+                LanguageCode = languageCode
             });
         }
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(string apiKey, string clientId, string langCode, string operatorToken)

@@ -24,7 +24,6 @@ namespace Platform.API.Models
     public class SearchResultRequest
     {
         public string SearchText { get; set; }
-        public string LanguageCode { get; set; }
     }
     public class DailyFixtureRequest
     {

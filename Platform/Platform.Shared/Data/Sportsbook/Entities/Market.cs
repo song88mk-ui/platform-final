@@ -22,7 +22,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public int FiStId { get; set; }
         public int CaStId { get; set; }
         public string CaStNa { get; set; }
-        public List<MarketTranslation> MaNaTr { get; set; }
+        public List<MarketTranslationMDB> MaNaTr { get; set; }
     }
 
     public class MarketFilter
@@ -35,7 +35,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public string Li { get; set; }
         public int MaStId { get; set; }
         public string MaStNa { get; set; }
-        public List<MarketTranslation> MaNaTr { get; set; }
+        public List<MarketTranslationMDB> MaNaTr { get; set; }
     }
 
     public class MarketCount
@@ -45,7 +45,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public long FiId { get; set; }
     }
 
-    public class MarketTranslation
+    public class MarketTranslationMDB
     {
         [BsonId]
         public string LaCo { get; set; }

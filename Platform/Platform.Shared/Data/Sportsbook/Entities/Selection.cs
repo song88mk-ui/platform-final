@@ -27,7 +27,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public int MaStId { get; set; }
         public string CoId { get; set; }
         public double Pr { get; set; }
-        public List<SelectionTranslation> SeNaTr { get; set; }
+        public List<SelectionTranslationMDB> SeNaTr { get; set; }
     }
     public class SelectionFilter
     {
@@ -41,10 +41,10 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public bool IsAc { get; set; }
         public int SeSoOr { get; set; }
         public string CoId { get; set; }
-        public List<SelectionTranslation> SeNaTr { get; set; }
+        public List<SelectionTranslationMDB> SeNaTr { get; set; }
     }
 
-    public class SelectionTranslation
+    public class SelectionTranslationMDB
     {
         [BsonId]
         public string LaCo { get; set; }

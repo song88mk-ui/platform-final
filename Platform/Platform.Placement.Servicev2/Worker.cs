@@ -259,20 +259,17 @@ namespace Platform.Placement.Servicev2
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
+            try
             {
-                try
-                {
+                if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
                     _mts.Close();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
 
+                _messageBroker.Dispose();
             }
-
-            _messageBroker.Dispose();
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
 
             return base.StopAsync(cancellationToken);
         }

@@ -35,5 +35,6 @@ namespace Platform.Shared.Models
         public string UserId { get; set; }
         public string Id { get; set; }
         public UserFavoriteHierarchy UserFavoriteHierarchy { get; set; }
+        public LanguageCode LanguageCode { get; set; }
     }
 }

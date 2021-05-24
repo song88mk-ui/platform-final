@@ -5,6 +5,7 @@ using Platform.API.Models;
 using Platform.API.Repository;
 using Platform.Shared.Models;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Platform.API.Controllers
@@ -129,13 +130,14 @@ namespace Platform.API.Controllers
         [HttpGet("v1/client/allleagues")]
         public async Task<IActionResult> GetClientAllLeagues([FromQuery] BackofficeClientAllLeaguesRequestDTO request2)
         {
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
+            
             var request = new TopLeaguesRequest
             {
-                SportId = request2.SportId,
-                LanguageCode = "EN"
+                SportId = request2.SportId
             };
 
-            var result = await _platformRepository.GetAllLeagues(string.Empty, request2.ClientIdRef.ToString(), request);
+            var result = await _platformRepository.GetAllLeagues(string.Empty, request2.ClientIdRef.ToString(), languageCode, request);
 
             switch (result.StatusCode)
             {

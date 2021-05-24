@@ -128,18 +128,13 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/sports/topleagues")]
-        public async Task<IActionResult> GetTopLeagues([FromQuery] TempTopLeaguesRequest request2)
+        public async Task<IActionResult> GetTopLeagues([FromQuery] TopLeaguesRequest request)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var request = new TopLeaguesRequest
-            {
-                SportId = request2.SportId,
-                LanguageCode = "EN"
-            };
-
-            var result = await _platformRepository.GetTopLeagues(apiKey, clientId, request);
+            var result = await _platformRepository.GetTopLeagues(apiKey, clientId, languageCode, request);
 
             switch (result.StatusCode)
             {
@@ -151,18 +146,13 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/sports/allleagues")]
-        public async Task<IActionResult> GetAllLeagues([FromQuery] TempTopLeaguesRequest request2)
+        public async Task<IActionResult> GetAllLeagues([FromQuery] TopLeaguesRequest request)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var request = new TopLeaguesRequest
-            {
-                SportId = request2.SportId,
-                LanguageCode = "EN"
-            };
-
-            var result = await _platformRepository.GetAllLeagues(apiKey, clientId, request);
+            var result = await _platformRepository.GetAllLeagues(apiKey, clientId, languageCode, request);
 
             switch (result.StatusCode)
             {
@@ -178,13 +168,9 @@ namespace Platform.API.Controllers
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var request = new TopFixturesRequest
-            {
-                LanguageCode = "EN"
-            };
-
-            var result = await _platformRepository.GetTopFixtureIds(apiKey, clientId, request);
+            var result = await _platformRepository.GetTopFixtureIds(apiKey, clientId, languageCode);
 
             switch (result.StatusCode)
             {
@@ -218,8 +204,9 @@ namespace Platform.API.Controllers
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetUserFavorites2(apiKey, clientId, operatorToken);
+            var result = await _platformRepository.GetUserFavorites2(apiKey, clientId, languageCode, operatorToken);
 
             switch (result.StatusCode)
             {
@@ -236,8 +223,9 @@ namespace Platform.API.Controllers
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetUserFavorites(apiKey, clientId, operatorToken);
+            var result = await _platformRepository.GetUserFavorites(apiKey, clientId, languageCode, operatorToken);
 
             switch (result.StatusCode)
             {
@@ -253,8 +241,9 @@ namespace Platform.API.Controllers
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetTopFixtures(apiKey, clientId, new TopFixturesRequest { LanguageCode = LanguageCode.EN.ToString() });
+            var result = await _platformRepository.GetTopFixtures(apiKey, clientId, languageCode);
 
             switch (result.StatusCode)
             {
@@ -270,8 +259,9 @@ namespace Platform.API.Controllers
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetLiveFixtureCount(apiKey, clientId, new FixtureCountRequest { LanguageCode = LanguageCode.EN.ToString() });
+            var result = await _platformRepository.GetLiveFixtureCount(apiKey, clientId, languageCode);
 
             switch (result.StatusCode)
             {
@@ -287,8 +277,9 @@ namespace Platform.API.Controllers
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetTodayFixtureCount(apiKey, clientId, new TodayFixtureCountRequest { LanguageCode = LanguageCode.EN.ToString(), MinuteUTCOffset = minuteUTCOffset });
+            var result = await _platformRepository.GetTodayFixtureCount(apiKey, clientId, languageCode, new TodayFixtureCountRequest { MinuteUTCOffset = minuteUTCOffset });
 
             switch (result.StatusCode)
             {
@@ -304,8 +295,9 @@ namespace Platform.API.Controllers
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetLiveFixtures(apiKey, clientId, new FixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId });
+            var result = await _platformRepository.GetLiveFixtures(apiKey, clientId, languageCode, new FixtureRequest { SportId = sportId });
 
             switch (result.StatusCode)
             {
@@ -321,8 +313,9 @@ namespace Platform.API.Controllers
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetTodayFixtures(apiKey, clientId, new TodayFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId, MinuteUTCOffset = minuteUTCOffset });
+            var result = await _platformRepository.GetTodayFixtures(apiKey, clientId, languageCode, new TodayFixtureRequest { SportId = sportId, MinuteUTCOffset = minuteUTCOffset });
 
             switch (result.StatusCode)
             {
@@ -338,8 +331,9 @@ namespace Platform.API.Controllers
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetDailyFixtures(apiKey, clientId, new DailyFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId, DateUTC = dateUTC, MinuteUTCOffset = minuteUTCOffset });
+            var result = await _platformRepository.GetDailyFixtures(apiKey, clientId, languageCode, new DailyFixtureRequest { SportId = sportId, DateUTC = dateUTC, MinuteUTCOffset = minuteUTCOffset });
 
             switch (result.StatusCode)
             {
@@ -355,8 +349,9 @@ namespace Platform.API.Controllers
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetOutrightFixtures(apiKey, clientId, new OutrightFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId });
+            var result = await _platformRepository.GetOutrightFixtures(apiKey, clientId, languageCode, new OutrightFixtureRequest { SportId = sportId });
 
             switch (result.StatusCode)
             {
@@ -372,8 +367,9 @@ namespace Platform.API.Controllers
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetTopLeagueFixtures(apiKey, clientId, new TopLeagueFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId });
+            var result = await _platformRepository.GetTopLeagueFixtures(apiKey, clientId, languageCode, new TopLeagueFixtureRequest { SportId = sportId });
 
             switch (result.StatusCode)
             {
@@ -389,8 +385,9 @@ namespace Platform.API.Controllers
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetSegmentFixtures(apiKey, clientId, new SegmentFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId, SegmentId = segmentId });
+            var result = await _platformRepository.GetSegmentFixtures(apiKey, clientId, languageCode, new SegmentFixtureRequest { SportId = sportId, SegmentId = segmentId });
 
             switch (result.StatusCode)
             {
@@ -406,8 +403,9 @@ namespace Platform.API.Controllers
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetFixtures(apiKey, clientId, new LeagueFixtureRequest { LanguageCode = LanguageCode.EN.ToString(), SportId = sportId, SegmentId = segmentId, LeagueId = leagueId });
+            var result = await _platformRepository.GetFixtures(apiKey, clientId, languageCode, new LeagueFixtureRequest { SportId = sportId, SegmentId = segmentId, LeagueId = leagueId });
 
             switch (result.StatusCode)
             {
@@ -440,8 +438,9 @@ namespace Platform.API.Controllers
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetSports(apiKey, clientId, new SportRequest { LanguageCode = LanguageCode.EN.ToString() });
+            var result = await _platformRepository.GetSports(apiKey, clientId, languageCode);
 
             switch (result.StatusCode)
             {
@@ -455,11 +454,11 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/fixturedetails")]
         public async Task<IActionResult> GetFixtureDetails([FromQuery] string fixtureId)
         {
-            //force deploy
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetFixtureDetails(apiKey, clientId, new FixtureDetailsRequest { LanguageCode = LanguageCode.EN.ToString(), FixtureId = fixtureId });
+            var result = await _platformRepository.GetFixtureDetails(apiKey, clientId, languageCode, new FixtureDetailsRequest { FixtureId = fixtureId });
 
             switch (result.StatusCode)
             {
@@ -473,11 +472,11 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/selectiondetails")]
         public async Task<IActionResult> GetSelectionDetails([FromQuery] string fixtureId, string marketId, string selectionId)
         {
-            //force deploy
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetSelectionDetails(apiKey, clientId, new FixtureMarketSelectionDetailsRequest { LanguageCode = LanguageCode.EN.ToString(), FixtureId = fixtureId, MarketId = marketId, SelectionId = selectionId });
+            var result = await _platformRepository.GetSelectionDetails(apiKey, clientId, languageCode, new FixtureMarketSelectionDetailsRequest { FixtureId = fixtureId, MarketId = marketId, SelectionId = selectionId });
 
             switch (result.StatusCode)
             {
@@ -494,8 +493,9 @@ namespace Platform.API.Controllers
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.AddUserFavorites(apiKey, clientId, operatorToken, request);
+            var result = await _platformRepository.AddUserFavorites(apiKey, clientId, languageCode, operatorToken, request);
 
             switch (result.StatusCode)
             {
@@ -512,8 +512,9 @@ namespace Platform.API.Controllers
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.DeleteUserFavorites(apiKey, clientId, operatorToken, request);
+            var result = await _platformRepository.DeleteUserFavorites(apiKey, clientId, languageCode, operatorToken, request);
 
             switch (result.StatusCode)
             {

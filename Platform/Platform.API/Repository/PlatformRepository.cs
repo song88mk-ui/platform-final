@@ -694,9 +694,9 @@ namespace Platform.API.Repository
                 IsMobile = request.IsMobile 
             });
         }
-        public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetTopLeagues(string apiKey, string clientId, TopLeaguesRequest request)
+        public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetTopLeagues(string apiKey, string clientId, string langCode, TopLeaguesRequest request)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -707,7 +707,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -736,9 +736,9 @@ namespace Platform.API.Repository
                 SportId = request.SportId
             });
         }
-        public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues(string apiKey, string clientId, TopLeaguesRequest request)
+        public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues(string apiKey, string clientId, string langCode, TopLeaguesRequest request)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -749,7 +749,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -825,9 +825,9 @@ namespace Platform.API.Repository
         }
 
 
-        public async Task<BaseResponseDTO<TopFixturesIdsResponseDTO>> GetTopFixtureIds(string apiKey, string clientId, TopFixturesRequest request)
+        public async Task<BaseResponseDTO<TopFixturesIdsResponseDTO>> GetTopFixtureIds(string apiKey, string clientId, string langCode)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -838,7 +838,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -881,9 +881,9 @@ namespace Platform.API.Repository
 
             return await _sportsbookRepository.GetMarketTemplateGroups();
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetTopFixtures(string apiKey, string clientId, TopFixturesRequest request)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetTopFixtures(string apiKey, string clientId, string langCode)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -894,7 +894,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -922,9 +922,9 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode
             });
         }
-        public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(string apiKey, string clientId, FixtureCountRequest request)
+        public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(string apiKey, string clientId, string langCode)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -935,7 +935,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -963,9 +963,9 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode,
             });
         }
-        public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetTodayFixtureCount(string apiKey, string clientId, TodayFixtureCountRequest request)
+        public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetTodayFixtureCount(string apiKey, string clientId, string langCode, TodayFixtureCountRequest request)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -976,7 +976,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -1005,9 +1005,9 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode,
             });
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixtures(string apiKey, string clientId, FixtureRequest request)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixtures(string apiKey, string clientId, string langCode, FixtureRequest request)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -1018,7 +1018,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -1047,9 +1047,9 @@ namespace Platform.API.Repository
                 SportId = request.SportId
             });
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(string apiKey, string clientId, TodayFixtureRequest request)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(string apiKey, string clientId, string langCode, TodayFixtureRequest request)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -1060,7 +1060,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -1090,9 +1090,9 @@ namespace Platform.API.Repository
                 SportId = request.SportId
             });
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixtures(string apiKey, string clientId, DailyFixtureRequest request)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixtures(string apiKey, string clientId, string langCode, DailyFixtureRequest request)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -1103,7 +1103,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -1134,9 +1134,9 @@ namespace Platform.API.Repository
                 SportId = request.SportId
             });
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetTopLeagueFixtures(string apiKey, string clientId, TopLeagueFixtureRequest request)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetTopLeagueFixtures(string apiKey, string clientId, string langCode, TopLeagueFixtureRequest request)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -1147,7 +1147,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -1176,9 +1176,9 @@ namespace Platform.API.Repository
                 SportId = request.SportId
             });
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetSegmentFixtures(string apiKey, string clientId, SegmentFixtureRequest request)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetSegmentFixtures(string apiKey, string clientId, string langCode, SegmentFixtureRequest request)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -1189,7 +1189,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -1219,9 +1219,9 @@ namespace Platform.API.Repository
                 SegmentId = request.SegmentId
             });
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(string apiKey, string clientId, LeagueFixtureRequest request)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(string apiKey, string clientId, string langCode, LeagueFixtureRequest request)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -1232,7 +1232,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -1263,9 +1263,9 @@ namespace Platform.API.Repository
                 LeagueId = request.LeagueId
             });
         }
-        public async Task<BaseResponseDTO<SportsResponseDTO>> GetSports(string apiKey, string clientId, SportRequest request)
+        public async Task<BaseResponseDTO<SportsResponseDTO>> GetSports(string apiKey, string clientId, string langCode)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -1276,7 +1276,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -1304,9 +1304,9 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode
             });
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(string apiKey, string clientId, FixtureDetailsRequest request)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(string apiKey, string clientId, string langCode, FixtureDetailsRequest request)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -1317,7 +1317,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -1346,9 +1346,9 @@ namespace Platform.API.Repository
                 FixtureId = request.FixtureId
             });
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetSelectionDetails(string apiKey, string clientId, FixtureMarketSelectionDetailsRequest request)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetSelectionDetails(string apiKey, string clientId, string langCode, FixtureMarketSelectionDetailsRequest request)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -1359,7 +1359,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -1390,9 +1390,9 @@ namespace Platform.API.Repository
                 SelectionId = request.SelectionId
             });
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetOutrightFixtures(string apiKey, string clientId, OutrightFixtureRequest request)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetOutrightFixtures(string apiKey, string clientId, string langCode, OutrightFixtureRequest request)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -1403,7 +1403,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
             if (!IsValidLanguageCode(languageCode))
             {
@@ -1432,8 +1432,30 @@ namespace Platform.API.Repository
                 SportId = request.SportId
             });
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetUserFavorites2(string apiKey, string clientId, string operatorToken)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetUserFavorites2(string apiKey, string clientId, string langCode, string operatorToken)
         {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
                 return new BaseResponseDTO<TWResponseDTO>
@@ -1469,7 +1491,7 @@ namespace Platform.API.Repository
             {
                 UserId = authenticationResponse.Result.UserId,
                 ClientCode = clientResponse.Result.ClientCode,
-                LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode)
+                LanguageCode = languageCode
             });
         }
         public async Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(string apiKey, string clientId, SearchResultRequest request)
@@ -1501,8 +1523,30 @@ namespace Platform.API.Repository
                 LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper())
             });
         }
-        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(string apiKey, string clientId, string operatorToken)
+        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(string apiKey, string clientId, string langCode, string operatorToken)
         {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
                 return new BaseResponseDTO<UserFavoriteResponseDTO>
@@ -1537,11 +1581,34 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.GetUserFavorites(new UserFavoriteRequestDTO 
             { 
                 UserId = authenticationResponse.Result.UserId,
-                ClientCode = clientResponse.Result.ClientCode
+                ClientCode = clientResponse.Result.ClientCode,
+                LanguageCode = languageCode
             });
         }
-        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> AddUserFavorites(string apiKey, string clientId, string operatorToken, InsertDeleteUserFavoritesRequest request)
+        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> AddUserFavorites(string apiKey, string clientId, string langCode, string operatorToken, InsertDeleteUserFavoritesRequest request)
         {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
                 return new BaseResponseDTO<UserFavoriteResponseDTO>
@@ -1578,11 +1645,34 @@ namespace Platform.API.Repository
                 UserId = authenticationResponse.Result.UserId,
                 ClientCode = clientResponse.Result.ClientCode,
                 Id = request.Id,
-                UserFavoriteHierarchy = request.UserFavoriteHierarchy
+                UserFavoriteHierarchy = request.UserFavoriteHierarchy,
+                LanguageCode = languageCode
             });
         }
-        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> DeleteUserFavorites(string apiKey, string clientId, string operatorToken, InsertDeleteUserFavoritesRequest request)
+        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> DeleteUserFavorites(string apiKey, string clientId, string langCode, string operatorToken, InsertDeleteUserFavoritesRequest request)
         {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
                 return new BaseResponseDTO<UserFavoriteResponseDTO>
@@ -1619,7 +1709,8 @@ namespace Platform.API.Repository
                 UserId = authenticationResponse.Result.UserId,
                 ClientCode = clientResponse.Result.ClientCode,
                 Id = request.Id,
-                UserFavoriteHierarchy = request.UserFavoriteHierarchy
+                UserFavoriteHierarchy = request.UserFavoriteHierarchy,
+                LanguageCode = languageCode
             });
         }
 

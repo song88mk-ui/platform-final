@@ -147,6 +147,56 @@ namespace Platform.Operator.API.Repository
             }
         }
 
+        public async Task<OperatorBetResponseDTO> BetFullCashOut(OperatorBetSettlementRequestDTO request)
+        {
+            var isGuid = Guid.TryParse(request.UserId, out Guid guid);
+
+            if (!isGuid)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003
+                };
+            }
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                try
+                {
+                    var result = _platformContext.Operator.Where(c => c.UserId == guid).FirstOrDefault();
+
+                    if (result == null)
+                    {
+                        return new OperatorBetResponseDTO
+                        {
+                            StatusId = 1003
+                        };
+                    }
+
+                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, request.Payout, request.Stake, request.BetStatus);
+
+                    result.Balance = operatorAudit.PostBalance;
+                    _platformContext.Operator.Update(result);
+
+                    _platformContext.SaveChanges();
+                    scope.Complete();
+
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1000,
+                        Balance = result.Balance
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1003
+                    };
+                }
+            }
+        }
+
         public async Task<OperatorBetResponseDTO> BetSettlement(OperatorBetSettlementRequestDTO request)
         {
             var isGuid = Guid.TryParse(request.UserId, out Guid guid);
@@ -319,6 +369,7 @@ namespace Platform.Operator.API.Repository
 
                 switch (prevOperatorAudit.TransactionTypeId)
                 {
+                    case (int)BetStatus.CashedOut:
                     case (int)BetStatus.Void:
                     case (int)BetStatus.Lost:
                     case (int)BetStatus.Won:

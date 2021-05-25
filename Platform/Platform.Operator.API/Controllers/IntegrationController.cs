@@ -70,6 +70,20 @@ namespace Platform.Operator.API.Controllers
             }
         }
 
+        [HttpPost("v1/bet/full/cashout")]
+        public async Task<IActionResult> BetFullCashOut([FromBody] OperatorBetSettlementRequestDTO request)
+        {
+            var result = await _platformRepository.BetFullCashOut(request);
+
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/bet/settlement")]
         public async Task<IActionResult> BetSettlement([FromBody] OperatorBetSettlementRequestDTO request)
         {

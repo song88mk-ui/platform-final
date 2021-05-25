@@ -61,6 +61,12 @@ namespace Platform.Operator.Service
                         _bettingRepository.ProcesssBetPlacement(onBetPlacement, _messageBroker, correlationId);
                         break;
 
+                    case "OnBetFullCashOut":
+                        var onBetFullCashout = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+
+                        _bettingRepository.ProcessBetFullCashOut(onBetFullCashout, _messageBroker, correlationId);
+                        break;
+
                     case "OnBetSettlement":
                         var onBetSettlement = JsonSerializer.Deserialize<OnBetSettlement>(payload);
 

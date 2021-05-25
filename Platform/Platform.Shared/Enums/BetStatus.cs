@@ -10,6 +10,7 @@
         HalfLost = 4001,
         Void = 5000,
         Rejected = 6000,
-        Cancelled = 7000
+        Cancelled = 7000,
+        CashedOut = 8000
     }
 }

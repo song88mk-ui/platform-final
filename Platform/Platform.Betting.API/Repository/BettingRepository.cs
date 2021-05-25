@@ -1187,27 +1187,37 @@ namespace Platform.Betting.API.Repository
                     if (bet == null)
                     {
                         data.IsSuccess = false;
-                        data.Message = "Bet ID not found";
+                        data.Message = "BetId not found";
                     }
-                    else if (bet.BetStatusId != (int)BetStatus.Running)
+                    else if (bet.BetStatusId == (int)BetStatus.Waiting)
                     {
                         data.IsSuccess = false;
-                        data.Message = "Bet Cancellation cannot be processed on highlighted Bet ID. Either Payment Transfer or Settlement has been made after bet settled or player wallet is 0.00.";
+                        data.Message = "Bet Cancellation not allowed on bets pending for acceptance by MTS";
                     }
-                    else if (!unsettledBetStatus.Contains(bet.BetStatusId) && settledBetStatus.Contains(bet.BetStatusId))
+                    else if (bet.BetStatusId == (int)BetStatus.CashedOut)
                     {
                         data.IsSuccess = false;
-                        data.Message = "Bet ID is already settled and can no longer be cancelled.";
+                        data.Message = "Bet Cancellation not allowed on Cashed Out bets";
                     }
-                    else if (bet.BetStatusId == (int)BetStatus.Void)
-                    {
-                        data.IsSuccess = false;
-                        data.Message = "Bet Reference ID entered has been cancelled previously.";
-                    }
+                    //else if (bet.BetStatusId != (int)BetStatus.Running)
+                    //{
+                    //    data.IsSuccess = false;
+                    //    data.Message = "Bet Cancellation cannot be processed on highlighted Bet ID. Either Payment Transfer or Settlement has been made after bet settled or player wallet is 0.00.";
+                    //}
+                    //else if (!unsettledBetStatus.Contains(bet.BetStatusId) && settledBetStatus.Contains(bet.BetStatusId))
+                    //{
+                    //    data.IsSuccess = false;
+                    //    data.Message = "Bet ID is already settled and can no longer be cancelled.";
+                    //}
+                    //else if (bet.BetStatusId == (int)BetStatus.Void)
+                    //{
+                    //    data.IsSuccess = false;
+                    //    data.Message = "Bet Reference ID entered has been cancelled previously.";
+                    //}
                     else if (bet.BetStatusId == (int)BetStatus.Cancelled)
                     {
                         data.IsSuccess = false;
-                        data.Message = "Bet Reference ID entered has been cancelled previously.";
+                        data.Message = "Bet Cancellation not allowed on Cancelled bets";
                     }
                 }
 

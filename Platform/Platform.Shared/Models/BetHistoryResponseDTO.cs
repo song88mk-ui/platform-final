@@ -36,6 +36,9 @@ namespace Platform.Shared.Models
         public string BetStatusName { get; set; }
         public string OddsType { get; set; }
         public string CurrencyCode { get; set; }
+        public int CashOutStatusId { get; set; }
+        public string CashOutStatusName { get; set; }
+        public decimal CashOutStake { get; set; }
         public DateTime TransactionDate { get; set; }
         public List<BetSelectionHistoryDTO> Selections { get; set; }
     }

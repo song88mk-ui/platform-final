@@ -49,13 +49,17 @@
         Top_Fixture_Entries_Must_Be_Equal_Or_Lower_Than_50 = 137,
         Top_League_Entries_Must_Be_Equal_Or_Lower_Than_50 = 138,
 
-        Bet_Status_Must_Be_Running = 139,
-        Cashout_Must_Be_Less_Than_Potential_Payout = 140,
-        Cashout_Must_Be_Greater_Than_Stake = 141,
+        //Bet_Status_Must_Be_Running = 139,
+        //Cashout_Must_Be_Less_Than_Potential_Payout = 140,
+        //Cashout_Must_Be_Greater_Than_Stake = 141,
 
         No_Record_Found = 139,
 
         Not_Authorized = 140,
+
+        CashOut_Is_Unavailable = 141,
+        CashOut_Stake_Changed_From_X_To_Y = 142,
+        Bet_Not_Found = 143,
 
         Error = 1000,
         Operator_Error = 1001

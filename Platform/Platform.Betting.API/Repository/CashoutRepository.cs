@@ -35,48 +35,48 @@ namespace Platform.Betting.API.Repository
 
         private async Task<BaseResponseDTO<bool>> CashoutBetWithMTS(CashoutBetRequestDTO request)
         {
-            var bet = _bettingContext.Bet.FirstOrDefault(c => c.BetId == request.BetId);
+            //var bet = _bettingContext.Bet.FirstOrDefault(c => c.BetId == request.BetId);
 
-            var betSelectionIds = request.Selections.Select(c => c.BetSelectionId).ToList();
-            var betSelections = _bettingContext.BetSelection.Where(c => c.BetId == request.BetId && betSelectionIds.Contains(c.BetSelectionId)).ToList();
+            //var betSelectionIds = request.Selections.Select(c => c.BetSelectionId).ToList();
+            //var betSelections = _bettingContext.BetSelection.Where(c => c.BetId == request.BetId && betSelectionIds.Contains(c.BetSelectionId)).ToList();
 
-            if (bet.BetStatusId != (int)BetStatus.Running)
-            {
-                return new BaseResponseDTO<bool>
-                {
-                    StatusCode = StatusCode.Bet_Status_Must_Be_Running,
-                    Message = StatusCode.Bet_Status_Must_Be_Running.ToString(),
-                    Result = false
-                };
-            }
+            //if (bet.BetStatusId != (int)BetStatus.Running)
+            //{
+            //    return new BaseResponseDTO<bool>
+            //    {
+            //        StatusCode = StatusCode.Bet_Status_Must_Be_Running,
+            //        Message = StatusCode.Bet_Status_Must_Be_Running.ToString(),
+            //        Result = false
+            //    };
+            //}
 
-            var potentialPayout = bet.Stake * bet.Odds;
+            //var potentialPayout = bet.Stake * bet.Odds;
 
-            if (request.Cashout > potentialPayout)
-            {
-                return new BaseResponseDTO<bool>
-                {
-                    StatusCode = StatusCode.Cashout_Must_Be_Less_Than_Potential_Payout,
-                    Message = StatusCode.Cashout_Must_Be_Less_Than_Potential_Payout.ToString(),
-                    Result = false
-                };
-            }
+            //if (request.Cashout > potentialPayout)
+            //{
+            //    return new BaseResponseDTO<bool>
+            //    {
+            //        StatusCode = StatusCode.Cashout_Must_Be_Less_Than_Potential_Payout,
+            //        Message = StatusCode.Cashout_Must_Be_Less_Than_Potential_Payout.ToString(),
+            //        Result = false
+            //    };
+            //}
 
-            // parlay validations
-            if (betSelections.Count > 1)
-            {
-                // for Parlay, Cashout can only be offered if Cashout Value > Stake. 
-                // this is to minimize showing of the gap or large margin between stake and cashout offer.
-                if (request.Cashout < bet.Stake)
-                {
-                    return new BaseResponseDTO<bool>
-                    {
-                        StatusCode = StatusCode.Cashout_Must_Be_Greater_Than_Stake,
-                        Message = StatusCode.Cashout_Must_Be_Greater_Than_Stake.ToString(),
-                        Result = false
-                    };
-                }
-            }
+            //// parlay validations
+            //if (betSelections.Count > 1)
+            //{
+            //    // for Parlay, Cashout can only be offered if Cashout Value > Stake. 
+            //    // this is to minimize showing of the gap or large margin between stake and cashout offer.
+            //    if (request.Cashout < bet.Stake)
+            //    {
+            //        return new BaseResponseDTO<bool>
+            //        {
+            //            StatusCode = StatusCode.Cashout_Must_Be_Greater_Than_Stake,
+            //            Message = StatusCode.Cashout_Must_Be_Greater_Than_Stake.ToString(),
+            //            Result = false
+            //        };
+            //    }
+            //}
 
             //_messageBroker.Publish(new OnCashoutBetSettlement
             //{
@@ -94,47 +94,47 @@ namespace Platform.Betting.API.Repository
 
         private async Task<BaseResponseDTO<bool>> CashoutBetWithoutMTS(CashoutBetRequestDTO request)
         {
-            var bet = _bettingContext.Bet.FirstOrDefault(c => c.BetId == request.BetId);
+            //var bet = _bettingContext.Bet.FirstOrDefault(c => c.BetId == request.BetId);
 
-            var betSelectionIds = request.Selections.Select(c => c.BetSelectionId).ToList();
-            var betSelections = _bettingContext.BetSelection.Where(c => c.BetId == request.BetId).ToList();
-            var selectedBetSelections = betSelections.Where(c => betSelectionIds.Contains(c.BetSelectionId)).ToList();
+            //var betSelectionIds = request.Selections.Select(c => c.BetSelectionId).ToList();
+            //var betSelections = _bettingContext.BetSelection.Where(c => c.BetId == request.BetId).ToList();
+            //var selectedBetSelections = betSelections.Where(c => betSelectionIds.Contains(c.BetSelectionId)).ToList();
 
-            if (bet.BetStatusId != (int)BetStatus.Running)
-            {
-                return new BaseResponseDTO<bool>
-                {
-                    StatusCode = StatusCode.Bet_Status_Must_Be_Running,
-                    Message = StatusCode.Bet_Status_Must_Be_Running.ToString(),
-                    Result = false
-                };
-            }
+            //if (bet.BetStatusId != (int)BetStatus.Running)
+            //{
+            //    return new BaseResponseDTO<bool>
+            //    {
+            //        StatusCode = StatusCode.Bet_Status_Must_Be_Running,
+            //        Message = StatusCode.Bet_Status_Must_Be_Running.ToString(),
+            //        Result = false
+            //    };
+            //}
 
-            var potentialPayout = bet.Stake * bet.Odds;
+            //var potentialPayout = bet.Stake * bet.Odds;
 
-            if (request.Cashout > potentialPayout)
-            {
-                return new BaseResponseDTO<bool>
-                {
-                    StatusCode = StatusCode.Cashout_Must_Be_Less_Than_Potential_Payout,
-                    Message = StatusCode.Cashout_Must_Be_Less_Than_Potential_Payout.ToString(),
-                    Result = false
-                };
-            }
+            //if (request.Cashout > potentialPayout)
+            //{
+            //    return new BaseResponseDTO<bool>
+            //    {
+            //        StatusCode = StatusCode.Cashout_Must_Be_Less_Than_Potential_Payout,
+            //        Message = StatusCode.Cashout_Must_Be_Less_Than_Potential_Payout.ToString(),
+            //        Result = false
+            //    };
+            //}
 
-            // parlay validations
-            if (betSelections.Count > 1)
-            {
-                if (request.Cashout < bet.Stake)
-                {
-                    return new BaseResponseDTO<bool>
-                    {
-                        StatusCode = StatusCode.Cashout_Must_Be_Greater_Than_Stake,
-                        Message = StatusCode.Cashout_Must_Be_Greater_Than_Stake.ToString(),
-                        Result = false
-                    };
-                }
-            }
+            //// parlay validations
+            //if (betSelections.Count > 1)
+            //{
+            //    if (request.Cashout < bet.Stake)
+            //    {
+            //        return new BaseResponseDTO<bool>
+            //        {
+            //            StatusCode = StatusCode.Cashout_Must_Be_Greater_Than_Stake,
+            //            Message = StatusCode.Cashout_Must_Be_Greater_Than_Stake.ToString(),
+            //            Result = false
+            //        };
+            //    }
+            //}
 
             //_messageBroker.Publish(new OnCashoutBetSettlement
             //{

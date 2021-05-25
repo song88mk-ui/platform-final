@@ -1985,11 +1985,20 @@ namespace Platform.API.Repository
             });
         }
 
-        public async Task<BaseResponseDTO<bool>> CashoutBet(string apiKey, string clientId, string operatorToken, CashoutBetRequest request)
+        public async Task<BaseResponseDTO<BetCashOutResponseDTO>> CashoutBet(string apiKey, string clientId, string operatorToken, CashoutBetRequest request)
         {
+            if (!Guid.TryParse(request.BetId, out Guid betId))
+            {
+                return new BaseResponseDTO<BetCashOutResponseDTO>
+                {
+                    StatusCode = StatusCode.Bet_Not_Found,
+                    Message = StatusCode.Bet_Not_Found.ToString().Replace('_', ' '),
+                };
+            }
+
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
-                return new BaseResponseDTO<bool>
+                return new BaseResponseDTO<BetCashOutResponseDTO>
                 {
                     StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
                     Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
@@ -1998,7 +2007,7 @@ namespace Platform.API.Repository
 
             if (!IsValidIPAddress(request.IPAddress))
             {
-                return new BaseResponseDTO<bool>
+                return new BaseResponseDTO<BetCashOutResponseDTO>
                 {
                     StatusCode = StatusCode.IPAddress_Must_Be_IPv4,
                     Message = StatusCode.IPAddress_Must_Be_IPv4.ToString().Replace('_', ' '),
@@ -2007,7 +2016,7 @@ namespace Platform.API.Repository
 
             if (!IsValidChannel(request.Channel))
             {
-                return new BaseResponseDTO<bool>
+                return new BaseResponseDTO<BetCashOutResponseDTO>
                 {
                     StatusCode = StatusCode.Unsupported_Channel,
                     Message = StatusCode.Unsupported_Channel.ToString().Replace('_', ' '),
@@ -2018,7 +2027,7 @@ namespace Platform.API.Repository
 
             if (clientResponse.StatusCode != StatusCode.Success)
             {
-                return new BaseResponseDTO<bool>
+                return new BaseResponseDTO<BetCashOutResponseDTO>
                 {
                     StatusCode = clientResponse.StatusCode,
                     Message = clientResponse.Message
@@ -2029,32 +2038,47 @@ namespace Platform.API.Repository
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
-                return new BaseResponseDTO<bool>
+                return new BaseResponseDTO<BetCashOutResponseDTO>
                 {
                     StatusCode = authenticationResponse.StatusCode,
                     Message = authenticationResponse.Message,
                 };
             }
 
-            return await _bettingRepository.CashoutBet(new CashoutBetRequestDTO()
+            //TODO: call platform.betting.api
+
+            return new BaseResponseDTO<BetCashOutResponseDTO>
             {
-                APIKey = apiKey,
-                OperatorToken = operatorToken,
-                ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
-                ClientIdRef = clientResponse.Result.ClientIdRef,
-                ClientCode = clientResponse.Result.ClientCode,
-                ClientName = clientResponse.Result.ClientName,
-                LimitId = clientResponse.Result.LimitId,
-                Endpoint = clientResponse.Result.Endpoint,
-                CompanyShare = clientResponse.Result.CompanyShare,
-                BetId = Guid.Parse(request.BetId),
-                UserId = authenticationResponse.Result.UserId,
-                Cashout = request.Cashout,
-                Selections = request.BetSelectionIds.Select(s => new BetSelectionRequestDTO
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BetCashOutResponseDTO
                 {
-                    BetSelectionId = Guid.Parse(s.BetSelectionId)
-                }).ToList()
-            });
+                    BetId = request.BetId,
+                    UserId = authenticationResponse.Result.UserId,
+                    BetStatus = BetStatus.Running,
+                    CashOutStake = request.CashoutStake
+                }
+            };
+
+            //return await _bettingRepository.CashoutBet(new CashoutBetRequestDTO()
+            //{
+            //    APIKey = apiKey,
+            //    OperatorToken = operatorToken,
+            //    ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
+            //    ClientIdRef = clientResponse.Result.ClientIdRef,
+            //    ClientCode = clientResponse.Result.ClientCode,
+            //    ClientName = clientResponse.Result.ClientName,
+            //    LimitId = clientResponse.Result.LimitId,
+            //    Endpoint = clientResponse.Result.Endpoint,
+            //    CompanyShare = clientResponse.Result.CompanyShare,
+            //    BetId = Guid.Parse(request.BetId),
+            //    UserId = authenticationResponse.Result.UserId,
+            //    Cashout = request.Cashout,
+            //    Selections = request.BetSelectionIds.Select(s => new BetSelectionRequestDTO
+            //    {
+            //        BetSelectionId = Guid.Parse(s.BetSelectionId)
+            //    }).ToList()
+            //});
         }
 
         private DateTime GetFirstDayOfNextMonth()

@@ -22,4 +22,12 @@ namespace Platform.Shared.Models
         public decimal Odds { get; set; }
         public string CorrelationId { get; set; }
     }
+
+    public class BetCashOutResponseDTO
+    {
+        public string UserId { get; set; }
+        public string BetId { get; set; }
+        public BetStatus BetStatus { get; set; }
+        public decimal CashOutStake { get; set; }
+    }
 }

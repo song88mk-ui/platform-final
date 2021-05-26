@@ -802,7 +802,7 @@ namespace Platform.Settlement.Service.Repository
                         {
                             var bet = context.Bet.Find(betItem.BetId);
 
-                            if (bet == null || bet.BetStatusId == (int)BetStatus.Waiting || bet.BetStatusId == (int)BetStatus.CashedOut || bet.BetStatusId == (int)BetStatus.Cancelled)
+                            if (bet == null || bet.BetStatusId == (int)BetStatus.Waiting || bet.BetStatusId == (int)BetStatus.CashedOut || bet.BetStatusId == (int)BetStatus.Cancelled || bet.BetStatusId == (int)BetStatus.Rejected)
                             {
                                 scope.Complete();
                                 continue;

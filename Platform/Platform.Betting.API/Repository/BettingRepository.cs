@@ -1202,6 +1202,11 @@ namespace Platform.Betting.API.Repository
                         data.IsSuccess = false;
                         data.Message = "Bet Cancellation not allowed on Cashed Out bets";
                     }
+                    else if (bet.BetStatusId == (int)BetStatus.Rejected)
+                    {
+                        data.IsSuccess = false;
+                        data.Message = "Bet Cancellation not allowed on Cashed Out bets";
+                    }
                     //else if (bet.BetStatusId != (int)BetStatus.Running)
                     //{
                     //    data.IsSuccess = false;

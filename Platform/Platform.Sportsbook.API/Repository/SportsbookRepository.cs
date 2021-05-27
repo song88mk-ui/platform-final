@@ -2389,10 +2389,10 @@ namespace Platform.Sportsbook.API.Repository
         {
             var result = new List<SearchResponse>();
 
-            var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.LeNa.ToLower().Contains(request.SearchText.ToLower()));
+            var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.LeNa.ToLower().Contains(request.SearchText.ToLower()));
             var leagues = fixtureCollection.Find(leagueFilter).ToListAsync();
 
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiNa.ToLower().Contains(request.SearchText.ToLower()));
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.FiNa.ToLower().Contains(request.SearchText.ToLower()));
             var fixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             await Task.WhenAll(leagues, fixtures);

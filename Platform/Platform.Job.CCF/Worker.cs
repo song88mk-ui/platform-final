@@ -26,7 +26,6 @@ namespace Platform.Job.CCF
             {
                 try
                 {
-
                     await _platformRepository.ProcessCCF();
                     _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                     await Task.Delay(300000, stoppingToken);

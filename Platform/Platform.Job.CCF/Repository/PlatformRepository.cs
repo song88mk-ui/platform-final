@@ -63,20 +63,26 @@ namespace Platform.Job.CCF.Repository
 
                 for (int i = 1; i < length - 1; i++)
                 {
-                    var temp = result[i];
-                    var split = temp.Split(",");
-
-                    final.Add(new CustomerConfidenceFactorTemp
+                    try
                     {
-                        Timestamp = Convert.ToDouble(split[0]),
-                        UserId = split[3],
-                        CurrentCCF = Convert.ToDouble(split[5]),
-                        PreviousCCF = string.IsNullOrEmpty(split[6]) ? 0 : Convert.ToDouble(split[6]),
-                        IsSpecificSport = string.IsNullOrEmpty(split[7]) ? false : true,
-                        SportId = string.IsNullOrEmpty(split[7]) ? string.Empty : split[7].Split(":").Last(),
-                        SportName = string.IsNullOrEmpty(split[8]) ? string.Empty : split[8],
-                        AppliedTo = string.IsNullOrEmpty(split[9]) ? "Both" : split[9].ToLower() == "true" ? "Live" : "Prematch"
-                    });
+                        var temp = result[i];
+                        var split = temp.Split(",");
+
+                        final.Add(new CustomerConfidenceFactorTemp
+                        {
+                            Timestamp = Convert.ToDouble(split[0]),
+                            UserId = split[3],
+                            CurrentCCF = string.IsNullOrEmpty(split[5]) ? 0 : Convert.ToDouble(split[5]),
+                            PreviousCCF = string.IsNullOrEmpty(split[6]) ? 0 : Convert.ToDouble(split[6]),
+                            IsSpecificSport = string.IsNullOrEmpty(split[7]) ? false : true,
+                            SportId = string.IsNullOrEmpty(split[7]) ? string.Empty : split[7].Split(":").Last(),
+                            SportName = string.IsNullOrEmpty(split[8]) ? string.Empty : split[8],
+                            AppliedTo = string.IsNullOrEmpty(split[9]) ? "Both" : split[9].ToLower() == "true" ? "Live" : "Prematch"
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                    }
                 }
 
                 foreach (var ccf in final)

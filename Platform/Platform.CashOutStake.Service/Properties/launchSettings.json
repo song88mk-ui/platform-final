@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "Platform.CashOutStake.Service": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

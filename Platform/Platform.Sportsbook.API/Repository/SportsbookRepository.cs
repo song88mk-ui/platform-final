@@ -1787,7 +1787,7 @@ namespace Platform.Sportsbook.API.Repository
             });
 
             if (request.SportId == 5)
-                finalResult = finalResult.OrderBy(o => o.SegmentId).ThenBy(o => o.LeagueId).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+                finalResult = finalResult.OrderBy(o => o.SegmentId).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             else
                 finalResult = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
@@ -1923,7 +1923,7 @@ namespace Platform.Sportsbook.API.Repository
             });
 
             if (request.SportId == 5)
-                finalResult = finalResult.OrderBy(o => o.SegmentId).ThenBy(o => o.LeagueId).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+                finalResult = finalResult.OrderBy(o => o.SegmentId).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             else
                 finalResult = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
@@ -2292,7 +2292,7 @@ namespace Platform.Sportsbook.API.Repository
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             if (request.SportId == 5)
-                result = result.OrderBy(o => o.SegmentId).ThenBy(o => o.LeagueId).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+                result = result.OrderBy(o => o.SegmentId).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             return new BaseResponseDTO<TWResponseDTO>
             {

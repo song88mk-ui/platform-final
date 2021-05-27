@@ -72,7 +72,7 @@ namespace Platform.Job.CCF.Repository
                         {
                             Timestamp = Convert.ToDouble(split[0]),
                             UserId = split[3],
-                            CurrentCCF = string.IsNullOrEmpty(split[5]) ? 0 : Convert.ToDouble(split[5]),
+                            CurrentCCF = Convert.ToDouble(split[5]),
                             PreviousCCF = string.IsNullOrEmpty(split[6]) ? 0 : Convert.ToDouble(split[6]),
                             IsSpecificSport = string.IsNullOrEmpty(split[7]) ? false : true,
                             SportId = string.IsNullOrEmpty(split[7]) ? string.Empty : split[7].Split(":").Last(),

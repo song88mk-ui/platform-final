@@ -79,10 +79,10 @@ namespace Platform.Client.API.ActionFilters
                 new Tuple<string, string, List<string>>("Lino", "hK3UUgRrTz5rZ5mP", new List<string> { "180.191.190.179" }),
                 new Tuple<string, string, List<string>>("10BET-dev", "8LKvrh6C2fe8mKXZ", new List<string> { "104.248.44.186" }),
                 new Tuple<string, string, List<string>>("10BET-STAGING", "8LKvrh6C2fe8mKXZ", new List<string> { "104.155.9.8", "104.155.35.27", "34.78.253.228", "34.76.95.115", "34.77.23.130", "35.205.226.112", "35.240.95.123", "35.205.202.76", "34.77.250.196", "34.77.123.20", "35.195.197.184", "34.76.16.81"}),
-                new Tuple<string, string, List<string>>("10BET", "8LKvrh6C2fe8mKXZ", new List<string> { "34.93.140.109", "35.200.240.0", "34.93.179.235", "34.93.30.117", "35.187.221.222", "34.84.241.22", "34.85.72.185", "104.248.44.186" }),
+                new Tuple<string, string, List<string>>("10BET", "8LKvrh6C2fe8mKXZ", new List<string> { "35.200.240.0", "34.93.179.235", "34.93.30.117", "35.187.221.222", "34.84.241.22", "34.85.72.185", "104.248.44.186" }),
                 new Tuple<string, string, List<string>>("lolTRICKEDu", "aYKn7A2SmxzageU8", new List<string> { "15.206.238.120", "13.127.42.155" }),
                 new Tuple<string, string, List<string>>("casinomobiltbankid", "j6uh5E2W74neCXrv", new List<string> { "111.118.215.154" }),
-                new Tuple<string, string, List<string>>("BilalAlim", "2J8DtUe8ugT3wM7x", new List<string> { "35.244.36.155" }),
+                new Tuple<string, string, List<string>>("BilalAlim", "2J8DtUe8ugT3wM7x", new List<string> { "34.93.140.109", "35.244.36.155" }),
                 new Tuple<string, string, List<string>>("betrallyindia", "44MRNepFKUr6tzp9", new List<string> { "67.227.164.101", "67.227.164.102", "67.227.164.103", "104.27.154.210", "104.27.155.210", "172.67.170.132" }),
                 new Tuple<string, string, List<string>>("riviera", "nq737zHSdqyu9VFY", new List<string> { "54.228.183.109", "93.171.241.132", "176.37.75.85", "54.195.248.219" }),
                 new Tuple<string, string, List<string>>("sportspunter", "TTFjKkXJsDke4ubu", new List<string> { "207.228.252.8", "207.228.252.24" })

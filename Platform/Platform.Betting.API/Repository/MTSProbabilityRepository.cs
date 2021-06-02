@@ -155,7 +155,7 @@ namespace Platform.Betting.API.Repository
                             {
                                 CashOutStatusId = probabilites.First().CashOutStatusId,
                                 CashOutStatusName = ((CashOutStatus)probabilites.First().CashOutStatusId).ToString(),
-                                CashOutStake = cashOutStake - (cashOutStake * 0.10m)
+                                CashOutStake = probabilites.First().CashOutStatusId == -1 ? 0 : cashOutStake - (cashOutStake * 0.10m)
                             }
                         };
                     }

@@ -29,34 +29,34 @@ namespace Platform.Betting.API.Repository
 
         public async Task<BaseResponseDTO<CashoutResponse>> GetCashOut(Bet bet, List<BetSelection> betSelections)
         {
-            if (bet.BetStatusId == (int)BetStatus.Running)
-            {
-                return new BaseResponseDTO<CashoutResponse>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new CashoutResponse
-                    {
-                        CashOutStatusId = (int)CashOutStatus.Available,
-                        CashOutStatusName = CashOutStatus.Available.ToString(),
-                        CashOutStake = bet.Stake * 0.90m
-                    }
-                };
-            }
-            else
-            {
-                return new BaseResponseDTO<CashoutResponse>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new CashoutResponse
-                    {
-                        CashOutStatusId = (int)CashOutStatus.Unavailable,
-                        CashOutStatusName = CashOutStatus.Unavailable.ToString(),
-                        CashOutStake = 0
-                    }
-                };
-            }
+            //if (bet.BetStatusId == (int)BetStatus.Running)
+            //{
+            //    return new BaseResponseDTO<CashoutResponse>
+            //    {
+            //        StatusCode = StatusCode.Success,
+            //        Message = StatusCode.Success.ToString(),
+            //        Result = new CashoutResponse
+            //        {
+            //            CashOutStatusId = (int)CashOutStatus.Available,
+            //            CashOutStatusName = CashOutStatus.Available.ToString(),
+            //            CashOutStake = bet.Stake * 0.90m
+            //        }
+            //    };
+            //}
+            //else
+            //{
+            //    return new BaseResponseDTO<CashoutResponse>
+            //    {
+            //        StatusCode = StatusCode.Success,
+            //        Message = StatusCode.Success.ToString(),
+            //        Result = new CashoutResponse
+            //        {
+            //            CashOutStatusId = (int)CashOutStatus.Unavailable,
+            //            CashOutStatusName = CashOutStatus.Unavailable.ToString(),
+            //            CashOutStake = 0
+            //        }
+            //    };
+            //}
 
             if (bet.BetStatusId == (int)BetStatus.Running)
             {

@@ -1048,7 +1048,7 @@ namespace Platform.Betting.API.Repository
             foreach (var bet in transactions)
             {
                 var selections = _bettingContext.BetSelection.AsNoTracking().Where(c => c.BetId == bet.BetId).ToList();
-                var cashOut = await _mtsProbabilityRepository.GetCashOut(bet, selections);
+                var cashOut = await _mtsProbabilityRepository.GetCashOut(bet, selections, request.IsCurrent);
 
                 result.Add(new BetHistoryDTO
                 {

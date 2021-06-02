@@ -141,6 +141,7 @@ namespace Platform.Betting.API.Repository
                     else
                     {
                         decimal cashOutStake = 0m;
+
                         if (probabilites.First().WonProbability > 0 ||
                             probabilites.First().LostProbability > 0 ||
                             probabilites.First().VoidProbability > 0 ||
@@ -158,17 +159,36 @@ namespace Platform.Betting.API.Repository
                         else
                             cashOutStake = (bet.TrueStake * bet.Odds) * Convert.ToDecimal(probabilites.First().Probability);
 
-                        return new BaseResponseDTO<CashoutResponse>
+                        var finalCashOutStake = cashOutStake - (cashOutStake * 0.10m);
+
+                        if (finalCashOutStake < bet.TrueStake * bet.Odds)
                         {
-                            StatusCode = StatusCode.Success,
-                            Message = StatusCode.Success.ToString(),
-                            Result = new CashoutResponse
+                            return new BaseResponseDTO<CashoutResponse>
                             {
-                                CashOutStatusId = probabilites.First().CashOutStatusId,
-                                CashOutStatusName = ((CashOutStatus)probabilites.First().CashOutStatusId).ToString(),
-                                CashOutStake = cashOutStake - (cashOutStake * 0.10m)
-                            }
-                        };
+                                StatusCode = StatusCode.Success,
+                                Message = StatusCode.Success.ToString(),
+                                Result = new CashoutResponse
+                                {
+                                    CashOutStatusId = (int)CashOutStatus.Available,
+                                    CashOutStatusName = CashOutStatus.Available.ToString(),
+                                    CashOutStake = 0
+                                }
+                            };
+                        }
+                        else
+                        {
+                            return new BaseResponseDTO<CashoutResponse>
+                            {
+                                StatusCode = StatusCode.Success,
+                                Message = StatusCode.Success.ToString(),
+                                Result = new CashoutResponse
+                                {
+                                    CashOutStatusId = (int)CashOutStatus.Unavailable,
+                                    CashOutStatusName = CashOutStatus.Unavailable.ToString(),
+                                    CashOutStake = 0
+                                }
+                            };
+                        }
                     }
                 }
                 catch (Exception)

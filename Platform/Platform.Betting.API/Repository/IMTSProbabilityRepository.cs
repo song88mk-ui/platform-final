@@ -8,5 +8,6 @@ namespace Platform.Betting.API.Repository
     public interface IMTSProbabilityRepository
     {
         Task<BaseResponseDTO<CashoutResponse>> GetCashOut(Bet bet, List<BetSelection> betSelections, bool isCurrent);
+        Task<BaseResponseDTO<CashoutResponse>> GetCashOut2(Bet bet, List<BetSelection> betSelections, bool isCurrent);
     }
 }

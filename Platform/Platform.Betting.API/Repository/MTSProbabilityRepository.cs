@@ -82,11 +82,21 @@ namespace Platform.Betting.API.Repository
                                     if (sel == betSelection.SelectionTemplateId)
                                     {
                                         var probability = Convert.ToDouble(selection.Attributes["probabilities"].Value);
+                                        var wonProbability = string.IsNullOrEmpty(selection.Attributes["win_probabilities"].Value) ? 0 : Convert.ToDouble(selection.Attributes["win_probabilities"].Value);
+                                        var lostProbability = string.IsNullOrEmpty(selection.Attributes["lose_probabilities"].Value) ? 0 : Convert.ToDouble(selection.Attributes["lose_probabilities"].Value);
+                                        var voidProbability = string.IsNullOrEmpty(selection.Attributes["refund_probabilities"].Value) ? 0 : Convert.ToDouble(selection.Attributes["refund_probabilities"].Value);
+                                        var halfWonProbability = string.IsNullOrEmpty(selection.Attributes["half_win_probabilities"].Value) ? 0 : Convert.ToDouble(selection.Attributes["half_win_probabilities"].Value);
+                                        var halfLostProbability = string.IsNullOrEmpty(selection.Attributes["half_lose_probabilities"].Value) ? 0 : Convert.ToDouble(selection.Attributes["half_lose_probabilities"].Value);
 
                                         probabilites.Add(new Probabilities
                                         {
                                             CashOutStatusId = 1,
-                                            Probability = probability
+                                            Probability = probability,
+                                            WonProbability = wonProbability,
+                                            LostProbability = lostProbability,
+                                            VoidProbability = voidProbability,
+                                            HalfWonProbability = halfWonProbability,
+                                            HalfLostProbability = halfLostProbability
                                         });
                                         break;
                                     }
@@ -130,7 +140,23 @@ namespace Platform.Betting.API.Repository
                     }
                     else
                     {
-                        var cashOutStake = (bet.TrueStake * bet.Odds) * Convert.ToDecimal(probabilites.First().Probability);
+                        decimal cashOutStake = 0m;
+                        if (probabilites.First().WonProbability > 0 ||
+                            probabilites.First().LostProbability > 0 ||
+                            probabilites.First().VoidProbability > 0 ||
+                            probabilites.First().HalfWonProbability > 0 ||
+                            probabilites.First().HalfLostProbability > 0)
+                        {
+                            var won = Convert.ToDecimal(probabilites.First().WonProbability) * (bet.TrueStake * bet.Odds);
+                            var lost = Convert.ToDecimal(probabilites.First().LostProbability) * (bet.TrueStake * 0);
+                            var voidd = Convert.ToDecimal(probabilites.First().VoidProbability) * (bet.TrueStake * 1);
+                            var halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * (bet.TrueStake * ((bet.Odds + 1) / 2));
+                            var halfLost = Convert.ToDecimal(probabilites.First().HalfLostProbability) * (bet.TrueStake / 2);
+
+                            cashOutStake = won + lost + voidd + halfWon + halfLost;
+                        }
+                        else
+                            cashOutStake = (bet.TrueStake * bet.Odds) * Convert.ToDecimal(probabilites.First().Probability);
 
                         return new BaseResponseDTO<CashoutResponse>
                         {
@@ -178,6 +204,11 @@ namespace Platform.Betting.API.Repository
     }
     public class Probabilities
     {
+        public double WonProbability { get; set; }
+        public double LostProbability { get; set; }
+        public double VoidProbability { get; set; }
+        public double HalfWonProbability { get; set; }
+        public double HalfLostProbability { get; set; }
         public double Probability { get; set; }
         public int CashOutStatusId { get; set; }
     }

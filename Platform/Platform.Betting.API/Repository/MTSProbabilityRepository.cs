@@ -29,6 +29,18 @@ namespace Platform.Betting.API.Repository
 
         public async Task<BaseResponseDTO<CashoutResponse>> GetCashOut(Bet bet, List<BetSelection> betSelections)
         {
+            return new BaseResponseDTO<CashoutResponse>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new CashoutResponse
+                {
+                    CashOutStatusId = (int)CashOutStatus.Unavailable,
+                    CashOutStatusName = CashOutStatus.Unavailable.ToString(),
+                    CashOutStake = 0m
+                }
+            };
+
             if (bet.BetStatusId == (int)BetStatus.Running)
             {
                 try

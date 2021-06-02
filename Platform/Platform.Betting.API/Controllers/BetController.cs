@@ -102,19 +102,5 @@ namespace Platform.Betting.API.Controllers
                     return BadRequest(result);
             }
         }
-
-        [HttpPost("v1/bet/cashout/test")]
-        public async Task<IActionResult> GetCashOutTestEndpoint([FromBody] BetHistoryRequestDTO request)
-        {
-            var result = await _bettingRepository.GetCashOutTest(request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
     }
 }

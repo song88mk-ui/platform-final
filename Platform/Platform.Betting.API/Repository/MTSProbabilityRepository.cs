@@ -84,7 +84,7 @@ namespace Platform.Betting.API.Repository
                         HttpResponseMessage response;
 
                         if (betSelection.SelectionSpecifier.Contains("?"))
-                            response = await _httpClient.GetAsync($"v1/probabilities/{betSelection.FixtureSpecifier}/{betSelection.MarketTemplateId}/{betSelection.SelectionSpecifier.Split('?').Last().Replace('&','|')}");
+                            response = await _httpClient.GetAsync($"v1/probabilities/{betSelection.FixtureSpecifier}/{betSelection.MarketTemplateId}/{betSelection.SelectionSpecifier.Split('?').Last().Replace('&', '|')}");
                         else
                             response = await _httpClient.GetAsync($"v1/probabilities/{betSelection.FixtureSpecifier}/{betSelection.MarketTemplateId}");
 
@@ -108,12 +108,53 @@ namespace Platform.Betting.API.Repository
 
                                     if (sel == betSelection.SelectionTemplateId)
                                     {
+                                        double wonProbability = 0;
+                                        double lostProbability = 0;
+                                        double voidProbability = 0;
+                                        double halfWonProbability = 0;
+                                        double halfLostProbability = 0;
+
+                                        try
+                                        {
+                                            wonProbability = Convert.ToDouble(selection.Attributes["win_probabilities"].Value);
+                                        }
+                                        catch (Exception)
+                                        {
+                                        }
+
+                                        try
+                                        {
+                                            lostProbability = Convert.ToDouble(selection.Attributes["lose_probabilities"].Value);
+                                        }
+                                        catch (Exception)
+                                        {
+                                        }
+
+                                        try
+                                        {
+                                            voidProbability = Convert.ToDouble(selection.Attributes["refund_probabilities"].Value);
+                                        }
+                                        catch (Exception)
+                                        {
+                                        }
+
+                                        try
+                                        {
+                                            halfWonProbability = Convert.ToDouble(selection.Attributes["half_win_probabilities"].Value);
+                                        }
+                                        catch (Exception)
+                                        {
+                                        }
+
+                                        try
+                                        {
+                                            halfLostProbability = Convert.ToDouble(selection.Attributes["half_lose_probabilities"].Value);
+                                        }
+                                        catch (Exception)
+                                        {
+                                        }
+
                                         var probability = Convert.ToDouble(selection.Attributes["probabilities"].Value);
-                                        var wonProbability = string.IsNullOrEmpty(selection.Attributes["win_probabilities"].Value) ? 0 : Convert.ToDouble(selection.Attributes["win_probabilities"].Value);
-                                        var lostProbability = string.IsNullOrEmpty(selection.Attributes["lose_probabilities"].Value) ? 0 : Convert.ToDouble(selection.Attributes["lose_probabilities"].Value);
-                                        var voidProbability = string.IsNullOrEmpty(selection.Attributes["refund_probabilities"].Value) ? 0 : Convert.ToDouble(selection.Attributes["refund_probabilities"].Value);
-                                        var halfWonProbability = string.IsNullOrEmpty(selection.Attributes["half_win_probabilities"].Value) ? 0 : Convert.ToDouble(selection.Attributes["half_win_probabilities"].Value);
-                                        var halfLostProbability = string.IsNullOrEmpty(selection.Attributes["half_lose_probabilities"].Value) ? 0 : Convert.ToDouble(selection.Attributes["half_lose_probabilities"].Value);
 
                                         probabilites.Add(new Probabilities
                                         {

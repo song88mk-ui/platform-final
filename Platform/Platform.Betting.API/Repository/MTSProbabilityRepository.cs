@@ -33,9 +33,7 @@ namespace Platform.Betting.API.Repository
             {
                 try
                 {
-                    var filteredBetSelections = betSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Running).ToList();
-
-                    if (filteredBetSelections.Count == 0)
+                    if (betSelections.Count == 0)
                     {
                         return new BaseResponseDTO<CashoutResponse>
                         {
@@ -52,7 +50,7 @@ namespace Platform.Betting.API.Repository
 
                     var probabilites = new List<Probabilities>();
 
-                    foreach (var betSelection in filteredBetSelections)
+                    foreach (var betSelection in betSelections)
                     {
                         HttpResponseMessage response;
 
@@ -123,20 +121,40 @@ namespace Platform.Betting.API.Repository
 
                     if (betSelections.Count > 1)
                     {
-                        var cashOutStake = (bet.TrueStake * bet.Odds) * Convert.ToDecimal(probabilites.First().Probability);
+                        var finalProbability = probabilites.Where(c => c.Probability > 0).Select(s => s.Probability).Aggregate((a, b) => a * b);
 
-                        //TODO:
-                        return new BaseResponseDTO<CashoutResponse>
+                        var cashOutStake = (bet.TrueStake * bet.Odds) * Convert.ToDecimal(finalProbability);
+
+                        var finalCashOutStake = cashOutStake - (cashOutStake * 0.10m);
+
+                        if (finalCashOutStake == 0 || finalCashOutStake > bet.TrueStake * bet.Odds)
                         {
-                            StatusCode = StatusCode.Success,
-                            Message = StatusCode.Success.ToString(),
-                            Result = new CashoutResponse
+                            return new BaseResponseDTO<CashoutResponse>
                             {
-                                CashOutStatusId = (int)CashOutStatus.Unavailable,
-                                CashOutStatusName = CashOutStatus.Unavailable.ToString(),
-                                CashOutStake = 0m
-                            }
-                        };
+                                StatusCode = StatusCode.Success,
+                                Message = StatusCode.Success.ToString(),
+                                Result = new CashoutResponse
+                                {
+                                    CashOutStatusId = (int)CashOutStatus.Unavailable,
+                                    CashOutStatusName = CashOutStatus.Unavailable.ToString(),
+                                    CashOutStake = 0m
+                                }
+                            };
+                        }
+                        else
+                        {
+                            return new BaseResponseDTO<CashoutResponse>
+                            {
+                                StatusCode = StatusCode.Success,
+                                Message = StatusCode.Success.ToString(),
+                                Result = new CashoutResponse
+                                {
+                                    CashOutStatusId = (int)CashOutStatus.Available,
+                                    CashOutStatusName = CashOutStatus.Available.ToString(),
+                                    CashOutStake = finalCashOutStake
+                                }
+                            };
+                        }
                     }
                     else
                     {
@@ -171,7 +189,7 @@ namespace Platform.Betting.API.Repository
                                 {
                                     CashOutStatusId = (int)CashOutStatus.Available,
                                     CashOutStatusName = CashOutStatus.Available.ToString(),
-                                    CashOutStake = 0
+                                    CashOutStake = finalCashOutStake
                                 }
                             };
                         }

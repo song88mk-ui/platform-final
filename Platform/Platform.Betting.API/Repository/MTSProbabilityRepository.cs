@@ -72,7 +72,7 @@ namespace Platform.Betting.API.Repository
                         HttpResponseMessage response;
 
                         if (betSelection.SelectionSpecifier.Contains("?"))
-                            response = await _httpClient.GetAsync($"v1/probabilities/{betSelection.FixtureSpecifier}/{betSelection.MarketTemplateId}/{betSelection.SelectionSpecifier.Split('?').Last()}");
+                            response = await _httpClient.GetAsync($"v1/probabilities/{betSelection.FixtureSpecifier}/{betSelection.MarketTemplateId}/{betSelection.SelectionSpecifier.Split('?').Last().Replace('&','|')}");
                         else
                             response = await _httpClient.GetAsync($"v1/probabilities/{betSelection.FixtureSpecifier}/{betSelection.MarketTemplateId}");
 

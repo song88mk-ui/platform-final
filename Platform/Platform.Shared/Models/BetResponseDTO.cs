@@ -30,11 +30,4 @@ namespace Platform.Shared.Models
         public BetStatus BetStatus { get; set; }
         public decimal CashOutStake { get; set; }
     }
-
-    public class CashoutResponse
-    {
-        public int CashOutStatusId { get; set; }
-        public string CashOutStatusName { get; set; }
-        public decimal CashOutStake { get; set; }
-    }
 }

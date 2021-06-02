@@ -1063,9 +1063,9 @@ namespace Platform.Betting.API.Repository
                     Commission = 0,
                     CurrencyCode = bet.CurrencyCode,
                     OddsType = bet.OddsTypeName,
-                    CashOutStake = cashOut.Result.CashOutStake,
-                    CashOutStatusId = cashOut.Result.CashOutStatusId,
-                    CashOutStatusName = cashOut.Result.CashOutStatusName,
+                    CashOutStake = cashOut.Result,
+                    CashOutStatusId = cashOut.StatusCode == StatusCode.Success ? (int)CashOutStatus.Available : (int)CashOutStatus.Unavailable,
+                    CashOutStatusName = cashOut.StatusCode == StatusCode.Success ? CashOutStatus.Available.ToString() : CashOutStatus.Unavailable.ToString(),
                     Selections = selections.Select(s => new BetSelectionHistoryDTO
                     {
                         SportId = s.SportId,

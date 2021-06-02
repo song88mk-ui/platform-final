@@ -27,53 +27,19 @@ namespace Platform.Betting.API.Repository
             _httpClient.DefaultRequestHeaders.Add("x-access-token", "bx8zTQrkEsbP0Gq7CS");
         }
 
-        public async Task<BaseResponseDTO<CashoutResponse>> GetCashOut(Bet bet, List<BetSelection> betSelections)
+        public async Task<BaseResponseDTO<decimal>> GetCashOut(Bet bet, List<BetSelection> betSelections)
         {
-            //if (bet.BetStatusId == (int)BetStatus.Running)
-            //{
-            //    return new BaseResponseDTO<CashoutResponse>
-            //    {
-            //        StatusCode = StatusCode.Success,
-            //        Message = StatusCode.Success.ToString(),
-            //        Result = new CashoutResponse
-            //        {
-            //            CashOutStatusId = (int)CashOutStatus.Available,
-            //            CashOutStatusName = CashOutStatus.Available.ToString(),
-            //            CashOutStake = bet.Stake * 0.90m
-            //        }
-            //    };
-            //}
-            //else
-            //{
-            //    return new BaseResponseDTO<CashoutResponse>
-            //    {
-            //        StatusCode = StatusCode.Success,
-            //        Message = StatusCode.Success.ToString(),
-            //        Result = new CashoutResponse
-            //        {
-            //            CashOutStatusId = (int)CashOutStatus.Unavailable,
-            //            CashOutStatusName = CashOutStatus.Unavailable.ToString(),
-            //            CashOutStake = 0
-            //        }
-            //    };
-            //}
-
             if (bet.BetStatusId == (int)BetStatus.Running)
             {
                 try
                 {
                     if (betSelections.Count == 0)
                     {
-                        return new BaseResponseDTO<CashoutResponse>
+                        return new BaseResponseDTO<decimal>
                         {
-                            StatusCode = StatusCode.Success,
-                            Message = StatusCode.Success.ToString(),
-                            Result = new CashoutResponse
-                            {
-                                CashOutStatusId = (int)CashOutStatus.Unavailable,
-                                CashOutStatusName = CashOutStatus.Unavailable.ToString(),
-                                CashOutStake = 0m
-                            }
+                            StatusCode = StatusCode.CashOut_Is_Unavailable,
+                            Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
+                            Result = 0m 
                         };
                     }
 
@@ -199,30 +165,20 @@ namespace Platform.Betting.API.Repository
 
                         if (finalCashOutStake == 0 || finalCashOutStake > bet.TrueStake * bet.Odds)
                         {
-                            return new BaseResponseDTO<CashoutResponse>
+                            return new BaseResponseDTO<decimal>
                             {
-                                StatusCode = StatusCode.Success,
-                                Message = StatusCode.Success.ToString(),
-                                Result = new CashoutResponse
-                                {
-                                    CashOutStatusId = (int)CashOutStatus.Unavailable,
-                                    CashOutStatusName = CashOutStatus.Unavailable.ToString(),
-                                    CashOutStake = 0m
-                                }
+                                StatusCode = StatusCode.CashOut_Is_Unavailable,
+                                Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
+                                Result = 0m
                             };
                         }
                         else
                         {
-                            return new BaseResponseDTO<CashoutResponse>
+                            return new BaseResponseDTO<decimal>
                             {
                                 StatusCode = StatusCode.Success,
                                 Message = StatusCode.Success.ToString(),
-                                Result = new CashoutResponse
-                                {
-                                    CashOutStatusId = (int)CashOutStatus.Available,
-                                    CashOutStatusName = CashOutStatus.Available.ToString(),
-                                    CashOutStake = finalCashOutStake
-                                }
+                                Result = finalCashOutStake
                             };
                         }
                     }
@@ -249,63 +205,43 @@ namespace Platform.Betting.API.Repository
 
                         var finalCashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
-                        if (finalCashOutStake < bet.TrueStake * bet.Odds)
+                        if (finalCashOutStake <= bet.TrueStake * bet.Odds)
                         {
-                            return new BaseResponseDTO<CashoutResponse>
+                            return new BaseResponseDTO<decimal>
                             {
                                 StatusCode = StatusCode.Success,
                                 Message = StatusCode.Success.ToString(),
-                                Result = new CashoutResponse
-                                {
-                                    CashOutStatusId = (int)CashOutStatus.Available,
-                                    CashOutStatusName = CashOutStatus.Available.ToString(),
-                                    CashOutStake = finalCashOutStake
-                                }
+                                Result = finalCashOutStake
                             };
                         }
                         else
                         {
-                            return new BaseResponseDTO<CashoutResponse>
+                            return new BaseResponseDTO<decimal>
                             {
-                                StatusCode = StatusCode.Success,
-                                Message = StatusCode.Success.ToString(),
-                                Result = new CashoutResponse
-                                {
-                                    CashOutStatusId = (int)CashOutStatus.Unavailable,
-                                    CashOutStatusName = CashOutStatus.Unavailable.ToString(),
-                                    CashOutStake = 0
-                                }
+                                StatusCode = StatusCode.CashOut_Is_Unavailable,
+                                Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
+                                Result = 0m
                             };
                         }
                     }
                 }
                 catch (Exception)
                 {
-                    return new BaseResponseDTO<CashoutResponse>
+                    return new BaseResponseDTO<decimal>
                     {
-                        StatusCode = StatusCode.Success,
-                        Message = StatusCode.Success.ToString(),
-                        Result = new CashoutResponse
-                        {
-                            CashOutStatusId = (int)CashOutStatus.Unavailable,
-                            CashOutStatusName = CashOutStatus.Unavailable.ToString(),
-                            CashOutStake = 0m
-                        }
+                        StatusCode = StatusCode.CashOut_Is_Unavailable,
+                        Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
+                        Result = 0m
                     };
                 }
             }
             else
             {
-                return new BaseResponseDTO<CashoutResponse>
+                return new BaseResponseDTO<decimal>
                 {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new CashoutResponse
-                    {
-                        CashOutStatusId = (int)CashOutStatus.Unavailable,
-                        CashOutStatusName = CashOutStatus.Unavailable.ToString(),
-                        CashOutStake = 0m
-                    }
+                    StatusCode = StatusCode.CashOut_Is_Unavailable,
+                    Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
+                    Result = 0m
                 };
             }
         }

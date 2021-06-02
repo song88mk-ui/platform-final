@@ -29,8 +29,8 @@ namespace Platform.Betting.API.Repository
 
         public async Task<BaseResponseDTO<CashoutResponse>> GetCashOut(Bet bet, List<BetSelection> betSelections, bool isCurrent)
         {
-            if (!isCurrent)
-            {
+            //if (!isCurrent)
+            //{
                 return new BaseResponseDTO<CashoutResponse>
                 {
                     StatusCode = StatusCode.Success,
@@ -42,7 +42,7 @@ namespace Platform.Betting.API.Repository
                         CashOutStake = 0m
                     }
                 };
-            }
+            //}
 
             if (bet.BetStatusId == (int)BetStatus.Running)
             {

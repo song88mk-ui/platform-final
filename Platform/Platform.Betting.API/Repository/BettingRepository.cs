@@ -28,16 +28,18 @@ namespace Platform.Betting.API.Repository
         private readonly IMTSAuthRepository _mtsAuthRepository;
         private readonly IMTSMaxStakeRepository _mtsMaxStakeRepository;
         private readonly IBackOfficeRepository _backOfficeRepository;
+        private readonly IMTSProbabilityRepository _mtsProbabilityRepository;
 
         private readonly TelemetryClient _telemetryClient;
 
-        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IMessageBroker messageBroker, IHttpClientFactory httpClientFactory, IMTSAuthRepository mtsAuthRepository, IMTSMaxStakeRepository mtsMaxStakeRepository, IBackOfficeRepository backOfficeRepository, TelemetryClient telemetryClient)
+        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IMessageBroker messageBroker, IHttpClientFactory httpClientFactory, IMTSAuthRepository mtsAuthRepository, IMTSMaxStakeRepository mtsMaxStakeRepository, IBackOfficeRepository backOfficeRepository, IMTSProbabilityRepository mtsProbabilityRepository, TelemetryClient telemetryClient)
         {
             _bettingContext = bettingContext;
             _httpClientFactory = httpClientFactory;
             _mtsAuthRepository = mtsAuthRepository;
             _mtsMaxStakeRepository = mtsMaxStakeRepository;
             _backOfficeRepository = backOfficeRepository;
+            _mtsProbabilityRepository = mtsProbabilityRepository;
             _telemetryClient = telemetryClient;
             _configuration = configuration;
             _messageBroker = messageBroker;
@@ -1045,7 +1047,8 @@ namespace Platform.Betting.API.Repository
 
             foreach (var bet in transactions)
             {
-                var selections = _bettingContext.BetSelection.AsNoTracking().Where(c => c.BetId == bet.BetId);
+                var selections = _bettingContext.BetSelection.AsNoTracking().Where(c => c.BetId == bet.BetId).ToList();
+                var cashOut = await _mtsProbabilityRepository.GetCashOut(bet, selections);
 
                 result.Add(new BetHistoryDTO
                 {
@@ -1060,9 +1063,9 @@ namespace Platform.Betting.API.Repository
                     Commission = 0,
                     CurrencyCode = bet.CurrencyCode,
                     OddsType = bet.OddsTypeName,
-                    CashOutStake = 0m,
-                    CashOutStatusId = (int)CashOutStatus.Unavailable,
-                    CashOutStatusName = CashOutStatus.Unavailable.ToString(),
+                    CashOutStake = cashOut.Result.CashOutStake,
+                    CashOutStatusId = cashOut.Result.CashOutStatusId,
+                    CashOutStatusName = cashOut.Result.CashOutStatusName,
                     Selections = selections.Select(s => new BetSelectionHistoryDTO
                     {
                         SportId = s.SportId,

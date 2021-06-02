@@ -16,7 +16,6 @@ namespace Platform.Shared.Models
         public decimal CompanyShare { get; set; }
         public Guid BetId { get; set; }
         public string UserId { get; set; }
-        public decimal Cashout { get; set; }
-        public List<BetSelectionRequestDTO> Selections { get; set; }
+        public decimal CashOutStake { get; set; }
     }
 }

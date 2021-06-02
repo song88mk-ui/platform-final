@@ -10,12 +10,10 @@ namespace Platform.Betting.API.Controllers
     public class BetController : ControllerBase
     {
         private readonly IBettingRepository _bettingRepository;
-        private readonly ICashoutRepository _cashoutRepository;
 
-        public BetController(IBettingRepository bettingRepository, ICashoutRepository cashoutRepository)
+        public BetController(IBettingRepository bettingRepository)
         {
             _bettingRepository = bettingRepository;
-            _cashoutRepository = cashoutRepository;
         }
 
         [HttpPost("v1/bet/placement")]
@@ -92,7 +90,7 @@ namespace Platform.Betting.API.Controllers
         [HttpPost("v1/bet/cashout")]
         public async Task<IActionResult> CashoutBet([FromBody] CashoutBetRequestDTO request)
         {
-            var result = await _cashoutRepository.CashoutBet(request);
+            var result = await _bettingRepository.CashOutBet(request);
 
             switch (result.StatusCode)
             {

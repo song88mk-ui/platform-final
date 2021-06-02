@@ -153,7 +153,7 @@ namespace Platform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<bool>> CashoutBet(CashoutBetRequestDTO request)
+        public async Task<BaseResponseDTO<BetCashOutResponseDTO>> CashOutBet(CashoutBetRequestDTO request)
         {
             _httpClient.DefaultRequestHeaders.Add("x-operator-token", request.OperatorToken);
 
@@ -162,14 +162,14 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"/v1/bet/cashout", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<bool>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<BaseResponseDTO<BetCashOutResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<bool>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<BaseResponseDTO<BetCashOutResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     else
                     {
-                        return new BaseResponseDTO<bool>
+                        return new BaseResponseDTO<BetCashOutResponseDTO>
                         {
                             StatusCode = StatusCode.Error,
                             Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
@@ -179,7 +179,7 @@ namespace Platform.API.Repository
             }
             catch (Exception ex)
             {
-                return new BaseResponseDTO<bool>
+                return new BaseResponseDTO<BetCashOutResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"

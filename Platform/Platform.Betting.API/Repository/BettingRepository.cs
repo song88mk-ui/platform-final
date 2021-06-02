@@ -1270,6 +1270,76 @@ namespace Platform.Betting.API.Repository
                 };
             }
         }
+        public async Task<BaseResponseDTO<BetCashOutResponseDTO>> CashOutBet(CashoutBetRequestDTO request)
+        {
+            var bet = _bettingContext.Bet.Find(request.BetId);
+
+            if (bet == null || bet.BetStatusId != (int)BetStatus.Running)
+            {
+                return new BaseResponseDTO<BetCashOutResponseDTO>
+                {
+                    StatusCode = StatusCode.CashOut_Is_Unavailable,
+                    Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' ')
+                };
+            }
+
+            var betSelections = _bettingContext.BetSelection.Where(c => c.BetId == bet.BetId).AsNoTracking().ToList();
+
+            if (betSelections.Count == 0)
+            {
+                return new BaseResponseDTO<BetCashOutResponseDTO>
+                {
+                    StatusCode = StatusCode.CashOut_Is_Unavailable,
+                    Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' ')
+                };
+            }
+
+            var result = await _mtsProbabilityRepository.GetCashOut(bet, betSelections);
+
+            if (result.StatusCode == StatusCode.Success)
+            {
+                if (request.CashOutStake != result.Result)
+                {
+                    return new BaseResponseDTO<BetCashOutResponseDTO>
+                    {
+                        StatusCode = StatusCode.CashOut_Stake_Changed_From_X_To_Y,
+                        Message = StatusCode.CashOut_Stake_Changed_From_X_To_Y.ToString().Replace('_', ' ').Replace("X", request.CashOutStake.ToString()).Replace("Y", result.Result.ToString()),
+                        Result = new BetCashOutResponseDTO
+                        {
+                            BetId = bet.BetId.ToString().ToUpper(),
+                            BetStatus = (BetStatus)bet.BetStatusId,
+                            UserId = bet.UserId,
+                            CashOutStake = result.Result
+                        }
+                    };
+                }
+                else
+                {
+                    //TODO: publish to Cashout Service
+
+                    return new BaseResponseDTO<BetCashOutResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString(),
+                        Result = new BetCashOutResponseDTO
+                        {
+                            BetId = bet.BetId.ToString().ToUpper(),
+                            BetStatus = (BetStatus)bet.BetStatusId,
+                            UserId = bet.UserId,
+                            CashOutStake = result.Result
+                        }
+                    };
+                }
+            }
+            else
+            {
+                return new BaseResponseDTO<BetCashOutResponseDTO>
+                {
+                    StatusCode = StatusCode.CashOut_Is_Unavailable,
+                    Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' ')
+                };
+            }
+        }
         private decimal GetMinStake(decimal minStake, decimal exchangeRate, decimal companyShare, string currencyCode)
         {
             List<decimal> minimumStake = new List<decimal>();

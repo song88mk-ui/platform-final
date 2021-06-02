@@ -2045,40 +2045,21 @@ namespace Platform.API.Repository
                 };
             }
 
-            //TODO: call platform.betting.api
-
-            return new BaseResponseDTO<BetCashOutResponseDTO>
+            return await _bettingRepository.CashOutBet(new CashoutBetRequestDTO
             {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = new BetCashOutResponseDTO
-                {
-                    BetId = request.BetId,
-                    UserId = authenticationResponse.Result.UserId,
-                    BetStatus = BetStatus.Running,
-                    CashOutStake = request.CashoutStake
-                }
-            };
-
-            //return await _bettingRepository.CashoutBet(new CashoutBetRequestDTO()
-            //{
-            //    APIKey = apiKey,
-            //    OperatorToken = operatorToken,
-            //    ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
-            //    ClientIdRef = clientResponse.Result.ClientIdRef,
-            //    ClientCode = clientResponse.Result.ClientCode,
-            //    ClientName = clientResponse.Result.ClientName,
-            //    LimitId = clientResponse.Result.LimitId,
-            //    Endpoint = clientResponse.Result.Endpoint,
-            //    CompanyShare = clientResponse.Result.CompanyShare,
-            //    BetId = Guid.Parse(request.BetId),
-            //    UserId = authenticationResponse.Result.UserId,
-            //    Cashout = request.Cashout,
-            //    Selections = request.BetSelectionIds.Select(s => new BetSelectionRequestDTO
-            //    {
-            //        BetSelectionId = Guid.Parse(s.BetSelectionId)
-            //    }).ToList()
-            //});
+                APIKey = apiKey,
+                OperatorToken = operatorToken,
+                ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
+                ClientIdRef = clientResponse.Result.ClientIdRef,
+                ClientCode = clientResponse.Result.ClientCode,
+                ClientName = clientResponse.Result.ClientName,
+                LimitId = clientResponse.Result.LimitId,
+                Endpoint = clientResponse.Result.Endpoint,
+                CompanyShare = clientResponse.Result.CompanyShare,
+                BetId = betId,
+                UserId = authenticationResponse.Result.UserId,
+                CashOutStake = request.CashoutStake
+            });
         }
 
         private DateTime GetFirstDayOfNextMonth()

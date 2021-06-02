@@ -156,21 +156,22 @@ namespace Platform.Betting.API.Repository
 
         public async Task<BaseResponseDTO<bool>> CashoutBet(CashoutBetRequestDTO request)
         {
-            var betSelectionIds = request.Selections.Select(s => s.BetSelectionId).ToList();
-            var sportIds = _bettingContext.BetSelection
-                .Where(c => c.BetId == request.BetId && betSelectionIds.Contains(c.BetSelectionId))
-                .Select(s => s.SportId)
-                .ToList();
+            return new BaseResponseDTO<bool>();
+            //var betSelectionIds = request.Selections.Select(s => s.BetSelectionId).ToList();
+            //var sportIds = _bettingContext.BetSelection
+            //    .Where(c => c.BetId == request.BetId && betSelectionIds.Contains(c.BetSelectionId))
+            //    .Select(s => s.SportId)
+            //    .ToList();
 
-            if (sportIds.Any(c => c > 1000))
-                return await CashoutBetWithoutMTS(request);
-            else
-            {
-                if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) == true)
-                    return await CashoutBetWithMTS(request);
-                else
-                    return await CashoutBetWithoutMTS(request);
-            }
+            //if (sportIds.Any(c => c > 1000))
+            //    return await CashoutBetWithoutMTS(request);
+            //else
+            //{
+            //    if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) == true)
+            //        return await CashoutBetWithMTS(request);
+            //    else
+            //        return await CashoutBetWithoutMTS(request);
+            //}
         }
 
         #endregion

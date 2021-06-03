@@ -170,6 +170,9 @@ namespace Platform.Betting.API.Repository
 
                         var finalCashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
+                        if (hasProbabilityChanged)
+                            finalCashOutStake = bet.TrueStake - (bet.TrueStake * 0.10m);
+
                         if (finalCashOutStake == 0 || finalCashOutStake > bet.TrueStake * bet.Odds)
                         {
                             return new BaseResponseDTO<CashOutResponse>
@@ -237,6 +240,9 @@ namespace Platform.Betting.API.Repository
                             cashOutStake = (bet.TrueStake * bet.Odds) * Convert.ToDecimal(probabilites.First().Probability);
 
                         var finalCashOutStake = cashOutStake - (cashOutStake * 0.10m);
+
+                        if (hasProbabilityChanged)
+                            finalCashOutStake = bet.TrueStake - (bet.TrueStake * 0.10m);
 
                         if (finalCashOutStake <= bet.TrueStake * bet.Odds)
                         {

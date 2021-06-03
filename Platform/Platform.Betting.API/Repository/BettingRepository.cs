@@ -1049,9 +1049,12 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
+            var betIds = transactions.Select(s => s.BetId).Distinct().ToList();
+            var selections = _bettingContext.BetSelection.AsNoTracking().Where(c => betIds.Contains(c.BetId)).ToList();
+
             foreach (var bet in transactions)
             {
-                var selections = _bettingContext.BetSelection.AsNoTracking().Where(c => c.BetId == bet.BetId).ToList();
+                var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
                 var cashOut = await _mtsProbabilityRepository.GetCashOut(bet, selections);
 
                 result.Add(new BetHistoryDTO
@@ -1071,7 +1074,7 @@ namespace Platform.Betting.API.Repository
                     CashOutStatusId = cashOut.StatusCode == StatusCode.Success ? (int)CashOutStatus.Available : (int)CashOutStatus.Unavailable,
                     CashOutStatusName = cashOut.StatusCode == StatusCode.Success ? CashOutStatus.Available.ToString() : CashOutStatus.Unavailable.ToString(),
                     Probabilities = cashOut.Result.Probabilities,
-                    Selections = selections.Select(s => new BetSelectionHistoryDTO
+                    Selections = filteredSelections.Select(s => new BetSelectionHistoryDTO
                     {
                         SportId = s.SportId,
                         SportName = s.SportName,

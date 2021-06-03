@@ -315,7 +315,7 @@ namespace Platform.CashOut.Service.Repository
 
                                 var totalStakeUsed = context.CashOutHistory.Where(c => c.BetId == message.BetId).Sum(s => s.StakeUsed);
                                 var preStake = bet.Stake - totalStakeUsed;
-                                var postStake = preStake - message.StakeUsed;
+                                var postStake = preStake;
 
                                 bet.Reason = $"{result.Item2} (MTS)";
 

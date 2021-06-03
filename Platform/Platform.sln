@@ -40,7 +40,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.RabbitMQ.API", "Pl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Placement.Servicev2", "Platform.Placement.Servicev2\Platform.Placement.Servicev2.csproj", "{8D0BE5BF-94BE-4CB7-AE1E-9022B4DAB4CC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.CashOutStake.Service", "Platform.CashOutStake.Service\Platform.CashOutStake.Service.csproj", "{5837D6DF-E4AC-4E13-B369-6FF23452D86D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.CashOutStake.Service", "Platform.CashOutStake.Service\Platform.CashOutStake.Service.csproj", "{5837D6DF-E4AC-4E13-B369-6FF23452D86D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.CashOut.Service", "Platform.CashOut.Service\Platform.CashOut.Service.csproj", "{52FCBF71-5D1A-4F18-866E-A80CB96ECE56}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -120,6 +122,10 @@ Global
 		{5837D6DF-E4AC-4E13-B369-6FF23452D86D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5837D6DF-E4AC-4E13-B369-6FF23452D86D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5837D6DF-E4AC-4E13-B369-6FF23452D86D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52FCBF71-5D1A-4F18-866E-A80CB96ECE56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52FCBF71-5D1A-4F18-866E-A80CB96ECE56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52FCBF71-5D1A-4F18-866E-A80CB96ECE56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52FCBF71-5D1A-4F18-866E-A80CB96ECE56}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

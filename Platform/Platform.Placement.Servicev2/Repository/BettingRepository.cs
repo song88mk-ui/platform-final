@@ -137,6 +137,7 @@ namespace Platform.Placement.Servicev2.Repository
                                         FixtureStartDate = betSelectionEntity.FixtureStartDate,
                                         BetScore = betSelectionEntity.BetScore,
                                         SettlementScore = betSelectionEntity.SettlementScore,
+                                        Probability = betSelectionEntity.Probability,
                                         CorrelationId = betSelectionEntity.CorrelationId
                                     });
                                 }
@@ -286,6 +287,7 @@ namespace Platform.Placement.Servicev2.Repository
                                         FixtureStartDate = betSelectionEntity.FixtureStartDate,
                                         BetScore = betSelectionEntity.BetScore,
                                         SettlementScore = betSelectionEntity.SettlementScore,
+                                        Probability = betSelectionEntity.Probability,
                                         CorrelationId = betSelectionEntity.CorrelationId
                                     });
                                 }
@@ -436,6 +438,7 @@ namespace Platform.Placement.Servicev2.Repository
                                     FixtureStartDate = betSelectionEntity.FixtureStartDate,
                                     BetScore = betSelectionEntity.BetScore,
                                     SettlementScore = betSelectionEntity.SettlementScore,
+                                    Probability = betSelectionEntity.Probability,
                                     CorrelationId = betSelectionEntity.CorrelationId
                                 });
                             }

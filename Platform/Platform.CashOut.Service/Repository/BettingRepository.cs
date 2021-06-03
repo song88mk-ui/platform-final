@@ -442,8 +442,8 @@ namespace Platform.CashOut.Service.Repository
                     BetScore = betSelectionEntity.BetScore,
                     SettlementScore = betSelectionEntity.SettlementScore,
                     CorrelationId = betSelectionEntity.CorrelationId,
-                    //Probability = betSelectionEntity.Probability,
-                    //CashoutStatusId = betSelectionEntity.CashoutStatusId
+                    Probability = betSelectionEntity.Probability,
+                    CashoutStatusId = betSelectionEntity.CashoutStatusId
                 });
             }
 

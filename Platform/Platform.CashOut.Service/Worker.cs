@@ -841,7 +841,7 @@ namespace Platform.CashOut.Service
                         
                         _bettingRepository.ProcesssCashoutBetSettlement(onCashoutBetSettlement, _mts, _messageBroker, correlationId ?? Guid.NewGuid().ToString());
 
-                        _logger.LogInformation($"{DateTime.UtcNow} - {onCashoutBetSettlement.Bet.BetId.ToString().ToUpper()} - {threadId}");
+                        _logger.LogInformation($"{DateTime.UtcNow} - {onCashoutBetSettlement.BetId.ToString().ToUpper()} - {threadId}");
 
                         _messageBroker.Acknowledge(e);
                         break;

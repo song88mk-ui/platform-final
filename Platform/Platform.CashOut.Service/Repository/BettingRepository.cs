@@ -317,12 +317,9 @@ namespace Platform.CashOut.Service.Repository
                                 var preStake = bet.Stake - totalStakeUsed;
                                 var postStake = preStake - message.StakeUsed;
 
-                                if ((totalStakeUsed + message.StakeUsed) >= bet.Stake)
-                                {
-                                    bet.Reason = $"{result.Item2} (MTS)";
+                                bet.Reason = $"{result.Item2} (MTS)";
 
-                                    isPublish = SettleBet(message, bet, isPublish, payload, settledDate, context, selections, filteredSelections);
-                                }
+                                isPublish = SettleBet(message, bet, isPublish, payload, settledDate, context, selections, filteredSelections);
 
                                 context.CashOutHistory.Add(new CashOutHistory
                                 {
@@ -455,8 +452,7 @@ namespace Platform.CashOut.Service.Repository
             bet.Payout = payout;
             bet.SettlementDate = settledDate;
             bet.SettlementDateOffset = settledDate.AddHours(-4);
-            bet.IsCashout = true;
-
+            
             var betEntity = context.Bet.Update(bet).Entity;
 
             context.BetAudit.Add(new BetAudit
@@ -518,6 +514,9 @@ namespace Platform.CashOut.Service.Repository
 
             decimal winLoss = payout - stake;
 
+            if (cashout > 0)
+                return BetStatus.CashedOut;
+
             if (betSelections.Contains(BetStatus.Lost))
                 return BetStatus.Lost;
 
@@ -541,9 +540,6 @@ namespace Platform.CashOut.Service.Repository
 
             if (halfLost == 1 && betSelections.Where(c => c == BetStatus.Void).Count() == betSelections.Count - 1)
                 return BetStatus.HalfLost;
-
-            if (cashout == 1 && betSelections.Where(c => c == BetStatus.Void).Count() == betSelections.Count - 1)
-                return BetStatus.CashedOut;
 
             if (winLoss <= 0)
                 return BetStatus.Lost;

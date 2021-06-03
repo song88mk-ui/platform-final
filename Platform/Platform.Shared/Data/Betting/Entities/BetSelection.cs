@@ -38,6 +38,7 @@ namespace Platform.Shared.Data.Betting.Entities
         public DateTime FixtureStartDate { get; set; }
         public string BetScore { get; set; }
         public string SettlementScore { get; set; }
+        public double Probability { get; set; }
         public string CorrelationId { get; set; }
     }
 }

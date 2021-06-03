@@ -322,6 +322,7 @@ namespace Platform.Betting.API.Repository
                             FixtureStartDate = selection.FixtureStartDate,
                             BetScore = selection.BetScore,
                             SettlementScore = selection.BetScore,
+                            Probability = selection.Probability,
                             CorrelationId = selection.CorrelationId
                         }).Entity;
 
@@ -364,6 +365,7 @@ namespace Platform.Betting.API.Repository
                             FixtureStartDate = betSelectionEntity.FixtureStartDate,
                             BetScore = betSelectionEntity.BetScore,
                             SettlementScore = betSelectionEntity.SettlementScore,
+                            Probability = betSelectionEntity.Probability,
                             CorrelationId = selection.CorrelationId
                         });
                     }
@@ -696,6 +698,7 @@ namespace Platform.Betting.API.Repository
                             FixtureStartDate = selection.FixtureStartDate,
                             BetScore = selection.BetScore,
                             SettlementScore = selection.BetScore,
+                            Probability = selection.Probability,
                             CorrelationId = selection.CorrelationId
                         }).Entity;
 
@@ -738,6 +741,7 @@ namespace Platform.Betting.API.Repository
                             FixtureStartDate = betSelectionEntity.FixtureStartDate,
                             BetScore = betSelectionEntity.BetScore,
                             SettlementScore = betSelectionEntity.SettlementScore,
+                            Probability = betSelectionEntity.Probability,
                             CorrelationId = selection.CorrelationId
                         });
                     }

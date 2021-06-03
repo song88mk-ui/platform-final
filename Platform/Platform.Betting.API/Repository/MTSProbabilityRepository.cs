@@ -27,7 +27,7 @@ namespace Platform.Betting.API.Repository
             _httpClient.DefaultRequestHeaders.Add("x-access-token", "bx8zTQrkEsbP0Gq7CS");
         }
 
-        public async Task<BaseResponseDTO<decimal>> GetCashOut(Bet bet, List<BetSelection> betSelections)
+        public async Task<BaseResponseDTO<CashOutResponse>> GetCashOut(Bet bet, List<BetSelection> betSelections)
         {
             if (bet.BetStatusId == (int)BetStatus.Running)
             {
@@ -35,11 +35,14 @@ namespace Platform.Betting.API.Repository
                 {
                     if (betSelections.Count == 0)
                     {
-                        return new BaseResponseDTO<decimal>
+                        return new BaseResponseDTO<CashOutResponse>
                         {
                             StatusCode = StatusCode.CashOut_Is_Unavailable,
                             Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
-                            Result = 0m 
+                            Result = new CashOutResponse
+                            {
+                                CashOutStake = 0m
+                            }
                         };
                     }
 
@@ -165,20 +168,46 @@ namespace Platform.Betting.API.Repository
 
                         if (finalCashOutStake == 0 || finalCashOutStake > bet.TrueStake * bet.Odds)
                         {
-                            return new BaseResponseDTO<decimal>
+                            return new BaseResponseDTO<CashOutResponse>
                             {
                                 StatusCode = StatusCode.CashOut_Is_Unavailable,
                                 Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
-                                Result = 0m
+                                Result = new CashOutResponse
+                                {
+                                    CashOutStake = 0m,
+                                    Probabilities = probabilites.Select(s => new Probabilities
+                                    {
+                                        CashOutStatusId = s.CashOutStatusId,
+                                        Probability = s.Probability,
+                                        WonProbability = s.WonProbability,
+                                        LostProbability = s.LostProbability,
+                                        VoidProbability = s.VoidProbability,
+                                        HalfWonProbability = s.HalfWonProbability,
+                                        HalfLostProbability = s.HalfLostProbability
+                                    }).ToList()
+                                }
                             };
                         }
                         else
                         {
-                            return new BaseResponseDTO<decimal>
+                            return new BaseResponseDTO<CashOutResponse>
                             {
                                 StatusCode = StatusCode.Success,
-                                Message = StatusCode.Success.ToString(),
-                                Result = finalCashOutStake
+                                Message = StatusCode.Success.ToString().Replace('_', ' '),
+                                Result = new CashOutResponse
+                                {
+                                    CashOutStake = finalCashOutStake,
+                                    Probabilities = probabilites.Select(s => new Probabilities
+                                    {
+                                        CashOutStatusId = s.CashOutStatusId,
+                                        Probability = s.Probability,
+                                        WonProbability = s.WonProbability,
+                                        LostProbability = s.LostProbability,
+                                        VoidProbability = s.VoidProbability,
+                                        HalfWonProbability = s.HalfWonProbability,
+                                        HalfLostProbability = s.HalfLostProbability
+                                    }).ToList()
+                                }
                             };
                         }
                     }
@@ -207,53 +236,75 @@ namespace Platform.Betting.API.Repository
 
                         if (finalCashOutStake <= bet.TrueStake * bet.Odds)
                         {
-                            return new BaseResponseDTO<decimal>
+                            return new BaseResponseDTO<CashOutResponse>
                             {
                                 StatusCode = StatusCode.Success,
-                                Message = StatusCode.Success.ToString(),
-                                Result = finalCashOutStake
+                                Message = StatusCode.Success.ToString().Replace('_', ' '),
+                                Result = new CashOutResponse
+                                {
+                                    CashOutStake = finalCashOutStake,
+                                    Probabilities = probabilites.Select(s => new Probabilities
+                                    {
+                                        CashOutStatusId = s.CashOutStatusId,
+                                        Probability = s.Probability,
+                                        WonProbability = s.WonProbability,
+                                        LostProbability = s.LostProbability,
+                                        VoidProbability = s.VoidProbability,
+                                        HalfWonProbability = s.HalfWonProbability,
+                                        HalfLostProbability = s.HalfLostProbability
+                                    }).ToList()
+                                }
                             };
                         }
                         else
                         {
-                            return new BaseResponseDTO<decimal>
+                            return new BaseResponseDTO<CashOutResponse>
                             {
                                 StatusCode = StatusCode.CashOut_Is_Unavailable,
                                 Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
-                                Result = 0m
+                                Result = new CashOutResponse
+                                {
+                                    CashOutStake = 0m,
+                                    Probabilities = probabilites.Select(s => new Probabilities
+                                    {
+                                        CashOutStatusId = s.CashOutStatusId,
+                                        Probability = s.Probability,
+                                        WonProbability = s.WonProbability,
+                                        LostProbability = s.LostProbability,
+                                        VoidProbability = s.VoidProbability,
+                                        HalfWonProbability = s.HalfWonProbability,
+                                        HalfLostProbability = s.HalfLostProbability
+                                    }).ToList()
+                                }
                             };
                         }
                     }
                 }
                 catch (Exception)
                 {
-                    return new BaseResponseDTO<decimal>
+                    return new BaseResponseDTO<CashOutResponse>
                     {
                         StatusCode = StatusCode.CashOut_Is_Unavailable,
                         Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
-                        Result = 0m
+                        Result = new CashOutResponse
+                        {
+                            CashOutStake = 0m
+                        }
                     };
                 }
             }
             else
             {
-                return new BaseResponseDTO<decimal>
+                return new BaseResponseDTO<CashOutResponse>
                 {
                     StatusCode = StatusCode.CashOut_Is_Unavailable,
                     Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
-                    Result = 0m
+                    Result = new CashOutResponse
+                    {
+                        CashOutStake = 0m
+                    }
                 };
             }
         }
-    }
-    public class Probabilities
-    {
-        public double WonProbability { get; set; }
-        public double LostProbability { get; set; }
-        public double VoidProbability { get; set; }
-        public double HalfWonProbability { get; set; }
-        public double HalfLostProbability { get; set; }
-        public double Probability { get; set; }
-        public int CashOutStatusId { get; set; }
     }
 }

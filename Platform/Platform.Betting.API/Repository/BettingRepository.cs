@@ -1063,9 +1063,10 @@ namespace Platform.Betting.API.Repository
                     Commission = 0,
                     CurrencyCode = bet.CurrencyCode,
                     OddsType = bet.OddsTypeName,
-                    CashOutStake = cashOut.Result,
+                    CashOutStake = cashOut.Result.CashOutStake,
                     CashOutStatusId = cashOut.StatusCode == StatusCode.Success ? (int)CashOutStatus.Available : (int)CashOutStatus.Unavailable,
                     CashOutStatusName = cashOut.StatusCode == StatusCode.Success ? CashOutStatus.Available.ToString() : CashOutStatus.Unavailable.ToString(),
+                    Probabilities = cashOut.Result.Probabilities,
                     Selections = selections.Select(s => new BetSelectionHistoryDTO
                     {
                         SportId = s.SportId,
@@ -1298,7 +1299,7 @@ namespace Platform.Betting.API.Repository
 
             if (result.StatusCode == StatusCode.Success)
             {
-                if (request.CashOutStake != result.Result)
+                if (request.CashOutStake != result.Result.CashOutStake)
                 {
                     return new BaseResponseDTO<BetCashOutResponseDTO>
                     {
@@ -1309,7 +1310,7 @@ namespace Platform.Betting.API.Repository
                             BetId = bet.BetId.ToString().ToUpper(),
                             BetStatus = (BetStatus)bet.BetStatusId,
                             UserId = bet.UserId,
-                            CashOutStake = result.Result
+                            CashOutStake = result.Result.CashOutStake
                         }
                     };
                 }
@@ -1326,7 +1327,7 @@ namespace Platform.Betting.API.Repository
                             BetId = bet.BetId.ToString().ToUpper(),
                             BetStatus = (BetStatus)bet.BetStatusId,
                             UserId = bet.UserId,
-                            CashOutStake = result.Result
+                            CashOutStake = result.Result.CashOutStake
                         }
                     };
                 }

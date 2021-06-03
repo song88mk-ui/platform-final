@@ -30,4 +30,21 @@ namespace Platform.Shared.Models
         public BetStatus BetStatus { get; set; }
         public decimal CashOutStake { get; set; }
     }
+
+    public class CashOutResponse
+    {
+        public decimal CashOutStake { get; set; }
+        public List<Probabilities> Probabilities { get; set; }
+    }
+
+    public class Probabilities
+    {
+        public double WonProbability { get; set; }
+        public double LostProbability { get; set; }
+        public double VoidProbability { get; set; }
+        public double HalfWonProbability { get; set; }
+        public double HalfLostProbability { get; set; }
+        public double Probability { get; set; }
+        public int CashOutStatusId { get; set; }
+    }
 }

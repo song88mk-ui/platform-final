@@ -24,6 +24,7 @@ namespace Platform.Shared.Models
     {
         public BetHistoryDTO()
         {
+            Probabilities = new List<Probabilities>();
             Selections = new List<BetSelectionHistoryDTO>();
         }
         public string BetId { get; set; }
@@ -39,6 +40,7 @@ namespace Platform.Shared.Models
         public int CashOutStatusId { get; set; }
         public string CashOutStatusName { get; set; }
         public decimal CashOutStake { get; set; }
+        public List<Probabilities> Probabilities { get; set; }
         public DateTime TransactionDate { get; set; }
         public List<BetSelectionHistoryDTO> Selections { get; set; }
     }

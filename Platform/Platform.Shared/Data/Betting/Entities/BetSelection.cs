@@ -40,5 +40,6 @@ namespace Platform.Shared.Data.Betting.Entities
         public string SettlementScore { get; set; }
         public double Probability { get; set; }
         public string CorrelationId { get; set; }
+        public double Probability { get; set; }
     }
 }

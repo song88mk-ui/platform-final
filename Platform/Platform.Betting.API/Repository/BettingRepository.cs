@@ -1311,7 +1311,7 @@ namespace Platform.Betting.API.Repository
                     return new BaseResponseDTO<BetCashOutResponseDTO>
                     {
                         StatusCode = StatusCode.CashOut_Stake_Changed_From_X_To_Y,
-                        Message = StatusCode.CashOut_Stake_Changed_From_X_To_Y.ToString().Replace('_', ' ').Replace("X", request.CashOutStake.ToString()).Replace("Y", result.Result.ToString()),
+                        Message = StatusCode.CashOut_Stake_Changed_From_X_To_Y.ToString().Replace('_', ' ').Replace("X", request.CashOutStake.ToString()).Replace("Y", result.Result.CashOutStake.ToString()),
                         Result = new BetCashOutResponseDTO
                         {
                             BetId = bet.BetId.ToString().ToUpper(),

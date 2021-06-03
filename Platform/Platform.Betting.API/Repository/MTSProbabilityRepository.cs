@@ -47,6 +47,7 @@ namespace Platform.Betting.API.Repository
                     }
 
                     var probabilites = new List<Probabilities>();
+                    var hasProbabilityChanged = false;
 
                     foreach (var betSelection in betSelections)
                     {
@@ -122,6 +123,9 @@ namespace Platform.Betting.API.Repository
                                         catch (Exception)
                                         {
                                         }
+
+                                        if (Math.Round(Convert.ToDecimal(betSelection.Probability), 2) != Math.Round(Convert.ToDecimal(selection.Attributes["probabilities"].Value), 2))
+                                            hasProbabilityChanged = true;
 
                                         var probability = Convert.ToDouble(selection.Attributes["probabilities"].Value);
 

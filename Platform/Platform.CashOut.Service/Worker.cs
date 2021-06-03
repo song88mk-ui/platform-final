@@ -836,7 +836,7 @@ namespace Platform.CashOut.Service
             {
                 switch (messageType)
                 {
-                    case "OnCashoutBetSettlement":
+                    case "OnBetFullCashOut":
                         var onCashoutBetSettlement = JsonSerializer.Deserialize<OnCashoutBetSettlement>(payload);
                         
                         _bettingRepository.ProcesssCashoutBetSettlement(onCashoutBetSettlement, _mts, _messageBroker, correlationId ?? Guid.NewGuid().ToString());

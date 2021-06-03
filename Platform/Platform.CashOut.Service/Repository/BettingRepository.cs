@@ -327,7 +327,7 @@ namespace Platform.CashOut.Service.Repository
                                 context.CashOutHistory.Add(new CashOutHistory
                                 {
                                     BetId = bet.BetId,
-                                    CashedOutAmount = message.Cashout,
+                                    CashedOutAmount = message.CashOutStake,
                                     CashoutDate = settledDate,
                                     CashoutDateOffset = settledDate.AddHours(-4),
                                     CashoutTypeId = (int)CashoutType.Full,
@@ -445,7 +445,7 @@ namespace Platform.CashOut.Service.Repository
                 });
             }
 
-            var payout = message.Cashout;
+            var payout = message.CashOutStake;
 
             var betStatus = GetStatus(selections.Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), payout, bet.TrueStake);
 
@@ -564,7 +564,7 @@ namespace Platform.CashOut.Service.Repository
                 CashoutAcceptance betStatus;
                 string reason;
 
-                var cashoutStake = (long)(message.Cashout * 10000);
+                var cashoutStake = (long)(message.CashOutStake * 10000);
 
                 var betCashout = _factory.CreateTicketCashoutBuilder().SetTicketId(message.BetId.ToString().ToUpper()).SetCashoutStake(cashoutStake).BuildTicket();
 

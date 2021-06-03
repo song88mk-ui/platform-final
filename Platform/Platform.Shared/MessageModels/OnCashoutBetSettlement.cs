@@ -1,7 +1,5 @@
-﻿using Platform.Shared.Data.Betting.Entities;
-using Platform.Shared.Enums;
+﻿using Platform.Shared.Enums;
 using System;
-using System.Collections.Generic;
 
 namespace Platform.Shared.MessageModels
 {

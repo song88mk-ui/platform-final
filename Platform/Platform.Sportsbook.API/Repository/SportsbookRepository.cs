@@ -733,6 +733,7 @@ namespace Platform.Sportsbook.API.Repository
                         FixtureSpecifier = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiSp).FirstOrDefault(),
                         SelectionSpecifier = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeSp).FirstOrDefault(),
                         CorrelationId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.CoId).FirstOrDefault(),
+                        Probability = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.Pr).FirstOrDefault(),
                         BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, s, result)
                     }).ToList()
                 }

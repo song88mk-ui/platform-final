@@ -244,7 +244,8 @@ namespace Platform.API.Repository
                     BetScore = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Score).FirstOrDefault(),
                     FixtureSpecifier = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureSpecifier).FirstOrDefault(),
                     SelectionSpecifier = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SelectionSpecifier).FirstOrDefault(),
-                    CorrelationId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.CorrelationId).FirstOrDefault()
+                    CorrelationId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.CorrelationId).FirstOrDefault(),
+                    Probability = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Probability).FirstOrDefault()
                 }).ToList()
             };
 

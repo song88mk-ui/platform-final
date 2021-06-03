@@ -60,5 +60,6 @@ namespace Platform.Shared.Models
         public string FixtureSpecifier { get; set; }
         public string SelectionSpecifier { get; set; }
         public string CorrelationId { get; set; }
+        public double Probability { get; set; }
     }
 }

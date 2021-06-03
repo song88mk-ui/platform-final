@@ -21,7 +21,7 @@ namespace Platform.CashOut.Service
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
-                .WriteTo.Logger(lc => lc.Filter.ByIncludingOnly(e => e.Level == LogEventLevel.Information)
+                .WriteTo.Logger(lc => lc.Filter.ByIncludingOnly(e => e.Level >= LogEventLevel.Information )
                     .WriteTo.File(Path.Combine(filePath, "app.log"),
                         outputTemplate: "{Timestamp:yyyy-MM-ddTHH:mm:ssK} {Level:w3} {Message}{NewLine}",
                         rollingInterval: RollingInterval.Day,

@@ -346,7 +346,7 @@ namespace Platform.CashOut.Service.Repository
 
                                 if (isPublish)
                                 {
-                                    messageBroker.Publish(payload, "OnBetFullCashOut", "r.bet.operator.test", correlationId);
+                                    messageBroker.Publish(payload, "OnBetFullCashOut", "r.bet.operator", correlationId);
 
                                     messageBroker.Publish(new OnBetStatus
                                     {
@@ -440,8 +440,8 @@ namespace Platform.CashOut.Service.Repository
                     BetScore = betSelectionEntity.BetScore,
                     SettlementScore = betSelectionEntity.SettlementScore,
                     CorrelationId = betSelectionEntity.CorrelationId,
-                    Probability = betSelectionEntity.Probability,
-                    CashoutStatusId = betSelectionEntity.CashoutStatusId
+                    Probability = betSelectionEntity.Probability
+                    //CashoutStatusId = betSelectionEntity.CashoutStatusId
                 });
             }
 

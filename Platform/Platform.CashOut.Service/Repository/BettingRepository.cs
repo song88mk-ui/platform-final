@@ -348,27 +348,25 @@ namespace Platform.CashOut.Service.Repository
                                 {
                                     messageBroker.Publish(payload, "OnBetFullCashOut", "r.bet.operator.test", correlationId);
 
-                                    //TODO: Uncomment this ticket
-                                    //messageBroker.Publish(new OnBetStatus
-                                    //{
-                                    //    ClientId = payload.Bet.ClientId.ToString().ToUpper(),
-                                    //    UserId = payload.Bet.UserId,
-                                    //    BetId = payload.Bet.BetId.ToString().ToUpper(),
-                                    //    BetStatus = (BetStatus)payload.Bet.BetStatusId
-                                    //}, "OnBetStatus", "r.bet.betstatus", correlationId);
+                                    messageBroker.Publish(new OnBetStatus
+                                    {
+                                        ClientId = payload.Bet.ClientId.ToString().ToUpper(),
+                                        UserId = payload.Bet.UserId,
+                                        BetId = payload.Bet.BetId.ToString().ToUpper(),
+                                        BetStatus = (BetStatus)payload.Bet.BetStatusId
+                                    }, "OnBetStatus", "r.bet.betstatus", correlationId);
                                 }
                             }
                             else
                             {
 
-                                //TODO: Uncomment this ticket
-                                //messageBroker.Publish(new OnBetStatus
-                                //{
-                                //    ClientId = payload.Bet.ClientId.ToString().ToUpper(),
-                                //    UserId = payload.Bet.UserId,
-                                //    BetId = payload.Bet.BetId.ToString().ToUpper(),
-                                //    BetStatus = (BetStatus)payload.Bet.BetStatusId
-                                //}, "OnBetStatus", "r.bet.betstatus", correlationId);
+                                messageBroker.Publish(new OnBetStatus
+                                {
+                                    ClientId = payload.Bet.ClientId.ToString().ToUpper(),
+                                    UserId = payload.Bet.UserId,
+                                    BetId = payload.Bet.BetId.ToString().ToUpper(),
+                                    BetStatus = (BetStatus)payload.Bet.BetStatusId
+                                }, "OnBetStatus", "r.bet.betstatus", correlationId);
                             }
                         }
 

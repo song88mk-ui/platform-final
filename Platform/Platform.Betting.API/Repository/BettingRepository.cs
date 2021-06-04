@@ -1308,10 +1308,13 @@ namespace Platform.Betting.API.Repository
             {
                 if (request.CashOutStake != result.Result.CashOutStake)
                 {
+                    var requestCashOutStake = request.CashOutStake % 1 == 0 ? request.CashOutStake.ToString() : request.CashOutStake.ToString().TrimEnd('0');
+                    var resultCashOutStake = result.Result.CashOutStake % 1 == 0 ? result.Result.CashOutStake.ToString() : result.Result.CashOutStake.ToString().TrimEnd('0');
+
                     return new BaseResponseDTO<BetCashOutResponseDTO>
                     {
                         StatusCode = StatusCode.CashOut_Stake_Changed_From_X_To_Y,
-                        Message = StatusCode.CashOut_Stake_Changed_From_X_To_Y.ToString().Replace('_', ' ').Replace("X", request.CashOutStake.ToString().TrimEnd('0')).Replace("Y", result.Result.CashOutStake.ToString().TrimEnd('0')),
+                        Message = StatusCode.CashOut_Stake_Changed_From_X_To_Y.ToString().Replace('_', ' ').Replace("X", requestCashOutStake).Replace("Y", resultCashOutStake),
                         Result = new BetCashOutResponseDTO
                         {
                             BetId = bet.BetId.ToString().ToUpper(),

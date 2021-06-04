@@ -220,6 +220,29 @@ namespace Platform.Betting.API.Repository
                     }
                     else
                     {
+                        if (probabilites.First().CashOutStatusId != (int)CashOutStatus.Available)
+                        {
+                            return new BaseResponseDTO<CashOutResponse>
+                            {
+                                StatusCode = StatusCode.CashOut_Is_Unavailable,
+                                Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
+                                Result = new CashOutResponse
+                                {
+                                    CashOutStake = 0m,
+                                    Probabilities = probabilites.Select(s => new Probabilities
+                                    {
+                                        CashOutStatusId = s.CashOutStatusId,
+                                        Probability = s.Probability,
+                                        WonProbability = s.WonProbability,
+                                        LostProbability = s.LostProbability,
+                                        VoidProbability = s.VoidProbability,
+                                        HalfWonProbability = s.HalfWonProbability,
+                                        HalfLostProbability = s.HalfLostProbability
+                                    }).ToList()
+                                }
+                            };
+                        }
+
                         decimal cashOutStake = 0m;
 
                         if (probabilites.First().WonProbability > 0 ||

@@ -1052,10 +1052,20 @@ namespace Platform.Betting.API.Repository
             var betIds = transactions.Select(s => s.BetId).Distinct().ToList();
             var selections = _bettingContext.BetSelection.AsNoTracking().Where(c => betIds.Contains(c.BetId)).ToList();
 
+            var cashOutTasks = new List<Task<BaseResponseDTO<CashOutResponse>>>();
+
             foreach (var bet in transactions)
             {
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
-                var cashOut = await _mtsProbabilityRepository.GetCashOut(bet, filteredSelections);
+                cashOutTasks.Add(_mtsProbabilityRepository.GetCashOut(bet, filteredSelections));
+            }
+
+            await Task.WhenAll(cashOutTasks);
+
+            foreach (var bet in transactions)
+            {
+                var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
+                var cashOut = cashOutTasks.Where(c => c.Result.Result.BetId == bet.BetId).FirstOrDefault();
 
                 result.Add(new BetHistoryDTO
                 {
@@ -1070,10 +1080,10 @@ namespace Platform.Betting.API.Repository
                     Commission = 0,
                     CurrencyCode = bet.CurrencyCode,
                     OddsType = bet.OddsTypeName,
-                    CashOutStake = cashOut.Result.CashOutStake,
-                    CashOutStatusId = cashOut.StatusCode == StatusCode.Success ? (int)CashOutStatus.Available : (int)CashOutStatus.Unavailable,
-                    CashOutStatusName = cashOut.StatusCode == StatusCode.Success ? CashOutStatus.Available.ToString() : CashOutStatus.Unavailable.ToString(),
-                    Probabilities = cashOut.Result.Probabilities,
+                    CashOutStake = cashOut.Result.Result.CashOutStake,
+                    CashOutStatusId = cashOut.Result.StatusCode == StatusCode.Success ? (int)CashOutStatus.Available : (int)CashOutStatus.Unavailable,
+                    CashOutStatusName = cashOut.Result.StatusCode == StatusCode.Success ? CashOutStatus.Available.ToString() : CashOutStatus.Unavailable.ToString(),
+                    Probabilities = cashOut.Result.Result.Probabilities,
                     Selections = filteredSelections.Select(s => new BetSelectionHistoryDTO
                     {
                         SportId = s.SportId,

@@ -33,6 +33,7 @@ namespace Platform.Shared.Models
 
     public class CashOutResponse
     {
+        public Guid BetId { get; set; }
         public decimal CashOutStake { get; set; }
         public List<Probabilities> Probabilities { get; set; }
     }

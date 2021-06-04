@@ -41,6 +41,7 @@ namespace Platform.Betting.API.Repository
                             Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
                             Result = new CashOutResponse
                             {
+                                BetId = bet.BetId,
                                 CashOutStake = 0m
                             }
                         };
@@ -172,6 +173,7 @@ namespace Platform.Betting.API.Repository
                                 Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
                                 Result = new CashOutResponse
                                 {
+                                    BetId = bet.BetId,
                                     CashOutStake = 0m,
                                     Probabilities = probabilites.Select(s => new Probabilities
                                     {
@@ -204,6 +206,7 @@ namespace Platform.Betting.API.Repository
                                 Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
                                 Result = new CashOutResponse
                                 {
+                                    BetId = bet.BetId,
                                     CashOutStake = 0m,
                                     Probabilities = probabilites.Select(s => new Probabilities
                                     {
@@ -226,6 +229,7 @@ namespace Platform.Betting.API.Repository
                                 Message = StatusCode.Success.ToString().Replace('_', ' '),
                                 Result = new CashOutResponse
                                 {
+                                    BetId = bet.BetId,
                                     CashOutStake = finalCashOutStake,
                                     Probabilities = probabilites.Select(s => new Probabilities
                                     {
@@ -251,6 +255,7 @@ namespace Platform.Betting.API.Repository
                                 Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
                                 Result = new CashOutResponse
                                 {
+                                    BetId = bet.BetId,
                                     CashOutStake = 0m,
                                     Probabilities = probabilites.Select(s => new Probabilities
                                     {
@@ -298,6 +303,7 @@ namespace Platform.Betting.API.Repository
                                 Message = StatusCode.Success.ToString().Replace('_', ' '),
                                 Result = new CashOutResponse
                                 {
+                                    BetId = bet.BetId,
                                     CashOutStake = finalCashOutStake,
                                     Probabilities = probabilites.Select(s => new Probabilities
                                     {
@@ -320,6 +326,7 @@ namespace Platform.Betting.API.Repository
                                 Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
                                 Result = new CashOutResponse
                                 {
+                                    BetId = bet.BetId,
                                     CashOutStake = 0m,
                                     Probabilities = probabilites.Select(s => new Probabilities
                                     {
@@ -344,6 +351,7 @@ namespace Platform.Betting.API.Repository
                         Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
                         Result = new CashOutResponse
                         {
+                            BetId = bet.BetId,
                             CashOutStake = 0m
                         }
                     };
@@ -357,6 +365,7 @@ namespace Platform.Betting.API.Repository
                     Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
                     Result = new CashOutResponse
                     {
+                        BetId = bet.BetId,
                         CashOutStake = 0m
                     }
                 };

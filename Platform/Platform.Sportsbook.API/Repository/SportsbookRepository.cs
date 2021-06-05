@@ -2959,6 +2959,17 @@ namespace Platform.Sportsbook.API.Repository
             var selection = result.Item3.Where(c => c.SeId == current.SelectionId).FirstOrDefault();
             var bettingStatus = result.Item4;
 
+            if ((fixture.SpId == 1001 || fixture.SpId == 1002 || fixture.SpId == 1055 || fixture.SpId == 1058) && fixture.FiStDa < DateTime.UtcNow)
+            {
+                return new BetSelectionState
+                {
+                    SelectionId = current.SelectionId.ToString(),
+                    Odds = current.Odds,
+                    StatusCode = StatusCode.Market_Is_Inactive,
+                    Message = StatusCode.Market_Is_Inactive.ToString().Replace('_', ' ')
+                };
+            }
+
             if (bettingStatus != null && bettingStatus.IsBeSo == true)
             {
                 return new BetSelectionState

@@ -24,7 +24,6 @@ namespace Platform.Operator.API.Controllers
         [HttpPost("v1/authentication")]
         public async Task<IActionResult> Authenticate()
         {
-            //test
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
             var result = await _platformRepository.Authenticate(operatorToken);

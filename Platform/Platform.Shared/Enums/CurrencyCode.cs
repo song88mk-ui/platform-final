@@ -27,6 +27,10 @@
         GHS = 23,
         ZMW = 24,
         MZN = 25,
-        CDF = 26
+        CDF = 26,
+        ETB = 27,
+        MWK = 28,
+        XAF = 29,
+        NGN = 30
     }
 }

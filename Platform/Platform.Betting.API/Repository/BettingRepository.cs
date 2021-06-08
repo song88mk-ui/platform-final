@@ -1318,8 +1318,8 @@ namespace Platform.Betting.API.Repository
             {
                 if (request.CashOutStake != result.Result.CashOutStake)
                 {
-                    var requestCashOutStake = request.CashOutStake % 1 == 0 ? request.CashOutStake.ToString() : request.CashOutStake.ToString().TrimEnd('0');
-                    var resultCashOutStake = result.Result.CashOutStake % 1 == 0 ? result.Result.CashOutStake.ToString() : result.Result.CashOutStake.ToString().TrimEnd('0');
+                    var requestCashOutStake = request.CashOutStake % 1 == 0 ? request.CashOutStake.ToString().TrimEnd('0').TrimEnd('.') : request.CashOutStake.ToString().TrimEnd('0').TrimEnd('.');
+                    var resultCashOutStake = result.Result.CashOutStake % 1 == 0 ? result.Result.CashOutStake.ToString().TrimEnd('0').TrimEnd('.') : result.Result.CashOutStake.ToString().TrimEnd('0').TrimEnd('.');
 
                     return new BaseResponseDTO<BetCashOutResponseDTO>
                     {

@@ -1316,7 +1316,7 @@ namespace Platform.Betting.API.Repository
 
             if (result.StatusCode == StatusCode.Success)
             {
-                if (request.CashOutStake != result.Result.CashOutStake)
+                if (Math.Round(request.CashOutStake, 2) != Math.Round(result.Result.CashOutStake, 2))
                 {
                     var requestCashOutStake = request.CashOutStake % 1 == 0 ? request.CashOutStake.ToString().TrimEnd('0').TrimEnd('.') : request.CashOutStake.ToString().TrimEnd('0').TrimEnd('.');
                     var resultCashOutStake = result.Result.CashOutStake % 1 == 0 ? result.Result.CashOutStake.ToString().TrimEnd('0').TrimEnd('.') : result.Result.CashOutStake.ToString().TrimEnd('0').TrimEnd('.');

@@ -195,7 +195,7 @@ namespace Platform.Betting.API.Repository
 
                         var finalCashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
-                        if (hasProbabilityChanged)
+                        if (!hasProbabilityChanged)
                             finalCashOutStake = bet.TrueStake - (bet.TrueStake * 0.10m);
 
                         if (finalCashOutStake == 0 || finalCashOutStake > bet.TrueStake * bet.Odds)
@@ -292,7 +292,7 @@ namespace Platform.Betting.API.Repository
 
                         var finalCashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
-                        if (hasProbabilityChanged)
+                        if (!hasProbabilityChanged)
                             finalCashOutStake = bet.TrueStake - (bet.TrueStake * 0.10m);
 
                         if (finalCashOutStake <= bet.TrueStake * bet.Odds)

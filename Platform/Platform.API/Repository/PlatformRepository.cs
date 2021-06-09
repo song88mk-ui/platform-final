@@ -507,7 +507,8 @@ namespace Platform.API.Repository
                             IsActive = result.IsActive,
                             Endpoint = result.Endpoint,
                             CompanyShare = result.EffectiveDate.Date < DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare,
-                            ClientIdRef = result.ClientIdRef
+                            ClientIdRef = result.ClientIdRef,
+                            WithholdingTax = string.IsNullOrEmpty(result.WithholdingTax) ? new WithholdingTaxSetting() : JsonSerializer.Deserialize<WithholdingTaxSetting>(result.WithholdingTax)
                         }
                     };
                 }
@@ -544,7 +545,8 @@ namespace Platform.API.Repository
                                 IsActive = result.IsActive,
                                 Endpoint = result.Endpoint,
                                 CompanyShare = result.EffectiveDate.Date < DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare,
-                                ClientIdRef = result.ClientIdRef
+                                ClientIdRef = result.ClientIdRef,
+                                WithholdingTax = string.IsNullOrEmpty(result.WithholdingTax) ? new WithholdingTaxSetting() : JsonSerializer.Deserialize<WithholdingTaxSetting>(result.WithholdingTax)
                             }
                         };
                     }
@@ -1775,7 +1777,8 @@ namespace Platform.API.Repository
                         MonthlyFee = request.MonthlyFee,
                         CurrentCompanyShare = currentCompanyShare,
                         EffectiveDate = effectiveDate,
-                        NextCompanyShare = nextCompanyShare
+                        NextCompanyShare = nextCompanyShare,
+                        WithholdingTax = JsonSerializer.Serialize(request.WithholdingTax)
                     }).Entity;
 
                     clientId = clientEntity.ClientId;

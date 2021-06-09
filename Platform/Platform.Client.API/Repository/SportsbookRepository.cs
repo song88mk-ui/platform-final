@@ -253,14 +253,17 @@ namespace Platform.Client.API.Repository
         {
             var clientCode = "10C";
 
-            if (clientId.ToUpper() == "5093617A-9367-EB11-89FB-00224815B68B")
-                clientCode = "10C";
+            if (!string.IsNullOrEmpty(clientId))
+            {
+                if (clientId.ToUpper() == "5093617A-9367-EB11-89FB-00224815B68B")
+                    clientCode = "10C";
 
-            if (clientId.ToUpper() == "BFED6DA4-D1B5-4437-665D-08D8EE99AC1C")
-                clientCode = "10I";
+                if (clientId.ToUpper() == "BFED6DA4-D1B5-4437-665D-08D8EE99AC1C")
+                    clientCode = "10I";
 
-            if (clientId.ToUpper() == "A96AB8BC-2970-EB11-89FC-00224815B68B" || clientId.ToUpper() == "917070EC-1DC1-4E10-28E8-08D8EE99CA8E")
-                clientCode = "10J";
+                if (clientId.ToUpper() == "A96AB8BC-2970-EB11-89FC-00224815B68B" || clientId.ToUpper() == "917070EC-1DC1-4E10-28E8-08D8EE99CA8E")
+                    clientCode = "10J";
+            }
 
             var result = await _platformContext.ConfidenceFactor.Where(c => c.UserId == $"{clientCode}{ userId.Replace("-", string.Empty)}").ToListAsync();
 

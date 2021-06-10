@@ -835,7 +835,7 @@ namespace Platform.Placement.Servicev2
 
                         _bettingRepository.ProcesssBetPlacement(onBetPlacement, _mts, _messageBroker, correlationId);
 
-                        Console.WriteLine($"{DateTime.UtcNow} - {onBetPlacement.Bet.BetId.ToString().ToUpper()} - {threadId}");
+                        //Console.WriteLine($"{DateTime.UtcNow} - {onBetPlacement.Bet.BetId.ToString().ToUpper()} - {threadId}");
 
                         _messageBroker.Acknowledge(e);
                         break;

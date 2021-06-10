@@ -1393,8 +1393,8 @@ namespace Platform.Betting.API.Repository
             minimumStake.Add(minStake);
 
             //4 Reference Bet / Company Share
-            //if (companyShare > 0)
-            //    minimumStake.Add(Math.Truncate(referenceBet / companyShare) + 1);
+            if (companyShare > 0)
+                minimumStake.Add(Math.Truncate(referenceBet / companyShare) + 1);
 
             //Get Max decimal value
             return minimumStake.Max();

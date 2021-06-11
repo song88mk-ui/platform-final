@@ -21,7 +21,7 @@ namespace Platform.Shared.Models
 
     public class WithholdingTaxSetting
     {
-        public decimal TaxStake { get; set; }
-        public decimal TaxWinnings { get; set; }
+        public decimal TaxPercentStake { get; set; }
+        public decimal TaxPercentWinnings { get; set; }
     }
 }

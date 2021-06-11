@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Platform.CashOutStake.Service.Repository;
 using Platform.Shared.Data.Betting;
+using Platform.Shared.Utility;
 
 namespace Platform.CashOutStake.Service
 {
@@ -17,6 +18,8 @@ namespace Platform.CashOutStake.Service
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddHttpClient();
+                    services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();
                     services.AddDbContext<BettingContext>(o => o.UseSqlServer(hostContext.Configuration["ConnectionStrings:Betting"]));

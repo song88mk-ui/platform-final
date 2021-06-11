@@ -27,6 +27,19 @@ namespace Platform.Shared.Utility
         private string _routingKey = string.Empty;
         private string _prefetchCount = string.Empty;
 
+        private ConnectionFactory _externalConnectionFactory;
+        private IConnection _externalConnection;
+        private IModel _externalModel;
+
+        private string _externalHostName = string.Empty;
+        private string _externalUserName = string.Empty;
+        private string _externalPassword = string.Empty;
+        private string _externalVirtualHost = string.Empty;
+        private string _externalExchange = string.Empty;
+        private string _externalQueue = string.Empty;
+        private string _externalConsumerName = string.Empty;
+        private string _externalRoutingKey = string.Empty;
+
         public MessageBroker(IConfiguration configuration)
         {
             _configuration = configuration;
@@ -87,6 +100,38 @@ namespace Platform.Shared.Utility
 
                     _model.BasicConsume(_queue, false, $"{_consumerName}.{Guid.NewGuid()}", _consumer);
                 }
+            }
+        }
+
+        public void ExternalConnect()
+        {
+            _externalHostName = _configuration["ExternalMessageBroker:Host"];
+            _externalUserName = _configuration["ExternalMessageBroker:Username"];
+            _externalPassword = _configuration["ExternalMessageBroker:Password"];
+            _externalVirtualHost = _configuration["ExternalMessageBroker:VirtualHost"];
+            _externalExchange = _configuration["ExternalMessageBroker:Exchange"];
+            _externalQueue = _configuration["ExternalMessageBroker:Queue"];
+            _externalConsumerName = _configuration["ExternalMessageBroker:Consumer"];
+            _externalRoutingKey = _configuration["ExternalMessageBroker:RoutingKey"];
+
+            if (_externalConnection == null)
+            {
+                if (_externalConnectionFactory == null)
+                    _externalConnectionFactory = new ConnectionFactory
+                    {
+                        HostName = _externalHostName,
+                        Port = 5672,
+                        UserName = _externalUserName,
+                        Password = _externalPassword,
+                        VirtualHost = _externalVirtualHost,
+                        RequestedHeartbeat = 60,
+                        NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
+                    };
+
+                _externalConnection = _externalConnectionFactory.CreateConnection();
+
+                if (_externalModel == null)
+                    _externalModel = _externalConnection.CreateModel();
             }
         }
 
@@ -174,6 +219,17 @@ namespace Platform.Shared.Utility
             var payloadBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload));
 
             _model.BasicPublish(_exchange, routingKey, properties, payloadBytes);
+        }
+        public void ExternalPublish<T>(T payload, string messageType, string routingKey, string correlationId)
+        {
+            var properties = _externalModel.CreateBasicProperties();
+            properties.CorrelationId = correlationId;
+            properties.DeliveryMode = 2;
+            properties.Type = messageType;
+
+            var payloadBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload));
+
+            _externalModel.BasicPublish(_externalExchange, routingKey, properties, payloadBytes);
         }
 
         public void Publish(string payload, string messageType, string routingKey, string correlationId)

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Platform.CashOutStake.Service.Repository;
 using Platform.Shared.Enums;
+using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using RabbitMQ.Client.Events;
 
@@ -34,7 +35,7 @@ namespace Platform.CashOutStake.Service
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            //_messageBrokerExternal.Dispose();
+            _messageBrokerExternal.Dispose();
 
             _messageBroker.Dispose();
 
@@ -43,10 +44,12 @@ namespace Platform.CashOutStake.Service
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            //_messageBrokerExternal.ExternalConnect();
+            _messageBrokerExternal.ExternalConnect();
 
             _messageBroker.Connect();
             _messageBroker.MessageReceived += MessageReceivedEvent;
+
+            _bettingRepository.PreloadActiveBets();
 
             return Task.CompletedTask;
         }
@@ -64,7 +67,25 @@ namespace Platform.CashOutStake.Service
                     case "OnOddsChange":
                         var onOddsChange = JsonSerializer.Deserialize<OnInternalOddsChangeMessage>(payload);
 
-                        _bettingRepository.ProcessCashOutStake(onOddsChange);
+                        _bettingRepository.ProcessCashOutStake(onOddsChange, _messageBrokerExternal);
+                        break;
+
+                    case "OnBetPlacement":
+                        var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
+
+                        _bettingRepository.AddBet(onBetPlacement);
+                        break;
+
+                    case "OnBetCancellation":
+                        var onBetCancellation = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+
+                        _bettingRepository.RemoveBet(onBetCancellation);
+                        break;
+
+                    case "OnBetSettlement":
+                        var onBetSettlement = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+
+                        _bettingRepository.RemoveBet(onBetSettlement);
                         break;
                 }
             }

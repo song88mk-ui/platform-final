@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
+using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,11 +18,14 @@ namespace Platform.CashOutStake.Service.Repository
         private readonly IServiceProvider _serviceProvider;
         public List<Tuple<long, List<BetMemory>>> _fixtureBets = new List<Tuple<long, List<BetMemory>>>();
         private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
 
-        public BettingRepository(IServiceProvider serviceProvider, HttpClient httpClient)
+        public BettingRepository(IServiceProvider serviceProvider, HttpClient httpClient, IConfiguration configuration)
         {
             _serviceProvider = serviceProvider;
             _httpClient = httpClient;
+            _configuration = configuration;
+            _httpClient.BaseAddress = new Uri(_configuration["API:MTSProbabilityAPI"]);
             _httpClient.DefaultRequestHeaders.Add("x-access-token", "bx8zTQrkEsbP0Gq7CS");
         }
 
@@ -136,7 +141,7 @@ namespace Platform.CashOutStake.Service.Repository
             }
         }
 
-        public void ProcessCashOutStake(OnInternalOddsChangeMessage message)
+        public void ProcessCashOutStake(OnInternalOddsChangeMessage message, IMessageBroker messageBroker)
         {
             if (message.SportId > 1000 || message.SportId == 21 || message.FixtureType == FixtureType.Outright || message.FixtureStatus == FixtureStatus.Prematch)
                 return;
@@ -147,12 +152,12 @@ namespace Platform.CashOutStake.Service.Repository
             {
                 foreach (var bet in fixtureBet.Item2)
                 {
-                    Process(bet, bet.BetSelections);
+                    Process(bet, bet.BetSelections, messageBroker);
                 }
             }
         }
 
-        public void Process(BetMemory bet, List<BetSelectionMemory> betSelections)
+        public void Process(BetMemory bet, List<BetSelectionMemory> betSelections, IMessageBroker messageBroker)
         {
             if (bet.BetStatusId == (int)BetStatus.Running)
             {
@@ -285,7 +290,7 @@ namespace Platform.CashOutStake.Service.Repository
                                 UserId = bet.UserId,
                                 CashOutStatus = CashOutStatus.Unavailable,
                                 CashOutStake = 0m
-                            });
+                            }, messageBroker);
 
                             return;
                         }
@@ -299,7 +304,7 @@ namespace Platform.CashOutStake.Service.Repository
                                 UserId = bet.UserId,
                                 CashOutStatus = CashOutStatus.Unavailable,
                                 CashOutStake = 0m
-                            });
+                            }, messageBroker);
 
                             return;
                         }
@@ -322,7 +327,7 @@ namespace Platform.CashOutStake.Service.Repository
                                 UserId = bet.UserId,
                                 CashOutStatus = CashOutStatus.Unavailable,
                                 CashOutStake = 0m
-                            });
+                            }, messageBroker);
 
                             return;
                         }
@@ -335,7 +340,7 @@ namespace Platform.CashOutStake.Service.Repository
                                 UserId = bet.UserId,
                                 CashOutStatus = CashOutStatus.Available,
                                 CashOutStake = finalCashOutStake
-                            });
+                            }, messageBroker);
 
                             return;
                         }
@@ -351,7 +356,7 @@ namespace Platform.CashOutStake.Service.Repository
                                 UserId = bet.UserId,
                                 CashOutStatus = CashOutStatus.Unavailable,
                                 CashOutStake = 0m
-                            });
+                            }, messageBroker);
 
                             return;
                         }
@@ -389,7 +394,7 @@ namespace Platform.CashOutStake.Service.Repository
                                 UserId = bet.UserId,
                                 CashOutStatus = CashOutStatus.Available,
                                 CashOutStake = finalCashOutStake
-                            });
+                            }, messageBroker);
 
                             return;
                         }
@@ -402,7 +407,7 @@ namespace Platform.CashOutStake.Service.Repository
                                 UserId = bet.UserId,
                                 CashOutStatus = CashOutStatus.Unavailable,
                                 CashOutStake = 0m
-                            });
+                            }, messageBroker);
 
                             return;
                         }
@@ -417,7 +422,7 @@ namespace Platform.CashOutStake.Service.Repository
                         UserId = bet.UserId,
                         CashOutStatus = CashOutStatus.Unavailable,
                         CashOutStake = 0m
-                    });
+                    }, messageBroker);
 
                     return;
                 }
@@ -431,14 +436,15 @@ namespace Platform.CashOutStake.Service.Repository
                     UserId = bet.UserId,
                     CashOutStatus = CashOutStatus.Unavailable,
                     CashOutStake = 0m
-                });
+                }, messageBroker);
 
                 return;
             }
         }
 
-        public void Publish(OnCashOutChange message)
+        public void Publish(OnCashOutChange message, IMessageBroker messageBroker)
         {
+            messageBroker.ExternalPublish(message, "OnCashOutChange", $"r.bet.oncashoutchange", Guid.NewGuid().ToString());
             Console.WriteLine($"{DateTime.UtcNow} : {message.BetId} : {message.CashOutStatus.ToString()} : {message.CashOutStake}");
         }
     }

@@ -1,7 +1,13 @@
-﻿namespace Platform.CashOutStake.Service.Repository
+﻿using Platform.Shared.MessageModels;
+using Platform.Shared.Utility;
+
+namespace Platform.CashOutStake.Service.Repository
 {
     public interface IBettingRepository
     {
-        void ProcessCashOutStake(OnInternalOddsChangeMessage message);
+        void PreloadActiveBets();
+        void AddBet(OnBetPlacement message);
+        void RemoveBet(OnBetSettlement message);
+        void ProcessCashOutStake(OnInternalOddsChangeMessage message, IMessageBroker messageBroker);
     }
 }

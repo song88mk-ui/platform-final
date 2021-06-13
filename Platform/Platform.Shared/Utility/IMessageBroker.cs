@@ -8,6 +8,7 @@ namespace Platform.Shared.Utility
         event EventHandler<BasicDeliverEventArgs> MessageReceived;
         void Connect();
         void ExternalConnect();
+        void ConnectWithAutoAck();
         void ConnectWithManualAck();
         void Acknowledge(BasicDeliverEventArgs e);
         void NAcknowledge(BasicDeliverEventArgs e);

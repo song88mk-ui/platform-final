@@ -6,8 +6,8 @@ namespace Platform.CashOutStake.Service.Repository
     public interface IBettingRepository
     {
         void PreloadActiveBets();
-        void AddBet(OnBetPlacement message);
-        void RemoveBet(OnBetSettlement message);
-        void ProcessCashOutStake(OnInternalOddsChangeMessage message, IMessageBroker messageBroker);
+        void AddBet(OnBetPlacement message, long fixtureId);
+        void RemoveBet(OnBetSettlement message, long fixtureId);
+        void ProcessCashOutStake(OnInternalOddsChangeMessage message, long fixtureId, IMessageBroker messageBroker);
     }
 }

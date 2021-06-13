@@ -51,7 +51,7 @@ namespace Platform.Placement.Servicev2.Repository
                         {
                             var bet = context.Bet.Where(c => c.BetId == message.Bet.BetId).FirstOrDefault();
 
-                            if (bet != null)
+                            if (bet != null && bet.BetStatusId == (int)BetStatus.Waiting)
                             {
                                 bet.Reason = $"{result.Item2} (MTS)";
 
@@ -148,6 +148,10 @@ namespace Platform.Placement.Servicev2.Repository
                                 //    Console.WriteLine($"{DateTime.UtcNow} - Not Saved - Accepted - {message.Bet.BetId.ToString().ToUpper()}");
                                 //else
                                 //    Console.WriteLine($"{DateTime.UtcNow} - Saved - Accepted - {message.Bet.BetId.ToString().ToUpper()}");
+
+                                scope.Complete();
+
+                                messageBroker.Publish(payload, "OnBetPlacement", "r.bet.operator", correlationId);
                             }
                             else
                             {
@@ -155,10 +159,6 @@ namespace Platform.Placement.Servicev2.Repository
                                 //Console.WriteLine($"{DateTime.UtcNow} - Bet Not Found - Accepted - {message.Bet.BetId.ToString().ToUpper()}");
                                 //Console.WriteLine($"{DateTime.UtcNow} - Re-process Bet - Accepted - {message.Bet.BetId.ToString().ToUpper()}");
                             }
-
-                            scope.Complete();
-
-                            messageBroker.Publish(payload, "OnBetPlacement", "r.bet.operator", correlationId);
                         }
                     }
 
@@ -196,7 +196,7 @@ namespace Platform.Placement.Servicev2.Repository
                         {
                             var bet = context.Bet.Where(c => c.BetId == message.Bet.BetId).FirstOrDefault();
 
-                            if (bet != null)
+                            if (bet != null && bet.BetStatusId == (int)BetStatus.Waiting)
                             {
                                 var betStatus = BetStatus.Rejected;
 
@@ -295,21 +295,22 @@ namespace Platform.Placement.Servicev2.Repository
                                 ProcessStakeFixtureLimit(payload, context);
 
                                 context.SaveChanges();
+
+                                scope.Complete();
+
+                                messageBroker.Publish(payload, "OnBetTimeout", "r.bet.cancellation", correlationId);
+
+                                //publish to reports
+                                messageBroker.Publish(payload, "OnBetRejection", "r.bet.reports", correlationId);
+
+                                messageBroker.Publish(new OnBetStatus
+                                {
+                                    ClientId = payload.Bet.ClientId.ToString().ToUpper(),
+                                    UserId = payload.Bet.UserId,
+                                    BetId = payload.Bet.BetId.ToString().ToUpper(),
+                                    BetStatus = (BetStatus)payload.Bet.BetStatusId
+                                }, "OnBetStatus", "r.bet.betstatus", correlationId);
                             }
-                            scope.Complete();
-
-                            messageBroker.Publish(payload, "OnBetTimeout", "r.bet.cancellation", correlationId);
-
-                            //publish to reports
-                            messageBroker.Publish(payload, "OnBetRejection", "r.bet.reports", correlationId);
-
-                            messageBroker.Publish(new OnBetStatus
-                            {
-                                ClientId = payload.Bet.ClientId.ToString().ToUpper(),
-                                UserId = payload.Bet.UserId,
-                                BetId = payload.Bet.BetId.ToString().ToUpper(),
-                                BetStatus = (BetStatus)payload.Bet.BetStatusId
-                            }, "OnBetStatus", "r.bet.betstatus", correlationId);
                         }
                     }
 
@@ -347,7 +348,7 @@ namespace Platform.Placement.Servicev2.Repository
                     {
                         var bet = context.Bet.Where(c => c.BetId == message.Bet.BetId).FirstOrDefault();
 
-                        if (bet != null)
+                        if (bet != null && bet.BetStatusId == (int)BetStatus.Waiting)
                         {
                             var betStatus = BetStatus.Rejected;
 
@@ -446,21 +447,22 @@ namespace Platform.Placement.Servicev2.Repository
                             ProcessStakeFixtureLimit(payload, context);
 
                             context.SaveChanges();
+
+                            scope.Complete();
+
+                            messageBroker.Publish(payload, "OnBetTimeout", "r.bet.cancellation", correlationId);
+
+                            //publish to reports
+                            messageBroker.Publish(payload, "OnBetRejection", "r.bet.reports", correlationId);
+
+                            messageBroker.Publish(new OnBetStatus
+                            {
+                                ClientId = payload.Bet.ClientId.ToString().ToUpper(),
+                                UserId = payload.Bet.UserId,
+                                BetId = payload.Bet.BetId.ToString().ToUpper(),
+                                BetStatus = (BetStatus)payload.Bet.BetStatusId
+                            }, "OnBetStatus", "r.bet.betstatus", correlationId);
                         }
-                        scope.Complete();
-
-                        messageBroker.Publish(payload, "OnBetTimeout", "r.bet.cancellation", correlationId);
-
-                        //publish to reports
-                        messageBroker.Publish(payload, "OnBetRejection", "r.bet.reports", correlationId);
-
-                        messageBroker.Publish(new OnBetStatus
-                        {
-                            ClientId = payload.Bet.ClientId.ToString().ToUpper(),
-                            UserId = payload.Bet.UserId,
-                            BetId = payload.Bet.BetId.ToString().ToUpper(),
-                            BetStatus = (BetStatus)payload.Bet.BetStatusId
-                        }, "OnBetStatus", "r.bet.betstatus", correlationId);
                     }
                 }
             }

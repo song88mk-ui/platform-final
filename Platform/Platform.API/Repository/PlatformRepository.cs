@@ -220,6 +220,8 @@ namespace Platform.API.Repository
                 LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode) == LanguageCode.ZHT ? LanguageCode.ZH : (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode),
                 Channel = request.Channel,
                 IPAddress = request.IPAddress,
+                TaxPercentStake = clientResponse.Result.TaxPercentStake,
+                TaxPercentWinnings = clientResponse.Result.TaxPercentWinnings,
                 Selections = request.Selections.Select(s => new BetSelectionRequestDTO
                 {
                     SportId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SportId).FirstOrDefault(),

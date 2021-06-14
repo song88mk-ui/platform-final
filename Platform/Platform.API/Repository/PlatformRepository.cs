@@ -508,7 +508,8 @@ namespace Platform.API.Repository
                             Endpoint = result.Endpoint,
                             CompanyShare = result.EffectiveDate.Date < DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare,
                             ClientIdRef = result.ClientIdRef,
-                            WithholdingTax = string.IsNullOrEmpty(result.WithholdingTax) ? new WithholdingTaxSetting() : JsonSerializer.Deserialize<WithholdingTaxSetting>(result.WithholdingTax)
+                            TaxPercentStake = result.TaxPercentStake,
+                            TaxPercentWinnings = result.TaxPercentWinnings
                         }
                     };
                 }
@@ -546,7 +547,8 @@ namespace Platform.API.Repository
                                 Endpoint = result.Endpoint,
                                 CompanyShare = result.EffectiveDate.Date < DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare,
                                 ClientIdRef = result.ClientIdRef,
-                                WithholdingTax = string.IsNullOrEmpty(result.WithholdingTax) ? new WithholdingTaxSetting() : JsonSerializer.Deserialize<WithholdingTaxSetting>(result.WithholdingTax)
+                                TaxPercentStake = result.TaxPercentStake,
+                                TaxPercentWinnings = result.TaxPercentWinnings
                             }
                         };
                     }
@@ -1778,7 +1780,8 @@ namespace Platform.API.Repository
                         CurrentCompanyShare = currentCompanyShare,
                         EffectiveDate = effectiveDate,
                         NextCompanyShare = nextCompanyShare,
-                        WithholdingTax = JsonSerializer.Serialize(request.WithholdingTax)
+                        TaxPercentStake = request.TaxPercentStake,
+                        TaxPercentWinnings = request.TaxPercentWinnings
                     }).Entity;
 
                     clientId = clientEntity.ClientId;

@@ -16,12 +16,8 @@ namespace Platform.Shared.Models
         public DateTime EffectiveDate { get; set; }
         public decimal NextCompanyShare { get; set; }
         public int ClientIdRef { get; set; }
-        public WithholdingTaxSetting WithholdingTax { get; set; }
-    }
-
-    public class WithholdingTaxSetting
-    {
         public decimal TaxPercentStake { get; set; }
         public decimal TaxPercentWinnings { get; set; }
     }
+
 }

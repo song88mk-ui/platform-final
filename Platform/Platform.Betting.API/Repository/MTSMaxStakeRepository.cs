@@ -105,25 +105,25 @@ namespace Platform.Betting.API.Repository
 
                     long.TryParse(initialResult.MaxStake, out long maxStakeReturn);
 
-                    //return new BaseResponseDTO<MTSStakeResponseDTO>
-                    //{
-                    //    StatusCode = StatusCode.Success,
-                    //    Message = StatusCode.Success.ToString(),
-                    //    Result = new MTSStakeResponseDTO
-                    //    {
-                    //        Stake = maxStakeReturn / 10000
-                    //    }
-                    //};
-
                     return new BaseResponseDTO<MTSStakeResponseDTO>
                     {
                         StatusCode = StatusCode.Success,
                         Message = StatusCode.Success.ToString(),
                         Result = new MTSStakeResponseDTO
                         {
-                            Stake = companyShare == 0m ? maxStakeReturn / 10000 : (maxStakeReturn / 10000) / companyShare
+                            Stake = maxStakeReturn / 10000
                         }
                     };
+
+                    //return new BaseResponseDTO<MTSStakeResponseDTO>
+                    //{
+                    //    StatusCode = StatusCode.Success,
+                    //    Message = StatusCode.Success.ToString(),
+                    //    Result = new MTSStakeResponseDTO
+                    //    {
+                    //        Stake = companyShare == 0m ? maxStakeReturn / 10000 : (maxStakeReturn / 10000) / companyShare
+                    //    }
+                    //};
                 }
                 else
                 {

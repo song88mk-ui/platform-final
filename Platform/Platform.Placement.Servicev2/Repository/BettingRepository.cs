@@ -532,15 +532,15 @@ namespace Platform.Placement.Servicev2.Repository
         }
         private IBet BuildBet(Bet betData, List<BetSelection> betSelectionData)
         {
-            var companyStake = (0.0001m * betData.ExchangeRate) * 10000;
+            //var companyStake = (0.0001m * betData.ExchangeRate) * 10000;
 
-            if (betData.CompanyShare > 0)
-                companyStake = (betData.TrueStake * betData.CompanyShare) * 10000;
+            //if (betData.CompanyShare > 0)
+            //    companyStake = (betData.TrueStake * betData.CompanyShare) * 10000;
 
-            if (betData.CompanyShare == 0)
-                companyStake = betData.TrueStake * 10000;
+            //if (betData.CompanyShare == 0)
+            //    companyStake = betData.TrueStake * 10000;
 
-            //var companyStake = betData.TrueStake * 10000;
+            var companyStake = betData.TrueStake * 10000;
 
             var selection = _factory.CreateBetBuilder()
                                     .SetBetId(betData.BetId.ToString().ToUpper())

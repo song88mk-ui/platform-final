@@ -43,5 +43,7 @@ namespace Platform.Shared.Data.Betting.Entities
         public DateTime BetDateOffset { get; set; }
         public DateTime SettlementDate { get; set; }
         public DateTime SettlementDateOffset { get; set; }
+        public decimal TaxPercentStake { get; set; }
+        public decimal TaxPercentWinnings { get; set; }
     }
 }

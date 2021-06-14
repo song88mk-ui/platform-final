@@ -213,6 +213,7 @@ namespace Platform.Betting.API.Repository
 
                     var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
                     var stake = request.Stake;
+                    //var stake = request.TaxPercentStake > 0 ? request.TaxPercentStake * request.Stake : request.Stake;
 
                     var betEntity = _bettingContext.Bet.Update(new Bet
                     {
@@ -245,7 +246,9 @@ namespace Platform.Betting.API.Repository
                         BetDate = request.BetDate,
                         BetDateOffset = request.BetDate.AddHours(-4),
                         SettlementDate = request.BetDate,
-                        SettlementDateOffset = request.BetDate.AddHours(-4)
+                        SettlementDateOffset = request.BetDate.AddHours(-4),
+                        TaxPercentStake = request.TaxPercentStake,
+                        TaxPercentWinnings = request.TaxPercentWinnings
                     }).Entity;
 
                     betData = betEntity;
@@ -284,7 +287,9 @@ namespace Platform.Betting.API.Repository
                         BetDate = betEntity.BetDate,
                         BetDateOffset = betEntity.BetDateOffset,
                         SettlementDate = betEntity.SettlementDate,
-                        SettlementDateOffset = betEntity.SettlementDateOffset
+                        SettlementDateOffset = betEntity.SettlementDateOffset,
+                        TaxPercentStake = betEntity.TaxPercentStake,
+                        TaxPercentWinnings = betEntity.TaxPercentWinnings
                     });
 
                     foreach (var selection in request.Selections)
@@ -589,6 +594,7 @@ namespace Platform.Betting.API.Repository
 
                     var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
                     var stake = request.Stake;
+                    //var stake = request.TaxPercentStake > 0 ? request.TaxPercentStake * request.Stake : request.Stake;
 
                     var betEntity = _bettingContext.Bet.Update(new Bet
                     {
@@ -621,7 +627,9 @@ namespace Platform.Betting.API.Repository
                         BetDate = request.BetDate,
                         BetDateOffset = request.BetDate.AddHours(-4),
                         SettlementDate = request.BetDate,
-                        SettlementDateOffset = request.BetDate.AddHours(-4)
+                        SettlementDateOffset = request.BetDate.AddHours(-4),
+                        TaxPercentStake = request.TaxPercentStake,
+                        TaxPercentWinnings = request.TaxPercentWinnings
                     }).Entity;
 
                     betData = betEntity;
@@ -660,7 +668,9 @@ namespace Platform.Betting.API.Repository
                         BetDate = betEntity.BetDate,
                         BetDateOffset = betEntity.BetDateOffset,
                         SettlementDate = betEntity.SettlementDate,
-                        SettlementDateOffset = betEntity.SettlementDateOffset
+                        SettlementDateOffset = betEntity.SettlementDateOffset,
+                        TaxPercentStake = betEntity.TaxPercentStake,
+                        TaxPercentWinnings = betEntity.TaxPercentWinnings
                     });
 
                     foreach (var selection in request.Selections)

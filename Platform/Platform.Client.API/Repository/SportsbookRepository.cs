@@ -265,7 +265,7 @@ namespace Platform.Client.API.Repository
                     clientCode = "10J";
             }
 
-            var result = await _platformContext.ConfidenceFactor.Where(c => c.UserId == $"{clientCode}{ userId.Replace("-", string.Empty)}").ToListAsync();
+            var result = await _platformContext.ConfidenceFactor.Where(c => c.UserId == $"{clientCode}{userId.Replace("-", string.Empty)}").ToListAsync();
 
             if (result.Count == 0)
             {

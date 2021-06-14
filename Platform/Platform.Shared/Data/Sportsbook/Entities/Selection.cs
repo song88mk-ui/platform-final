@@ -27,6 +27,11 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public int MaStId { get; set; }
         public string CoId { get; set; }
         public double Pr { get; set; }
+        public double WoPr { get; set; }
+        public double LoPr { get; set; }
+        public double VoPr { get; set; }
+        public double HaWoPr { get; set; }
+        public double HaLoPr { get; set; }
         public List<SelectionTranslationMDB> SeNaTr { get; set; }
     }
     public class SelectionFilter

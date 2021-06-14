@@ -9,7 +9,6 @@ using Sportradar.MTS.SDK.API;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -243,7 +242,7 @@ namespace Platform.CashOut.Service
             {
                 try
                 {
-                    _logger.LogInformation($"Starting MTS..");
+                    Console.WriteLine("Starting");
                     var config = MtsSdk.GetConfiguration();
 
                     _mts = new MtsSdk(config);
@@ -251,7 +250,7 @@ namespace Platform.CashOut.Service
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogInformation($"Error in starting MTS..{ex.Message}");
+                    Console.WriteLine(ex.Message);
                 }
             }
 
@@ -270,7 +269,7 @@ namespace Platform.CashOut.Service
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogInformation($"Error in closing MTS..{ex.Message}");
+                    Console.WriteLine(ex.Message);
                 }
             }
 
@@ -841,8 +840,6 @@ namespace Platform.CashOut.Service
                         
                         _bettingRepository.ProcesssCashoutBetSettlement(onCashoutBetSettlement, _mts, _messageBroker, correlationId ?? Guid.NewGuid().ToString());
 
-                        _logger.LogInformation($"{DateTime.UtcNow} - {onCashoutBetSettlement.BetId.ToString().ToUpper()} - {threadId}");
-
                         _messageBroker.Acknowledge(e);
                         break;
                     default:
@@ -852,7 +849,6 @@ namespace Platform.CashOut.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError($"{messageType} {payload} {ex.Message} - {threadId}");
                 _messageBroker.Acknowledge(e);
             }
         }

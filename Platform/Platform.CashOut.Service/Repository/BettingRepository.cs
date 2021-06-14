@@ -1,20 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
-using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using Sportradar.MTS.SDK.API;
 using Sportradar.MTS.SDK.Entities.Builders;
 using Sportradar.MTS.SDK.Entities.Enums;
-using Sportradar.MTS.SDK.Entities.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Transactions;
 
 namespace Platform.CashOut.Service.Repository
@@ -22,12 +18,10 @@ namespace Platform.CashOut.Service.Repository
     public class BettingRepository : IBettingRepository
     {
         private IBuilderFactory _factory;
-        private readonly ILogger<BettingRepository> _logger;
         private readonly IConfiguration _configuration;
-        public BettingRepository(IConfiguration configuration, ILogger<BettingRepository> logger)
+        public BettingRepository(IConfiguration configuration)
         {
             _configuration = configuration;
-            _logger = logger;
         }
 
         public void ProcesssCashoutBetSettlement(OnCashoutBetSettlement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
@@ -122,8 +116,6 @@ namespace Platform.CashOut.Service.Repository
             }
             catch (Exception ex)
             {
-                _logger.LogError($"{DateTime.UtcNow} - Error in Cashout - {message.BetId.ToString().ToUpper()} - {ex.Message}");
-
                 messageBroker.Publish(new OnBetStatus
                 {
                     ClientId = bet.ClientId.ToString().ToUpper(),
@@ -312,8 +304,6 @@ namespace Platform.CashOut.Service.Repository
 
                 var response = mts.SendTicketCashoutBlocking(betCashout);
 
-                _logger.LogInformation($"SendCashoutToMTS - Response - {JsonSerializer.Serialize(response)}");
-
                 betStatus = response.Status;
                 reason = $"{response.Reason.Code} - {response.Reason.Message}";
 
@@ -321,8 +311,6 @@ namespace Platform.CashOut.Service.Repository
             }
             catch (Exception ex)
             {
-                _logger.LogError($"SendCashoutToMTS - {message.BetId.ToString().ToUpper()} - {ex.Message}");
-
                 return new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Rejected, $"10000 - {ex.Message}");
             }
         }

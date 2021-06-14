@@ -13,7 +13,8 @@ namespace Platform.API.Models
         public string Endpoint { get; set; }
         public decimal CompanyShare { get; set; }
         public int ClientIdRef { get; set; }
-        public WithholdingTaxSetting WithholdingTax { get; set; }
+        public decimal TaxPercentStake { get; set; }
+        public decimal TaxPercentWinnings { get; set; }
     }
 
     public class ForexEURResponse

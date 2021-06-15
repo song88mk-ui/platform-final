@@ -220,8 +220,8 @@ namespace Platform.API.Repository
                 LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode) == LanguageCode.ZHT ? LanguageCode.ZH : (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode),
                 Channel = request.Channel,
                 IPAddress = request.IPAddress,
-                TaxPercentStake = clientResponse.Result.TaxPercentStake,
-                TaxPercentWinnings = clientResponse.Result.TaxPercentWinnings,
+                TaxPercentStake = clientResponse.Result.StakeTax,
+                TaxPercentWinnings = clientResponse.Result.WinningsTax,
                 Selections = request.Selections.Select(s => new BetSelectionRequestDTO
                 {
                     SportId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SportId).FirstOrDefault(),
@@ -510,8 +510,8 @@ namespace Platform.API.Repository
                             Endpoint = result.Endpoint,
                             CompanyShare = result.EffectiveDate.Date < DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare,
                             ClientIdRef = result.ClientIdRef,
-                            TaxPercentStake = result.TaxPercentStake,
-                            TaxPercentWinnings = result.TaxPercentWinnings
+                            StakeTax = result.StakeTax,
+                            WinningsTax = result.WinningsTax
                         }
                     };
                 }
@@ -549,8 +549,8 @@ namespace Platform.API.Repository
                                 Endpoint = result.Endpoint,
                                 CompanyShare = result.EffectiveDate.Date < DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare,
                                 ClientIdRef = result.ClientIdRef,
-                                TaxPercentStake = result.TaxPercentStake,
-                                TaxPercentWinnings = result.TaxPercentWinnings
+                                StakeTax = result.StakeTax,
+                                WinningsTax = result.WinningsTax
                             }
                         };
                     }
@@ -1782,8 +1782,8 @@ namespace Platform.API.Repository
                         CurrentCompanyShare = currentCompanyShare,
                         EffectiveDate = effectiveDate,
                         NextCompanyShare = nextCompanyShare,
-                        TaxPercentStake = request.TaxPercentStake,
-                        TaxPercentWinnings = request.TaxPercentWinnings
+                        StakeTax = request.StakeTax,
+                        WinningsTax = request.WinningsTax
                     }).Entity;
 
                     clientId = clientEntity.ClientId;

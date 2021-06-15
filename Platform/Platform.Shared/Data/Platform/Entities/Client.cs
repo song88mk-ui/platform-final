@@ -15,7 +15,7 @@ namespace Platform.Shared.Data.Platform.Entities
         public DateTime EffectiveDate { get; set; }
         public decimal NextCompanyShare { get; set; }
         public int ClientIdRef { get; set; }
-        public decimal TaxPercentStake { get; set; }
-        public decimal TaxPercentWinnings { get; set; }
+        public decimal StakeTax { get; set; }
+        public decimal WinningsTax { get; set; }
     }
 }

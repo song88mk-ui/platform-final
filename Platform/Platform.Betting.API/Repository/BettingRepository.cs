@@ -1084,6 +1084,8 @@ namespace Platform.Betting.API.Repository
                     CashOutStatusId = cashOut.Result.StatusCode == StatusCode.Success ? (int)CashOutStatus.Available : (int)CashOutStatus.Unavailable,
                     CashOutStatusName = cashOut.Result.StatusCode == StatusCode.Success ? CashOutStatus.Available.ToString() : CashOutStatus.Unavailable.ToString(),
                     Probabilities = cashOut.Result.Result.Probabilities,
+                    StakeTax = 0,
+                    WinningsTax = 0,
                     Selections = filteredSelections.Select(s => new BetSelectionHistoryDTO
                     {
                         SportId = s.SportId,
@@ -1163,6 +1165,13 @@ namespace Platform.Betting.API.Repository
                 MinStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
                 MaxStake = parlayConfig.MaxStake,
                 MaxPayout = parlayConfig.MaxPayout
+            };
+
+            //TODO:
+            result.TaxConfig = new TaxConfig
+            {
+                StakeTax = 0,
+                WinningsTax = 0
             };
 
             return new BaseResponseDTO<BetConfigFEResponseDTO>

@@ -12,6 +12,7 @@ namespace Platform.Shared.Models
         public DefaultSportConfigFE DefaultSportConfig { get; set; }
         public List<OverrideSportConfigFE> OverrideSportConfig { get; set; }
         public ParlayConfigFE Parlayconfig { get; set; }
+        public TaxConfig TaxConfig { get; set; }
     }
 
     public class OverrideSportConfigFE
@@ -43,5 +44,11 @@ namespace Platform.Shared.Models
         public decimal MaxStake { get; set; }
         [JsonProperty("maxPayout")]
         public decimal MaxPayout { get; set; }
+    }
+
+    public class TaxConfig
+    {
+        public decimal StakeTax { get; set; }
+        public decimal WinningsTax { get; set; }
     }
 }

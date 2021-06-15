@@ -42,6 +42,8 @@ namespace Platform.Shared.Models
         public decimal CashOutStake { get; set; }
         public List<Probabilities> Probabilities { get; set; }
         public DateTime TransactionDate { get; set; }
+        public decimal StakeTax { get; set; }
+        public decimal WinningsTax { get; set; }
         public List<BetSelectionHistoryDTO> Selections { get; set; }
     }
 

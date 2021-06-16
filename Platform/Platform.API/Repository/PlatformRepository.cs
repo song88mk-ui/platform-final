@@ -220,8 +220,8 @@ namespace Platform.API.Repository
                 LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode) == LanguageCode.ZHT ? LanguageCode.ZH : (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode),
                 Channel = request.Channel,
                 IPAddress = request.IPAddress,
-                TaxPercentStake = clientResponse.Result.StakeTax,
-                TaxPercentWinnings = clientResponse.Result.WinningsTax,
+                StakeTax = clientResponse.Result.StakeTax,
+                WinningsTax = clientResponse.Result.WinningsTax,
                 Selections = request.Selections.Select(s => new BetSelectionRequestDTO
                 {
                     SportId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SportId).FirstOrDefault(),
@@ -644,7 +644,9 @@ namespace Platform.API.Repository
                 CompanyShare = clientResponse.Result.CompanyShare,
                 ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
                 CurrencyCode = request.CurrencyCode.ToString(),
-                ExchangeRate = rate.ExchangeRate
+                ExchangeRate = rate.ExchangeRate,
+                StakeTax = clientResponse.Result.StakeTax,
+                WinningsTax = clientResponse.Result.WinningsTax
             };
 
             return await _bettingRepository.BetConfig(payload);

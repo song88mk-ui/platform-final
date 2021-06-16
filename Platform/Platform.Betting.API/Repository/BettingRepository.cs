@@ -247,8 +247,8 @@ namespace Platform.Betting.API.Repository
                         BetDateOffset = request.BetDate.AddHours(-4),
                         SettlementDate = request.BetDate,
                         SettlementDateOffset = request.BetDate.AddHours(-4),
-                        TaxPercentStake = request.TaxPercentStake,
-                        TaxPercentWinnings = request.TaxPercentWinnings
+                        StakeTax = request.StakeTax,
+                        WinningsTax = request.WinningsTax
                     }).Entity;
 
                     betData = betEntity;
@@ -288,8 +288,8 @@ namespace Platform.Betting.API.Repository
                         BetDateOffset = betEntity.BetDateOffset,
                         SettlementDate = betEntity.SettlementDate,
                         SettlementDateOffset = betEntity.SettlementDateOffset,
-                        TaxPercentStake = betEntity.TaxPercentStake,
-                        TaxPercentWinnings = betEntity.TaxPercentWinnings
+                        StakeTax = betEntity.StakeTax,
+                        WinningsTax = betEntity.WinningsTax
                     });
 
                     foreach (var selection in request.Selections)
@@ -628,8 +628,8 @@ namespace Platform.Betting.API.Repository
                         BetDateOffset = request.BetDate.AddHours(-4),
                         SettlementDate = request.BetDate,
                         SettlementDateOffset = request.BetDate.AddHours(-4),
-                        TaxPercentStake = request.TaxPercentStake,
-                        TaxPercentWinnings = request.TaxPercentWinnings
+                        StakeTax = request.StakeTax,
+                        WinningsTax = request.WinningsTax
                     }).Entity;
 
                     betData = betEntity;
@@ -669,8 +669,8 @@ namespace Platform.Betting.API.Repository
                         BetDateOffset = betEntity.BetDateOffset,
                         SettlementDate = betEntity.SettlementDate,
                         SettlementDateOffset = betEntity.SettlementDateOffset,
-                        TaxPercentStake = betEntity.TaxPercentStake,
-                        TaxPercentWinnings = betEntity.TaxPercentWinnings
+                        StakeTax = betEntity.StakeTax,
+                        WinningsTax = betEntity.WinningsTax
                     });
 
                     foreach (var selection in request.Selections)
@@ -1094,8 +1094,8 @@ namespace Platform.Betting.API.Repository
                     CashOutStatusId = cashOut.Result.StatusCode == StatusCode.Success ? (int)CashOutStatus.Available : (int)CashOutStatus.Unavailable,
                     CashOutStatusName = cashOut.Result.StatusCode == StatusCode.Success ? CashOutStatus.Available.ToString() : CashOutStatus.Unavailable.ToString(),
                     Probabilities = cashOut.Result.Result.Probabilities,
-                    StakeTax = 0,
-                    WinningsTax = 0,
+                    StakeTax = bet.StakeTax,
+                    WinningsTax = bet.WinningsTax,
                     Selections = filteredSelections.Select(s => new BetSelectionHistoryDTO
                     {
                         SportId = s.SportId,
@@ -1177,11 +1177,10 @@ namespace Platform.Betting.API.Repository
                 MaxPayout = parlayConfig.MaxPayout
             };
 
-            //TODO:
             result.TaxConfig = new TaxConfig
             {
-                StakeTax = 0,
-                WinningsTax = 0
+                StakeTax = request.StakeTax,
+                WinningsTax = request.WinningsTax
             };
 
             return new BaseResponseDTO<BetConfigFEResponseDTO>

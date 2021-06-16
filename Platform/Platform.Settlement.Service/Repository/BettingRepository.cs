@@ -490,7 +490,9 @@ namespace Platform.Settlement.Service.Repository
                         BetDate = betEntity.BetDate,
                         BetDateOffset = betEntity.BetDateOffset,
                         SettlementDate = betEntity.SettlementDate,
-                        SettlementDateOffset = betEntity.SettlementDateOffset
+                        SettlementDateOffset = betEntity.SettlementDateOffset,
+                        StakeTax = betEntity.StakeTax,
+                        WinningsTax = betEntity.WinningsTax
                     });
 
                     isPublish = true;
@@ -554,7 +556,9 @@ namespace Platform.Settlement.Service.Repository
                             BetDate = betEntity.BetDate,
                             BetDateOffset = betEntity.BetDateOffset,
                             SettlementDate = betEntity.SettlementDate,
-                            SettlementDateOffset = betEntity.SettlementDateOffset
+                            SettlementDateOffset = betEntity.SettlementDateOffset,
+                            StakeTax = betEntity.StakeTax,
+                            WinningsTax = betEntity.WinningsTax
                         });
 
                         ProcessStakeFixtureLimit(message, betSelection, context, selections, betEntity);
@@ -687,7 +691,9 @@ namespace Platform.Settlement.Service.Repository
                         BetDate = betEntity.BetDate,
                         BetDateOffset = betEntity.BetDateOffset,
                         SettlementDate = betEntity.SettlementDate,
-                        SettlementDateOffset = betEntity.SettlementDateOffset
+                        SettlementDateOffset = betEntity.SettlementDateOffset,
+                        StakeTax = betEntity.StakeTax,
+                        WinningsTax = betEntity.WinningsTax
                     });
 
                     isPublish = true;
@@ -751,7 +757,9 @@ namespace Platform.Settlement.Service.Repository
                             BetDate = betEntity.BetDate,
                             BetDateOffset = betEntity.BetDateOffset,
                             SettlementDate = betEntity.SettlementDate,
-                            SettlementDateOffset = betEntity.SettlementDateOffset
+                            SettlementDateOffset = betEntity.SettlementDateOffset,
+                            StakeTax = betEntity.StakeTax,
+                            WinningsTax = betEntity.WinningsTax
                         });
 
                         isPublish = true;

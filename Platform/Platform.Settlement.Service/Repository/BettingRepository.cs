@@ -445,14 +445,18 @@ namespace Platform.Settlement.Service.Repository
 
                 if (bet != null)
                 {
-                    var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), bet.TrueStake);
+                    var taxedStake = bet.TrueStake - (bet.TrueStake * bet.StakeTax);
+                    var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), taxedStake);
 
                     var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
 
-                    bet.WinLoss = payout == 0 ? -bet.Stake : payout - bet.Stake;
+                    bet.WinLoss = payout == 0 ? -taxedStake : payout - taxedStake;
                     bet.BetStatusId = (int)betStatus;
                     bet.BetStatusName = betStatus.ToString();
-                    bet.Payout = payout;
+
+                    var taxedWinnings = (payout == 0 ? -taxedStake : payout - taxedStake) * bet.WinningsTax;
+
+                    bet.Payout = payout - taxedWinnings;
                     bet.SettlementDate = settledDate;
                     bet.SettlementDateOffset = settledDate.AddHours(-4);
 

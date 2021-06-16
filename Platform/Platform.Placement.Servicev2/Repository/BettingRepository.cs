@@ -179,7 +179,7 @@ namespace Platform.Placement.Servicev2.Repository
                         InnerException = ex.InnerException.ToString()
                     }, "OnBetPlacementError", "r.bet.placement.error", Guid.NewGuid().ToString().ToUpper());
 
-                    RejectBetOnError(message, messageBroker, correlationId, payload, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10001 - {ex.Message}"), 2);
+                    RejectBetOnError(message, messageBroker, correlationId, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10001 - {ex.Message}"), 2);
                 }
             }
             else
@@ -328,15 +328,17 @@ namespace Platform.Placement.Servicev2.Repository
                         InnerException = ex.InnerException.ToString()
                     }, "OnBetPlacementError", "r.bet.placement.error", Guid.NewGuid().ToString().ToUpper());
 
-                    RejectBetOnError(message, messageBroker, correlationId, payload, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10002 - {ex.Message}"), 2);
+                    RejectBetOnError(message, messageBroker, correlationId, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10002 - {ex.Message}"), 2);
                 }
             }
         }
 
-        private void RejectBetOnError(OnBetPlacement message, IMessageBroker messageBroker, string correlationId, OnBetPlacement payload, Tuple<TicketAcceptance, string> result, int remainingRetries)
+        private void RejectBetOnError(OnBetPlacement message, IMessageBroker messageBroker, string correlationId, Tuple<TicketAcceptance, string> result, int remainingRetries)
         {
             if (remainingRetries == 0) return;
             remainingRetries -= 1;
+
+            var rejectionPayload = new OnBetPlacement();
 
             try
             {
@@ -357,7 +359,7 @@ namespace Platform.Placement.Servicev2.Repository
                             bet.Reason = result.Item2;
 
                             var betEntity = context.Bet.Update(bet).Entity;
-                            payload.Bet = betEntity;
+                            rejectionPayload.Bet = betEntity;
 
                             context.BetAudit.Add(new BetAudit
                             {
@@ -403,7 +405,7 @@ namespace Platform.Placement.Servicev2.Repository
                                 betSelection.IsSettled = true;
 
                                 var betSelectionEntity = context.BetSelection.Update(betSelection).Entity;
-                                payload.BetSelections.Add(betSelectionEntity);
+                                rejectionPayload.BetSelections.Add(betSelectionEntity);
 
                                 context.BetSelectionAudit.Add(new BetSelectionAudit
                                 {
@@ -444,23 +446,23 @@ namespace Platform.Placement.Servicev2.Repository
                                 });
                             }
 
-                            ProcessStakeFixtureLimit(payload, context);
+                            ProcessStakeFixtureLimit(rejectionPayload, context);
 
                             context.SaveChanges();
 
                             scope.Complete();
 
-                            messageBroker.Publish(payload, "OnBetTimeout", "r.bet.cancellation", correlationId);
+                            messageBroker.Publish(rejectionPayload, "OnBetTimeout", "r.bet.cancellation", correlationId);
 
                             //publish to reports
-                            messageBroker.Publish(payload, "OnBetRejection", "r.bet.reports", correlationId);
+                            messageBroker.Publish(rejectionPayload, "OnBetRejection", "r.bet.reports", correlationId);
 
                             messageBroker.Publish(new OnBetStatus
                             {
-                                ClientId = payload.Bet.ClientId.ToString().ToUpper(),
-                                UserId = payload.Bet.UserId,
-                                BetId = payload.Bet.BetId.ToString().ToUpper(),
-                                BetStatus = (BetStatus)payload.Bet.BetStatusId
+                                ClientId = rejectionPayload.Bet.ClientId.ToString().ToUpper(),
+                                UserId = rejectionPayload.Bet.UserId,
+                                BetId = rejectionPayload.Bet.BetId.ToString().ToUpper(),
+                                BetStatus = (BetStatus)rejectionPayload.Bet.BetStatusId
                             }, "OnBetStatus", "r.bet.betstatus", correlationId);
                         }
                     }
@@ -468,7 +470,7 @@ namespace Platform.Placement.Servicev2.Repository
             }
             catch (Exception ex)
             {
-                RejectBetOnError(message, messageBroker, correlationId, payload, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10003 - {ex.Message}"), remainingRetries);
+                RejectBetOnError(message, messageBroker, correlationId, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10003 - {ex.Message}"), remainingRetries);
             }
         }
         private static void ProcessStakeFixtureLimit(OnBetPlacement payload, BettingContext context)

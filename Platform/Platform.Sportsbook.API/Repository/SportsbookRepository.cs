@@ -2390,11 +2390,28 @@ namespace Platform.Sportsbook.API.Repository
         {
             var result = new List<SearchResponse>();
 
-            var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.LeNa.ToLower().Contains(request.SearchText.ToLower()));
-            var leagues = fixtureCollection.Find(leagueFilter).ToListAsync();
+            FilterDefinition<Fixture> leagueFilter;
+            Task<List<Fixture>> leagues;
 
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.FiNa.ToLower().Contains(request.SearchText.ToLower()));
-            var fixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+            FilterDefinition<Fixture> fixtureFilter;
+            Task<List<Fixture>> fixtures;
+
+            if (request.LanguageCode == LanguageCode.EN)
+            {
+                leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.LeNa.ToLower().Contains(request.SearchText.ToLower()));
+                leagues = fixtureCollection.Find(leagueFilter).ToListAsync();
+
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.FiNa.ToLower().Contains(request.SearchText.ToLower()));
+                fixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+            }
+            else
+            {
+                leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.LeNaTr.Any(s => s.LeNa.ToLower().Contains(request.SearchText.ToLower())));
+                leagues = fixtureCollection.Find(leagueFilter).ToListAsync();
+
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.FiNaTr.Any(s => s.FiNa.ToLower().Contains(request.SearchText.ToLower())));
+                fixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+            }
 
             await Task.WhenAll(leagues, fixtures);
 
@@ -2424,25 +2441,11 @@ namespace Platform.Sportsbook.API.Repository
                 if (leagueListStartsWith.Any(c => c.SportId == league.SpId && c.SegmentId == league.SegId && c.LeagueId == league.LeId)) continue;
                 if (leagueListNotStartsWith.Any(c => c.SportId == league.SpId && c.SegmentId == league.SegId && c.LeagueId == league.LeId)) continue;
 
-                if (league.LeNa.ToLower().StartsWith(request.SearchText.ToLower()))
+                if (request.LanguageCode == LanguageCode.EN)
                 {
-                    leagueListStartsWith.Add(new SearchResponse
+                    if (league.LeNa.ToLower().StartsWith(request.SearchText.ToLower()))
                     {
-                        SportId = league.SpId,
-                        SportName = GetSportName(league.SpNa, league.SpNaTr, request.LanguageCode),
-                        SegmentId = league.SegId,
-                        SegmentName = GetSegmentName(league.SegNa, league.SegNaTr, request.LanguageCode),
-                        LeagueId = league.LeId,
-                        LeagueName = GetLeagueName(league.LeNa, league.LeNaTr, request.LanguageCode),
-                        FixtureId = string.Empty,
-                        FixtureName = string.Empty
-                    });
-                }
-                else
-                {
-                    if (league.LeNa.ToLower().Contains(request.SearchText.ToLower()))
-                    {
-                        leagueListNotStartsWith.Add(new SearchResponse
+                        leagueListStartsWith.Add(new SearchResponse
                         {
                             SportId = league.SpId,
                             SportName = GetSportName(league.SpNa, league.SpNaTr, request.LanguageCode),
@@ -2454,7 +2457,59 @@ namespace Platform.Sportsbook.API.Repository
                             FixtureName = string.Empty
                         });
                     }
+                    else
+                    {
+                        if (league.LeNa.ToLower().Contains(request.SearchText.ToLower()))
+                        {
+                            leagueListNotStartsWith.Add(new SearchResponse
+                            {
+                                SportId = league.SpId,
+                                SportName = GetSportName(league.SpNa, league.SpNaTr, request.LanguageCode),
+                                SegmentId = league.SegId,
+                                SegmentName = GetSegmentName(league.SegNa, league.SegNaTr, request.LanguageCode),
+                                LeagueId = league.LeId,
+                                LeagueName = GetLeagueName(league.LeNa, league.LeNaTr, request.LanguageCode),
+                                FixtureId = string.Empty,
+                                FixtureName = string.Empty
+                            });
+                        }
+                    }
                 }
+                else
+                {
+                    if (league.LeNaTr.Where(c => c.LaCo == request.LanguageCode.ToString()).Select(s => s.LeNa).FirstOrDefault().ToLower().StartsWith(request.SearchText.ToLower()))
+                    {
+                        leagueListStartsWith.Add(new SearchResponse
+                        {
+                            SportId = league.SpId,
+                            SportName = GetSportName(league.SpNa, league.SpNaTr, request.LanguageCode),
+                            SegmentId = league.SegId,
+                            SegmentName = GetSegmentName(league.SegNa, league.SegNaTr, request.LanguageCode),
+                            LeagueId = league.LeId,
+                            LeagueName = GetLeagueName(league.LeNa, league.LeNaTr, request.LanguageCode),
+                            FixtureId = string.Empty,
+                            FixtureName = string.Empty
+                        });
+                    }
+                    else
+                    {
+                        if (league.LeNaTr.Where(c => c.LaCo == request.LanguageCode.ToString()).Select(s => s.LeNa).FirstOrDefault().ToLower().Contains(request.SearchText.ToLower()))
+                        {
+                            leagueListNotStartsWith.Add(new SearchResponse
+                            {
+                                SportId = league.SpId,
+                                SportName = GetSportName(league.SpNa, league.SpNaTr, request.LanguageCode),
+                                SegmentId = league.SegId,
+                                SegmentName = GetSegmentName(league.SegNa, league.SegNaTr, request.LanguageCode),
+                                LeagueId = league.LeId,
+                                LeagueName = GetLeagueName(league.LeNa, league.LeNaTr, request.LanguageCode),
+                                FixtureId = string.Empty,
+                                FixtureName = string.Empty
+                            });
+                        }
+                    }
+                }
+
             }
 
             foreach (var fixture in finalFixtures)
@@ -2462,25 +2517,11 @@ namespace Platform.Sportsbook.API.Repository
                 if (fixtureListStartsWith.Any(c => c.FixtureId == fixture.FiId.ToString())) continue;
                 if (fixtureListNotStartsWith.Any(c => c.FixtureId == fixture.FiId.ToString())) continue;
 
-                if (fixture.FiNa.Split(" vs. ").First().ToLower().StartsWith(request.SearchText.ToLower()) || fixture.FiNa.Split(" vs. ").Last().ToLower().StartsWith(request.SearchText.ToLower()))
+                if (request.LanguageCode == LanguageCode.EN)
                 {
-                    fixtureListStartsWith.Add(new SearchResponse
+                    if (fixture.FiNa.Split(" vs. ").First().ToLower().StartsWith(request.SearchText.ToLower()) || fixture.FiNa.Split(" vs. ").Last().ToLower().StartsWith(request.SearchText.ToLower()))
                     {
-                        SportId = fixture.SpId,
-                        SportName = GetSportName(fixture.SpNa, fixture.SpNaTr, request.LanguageCode),
-                        SegmentId = fixture.SegId,
-                        SegmentName = GetSegmentName(fixture.SegNa, fixture.SegNaTr, request.LanguageCode),
-                        LeagueId = fixture.LeId,
-                        LeagueName = GetLeagueName(fixture.LeNa, fixture.LeNaTr, request.LanguageCode),
-                        FixtureId = fixture.FiId.ToString(),
-                        FixtureName = GetFixtureName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode)
-                    });
-                }
-                else
-                {
-                    if (fixture.FiNa.ToLower().Contains(request.SearchText.ToLower()))
-                    {
-                        fixtureListNotStartsWith.Add(new SearchResponse
+                        fixtureListStartsWith.Add(new SearchResponse
                         {
                             SportId = fixture.SpId,
                             SportName = GetSportName(fixture.SpNa, fixture.SpNaTr, request.LanguageCode),
@@ -2492,7 +2533,60 @@ namespace Platform.Sportsbook.API.Repository
                             FixtureName = GetFixtureName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode)
                         });
                     }
+                    else
+                    {
+                        if (fixture.FiNa.ToLower().Contains(request.SearchText.ToLower()))
+                        {
+                            fixtureListNotStartsWith.Add(new SearchResponse
+                            {
+                                SportId = fixture.SpId,
+                                SportName = GetSportName(fixture.SpNa, fixture.SpNaTr, request.LanguageCode),
+                                SegmentId = fixture.SegId,
+                                SegmentName = GetSegmentName(fixture.SegNa, fixture.SegNaTr, request.LanguageCode),
+                                LeagueId = fixture.LeId,
+                                LeagueName = GetLeagueName(fixture.LeNa, fixture.LeNaTr, request.LanguageCode),
+                                FixtureId = fixture.FiId.ToString(),
+                                FixtureName = GetFixtureName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode)
+                            });
+                        }
+                    }
                 }
+                else
+                {
+                    if (fixture.FiNaTr.Where(c => c.LaCo == request.LanguageCode.ToString()).Select(s => s.FiNa).FirstOrDefault().Split(" vs. ").First().ToLower().StartsWith(request.SearchText.ToLower()) || fixture.FiNa.Split(" vs. ").Last().ToLower().StartsWith(request.SearchText.ToLower()))
+                    {
+                        fixtureListStartsWith.Add(new SearchResponse
+                        {
+                            SportId = fixture.SpId,
+                            SportName = GetSportName(fixture.SpNa, fixture.SpNaTr, request.LanguageCode),
+                            SegmentId = fixture.SegId,
+                            SegmentName = GetSegmentName(fixture.SegNa, fixture.SegNaTr, request.LanguageCode),
+                            LeagueId = fixture.LeId,
+                            LeagueName = GetLeagueName(fixture.LeNa, fixture.LeNaTr, request.LanguageCode),
+                            FixtureId = fixture.FiId.ToString(),
+                            FixtureName = GetFixtureName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode)
+                        });
+                    }
+                    else
+                    {
+                        if (fixture.FiNaTr.Where(c => c.LaCo == request.LanguageCode.ToString()).Select(s => s.FiNa).FirstOrDefault().Split(" vs. ").First().ToLower().Contains(request.SearchText.ToLower()))
+                        {
+                            fixtureListNotStartsWith.Add(new SearchResponse
+                            {
+                                SportId = fixture.SpId,
+                                SportName = GetSportName(fixture.SpNa, fixture.SpNaTr, request.LanguageCode),
+                                SegmentId = fixture.SegId,
+                                SegmentName = GetSegmentName(fixture.SegNa, fixture.SegNaTr, request.LanguageCode),
+                                LeagueId = fixture.LeId,
+                                LeagueName = GetLeagueName(fixture.LeNa, fixture.LeNaTr, request.LanguageCode),
+                                FixtureId = fixture.FiId.ToString(),
+                                FixtureName = GetFixtureName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode)
+                            });
+                        }
+                    }
+                }
+
+
             }
 
             var startsWith = new List<SearchResponse>();

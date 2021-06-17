@@ -569,6 +569,8 @@ namespace Platform.API.Repository
                 {
                     SportId = selection.SportId,
                     SportName = translation == null ? selection.SportName : translation.SportName,
+                    SegmentId = selection.SegmentId,
+                    SegmentName = translation == null ? selection.SegmentName : translation.SegmentName,
                     LeagueId = selection.LeagueId,
                     LeagueName = translation == null ? selection.LeagueName : translation.LeagueName,
                     FixtureId = selection.FixtureId.ToString(),
@@ -586,8 +588,7 @@ namespace Platform.API.Repository
                     FixtureStatusId = selection.FixtureStatusId,
                     FixtureStatusName = selection.FixtureStatusName,
                     MarketTemplateId = selection.MarketTemplateId,
-                    SegmentId = selection.SegmentId,
-                    SegmentName = selection.SegmentName,
+
                     SelectionTemplateId = selection.SelectionTemplateId,
                     BetSelectionStatusId = selection.BetSelectionStatusId,
                     BetSelectionStatusName = selection.BetSelectionStatusName

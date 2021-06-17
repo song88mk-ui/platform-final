@@ -108,7 +108,9 @@ namespace Platform.Operator.Service.Repository
                             BetDate = betEntity.BetDate,
                             BetDateOffset = betEntity.BetDateOffset,
                             SettlementDate = betEntity.SettlementDate,
-                            SettlementDateOffset = betEntity.SettlementDateOffset
+                            SettlementDateOffset = betEntity.SettlementDateOffset,
+                            StakeTax = betEntity.StakeTax,
+                            WinningsTax = betEntity.WinningsTax
                         });
 
                         var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
@@ -234,7 +236,9 @@ namespace Platform.Operator.Service.Repository
                             BetDate = betEntity.BetDate,
                             BetDateOffset = betEntity.BetDateOffset,
                             SettlementDate = betEntity.SettlementDate,
-                            SettlementDateOffset = betEntity.SettlementDateOffset
+                            SettlementDateOffset = betEntity.SettlementDateOffset,
+                            StakeTax = betEntity.StakeTax,
+                            WinningsTax = betEntity.WinningsTax
                         });
 
                         var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
@@ -357,6 +361,8 @@ namespace Platform.Operator.Service.Repository
                     Stake = betData.Stake,
                     Odds = betData.Odds,
                     BetStatus = BetStatus.Running.ToString(),
+                    StakeTax = betData.StakeTax,
+                    WinningsTax = betData.WinningsTax,
                     TransactionDate = betData.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                     BetSelections = betSelectionData.Select(s => new OperatorBetSelectionRequestDTO
                     {
@@ -503,6 +509,8 @@ namespace Platform.Operator.Service.Repository
                     Stake = message.Bet.Stake,
                     Odds = message.Bet.Odds,
                     BetStatus = message.Bet.BetStatusName,
+                    StakeTax = message.Bet.StakeTax,
+                    WinningsTax = message.Bet.WinningsTax,
                     TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                     BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
                     {
@@ -640,6 +648,8 @@ namespace Platform.Operator.Service.Repository
                     Stake = message.Bet.Stake,
                     Odds = message.Bet.Odds,
                     BetStatus = message.Bet.BetStatusName,
+                    StakeTax = message.Bet.StakeTax,
+                    WinningsTax = message.Bet.WinningsTax,
                     TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                     BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
                     {

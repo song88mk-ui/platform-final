@@ -588,7 +588,6 @@ namespace Platform.API.Repository
                     FixtureStatusId = selection.FixtureStatusId,
                     FixtureStatusName = selection.FixtureStatusName,
                     MarketTemplateId = selection.MarketTemplateId,
-
                     SelectionTemplateId = selection.SelectionTemplateId,
                     BetSelectionStatusId = selection.BetSelectionStatusId,
                     BetSelectionStatusName = selection.BetSelectionStatusName

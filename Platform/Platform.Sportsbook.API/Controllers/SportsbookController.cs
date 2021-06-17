@@ -129,6 +129,20 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v1/sportsbook/betfixture/translation")]
+        public async Task<IActionResult> GetBetFixtureTranslation([FromBody] BetFixtureTranslationRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetBetFixtureTranslation(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/sportsbook/userfavorites/get/all")]
         public async Task<IActionResult> GetUserFavorites2([FromBody] UserFavoriteRequestDTO request)
         {

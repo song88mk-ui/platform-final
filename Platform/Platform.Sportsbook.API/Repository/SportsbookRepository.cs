@@ -698,6 +698,53 @@ namespace Platform.Sportsbook.API.Repository
 
             return new Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>(fixtures.Result, markets.Result, selections.Result, bettingStatus.Result);
         }
+
+        private async Task<Tuple<List<Fixture>, List<Market>, List<Selection>>> GetBetFixtureTranslations(BetFixtureTranslationRequestDTO request)
+        {
+            var fixtureIds = request.Selections.Select(s => s.FixtureId).ToList();
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
+            var fixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            var marketIds = request.Selections.Select(s => s.MarketId).ToList();
+            var marketFilter = Builders<Market>.Filter.Where(c => marketIds.Contains(c.MaId));
+            var markets = marketCollection.Find(marketFilter).ToListAsync();
+
+            var selectionIds = request.Selections.Select(s => s.SelectionId).ToList();
+            var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
+            var selections = selectionCollection.Find(selectionFilter).ToListAsync();
+
+            await Task.WhenAll(fixtures, markets, selections);
+
+            return new Tuple<List<Fixture>, List<Market>, List<Selection>>(fixtures.Result, markets.Result, selections.Result);
+        }
+        public async Task<BaseResponseDTO<BetFixtureTranslationResponseDTO>> GetBetFixtureTranslation(BetFixtureTranslationRequestDTO request)
+        {
+            var result = await GetBetFixtureTranslations(request);
+
+            return new BaseResponseDTO<BetFixtureTranslationResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BetFixtureTranslationResponseDTO
+                {
+                    Selections = request.Selections.Select(s => new BetFixtureSelectionTranslationResponseDTO
+                    {
+                        SportId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SpId).FirstOrDefault(),
+                        SportName = GetSportName(result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SpNa).FirstOrDefault(), result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SpNaTr).FirstOrDefault(), request.LanguageCode),
+                        SegmentId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SegId).FirstOrDefault(),
+                        SegmentName = GetSegmentName(result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SegNa).FirstOrDefault(), result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SegNaTr).FirstOrDefault(), request.LanguageCode),
+                        LeagueId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.LeId).FirstOrDefault(),
+                        LeagueName = GetLeagueName(result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.LeNa).FirstOrDefault(), result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.LeNaTr).FirstOrDefault(), request.LanguageCode),
+                        FixtureId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiId).FirstOrDefault(),
+                        FixtureName = GetFixtureName(result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiNa).FirstOrDefault(), result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiNaTr).FirstOrDefault(), request.LanguageCode),
+                        MarketId = result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.MaId).FirstOrDefault(),
+                        MarketName = GetMarketName(result.Item2.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId).Select(ss => ss.MaNa).FirstOrDefault(), result.Item2.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId).Select(ss => ss.MaNaTr).FirstOrDefault(), request.LanguageCode),
+                        SelectionId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeId).FirstOrDefault(),
+                        SelectionName = GetSelectionName(result.Item3.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId && c.SeId == s.SelectionId).Select(ss => ss.SeNa).FirstOrDefault(), result.Item3.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId && c.SeId == s.SelectionId).Select(ss => ss.SeNaTr).FirstOrDefault(), request.LanguageCode)
+                    }).ToList()
+                }
+            };
+        }
         public async Task<BaseResponseDTO<BetFixtureResponseDTO>> GetBetFixture(BetFixtureRequestDTO request)
         {
             var result = await GetBetFixtures(request);

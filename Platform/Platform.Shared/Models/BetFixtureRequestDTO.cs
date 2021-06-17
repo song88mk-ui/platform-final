@@ -23,4 +23,21 @@ namespace Platform.Shared.Models
         public decimal Odds { get; set; }
         public string CorrelationId { get; set; }
     }
+
+    public class BetFixtureTranslationRequestDTO
+    {
+        public BetFixtureTranslationRequestDTO()
+        {
+            Selections = new List<BetFixtureSelectionTranslationRequestDTO>();
+        }
+        public LanguageCode LanguageCode { get; set; }
+        public List<BetFixtureSelectionTranslationRequestDTO> Selections { get; set; }
+    }
+
+    public class BetFixtureSelectionTranslationRequestDTO
+    {
+        public long FixtureId { get; set; }
+        public long MarketId { get; set; }
+        public long SelectionId { get; set; }
+    }
 }

@@ -41,4 +41,29 @@ namespace Platform.Shared.Models
         public double Probability { get; set; }
         public BetSelectionState BetSelectionState { get; set; }
     }
+
+    public class BetFixtureTranslationResponseDTO
+    {
+        public BetFixtureTranslationResponseDTO()
+        {
+            Selections = new List<BetFixtureSelectionTranslationResponseDTO>();
+        }
+        public List<BetFixtureSelectionTranslationResponseDTO> Selections { get; set; }
+    }
+
+    public class BetFixtureSelectionTranslationResponseDTO
+    {
+        public int SportId { get; set; }
+        public string SportName { get; set; }
+        public int SegmentId { get; set; }
+        public string SegmentName { get; set; }
+        public int LeagueId { get; set; }
+        public string LeagueName { get; set; }
+        public long FixtureId { get; set; }
+        public string FixtureName { get; set; }
+        public long MarketId { get; set; }
+        public string MarketName { get; set; }
+        public long SelectionId { get; set; }
+        public string SelectionName { get; set; }
+    }
 }

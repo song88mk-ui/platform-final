@@ -427,8 +427,30 @@ namespace Platform.API.Repository
 
             return await _bettingRepository.GetMaxStake(payload);
         }
-        public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(string apiKey, string clientId, string operatorToken, BetHistoryRequest request)
+        public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(string apiKey, string clientId, string langCode, string operatorToken, BetHistoryRequest request)
         {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<BetHistoryResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<BetHistoryResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
                 return new BaseResponseDTO<BetHistoryResponseDTO>
@@ -474,7 +496,104 @@ namespace Platform.API.Repository
                 PageSize = request.PageSize
             };
 
-            return await _bettingRepository.GetBetHistory(payload);
+            if (languageCode == LanguageCode.EN)
+                return await _bettingRepository.GetBetHistory(payload);
+            else
+            {
+                var betHistory = await _bettingRepository.GetBetHistory(payload);
+
+                if (betHistory.Result.Bets.Count == 0)
+                    return betHistory;
+               
+                var betFixtureTranslation = new BetFixtureTranslationRequestDTO();
+
+                foreach (var bet in betHistory.Result.Bets)
+                {
+                    foreach (var selection in bet.Selections)
+                    {
+                        if (betFixtureTranslation.Selections.Any(c => c.SelectionId == Convert.ToInt64(selection.SelectionId))) continue;
+
+                        betFixtureTranslation.Selections.Add(new BetFixtureSelectionTranslationRequestDTO
+                        {
+                            FixtureId = Convert.ToInt64(selection.FixtureId),
+                            MarketId = Convert.ToInt64(selection.MarketId),
+                            SelectionId = Convert.ToInt64(selection.SelectionId)
+                        });
+                    }
+                }
+
+                var translations = await _sportsbookRepository.GetBetFixtureTranslation(betFixtureTranslation);
+
+                return new BaseResponseDTO<BetHistoryResponseDTO>
+                {
+                    Message = betHistory.Message,
+                    StatusCode = betHistory.StatusCode,
+                    Result = new BetHistoryResponseDTO
+                    {
+                        Bets = betHistory.Result.Bets.Select(s => new BetHistoryDTO
+                        {
+                            BetId = s.BetId,
+                            Stake = s.Stake,
+                            Odds = s.Odds,
+                            Payout = s.Payout,
+                            WinLoss = s.WinLoss,
+                            BetStatusId = s.BetStatusId,
+                            BetStatusName = s.BetStatusName,
+                            TransactionDate = s.TransactionDate,
+                            Commission = s.Commission,
+                            CurrencyCode = s.CurrencyCode,
+                            OddsType = s.OddsType,
+                            CashOutStake = s.CashOutStake,
+                            CashOutStatusId = s.CashOutStatusId,
+                            CashOutStatusName = s.CashOutStatusName,
+                            Probabilities = s.Probabilities,
+                            StakeTax = s.StakeTax,
+                            WinningsTax = s.WinningsTax,
+                            Selections = GetTranslatedBetSelectionHistory(s.Selections, translations.Result.Selections)
+                        }).ToList()
+                    }
+                };
+            }
+        }
+
+        private List<BetSelectionHistoryDTO> GetTranslatedBetSelectionHistory(List<BetSelectionHistoryDTO> selections, List<BetFixtureSelectionTranslationResponseDTO> translations)
+        {
+            var result = new List<BetSelectionHistoryDTO>();
+
+            foreach (var selection in selections)
+            {
+                var translation = translations.Where(c => c.FixtureId == Convert.ToInt64(selection.FixtureId) && c.MarketId == Convert.ToInt64(selection.MarketId) && c.SelectionId == Convert.ToInt64(selection.SelectionId)).FirstOrDefault();
+
+                result.Add(new BetSelectionHistoryDTO
+                {
+                    SportId = selection.SportId,
+                    SportName = translation.SportName,
+                    LeagueId = selection.LeagueId,
+                    LeagueName = translation.LeagueName,
+                    FixtureId = selection.FixtureId.ToString(),
+                    FixtureName = translation.FixtureName,
+                    MarketId = selection.MarketId.ToString(),
+                    MarketName = translation.MarketName,
+                    Line = selection.Line,
+                    SelectionId = selection.SelectionId.ToString(),
+                    SelectionName = translation.SelectionName,
+                    Odds = selection.Odds,
+                    BetScore = selection.BetScore,
+                    SettlementScore = selection.SettlementScore,
+                    BetSelectionId = selection.BetSelectionId.ToString(),
+                    FixtureStartDate = selection.FixtureStartDate,
+                    FixtureStatusId = selection.FixtureStatusId,
+                    FixtureStatusName = selection.FixtureStatusName,
+                    MarketTemplateId = selection.MarketTemplateId,
+                    SegmentId = selection.SegmentId,
+                    SegmentName = selection.SegmentName,
+                    SelectionTemplateId = selection.SelectionTemplateId,
+                    BetSelectionStatusId = selection.BetSelectionStatusId,
+                    BetSelectionStatusName = selection.BetSelectionStatusName
+                });
+            }
+
+            return result;
         }
         private async Task<BaseResponseDTO<ClientResponse>> GetClient(string clientId)
         {

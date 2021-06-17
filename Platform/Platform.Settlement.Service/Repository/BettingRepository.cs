@@ -445,18 +445,14 @@ namespace Platform.Settlement.Service.Repository
 
                 if (bet != null)
                 {
-                    var taxedStake = bet.TrueStake - (bet.TrueStake * bet.StakeTax);
-                    var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), taxedStake);
+                    var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), bet.TrueStake);
 
                     var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
 
-                    bet.WinLoss = payout == 0 ? -taxedStake : payout - taxedStake;
+                    bet.WinLoss = payout == 0 ? -bet.Stake : payout - bet.Stake;
                     bet.BetStatusId = (int)betStatus;
                     bet.BetStatusName = betStatus.ToString();
-
-                    var taxedWinnings = (payout == 0 ? -taxedStake : payout - taxedStake) * bet.WinningsTax;
-
-                    bet.Payout = payout - taxedWinnings;
+                    bet.Payout = payout;
                     bet.SettlementDate = settledDate;
                     bet.SettlementDateOffset = settledDate.AddHours(-4);
 
@@ -494,9 +490,7 @@ namespace Platform.Settlement.Service.Repository
                         BetDate = betEntity.BetDate,
                         BetDateOffset = betEntity.BetDateOffset,
                         SettlementDate = betEntity.SettlementDate,
-                        SettlementDateOffset = betEntity.SettlementDateOffset,
-                        StakeTax = betEntity.StakeTax,
-                        WinningsTax = betEntity.WinningsTax
+                        SettlementDateOffset = betEntity.SettlementDateOffset
                     });
 
                     isPublish = true;
@@ -560,9 +554,7 @@ namespace Platform.Settlement.Service.Repository
                             BetDate = betEntity.BetDate,
                             BetDateOffset = betEntity.BetDateOffset,
                             SettlementDate = betEntity.SettlementDate,
-                            SettlementDateOffset = betEntity.SettlementDateOffset,
-                            StakeTax = betEntity.StakeTax,
-                            WinningsTax = betEntity.WinningsTax
+                            SettlementDateOffset = betEntity.SettlementDateOffset
                         });
 
                         ProcessStakeFixtureLimit(message, betSelection, context, selections, betEntity);
@@ -650,18 +642,14 @@ namespace Platform.Settlement.Service.Repository
 
                 if (bet != null)
                 {
-                    var taxedStake = bet.TrueStake - (bet.TrueStake * bet.StakeTax);
-                    var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), taxedStake);
+                    var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), bet.TrueStake);
 
                     var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
 
-                    bet.WinLoss = payout == 0 ? -taxedStake : payout - taxedStake;
+                    bet.WinLoss = payout == 0 ? -bet.Stake : payout - bet.Stake;
                     bet.BetStatusId = (int)betStatus;
                     bet.BetStatusName = betStatus.ToString();
-
-                    var taxedWinnings = (payout == 0 ? -taxedStake : payout - taxedStake) * bet.WinningsTax;
-
-                    bet.Payout = payout - taxedWinnings;
+                    bet.Payout = payout;
                     bet.SettlementDate = settledDate;
                     bet.SettlementDateOffset = settledDate.AddHours(-4);
 
@@ -699,9 +687,7 @@ namespace Platform.Settlement.Service.Repository
                         BetDate = betEntity.BetDate,
                         BetDateOffset = betEntity.BetDateOffset,
                         SettlementDate = betEntity.SettlementDate,
-                        SettlementDateOffset = betEntity.SettlementDateOffset,
-                        StakeTax = betEntity.StakeTax,
-                        WinningsTax = betEntity.WinningsTax
+                        SettlementDateOffset = betEntity.SettlementDateOffset
                     });
 
                     isPublish = true;
@@ -765,9 +751,7 @@ namespace Platform.Settlement.Service.Repository
                             BetDate = betEntity.BetDate,
                             BetDateOffset = betEntity.BetDateOffset,
                             SettlementDate = betEntity.SettlementDate,
-                            SettlementDateOffset = betEntity.SettlementDateOffset,
-                            StakeTax = betEntity.StakeTax,
-                            WinningsTax = betEntity.WinningsTax
+                            SettlementDateOffset = betEntity.SettlementDateOffset
                         });
 
                         isPublish = true;
@@ -881,9 +865,7 @@ namespace Platform.Settlement.Service.Repository
                                 BetDate = betEntity.BetDate,
                                 BetDateOffset = betEntity.BetDateOffset,
                                 SettlementDate = betEntity.SettlementDate,
-                                SettlementDateOffset = betEntity.SettlementDateOffset,
-                                StakeTax = betEntity.StakeTax,
-                                WinningsTax = betEntity.WinningsTax
+                                SettlementDateOffset = betEntity.SettlementDateOffset
                             });
 
                             foreach (var betSelection in betSelections)

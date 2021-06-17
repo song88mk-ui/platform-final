@@ -31,8 +31,6 @@ namespace Platform.Shared.Models
         public LanguageCode LanguageCode { get; set; }
         public Channel Channel { get; set; }
         public string IPAddress { get; set; }
-        public decimal StakeTax { get; set; }
-        public decimal WinningsTax { get; set; }
         public List<BetSelectionRequestDTO> Selections { get; set; }
     }
 

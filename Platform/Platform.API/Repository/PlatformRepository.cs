@@ -506,6 +506,7 @@ namespace Platform.API.Repository
                     return betHistory;
                
                 var betFixtureTranslation = new BetFixtureTranslationRequestDTO();
+                betFixtureTranslation.LanguageCode = languageCode;
 
                 foreach (var bet in betHistory.Result.Bets)
                 {

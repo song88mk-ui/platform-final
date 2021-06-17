@@ -67,6 +67,7 @@ namespace Platform.Operator.Service.Repository
                     try
                     {
                         var bet = context.Bet.Find(betId);
+                        bet.Payout = bet.TrueStake;
                         bet.BetStatusId = (int)BetStatus.Cancelled;
                         bet.BetStatusName = BetStatus.Cancelled.ToString();
                         bet.Reason = $"103 - {reason}";

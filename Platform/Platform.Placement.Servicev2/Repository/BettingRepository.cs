@@ -90,9 +90,7 @@ namespace Platform.Placement.Servicev2.Repository
                                     BetDate = betEntity.BetDate,
                                     BetDateOffset = betEntity.BetDateOffset,
                                     SettlementDate = betEntity.SettlementDate,
-                                    SettlementDateOffset = betEntity.SettlementDateOffset,
-                                    StakeTax = betEntity.StakeTax,
-                                    WinningsTax = betEntity.WinningsTax
+                                    SettlementDateOffset = betEntity.SettlementDateOffset
                                 });
 
                                 var betSelections = context.BetSelection.Where(c => c.BetId == betEntity.BetId).ToList();
@@ -395,9 +393,7 @@ namespace Platform.Placement.Servicev2.Repository
                                 BetDate = betEntity.BetDate,
                                 BetDateOffset = betEntity.BetDateOffset,
                                 SettlementDate = betEntity.SettlementDate,
-                                SettlementDateOffset = betEntity.SettlementDateOffset,
-                                StakeTax = betEntity.StakeTax,
-                                WinningsTax = betEntity.WinningsTax
+                                SettlementDateOffset = betEntity.SettlementDateOffset
                             });
 
                             var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();

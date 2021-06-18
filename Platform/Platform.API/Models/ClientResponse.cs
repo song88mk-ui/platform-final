@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Platform.Shared.Models;
+using System;
 
 namespace Platform.API.Models
 {
@@ -12,6 +13,8 @@ namespace Platform.API.Models
         public string Endpoint { get; set; }
         public decimal CompanyShare { get; set; }
         public int ClientIdRef { get; set; }
+        public decimal StakeTax { get; set; }
+        public decimal WinningsTax { get; set; }
     }
 
     public class ForexEURResponse

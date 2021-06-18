@@ -16,7 +16,6 @@ namespace Platform.Shared.Models
         public AnySportBetSetting OtherSports { get; set; }
         public ParlayBetSetting Parlay { get; set; }
         public CricketBetSetting Cricket { get; set; }
-        public TaxConfig TaxConfig { get; set; }
     }
 
     public class FootballBetSetting

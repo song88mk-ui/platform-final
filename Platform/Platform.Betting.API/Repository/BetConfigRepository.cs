@@ -63,6 +63,8 @@ namespace Platform.Betting.API.Repository
                             MaxPayout = config.Parlay.MaxPayout,
                         });
 
+                        var taxJSON = JsonSerializer.Serialize(config.TaxConfig);
+
                         var betconfig = _bettingContext.BetConfig.FirstOrDefault(b => b.ClientId == clientID && b.CurrencyCode == config.CurrencyCode);
                         if (betconfig != null)
                         {
@@ -70,7 +72,7 @@ namespace Platform.Betting.API.Repository
                             betconfig.OverrideConfig = overrideJSON;
                             betconfig.ParlayConfig = parleyJSON;
                             betconfig.CreatedDate = dateCreated;
-
+                            betconfig.TaxConfig = taxJSON;
                             _bettingContext.BetConfig.Update(betconfig);
                         }
                         else
@@ -82,7 +84,8 @@ namespace Platform.Betting.API.Repository
                                 DefaultConfig = defaultJSON,
                                 OverrideConfig = overrideJSON,
                                 ParlayConfig = parleyJSON,
-                                CreatedDate = dateCreated
+                                CreatedDate = dateCreated,
+                                TaxConfig = taxJSON
                             });
                         }
                     }

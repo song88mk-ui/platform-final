@@ -1903,9 +1903,7 @@ namespace Platform.API.Repository
                         MonthlyFee = request.MonthlyFee,
                         CurrentCompanyShare = currentCompanyShare,
                         EffectiveDate = effectiveDate,
-                        NextCompanyShare = nextCompanyShare,
-                        StakeTax = request.StakeTax,
-                        WinningsTax = request.WinningsTax
+                        NextCompanyShare = nextCompanyShare
                     }).Entity;
 
                     clientId = clientEntity.ClientId;

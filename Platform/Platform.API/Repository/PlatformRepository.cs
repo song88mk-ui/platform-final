@@ -220,8 +220,6 @@ namespace Platform.API.Repository
                 LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode) == LanguageCode.ZHT ? LanguageCode.ZH : (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode),
                 Channel = request.Channel,
                 IPAddress = request.IPAddress,
-                StakeTax = clientResponse.Result.StakeTax,
-                WinningsTax = clientResponse.Result.WinningsTax,
                 Selections = request.Selections.Select(s => new BetSelectionRequestDTO
                 {
                     SportId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SportId).FirstOrDefault(),
@@ -629,9 +627,7 @@ namespace Platform.API.Repository
                             IsActive = result.IsActive,
                             Endpoint = result.Endpoint,
                             CompanyShare = result.EffectiveDate.Date < DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare,
-                            ClientIdRef = result.ClientIdRef,
-                            StakeTax = result.StakeTax,
-                            WinningsTax = result.WinningsTax
+                            ClientIdRef = result.ClientIdRef
                         }
                     };
                 }
@@ -668,9 +664,7 @@ namespace Platform.API.Repository
                                 IsActive = result.IsActive,
                                 Endpoint = result.Endpoint,
                                 CompanyShare = result.EffectiveDate.Date < DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare,
-                                ClientIdRef = result.ClientIdRef,
-                                StakeTax = result.StakeTax,
-                                WinningsTax = result.WinningsTax
+                                ClientIdRef = result.ClientIdRef
                             }
                         };
                     }
@@ -747,7 +741,6 @@ namespace Platform.API.Repository
             //};
             #endregion
 
-
             var rate = await GetExchangeRate(request.CurrencyCode.ToString());
 
             if (rate.CurrencyCode == null)
@@ -764,9 +757,7 @@ namespace Platform.API.Repository
                 CompanyShare = clientResponse.Result.CompanyShare,
                 ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
                 CurrencyCode = request.CurrencyCode.ToString(),
-                ExchangeRate = rate.ExchangeRate,
-                StakeTax = clientResponse.Result.StakeTax,
-                WinningsTax = clientResponse.Result.WinningsTax
+                ExchangeRate = rate.ExchangeRate
             };
 
             return await _bettingRepository.BetConfig(payload);

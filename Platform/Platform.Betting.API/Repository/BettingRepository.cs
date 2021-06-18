@@ -88,6 +88,7 @@ namespace Platform.Betting.API.Repository
             decimal maxPerGame = 0;
             decimal stakeFixtureLimit = 0;
             var odds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+            var taxConfig = JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
             if (request.Selections.Count == 1)
             {
@@ -213,7 +214,7 @@ namespace Platform.Betting.API.Repository
 
                     var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
                     var stake = request.Stake;
-                    //var stake = request.TaxPercentStake > 0 ? request.TaxPercentStake * request.Stake : request.Stake;
+                    var taxedStake = stake - (stake * taxConfig.StakeTax);
 
                     var betEntity = _bettingContext.Bet.Update(new Bet
                     {
@@ -223,7 +224,8 @@ namespace Platform.Betting.API.Repository
                         Odds = totalOdds,
                         OddsTypeId = (int)request.OddsType,
                         OddsTypeName = request.OddsType.ToString(),
-                        Payout = stake == request.Stake ? stake * totalOdds : stake + request.Stake,
+                        //Payout = stake == request.Stake ? stake * totalOdds : stake + request.Stake,
+                        Payout = taxedStake * totalOdds,
                         WinLoss = 0m,
                         BetStatusId = (int)BetStatus.Waiting,
                         BetStatusName = BetStatus.Waiting.ToString(),
@@ -247,8 +249,8 @@ namespace Platform.Betting.API.Repository
                         BetDateOffset = request.BetDate.AddHours(-4),
                         SettlementDate = request.BetDate,
                         SettlementDateOffset = request.BetDate.AddHours(-4),
-                        StakeTax = request.StakeTax,
-                        WinningsTax = request.WinningsTax
+                        StakeTax = taxConfig.StakeTax,
+                        WinningsTax = taxConfig.WinningsTax
                     }).Entity;
 
                     betData = betEntity;
@@ -491,6 +493,7 @@ namespace Platform.Betting.API.Repository
             decimal maxPerGame = 0;
             decimal stakeFixtureLimit = 0;
             var odds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+            var taxConfig = JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
             if (request.Selections.Count == 1)
             {
@@ -594,7 +597,7 @@ namespace Platform.Betting.API.Repository
 
                     var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
                     var stake = request.Stake;
-                    //var stake = request.TaxPercentStake > 0 ? request.TaxPercentStake * request.Stake : request.Stake;
+                    var taxedStake = stake - (stake * taxConfig.StakeTax);
 
                     var betEntity = _bettingContext.Bet.Update(new Bet
                     {
@@ -604,7 +607,8 @@ namespace Platform.Betting.API.Repository
                         Odds = totalOdds,
                         OddsTypeId = (int)request.OddsType,
                         OddsTypeName = request.OddsType.ToString(),
-                        Payout = stake == request.Stake ? stake * totalOdds : stake + request.Stake,
+                        //Payout = stake == request.Stake ? stake * totalOdds : stake + request.Stake,
+                        Payout = taxedStake * totalOdds,
                         WinLoss = 0m,
                         BetStatusId = (int)BetStatus.Waiting,
                         BetStatusName = BetStatus.Waiting.ToString(),
@@ -628,8 +632,8 @@ namespace Platform.Betting.API.Repository
                         BetDateOffset = request.BetDate.AddHours(-4),
                         SettlementDate = request.BetDate,
                         SettlementDateOffset = request.BetDate.AddHours(-4),
-                        StakeTax = request.StakeTax,
-                        WinningsTax = request.WinningsTax
+                        StakeTax = taxConfig.StakeTax,
+                        WinningsTax = taxConfig.WinningsTax
                     }).Entity;
 
                     betData = betEntity;
@@ -1152,6 +1156,7 @@ namespace Platform.Betting.API.Repository
             DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
             ParlayConfig parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
             List<OverrideSportConfig> overrideSportConfig = JsonSerializer.Deserialize<List<OverrideSportConfig>>(betConfig.OverrideConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            TaxConfig taxConfig = JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
             result.DefaultSportConfig = new DefaultSportConfigFE()
             {
@@ -1177,10 +1182,11 @@ namespace Platform.Betting.API.Repository
                 MaxPayout = parlayConfig.MaxPayout
             };
 
+
             result.TaxConfig = new TaxConfig
             {
-                StakeTax = request.StakeTax,
-                WinningsTax = request.WinningsTax
+                StakeTax = taxConfig.StakeTax,
+                WinningsTax = taxConfig.WinningsTax
             };
 
             return new BaseResponseDTO<BetConfigFEResponseDTO>

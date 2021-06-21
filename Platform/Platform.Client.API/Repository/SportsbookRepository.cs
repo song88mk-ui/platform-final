@@ -251,7 +251,7 @@ namespace Platform.Client.API.Repository
         }
         public async Task<BaseResponseDTO<CustomerConfidenceFactorResponseDTO>> GetCustomerConfidenceFactor(string apiKey, string clientId, string userId)
         {
-            var clientCode = "10C";
+            var clientCode = _configuration["Custom:ClientCode"];
 
             if (!string.IsNullOrEmpty(clientId))
             {

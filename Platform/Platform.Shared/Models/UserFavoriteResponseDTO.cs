@@ -1,4 +1,5 @@
 ﻿using Platform.Shared.Enums;
+using System;
 using System.Collections.Generic;
 
 namespace Platform.Shared.Models
@@ -24,6 +25,7 @@ namespace Platform.Shared.Models
 
     public class UserFavoriteRequestDTO
     {
+        public Guid ClientId { get; set; }
         public string ClientCode { get; set; }
         public string UserId { get; set; }
         public LanguageCode LanguageCode { get; set; }

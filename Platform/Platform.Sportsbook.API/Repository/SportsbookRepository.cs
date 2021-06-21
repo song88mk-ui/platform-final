@@ -859,7 +859,7 @@ namespace Platform.Sportsbook.API.Repository
                             FixtureStatusName = item.FiStNa,
                             MarketCount = marketCount.Result.Where(c => c.FiId == item.FiId).Count(),
                             SMSCode = string.Empty,
-                            StatisticsURL = string.IsNullOrEmpty(item.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{item.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                            StatisticsURL = GetStatisticsURL(request.ClientId, item.StUr, request.LanguageCode),
                             Score = item.Sc,
                             CurrentPeriod = CurrentPeriodHelper.ToShortName(item.CuPe),
                             CurrentMinute = item.CuMi.ToString(),
@@ -929,7 +929,7 @@ namespace Platform.Sportsbook.API.Repository
                             FixtureStatusName = item.FiStNa,
                             MarketCount = marketCount.Result.Where(c => c.FiId == item.FiId).Count(),
                             SMSCode = string.Empty,
-                            StatisticsURL = string.IsNullOrEmpty(item.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{item.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                            StatisticsURL = GetStatisticsURL(request.ClientId, item.StUr, request.LanguageCode),
                             Score = item.Sc,
                             CurrentPeriod = CurrentPeriodHelper.ToShortName(item.CuPe),
                             CurrentMinute = item.CuMi.ToString(),
@@ -1245,7 +1245,7 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStatusName = s.FiStNa,
                 MarketCount = 0,
                 SMSCode = string.Empty,
-                StatisticsURL = string.IsNullOrEmpty(s.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
                 Score = s.Sc,
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
@@ -1437,6 +1437,22 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+        private string GetStatisticsURL(Guid clientId, string uriPath, LanguageCode languageCode)
+        {
+            switch (clientId.ToString().ToUpper())
+            {
+                case "5093617A-9367-EB11-89FB-00224815B68B":
+                case "BFED6DA4-D1B5-4437-665D-08D8EE99AC1C":
+                    return string.IsNullOrEmpty(uriPath) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{uriPath}".Replace("{languageCode}", languageCode.ToString().ToLower());
+
+                case "A96AB8BC-2970-EB11-89FC-00224815B68B":
+                case "917070EC-1DC1-4E10-28E8-08D8EE99CA8E":
+                    return string.IsNullOrEmpty(uriPath) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding3{uriPath}".Replace("{languageCode}", languageCode.ToString().ToLower());
+
+                default:
+                    return string.IsNullOrEmpty(uriPath) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding3{uriPath}".Replace("{languageCode}", languageCode.ToString().ToLower());
+            }
+        } 
         public async Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixtures(TWLiveFixtureRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Live && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
@@ -1482,7 +1498,7 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStatusName = s.FiStNa,
                 MarketCount = 0,
                 SMSCode = string.Empty,
-                StatisticsURL = string.IsNullOrEmpty(s.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
                 Score = s.Sc,
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
@@ -1673,16 +1689,6 @@ namespace Platform.Sportsbook.API.Repository
             else
                 fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
 
-            //var fixtureProjection = Builders<Fixture>.Projection.Include(s => s.FiId).Include(s => s.PrFiId).Include(s => s.SpId).Include(s => s.SpNa).Include(s => s.SegId)
-            //    .Include(s => s.SegNa).Include(s => s.LeId).Include(s => s.LeNa).Include(s => s.FiNa).Include(s => s.FiStDa).Include(s => s.FiStId).Include(s => s.FiStNa).Include(s => s.FiTyId)
-            //    .Include(s => s.FiTyNa).Include(s => s.Sc).Include(s => s.IsOfLi).Include(s => s.HoReCa).Include(s => s.AwReCa).Include(s => s.CuPe).Include(s => s.CuMi).Include(s => s.FiSp)
-            //    .Include(s => s.IsHoFa).Include(s => s.FiSoOr).Include(s => s.ToTi).Include(s => s.LiId).Include(s => s.StUr).Include(s => s.IsSu).Include(s => s.SpNaTr).Include(s => s.SegNaTr)
-            //    .Include(s => s.LeNaTr).Include(s => s.FiNaTr)
-            //    .ElemMatch(c => c.SpNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
-            //    .ElemMatch(c => c.SegNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
-            //    .ElemMatch(c => c.LeNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
-            //    .ElemMatch(c => c.FiNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
-
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
@@ -1728,7 +1734,7 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureStatusName = s.FiStNa,
                     MarketCount = 0,
                     SMSCode = string.Empty,
-                    StatisticsURL = string.IsNullOrEmpty(s.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                    StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
                     Score = s.Sc,
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                     CurrentMinute = s.CuMi.ToString(),
@@ -1760,7 +1766,7 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureStatusName = s.FiStNa,
                     MarketCount = 0,
                     SMSCode = string.Empty,
-                    StatisticsURL = string.IsNullOrEmpty(s.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                    StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
                     Score = s.Sc,
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                     CurrentMinute = s.CuMi.ToString(),
@@ -1897,7 +1903,7 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStatusName = s.FiStNa,
                 MarketCount = 0,
                 SMSCode = string.Empty,
-                StatisticsURL = string.IsNullOrEmpty(s.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
                 Score = s.Sc,
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
@@ -2030,7 +2036,7 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStatusName = s.FiStNa,
                 MarketCount = 0,
                 SMSCode = string.Empty,
-                StatisticsURL = string.IsNullOrEmpty(s.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
                 Score = s.Sc,
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
@@ -2245,7 +2251,7 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStatusName = s.FiStNa,
                 MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
                 SMSCode = string.Empty,
-                StatisticsURL = string.IsNullOrEmpty(s.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
                 Score = s.Sc,
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
@@ -2329,7 +2335,7 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStatusName = s.FiStNa,
                 MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
                 SMSCode = string.Empty,
-                StatisticsURL = string.IsNullOrEmpty(s.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
                 Score = s.Sc,
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
@@ -2414,7 +2420,7 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStatusName = s.FiStNa,
                 MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
                 SMSCode = string.Empty,
-                StatisticsURL = string.IsNullOrEmpty(s.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{s.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
                 Score = s.Sc,
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
@@ -2801,7 +2807,7 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureStatusName = fixture.FiStNa,
                     MarketCount = markets.Result.Where(c => c.FiId == fixture.FiId).Count(),
                     SMSCode = string.Empty,
-                    StatisticsURL = string.IsNullOrEmpty(fixture.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{fixture.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                    StatisticsURL = GetStatisticsURL(request.ClientId, fixture.StUr, request.LanguageCode),
                     Score = fixture.Sc,
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(fixture.CuPe),
                     CurrentMinute = fixture.CuMi.ToString(),
@@ -2951,7 +2957,7 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureStatusName = fixture.FiStNa,
                     MarketCount = markets.Result.Where(c => c.FiId == fixture.FiId).Count(),
                     SMSCode = string.Empty,
-                    StatisticsURL = string.IsNullOrEmpty(fixture.StUr) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding2{fixture.StUr}".Replace("{languageCode}", request.LanguageCode.ToString().ToLower()),
+                    StatisticsURL = GetStatisticsURL(request.ClientId, fixture.StUr, request.LanguageCode),
                     Score = fixture.Sc,
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(fixture.CuPe),
                     CurrentMinute = fixture.CuMi.ToString(),

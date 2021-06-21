@@ -1610,6 +1610,7 @@ namespace Platform.API.Repository
 
             return await _sportsbookRepository.GetUserFavorites2(new UserFavoriteRequestDTO
             {
+                ClientId = clientResponse.Result.ClientId,
                 UserId = authenticationResponse.Result.UserId,
                 ClientCode = clientResponse.Result.ClientCode,
                 LanguageCode = languageCode
@@ -1723,6 +1724,7 @@ namespace Platform.API.Repository
 
             return await _sportsbookRepository.GetUserFavorites(new UserFavoriteRequestDTO 
             { 
+                ClientId = clientResponse.Result.ClientId,
                 UserId = authenticationResponse.Result.UserId,
                 ClientCode = clientResponse.Result.ClientCode,
                 LanguageCode = languageCode

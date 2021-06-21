@@ -88,7 +88,7 @@ namespace Platform.Betting.API.Repository
             decimal maxPerGame = 0;
             decimal stakeFixtureLimit = 0;
             var odds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
-            var taxConfig = JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            var taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
 
             if (request.Selections.Count == 1)
             {
@@ -493,7 +493,7 @@ namespace Platform.Betting.API.Repository
             decimal maxPerGame = 0;
             decimal stakeFixtureLimit = 0;
             var odds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
-            var taxConfig = JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            var taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
 
             if (request.Selections.Count == 1)
             {
@@ -1156,7 +1156,7 @@ namespace Platform.Betting.API.Repository
             DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
             ParlayConfig parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
             List<OverrideSportConfig> overrideSportConfig = JsonSerializer.Deserialize<List<OverrideSportConfig>>(betConfig.OverrideConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-            TaxConfig taxConfig = JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            TaxConfig taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
 
             result.DefaultSportConfig = new DefaultSportConfigFE()
             {

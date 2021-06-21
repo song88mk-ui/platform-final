@@ -741,7 +741,6 @@ namespace Platform.API.Repository
             //};
             #endregion
 
-
             var rate = await GetExchangeRate(request.CurrencyCode.ToString());
 
             if (rate.CurrencyCode == null)

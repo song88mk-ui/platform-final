@@ -17,4 +17,5 @@ namespace Platform.Shared.Models
         public decimal NextCompanyShare { get; set; }
         public int ClientIdRef { get; set; }
     }
+
 }

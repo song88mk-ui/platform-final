@@ -215,14 +215,16 @@ namespace Platform.Betting.API.Repository
 
                         var finalProbability = probabilites.Where(c => c.Probability > 0).Select(s => s.Probability).Aggregate((a, b) => a * b);
 
-                        var cashOutStake = (bet.TrueStake * bet.Odds) * Convert.ToDecimal(finalProbability);
+                        var stake = bet.TrueStake - (bet.TrueStake * bet.StakeTax);
+
+                        var cashOutStake = (stake * bet.Odds) * Convert.ToDecimal(finalProbability);
 
                         var finalCashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
                         if (!hasProbabilityChanged)
-                            finalCashOutStake = bet.TrueStake - (bet.TrueStake * 0.10m);
+                            finalCashOutStake = stake - (stake * 0.10m);
 
-                        if (finalCashOutStake == 0 || finalCashOutStake > bet.TrueStake * bet.Odds)
+                        if (finalCashOutStake == 0 || finalCashOutStake > stake * bet.Odds)
                         {
                             return new BaseResponseDTO<CashOutResponse>
                             {

@@ -43,5 +43,9 @@ namespace Platform.Shared.Data.Betting.Entities
         public DateTime BetDateOffset { get; set; }
         public DateTime SettlementDate { get; set; }
         public DateTime SettlementDateOffset { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal StakeTax { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal WinningsTax { get; set; }
     }
 }

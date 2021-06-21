@@ -90,7 +90,9 @@ namespace Platform.Placement.Servicev2.Repository
                                     BetDate = betEntity.BetDate,
                                     BetDateOffset = betEntity.BetDateOffset,
                                     SettlementDate = betEntity.SettlementDate,
-                                    SettlementDateOffset = betEntity.SettlementDateOffset
+                                    SettlementDateOffset = betEntity.SettlementDateOffset,
+                                    StakeTax = betEntity.StakeTax,
+                                    WinningsTax = betEntity.WinningsTax
                                 });
 
                                 var betSelections = context.BetSelection.Where(c => c.BetId == betEntity.BetId).ToList();
@@ -200,6 +202,7 @@ namespace Platform.Placement.Servicev2.Repository
                             {
                                 var betStatus = BetStatus.Rejected;
 
+                                bet.Payout = bet.TrueStake;
                                 bet.BetStatusId = (int)betStatus;
                                 bet.BetStatusName = betStatus.ToString();
                                 bet.Reason = result.Item2;
@@ -354,6 +357,7 @@ namespace Platform.Placement.Servicev2.Repository
                         {
                             var betStatus = BetStatus.Rejected;
 
+                            bet.Payout = bet.TrueStake;
                             bet.BetStatusId = (int)betStatus;
                             bet.BetStatusName = betStatus.ToString();
                             bet.Reason = result.Item2;
@@ -393,7 +397,9 @@ namespace Platform.Placement.Servicev2.Repository
                                 BetDate = betEntity.BetDate,
                                 BetDateOffset = betEntity.BetDateOffset,
                                 SettlementDate = betEntity.SettlementDate,
-                                SettlementDateOffset = betEntity.SettlementDateOffset
+                                SettlementDateOffset = betEntity.SettlementDateOffset,
+                                StakeTax = betEntity.StakeTax,
+                                WinningsTax = betEntity.WinningsTax
                             });
 
                             var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
@@ -542,12 +548,13 @@ namespace Platform.Placement.Servicev2.Repository
             //if (betData.CompanyShare == 0)
             //    companyStake = betData.TrueStake * 10000;
 
-            var companyStake = betData.TrueStake * 10000;
+            //var companyStake = betData.TrueStake * 10000;
+            var stake = (betData.TrueStake - (betData.TrueStake * betData.WinningsTax)) * 10000;
 
             var selection = _factory.CreateBetBuilder()
                                     .SetBetId(betData.BetId.ToString().ToUpper())
-                                    .SetStake(Convert.ToInt64(companyStake), StakeType.Total)
-                                    .SetEntireStake(Convert.ToInt64((betData.TrueStake * 10000)), StakeType.Total)
+                                    .SetStake(Convert.ToInt64(stake), StakeType.Total)
+                                    .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
                                     .AddSelectedSystem(betSelectionData.Count);
 
             foreach (var betSelection in betSelectionData)

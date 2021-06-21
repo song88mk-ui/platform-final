@@ -48,7 +48,9 @@ namespace Platform.Shared.Models
 
     public class TaxConfig
     {
+        [JsonProperty("stakeTax")]
         public decimal StakeTax { get; set; }
+        [JsonProperty("winningsTax")]
         public decimal WinningsTax { get; set; }
     }
 }

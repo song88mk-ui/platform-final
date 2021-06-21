@@ -724,7 +724,7 @@ namespace Platform.Settlement.Service.Repository
 
                     if (bet != null)
                     {
-                        var stake = message.SelectionStatus == BetStatus.Cancelled ? bet.TrueStake - (bet.TrueStake * bet.StakeTax);
+                        var stake = message.SelectionStatus == BetStatus.Cancelled ? bet.TrueStake : bet.TrueStake - (bet.TrueStake * bet.StakeTax);
                         var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), stake);
 
                         var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);

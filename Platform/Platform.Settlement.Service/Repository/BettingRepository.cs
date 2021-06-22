@@ -454,9 +454,7 @@ namespace Platform.Settlement.Service.Repository
                     bet.BetStatusId = (int)betStatus;
                     bet.BetStatusName = betStatus.ToString();
 
-                    var taxedWinnings = (payout == 0 ? -stake : payout - stake) * bet.WinningsTax;
-
-                    bet.Payout = payout - taxedWinnings;
+                    bet.Payout = payout;
                     bet.SettlementDate = settledDate;
                     bet.SettlementDateOffset = settledDate.AddHours(-4);
 
@@ -663,9 +661,7 @@ namespace Platform.Settlement.Service.Repository
                     bet.BetStatusId = (int)betStatus;
                     bet.BetStatusName = betStatus.ToString();
 
-                    var taxedWinnings = (payout == 0 ? -stake : payout - stake) * bet.WinningsTax;
-
-                    bet.Payout = payout - taxedWinnings;
+                    bet.Payout = payout;
                     bet.SettlementDate = settledDate;
                     bet.SettlementDateOffset = settledDate.AddHours(-4);
 

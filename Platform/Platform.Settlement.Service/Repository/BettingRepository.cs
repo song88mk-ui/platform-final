@@ -445,12 +445,11 @@ namespace Platform.Settlement.Service.Repository
 
                 if (bet != null)
                 {
-                    var stake = bet.TrueStake - (bet.TrueStake * bet.StakeTax);
-                    var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), stake);
+                    var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), bet.TrueStake);
 
                     var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
 
-                    bet.WinLoss = payout == 0 ? -stake : payout - stake;
+                    bet.WinLoss = payout == 0 ? -bet.Stake : payout - bet.Stake;
                     bet.BetStatusId = (int)betStatus;
                     bet.BetStatusName = betStatus.ToString();
 
@@ -652,12 +651,11 @@ namespace Platform.Settlement.Service.Repository
 
                 if (bet != null)
                 {
-                    var stake = bet.TrueStake - (bet.TrueStake * bet.StakeTax);
-                    var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), stake);
+                    var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), bet.TrueStake);
 
                     var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
 
-                    bet.WinLoss = payout == 0 ? -stake : payout - stake;
+                    bet.WinLoss = payout == 0 ? -bet.Stake : payout - bet.Stake;
                     bet.BetStatusId = (int)betStatus;
                     bet.BetStatusName = betStatus.ToString();
 

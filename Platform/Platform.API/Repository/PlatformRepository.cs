@@ -1167,6 +1167,50 @@ namespace Platform.API.Repository
                 SportId = request.SportId
             });
         }
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixturesByLeague(string apiKey, string clientId, string langCode, FixtureRequest request)
+        {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetLiveFixturesByLeague(new TWLeagueLiveFixtureRequestDTO
+            {
+                ClientId = clientResponse.Result.ClientId,
+                LanguageCode = languageCode,
+                SportId = request.SportId,
+                SegmentId = request.SegmentId,
+                LeagueId = request.LeagueId
+            });
+        }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(string apiKey, string clientId, string langCode, TodayFixtureRequest request)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
@@ -1208,6 +1252,51 @@ namespace Platform.API.Repository
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
                 SportId = request.SportId
+            });
+        }
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixturesByLeague(string apiKey, string clientId, string langCode, TodayFixtureRequest request)
+        {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetTodayFixturesByLeague(new TWLeagueTodayFixtureRequestDTO
+            {
+                MinuteUTCOffset = request.MinuteUTCOffset,
+                ClientId = clientResponse.Result.ClientId,
+                LanguageCode = languageCode,
+                SportId = request.SportId,
+                SegmentId = request.SegmentId,
+                LeagueId = request.LeagueId
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixtures(string apiKey, string clientId, string langCode, DailyFixtureRequest request)
@@ -1252,6 +1341,52 @@ namespace Platform.API.Repository
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
                 SportId = request.SportId
+            });
+        }
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixturesByLeague(string apiKey, string clientId, string langCode, DailyFixtureRequest request)
+        {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetDailyFixturesByLeague(new TWLeagueDailyFixtureRequestDTO
+            {
+                DateUTC = request.DateUTC,
+                MinuteUTCOffset = request.MinuteUTCOffset,
+                ClientId = clientResponse.Result.ClientId,
+                LanguageCode = languageCode,
+                SportId = request.SportId,
+                SegmentId = request.SegmentId,
+                LeagueId = request.LeagueId
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopLeagueFixtures(string apiKey, string clientId, string langCode, TopLeagueFixtureRequest request)
@@ -1550,6 +1685,50 @@ namespace Platform.API.Repository
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
                 SportId = request.SportId
+            });
+        }
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetOutrightFixturesByLeague(string apiKey, string clientId, string langCode, OutrightFixtureRequest request)
+        {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetOutrightFixturesByLeague(new TWLeagueOutrightFixtureRequestDTO
+            {
+                ClientId = clientResponse.Result.ClientId,
+                LanguageCode = languageCode,
+                SportId = request.SportId,
+                SegmentId = request.SegmentId,
+                LeagueId = request.LeagueId
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetUserFavorites2(string apiKey, string clientId, string langCode, string operatorToken)

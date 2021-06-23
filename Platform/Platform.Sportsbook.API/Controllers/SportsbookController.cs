@@ -255,10 +255,38 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v2/sportsbook/sports/segments/leagues/livefixtures")]
+        public async Task<IActionResult> GetLiveFixturesByLeague([FromBody] TWLeagueLiveFixtureRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetLiveFixturesByLeague(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v2/sportsbook/todayfixtures")]
         public async Task<IActionResult> GetTodayFixtures([FromBody] TWTodayFixtureRequestDTO request)
         {
             var result = await _sportsbookRepository.GetTodayFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v2/sportsbook/sports/segments/leagues/todayfixtures")]
+        public async Task<IActionResult> GetTodayFixturesByLeague([FromBody] TWLeagueTodayFixtureRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetTodayFixturesByLeague(request);
 
             switch (result.StatusCode)
             {
@@ -283,10 +311,38 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v2/sportsbook/sports/segments/leagues/dailyfixtures")]
+        public async Task<IActionResult> GetDailyFixturesByLeague([FromBody] TWLeagueDailyFixtureRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetDailyFixturesByLeague(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v2/sportsbook/outrightfixtures")]
         public async Task<IActionResult> GetOutrightFixtures([FromBody] TWOutrightFixtureRequestDTO request)
         {
             var result = await _sportsbookRepository.GetOutrightFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v2/sportsbook/sports/segments/leagues/outrightfixtures")]
+        public async Task<IActionResult> GetOutrightFixturesByLeague([FromBody] TWLeagueOutrightFixtureRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetOutrightFixturesByLeague(request);
 
             switch (result.StatusCode)
             {

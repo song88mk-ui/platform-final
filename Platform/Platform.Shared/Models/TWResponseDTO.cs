@@ -75,9 +75,25 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }
+    public class TWLeagueLiveFixtureRequestDTO
+    {
+        public int SportId { get; set; }
+        public int SegmentId { get; set; }
+        public int LeagueId { get; set; }
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+    }
     public class TWOutrightFixtureRequestDTO
     {
         public int SportId { get; set; }
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+    }
+    public class TWLeagueOutrightFixtureRequestDTO
+    {
+        public int SportId { get; set; }
+        public int SegmentId { get; set; }
+        public int LeagueId { get; set; }
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }
@@ -88,11 +104,30 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }
+    public class TWLeagueTodayFixtureRequestDTO
+    {
+        public int MinuteUTCOffset { get; set; }
+        public int SportId { get; set; }
+        public int SegmentId { get; set; }
+        public int LeagueId { get; set; }
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+    }
     public class TWDailyFixtureRequestDTO
     {
         public DateTime DateUTC { get; set; }
         public int MinuteUTCOffset { get; set; }
         public int SportId { get; set; }
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+    }
+    public class TWLeagueDailyFixtureRequestDTO
+    {
+        public DateTime DateUTC { get; set; }
+        public int MinuteUTCOffset { get; set; }
+        public int SportId { get; set; }
+        public int SegmentId { get; set; }
+        public int LeagueId { get; set; }
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }

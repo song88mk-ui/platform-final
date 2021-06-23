@@ -14,11 +14,14 @@ namespace Platform.API.Models
     public class FixtureRequest
     {
         public int SportId { get; set; }
+        public int SegmentId { get; set; }
+        public int LeagueId { get; set; }
     }
-
     public class OutrightFixtureRequest
     {
         public int SportId { get; set; }
+        public int SegmentId { get; set; }
+        public int LeagueId { get; set; }
     }
 
     public class SearchResultRequest
@@ -30,12 +33,16 @@ namespace Platform.API.Models
         public DateTime DateUTC { get; set; }
         public int MinuteUTCOffset { get; set; }
         public int SportId { get; set; }
+        public int SegmentId { get; set; }
+        public int LeagueId { get; set; }
     }
 
     public class TodayFixtureRequest
     {
         public int MinuteUTCOffset { get; set; }
         public int SportId { get; set; }
+        public int SegmentId { get; set; }
+        public int LeagueId { get; set; }
     }
 
     public class TopLeagueFixtureRequest

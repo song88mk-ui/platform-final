@@ -35,6 +35,8 @@ namespace Platform.Shared.Models
     {
         public Guid BetId { get; set; }
         public decimal CashOutStake { get; set; }
+        public decimal TaxedStake { get; set; }
+        public decimal TaxedWinnings { get; set; }
         public List<Probabilities> Probabilities { get; set; }
     }
 

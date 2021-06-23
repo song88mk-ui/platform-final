@@ -8,6 +8,7 @@ namespace Platform.Shared.MessageModels
         public Guid BetId { get; set; }
         public CashoutType CashoutType { get; set; }
         public decimal CashOutStake { get; set; }
-        public decimal StakeUsed { get; set; }
+        public decimal TaxedStake { get; set; }
+        public decimal TaxedWinnings { get; set; }
     }
 }

@@ -221,11 +221,12 @@ namespace Platform.Betting.API.Repository
 
                         cashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
+                        var taxedWinnings = (cashOutStake - stake) * bet.WinningsTax;
+
                         if (cashOutStake > stake)
-                        {
-                            var taxedWinnings = (cashOutStake - stake) * bet.WinningsTax;
                             cashOutStake = cashOutStake - taxedWinnings;
-                        }
+                        else
+                            taxedWinnings = 0;
 
                         var finalCashOutStake = cashOutStake;
 
@@ -265,6 +266,8 @@ namespace Platform.Betting.API.Repository
                                 {
                                     BetId = bet.BetId,
                                     CashOutStake = finalCashOutStake,
+                                    TaxedStake = bet.TrueStake * bet.StakeTax,
+                                    TaxedWinnings = taxedWinnings,
                                     Probabilities = probabilites.Select(s => new Probabilities
                                     {
                                         CashOutStatusId = s.CashOutStatusId,
@@ -326,11 +329,12 @@ namespace Platform.Betting.API.Repository
 
                         cashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
+                        var taxedWinnings = (cashOutStake - stake) * bet.WinningsTax;
+
                         if (cashOutStake > stake)
-                        {
-                            var taxedWinnings = (cashOutStake - stake) * bet.WinningsTax;
                             cashOutStake = cashOutStake - taxedWinnings;
-                        }
+                        else
+                            taxedWinnings = 0;
 
                         var finalCashOutStake = cashOutStake;
 
@@ -347,6 +351,8 @@ namespace Platform.Betting.API.Repository
                                 {
                                     BetId = bet.BetId,
                                     CashOutStake = finalCashOutStake,
+                                    TaxedStake = bet.TrueStake * bet.StakeTax,
+                                    TaxedWinnings = taxedWinnings,
                                     Probabilities = probabilites.Select(s => new Probabilities
                                     {
                                         CashOutStatusId = s.CashOutStatusId,

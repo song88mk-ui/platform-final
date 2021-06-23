@@ -176,7 +176,6 @@ namespace Platform.CashOut.Service.Repository
                     SettlementScore = betSelectionEntity.SettlementScore,
                     CorrelationId = betSelectionEntity.CorrelationId,
                     Probability = betSelectionEntity.Probability
-                    //CashoutStatusId = betSelectionEntity.CashoutStatusId
                 });
             }
 
@@ -193,6 +192,9 @@ namespace Platform.CashOut.Service.Repository
             bet.Payout = payout;
             bet.SettlementDate = settledDate;
             bet.SettlementDateOffset = settledDate.AddHours(-4);
+
+            bet.TaxedStake = message.TaxedStake;
+            bet.TaxedWinnings = message.TaxedWinnings;
             
             var betEntity = context.Bet.Update(bet).Entity;
 
@@ -228,7 +230,11 @@ namespace Platform.CashOut.Service.Repository
                 BetDate = betEntity.BetDate,
                 BetDateOffset = betEntity.BetDateOffset,
                 SettlementDate = betEntity.SettlementDate,
-                SettlementDateOffset = betEntity.SettlementDateOffset
+                SettlementDateOffset = betEntity.SettlementDateOffset,
+                StakeTax = betEntity.StakeTax,
+                WinningsTax = betEntity.WinningsTax,
+                TaxedStake = betEntity.TaxedStake,
+                TaxedWinnings = betEntity.TaxedWinnings
             });
 
             isPublish = true;

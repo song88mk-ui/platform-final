@@ -92,7 +92,9 @@ namespace Platform.Placement.Servicev2.Repository
                                     SettlementDate = betEntity.SettlementDate,
                                     SettlementDateOffset = betEntity.SettlementDateOffset,
                                     StakeTax = betEntity.StakeTax,
-                                    WinningsTax = betEntity.WinningsTax
+                                    WinningsTax = betEntity.WinningsTax,
+                                    TaxedStake = betEntity.TaxedStake,
+                                    TaxedWinnings = betEntity.TaxedWinnings
                                 });
 
                                 var betSelections = context.BetSelection.Where(c => c.BetId == betEntity.BetId).ToList();
@@ -206,6 +208,8 @@ namespace Platform.Placement.Servicev2.Repository
                                 bet.BetStatusId = (int)betStatus;
                                 bet.BetStatusName = betStatus.ToString();
                                 bet.Reason = result.Item2;
+                                bet.TaxedStake = 0;
+                                bet.TaxedWinnings = 0;
 
                                 var betEntity = context.Bet.Update(bet).Entity;
                                 payload.Bet = betEntity;
@@ -242,7 +246,11 @@ namespace Platform.Placement.Servicev2.Repository
                                     BetDate = betEntity.BetDate,
                                     BetDateOffset = betEntity.BetDateOffset,
                                     SettlementDate = betEntity.SettlementDate,
-                                    SettlementDateOffset = betEntity.SettlementDateOffset
+                                    SettlementDateOffset = betEntity.SettlementDateOffset,
+                                    StakeTax = betEntity.StakeTax,
+                                    WinningsTax = betEntity.WinningsTax,
+                                    TaxedStake = betEntity.TaxedStake,
+                                    TaxedWinnings = betEntity.TaxedWinnings
                                 });
 
                                 var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
@@ -361,6 +369,8 @@ namespace Platform.Placement.Servicev2.Repository
                             bet.BetStatusId = (int)betStatus;
                             bet.BetStatusName = betStatus.ToString();
                             bet.Reason = result.Item2;
+                            bet.TaxedStake = 0;
+                            bet.TaxedWinnings = 0;
 
                             var betEntity = context.Bet.Update(bet).Entity;
                             rejectionPayload.Bet = betEntity;
@@ -399,7 +409,9 @@ namespace Platform.Placement.Servicev2.Repository
                                 SettlementDate = betEntity.SettlementDate,
                                 SettlementDateOffset = betEntity.SettlementDateOffset,
                                 StakeTax = betEntity.StakeTax,
-                                WinningsTax = betEntity.WinningsTax
+                                WinningsTax = betEntity.WinningsTax,
+                                TaxedStake = betEntity.TaxedStake,
+                                TaxedWinnings = betEntity.TaxedWinnings
                             });
 
                             var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();

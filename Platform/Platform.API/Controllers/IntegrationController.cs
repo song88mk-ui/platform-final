@@ -15,7 +15,6 @@ namespace Platform.API.Controllers
     public class IntegrationController : ControllerBase
     {
         private readonly IPlatformRepository _platformRepository;
-
         public IntegrationController(IPlatformRepository platformRepository)
         {
             _platformRepository = platformRepository;

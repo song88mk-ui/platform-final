@@ -44,6 +44,8 @@ namespace Platform.Shared.Models
         public DateTime TransactionDate { get; set; }
         public decimal StakeTax { get; set; }
         public decimal WinningsTax { get; set; }
+        public decimal TaxedStake { get; set; }
+        public decimal TaxedWinnings { get; set; }
         public List<BetSelectionHistoryDTO> Selections { get; set; }
     }
 

@@ -47,5 +47,9 @@ namespace Platform.Shared.Data.Betting.Entities
         public decimal StakeTax { get; set; }
         [Column(TypeName = "decimal(18,2)")]
         public decimal WinningsTax { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal TaxedStake { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal TaxedWinnings { get; set; }
     }
 }

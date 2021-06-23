@@ -180,21 +180,17 @@ namespace Platform.CashOut.Service.Repository
                 });
             }
 
-            var taxedStake = bet.TrueStake * bet.StakeTax;
-                        
+            var stake = bet.TrueStake - (bet.TrueStake * bet.StakeTax);
             var payout = message.CashOutStake;
-            
-            var winloss = payout - taxedStake;
+            var winloss = payout - stake;
 
-            var taxedWinnings = winloss * bet.WinningsTax;
+            var betStatus = GetStatus(selections.Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), payout, stake);
 
-            var betStatus = GetStatus(selections.Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), payout, bet.TrueStake);
-
-            bet.WinLoss = winloss - taxedWinnings;
+            bet.WinLoss = winloss;
             bet.BetStatusId = (int)betStatus;
             bet.BetStatusName = betStatus.ToString();
 
-            bet.Payout = payout - taxedWinnings;
+            bet.Payout = payout;
             bet.SettlementDate = settledDate;
             bet.SettlementDateOffset = settledDate.AddHours(-4);
             

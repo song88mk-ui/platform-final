@@ -521,7 +521,7 @@ namespace Platform.Settlement.Service.Repository
                             payout = payout - taxedWinnings;
                         }
 
-                        var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
+                        var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, stake);
 
                         bet.WinLoss = payout == 0 ? -stake : payout - stake;
                         bet.BetStatusId = (int)betStatus;

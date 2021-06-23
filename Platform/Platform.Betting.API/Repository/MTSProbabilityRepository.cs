@@ -219,10 +219,21 @@ namespace Platform.Betting.API.Repository
 
                         var cashOutStake = (stake * bet.Odds) * Convert.ToDecimal(finalProbability);
 
-                        var finalCashOutStake = cashOutStake - (cashOutStake * 0.10m);
+                        cashOutStake = cashOutStake - (cashOutStake * 0.10m);
+
+                        if (cashOutStake > stake)
+                        {
+                            var taxedWinnings = (cashOutStake - stake) * bet.WinningsTax;
+                            cashOutStake = cashOutStake - taxedWinnings;
+                        }
+
+                        var finalCashOutStake = cashOutStake;
 
                         if (!hasProbabilityChanged)
+                        {
                             finalCashOutStake = stake - (stake * 0.10m);
+                            finalCashOutStake -= finalCashOutStake * bet.WinningsTax;
+                        }
 
                         if (finalCashOutStake == 0 || finalCashOutStake > stake * bet.Odds)
                         {
@@ -316,10 +327,21 @@ namespace Platform.Betting.API.Repository
                         else
                             cashOutStake = (stake * bet.Odds) * Convert.ToDecimal(probabilites.First().Probability);
 
-                        var finalCashOutStake = cashOutStake - (cashOutStake * 0.10m);
+                        cashOutStake = cashOutStake - (cashOutStake * 0.10m);
+
+                        if (cashOutStake > stake)
+                        {
+                            var taxedWinnings = (cashOutStake - stake) * bet.WinningsTax;
+                            cashOutStake = cashOutStake - taxedWinnings;
+                        }
+
+                        var finalCashOutStake = cashOutStake;
 
                         if (!hasProbabilityChanged)
+                        {
                             finalCashOutStake = stake - (stake * 0.10m);
+                            finalCashOutStake -= finalCashOutStake * bet.WinningsTax;
+                        }
 
                         if (finalCashOutStake <= stake * bet.Odds)
                         {

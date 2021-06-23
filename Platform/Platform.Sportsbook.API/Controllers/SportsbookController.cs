@@ -297,6 +297,20 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v2/sportsbook/upcomingfixtures")]
+        public async Task<IActionResult> GetUpcomingFixtures([FromBody] TWUpcomingFixtureRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetUpcomingFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v2/sportsbook/dailyfixtures")]
         public async Task<IActionResult> GetDailyFixtures([FromBody] TWDailyFixtureRequestDTO request)
         {

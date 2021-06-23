@@ -2067,6 +2067,185 @@ namespace Platform.Sportsbook.API.Repository
 
             return final;
         }
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetUpcomingFixtures(TWUpcomingFixtureRequestDTO request)
+        {
+            var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset);
+
+            FilterDefinition<Fixture> fixtureFilter;
+
+            if (request.SportId == 1055 || request.SportId == 1058)
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Outright && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
+            else
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
+
+            var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            await Task.WhenAll(tempFixtures, tempBettingStatus);
+
+            var fixtures = tempFixtures.Result;
+            var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new TWResponseDTO()
+                };
+            }
+
+            List<TierLeagueOrder> sortOrder;
+            List<TempFixtureDTO> result;
+
+            if (request.SportId == 1055 || request.SportId == 1058)
+            {
+                result = fixtures.Select(s => new TempFixtureDTO
+                {
+                    SportId = s.SpId,
+                    SportName = GetSportName(s.SpNa, s.SpNaTr, request.LanguageCode),
+                    SegmentId = s.SegId,
+                    SegmentName = GetSegmentName(s.SegNa, s.SegNaTr, request.LanguageCode),
+                    LeagueId = s.LeId,
+                    LeagueName = GetLeagueName(s.LeNa, s.LeNaTr, request.LanguageCode),
+                    ProviderFixtureId = s.PrFiId,
+                    FixtureId = s.FiId.ToString(),
+                    FixtureName = GetFixtureName(s.FiNa, s.FiNaTr, request.LanguageCode),
+                    HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                    AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                    FixtureStartDate = s.FiStDa,
+                    IsLive = s.IsOfLi,
+                    IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
+                    FixtureStatusId = s.FiStId,
+                    FixtureStatusName = s.FiStNa,
+                    MarketCount = 0,
+                    SMSCode = string.Empty,
+                    StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
+                    Score = s.Sc,
+                    CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
+                    CurrentMinute = s.CuMi.ToString(),
+                    BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                    IsBetStopGlobal = bettingStatus.IsBeSo
+                }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+            }
+            else
+            {
+                sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+
+                result = fixtures.Select(s => new TempFixtureDTO
+                {
+                    SportId = s.SpId,
+                    SportName = GetSportName(s.SpNa, s.SpNaTr, request.LanguageCode),
+                    SegmentId = s.SegId,
+                    SegmentName = GetSegmentName(s.SegNa, s.SegNaTr, request.LanguageCode),
+                    LeagueId = s.LeId,
+                    LeagueName = GetLeagueName(s.LeNa, s.LeNaTr, request.LanguageCode),
+                    ProviderFixtureId = s.PrFiId,
+                    FixtureId = s.FiId.ToString(),
+                    FixtureName = GetFixtureName(s.FiNa, s.FiNaTr, request.LanguageCode),
+                    HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                    AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                    FixtureStartDate = s.FiStDa,
+                    IsLive = s.IsOfLi,
+                    IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
+                    FixtureStatusId = s.FiStId,
+                    FixtureStatusName = s.FiStNa,
+                    MarketCount = 0,
+                    SMSCode = string.Empty,
+                    StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
+                    Score = s.Sc,
+                    CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
+                    CurrentMinute = s.CuMi.ToString(),
+                    BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                    IsBetStopGlobal = bettingStatus.IsBeSo,
+                    SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                    == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+            }
+
+            var initialResult = new List<TempFixtureDTO>();
+
+            foreach (var item in result)
+            {
+                if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
+
+                initialResult.Add(item);
+            }
+
+            var finalResult = new List<FixtureDTO>();
+
+            var fixtureIds = initialResult.Select(s => Convert.ToInt64(s.FixtureId)).ToList();
+            var marketTemplateIds = GetMainMarketTemplates(request.SportId);
+
+            var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+            var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
+            var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
+
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
+            var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
+
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
+
+            await Task.WhenAll(marketCount, markets, selections);
+
+            Parallel.ForEach(initialResult, item =>
+            {
+                finalResult.Add(new FixtureDTO
+                {
+                    SportId = item.SportId,
+                    SportName = item.SportName,
+                    SegmentId = item.SegmentId,
+                    SegmentName = item.SegmentName,
+                    LeagueId = item.LeagueId,
+                    LeagueName = item.LeagueName,
+                    FixtureId = item.FixtureId,
+                    ProviderFixtureId = item.ProviderFixtureId,
+                    FixtureName = item.FixtureName,
+                    HomeName = item.HomeName,
+                    AwayName = item.AwayName,
+                    FixtureStartDate = item.FixtureStartDate,
+                    IsLive = item.IsLive,
+                    IsLiveStream = item.IsLiveStream,
+                    FixtureStatusId = item.FixtureStatusId,
+                    FixtureStatusName = item.FixtureStatusName,
+                    MarketCount = marketCount.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).Count(),
+                    SMSCode = string.Empty,
+                    StatisticsURL = item.StatisticsURL,
+                    Score = item.Score,
+                    CurrentPeriod = item.CurrentPeriod,
+                    CurrentMinute = item.CurrentMinute,
+                    BetStop = item.BetStop,
+                    IsBetStopGlobal = item.IsBetStopGlobal,
+                    SortOrder = item.SortOrder,
+                    Markets = GetMarkets(item.SportId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode)
+                });
+            });
+
+            if (request.SportId == 5)
+                finalResult = finalResult.OrderBy(o => o.SegmentId).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+            else
+                finalResult = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+
+            var final = new BaseResponseDTO<TWResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new TWResponseDTO
+                {
+                    Fixtures = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList()
+                }
+            };
+
+            return final;
+        }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixtures(TWDailyFixtureRequestDTO request)
         {
             var dateTimeRange = GetDateTimeRange(request.DateUTC, request.MinuteUTCOffset);

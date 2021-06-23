@@ -44,6 +44,11 @@ namespace Platform.API.Models
         public int SegmentId { get; set; }
         public int LeagueId { get; set; }
     }
+    public class UpcomingFixtureRequest
+    {
+        public int MinuteUTCOffset { get; set; }
+        public int SportId { get; set; }
+    }
 
     public class TopLeagueFixtureRequest
     {

@@ -104,6 +104,13 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }
+    public class TWUpcomingFixtureRequestDTO
+    {
+        public int MinuteUTCOffset { get; set; }
+        public int SportId { get; set; }
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+    }
     public class TWLeagueTodayFixtureRequestDTO
     {
         public int MinuteUTCOffset { get; set; }

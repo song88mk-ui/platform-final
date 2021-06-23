@@ -1365,7 +1365,7 @@ namespace Platform.Betting.API.Repository
                     {
                         BetId = request.BetId,
                         CashoutType = CashoutType.Full,
-                        CashOutStake = request.CashOutStake
+                        CashOutStake = result.Result.CashOutStake
                     }, "OnBetFullCashOut", "r.bet.cashout", request.BetId.ToString().ToUpper());
 
                     return new BaseResponseDTO<BetCashOutResponseDTO>

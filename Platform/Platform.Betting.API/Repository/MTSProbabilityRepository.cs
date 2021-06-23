@@ -230,10 +230,7 @@ namespace Platform.Betting.API.Repository
                         var finalCashOutStake = cashOutStake;
 
                         if (!hasProbabilityChanged)
-                        {
                             finalCashOutStake = stake - (stake * 0.10m);
-                            finalCashOutStake -= finalCashOutStake * bet.WinningsTax;
-                        }
 
                         if (finalCashOutStake == 0 || finalCashOutStake > stake * bet.Odds)
                         {
@@ -338,10 +335,7 @@ namespace Platform.Betting.API.Repository
                         var finalCashOutStake = cashOutStake;
 
                         if (!hasProbabilityChanged)
-                        {
                             finalCashOutStake = stake - (stake * 0.10m);
-                            finalCashOutStake -= finalCashOutStake * bet.WinningsTax;
-                        }
 
                         if (finalCashOutStake <= stake * bet.Odds)
                         {

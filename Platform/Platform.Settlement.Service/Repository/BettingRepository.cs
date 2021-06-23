@@ -515,15 +515,18 @@ namespace Platform.Settlement.Service.Repository
                         var stake = message.SelectionStatus == BetStatus.Cancelled ? bet.TrueStake : bet.TrueStake - (bet.TrueStake * bet.StakeTax);
                         var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), stake);
 
+                        if (payout > stake)
+                        {
+                            var taxedWinnings = (payout - stake) * bet.WinningsTax;
+                            payout = payout - taxedWinnings;
+                        }
+
                         var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
 
                         bet.WinLoss = payout == 0 ? -stake : payout - stake;
                         bet.BetStatusId = (int)betStatus;
                         bet.BetStatusName = betStatus.ToString();
-
-                        var taxedWinnings = (payout == 0 ? -stake : payout - stake) * bet.WinningsTax;
-
-                        bet.Payout = payout - taxedWinnings;
+                        bet.Payout = payout;
                         bet.SettlementDate = settledDate;
                         bet.SettlementDateOffset = settledDate.AddHours(-4);
 
@@ -721,15 +724,18 @@ namespace Platform.Settlement.Service.Repository
                         var stake = message.SelectionStatus == BetStatus.Cancelled ? bet.TrueStake : bet.TrueStake - (bet.TrueStake * bet.StakeTax);
                         var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), stake);
 
+                        if (payout > stake)
+                        {
+                            var taxedWinnings = (payout - stake) * bet.WinningsTax;
+                            payout = payout - taxedWinnings;
+                        }
+
                         var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
 
                         bet.WinLoss = payout == 0 ? -stake : payout - stake;
                         bet.BetStatusId = (int)betStatus;
                         bet.BetStatusName = betStatus.ToString();
-
-                        var taxedWinnings = (payout == 0 ? -stake : payout - stake) * bet.WinningsTax;
-
-                        bet.Payout = payout - taxedWinnings;
+                        bet.Payout = payout;
                         bet.SettlementDate = settledDate;
                         bet.SettlementDateOffset = settledDate.AddHours(-4);
 

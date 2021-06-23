@@ -31,6 +31,8 @@ namespace Platform.Betting.API.Repository
         {
             if (bet.BetStatusId == (int)BetStatus.Running)
             {
+                var stake = bet.TrueStake - (bet.TrueStake * bet.StakeTax);
+
                 try
                 {
                     if (betSelections.Count == 0)
@@ -215,8 +217,6 @@ namespace Platform.Betting.API.Repository
 
                         var finalProbability = probabilites.Where(c => c.Probability > 0).Select(s => s.Probability).Aggregate((a, b) => a * b);
 
-                        var stake = bet.TrueStake - (bet.TrueStake * bet.StakeTax);
-
                         var cashOutStake = (stake * bet.Odds) * Convert.ToDecimal(finalProbability);
 
                         var finalCashOutStake = cashOutStake - (cashOutStake * 0.10m);
@@ -305,23 +305,23 @@ namespace Platform.Betting.API.Repository
                             probabilites.First().HalfWonProbability > 0 ||
                             probabilites.First().HalfLostProbability > 0)
                         {
-                            var won = Convert.ToDecimal(probabilites.First().WonProbability) * (bet.TrueStake * bet.Odds);
-                            var lost = Convert.ToDecimal(probabilites.First().LostProbability) * (bet.TrueStake * 0);
-                            var voidd = Convert.ToDecimal(probabilites.First().VoidProbability) * (bet.TrueStake * 1);
-                            var halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * (bet.TrueStake * ((bet.Odds + 1) / 2));
-                            var halfLost = Convert.ToDecimal(probabilites.First().HalfLostProbability) * (bet.TrueStake / 2);
+                            var won = Convert.ToDecimal(probabilites.First().WonProbability) * (stake * bet.Odds);
+                            var lost = Convert.ToDecimal(probabilites.First().LostProbability) * (stake * 0);
+                            var voidd = Convert.ToDecimal(probabilites.First().VoidProbability) * (stake * 1);
+                            var halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * (stake * ((bet.Odds + 1) / 2));
+                            var halfLost = Convert.ToDecimal(probabilites.First().HalfLostProbability) * (stake / 2);
 
                             cashOutStake = won + lost + voidd + halfWon + halfLost;
                         }
                         else
-                            cashOutStake = (bet.TrueStake * bet.Odds) * Convert.ToDecimal(probabilites.First().Probability);
+                            cashOutStake = (stake * bet.Odds) * Convert.ToDecimal(probabilites.First().Probability);
 
                         var finalCashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
                         if (!hasProbabilityChanged)
-                            finalCashOutStake = bet.TrueStake - (bet.TrueStake * 0.10m);
+                            finalCashOutStake = stake - (stake * 0.10m);
 
-                        if (finalCashOutStake <= bet.TrueStake * bet.Odds)
+                        if (finalCashOutStake <= stake * bet.Odds)
                         {
                             return new BaseResponseDTO<CashOutResponse>
                             {

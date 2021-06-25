@@ -15,18 +15,16 @@ namespace Platform.Betting.API.Repository
 
         private readonly BettingContext _bettingContext;
         private readonly IConfiguration _configuration;
-        private readonly IMessageBroker _messageBroker;
-
+        private readonly IRabbitMQRepository _rabbitMQRepository;
         #endregion
 
         #region Ctor
 
-        public CashoutRepository(BettingContext bettingContext, IConfiguration configuration, IMessageBroker messageBroker)
+        public CashoutRepository(BettingContext bettingContext, IConfiguration configuration, IRabbitMQRepository rabbitMQRepository)
         {
             _bettingContext = bettingContext;
             _configuration = configuration;
-            _messageBroker = messageBroker;
-            _messageBroker.Connect();
+            _rabbitMQRepository = rabbitMQRepository;
         }
 
         #endregion

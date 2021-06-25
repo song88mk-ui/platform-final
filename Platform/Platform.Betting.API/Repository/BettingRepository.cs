@@ -32,7 +32,7 @@ namespace Platform.Betting.API.Repository
 
         private readonly TelemetryClient _telemetryClient;
 
-        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IHttpClientFactory httpClientFactory, IMTSAuthRepository mtsAuthRepository, IMTSMaxStakeRepository mtsMaxStakeRepository, IBackOfficeRepository backOfficeRepository, IMTSProbabilityRepository mtsProbabilityRepository, TelemetryClient telemetryClient, IRabbitMQRepository rabbitMQRepository)
+        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IMessageBroker messageBroker, IHttpClientFactory httpClientFactory, IMTSAuthRepository mtsAuthRepository, IMTSMaxStakeRepository mtsMaxStakeRepository, IBackOfficeRepository backOfficeRepository, IMTSProbabilityRepository mtsProbabilityRepository, TelemetryClient telemetryClient, IRabbitMQRepository rabbitMQRepository)
         {
             _bettingContext = bettingContext;
             _httpClientFactory = httpClientFactory;

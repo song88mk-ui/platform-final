@@ -21,6 +21,7 @@ namespace Platform.Betting.API.Repository
     public class BettingRepository : IBettingRepository
     {
         private readonly BettingContext _bettingContext;
+        private readonly IMessageBroker _messageBroker;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
 
@@ -28,11 +29,10 @@ namespace Platform.Betting.API.Repository
         private readonly IMTSMaxStakeRepository _mtsMaxStakeRepository;
         private readonly IBackOfficeRepository _backOfficeRepository;
         private readonly IMTSProbabilityRepository _mtsProbabilityRepository;
-        private readonly IRabbitMQRepository _rabbitMQRepository;
 
         private readonly TelemetryClient _telemetryClient;
 
-        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IMessageBroker messageBroker, IHttpClientFactory httpClientFactory, IMTSAuthRepository mtsAuthRepository, IMTSMaxStakeRepository mtsMaxStakeRepository, IBackOfficeRepository backOfficeRepository, IMTSProbabilityRepository mtsProbabilityRepository, TelemetryClient telemetryClient, IRabbitMQRepository rabbitMQRepository)
+        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IMessageBroker messageBroker, IHttpClientFactory httpClientFactory, IMTSAuthRepository mtsAuthRepository, IMTSMaxStakeRepository mtsMaxStakeRepository, IBackOfficeRepository backOfficeRepository, IMTSProbabilityRepository mtsProbabilityRepository, TelemetryClient telemetryClient)
         {
             _bettingContext = bettingContext;
             _httpClientFactory = httpClientFactory;
@@ -42,7 +42,8 @@ namespace Platform.Betting.API.Repository
             _mtsProbabilityRepository = mtsProbabilityRepository;
             _telemetryClient = telemetryClient;
             _configuration = configuration;
-            _rabbitMQRepository = rabbitMQRepository;
+            _messageBroker = messageBroker;
+            _messageBroker.Connect();
         }
 
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(BetRequestDTO request)
@@ -403,18 +404,11 @@ namespace Platform.Betting.API.Repository
                     _bettingContext.SaveChanges();
                     scope.Complete();
 
-                    await _rabbitMQRepository.Settlebet(new MessageRequestDTO()
+                    _messageBroker.Publish(new OnBetPlacement
                     {
-                        CorrelationId = Guid.NewGuid().ToString().ToUpper(),
-                        MessageType = "OnBetPlacement",
-                        RoutingKey = $"r.bet.placement",
-                        Payload = JsonSerializer.Serialize(new OnBetPlacement
-                        {
-                            Bet = betData,
-                            BetSelections = betSelectionData
-                        })
-                    });
-
+                        Bet = betData,
+                        BetSelections = betSelectionData
+                    }, "OnBetPlacement", "r.bet.placement", Guid.NewGuid().ToString().ToUpper());
                 }
             }
             catch (Exception ex)
@@ -427,20 +421,13 @@ namespace Platform.Betting.API.Repository
 
                 _telemetryClient.TrackEvent("BetWithoutMTS", properties);
 
-
-                await _rabbitMQRepository.Settlebet(new MessageRequestDTO()
+                _messageBroker.Publish(new OnBetPlacementError
                 {
-                    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
-                    MessageType = "OnBetPlacementError",
-                    RoutingKey = $"r.bet.placement.error",
-                    Payload = JsonSerializer.Serialize(new OnBetPlacementError
-                    {
-                        BetId = betData.BetId.ToString(),
-                        Error = ex.Message,
-                        StackTrace = ex.StackTrace,
-                        InnerException = ex.InnerException.ToString()
-                    })
-                });
+                    BetId = betData.BetId.ToString(),
+                    Error = ex.Message,
+                    StackTrace = ex.StackTrace,
+                    InnerException = ex.InnerException.ToString()
+                }, "OnBetPlacementError", "r.bet.placement.error", Guid.NewGuid().ToString().ToUpper());
 
                 return new BaseResponseDTO<BetResponseDTO>
                 {
@@ -804,19 +791,11 @@ namespace Platform.Betting.API.Repository
                     _bettingContext.SaveChanges();
                     scope.Complete();
 
-
-                    await _rabbitMQRepository.Settlebet(new MessageRequestDTO()
+                    _messageBroker.Publish(new OnBetPlacement
                     {
-                        CorrelationId = Guid.NewGuid().ToString().ToUpper(),
-                        MessageType = "OnBetPlacement",
-                        RoutingKey = $"r.bet.placement",
-                        Payload = JsonSerializer.Serialize(new OnBetPlacement
-                        {
-                            Bet = betData,
-                            BetSelections = betSelectionData
-                        })
-                    });
-
+                        Bet = betData,
+                        BetSelections = betSelectionData
+                    }, "OnBetPlacement", "r.bet.placement", Guid.NewGuid().ToString().ToUpper());
                 }
             }
             catch (Exception ex)
@@ -829,19 +808,13 @@ namespace Platform.Betting.API.Repository
 
                 _telemetryClient.TrackEvent("BetWithMTS", properties);
 
-                await _rabbitMQRepository.Settlebet(new MessageRequestDTO()
+                _messageBroker.Publish(new OnBetPlacementError
                 {
-                    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
-                    MessageType = "OnBetPlacementError",
-                    RoutingKey = $"r.bet.placement.error",
-                    Payload = JsonSerializer.Serialize(new OnBetPlacementError
-                    {
-                        BetId = betData.BetId.ToString(),
-                        Error = ex.Message,
-                        StackTrace = ex.StackTrace,
-                        InnerException = ex.InnerException.ToString()
-                    })
-                });
+                    BetId = betData.BetId.ToString(),
+                    Error = ex.Message,
+                    StackTrace = ex.StackTrace,
+                    InnerException = ex.InnerException.ToString()
+                }, "OnBetPlacementError", "r.bet.placement.error", Guid.NewGuid().ToString().ToUpper());
 
                 return new BaseResponseDTO<BetResponseDTO>
                 {
@@ -1321,18 +1294,12 @@ namespace Platform.Betting.API.Repository
                         Result = response
                     };
 
-                #endregion
+                #endregion                
 
-                await _rabbitMQRepository.Settlebet(new MessageRequestDTO()
+                _messageBroker.Publish(new OnBOBetCancellaton
                 {
-                    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
-                    MessageType = "OnBetBackOfficeCancellation",
-                    RoutingKey = $"r.bet.settlement",
-                    Payload = JsonSerializer.Serialize(new OnBOBetCancellaton
-                    {
-                        Bets = betList
-                    })
-                });
+                    Bets = betList
+                }, "OnBetBackOfficeCancellation", "r.bet.settlement", Guid.NewGuid().ToString().ToUpper());
 
                 bool success = response.Data.Any(m => m.IsSuccess);
                 response.IsSuccess = success;
@@ -1403,22 +1370,15 @@ namespace Platform.Betting.API.Repository
                 }
                 else
                 {
-                    
-                    await _rabbitMQRepository.Settlebet(new MessageRequestDTO()
+                    //TODO: publish to Cashout Service
+                    _messageBroker.Publish(new OnCashoutBetSettlement
                     {
-                        CorrelationId = Guid.NewGuid().ToString().ToUpper(),
-                        MessageType = "OnBetFullCashOut",
-                        RoutingKey = $"r.bet.cashout",
-                        Payload = JsonSerializer.Serialize(new OnCashoutBetSettlement
-                        {
-                            BetId = request.BetId,
-                            CashoutType = CashoutType.Full,
-                            CashOutStake = result.Result.CashOutStake,
-                            TaxedStake = result.Result.TaxedStake,
-                            TaxedWinnings = result.Result.TaxedWinnings
-                        })
-                    });
-
+                        BetId = request.BetId,
+                        CashoutType = CashoutType.Full,
+                        CashOutStake = result.Result.CashOutStake,
+                        TaxedStake = result.Result.TaxedStake,
+                        TaxedWinnings = result.Result.TaxedWinnings
+                    }, "OnBetFullCashOut", "r.bet.cashout", request.BetId.ToString().ToUpper());
 
                     return new BaseResponseDTO<BetCashOutResponseDTO>
                     {

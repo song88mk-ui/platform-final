@@ -19,7 +19,7 @@ namespace Platform.RabbitMQ.API.Controllers
         }
 
         [HttpPost("v1/broker/publish")]
-        public async Task<IActionResult> PlaceBet([FromBody] MessageRequestDTO request)
+        public async Task<IActionResult> Publish([FromBody] MessageRequestDTO request)
         {
             try
             {

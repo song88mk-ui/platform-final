@@ -45,14 +45,13 @@ namespace Platform.Betting.API
             services.AddControllers();
 
             services.AddSingleton<IMemCache, MemCache>();
-            services.AddSingleton<IMessageBroker, MessageBroker>();
             services.AddScoped<IBettingRepository, BettingRepository>();
             services.AddScoped<IBetConfigRepository, BetConfigRepository>();
-            services.AddScoped<ICashoutRepository, CashoutRepository>();
             services.AddHttpClient<IMTSAuthRepository, MTSAuthRepository>();
             services.AddHttpClient<IMTSMaxStakeRepository, MTSMaxStakeRepository>();
             services.AddHttpClient<IBackOfficeRepository, BackOfficeRepository>();
             services.AddHttpClient<IMTSProbabilityRepository, MTSProbabilityRepository>();
+            services.AddHttpClient<IRabbitMQRepository, RabbitMQRepository>();
 
             services.AddSwaggerGen(c =>
             {

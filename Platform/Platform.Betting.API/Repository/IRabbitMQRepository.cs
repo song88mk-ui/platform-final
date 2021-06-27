@@ -8,6 +8,6 @@ namespace Platform.Betting.API.Repository
 {
     public interface IRabbitMQRepository
     {
-        Task<BaseResponseDTO<MessageResponseDTO>> PublishViaHttp(MessageRequestDTO request);
+        BaseResponseDTO<MessageResponseDTO> PublishViaHttp(MessageRequestDTO request);
     }
 }

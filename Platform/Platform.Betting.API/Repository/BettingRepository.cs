@@ -415,7 +415,7 @@ namespace Platform.Betting.API.Repository
                         BetSelections = betSelectionData
                     };
 
-                    await _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                    _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
                     {
                         Payload = JsonSerializer.Serialize(payload),
                         CorrelationId = Guid.NewGuid().ToString().ToUpper(),
@@ -450,7 +450,7 @@ namespace Platform.Betting.API.Repository
                     InnerException = ex.InnerException.ToString()
                 };
 
-                await _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
                 {
                     Payload = JsonSerializer.Serialize(payload),
                     CorrelationId = Guid.NewGuid().ToString().ToUpper(),
@@ -832,7 +832,7 @@ namespace Platform.Betting.API.Repository
                         BetSelections = betSelectionData
                     };
 
-                    await _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                    _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
                     {
                         Payload = JsonSerializer.Serialize(payload),
                         CorrelationId = Guid.NewGuid().ToString().ToUpper(),
@@ -867,7 +867,7 @@ namespace Platform.Betting.API.Repository
                     InnerException = ex.InnerException.ToString()
                 };
 
-                await _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
                 {
                     Payload = JsonSerializer.Serialize(payload),
                     CorrelationId = Guid.NewGuid().ToString().ToUpper(),
@@ -1365,7 +1365,7 @@ namespace Platform.Betting.API.Repository
                     Bets = betList
                 };
 
-                await _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
                 {
                     Payload = JsonSerializer.Serialize(payload),
                     CorrelationId = Guid.NewGuid().ToString().ToUpper(),
@@ -1460,7 +1460,7 @@ namespace Platform.Betting.API.Repository
                         TaxedWinnings = result.Result.TaxedWinnings
                     };
 
-                    await _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                    _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
                     {
                         Payload = JsonSerializer.Serialize(payload),
                         CorrelationId = Guid.NewGuid().ToString().ToUpper(),

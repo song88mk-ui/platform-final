@@ -17,7 +17,7 @@ namespace Platform.Operator.API.Controllers
         private readonly IPlatformRepository _platformRepository;
 
         public IntegrationController(IPlatformRepository platformRepository)
-        {
+        {//
             _platformRepository = platformRepository;
         }
 

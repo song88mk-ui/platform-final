@@ -34,6 +34,13 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpPost("v1/client/status")]
+        public IActionResult ProcessStatusUpdate([FromBody] ClientStatusRequestDTO request)
+        {
+            var response = _platformRepository.ProcessStatusUpdate(request);
+            return Ok(response);
+        }
+
         /// <summary>
         /// Get list of all top fixtures per client ids that are included in the request.
         /// </summary>

@@ -2148,6 +2148,41 @@ namespace Platform.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<bool>> ProcessStatusUpdate(ClientStatusRequestDTO request)
+        {
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
+            {
+                try
+                {
+                    var currentClient = await _platformContext.Client.AsNoTracking().FirstOrDefaultAsync(c => c.ClientIdRef == request.ClientIdRef);
+
+                    currentClient.IsActive = request.IsActive;
+
+                    _platformContext.Client.Update(currentClient);
+
+                    await _platformContext.SaveChangesAsync();
+
+                    scope.Complete();
+                }
+                catch (Exception ex)
+                {
+                    scope.Dispose();
+                    return new BaseResponseDTO<bool>
+                    {
+                        Result = false,
+                        StatusCode = StatusCode.Error,
+                        Message = StatusCode.Error.ToString()
+                    };
+                }
+            }
+            return new BaseResponseDTO<bool>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = true
+            };
+        }
+
         public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures(string strClientRefIds)
         {
             var clientRefIds = strClientRefIds.Split(',').ToList().ConvertAll(int.Parse);

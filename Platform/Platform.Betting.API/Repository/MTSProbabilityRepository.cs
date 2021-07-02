@@ -81,6 +81,8 @@ namespace Platform.Betting.API.Repository
 
                                     if (sel == betSelection.SelectionTemplateId)
                                     {
+                                        var isActive = Convert.ToBoolean(selection.Attributes["active"].Value);
+
                                         double wonProbability = 0;
                                         double lostProbability = 0;
                                         double voidProbability = 0;
@@ -132,16 +134,27 @@ namespace Platform.Betting.API.Repository
 
                                         var probability = Convert.ToDouble(selection.Attributes["probabilities"].Value);
 
-                                        probabilites.Add(new Probabilities
+                                        if (isActive)
                                         {
-                                            CashOutStatusId = 1,
-                                            Probability = probability,
-                                            WonProbability = wonProbability,
-                                            LostProbability = lostProbability,
-                                            VoidProbability = voidProbability,
-                                            HalfWonProbability = halfWonProbability,
-                                            HalfLostProbability = halfLostProbability
-                                        });
+                                            probabilites.Add(new Probabilities
+                                            {
+                                                CashOutStatusId = 1,
+                                                Probability = probability,
+                                                WonProbability = wonProbability,
+                                                LostProbability = lostProbability,
+                                                VoidProbability = voidProbability,
+                                                HalfWonProbability = halfWonProbability,
+                                                HalfLostProbability = halfLostProbability
+                                            });
+                                        }
+                                        else
+                                        {
+                                            probabilites.Add(new Probabilities
+                                            {
+                                                CashOutStatusId = -1,
+                                                Probability = 0
+                                            });
+                                        }
                                         break;
                                     }
                                 }

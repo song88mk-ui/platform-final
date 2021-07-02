@@ -54,6 +54,7 @@ namespace Platform.Betting.API.Repository
 
                     foreach (var betSelection in betSelections)
                     {
+                        var isExisting = false;
                         HttpResponseMessage response;
 
                         if (betSelection.SelectionSpecifier.Contains("?"))
@@ -81,6 +82,7 @@ namespace Platform.Betting.API.Repository
 
                                     if (sel == betSelection.SelectionTemplateId)
                                     {
+                                        isExisting = true;
                                         var isActive = Convert.ToBoolean(Convert.ToInt32(selection.Attributes["active"].Value));
 
                                         double wonProbability = 0;
@@ -158,6 +160,15 @@ namespace Platform.Betting.API.Repository
                                         break;
                                     }
                                 }
+
+                                if (isExisting == false)
+                                {
+                                    probabilites.Add(new Probabilities
+                                    {
+                                        CashOutStatusId = -1,
+                                        Probability = 0
+                                    });
+                                }
                             }
                             else
                             {
@@ -180,31 +191,7 @@ namespace Platform.Betting.API.Repository
 
                     if (betSelections.Count > 1)
                     {
-                        if (probabilites.Any(c => c.CashOutStatusId != (int)CashOutStatus.Available))
-                        {
-                            return new BaseResponseDTO<CashOutResponse>
-                            {
-                                StatusCode = StatusCode.CashOut_Is_Unavailable,
-                                Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' '),
-                                Result = new CashOutResponse
-                                {
-                                    BetId = bet.BetId,
-                                    CashOutStake = 0m,
-                                    Probabilities = probabilites.Select(s => new Probabilities
-                                    {
-                                        CashOutStatusId = s.CashOutStatusId,
-                                        Probability = s.Probability,
-                                        WonProbability = s.WonProbability,
-                                        LostProbability = s.LostProbability,
-                                        VoidProbability = s.VoidProbability,
-                                        HalfWonProbability = s.HalfWonProbability,
-                                        HalfLostProbability = s.HalfLostProbability
-                                    }).ToList()
-                                }
-                            };
-                        }
-
-                        if (!probabilites.Any(c => c.CashOutStatusId == (int)CashOutStatus.Available))
+                        if (probabilites.Any(c => c.CashOutStatusId == (int)CashOutStatus.Unavailable))
                         {
                             return new BaseResponseDTO<CashOutResponse>
                             {
@@ -297,7 +284,7 @@ namespace Platform.Betting.API.Repository
                     }
                     else
                     {
-                        if (probabilites.First().CashOutStatusId != (int)CashOutStatus.Available)
+                        if (probabilites.Any(c => c.CashOutStatusId == (int)CashOutStatus.Unavailable))
                         {
                             return new BaseResponseDTO<CashOutResponse>
                             {

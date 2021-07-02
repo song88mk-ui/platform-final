@@ -81,7 +81,7 @@ namespace Platform.Betting.API.Repository
 
                                     if (sel == betSelection.SelectionTemplateId)
                                     {
-                                        var isActive = Convert.ToBoolean(selection.Attributes["active"].Value);
+                                        var isActive = Convert.ToBoolean(Convert.ToInt32(selection.Attributes["active"].Value));
 
                                         double wonProbability = 0;
                                         double lostProbability = 0;

@@ -82,7 +82,8 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", operatorToken },
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "message", result.Message.ToString() },
+                                { "response", JsonSerializer.Serialize(result) }
                             };
 
             _telemetryClient.TrackEvent("e:v2/bet/placement", properties);

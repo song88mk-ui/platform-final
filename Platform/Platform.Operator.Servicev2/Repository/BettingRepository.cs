@@ -26,33 +26,47 @@ namespace Platform.Operator.Servicev2.Repository
         {
             _configuration = configuration;
         }
+
         private HttpClient GetHttpClient(string endpoint, string operatorToken)
         {
-            var result = _httpClients.Where(c => c.BaseAddress.OriginalString == endpoint).FirstOrDefault();
-
-            if (result == null)
+            var result = new HttpClient
             {
-                var newHttpClient = new HttpClient
-                {
-                    BaseAddress = new Uri(endpoint),
-                    Timeout = TimeSpan.FromSeconds(5)
-                };
+                BaseAddress = new Uri(endpoint),
+                Timeout = TimeSpan.FromSeconds(5)
+            };
 
-                newHttpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+            result.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
 
-                _httpClients.Add(newHttpClient);
-
-                return newHttpClient;
-            }
-            else
-            {
-                result.DefaultRequestHeaders.Remove("x-operator-token");
-                result.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
-
-                return result;
-            }
-
+            return result;
         }
+
+        //private HttpClient GetHttpClient(string endpoint, string operatorToken)
+        //{
+        //    var result = _httpClients.Where(c => c.BaseAddress.OriginalString == endpoint).FirstOrDefault();
+
+        //    if (result == null)
+        //    {
+        //        var newHttpClient = new HttpClient
+        //        {
+        //            BaseAddress = new Uri(endpoint),
+        //            Timeout = TimeSpan.FromSeconds(5)
+        //        };
+
+        //        newHttpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+
+        //        _httpClients.Add(newHttpClient);
+
+        //        return newHttpClient;
+        //    }
+        //    else
+        //    {
+        //        result.DefaultRequestHeaders.Remove("x-operator-token");
+        //        result.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+
+        //        return result;
+        //    }
+
+        //}
         private void CancelBet(Guid betId, string reason, string correlationId, IMessageBroker messageBroker)
         {
             var betData = new Bet();

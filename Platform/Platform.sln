@@ -42,7 +42,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Placement.Servicev
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.CashOutStake.Service", "Platform.CashOutStake.Service\Platform.CashOutStake.Service.csproj", "{5837D6DF-E4AC-4E13-B369-6FF23452D86D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.CashOut.Service", "Platform.CashOut.Service\Platform.CashOut.Service.csproj", "{52FCBF71-5D1A-4F18-866E-A80CB96ECE56}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.CashOut.Service", "Platform.CashOut.Service\Platform.CashOut.Service.csproj", "{52FCBF71-5D1A-4F18-866E-A80CB96ECE56}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Operator.Servicev2", "Platform.Operator.Servicev2\Platform.Operator.Servicev2.csproj", "{23424F2A-F24B-4946-A23A-43A4D6F20796}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -126,6 +128,10 @@ Global
 		{52FCBF71-5D1A-4F18-866E-A80CB96ECE56}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52FCBF71-5D1A-4F18-866E-A80CB96ECE56}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52FCBF71-5D1A-4F18-866E-A80CB96ECE56}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23424F2A-F24B-4946-A23A-43A4D6F20796}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23424F2A-F24B-4946-A23A-43A4D6F20796}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23424F2A-F24B-4946-A23A-43A4D6F20796}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23424F2A-F24B-4946-A23A-43A4D6F20796}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

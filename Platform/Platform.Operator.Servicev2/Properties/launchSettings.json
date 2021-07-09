@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "Platform.Operator.Servicev2": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

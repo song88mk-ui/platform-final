@@ -850,11 +850,17 @@ namespace Platform.Settlement.Service.Repository
                         {
                             var bet = context.Bet.Find(betItem.BetId);
 
-                            if (bet == null || bet.BetStatusId == (int)BetStatus.Waiting || bet.BetStatusId == (int)BetStatus.CashedOut || bet.BetStatusId == (int)BetStatus.Cancelled || bet.BetStatusId == (int)BetStatus.Rejected)
+                            if (bet == null || bet.BetStatusId == (int)BetStatus.Waiting || bet.BetStatusId == (int)BetStatus.Cancelled || bet.BetStatusId == (int)BetStatus.Rejected)
                             {
                                 scope.Complete();
                                 continue;
                             }
+
+                            //if (bet == null || bet.BetStatusId == (int)BetStatus.Waiting || bet.BetStatusId == (int)BetStatus.CashedOut || bet.BetStatusId == (int)BetStatus.Cancelled || bet.BetStatusId == (int)BetStatus.Rejected)
+                            //{
+                            //    scope.Complete();
+                            //    continue;
+                            //}
 
                             var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
 

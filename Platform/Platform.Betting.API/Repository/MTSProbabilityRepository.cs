@@ -31,7 +31,8 @@ namespace Platform.Betting.API.Repository
         {
             if (bet.BetStatusId == (int)BetStatus.Running)
             {
-                var stake = bet.TrueStake - (bet.TrueStake * bet.StakeTax);
+                var taxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
+                var stake = bet.TrueStake - taxedStake;
 
                 try
                 {
@@ -266,7 +267,7 @@ namespace Platform.Betting.API.Repository
                                 {
                                     BetId = bet.BetId,
                                     CashOutStake = finalCashOutStake,
-                                    TaxedStake = bet.TrueStake * bet.StakeTax,
+                                    TaxedStake = taxedStake,
                                     TaxedWinnings = taxedWinnings,
                                     Probabilities = probabilites.Select(s => new Probabilities
                                     {
@@ -351,7 +352,7 @@ namespace Platform.Betting.API.Repository
                                 {
                                     BetId = bet.BetId,
                                     CashOutStake = finalCashOutStake,
-                                    TaxedStake = bet.TrueStake * bet.StakeTax,
+                                    TaxedStake = taxedStake,
                                     TaxedWinnings = taxedWinnings,
                                     Probabilities = probabilites.Select(s => new Probabilities
                                     {

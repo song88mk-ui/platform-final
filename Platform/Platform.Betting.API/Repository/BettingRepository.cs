@@ -213,7 +213,7 @@ namespace Platform.Betting.API.Repository
 
                     var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
                     var stake = request.Stake;
-                    var taxedStake = stake - (stake * taxConfig.StakeTax);
+                    var taxedStake = stake - (stake / (1 + taxConfig.StakeTax));
 
                     var betEntity = _bettingContext.Bet.Update(new Bet
                     {
@@ -224,7 +224,7 @@ namespace Platform.Betting.API.Repository
                         OddsTypeId = (int)request.OddsType,
                         OddsTypeName = request.OddsType.ToString(),
                         //Payout = stake == request.Stake ? stake * totalOdds : stake + request.Stake,
-                        Payout = taxedStake * totalOdds,
+                        Payout = (stake - taxedStake) * totalOdds,
                         WinLoss = 0m,
                         BetStatusId = (int)BetStatus.Waiting,
                         BetStatusName = BetStatus.Waiting.ToString(),
@@ -250,7 +250,7 @@ namespace Platform.Betting.API.Repository
                         SettlementDateOffset = request.BetDate.AddHours(-4),
                         StakeTax = taxConfig.StakeTax,
                         WinningsTax = taxConfig.WinningsTax,
-                        TaxedStake = stake * taxConfig.StakeTax,
+                        TaxedStake = taxedStake,
                         TaxedWinnings = 0
                     }).Entity;
 
@@ -630,7 +630,7 @@ namespace Platform.Betting.API.Repository
 
                     var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
                     var stake = request.Stake;
-                    var taxedStake = stake - (stake * taxConfig.StakeTax);
+                    var taxedStake = stake - (stake / (1 + taxConfig.StakeTax));
 
                     var betEntity = _bettingContext.Bet.Update(new Bet
                     {
@@ -641,7 +641,7 @@ namespace Platform.Betting.API.Repository
                         OddsTypeId = (int)request.OddsType,
                         OddsTypeName = request.OddsType.ToString(),
                         //Payout = stake == request.Stake ? stake * totalOdds : stake + request.Stake,
-                        Payout = taxedStake * totalOdds,
+                        Payout = (stake - taxedStake) * totalOdds,
                         WinLoss = 0m,
                         BetStatusId = (int)BetStatus.Waiting,
                         BetStatusName = BetStatus.Waiting.ToString(),

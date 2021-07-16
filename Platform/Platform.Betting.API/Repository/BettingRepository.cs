@@ -219,7 +219,7 @@ namespace Platform.Betting.API.Repository
                     {
                         UserId = request.UserId,
                         Stake = request.Stake,
-                        TrueStake = stake,
+                        TrueStake = request.Stake,
                         Odds = totalOdds,
                         OddsTypeId = (int)request.OddsType,
                         OddsTypeName = request.OddsType.ToString(),
@@ -635,7 +635,7 @@ namespace Platform.Betting.API.Repository
                     {
                         UserId = request.UserId,
                         Stake = request.Stake,
-                        TrueStake = stake,
+                        TrueStake = request.Stake,
                         Odds = totalOdds,
                         OddsTypeId = (int)request.OddsType,
                         OddsTypeName = request.OddsType.ToString(),

@@ -523,7 +523,7 @@ namespace Platform.Settlement.Service.Repository
 
                         var taxedWinnings = (payout - bet.TrueStake) * bet.WinningsTax;
 
-                        if (payout > stake)
+                        if (payout > bet.TrueStake)
                         {
                             payout = payout - taxedWinnings;
                         }
@@ -745,7 +745,7 @@ namespace Platform.Settlement.Service.Repository
 
                         var taxedWinnings = (payout - bet.TrueStake) * bet.WinningsTax;
 
-                        if (payout > stake)
+                        if (payout > bet.TrueStake)
                             payout = payout - taxedWinnings;
                         else
                             taxedWinnings = 0;

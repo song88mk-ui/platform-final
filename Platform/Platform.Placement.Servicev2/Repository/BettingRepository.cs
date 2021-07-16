@@ -561,7 +561,9 @@ namespace Platform.Placement.Servicev2.Repository
             //    companyStake = betData.TrueStake * 10000;
 
             //var companyStake = betData.TrueStake * 10000;
-            var stake = (betData.TrueStake - (betData.TrueStake * betData.WinningsTax)) * 10000;
+            //var stake = (betData.TrueStake - (betData.TrueStake * betData.WinningsTax)) * 10000;
+
+            var stake = betData.TrueStake * 10000;
 
             var selection = _factory.CreateBetBuilder()
                                     .SetBetId(betData.BetId.ToString().ToUpper())

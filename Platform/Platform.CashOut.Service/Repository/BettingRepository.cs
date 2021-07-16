@@ -179,7 +179,7 @@ namespace Platform.CashOut.Service.Repository
                 });
             }
 
-            var stake = bet.TrueStake - (bet.TrueStake * bet.StakeTax);
+            var stake = bet.TrueStake - message.TaxedStake;
             var payout = message.CashOutStake;
             var winloss = payout - stake;
 

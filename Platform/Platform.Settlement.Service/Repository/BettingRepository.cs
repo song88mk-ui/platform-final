@@ -531,8 +531,10 @@ namespace Platform.Settlement.Service.Repository
                             taxedWinnings = 0;
 
                         var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
-                        var actualStake = betStatus == BetStatus.HalfLost ? stake : bet.TrueStake;
-                        bet.WinLoss = payout == 0 ? -bet.TrueStake : payout - actualStake;
+
+                        stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon ? bet.TrueStake : stake;
+
+                        bet.WinLoss = payout == 0 ? -bet.TrueStake : payout - stake;
                         bet.BetStatusId = (int)betStatus;
                         bet.BetStatusName = betStatus.ToString();
                         bet.Payout = payout;
@@ -752,9 +754,9 @@ namespace Platform.Settlement.Service.Repository
 
                         var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
 
-                        var actualStake = betStatus == BetStatus.HalfLost ? stake : bet.TrueStake;
+                        stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon ? bet.TrueStake : stake;
 
-                        bet.WinLoss = payout == 0 ? -bet.TrueStake : payout - actualStake;
+                        bet.WinLoss = payout == 0 ? -bet.TrueStake : payout - stake;
                         bet.BetStatusId = (int)betStatus;
                         bet.BetStatusName = betStatus.ToString();
                         bet.Payout = payout;

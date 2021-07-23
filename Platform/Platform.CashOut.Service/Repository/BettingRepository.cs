@@ -179,9 +179,9 @@ namespace Platform.CashOut.Service.Repository
                 });
             }
 
-            var stake = bet.TrueStake;
+            var stake = bet.TrueStake - bet.TaxedStake;
             var payout = message.CashOutStake;
-            var winloss = payout - stake;
+            var winloss = payout - bet.TrueStake;
 
             var betStatus = GetStatus(selections.Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), payout, stake);
 

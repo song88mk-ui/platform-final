@@ -177,5 +177,18 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpGet("v1/client/exchangerate")]
+        public async Task<IActionResult> GetExchangeRate([FromQuery] string currencyCode)
+        {
+            var result = await _platformRepository.GetCurrentExchangeRate(currencyCode);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

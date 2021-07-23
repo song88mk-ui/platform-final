@@ -51,6 +51,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<BackOfficeTopLeaguesResponseDTO>> GetClientTopLeagues(BackOfficeTopLeaguesRequestDTO request);
         Task<BaseResponseDTO<SportsLookupResponseDTO>> GetClientSportsLookup(BackofficeClientSportsRequestDTO request);
         Task<BaseResponseDTO<BetCashOutResponseDTO>> CashoutBet(string apiKey, string clientId, string operatorToken, CashoutBetRequest request);
+        Task<BaseResponseDTO<ExchangeRateResponseDTO>> GetCurrentExchangeRate(string currencyCode);
 
     }
 }

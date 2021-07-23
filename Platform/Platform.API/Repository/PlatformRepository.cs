@@ -2441,6 +2441,41 @@ namespace Platform.API.Repository
             });
         }
 
+        public async Task<BaseResponseDTO<ExchangeRateResponseDTO>> GetCurrentExchangeRate(string currencyCode)
+        {
+            if (string.IsNullOrEmpty(currencyCode))
+            {
+                return new BaseResponseDTO<ExchangeRateResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString()
+                };
+            }
+
+            var result = await _platformContext.ForexEUR.FindAsync(currencyCode);
+
+            if (result == null)
+            {
+                return new BaseResponseDTO<ExchangeRateResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString()
+                };
+            }
+            else
+            {
+                return new BaseResponseDTO<ExchangeRateResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new ExchangeRateResponseDTO
+                    {
+                        ExchangeRate = result.ExchangeRate
+                    }
+                };
+            }
+        }
+
         private DateTime GetFirstDayOfNextMonth()
         {
             DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);

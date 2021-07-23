@@ -2470,6 +2470,7 @@ namespace Platform.API.Repository
                     Message = StatusCode.Success.ToString(),
                     Result = new ExchangeRateResponseDTO
                     {
+                        CurrencyCode = result.CurrencyCode,
                         ExchangeRate = result.ExchangeRate
                     }
                 };

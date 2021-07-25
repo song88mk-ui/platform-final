@@ -699,6 +699,44 @@ namespace Platform.Sportsbook.API.Repository
             return new Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>(fixtures.Result, markets.Result, selections.Result, bettingStatus.Result);
         }
 
+        public async Task<BaseResponseDTO<BetSelectionProbabilityResponseDTO>> GetBetSelectionProbabilities(BetSelectionProbabilityRequestDTO request)
+        {
+            var selectionFilter = Builders<Selection>.Filter.Where(c => request.Selections.Contains(c.SeId));
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr);
+            var selections = await primarySelectionCollection.Find(selectionFilter).Project<SelectionProbabilityFilter>(selectionProjection).ToListAsync();
+
+            if (selections.Count == 0)
+            {
+                return new BaseResponseDTO<BetSelectionProbabilityResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new BetSelectionProbabilityResponseDTO()
+                };
+            }
+
+            return new BaseResponseDTO<BetSelectionProbabilityResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BetSelectionProbabilityResponseDTO
+                {
+                    Selections = selections.Select(s => new BetSelectionProbabilityDTO
+                    {
+                        SelectionId = s.SeId,
+                        MarketStatusId = s.MaStId,
+                        IsActive = s.IsAc,
+                        Probability = s.Pr,
+                        WonProbability = s.WoPr,
+                        LostProbability = s.LoPr,
+                        VoidProbability = s.VoPr,
+                        HalfWonProbability = s.HaWoPr,
+                        HalfLostProbability = s.HaLoPr
+                    }).ToList()
+                }
+            };
+        }
+
         private async Task<Tuple<List<Fixture>, List<Market>, List<Selection>>> GetBetFixtureTranslations(BetFixtureTranslationRequestDTO request)
         {
             var fixtureIds = request.Selections.Select(s => s.FixtureId).ToList();

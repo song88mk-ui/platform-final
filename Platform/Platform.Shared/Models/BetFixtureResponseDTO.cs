@@ -13,6 +13,28 @@ namespace Platform.Shared.Models
         public List<BetFixtureSelectionResponseDTO> Selections { get; set; }
     }
 
+    public class BetSelectionProbabilityResponseDTO
+    {
+        public BetSelectionProbabilityResponseDTO()
+        {
+            Selections = new List<BetSelectionProbabilityDTO>();
+        }
+        public List<BetSelectionProbabilityDTO> Selections { get; set; }
+    }
+
+    public class BetSelectionProbabilityDTO
+    {
+        public long SelectionId { get; set; }
+        public int MarketStatusId { get; set; }
+        public bool IsActive { get; set; }
+        public double Probability { get; set; }
+        public double WonProbability { get; set; }
+        public double LostProbability { get; set; }
+        public double VoidProbability { get; set; }
+        public double HalfWonProbability { get; set; }
+        public double HalfLostProbability { get; set; }
+    }
+
     public class BetFixtureSelectionResponseDTO
     {
         public int SportId { get; set; }

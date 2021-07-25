@@ -55,4 +55,18 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public string LaCo { get; set; }
         public string SeNa { get; set; }
     }
+
+    public class SelectionProbabilityFilter
+    {
+        [BsonId]
+        public long SeId { get; set; }
+        public int MaStId { get; set; }
+        public bool IsAc { get; set; }
+        public double Pr { get; set; }
+        public double WoPr { get; set; }
+        public double LoPr { get; set; }
+        public double VoPr { get; set; }
+        public double HaWoPr { get; set; }
+        public double HaLoPr { get; set; }
+    }
 }

@@ -40,6 +40,16 @@ namespace Platform.Shared.Models
         public List<Probabilities> Probabilities { get; set; }
     }
 
+    public class CashOutDetailsReponse
+    {
+        public Guid BetId { get; set; }
+        public CashOutStatus CashOutStatus { get; set; }
+        public decimal CashOutStake { get; set; }
+        public decimal TaxedStake { get; set; }
+        public decimal TaxedWinnings { get; set; }
+        public List<Probabilities> Probabilities { get; set; }
+    }
+
     public class Probabilities
     {
         public double WonProbability { get; set; }

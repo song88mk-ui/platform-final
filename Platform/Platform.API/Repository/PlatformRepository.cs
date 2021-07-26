@@ -2482,6 +2482,11 @@ namespace Platform.API.Repository
             return await _bettingRepository.ProcessBetConfig(request);
         }
 
+        public async Task<BaseResponseDTO<BetModifyResponseDTO>> CancelBets(BetModifyRequestDTO request)
+        {
+            return await _bettingRepository.CancelBets(request);
+        }
+
         private DateTime GetFirstDayOfNextMonth()
         {
             DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);

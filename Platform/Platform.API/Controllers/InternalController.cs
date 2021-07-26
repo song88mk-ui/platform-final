@@ -204,5 +204,19 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/bet/cancel")]
+        public async Task<IActionResult> CancelBets([FromBody] BetModifyRequestDTO request)
+        {
+            var result = await _platformRepository.CancelBets(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

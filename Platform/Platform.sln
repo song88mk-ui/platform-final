@@ -46,7 +46,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.CashOut.Service", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Operator.Servicev2", "Platform.Operator.Servicev2\Platform.Operator.Servicev2.csproj", "{23424F2A-F24B-4946-A23A-43A4D6F20796}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.CashOutStake.Servicev2", "Platform.CashOutStake.Servicev2\Platform.CashOutStake.Servicev2.csproj", "{00537B2C-C3B5-4659-ABB4-013AA38B1684}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.CashOutStake.Servicev2", "Platform.CashOutStake.Servicev2\Platform.CashOutStake.Servicev2.csproj", "{00537B2C-C3B5-4659-ABB4-013AA38B1684}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.BetForwarder.Service", "Platform.BetForwarder.Service\Platform.BetForwarder.Service.csproj", "{4DD52BE5-9E33-4EC6-9440-F21B9AFE8F7E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -138,6 +140,10 @@ Global
 		{00537B2C-C3B5-4659-ABB4-013AA38B1684}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{00537B2C-C3B5-4659-ABB4-013AA38B1684}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{00537B2C-C3B5-4659-ABB4-013AA38B1684}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DD52BE5-9E33-4EC6-9440-F21B9AFE8F7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DD52BE5-9E33-4EC6-9440-F21B9AFE8F7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DD52BE5-9E33-4EC6-9440-F21B9AFE8F7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DD52BE5-9E33-4EC6-9440-F21B9AFE8F7E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

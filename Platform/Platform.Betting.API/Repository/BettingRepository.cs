@@ -26,19 +26,17 @@ namespace Platform.Betting.API.Repository
 
         private readonly IMTSAuthRepository _mtsAuthRepository;
         private readonly IMTSMaxStakeRepository _mtsMaxStakeRepository;
-        private readonly IBackOfficeRepository _backOfficeRepository;
         private readonly IMTSProbabilityRepository _mtsProbabilityRepository;
         private readonly IRabbitMQRepository _rabbitMQRepository;
 
         private readonly TelemetryClient _telemetryClient;
 
-        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IHttpClientFactory httpClientFactory, IMTSAuthRepository mtsAuthRepository, IMTSMaxStakeRepository mtsMaxStakeRepository, IBackOfficeRepository backOfficeRepository, IMTSProbabilityRepository mtsProbabilityRepository, IRabbitMQRepository rabbitMQRepository, TelemetryClient telemetryClient)
+        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IHttpClientFactory httpClientFactory, IMTSAuthRepository mtsAuthRepository, IMTSMaxStakeRepository mtsMaxStakeRepository, IMTSProbabilityRepository mtsProbabilityRepository, IRabbitMQRepository rabbitMQRepository, TelemetryClient telemetryClient)
         {
             _bettingContext = bettingContext;
             _httpClientFactory = httpClientFactory;
             _mtsAuthRepository = mtsAuthRepository;
             _mtsMaxStakeRepository = mtsMaxStakeRepository;
-            _backOfficeRepository = backOfficeRepository;
             _mtsProbabilityRepository = mtsProbabilityRepository;
             _rabbitMQRepository = rabbitMQRepository;
             _telemetryClient = telemetryClient;
@@ -91,7 +89,7 @@ namespace Platform.Betting.API.Repository
 
             if (request.Selections.Count == 1)
             {
-                var tierMaxStake = await _backOfficeRepository.GetTierMaxStake(new BetConfigLeagueRequestDTO
+                var tierMaxStake = await GetTierMaxStake(new BetConfigLeagueRequestDTO
                 {
                     LeagueId = request.Selections.FirstOrDefault().LeagueId,
                     SegmentId = request.Selections.FirstOrDefault().SegmentId,
@@ -105,16 +103,16 @@ namespace Platform.Betting.API.Repository
                 if (checkOverride != null)
                 {
                     minStake = GetMinStake(checkOverride.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
-                    maxStake = GetMaxStakeForSingleBetWithoutMTS(checkOverride.MaxStake, tierMaxStake.Result.MaxStake, request.ExchangeRate, odds);
-                    maxPerGame = tierMaxStake.Result.MaxPerGame * request.ExchangeRate;
+                    maxStake = GetMaxStakeForSingleBetWithoutMTS(checkOverride.MaxStake, tierMaxStake.MaxStake, request.ExchangeRate, odds);
+                    maxPerGame = tierMaxStake.MaxPerGame * request.ExchangeRate;
                     stakeFixtureLimit = checkOverride.StakeLimitFixture < maxPerGame ? checkOverride.StakeLimitFixture : maxPerGame;
                 }
                 else
                 {
                     DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     minStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
-                    maxStake = GetMaxStakeForSingleBetWithoutMTS(defaultSportConfig.MaxStake, tierMaxStake.Result.MaxStake, request.ExchangeRate, odds);
-                    maxPerGame = tierMaxStake.Result.MaxPerGame * request.ExchangeRate;
+                    maxStake = GetMaxStakeForSingleBetWithoutMTS(defaultSportConfig.MaxStake, tierMaxStake.MaxStake, request.ExchangeRate, odds);
+                    maxPerGame = tierMaxStake.MaxPerGame * request.ExchangeRate;
                     stakeFixtureLimit = defaultSportConfig.StakeLimitFixture < maxPerGame ? defaultSportConfig.StakeLimitFixture  : maxPerGame;
                 }
 
@@ -529,7 +527,7 @@ namespace Platform.Betting.API.Repository
 
             if (request.Selections.Count == 1)
             {
-                var tierMaxStake = await _backOfficeRepository.GetTierMaxStake(new BetConfigLeagueRequestDTO
+                var tierMaxStake = await GetTierMaxStake(new BetConfigLeagueRequestDTO
                 {
                     LeagueId = request.Selections.FirstOrDefault().LeagueId,
                     SegmentId = request.Selections.FirstOrDefault().SegmentId,
@@ -543,16 +541,16 @@ namespace Platform.Betting.API.Repository
                 if (checkOverride != null)
                 {
                     minStake = GetMinStake(checkOverride.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
-                    maxStake = GetMaxStakeForSingleBetWithMTS(checkOverride.MaxStake, tierMaxStake.Result.MaxStake, mtsMaxStake.Result.Stake, request.ExchangeRate, odds, request.CompanyShare);
-                    maxPerGame = tierMaxStake.Result.MaxPerGame * request.ExchangeRate;
+                    maxStake = GetMaxStakeForSingleBetWithMTS(checkOverride.MaxStake, tierMaxStake.MaxStake, mtsMaxStake.Result.Stake, request.ExchangeRate, odds, request.CompanyShare);
+                    maxPerGame = tierMaxStake.MaxPerGame * request.ExchangeRate;
                     stakeFixtureLimit = checkOverride.StakeLimitFixture < maxPerGame ? checkOverride.StakeLimitFixture : maxPerGame;
                 }
                 else
                 {
                     DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     minStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
-                    maxStake = GetMaxStakeForSingleBetWithMTS(defaultSportConfig.MaxStake, tierMaxStake.Result.MaxStake, mtsMaxStake.Result.Stake, request.ExchangeRate, odds, request.CompanyShare);
-                    maxPerGame = tierMaxStake.Result.MaxPerGame * request.ExchangeRate;
+                    maxStake = GetMaxStakeForSingleBetWithMTS(defaultSportConfig.MaxStake, tierMaxStake.MaxStake, mtsMaxStake.Result.Stake, request.ExchangeRate, odds, request.CompanyShare);
+                    maxPerGame = tierMaxStake.MaxPerGame * request.ExchangeRate;
                     stakeFixtureLimit = defaultSportConfig.StakeLimitFixture < maxPerGame ? defaultSportConfig.StakeLimitFixture : maxPerGame;
                 }
 
@@ -959,7 +957,7 @@ namespace Platform.Betting.API.Repository
 
             if (request.Selections.Count == 1)
             {
-                var tierMaxStake = await _backOfficeRepository.GetTierMaxStake(new BetConfigLeagueRequestDTO
+                var tierMaxStake = await GetTierMaxStake(new BetConfigLeagueRequestDTO
                 {
                     LeagueId = request.Selections.FirstOrDefault().LeagueId,
                     SegmentId = request.Selections.FirstOrDefault().SegmentId,
@@ -972,15 +970,15 @@ namespace Platform.Betting.API.Repository
                 var checkOverride = overrideSportConfig.Where(a => a.SportId == selection.SportId).FirstOrDefault();
                 if (checkOverride != null)
                 {
-                    maxStake = GetMaxStakeForSingleBetWithoutMTS(checkOverride.MaxStake, tierMaxStake.Result.MaxStake, request.ExchangeRate, odds);
-                    maxPerGame = tierMaxStake.Result.MaxPerGame * request.ExchangeRate;
+                    maxStake = GetMaxStakeForSingleBetWithoutMTS(checkOverride.MaxStake, tierMaxStake.MaxStake, request.ExchangeRate, odds);
+                    maxPerGame = tierMaxStake.MaxPerGame * request.ExchangeRate;
                     stakeFixtureLimit = checkOverride.StakeLimitFixture < maxPerGame ? checkOverride.StakeLimitFixture : maxPerGame;
                 }
                 else
                 {
                     DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-                    maxStake = GetMaxStakeForSingleBetWithoutMTS(defaultSportConfig.MaxStake, tierMaxStake.Result.MaxStake, request.ExchangeRate, odds);
-                    maxPerGame = tierMaxStake.Result.MaxPerGame * request.ExchangeRate;
+                    maxStake = GetMaxStakeForSingleBetWithoutMTS(defaultSportConfig.MaxStake, tierMaxStake.MaxStake, request.ExchangeRate, odds);
+                    maxPerGame = tierMaxStake.MaxPerGame * request.ExchangeRate;
                     stakeFixtureLimit = defaultSportConfig.StakeLimitFixture < maxPerGame ? defaultSportConfig.StakeLimitFixture : maxPerGame;
                 }
 
@@ -1570,5 +1568,33 @@ namespace Platform.Betting.API.Repository
         {
             return (value % 1m != 0) ? Math.Truncate(value) + 1 : value;
         }
+
+        public async Task<BetConfigLeagueResponse> GetTierMaxStake(BetConfigLeagueRequestDTO request)
+        {
+            BetConfigLeagueResponse result = new BetConfigLeagueResponse();
+            int TierId = 2;
+            var league = await _bettingContext.League.Where(a => a.SportId == request.SportId && a.LeagueId == request.LeagueId && a.SegmentId == request.SegmentId).FirstOrDefaultAsync();
+            List<int> eSports = new List<int> { 1001, 1002, 1003, 1005, 1055, 1058 };
+            List<int> virtualSports = new List<int> { 107, 109, 110, 111, 132, 133, 134, 139, 140, 152, 154, 156, 158, 159, 160, 161, 162, 164, 166, 167, 168 };
+
+            if (league == null)
+            {
+                if (eSports.Contains(request.SportId))
+                    TierId = 1;
+                if (virtualSports.Contains(request.SportId))
+                    TierId = 3;
+            }
+            else
+            {
+                TierId = league.Tier;
+            }
+
+            var tier = _bettingContext.Tier.Find(TierId);
+            result.MaxStake = tier.MaxStake;
+            result.MaxPerGame = tier.MaxPerGame;
+
+            return result;
+        }
+
     }
 }

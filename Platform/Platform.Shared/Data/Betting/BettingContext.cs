@@ -16,6 +16,8 @@ namespace Platform.Shared.Data.Betting
             modelBuilder.Entity<BetSelectionAudit>().HasKey(k => new { k.Id });
             modelBuilder.Entity<BetConfig>().HasKey(k => new { k.ClientId, k.CurrencyCode });
             modelBuilder.Entity<StakeLimitFixture>().HasKey(k => new { k.UserId, k.FixtureId });
+            modelBuilder.Entity<Tier>().HasKey(k => new { k.TierId });
+            modelBuilder.Entity<League>().HasKey(k => new { k.Id });
         }
 
         public DbSet<Bet> Bet { get; set; }
@@ -24,5 +26,7 @@ namespace Platform.Shared.Data.Betting
         public DbSet<BetSelectionAudit> BetSelectionAudit { get; set; }
         public DbSet<BetConfig> BetConfig { get; set; }
         public DbSet<StakeLimitFixture> StakeLimitFixture { get; set; }
+        public DbSet<League> League { get; set; }
+        public DbSet<Tier> Tier { get; set; }
     }
 }

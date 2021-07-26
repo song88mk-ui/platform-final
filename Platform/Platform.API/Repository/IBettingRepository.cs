@@ -1,4 +1,5 @@
-﻿using Platform.Shared.Models;
+﻿using Platform.Shared.Enums;
+using Platform.Shared.Models;
 using System.Threading.Tasks;
 
 namespace Platform.API.Repository
@@ -10,5 +11,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(BetHistoryRequestDTO request);
         Task<BaseResponseDTO<BetConfigFEResponseDTO>> BetConfig(BetConfigRequestDTO request);
         Task<BaseResponseDTO<BetCashOutResponseDTO>> CashOutBet(CashoutBetRequestDTO request);
+        Task<BaseResponseDTO<StatusCode>> ProcessBetConfig(BackOfficeBetConfigPayloadDTO request);
     }
 }

@@ -190,5 +190,19 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpGet("v1/config/client")]
+        public async Task<IActionResult> ProcessBackOfficeClientBetConfig([FromBody] BackOfficeBetConfigPayloadDTO payload)
+        {
+            var result = await _platformRepository.ProcessBetConfig(payload);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

@@ -263,6 +263,21 @@ namespace Platform.Client.API.Repository
 
                 if (clientId.ToUpper() == "A96AB8BC-2970-EB11-89FC-00224815B68B" || clientId.ToUpper() == "917070EC-1DC1-4E10-28E8-08D8EE99CA8E")
                     clientCode = "10J";
+
+                if (clientId.ToUpper() == "A15C2C99-1F0E-4C24-CD4C-08D930DC2F4E" || clientId.ToUpper() == "D59C309B-7204-40D5-A986-08D940573A8F")
+                    clientCode = "10K";
+
+                if (clientId.ToUpper() == "BC04ECBB-6A1E-414D-CD4D-08D930DC2F4E" || clientId.ToUpper() == "244F1375-7BC3-48D9-66F9-08D94057C6CB")
+                    clientCode = "10G";
+
+                if (clientId.ToUpper() == "AFD99514-CB77-4667-CD50-08D930DC2F4E" || clientId.ToUpper() == "5E777D88-645A-420E-66FA-08D94057C6CB")
+                    clientCode = "10N";
+
+                if (clientId.ToUpper() == "694CEF9F-4C35-4C7B-CD4E-08D930DC2F4E" || clientId.ToUpper() == "75DD691C-F96C-4816-66FB-08D94057C6CB")
+                    clientCode = "10T";
+
+                if (clientId.ToUpper() == "AE83C5AD-396E-4406-CD4F-08D930DC2F4E" || clientId.ToUpper() == "5245C54C-EB98-42E4-66FC-08D94057C6CB")
+                    clientCode = "10Z";
             }
 
             var result = await _platformContext.ConfidenceFactor.Where(c => c.UserId == $"{clientCode}{userId.Replace("-", string.Empty)}").ToListAsync();

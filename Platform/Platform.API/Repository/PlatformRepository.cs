@@ -245,7 +245,12 @@ namespace Platform.API.Repository
                     FixtureSpecifier = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureSpecifier).FirstOrDefault(),
                     SelectionSpecifier = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SelectionSpecifier).FirstOrDefault(),
                     CorrelationId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.CorrelationId).FirstOrDefault(),
-                    Probability = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Probability).FirstOrDefault()
+                    Probability = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Probability).FirstOrDefault(),
+                    WonProbability = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.WonProbability).FirstOrDefault(),
+                    LostProbability = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.LostProbability).FirstOrDefault(),
+                    VoidProbability = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.VoidProbability).FirstOrDefault(),
+                    HalfWonProbability = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.HalfWonProbability).FirstOrDefault(),
+                    HalfLostProbability = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.HalfLostProbability).FirstOrDefault()
                 }).ToList()
             };
 

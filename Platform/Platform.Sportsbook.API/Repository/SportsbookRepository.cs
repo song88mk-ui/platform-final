@@ -826,6 +826,11 @@ namespace Platform.Sportsbook.API.Repository
                         SelectionSpecifier = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeSp).FirstOrDefault(),
                         CorrelationId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.CoId).FirstOrDefault(),
                         Probability = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.Pr).FirstOrDefault(),
+                        WonProbability = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.WoPr).FirstOrDefault(),
+                        LostProbability = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.LoPr).FirstOrDefault(),
+                        VoidProbability = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.VoPr).FirstOrDefault(),
+                        HalfWonProbability = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.HaWoPr).FirstOrDefault(),
+                        HalfLostProbability = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.HaLoPr).FirstOrDefault(),
                         BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, s, result)
                     }).ToList()
                 }

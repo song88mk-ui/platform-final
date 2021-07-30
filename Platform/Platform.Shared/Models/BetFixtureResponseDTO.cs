@@ -61,6 +61,11 @@ namespace Platform.Shared.Models
         public string SelectionSpecifier { get; set; }
         public string CorrelationId { get; set; }
         public double Probability { get; set; }
+        public double WonProbability { get; set; }
+        public double LostProbability { get; set; }
+        public double VoidProbability { get; set; }
+        public double HalfWonProbability { get; set; }
+        public double HalfLostProbability { get; set; }
         public BetSelectionState BetSelectionState { get; set; }
     }
 

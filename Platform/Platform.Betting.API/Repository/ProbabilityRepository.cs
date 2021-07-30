@@ -60,7 +60,7 @@ namespace Platform.Betting.API.Repository
         public async Task<BaseResponseDTO<List<CashOutDetailsReponse>>> GetCashOut(List<Bet> bets, List<BetSelection> betSelections)
         {
             var result = new List<CashOutDetailsReponse>();
-            var selectionIds = betSelections.Where(c => c.FixtureTypeId == (int)FixtureType.Match && c.SportId > 1000 && c.BetSelectionStatusId == (int)BetStatus.Running).Select(s => s.SelectionId).ToList();
+            var selectionIds = betSelections.Where(c => c.FixtureTypeId == (int)FixtureType.Match && c.SportId < 1000 && c.BetSelectionStatusId == (int)BetStatus.Running).Select(s => s.SelectionId).ToList();
             
             if (selectionIds.Count == 0)
             {

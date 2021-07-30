@@ -50,6 +50,7 @@ namespace Platform.Betting.API
             services.AddHttpClient<IMTSAuthRepository, MTSAuthRepository>();
             services.AddHttpClient<IMTSMaxStakeRepository, MTSMaxStakeRepository>();
             services.AddHttpClient<IMTSProbabilityRepository, MTSProbabilityRepository>();
+            services.AddHttpClient<IProbabilityRepository, ProbabilityRepository>();
             services.AddHttpClient<IRabbitMQRepository, RabbitMQRepository>();
 
             services.AddSwaggerGen(c =>

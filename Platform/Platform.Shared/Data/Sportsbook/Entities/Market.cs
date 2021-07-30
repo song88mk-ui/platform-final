@@ -52,4 +52,11 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public string LaCo { get; set; }
         public string MaNa { get; set; }
     }
+
+    public class MarketProbabilityFilter
+    {
+        [BsonId]
+        public long MaId { get; set; }
+        public int MaStId { get; set; }
+    }
 }

@@ -701,8 +701,15 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<BetSelectionProbabilityResponseDTO>> GetBetSelectionProbabilities(BetSelectionProbabilityRequestDTO request)
         {
-            var selectionFilter = Builders<Selection>.Filter.Where(c => request.Selections.Contains(c.SeId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr);
+            var marketIds = request.Selections.Select(s => s.Item1).ToList();
+            var selectionIds = request.Selections.Select(s => s.Item2).ToList();
+
+            var marketFilter = Builders<Market>.Filter.Where(c => marketIds.Contains(c.MaId));
+            var marketProjection = Builders<Market>.Projection.Include(c => c.MaId).Include(c => c.MaStId);
+            var markets = await primaryMarketCollection.Find(marketFilter).Project<MarketProbabilityFilter>(marketProjection).ToListAsync();
+
+            var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr);
             var selections = await primarySelectionCollection.Find(selectionFilter).Project<SelectionProbabilityFilter>(selectionProjection).ToListAsync();
 
             if (selections.Count == 0)
@@ -724,7 +731,7 @@ namespace Platform.Sportsbook.API.Repository
                     Selections = selections.Select(s => new BetSelectionProbabilityDTO
                     {
                         SelectionId = s.SeId,
-                        MarketStatusId = s.MaStId,
+                        MarketStatusId = markets.Where(c => c.MaId == s.MaId).Select(ss => ss.MaStId).FirstOrDefault(),
                         IsActive = s.IsAc,
                         Probability = s.Pr,
                         WonProbability = s.WoPr,

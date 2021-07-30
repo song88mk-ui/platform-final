@@ -60,9 +60,9 @@ namespace Platform.Betting.API.Repository
         public async Task<BaseResponseDTO<List<CashOutDetailsReponse>>> GetCashOut(List<Bet> bets, List<BetSelection> betSelections)
         {
             var result = new List<CashOutDetailsReponse>();
-            var selectionIds = betSelections.Where(c => c.FixtureTypeId == (int)FixtureType.Match && c.SportId < 1000 && c.BetSelectionStatusId == (int)BetStatus.Running).Select(s => s.SelectionId).ToList();
+            var tempSelections = betSelections.Where(c => c.FixtureTypeId == (int)FixtureType.Match && c.SportId < 1000 && c.BetSelectionStatusId == (int)BetStatus.Running).Select(s => new Tuple<long, long>(s.MarketId, s.SelectionId)).ToList();
             
-            if (selectionIds.Count == 0)
+            if (tempSelections.Count == 0)
             {
                 foreach (var bet in bets)
                 {
@@ -82,7 +82,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var probabilityResult = await GetSelectionProbabilities(new BetSelectionProbabilityRequestDTO { Selections = selectionIds });
+            var probabilityResult = await GetSelectionProbabilities(new BetSelectionProbabilityRequestDTO { Selections = tempSelections });
 
             if (probabilityResult.StatusCode != StatusCode.Success)
             {

@@ -332,6 +332,11 @@ namespace Platform.Betting.API.Repository
                             BetScore = selection.BetScore,
                             SettlementScore = selection.BetScore,
                             Probability = selection.Probability,
+                            WonProbability = selection.WonProbability,
+                            LostProbability = selection.LostProbability,
+                            VoidProbability = selection.VoidProbability,
+                            HalfWonProbability = selection.HalfWonProbability,
+                            HalfLostProbability = selection.HalfLostProbability,
                             CorrelationId = selection.CorrelationId
                         }).Entity;
 
@@ -375,6 +380,11 @@ namespace Platform.Betting.API.Repository
                             BetScore = betSelectionEntity.BetScore,
                             SettlementScore = betSelectionEntity.SettlementScore,
                             Probability = betSelectionEntity.Probability,
+                            WonProbability = betSelectionEntity.WonProbability,
+                            LostProbability = betSelectionEntity.LostProbability,
+                            VoidProbability = betSelectionEntity.VoidProbability,
+                            HalfWonProbability = betSelectionEntity.HalfWonProbability,
+                            HalfLostProbability = betSelectionEntity.HalfLostProbability,
                             CorrelationId = selection.CorrelationId
                         });
                     }
@@ -748,6 +758,11 @@ namespace Platform.Betting.API.Repository
                             BetScore = selection.BetScore,
                             SettlementScore = selection.BetScore,
                             Probability = selection.Probability,
+                            WonProbability = selection.WonProbability,
+                            LostProbability = selection.LostProbability,
+                            VoidProbability = selection.VoidProbability,
+                            HalfWonProbability = selection.HalfWonProbability,
+                            HalfLostProbability = selection.HalfLostProbability,
                             CorrelationId = selection.CorrelationId
                         }).Entity;
 
@@ -791,6 +806,11 @@ namespace Platform.Betting.API.Repository
                             BetScore = betSelectionEntity.BetScore,
                             SettlementScore = betSelectionEntity.SettlementScore,
                             Probability = betSelectionEntity.Probability,
+                            WonProbability = betSelectionEntity.WonProbability,
+                            LostProbability = betSelectionEntity.LostProbability,
+                            VoidProbability = betSelectionEntity.VoidProbability,
+                            HalfWonProbability = betSelectionEntity.HalfWonProbability,
+                            HalfLostProbability = betSelectionEntity.HalfLostProbability,
                             CorrelationId = selection.CorrelationId
                         });
                     }
@@ -1249,7 +1269,12 @@ namespace Platform.Betting.API.Repository
                         SegmentName = s.SegmentName,
                         SelectionTemplateId = s.SelectionTemplateId,
                         BetSelectionStatusId = s.BetSelectionStatusId,
-                        BetSelectionStatusName = s.BetSelectionStatusName
+                        BetSelectionStatusName = s.BetSelectionStatusName,
+                        WonProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.WonProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.WonProbability).FirstOrDefault(),
+                        LostProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.LostProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.LostProbability).FirstOrDefault(),
+                        VoidProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.VoidProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.VoidProbability).FirstOrDefault(),
+                        HalfWonProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfWonProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfWonProbability).FirstOrDefault(),
+                        HalfLostProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault()
                     }).ToList()
                 });
             }
@@ -1587,7 +1612,15 @@ namespace Platform.Betting.API.Repository
                         CashoutType = CashoutType.Full,
                         CashOutStake = cashOut.CashOutStake,
                         TaxedStake = cashOut.TaxedStake,
-                        TaxedWinnings = cashOut.TaxedWinnings
+                        TaxedWinnings = cashOut.TaxedWinnings,
+                        Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities 
+                        { 
+                            WonProbability = s.WonProbability,
+                            LostProbability = s.LostProbability,
+                            VoidProbability = s.VoidProbability,
+                            HalfWonProbability = s.HalfWonProbability,
+                            HalfLostProbability = s.HalfLostProbability
+                        }).ToList()
                     };
 
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO

@@ -142,6 +142,11 @@ namespace Platform.Placement.Servicev2.Repository
                                         BetScore = betSelectionEntity.BetScore,
                                         SettlementScore = betSelectionEntity.SettlementScore,
                                         Probability = betSelectionEntity.Probability,
+                                        WonProbability = betSelectionEntity.WonProbability,
+                                        LostProbability = betSelectionEntity.LostProbability,
+                                        VoidProbability = betSelectionEntity.VoidProbability,
+                                        HalfWonProbability = betSelectionEntity.HalfWonProbability,
+                                        HalfLostProbability = betSelectionEntity.HalfLostProbability,
                                         CorrelationId = betSelectionEntity.CorrelationId
                                     });
                                 }
@@ -299,6 +304,11 @@ namespace Platform.Placement.Servicev2.Repository
                                         BetScore = betSelectionEntity.BetScore,
                                         SettlementScore = betSelectionEntity.SettlementScore,
                                         Probability = betSelectionEntity.Probability,
+                                        WonProbability = betSelectionEntity.WonProbability,
+                                        LostProbability = betSelectionEntity.LostProbability,
+                                        VoidProbability = betSelectionEntity.VoidProbability,
+                                        HalfWonProbability = betSelectionEntity.HalfWonProbability,
+                                        HalfLostProbability = betSelectionEntity.HalfLostProbability,
                                         CorrelationId = betSelectionEntity.CorrelationId
                                     });
                                 }
@@ -460,6 +470,11 @@ namespace Platform.Placement.Servicev2.Repository
                                     BetScore = betSelectionEntity.BetScore,
                                     SettlementScore = betSelectionEntity.SettlementScore,
                                     Probability = betSelectionEntity.Probability,
+                                    WonProbability = betSelectionEntity.WonProbability,
+                                    LostProbability = betSelectionEntity.LostProbability,
+                                    VoidProbability = betSelectionEntity.VoidProbability,
+                                    HalfWonProbability = betSelectionEntity.HalfWonProbability,
+                                    HalfLostProbability = betSelectionEntity.HalfLostProbability,
                                     CorrelationId = betSelectionEntity.CorrelationId
                                 });
                             }

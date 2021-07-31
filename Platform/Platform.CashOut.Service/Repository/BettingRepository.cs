@@ -133,10 +133,20 @@ namespace Platform.CashOut.Service.Repository
 
             foreach (var selection in filteredSelections)
             {
+                var tempSelection = message.Probabilities.Where(c => c.BetSelectionId == selection.BetSelectionId).FirstOrDefault();
 
                 selection.IsSettled = true;
                 selection.BetSelectionStatusId = (int)BetStatus.CashedOut;
                 selection.BetSelectionStatusName = BetStatus.CashedOut.ToString();
+
+                if (tempSelection != null)
+                {
+                    selection.WonProbability = tempSelection.WonProbability;
+                    selection.LostProbability = tempSelection.LostProbability;
+                    selection.VoidProbability = tempSelection.VoidProbability;
+                    selection.HalfWonProbability = tempSelection.HalfWonProbability;
+                    selection.HalfLostProbability = tempSelection.HalfLostProbability;
+                }
 
                 var betSelectionEntity = context.BetSelection.Update(selection).Entity;
 
@@ -174,8 +184,13 @@ namespace Platform.CashOut.Service.Repository
                     FixtureStartDate = betSelectionEntity.FixtureStartDate,
                     BetScore = betSelectionEntity.BetScore,
                     SettlementScore = betSelectionEntity.SettlementScore,
-                    CorrelationId = betSelectionEntity.CorrelationId,
-                    Probability = betSelectionEntity.Probability
+                    Probability = betSelectionEntity.Probability,
+                    WonProbability = betSelectionEntity.WonProbability,
+                    LostProbability = betSelectionEntity.LostProbability,
+                    VoidProbability = betSelectionEntity.VoidProbability,
+                    HalfWonProbability = betSelectionEntity.HalfWonProbability,
+                    HalfLostProbability = betSelectionEntity.HalfLostProbability,
+                    CorrelationId = betSelectionEntity.CorrelationId
                 });
             }
 

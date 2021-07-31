@@ -552,7 +552,6 @@ namespace Platform.API.Repository
                             CashOutStake = s.CashOutStake,
                             CashOutStatusId = s.CashOutStatusId,
                             CashOutStatusName = s.CashOutStatusName,
-                            Probabilities = s.Probabilities,
                             StakeTax = s.StakeTax,
                             WinningsTax = s.WinningsTax,
                             Selections = GetTranslatedBetSelectionHistory(s.Selections, translations.Result.Selections)

@@ -182,6 +182,7 @@ namespace Platform.Betting.API.Repository
 
                             probabilites.Add(new Probabilities
                             {
+                                BetSelectionId = selection.BetSelectionId,
                                 CashOutStatusId = 1,
                                 Probability = selectionProbability.Probability,
                                 WonProbability = selectionProbability.WonProbability,
@@ -250,6 +251,7 @@ namespace Platform.Betting.API.Repository
                                     TaxedWinnings = taxedWinnings,
                                     Probabilities = probabilites.Select(s => new Probabilities
                                     {
+                                        BetSelectionId = s.BetSelectionId,
                                         CashOutStatusId = s.CashOutStatusId,
                                         Probability = s.Probability,
                                         WonProbability = s.WonProbability,
@@ -317,6 +319,7 @@ namespace Platform.Betting.API.Repository
                                     TaxedWinnings = taxedWinnings,
                                     Probabilities = probabilites.Select(s => new Probabilities
                                     {
+                                        BetSelectionId = s.BetSelectionId,
                                         CashOutStatusId = s.CashOutStatusId,
                                         Probability = s.Probability,
                                         WonProbability = s.WonProbability,

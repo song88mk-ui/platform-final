@@ -436,6 +436,11 @@ namespace Platform.Settlement.Service.Repository
                 BetScore = betSelectionEntity.BetScore,
                 SettlementScore = betSelectionEntity.SettlementScore,
                 Probability = betSelectionEntity.Probability,
+                WonProbability = betSelectionEntity.WonProbability,
+                LostProbability = betSelectionEntity.LostProbability,
+                VoidProbability = betSelectionEntity.VoidProbability,
+                HalfWonProbability = betSelectionEntity.HalfWonProbability,
+                HalfLostProbability = betSelectionEntity.HalfLostProbability,
                 CorrelationId = betSelection.CorrelationId
             });
 
@@ -660,6 +665,11 @@ namespace Platform.Settlement.Service.Repository
                 BetScore = betSelectionEntity.BetScore,
                 SettlementScore = betSelectionEntity.SettlementScore,
                 Probability = betSelectionEntity.Probability,
+                WonProbability = betSelectionEntity.WonProbability,
+                LostProbability = betSelectionEntity.LostProbability,
+                VoidProbability = betSelectionEntity.VoidProbability,
+                HalfWonProbability = betSelectionEntity.HalfWonProbability,
+                HalfLostProbability = betSelectionEntity.HalfLostProbability,
                 CorrelationId = betSelection.CorrelationId
             });
 
@@ -976,6 +986,11 @@ namespace Platform.Settlement.Service.Repository
                                     BetScore = betSelectionEntity.BetScore,
                                     SettlementScore = betSelectionEntity.SettlementScore,
                                     Probability = betSelectionEntity.Probability,
+                                    WonProbability = betSelectionEntity.WonProbability,
+                                    LostProbability = betSelectionEntity.LostProbability,
+                                    VoidProbability = betSelectionEntity.VoidProbability,
+                                    HalfWonProbability = betSelectionEntity.HalfWonProbability,
+                                    HalfLostProbability = betSelectionEntity.HalfLostProbability,
                                     CorrelationId = betSelectionEntity.CorrelationId
                                 });
                             }

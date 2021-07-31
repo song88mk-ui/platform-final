@@ -52,6 +52,7 @@ namespace Platform.Shared.Models
 
     public class Probabilities
     {
+        public Guid BetSelectionId { get; set; }
         public double WonProbability { get; set; }
         public double LostProbability { get; set; }
         public double VoidProbability { get; set; }

@@ -1615,7 +1615,8 @@ namespace Platform.Betting.API.Repository
                         TaxedStake = cashOut.TaxedStake,
                         TaxedWinnings = cashOut.TaxedWinnings,
                         Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities 
-                        { 
+                        {
+                            BetSelectionId = s.BetSelectionId,
                             WonProbability = s.WonProbability,
                             LostProbability = s.LostProbability,
                             VoidProbability = s.VoidProbability,

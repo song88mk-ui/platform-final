@@ -339,6 +339,70 @@ namespace Platform.Operator.Servicev2.Repository
                 }
             }
         }
+        private void AddOrUpdateOperatorSettlementRetry(OnBetSettlementRetry message, OperatorBetSettlementRequestDTO payload, string messageType, string correlationId, bool isSuccess)
+        {
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]);
+
+                using (var context = new PlatformContext(optionsBuilder.Options))
+                {
+                    try
+                    {
+                        var bet = context.OperatorSettlementRetry.Find(message.OnBetSettlement.Bet.BetId);
+
+                        if (isSuccess)
+                        {
+                            if (bet != null)
+                            {
+                                bet.Info = JsonSerializer.Serialize(payload);
+                                bet.IsRetry = false;
+                                bet.IsSuccess = isSuccess;
+
+                                context.OperatorSettlementRetry.Update(bet);
+                            }
+                        }
+                        else
+                        {
+                            if (bet == null)
+                            {
+                                context.OperatorSettlementRetry.Add(new OperatorSettlementRetry
+                                {
+                                    BetId = message.OnBetSettlement.Bet.BetId,
+                                    ClientId = message.OnBetSettlement.Bet.ClientId,
+                                    ClientCode = message.OnBetSettlement.Bet.ClientCode,
+                                    Endpoint = message.OnBetSettlement.Bet.Endpoint,
+                                    MessageType = messageType,
+                                    Info = JsonSerializer.Serialize(payload),
+                                    OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
+                                    CorrelationId = correlationId,
+                                    RetryCount = 1,
+                                    IsRetry = true,
+                                    IsSuccess = false,
+                                    Timestamp = DateTime.UtcNow
+                                });
+                            }
+                            else
+                            {
+                                var isRetry = bet.RetryCount < 5 ? true : false;
+
+                                bet.Info = JsonSerializer.Serialize(payload);
+                                bet.IsRetry = isRetry;
+                                bet.RetryCount = isRetry == true ? bet.RetryCount + 1 : bet.RetryCount;
+
+                                context.OperatorSettlementRetry.Update(bet);
+                            }
+                        }
+
+                        context.SaveChanges();
+                        scope.Complete();
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+            }
+        }
 
         private static void ProcessStakeFixtureLimit(List<BetSelection> betSelectionData, BettingContext context, Bet betEntity)
         {
@@ -528,50 +592,50 @@ namespace Platform.Operator.Servicev2.Repository
         {
             var uri = "/v1/bet/full/cashout";
 
+            var payload = new OperatorBetSettlementRequestDTO
+            {
+                TransactionId = correlationId,
+                BetId = message.Bet.BetId.ToString().ToUpper(),
+                UserId = message.Bet.UserId,
+                CurrencyCode = message.Bet.CurrencyCode,
+                Payout = message.Bet.Payout,
+                Stake = message.Bet.Stake,
+                Odds = message.Bet.Odds,
+                BetStatus = message.Bet.BetStatusName,
+                StakeTax = message.Bet.StakeTax,
+                WinningsTax = message.Bet.WinningsTax,
+                TaxedStake = message.Bet.TaxedStake,
+                TaxedWinnings = message.Bet.TaxedWinnings,
+                TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
+                {
+                    BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
+                    BetSelectionStatus = s.BetSelectionStatusName,
+                    SportId = s.SportId,
+                    SportName = s.SportName,
+                    SegmentId = s.SegmentId,
+                    SegmentName = s.SegmentName,
+                    LeagueId = s.LeagueId,
+                    LeagueName = s.LeagueName,
+                    FixtureId = s.FixtureId.ToString(),
+                    FixtureName = s.FixtureName,
+                    FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                    FixtureStatus = s.FixtureStatusName,
+                    Score = s.BetScore,
+                    SettlementScore = s.SettlementScore,
+                    MarketId = s.MarketId.ToString(),
+                    MarketName = s.MarketName,
+                    Line = s.Line,
+                    SelectionId = s.SelectionId.ToString(),
+                    SelectionName = s.SelectionName,
+                    Odds = s.Odds,
+                    HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
+                    AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
+                }).ToList()
+            };
+
             try
             {
-                var payload = new OperatorBetSettlementRequestDTO
-                {
-                    TransactionId = correlationId,
-                    BetId = message.Bet.BetId.ToString().ToUpper(),
-                    UserId = message.Bet.UserId,
-                    CurrencyCode = message.Bet.CurrencyCode,
-                    Payout = message.Bet.Payout,
-                    Stake = message.Bet.Stake,
-                    Odds = message.Bet.Odds,
-                    BetStatus = message.Bet.BetStatusName,
-                    StakeTax = message.Bet.StakeTax,
-                    WinningsTax = message.Bet.WinningsTax,
-                    TaxedStake = message.Bet.TaxedStake,
-                    TaxedWinnings = message.Bet.TaxedWinnings,
-                    TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
-                    BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
-                    {
-                        BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
-                        BetSelectionStatus = s.BetSelectionStatusName,
-                        SportId = s.SportId,
-                        SportName = s.SportName,
-                        SegmentId = s.SegmentId,
-                        SegmentName = s.SegmentName,
-                        LeagueId = s.LeagueId,
-                        LeagueName = s.LeagueName,
-                        FixtureId = s.FixtureId.ToString(),
-                        FixtureName = s.FixtureName,
-                        FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
-                        FixtureStatus = s.FixtureStatusName,
-                        Score = s.BetScore,
-                        SettlementScore = s.SettlementScore,
-                        MarketId = s.MarketId.ToString(),
-                        MarketName = s.MarketName,
-                        Line = s.Line,
-                        SelectionId = s.SelectionId.ToString(),
-                        SelectionName = s.SelectionName,
-                        Odds = s.Odds,
-                        HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
-                        AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
-                    }).ToList()
-                };
-
                 //publish to reports
                 messageBroker.Publish(message, "OnBetFullCashOut", "r.bet.reports", correlationId);
 
@@ -606,6 +670,8 @@ namespace Platform.Operator.Servicev2.Repository
                         CorrelationId = correlationId,
                         Timestamp = DateTime.UtcNow
                     });
+
+                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetFullCashOut", correlationId, response.IsSuccessStatusCode);
                 }
                 else
                 {
@@ -626,7 +692,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, messageBroker, correlationId);
+                        RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId);
                     }
                     else
                     {
@@ -643,7 +709,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, messageBroker, correlationId);
+                        RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId);
                     }
                 }
             }
@@ -662,57 +728,57 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, messageBroker, correlationId);
+                RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId);
             }
         }
         public void ProcesssBetSettlement(OnBetSettlement message, IMessageBroker messageBroker, string correlationId)
         {
             var uri = "/v1/bet/settlement";
 
+            var payload = new OperatorBetSettlementRequestDTO
+            {
+                TransactionId = correlationId,
+                BetId = message.Bet.BetId.ToString().ToUpper(),
+                UserId = message.Bet.UserId,
+                CurrencyCode = message.Bet.CurrencyCode,
+                Payout = message.Bet.Payout,
+                Stake = message.Bet.Stake,
+                Odds = message.Bet.Odds,
+                BetStatus = message.Bet.BetStatusName,
+                StakeTax = message.Bet.StakeTax,
+                WinningsTax = message.Bet.WinningsTax,
+                TaxedStake = message.Bet.TaxedStake,
+                TaxedWinnings = message.Bet.TaxedWinnings,
+                TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
+                {
+                    BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
+                    BetSelectionStatus = s.BetSelectionStatusName,
+                    SportId = s.SportId,
+                    SportName = s.SportName,
+                    SegmentId = s.SegmentId,
+                    SegmentName = s.SegmentName,
+                    LeagueId = s.LeagueId,
+                    LeagueName = s.LeagueName,
+                    FixtureId = s.FixtureId.ToString(),
+                    FixtureName = s.FixtureName,
+                    FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                    FixtureStatus = s.FixtureStatusName,
+                    Score = s.BetScore,
+                    SettlementScore = s.SettlementScore,
+                    MarketId = s.MarketId.ToString(),
+                    MarketName = s.MarketName,
+                    Line = s.Line,
+                    SelectionId = s.SelectionId.ToString(),
+                    SelectionName = s.SelectionName,
+                    Odds = s.Odds,
+                    HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
+                    AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
+                }).ToList()
+            };
+
             try
             {
-                var payload = new OperatorBetSettlementRequestDTO
-                {
-                    TransactionId = correlationId,
-                    BetId = message.Bet.BetId.ToString().ToUpper(),
-                    UserId = message.Bet.UserId,
-                    CurrencyCode = message.Bet.CurrencyCode,
-                    Payout = message.Bet.Payout,
-                    Stake = message.Bet.Stake,
-                    Odds = message.Bet.Odds,
-                    BetStatus = message.Bet.BetStatusName,
-                    StakeTax = message.Bet.StakeTax,
-                    WinningsTax = message.Bet.WinningsTax,
-                    TaxedStake = message.Bet.TaxedStake,
-                    TaxedWinnings = message.Bet.TaxedWinnings,
-                    TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
-                    BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
-                    {
-                        BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
-                        BetSelectionStatus = s.BetSelectionStatusName,
-                        SportId = s.SportId,
-                        SportName = s.SportName,
-                        SegmentId = s.SegmentId,
-                        SegmentName = s.SegmentName,
-                        LeagueId = s.LeagueId,
-                        LeagueName = s.LeagueName,
-                        FixtureId = s.FixtureId.ToString(),
-                        FixtureName = s.FixtureName,
-                        FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
-                        FixtureStatus = s.FixtureStatusName,
-                        Score = s.BetScore,
-                        SettlementScore = s.SettlementScore,
-                        MarketId = s.MarketId.ToString(),
-                        MarketName = s.MarketName,
-                        Line = s.Line,
-                        SelectionId = s.SelectionId.ToString(),
-                        SelectionName = s.SelectionName,
-                        Odds = s.Odds,
-                        HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
-                        AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
-                    }).ToList()
-                };
-
                 //publish to reports
                 messageBroker.Publish(message, "OnBetSettlement", "r.bet.reports", correlationId);
 
@@ -747,6 +813,8 @@ namespace Platform.Operator.Servicev2.Repository
                         CorrelationId = correlationId,
                         Timestamp = DateTime.UtcNow
                     });
+
+                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetSettlement", correlationId, response.IsSuccessStatusCode);
                 }
                 else
                 {
@@ -767,7 +835,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, messageBroker, correlationId);
+                        RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId);
                     }
                     else
                     {
@@ -784,7 +852,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, messageBroker, correlationId);
+                        RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId);
                     }
                 }
             }
@@ -803,53 +871,53 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, messageBroker, correlationId);
+                RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId);
             }
         }
         public void ProcesssBetCancellation(OnBetSettlement message, IMessageBroker messageBroker, string correlationId)
         {
             var uri = "/v1/bet/cancellation";
 
+            var payload = new OperatorBetSettlementRequestDTO
+            {
+                TransactionId = correlationId,
+                BetId = message.Bet.BetId.ToString().ToUpper(),
+                UserId = message.Bet.UserId,
+                CurrencyCode = message.Bet.CurrencyCode,
+                Payout = message.Bet.Payout,
+                Stake = message.Bet.Stake,
+                Odds = message.Bet.Odds,
+                BetStatus = message.Bet.BetStatusName,
+                TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
+                {
+                    BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
+                    BetSelectionStatus = s.BetSelectionStatusName,
+                    SportId = s.SportId,
+                    SportName = s.SportName,
+                    SegmentId = s.SegmentId,
+                    SegmentName = s.SegmentName,
+                    LeagueId = s.LeagueId,
+                    LeagueName = s.LeagueName,
+                    FixtureId = s.FixtureId.ToString(),
+                    FixtureName = s.FixtureName,
+                    FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                    FixtureStatus = s.FixtureStatusName,
+                    Score = s.BetScore,
+                    SettlementScore = s.SettlementScore,
+                    MarketId = s.MarketId.ToString(),
+                    MarketName = s.MarketName,
+                    Line = s.Line,
+                    SelectionId = s.SelectionId.ToString(),
+                    SelectionName = s.SelectionName,
+                    Odds = s.Odds,
+                    HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
+                    AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
+                }).ToList()
+            };
+
             try
             {
-                var payload = new OperatorBetSettlementRequestDTO
-                {
-                    TransactionId = correlationId,
-                    BetId = message.Bet.BetId.ToString().ToUpper(),
-                    UserId = message.Bet.UserId,
-                    CurrencyCode = message.Bet.CurrencyCode,
-                    Payout = message.Bet.Payout,
-                    Stake = message.Bet.Stake,
-                    Odds = message.Bet.Odds,
-                    BetStatus = message.Bet.BetStatusName,
-                    TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
-                    BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
-                    {
-                        BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
-                        BetSelectionStatus = s.BetSelectionStatusName,
-                        SportId = s.SportId,
-                        SportName = s.SportName,
-                        SegmentId = s.SegmentId,
-                        SegmentName = s.SegmentName,
-                        LeagueId = s.LeagueId,
-                        LeagueName = s.LeagueName,
-                        FixtureId = s.FixtureId.ToString(),
-                        FixtureName = s.FixtureName,
-                        FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
-                        FixtureStatus = s.FixtureStatusName,
-                        Score = s.BetScore,
-                        SettlementScore = s.SettlementScore,
-                        MarketId = s.MarketId.ToString(),
-                        MarketName = s.MarketName,
-                        Line = s.Line,
-                        SelectionId = s.SelectionId.ToString(),
-                        SelectionName = s.SelectionName,
-                        Odds = s.Odds,
-                        HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
-                        AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
-                    }).ToList()
-                };
-
                 messageBroker.Publish(new OnBetStatus
                 {
                     ClientId = message.Bet.ClientId.ToString().ToUpper(),
@@ -894,6 +962,8 @@ namespace Platform.Operator.Servicev2.Repository
                         CorrelationId = correlationId,
                         Timestamp = DateTime.UtcNow
                     });
+
+                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetCancellation", correlationId, response.IsSuccessStatusCode);
                 }
                 else
                 {
@@ -915,7 +985,7 @@ namespace Platform.Operator.Servicev2.Repository
                         });
 
                         messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
-                        RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, messageBroker, correlationId);
+                        RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId);
                     }
                     else
                     {
@@ -933,7 +1003,7 @@ namespace Platform.Operator.Servicev2.Repository
                         });
 
                         messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
-                        RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, messageBroker, correlationId);
+                        RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId);
                     }
                 }
             }
@@ -953,61 +1023,24 @@ namespace Platform.Operator.Servicev2.Repository
                 });
 
                 messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
-                RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, messageBroker, correlationId);
+                RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId);
             }
         }
 
-        private void RetryBetFullCashOut(OnBetSettlementRetry message, IMessageBroker messageBroker, string correlationId)
+        private void RetryBetFullCashOut(OnBetSettlementRetry message, OperatorBetSettlementRequestDTO payload, string messageType, IMessageBroker messageBroker, string correlationId)
         {
-            if (message.RemainingRetries == 0) return;
+            if (message.RemainingRetries == 0)
+            {
+                AddOrUpdateOperatorSettlementRetry(message, payload, messageType, correlationId, false);
+                return;
+            }
+
             message.RemainingRetries -= 1;
 
             var uri = "/v1/bet/full/cashout";
 
             try
             {
-                var payload = new OperatorBetSettlementRequestDTO
-                {
-                    TransactionId = correlationId,
-                    BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
-                    UserId = message.OnBetSettlement.Bet.UserId,
-                    CurrencyCode = message.OnBetSettlement.Bet.CurrencyCode,
-                    Payout = message.OnBetSettlement.Bet.Payout,
-                    Stake = message.OnBetSettlement.Bet.Stake,
-                    Odds = message.OnBetSettlement.Bet.Odds,
-                    BetStatus = message.OnBetSettlement.Bet.BetStatusName,
-                    StakeTax = message.OnBetSettlement.Bet.StakeTax,
-                    WinningsTax = message.OnBetSettlement.Bet.WinningsTax,
-                    TaxedStake = message.OnBetSettlement.Bet.TaxedStake,
-                    TaxedWinnings = message.OnBetSettlement.Bet.TaxedWinnings,
-                    TransactionDate = message.OnBetSettlement.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
-                    BetSelections = message.OnBetSettlement.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
-                    {
-                        BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
-                        BetSelectionStatus = s.BetSelectionStatusName,
-                        SportId = s.SportId,
-                        SportName = s.SportName,
-                        SegmentId = s.SegmentId,
-                        SegmentName = s.SegmentName,
-                        LeagueId = s.LeagueId,
-                        LeagueName = s.LeagueName,
-                        FixtureId = s.FixtureId.ToString(),
-                        FixtureName = s.FixtureName,
-                        FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
-                        FixtureStatus = s.FixtureStatusName,
-                        Score = s.BetScore,
-                        SettlementScore = s.SettlementScore,
-                        MarketId = s.MarketId.ToString(),
-                        MarketName = s.MarketName,
-                        Line = s.Line,
-                        SelectionId = s.SelectionId.ToString(),
-                        SelectionName = s.SelectionName,
-                        Odds = s.Odds,
-                        HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
-                        AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
-                    }).ToList()
-                };
-
                 AddOperatorLog(new OperatorLog
                 {
                     Direction = "REQUEST",
@@ -1059,7 +1092,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetFullCashOut(message, messageBroker, correlationId);
+                        RetryBetFullCashOut(message, payload, messageType, messageBroker, correlationId);
                     }
                     else
                     {
@@ -1076,7 +1109,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetFullCashOut(message, messageBroker, correlationId);
+                        RetryBetFullCashOut(message, payload, messageType, messageBroker, correlationId);
                     }
                 }
             }
@@ -1095,60 +1128,23 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                RetryBetFullCashOut(message, messageBroker, correlationId);
+                RetryBetFullCashOut(message, payload, messageType, messageBroker, correlationId);
             }
         }
-        private void RetryBetSettlement(OnBetSettlementRetry message, IMessageBroker messageBroker, string correlationId)
+        private void RetryBetSettlement(OnBetSettlementRetry message, OperatorBetSettlementRequestDTO payload, string messageType, IMessageBroker messageBroker, string correlationId)
         {
-            if (message.RemainingRetries == 0) return;
+            if (message.RemainingRetries == 0)
+            {
+                AddOrUpdateOperatorSettlementRetry(message, payload, messageType, correlationId, false);
+                return;
+            }
+
             message.RemainingRetries -= 1;
 
             var uri = "/v1/bet/settlement";
 
             try
             {
-                var payload = new OperatorBetSettlementRequestDTO
-                {
-                    TransactionId = correlationId,
-                    BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
-                    UserId = message.OnBetSettlement.Bet.UserId,
-                    CurrencyCode = message.OnBetSettlement.Bet.CurrencyCode,
-                    Payout = message.OnBetSettlement.Bet.Payout,
-                    Stake = message.OnBetSettlement.Bet.Stake,
-                    Odds = message.OnBetSettlement.Bet.Odds,
-                    BetStatus = message.OnBetSettlement.Bet.BetStatusName,
-                    StakeTax = message.OnBetSettlement.Bet.StakeTax,
-                    WinningsTax = message.OnBetSettlement.Bet.WinningsTax,
-                    TaxedStake = message.OnBetSettlement.Bet.TaxedStake,
-                    TaxedWinnings = message.OnBetSettlement.Bet.TaxedWinnings,
-                    TransactionDate = message.OnBetSettlement.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
-                    BetSelections = message.OnBetSettlement.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
-                    {
-                        BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
-                        BetSelectionStatus = s.BetSelectionStatusName,
-                        SportId = s.SportId,
-                        SportName = s.SportName,
-                        SegmentId = s.SegmentId,
-                        SegmentName = s.SegmentName,
-                        LeagueId = s.LeagueId,
-                        LeagueName = s.LeagueName,
-                        FixtureId = s.FixtureId.ToString(),
-                        FixtureName = s.FixtureName,
-                        FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
-                        FixtureStatus = s.FixtureStatusName,
-                        Score = s.BetScore,
-                        SettlementScore = s.SettlementScore,
-                        MarketId = s.MarketId.ToString(),
-                        MarketName = s.MarketName,
-                        Line = s.Line,
-                        SelectionId = s.SelectionId.ToString(),
-                        SelectionName = s.SelectionName,
-                        Odds = s.Odds,
-                        HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
-                        AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
-                    }).ToList()
-                };
-
                 AddOperatorLog(new OperatorLog
                 {
                     Direction = "REQUEST",
@@ -1200,7 +1196,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetSettlement(message, messageBroker, correlationId);
+                        RetryBetSettlement(message, payload, messageType, messageBroker, correlationId);
                     }
                     else
                     {
@@ -1217,7 +1213,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetSettlement(message, messageBroker, correlationId);
+                        RetryBetSettlement(message, payload, messageType, messageBroker, correlationId);
                     }
                 }
             }
@@ -1236,56 +1232,23 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                RetryBetSettlement(message, messageBroker, correlationId);
+                RetryBetSettlement(message, payload, messageType, messageBroker, correlationId);
             }
         }
-        private void RetryBetCancellation(OnBetSettlementRetry message, IMessageBroker messageBroker, string correlationId)
+        private void RetryBetCancellation(OnBetSettlementRetry message, OperatorBetSettlementRequestDTO payload, string messageType, IMessageBroker messageBroker, string correlationId)
         {
-            if (message.RemainingRetries == 0) return;
+            if (message.RemainingRetries == 0)
+            {
+                AddOrUpdateOperatorSettlementRetry(message, payload, messageType, correlationId, false);
+                return;
+            }
+
             message.RemainingRetries -= 1;
 
             var uri = "/v1/bet/cancellation";
 
             try
             {
-                var payload = new OperatorBetSettlementRequestDTO
-                {
-                    TransactionId = correlationId,
-                    BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
-                    UserId = message.OnBetSettlement.Bet.UserId,
-                    CurrencyCode = message.OnBetSettlement.Bet.CurrencyCode,
-                    Payout = message.OnBetSettlement.Bet.Payout,
-                    Stake = message.OnBetSettlement.Bet.Stake,
-                    Odds = message.OnBetSettlement.Bet.Odds,
-                    BetStatus = message.OnBetSettlement.Bet.BetStatusName,
-                    TransactionDate = message.OnBetSettlement.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
-                    BetSelections = message.OnBetSettlement.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
-                    {
-                        BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
-                        BetSelectionStatus = s.BetSelectionStatusName,
-                        SportId = s.SportId,
-                        SportName = s.SportName,
-                        SegmentId = s.SegmentId,
-                        SegmentName = s.SegmentName,
-                        LeagueId = s.LeagueId,
-                        LeagueName = s.LeagueName,
-                        FixtureId = s.FixtureId.ToString(),
-                        FixtureName = s.FixtureName,
-                        FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
-                        FixtureStatus = s.FixtureStatusName,
-                        Score = s.BetScore,
-                        SettlementScore = s.SettlementScore,
-                        MarketId = s.MarketId.ToString(),
-                        MarketName = s.MarketName,
-                        Line = s.Line,
-                        SelectionId = s.SelectionId.ToString(),
-                        SelectionName = s.SelectionName,
-                        Odds = s.Odds,
-                        HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
-                        AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
-                    }).ToList()
-                };
-
                 AddOperatorLog(new OperatorLog
                 {
                     Direction = "REQUEST",
@@ -1337,7 +1300,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetCancellation(message, messageBroker, correlationId);
+                        RetryBetCancellation(message, payload, messageType, messageBroker, correlationId);
                     }
                     else
                     {
@@ -1354,7 +1317,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetCancellation(message, messageBroker, correlationId);
+                        RetryBetCancellation(message, payload, messageType, messageBroker, correlationId);
                     }
                 }
             }
@@ -1373,7 +1336,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                RetryBetCancellation(message, messageBroker, correlationId);
+                RetryBetCancellation(message, payload, messageType, messageBroker, correlationId);
             }
         }
     }

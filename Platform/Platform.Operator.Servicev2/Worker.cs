@@ -205,7 +205,7 @@ namespace Platform.Operator.Servicev2
             var payload = Encoding.UTF8.GetString(e.Body);
             var messageType = e.BasicProperties.Type;
 
-            var lastChar = string.Empty;
+            var firstChar = string.Empty;
 
             try
             {
@@ -213,26 +213,26 @@ namespace Platform.Operator.Servicev2
                 {
                     case "OnBetPlacement":
                         var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
-                        lastChar = onBetPlacement.Bet.BetId.ToString().ToUpper().Substring(0, 1);
+                        firstChar = onBetPlacement.Bet.BetId.ToString().ToUpper().Substring(0, 1);
                         break;
 
                     case "OnBetFullCashOut":
                         var onBetFullCashout = JsonSerializer.Deserialize<OnBetSettlement>(payload);
-                        lastChar = onBetFullCashout.Bet.BetId.ToString().ToUpper().Substring(0, 1);
+                        firstChar = onBetFullCashout.Bet.BetId.ToString().ToUpper().Substring(0, 1);
                         break;
 
                     case "OnBetSettlement":
                         var onBetSettlement = JsonSerializer.Deserialize<OnBetSettlement>(payload);
-                        lastChar = onBetSettlement.Bet.BetId.ToString().ToUpper().Substring(0, 1);
+                        firstChar = onBetSettlement.Bet.BetId.ToString().ToUpper().Substring(0, 1);
                         break;
 
                     case "OnBetCancellation":
                         var onBetCancellation = JsonSerializer.Deserialize<OnBetSettlement>(payload);
-                        lastChar = onBetCancellation.Bet.BetId.ToString().ToUpper().Substring(0, 1);
+                        firstChar = onBetCancellation.Bet.BetId.ToString().ToUpper().Substring(0, 1);
                         break;
                 }
 
-                switch (lastChar)
+                switch (firstChar)
                 {
                     case "0":
                         _messages0.Add(e);

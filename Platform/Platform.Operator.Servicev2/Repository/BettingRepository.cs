@@ -403,7 +403,6 @@ namespace Platform.Operator.Servicev2.Repository
                 }
             }
         }
-
         private static void ProcessStakeFixtureLimit(List<BetSelection> betSelectionData, BettingContext context, Bet betEntity)
         {
             if (betSelectionData.Count == 1)
@@ -418,7 +417,6 @@ namespace Platform.Operator.Servicev2.Repository
                 }
             }
         }
-
         private void AddOperatorLog(OperatorLog operatorLog)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
@@ -438,6 +436,26 @@ namespace Platform.Operator.Servicev2.Repository
                 }
             }
         }
+        private bool IsProcess(Guid betId)
+        {
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadUncommitted }))
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]);
+
+                using (var context = new PlatformContext(optionsBuilder.Options))
+                {
+                    var bet = context.OperatorSettlementRetry.Find(betId);
+
+                    scope.Complete();
+
+                    if (bet == null)
+                        return false;
+
+                    return bet.IsRetry;
+                }
+            }
+        }
+
         public void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId)
         {
             var uri = "/v1/bet/placement";
@@ -590,6 +608,12 @@ namespace Platform.Operator.Servicev2.Repository
         }
         public void ProcessBetFullCashOut(OnBetSettlement message, IMessageBroker messageBroker, string correlationId)
         {
+            if (message.IsRetry)
+            {
+                if (IsProcess(message.Bet.BetId) == false)
+                    return;
+            }
+
             var uri = "/v1/bet/full/cashout";
 
             var payload = new OperatorBetSettlementRequestDTO
@@ -733,6 +757,12 @@ namespace Platform.Operator.Servicev2.Repository
         }
         public void ProcesssBetSettlement(OnBetSettlement message, IMessageBroker messageBroker, string correlationId)
         {
+            if (message.IsRetry)
+            {
+                if (IsProcess(message.Bet.BetId) == false)
+                    return;
+            }
+
             var uri = "/v1/bet/settlement";
 
             var payload = new OperatorBetSettlementRequestDTO
@@ -876,6 +906,12 @@ namespace Platform.Operator.Servicev2.Repository
         }
         public void ProcesssBetCancellation(OnBetSettlement message, IMessageBroker messageBroker, string correlationId)
         {
+            if (message.IsRetry)
+            {
+                if (IsProcess(message.Bet.BetId) == false)
+                    return;
+            }
+
             var uri = "/v1/bet/cancellation";
 
             var payload = new OperatorBetSettlementRequestDTO
@@ -1035,6 +1071,7 @@ namespace Platform.Operator.Servicev2.Repository
                 return;
             }
 
+            message.OnBetSettlement.IsRetry = true;
             message.RemainingRetries -= 1;
 
             var uri = "/v1/bet/full/cashout";
@@ -1139,6 +1176,7 @@ namespace Platform.Operator.Servicev2.Repository
                 return;
             }
 
+            message.OnBetSettlement.IsRetry = true;
             message.RemainingRetries -= 1;
 
             var uri = "/v1/bet/settlement";
@@ -1243,6 +1281,7 @@ namespace Platform.Operator.Servicev2.Repository
                 return;
             }
 
+            message.OnBetSettlement.IsRetry = true;
             message.RemainingRetries -= 1;
 
             var uri = "/v1/bet/cancellation";

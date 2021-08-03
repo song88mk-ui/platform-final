@@ -716,7 +716,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId);
+                        RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 1, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId);
                     }
                     else
                     {
@@ -733,7 +733,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId);
+                        RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 1, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId);
                     }
                 }
             }
@@ -752,7 +752,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId);
+                RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 1, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId);
             }
         }
         public void ProcesssBetSettlement(OnBetSettlement message, IMessageBroker messageBroker, string correlationId)
@@ -865,7 +865,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId);
+                        RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 1, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId);
                     }
                     else
                     {
@@ -882,7 +882,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId);
+                        RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 1, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId);
                     }
                 }
             }
@@ -901,7 +901,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId);
+                RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 1, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId);
             }
         }
         public void ProcesssBetCancellation(OnBetSettlement message, IMessageBroker messageBroker, string correlationId)
@@ -1021,7 +1021,7 @@ namespace Platform.Operator.Servicev2.Repository
                         });
 
                         messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
-                        RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId);
+                        RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 1, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId);
                     }
                     else
                     {
@@ -1039,7 +1039,7 @@ namespace Platform.Operator.Servicev2.Repository
                         });
 
                         messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
-                        RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId);
+                        RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 1, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId);
                     }
                 }
             }
@@ -1059,7 +1059,7 @@ namespace Platform.Operator.Servicev2.Repository
                 });
 
                 messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
-                RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 2, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId);
+                RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 1, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId);
             }
         }
 

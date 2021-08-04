@@ -424,5 +424,55 @@ namespace Platform.Operator.API.Repository
 
         #endregion
 
+        public bool AddClient(string clientId)
+        {
+            var isValid = Guid.TryParse(clientId, out Guid id);
+
+            if (isValid)
+            {
+                var result = _platformContext.NegativeTest.Find(id);
+
+                if (result == null)
+                {
+                    _platformContext.NegativeTest.Add(new NegativeTest { ClientId = id });
+                    _platformContext.SaveChanges();
+                }
+
+                return true;
+            }
+            else
+                return false;
+        }
+
+        public bool RemoveClient(string clientId)
+        {
+            var isValid = Guid.TryParse(clientId, out Guid id);
+
+            if (isValid)
+            {
+                var result = _platformContext.NegativeTest.Find(id);
+
+                if (result != null)
+                {
+                    _platformContext.NegativeTest.Remove(result);
+                    _platformContext.SaveChanges();
+                }
+
+                return true;
+            }
+            else
+                return false;
+        }
+
+        public List<string> GetClients()
+        {
+
+            var result = _platformContext.NegativeTest.ToList();
+
+            if (result.Count == 0)
+                return new List<string>();
+            else
+                return result.Select(s => s.ToString()).ToList();
+        }
     }
 }

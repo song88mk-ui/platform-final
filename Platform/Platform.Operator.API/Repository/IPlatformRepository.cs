@@ -1,4 +1,5 @@
 ﻿using Platform.Shared.Models;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Platform.Operator.API.Repository
@@ -12,5 +13,9 @@ namespace Platform.Operator.API.Repository
         Task<OperatorBetResponseDTO> BetSettlement(OperatorBetSettlementRequestDTO request);
         Task<OperatorBetResponseDTO> BetCancellation(OperatorBetCancellationRequestDTO request);
         Task<BaseResponseDTO<GenerateUserResponseDTO>> AddUser(GenerateUserRequestDTO request);
+
+        bool AddClient(string clientId);
+        bool RemoveClient(string clientId);
+        List<string> GetClients();
     }
 }

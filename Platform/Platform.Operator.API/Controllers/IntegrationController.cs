@@ -125,5 +125,35 @@ namespace Platform.Operator.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/negativetest/add")]
+        public async Task<IActionResult> AddClient([FromBody] string clientId)
+        {
+            var result = _platformRepository.AddClient(clientId);
+
+            if (result == false)
+                return BadRequest();
+
+            return Ok();
+        }
+
+        [HttpPost("v1/negativetest/remove")]
+        public async Task<IActionResult> RemoveClient([FromBody] string clientId)
+        {
+            var result = _platformRepository.RemoveClient(clientId);
+
+            if (result == false)
+                return BadRequest();
+
+            return Ok();
+        }
+
+        [HttpPost("v1/negativetest/get")]
+        public async Task<IActionResult> GetClients()
+        {
+            var result = _platformRepository.GetClients();
+
+            return Ok(result);
+        }
     }
 }

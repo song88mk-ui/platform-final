@@ -19,6 +19,7 @@ namespace Platform.Shared.Data.Platform
             modelBuilder.Entity<OperatorAudit>().HasKey(k => new { k.Id });
             modelBuilder.Entity<ConfidenceFactor>().HasKey(k => new { k.Timestamp, k.UserId });
             modelBuilder.Entity<OperatorSettlementRetry>().HasKey(k => new { k.BetId });
+            modelBuilder.Entity<NegativeTest>().HasKey(k => new { k.ClientId });
         }
 
         public DbSet<Client> Client { get; set; }
@@ -28,5 +29,6 @@ namespace Platform.Shared.Data.Platform
         public DbSet<OperatorAudit> OperatorAudit { get; set; }
         public DbSet<ConfidenceFactor> ConfidenceFactor { get; set; }
         public DbSet<OperatorSettlementRetry> OperatorSettlementRetry { get; set; }
+        public DbSet<NegativeTest> NegativeTest { get; set; }
     }
 }

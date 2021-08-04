@@ -384,7 +384,7 @@ namespace Platform.Operator.Servicev2.Repository
                             }
                             else
                             {
-                                var isRetry = bet.RetryCount < 5 ? true : false;
+                                var isRetry = bet.RetryCount < 8 ? true : false;
 
                                 bet.Info = JsonSerializer.Serialize(payload);
                                 bet.IsRetry = isRetry;

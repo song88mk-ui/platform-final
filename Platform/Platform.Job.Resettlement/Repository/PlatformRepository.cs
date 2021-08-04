@@ -13,6 +13,7 @@ namespace Platform.Job.Resettlement.Repository
             foreach (var bet in bets)
             {
                 var payload = JsonSerializer.Deserialize<OnBetSettlement>(bet.Info);
+                payload.IsRetry = true;
 
                 messageBroker.Publish(payload, bet.MessageType, "r.bet.operator", bet.CorrelationId);
             }

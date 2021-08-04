@@ -17,25 +17,23 @@ namespace Platform.Job.Resettlement
     public class Worker : BackgroundService
     {
         private readonly ILogger<Worker> _logger;
-        private readonly IMessageBroker _messageBroker;
         private readonly IServiceProvider _provider;
+        private readonly IMessageBroker _messageBroker;
         private readonly IPlatformRepository _platformRepository;
         private readonly IConfiguration _configuration;
         private Stack<int> _fibonnaci = new Stack<int>();
 
-        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IServiceProvider provider, IPlatformRepository platformRepository, IConfiguration configuration)
+        public Worker(ILogger<Worker> logger, IServiceProvider provider, IMessageBroker messageBroker, IPlatformRepository platformRepository, IConfiguration configuration)
         {
             _logger = logger;
-            _messageBroker = messageBroker;
             _provider = provider;
+            _messageBroker = messageBroker;
             _platformRepository = platformRepository;
             _configuration = configuration;
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
         {
-            _messageBroker.Connect();
-
             return base.StartAsync(cancellationToken);
         }
 
@@ -48,6 +46,8 @@ namespace Platform.Job.Resettlement
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _messageBroker.Connect();
+
             while (true)
             {
                 
@@ -57,14 +57,14 @@ namespace Platform.Job.Resettlement
 
                     Console.WriteLine($"{DateTime.UtcNow} - Current Config - {waitTime} minutes");
 
-                    await Task.Delay(waitTime);
+                    await Task.Delay(waitTime * 1000 * 60);
 
                     Console.WriteLine($"{DateTime.UtcNow} - Start");
 
                     using var scope = _provider.CreateScope();
                     var context = scope.ServiceProvider.GetRequiredService<PlatformContext>();
 
-                    var bets = await context.OperatorSettlementRetry.Where(c => c.IsRetry == true).AsNoTracking().ToListAsync();
+                    var bets = context.OperatorSettlementRetry.Where(c => c.IsRetry == true).AsNoTracking().ToList();
 
                     if (bets.Count > 0)
                         _platformRepository.ProcessBets(bets, _messageBroker);
@@ -83,7 +83,7 @@ namespace Platform.Job.Resettlement
 
             if (_fibonnaci.Count == 0)
             {
-                var times = _configuration["Custom:Fibonnaci"].Split(',').Select(s => Convert.ToInt32(s)).ToList();
+                var times = _configuration["Custom:Fibonnaci"].Split(',').Select(s => Convert.ToInt32(s)).OrderByDescending(o => o).ToList();
 
                 foreach (var time in times)
                 {

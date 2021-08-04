@@ -27,7 +27,7 @@ namespace Platform.Operator.Servicev2.Repository
             _configuration = configuration;
         }
 
-        private HttpClient GetHttpClient(string endpoint, string operatorToken)
+        private HttpClient GetHttpClient(string endpoint, string operatorToken, string clientId)
         {
             var result = new HttpClient
             {
@@ -35,6 +35,7 @@ namespace Platform.Operator.Servicev2.Repository
                 Timeout = TimeSpan.FromSeconds(5)
             };
 
+            result.DefaultRequestHeaders.Add("x-client-id", clientId);
             result.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
 
             return result;
@@ -355,7 +356,7 @@ namespace Platform.Operator.Servicev2.Repository
                         {
                             if (bet != null)
                             {
-                                bet.Info = JsonSerializer.Serialize(payload);
+                                bet.Info = JsonSerializer.Serialize(message.OnBetSettlement);
                                 bet.IsRetry = false;
                                 bet.IsSuccess = isSuccess;
 
@@ -373,7 +374,7 @@ namespace Platform.Operator.Servicev2.Repository
                                     ClientCode = message.OnBetSettlement.Bet.ClientCode,
                                     Endpoint = message.OnBetSettlement.Bet.Endpoint,
                                     MessageType = messageType,
-                                    Info = JsonSerializer.Serialize(payload),
+                                    Info = JsonSerializer.Serialize(message.OnBetSettlement),
                                     OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
                                     CorrelationId = correlationId,
                                     RetryCount = 1,
@@ -386,7 +387,7 @@ namespace Platform.Operator.Servicev2.Repository
                             {
                                 var isRetry = bet.RetryCount < 8 ? true : false;
 
-                                bet.Info = JsonSerializer.Serialize(payload);
+                                bet.Info = JsonSerializer.Serialize(message.OnBetSettlement);
                                 bet.IsRetry = isRetry;
                                 bet.RetryCount = isRetry == true ? bet.RetryCount + 1 : bet.RetryCount;
 
@@ -516,7 +517,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(betData.Endpoint, betData.OperatorToken).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(betData.Endpoint, betData.OperatorToken, betData.ClientId).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -676,7 +677,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.Bet.Endpoint, message.Bet.OperatorToken).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -825,7 +826,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.Bet.Endpoint, message.Bet.OperatorToken).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -980,7 +981,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.Bet.Endpoint, message.Bet.OperatorToken).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -1091,7 +1092,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -1196,7 +1197,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -1301,7 +1302,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {

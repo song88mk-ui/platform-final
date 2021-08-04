@@ -437,7 +437,7 @@ namespace Platform.Operator.Servicev2.Repository
                 }
             }
         }
-        private bool IsProcess(Guid betId)
+        private Tuple<bool, OnBetSettlement> IsProcess(Guid betId)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadUncommitted }))
             {
@@ -450,9 +450,9 @@ namespace Platform.Operator.Servicev2.Repository
                     scope.Complete();
 
                     if (bet == null)
-                        return false;
+                        return new Tuple<bool, OnBetSettlement>(false, JsonSerializer.Deserialize<OnBetSettlement>(bet.Info));
 
-                    return bet.IsRetry;
+                    return new Tuple<bool, OnBetSettlement>(true, JsonSerializer.Deserialize<OnBetSettlement>(bet.Info));
                 }
             }
         }
@@ -611,8 +611,12 @@ namespace Platform.Operator.Servicev2.Repository
         {
             if (message.IsRetry)
             {
-                if (IsProcess(message.Bet.BetId) == false)
+                var initialMessage = IsProcess(message.Bet.BetId);
+
+                if (initialMessage.Item1 == false)
                     return;
+
+                message = initialMessage.Item2;
             }
 
             var uri = "/v1/bet/full/cashout";
@@ -760,8 +764,12 @@ namespace Platform.Operator.Servicev2.Repository
         {
             if (message.IsRetry)
             {
-                if (IsProcess(message.Bet.BetId) == false)
+                var initialMessage = IsProcess(message.Bet.BetId);
+
+                if (initialMessage.Item1 == false)
                     return;
+
+                message = initialMessage.Item2;
             }
 
             var uri = "/v1/bet/settlement";
@@ -909,8 +917,12 @@ namespace Platform.Operator.Servicev2.Repository
         {
             if (message.IsRetry)
             {
-                if (IsProcess(message.Bet.BetId) == false)
+                var initialMessage = IsProcess(message.Bet.BetId);
+
+                if (initialMessage.Item1 == false)
                     return;
+
+                message = initialMessage.Item2;
             }
 
             var uri = "/v1/bet/cancellation";

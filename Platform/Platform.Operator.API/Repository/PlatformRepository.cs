@@ -89,8 +89,20 @@ namespace Platform.Operator.API.Repository
             };
 
         }
-        public async Task<OperatorBetResponseDTO> BetPlacement(OperatorBetRequestDTO request, string operatorToken)
+        public async Task<OperatorBetResponseDTO> BetPlacement(OperatorBetRequestDTO request, string operatorToken, string clientId)
         {
+            Guid.TryParse(clientId, out Guid id);
+
+            var res = _platformContext.NegativeTest.Find(id);
+
+            if (res != null && res.ClientId == id)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1002
+                };
+            }
+
             var isGuid = Guid.TryParse(operatorToken, out Guid guid);
 
             if (!isGuid)
@@ -147,8 +159,20 @@ namespace Platform.Operator.API.Repository
             }
         }
 
-        public async Task<OperatorBetResponseDTO> BetFullCashOut(OperatorBetSettlementRequestDTO request)
+        public async Task<OperatorBetResponseDTO> BetFullCashOut(OperatorBetSettlementRequestDTO request, string clientId)
         {
+            Guid.TryParse(clientId, out Guid id);
+
+            var res = _platformContext.NegativeTest.Find(id);
+
+            if (res != null && res.ClientId == id)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003
+                };
+            }
+
             var isGuid = Guid.TryParse(request.UserId, out Guid guid);
 
             if (!isGuid)
@@ -197,8 +221,20 @@ namespace Platform.Operator.API.Repository
             }
         }
 
-        public async Task<OperatorBetResponseDTO> BetSettlement(OperatorBetSettlementRequestDTO request)
+        public async Task<OperatorBetResponseDTO> BetSettlement(OperatorBetSettlementRequestDTO request, string clientId)
         {
+            Guid.TryParse(clientId, out Guid id);
+
+            var res = _platformContext.NegativeTest.Find(id);
+
+            if (res != null && res.ClientId == id)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003
+                };
+            }
+
             var isGuid = Guid.TryParse(request.UserId, out Guid guid);
 
             if (!isGuid)
@@ -246,8 +282,20 @@ namespace Platform.Operator.API.Repository
                 }
             }
         }
-        public async Task<OperatorBetResponseDTO> BetCancellation(OperatorBetCancellationRequestDTO request)
+        public async Task<OperatorBetResponseDTO> BetCancellation(OperatorBetCancellationRequestDTO request, string clientId)
         {
+            Guid.TryParse(clientId, out Guid id);
+
+            var res = _platformContext.NegativeTest.Find(id);
+
+            if (res != null && res.ClientId == id)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003
+                };
+            }
+
             var isGuid = Guid.TryParse(request.UserId, out Guid guid);
 
             if (!isGuid)

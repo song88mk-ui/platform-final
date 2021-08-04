@@ -8,10 +8,10 @@ namespace Platform.Operator.API.Repository
     {
         Task<AuthenticationResponseDTO> Authenticate(string operatorToken);
         Task<OperatorBetResponseDTO> WalletBalance(string operatorToken);
-        Task<OperatorBetResponseDTO> BetPlacement(OperatorBetRequestDTO request, string operatorToken);
-        Task<OperatorBetResponseDTO> BetFullCashOut(OperatorBetSettlementRequestDTO request);
-        Task<OperatorBetResponseDTO> BetSettlement(OperatorBetSettlementRequestDTO request);
-        Task<OperatorBetResponseDTO> BetCancellation(OperatorBetCancellationRequestDTO request);
+        Task<OperatorBetResponseDTO> BetPlacement(OperatorBetRequestDTO request, string operatorToken, string clientId);
+        Task<OperatorBetResponseDTO> BetFullCashOut(OperatorBetSettlementRequestDTO request, string clientId);
+        Task<OperatorBetResponseDTO> BetSettlement(OperatorBetSettlementRequestDTO request, string clientId);
+        Task<OperatorBetResponseDTO> BetCancellation(OperatorBetCancellationRequestDTO request, string clientId);
         Task<BaseResponseDTO<GenerateUserResponseDTO>> AddUser(GenerateUserRequestDTO request);
 
         bool AddClient(string clientId);

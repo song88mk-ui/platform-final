@@ -57,8 +57,9 @@ namespace Platform.Operator.API.Controllers
         public async Task<IActionResult> BetPlacement([FromBody] OperatorBetRequestDTO request)
         {
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-            var result = await _platformRepository.BetPlacement(request, operatorToken);
+            var result = await _platformRepository.BetPlacement(request, operatorToken, clientId);
 
             switch (result.StatusId)
             {
@@ -72,7 +73,8 @@ namespace Platform.Operator.API.Controllers
         [HttpPost("v1/bet/full/cashout")]
         public async Task<IActionResult> BetFullCashOut([FromBody] OperatorBetSettlementRequestDTO request)
         {
-            var result = await _platformRepository.BetFullCashOut(request);
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var result = await _platformRepository.BetFullCashOut(request, clientId);
 
             switch (result.StatusId)
             {
@@ -86,7 +88,8 @@ namespace Platform.Operator.API.Controllers
         [HttpPost("v1/bet/settlement")]
         public async Task<IActionResult> BetSettlement([FromBody] OperatorBetSettlementRequestDTO request)
         {
-            var result = await _platformRepository.BetSettlement(request);
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var result = await _platformRepository.BetSettlement(request, clientId);
 
             switch (result.StatusId)
             {
@@ -100,7 +103,8 @@ namespace Platform.Operator.API.Controllers
         [HttpPost("v1/bet/cancellation")]
         public async Task<IActionResult> BetCancellation([FromBody] OperatorBetCancellationRequestDTO request)
         {
-            var result = await _platformRepository.BetCancellation(request);
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var result = await _platformRepository.BetCancellation(request, clientId);
 
             switch (result.StatusId)
             {

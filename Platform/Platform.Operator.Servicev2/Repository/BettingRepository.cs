@@ -326,6 +326,7 @@ namespace Platform.Operator.Servicev2.Repository
                         scope.Complete();
 
                         messageBroker.Publish(payload, "OnBetPlacement", "r.bet.reports", correlationId);
+
                         messageBroker.Publish(new OnBetStatus
                         {
                             ClientId = payload.Bet.ClientId.ToString().ToUpper(),
@@ -665,8 +666,8 @@ namespace Platform.Operator.Servicev2.Repository
 
             try
             {
-                //publish to reports
-                messageBroker.Publish(message, "OnBetFullCashOut", "r.bet.reports", correlationId);
+                if (message.IsRetry == false)
+                    messageBroker.Publish(message, "OnBetFullCashOut", "r.bet.reports", correlationId);
 
                 AddOperatorLog(new OperatorLog
                 {
@@ -818,8 +819,8 @@ namespace Platform.Operator.Servicev2.Repository
 
             try
             {
-                //publish to reports
-                messageBroker.Publish(message, "OnBetSettlement", "r.bet.reports", correlationId);
+                if (message.IsRetry == false)
+                    messageBroker.Publish(message, "OnBetSettlement", "r.bet.reports", correlationId);
 
                 AddOperatorLog(new OperatorLog
                 {
@@ -976,8 +977,9 @@ namespace Platform.Operator.Servicev2.Repository
                     Message = message.Message
                 }, "OnBetStatus", "r.bet.betstatus", correlationId);
 
-                //publish to reports
-                messageBroker.Publish(message, "OnBetCancellation", "r.bet.reports", correlationId);
+                if (message.IsRetry == false)
+                    messageBroker.Publish(message, "OnBetCancellation", "r.bet.reports", correlationId);
+
                 messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackOfficeCancellation", "r.bet.cancellation", correlationId);
 
                 AddOperatorLog(new OperatorLog

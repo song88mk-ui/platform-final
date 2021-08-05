@@ -389,7 +389,7 @@ namespace Platform.Operator.Servicev2.Repository
                                 var isRetry = bet.RetryCount < 8 ? true : false;
 
                                 bet.Info = JsonSerializer.Serialize(message.OnBetSettlement);
-                                bet.IsRetry = isRetry;
+                                bet.IsRetry = bet.RetryCount + 1 == 8 ? false : true;
                                 bet.RetryCount = isRetry == true ? bet.RetryCount + 1 : bet.RetryCount;
 
                                 context.OperatorSettlementRetry.Update(bet);
@@ -618,6 +618,7 @@ namespace Platform.Operator.Servicev2.Repository
                     return;
 
                 message = initialMessage.Item2;
+                message.IsRetry = true;
             }
 
             var uri = "/v1/bet/full/cashout";
@@ -771,6 +772,7 @@ namespace Platform.Operator.Servicev2.Repository
                     return;
 
                 message = initialMessage.Item2;
+                message.IsRetry = true;
             }
 
             var uri = "/v1/bet/settlement";
@@ -924,6 +926,7 @@ namespace Platform.Operator.Servicev2.Repository
                     return;
 
                 message = initialMessage.Item2;
+                message.IsRetry = true;
             }
 
             var uri = "/v1/bet/cancellation";

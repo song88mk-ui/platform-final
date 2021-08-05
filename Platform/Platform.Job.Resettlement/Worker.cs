@@ -53,21 +53,24 @@ namespace Platform.Job.Resettlement
                 
                 try
                 {
-                    var waitTime = GetNextRetry(false);
-
-                    Console.WriteLine($"{DateTime.UtcNow} - Current Config - {waitTime} minutes");
-
-                    await Task.Delay(waitTime * 1000 * 60);
-
-                    Console.WriteLine($"{DateTime.UtcNow} - Start");
-
                     using var scope = _provider.CreateScope();
                     var context = scope.ServiceProvider.GetRequiredService<PlatformContext>();
 
                     var bets = context.OperatorSettlementRetry.Where(c => c.IsRetry == true).AsNoTracking().ToList();
 
                     if (bets.Count > 0)
+                    {
                         _platformRepository.ProcessBets(bets, _messageBroker);
+                        
+                        var waitTime = GetNextRetry(false);
+                        await Task.Delay(waitTime * 1000 * 60);
+                    }
+                    else
+                    {
+                        var waitTime = GetNextRetry(true);
+                        await Task.Delay(waitTime * 1000 * 60);
+                    }
+
                 }
                 catch (Exception ex)
                 {

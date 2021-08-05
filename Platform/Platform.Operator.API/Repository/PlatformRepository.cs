@@ -520,7 +520,7 @@ namespace Platform.Operator.API.Repository
             if (result.Count == 0)
                 return new List<string>();
             else
-                return result.Select(s => s.ToString()).ToList();
+                return result.Select(s => s.ClientId.ToString()).ToList();
         }
     }
 }

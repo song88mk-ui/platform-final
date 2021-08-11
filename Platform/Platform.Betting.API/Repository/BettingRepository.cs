@@ -1100,7 +1100,7 @@ namespace Platform.Betting.API.Repository
             }
             else
             {
-                var openBets = new List<int> { (int)BetStatus.Running };
+                var openBets = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running };
 
                 if (request.BetStatusFilter == BetStatusFilter.All)
                 {

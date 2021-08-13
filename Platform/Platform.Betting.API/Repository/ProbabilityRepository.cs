@@ -177,7 +177,7 @@ namespace Platform.Betting.API.Repository
                                 break;
                             }
 
-                            if (Math.Round(Convert.ToDecimal(selection.Probability), 2) != Math.Round(Convert.ToDecimal(selectionProbability.Probability), 2))
+                            if (selection.Probability != selectionProbability.Probability)
                                 hasProbabilityChanged = true;
 
                             probabilites.Add(new Probabilities

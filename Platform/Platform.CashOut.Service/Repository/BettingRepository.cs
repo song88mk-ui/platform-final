@@ -141,6 +141,7 @@ namespace Platform.CashOut.Service.Repository
 
                 if (tempSelection != null)
                 {
+                    selection.Probability = tempSelection.Probability;
                     selection.WonProbability = tempSelection.WonProbability;
                     selection.LostProbability = tempSelection.LostProbability;
                     selection.VoidProbability = tempSelection.VoidProbability;

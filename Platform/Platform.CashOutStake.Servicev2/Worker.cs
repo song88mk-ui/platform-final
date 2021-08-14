@@ -16,13 +16,11 @@ namespace Platform.CashOutStake.Servicev2
     {
         private readonly ILogger<Worker> _logger;
         private readonly IMessageBroker _messageBroker;
-        private readonly IMessageBroker _messageBrokerExternal;
         private readonly IBettingRepository _bettingRepository;
-        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IMessageBroker messageBrokerExternal, IBettingRepository bettingRepository)
+        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository)
         {
             _logger = logger;
             _messageBroker = messageBroker;
-            _messageBrokerExternal = messageBrokerExternal;
             _bettingRepository = bettingRepository;
         }
         public override Task StartAsync(CancellationToken cancellationToken)
@@ -32,8 +30,6 @@ namespace Platform.CashOutStake.Servicev2
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            _messageBrokerExternal.Dispose();
-
             _messageBroker.Dispose();
 
             return base.StopAsync(cancellationToken);
@@ -41,8 +37,6 @@ namespace Platform.CashOutStake.Servicev2
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _messageBrokerExternal.ExternalConnect();
-
             _messageBroker.Connect();
             _messageBroker.MessageReceived += MessageReceivedEvent;
 

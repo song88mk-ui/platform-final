@@ -54,7 +54,9 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 UserId = s.UserId,
                 BetStatusId = s.BetStatusId,
                 TrueStake = s.TrueStake,
-                Odds = s.Odds
+                Odds = s.Odds,
+                StakeTax = s.StakeTax,
+                WinningsTax = s.WinningsTax
             }).ToList();
 
             foreach (var bet in bets)
@@ -107,7 +109,9 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 UserId = message.Bet.UserId,
                 BetStatusId = message.Bet.BetStatusId,
                 TrueStake = message.Bet.TrueStake,
-                Odds = message.Bet.Odds
+                Odds = message.Bet.Odds,
+                StakeTax = message.Bet.StakeTax,
+                WinningsTax = message.Bet.WinningsTax
             };
 
             var betSelections = message.BetSelections.Select(s => new BetSelectionMemory
@@ -285,6 +289,8 @@ namespace Platform.CashOutStake.Servicev2.Repository
         public int BetStatusId { get; set; }
         public decimal TrueStake { get; set; }
         public decimal Odds { get; set; }
+        public decimal StakeTax { get; set; }
+        public decimal WinningsTax { get; set; }
         public List<BetSelectionMemory> BetSelections { get; set; }
     }
 

@@ -64,6 +64,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 var betSelections = context.BetSelection.AsNoTracking().Where(c => c.BetId == bet.BetId).Select(s => new BetSelectionMemory
                 {
                     BetId = s.BetId,
+                    BetSelectionId = s.BetSelectionId,
                     SportId = s.SportId,
                     FixtureId = s.FixtureId,
                     FixtureTypeId = s.FixtureTypeId,
@@ -117,6 +118,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
             var betSelections = message.BetSelections.Select(s => new BetSelectionMemory
             {
                 BetId = s.BetId,
+                BetSelectionId = s.BetSelectionId,
                 SportId = s.SportId,
                 FixtureId = s.FixtureId,
                 FixtureTypeId = s.FixtureTypeId,
@@ -203,15 +205,16 @@ namespace Platform.CashOutStake.Servicev2.Repository
                     PreloadSelection(betSelection.MarketId, betSelection.SelectionId, message);
                 }
 
-                //TODO: cashout logic
+                var payload = GetCashOut(bet);
 
+                messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.oncashoutchange", Guid.NewGuid().ToString());
             }
         }
         private void PreloadMarket(long marketId, OnExternalOddsChangeMessage message)
         {
             var expiration = DateTime.UtcNow.AddHours(6);
 
-            var marketKey = $"Market:{marketId}";
+            var marketKey = $"market:{marketId}";
 
             var marketResult = _memCache.GetCache<CashOutMarketFilter>(marketKey);
 
@@ -239,7 +242,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
         {
             var expiration = DateTime.UtcNow.AddHours(6);
 
-            var selectionKey = $"Selection:{selectionId}";
+            var selectionKey = $"selection:{selectionId}";
 
             var selectionResult = _memCache.GetCache<CashOutSelectionFilter>(selectionKey);
 
@@ -274,6 +277,59 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 }
             }
         }
+        private OnCashOutChange GetCashOut(BetMemory bet)
+        {
+            var taxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
+            var stake = bet.TrueStake - taxedStake;
+
+            var probabilites = new List<Probabilities>();
+            var hasProbabilityChanged = false;
+
+            foreach (var betSelection in bet.BetSelections)
+            {
+                var marketResult = _memCache.GetCache<CashOutMarketFilter>($"market:{betSelection.MarketId}");
+                var selectionResult = _memCache.GetCache<CashOutSelectionFilter>($"selection:{betSelection.SelectionId}");
+
+                if (marketResult == null || selectionResult == null || marketResult.MaStId != (int)MarketStatus.Active || selectionResult.IsAc == false)
+                {
+                    return new OnCashOutChange
+                    {
+                        ClientId = bet.ClientId,
+                        UserId = bet.UserId,
+                        BetId = bet.BetId.ToString().ToUpper(),
+                        CashOutStatus = CashOutStatus.Unavailable,
+                        CashOutStake = 0m
+                    };
+                }
+
+                if (betSelection.Probability != selectionResult.Pr)
+                    hasProbabilityChanged = true;
+
+                probabilites.Add(new Probabilities
+                {
+                    BetSelectionId = betSelection.BetSelectionId,
+                    CashOutStatusId = 1,
+                    Probability = selectionResult.Pr,
+                    WonProbability = selectionResult.WoPr,
+                    LostProbability = selectionResult.LoPr,
+                    VoidProbability = selectionResult.VoPr,
+                    HalfWonProbability = selectionResult.HaWoPr,
+                    HalfLostProbability = selectionResult.HaLoPr
+                });
+            }
+
+            if (bet.BetSelections.Count == 1)
+            {
+
+            }
+
+            if (bet.BetSelections.Count > 1)
+            {
+
+            }
+
+            return new OnCashOutChange();
+        }
     }
 
     public class BetMemory
@@ -297,6 +353,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
     public class BetSelectionMemory
     {
         public Guid BetId { get; set; }
+        public Guid BetSelectionId { get; set; }
         public int SportId { get; set; }
         public long FixtureId { get; set; }
         public int FixtureTypeId { get; set; }
@@ -348,5 +405,16 @@ namespace Platform.CashOutStake.Servicev2.Repository
         public double VoidProbability { get; set; }
         public double HalfWonProbability { get; set; }
         public double HalfLostProbability { get; set; }
+    }
+    public class Probabilities
+    {
+        public Guid BetSelectionId { get; set; }
+        public double WonProbability { get; set; }
+        public double LostProbability { get; set; }
+        public double VoidProbability { get; set; }
+        public double HalfWonProbability { get; set; }
+        public double HalfLostProbability { get; set; }
+        public double Probability { get; set; }
+        public int CashOutStatusId { get; set; }
     }
 }

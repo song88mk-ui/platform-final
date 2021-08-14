@@ -67,14 +67,17 @@ namespace Platform.CashOutStake.Servicev2
 
                     case "OnBetPlacement":
                         var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
+                        _bettingRepository.AddBet(onBetPlacement);
                         break;
 
                     case "OnBetCancellation":
                         var onBetCancellation = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+                        _bettingRepository.RemoveBet(onBetCancellation);
                         break;
 
                     case "OnBetSettlement":
                         var onBetSettlement = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+                        _bettingRepository.RemoveBet(onBetSettlement);
                         break;
                 }
             }

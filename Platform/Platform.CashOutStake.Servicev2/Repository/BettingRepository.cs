@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Enums;
+using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -57,11 +58,59 @@ namespace Platform.CashOutStake.Servicev2.Repository
             }).ToList();
 
             foreach (var bet in bets)
-                AddBet(bet, context);
+            {
+                var betSelections = context.BetSelection.AsNoTracking().Where(c => c.BetId == bet.BetId).Select(s => new BetSelectionMemory
+                {
+                    BetId = s.BetId,
+                    SportId = s.SportId,
+                    FixtureId = s.FixtureId,
+                    FixtureTypeId = s.FixtureTypeId,
+                    MarketId = s.MarketId,
+                    SelectionId = s.SelectionId,
+                    BetSelectionStatusId = s.BetSelectionStatusId,
+                    Probability = s.Probability,
+                    WonProbability = s.WonProbability,
+                    LostProbability = s.LostProbability,
+                    VoidProbability = s.VoidProbability,
+                    HalfWonProbability = s.HalfWonProbability,
+                    HalfLostProbability = s.HalfLostProbability
+                }).ToList();
+
+                if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright || c.BetSelectionStatusId != (int)BetStatus.Running))
+                    return;
+
+                bet.BetSelections.AddRange(betSelections);
+
+                _bets.Add(bet);
+
+                foreach (var betSelection in betSelections)
+                {
+                    var copy = _fixtureBetReference.Where(c => c.Item1 == betSelection.FixtureId).FirstOrDefault();
+
+                    if (copy != null)
+                    {
+                        if (copy.Item2.Any(c => c == bet.BetId)) continue;
+
+                        copy.Item2.Add(bet.BetId);
+                    }
+                    else
+                        _fixtureBetReference.Add(new Tuple<long, List<Guid>>(betSelection.FixtureId, new List<Guid> { bet.BetId }));
+                }
+            }
         }
-        public void AddBet(BetMemory bet, BettingContext context)
+        public void AddBet(OnBetPlacement message)
         {
-            var betSelections = context.BetSelection.AsNoTracking().Where(c => c.BetId == bet.BetId).Select(s => new BetSelectionMemory
+            var bet = new BetMemory
+            {
+                BetId = message.Bet.BetId,
+                ClientId = message.Bet.ClientId,
+                UserId = message.Bet.UserId,
+                BetStatusId = message.Bet.BetStatusId,
+                TrueStake = message.Bet.TrueStake,
+                Odds = message.Bet.Odds
+            };
+
+            var betSelections = message.BetSelections.Select(s => new BetSelectionMemory
             {
                 BetId = s.BetId,
                 SportId = s.SportId,
@@ -91,7 +140,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
                 if (copy != null)
                 {
-                    if (copy.Item2.Any(c => c == bet.BetId)) return;
+                    if (copy.Item2.Any(c => c == bet.BetId)) continue;
 
                     copy.Item2.Add(bet.BetId);
                 }
@@ -99,9 +148,9 @@ namespace Platform.CashOutStake.Servicev2.Repository
                     _fixtureBetReference.Add(new Tuple<long, List<Guid>>(betSelection.FixtureId, new List<Guid> { bet.BetId }));
             }
         }
-        public void RemoveBet(Guid betId)
+        public void RemoveBet(OnBetSettlement message)
         {
-            var bet = _bets.Where(c => c.BetId == betId).FirstOrDefault();
+            var bet = _bets.Where(c => c.BetId == message.Bet.BetId).FirstOrDefault();
 
             if (bet != null)
             {
@@ -112,7 +161,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                     if (fixtureBetReference != null)
                     {
                         var fixtureEntry = fixtureBetReference.Item1;
-                        var betEntries = fixtureBetReference.Item2.Where(c => c != betId).ToList();
+                        var betEntries = fixtureBetReference.Item2.Where(c => c != message.Bet.BetId).ToList();
 
                         if (betEntries.Count == 0)
                             _fixtureBetReference.Remove(fixtureBetReference);
@@ -124,7 +173,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                     }
                 }
 
-                _bets = _bets.Where(c => c.BetId != betId).ToList();
+                _bets = _bets.Where(c => c.BetId != message.Bet.BetId).ToList();
             }
         }
         public void ProcessOddsChange(OnExternalOddsChangeMessage message, IMessageBroker messageBroker)

@@ -1,9 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Platform.CashOutStake.Servicev2.Repository;
+using Platform.Shared.Data.Betting;
+using Platform.Shared.Utility;
 
 namespace Platform.CashOutStake.Servicev2
 {
@@ -18,7 +18,10 @@ namespace Platform.CashOutStake.Servicev2
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddSingleton<IMessageBroker, MessageBroker>();
+                    services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();
-                });
+                    services.AddDbContext<BettingContext>(o => o.UseSqlServer(hostContext.Configuration["ConnectionStrings:Betting"]));
+                }).UseWindowsService();
     }
 }

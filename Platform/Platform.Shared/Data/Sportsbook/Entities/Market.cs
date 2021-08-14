@@ -59,4 +59,11 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public long MaId { get; set; }
         public int MaStId { get; set; }
     }
+
+    public class CashOutMarketFilter
+    {
+        [BsonId]
+        public long MaId { get; set; }
+        public int MaStId { get; set; }
+    }
 }

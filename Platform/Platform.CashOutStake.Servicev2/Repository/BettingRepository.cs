@@ -10,6 +10,7 @@ using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace Platform.CashOutStake.Servicev2.Repository
 {
@@ -153,6 +154,11 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 else
                     _fixtureBetReference.Add(new Tuple<long, List<Guid>>(betSelection.FixtureId, new List<Guid> { bet.BetId }));
             }
+
+            if (_bets.Any(c => c.BetId == bet.BetId))
+                Console.WriteLine($"{DateTime.UtcNow} - Add Bet : {bet.BetId.ToString().ToUpper()} : True");
+            else
+                Console.WriteLine($"{DateTime.UtcNow} - Add Bet : {bet.BetId.ToString().ToUpper()} : False");
         }
         public void RemoveBet(OnBetSettlement message)
         {
@@ -180,6 +186,11 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 }
 
                 _bets = _bets.Where(c => c.BetId != message.Bet.BetId).ToList();
+
+                if (_bets.Any(c => c.BetId == message.Bet.BetId))
+                    Console.WriteLine($"{DateTime.UtcNow} - Remove Bet : {message.Bet.BetId.ToString().ToUpper()} : False");
+                else
+                    Console.WriteLine($"{DateTime.UtcNow} - Remove Bet : {message.Bet.BetId.ToString().ToUpper()} : True");
             }
         }
         public void ProcessOddsChange(OnExternalOddsChangeMessage message, IMessageBroker messageBroker)
@@ -207,7 +218,9 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
                 var payload = GetCashOut(bet);
 
-                messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.oncashoutchange", Guid.NewGuid().ToString());
+                Console.WriteLine($"{DateTime.UtcNow} - OddsChange : {JsonSerializer.Serialize(payload)}");
+
+                messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.betstatus", Guid.NewGuid().ToString());
             }
         }
         private void PreloadMarket(long marketId, OnExternalOddsChangeMessage message)
@@ -232,7 +245,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
                 if (market != null)
                 {
-                    marketResult.MaStId = (int)market.MarketStatus;
+                    marketResult.MaStId = market.MarketStatusId;
 
                     _memCache.AddOrUpdateCache(marketKey, marketResult, expiration);
                 }
@@ -318,17 +331,107 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 });
             }
 
-            if (bet.BetSelections.Count == 1)
-            {
-
-            }
-
             if (bet.BetSelections.Count > 1)
             {
+                var finalProbability = probabilites.Where(c => c.Probability > 0).Select(s => s.Probability).Aggregate((a, b) => a * b);
 
+                var cashOutStake = (stake * bet.Odds) * Convert.ToDecimal(finalProbability);
+
+                cashOutStake = cashOutStake - (cashOutStake * 0.10m);
+
+                var taxedWinnings = (cashOutStake - stake) * bet.WinningsTax;
+
+                if (cashOutStake > stake)
+                    cashOutStake = cashOutStake - taxedWinnings;
+                else
+                    taxedWinnings = 0;
+
+                var finalCashOutStake = cashOutStake;
+
+                if (!hasProbabilityChanged)
+                    finalCashOutStake = stake - (stake * 0.10m);
+
+                if (finalCashOutStake == 0 || finalCashOutStake > stake * bet.Odds)
+                {
+                    return new OnCashOutChange
+                    {
+                        ClientId = bet.ClientId,
+                        UserId = bet.UserId,
+                        BetId = bet.BetId.ToString().ToUpper(),
+                        CashOutStatus = CashOutStatus.Unavailable,
+                        CashOutStake = 0m
+                    };
+                }
+                else
+                {
+                    return new OnCashOutChange
+                    {
+                        ClientId = bet.ClientId,
+                        UserId = bet.UserId,
+                        BetId = bet.BetId.ToString().ToUpper(),
+                        CashOutStatus = CashOutStatus.Available,
+                        CashOutStake = Convert.ToDecimal(finalCashOutStake.ToString().TrimEnd('0').TrimEnd('.'))
+                    };
+                }
             }
+            else
+            {
+                decimal cashOutStake = 0m;
 
-            return new OnCashOutChange();
+                if (probabilites.First().WonProbability > 0 ||
+                    probabilites.First().LostProbability > 0 ||
+                    probabilites.First().VoidProbability > 0 ||
+                    probabilites.First().HalfWonProbability > 0 ||
+                    probabilites.First().HalfLostProbability > 0)
+                {
+                    var won = Convert.ToDecimal(probabilites.First().WonProbability) * (stake * bet.Odds);
+                    var lost = Convert.ToDecimal(probabilites.First().LostProbability) * (stake * 0);
+                    var voidd = Convert.ToDecimal(probabilites.First().VoidProbability) * (stake * 1);
+                    var halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * (stake * ((bet.Odds + 1) / 2));
+                    var halfLost = Convert.ToDecimal(probabilites.First().HalfLostProbability) * (stake / 2);
+
+                    cashOutStake = won + lost + voidd + halfWon + halfLost;
+                }
+                else
+                    cashOutStake = (stake * bet.Odds) * Convert.ToDecimal(probabilites.First().Probability);
+
+                cashOutStake = cashOutStake - (cashOutStake * 0.10m);
+
+                var taxedWinnings = (cashOutStake - stake) * bet.WinningsTax;
+
+                if (cashOutStake > stake)
+                    cashOutStake = cashOutStake - taxedWinnings;
+                else
+                    taxedWinnings = 0;
+
+                var finalCashOutStake = cashOutStake;
+
+                if (!hasProbabilityChanged)
+                    finalCashOutStake = stake - (stake * 0.10m);
+
+                if (finalCashOutStake <= stake * bet.Odds)
+                {
+                    return new OnCashOutChange
+                    {
+                        ClientId = bet.ClientId,
+                        UserId = bet.UserId,
+                        BetId = bet.BetId.ToString().ToUpper(),
+                        CashOutStatus = CashOutStatus.Available,
+                        CashOutStake = Convert.ToDecimal(finalCashOutStake.ToString().TrimEnd('0').TrimEnd('.'))
+                    };
+                }
+                else
+                {
+                    return new OnCashOutChange
+                    {
+                        ClientId = bet.ClientId,
+                        UserId = bet.UserId,
+                        BetId = bet.BetId.ToString().ToUpper(),
+                        CashOutStatus = CashOutStatus.Unavailable,
+                        CashOutStake = 0m
+                    };
+                }
+            }
         }
     }
 
@@ -389,7 +492,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
             Selections = new List<ExternalSelectionMessage>();
         }
         public long MarketId { get; set; }
-        public MarketStatus MarketStatus { get; set; }
+        public int MarketStatusId { get; set; }
         public List<ExternalSelectionMessage> Selections { get; set; }
     }
 

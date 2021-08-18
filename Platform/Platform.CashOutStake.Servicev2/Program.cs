@@ -18,6 +18,7 @@ namespace Platform.CashOutStake.Servicev2
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddSingleton<IMemCache, MemCache>();
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();

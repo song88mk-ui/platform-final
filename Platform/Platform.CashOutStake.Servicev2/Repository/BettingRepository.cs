@@ -221,6 +221,18 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 Console.WriteLine($"{DateTime.UtcNow} - OddsChange : {JsonSerializer.Serialize(payload)}");
 
                 messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.betstatus", Guid.NewGuid().ToString());
+
+                //var cache = _memCache.GetCache<OnCashOutChange>($"co:{betId.ToString()}");
+
+                //if (cache == null)
+                //    messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.betstatus", Guid.NewGuid().ToString());
+                //else
+                //{
+                //    if (cache.CashOutStake != payload.CashOutStake && cache.CashOutStatus != payload.CashOutStatus)
+                //        messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.betstatus", Guid.NewGuid().ToString());
+                //}
+
+                //_memCache.AddOrUpdateCache($"co:{betId.ToString()}", payload, DateTime.UtcNow.AddHours(1));
             }
         }
         private void PreloadMarket(long marketId, OnExternalOddsChangeMessage message)

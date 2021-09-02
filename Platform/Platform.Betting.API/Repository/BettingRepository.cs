@@ -1653,11 +1653,11 @@ namespace Platform.Betting.API.Repository
             {
                 minimumStake.Add(1);
             }
-            else
-            {
-                minimumStake.Add(0.02m);
-                //referenceBet = exchangeRate * 0.0001m;
-            }
+            //else
+            //{
+            //    minimumStake.Add(0.02m);
+            //    referenceBet = exchangeRate * 0.0001m;
+            //}
 
 
             //2. High Currency add 1000 default

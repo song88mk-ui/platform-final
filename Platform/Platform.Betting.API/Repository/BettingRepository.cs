@@ -1648,15 +1648,15 @@ namespace Platform.Betting.API.Repository
             var highCurrencies = new List<string> { "KRW", "VND", "KHR", "IDR", "MMK" };
 
             //1. Reference Bet
-            decimal referenceBet = 1;
+            //decimal referenceBet = 1;
             if (currencyCode == CurrencyCode.EUR.ToString())
             {
                 minimumStake.Add(1);
             }
             else
             {
-                minimumStake.Add(Math.Truncate(exchangeRate * 0.0001m) + 1);
-                referenceBet = exchangeRate * 0.0001m;
+                minimumStake.Add(0.02m);
+                //referenceBet = exchangeRate * 0.0001m;
             }
 
 

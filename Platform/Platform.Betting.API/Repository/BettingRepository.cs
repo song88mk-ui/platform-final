@@ -1386,7 +1386,7 @@ namespace Platform.Betting.API.Repository
                     if (bet == null)
                     {
                         data.IsSuccess = false;
-                        data.Message = "BetId not found";
+                        data.Message = "Bet ID not found";
                     }
                     else if (bet.BetStatusId == (int)BetStatus.Waiting)
                     {

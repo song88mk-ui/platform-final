@@ -1649,10 +1649,10 @@ namespace Platform.Betting.API.Repository
 
             //1. Reference Bet
             //decimal referenceBet = 1;
-            if (currencyCode == CurrencyCode.EUR.ToString())
-            {
-                minimumStake.Add(1);
-            }
+            //if (currencyCode == CurrencyCode.EUR.ToString())
+            //{
+            //    minimumStake.Add(1);
+            //}
             //else
             //{
             //    minimumStake.Add(0.02m);

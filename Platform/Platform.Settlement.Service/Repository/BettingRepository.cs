@@ -462,7 +462,7 @@ namespace Platform.Settlement.Service.Repository
                     bet.SettlementDate = settledDate;
                     bet.SettlementDateOffset = settledDate.AddHours(-4);
 
-                    bet.TaxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax)); ;
+                    bet.TaxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
                     bet.TaxedWinnings = 0;
 
                     var betEntity = context.Bet.Update(bet).Entity;

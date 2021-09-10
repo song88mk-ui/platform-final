@@ -60,6 +60,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
     {
         [BsonId]
         public long SeId { get; set; }
+        public long FiId { get; set; }
         public long MaId { get; set; }
         public int MaStId { get; set; }
         public bool IsAc { get; set; }

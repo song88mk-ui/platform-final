@@ -155,4 +155,11 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public string LaCo { get; set; }
         public string FiNa { get; set; }
     }
+
+    public class FixtureProbabilityFilter
+    {
+        [BsonId]
+        public long FiId { get; set; }
+        public bool IsSu { get; set; }
+    }
 }

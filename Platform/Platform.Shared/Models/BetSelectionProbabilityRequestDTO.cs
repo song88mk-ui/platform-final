@@ -5,6 +5,6 @@ namespace Platform.Shared.Models
 {
     public class BetSelectionProbabilityRequestDTO
     {
-        public List<Tuple<long, long>> Selections { get; set; }
+        public List<Tuple<long, long, long>> Selections { get; set; }
     }
 }

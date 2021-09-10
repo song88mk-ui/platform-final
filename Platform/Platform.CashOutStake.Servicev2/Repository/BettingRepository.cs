@@ -216,7 +216,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                     PreloadSelection(betSelection.MarketId, betSelection.SelectionId, message);
                 }
 
-                var payload = GetCashOut(bet);
+                var payload = GetCashOut(bet, message);
 
                 Console.WriteLine($"{DateTime.UtcNow} - OddsChange : {JsonSerializer.Serialize(payload)}");
 
@@ -302,13 +302,25 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 }
             }
         }
-        private OnCashOutChange GetCashOut(BetMemory bet)
+        private OnCashOutChange GetCashOut(BetMemory bet, OnExternalOddsChangeMessage message)
         {
             var taxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
             var stake = bet.TrueStake - taxedStake;
 
             var probabilites = new List<Probabilities>();
             var hasProbabilityChanged = false;
+
+            if (message.IsSuspended == true)
+            {
+                return new OnCashOutChange
+                {
+                    ClientId = bet.ClientId,
+                    UserId = bet.UserId,
+                    BetId = bet.BetId.ToString().ToUpper(),
+                    CashOutStatus = CashOutStatus.Unavailable,
+                    CashOutStake = 0m
+                };
+            }
 
             foreach (var betSelection in bet.BetSelections)
             {
@@ -494,6 +506,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
         public DateTime FixtureStartDate { get; set; }
         public FixtureStatus FixtureStatus { get; set; }
         public FixtureType FixtureType { get; set; }
+        public bool IsSuspended { get; set; }
         public List<ExternalMarketMessage> Markets { get; set; }
     }
 

@@ -161,5 +161,6 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         [BsonId]
         public long FiId { get; set; }
         public bool IsSu { get; set; }
+        public int FiStId { get; set; }
     }
 }

@@ -706,7 +706,7 @@ namespace Platform.Sportsbook.API.Repository
             var selectionIds = request.Selections.Select(s => s.Item3).Distinct().ToList();
 
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
-            var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.IsSu);
+            var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.IsSu).Include(c => c.FiStId);
             var fixtures = await primaryFixtureCollection.Find(fixtureFilter).Project<FixtureProbabilityFilter>(fixtureProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => marketIds.Contains(c.MaId));
@@ -737,7 +737,7 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         SelectionId = s.SeId,
                         MarketStatusId = markets.Where(c => c.MaId == s.MaId).Select(ss => ss.MaStId).FirstOrDefault(),
-                        IsSuspended = fixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.IsSu).FirstOrDefault(),
+                        IsSuspended = fixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.FiStId).FirstOrDefault() > 1 ? true : fixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.IsSu).FirstOrDefault(),
                         IsActive = s.IsAc,
                         Probability = s.Pr,
                         WonProbability = s.WoPr,

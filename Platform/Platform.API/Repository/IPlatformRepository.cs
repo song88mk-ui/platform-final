@@ -54,6 +54,9 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<ExchangeRateResponseDTO>> GetCurrentExchangeRate(string currencyCode);
         Task<BaseResponseDTO<StatusCode>> ProcessBetConfig(BackOfficeBetConfigPayloadDTO request);
         Task<BaseResponseDTO<BetModifyResponseDTO>> CancelBets(BetModifyRequestDTO request);
+        Task<BaseResponseDTO<MultibetBonusResponseDTO>> GetClientMultibetBonus(GetMultibetBonusRequestDTO request);
+        Task<BaseResponseDTO<MultibetBonusAuditResponseDTO>> GetClientMultibetBonusHistory(GetMultibetBonusRequestDTO request);
+        Task<BaseResponseDTO<StatusCode>> AddOrUpdateMultibetBonus(MultibetBonusRequestDTO request);
 
     }
 }

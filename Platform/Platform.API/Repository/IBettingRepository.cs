@@ -13,5 +13,8 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<BetCashOutResponseDTO>> CashOutBet(CashoutBetRequestDTO request);
         Task<BaseResponseDTO<StatusCode>> ProcessBetConfig(BackOfficeBetConfigPayloadDTO request);
         Task<BaseResponseDTO<BetModifyResponseDTO>> CancelBets(BetModifyRequestDTO request);
+        Task<BaseResponseDTO<StatusCode>> ProcessMultibetBonus(MultibetBonusRequestDTO request);
+        Task<BaseResponseDTO<MultibetBonusResponseDTO>> GetMultibetBonus(GetMultibetBonusRequestDTO request);
+        Task<BaseResponseDTO<MultibetBonusAuditResponseDTO>> GetMultibetBonusHistory(GetMultibetBonusRequestDTO request);
     }
 }

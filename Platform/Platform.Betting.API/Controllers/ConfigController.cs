@@ -30,5 +30,47 @@ namespace Platform.Betting.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/config/multibetbonus")]
+        public async Task<IActionResult> ProcessBackOfficeClientMultibetBonus([FromBody] MultibetBonusRequestDTO payload)
+        {
+            var result = await _clientbetconfigRepository.ProcessMultibetBonus(payload);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/config/multibetbonus/list")]
+        public async Task<IActionResult> GetClientMultibetBonus([FromBody] GetMultibetBonusRequestDTO request)
+        {
+            var result = await _clientbetconfigRepository.GetClientMultibetBonus(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/config/multibetbonus/history/list")]
+        public async Task<IActionResult> GetClientMultibetBonusHistory([FromBody] GetMultibetBonusRequestDTO request)
+        {
+            var result = await _clientbetconfigRepository.GetClientMultibetBonusHistory(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

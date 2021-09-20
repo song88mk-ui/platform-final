@@ -110,6 +110,126 @@ namespace Platform.Betting.API.Repository
                 Message = StatusCode.Success.ToString()
             };
         }
+
+        public async Task<BaseResponseDTO<StatusCode>> ProcessMultibetBonus(MultibetBonusRequestDTO payload)
+        {
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
+            {
+                try
+                {
+                    var dateCreated = DateTime.UtcNow;
+
+                    foreach (var multibet in payload.MultibetBonus)
+                    {
+                        var result = _bettingContext.MultibetBonus.FirstOrDefault(b => b.ClientIdRef == payload.ClientIdRef 
+                                            && b.NoOfGames == multibet.NoOfGames);
+                        if (result != null)
+                        {
+                            result.Bonus = multibet.Bonus;
+                            result.ClientId = payload.ClientId;
+                            _bettingContext.MultibetBonus.Update(result);
+                        }
+                        else
+                        {
+                            _bettingContext.MultibetBonus.Add(new MultibetBonus
+                            {
+                                ClientId = payload.ClientId,
+                                ClientIdRef = multibet.ClientIdRef,
+                                NoOfGames = multibet.NoOfGames,
+                                Bonus = multibet.Bonus
+                            });
+                        }
+
+                        _bettingContext.MultibetBonusAudit.Add(new MultibetBonusAudit
+                        {
+                            ClientId = payload.ClientId,
+                            ClientIdRef = multibet.ClientIdRef,
+                            NoOfGames = multibet.NoOfGames,
+                            Bonus = multibet.Bonus,
+                            TimeStamp = dateCreated
+                        });
+                    }
+
+                    await _bettingContext.SaveChangesAsync();
+
+                    scope.Complete();
+                }
+                catch (Exception ex)
+                {
+                    scope.Dispose();
+                    return new BaseResponseDTO<StatusCode>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = ex.Message
+                    };
+                }
+            }
+            return new BaseResponseDTO<StatusCode>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString()
+            };
+        }
+        
+        public async Task<BaseResponseDTO<MultibetBonusResponseDTO>> GetClientMultibetBonus(GetMultibetBonusRequestDTO request)
+        {
+            var result = new MultibetBonusResponseDTO();
+            if(request.NoOfGames == 0)
+            {
+                if(request.ClientIdRef == 0)
+                {
+                    var multibet = _bettingContext.MultibetBonus.Where(x => x.ClientId == request.ClientId).ToList();
+                    result.MultibetBonus = multibet;
+                }
+                else
+                {
+                    var multibet = _bettingContext.MultibetBonus.Where(x => x.ClientIdRef == request.ClientIdRef).ToList();
+                    result.MultibetBonus = multibet;
+                }
+            }
+            else
+            {
+                if(request.ClientIdRef == 0)
+                {
+                    var multibet = _bettingContext.MultibetBonus.Where(x => x.ClientId == request.ClientId && x.NoOfGames == request.NoOfGames).ToList();
+                    result.MultibetBonus = multibet;
+                }
+                else
+                {
+                    var multibet = _bettingContext.MultibetBonus.Where(x => x.ClientIdRef == request.ClientIdRef && x.NoOfGames == request.NoOfGames).ToList();
+                    result.MultibetBonus = multibet;
+                }
+            }
+
+            return new BaseResponseDTO<MultibetBonusResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = result
+            };
+        }
+
+        public async Task<BaseResponseDTO<MultibetBonusAuditResponseDTO>> GetClientMultibetBonusHistory(GetMultibetBonusRequestDTO request)
+        {
+            var result = new MultibetBonusAuditResponseDTO();
+            if (request.NoOfGames == 0)
+            {
+                var multibet = _bettingContext.MultibetBonusAudit.Where(x => x.ClientIdRef == request.ClientIdRef).ToList();
+                result.MultibetBonusAudit = multibet;
+            }
+            else
+            {
+                var multibet = _bettingContext.MultibetBonusAudit.Where(x => x.ClientIdRef == request.ClientIdRef && x.NoOfGames == request.NoOfGames).ToList();
+                result.MultibetBonusAudit = multibet;
+            }
+
+            return new BaseResponseDTO<MultibetBonusAuditResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = result
+            };
+        }
     }
 }
  

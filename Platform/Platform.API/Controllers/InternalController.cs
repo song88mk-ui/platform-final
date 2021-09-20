@@ -218,5 +218,51 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        /// <summary>
+        /// Update multibet bonus of a client.
+        /// </summary>
+        [HttpPost("v1/client/multibetbonus")]
+        public async Task<IActionResult> PostClientMultibetBonus([FromBody] MultibetBonusRequestDTO request)
+        {
+            var result = await _platformRepository.AddOrUpdateMultibetBonus(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/client/multibetbonus")]
+        public async Task<IActionResult> GetClientMultibetBonus([FromQuery] GetMultibetBonusRequestDTO request)
+        {
+            var result = await _platformRepository.GetClientMultibetBonus(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/client/multibetbonus/history")]
+        public async Task<IActionResult> GetClientMultibetBonusHistory([FromQuery] GetMultibetBonusRequestDTO request)
+        {
+            var result = await _platformRepository.GetClientMultibetBonusHistory(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
     }
 }

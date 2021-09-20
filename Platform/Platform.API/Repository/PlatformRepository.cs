@@ -2491,6 +2491,101 @@ namespace Platform.API.Repository
             return await _bettingRepository.CancelBets(request);
         }
 
+        public async Task<BaseResponseDTO<MultibetBonusResponseDTO>> GetClientMultibetBonus(GetMultibetBonusRequestDTO request)
+        {
+            var clientResult = await _platformContext.Client.Where(c => c.ClientIdRef == request.ClientIdRef).FirstOrDefaultAsync();
+            if (clientResult == null)
+            {
+                return new BaseResponseDTO<MultibetBonusResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                };
+            }
+
+            request.ClientId = clientResult.ClientId;
+
+            var multibetResponse = await _bettingRepository.GetMultibetBonus(request);
+            if (multibetResponse.StatusCode == StatusCode.Success)
+            {
+                var backOfficeResponse = new MultibetBonusResponseDTO()
+                {
+                    MultibetBonus = multibetResponse.Result.MultibetBonus
+                };
+
+                return new BaseResponseDTO<MultibetBonusResponseDTO>
+                {
+                    StatusCode = multibetResponse.StatusCode,
+                    Message = multibetResponse.Message,
+                    Result = backOfficeResponse
+                };
+            }
+            else
+            {
+                return new BaseResponseDTO<MultibetBonusResponseDTO>
+                {
+                    StatusCode = multibetResponse.StatusCode,
+                    Message = multibetResponse.Message
+                };
+
+            }
+        }
+        
+        public async Task<BaseResponseDTO<MultibetBonusAuditResponseDTO>> GetClientMultibetBonusHistory(GetMultibetBonusRequestDTO request)
+        {
+            var clientResult = await _platformContext.Client.Where(c => c.ClientIdRef == request.ClientIdRef).FirstOrDefaultAsync();
+            if (clientResult == null)
+            {
+                return new BaseResponseDTO<MultibetBonusAuditResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                };
+            }
+
+            request.ClientId = clientResult.ClientId;
+
+            var multibetResponse = await _bettingRepository.GetMultibetBonusHistory(request);
+            if (multibetResponse.StatusCode == StatusCode.Success)
+            {
+                var backOfficeResponse = new MultibetBonusAuditResponseDTO()
+                {
+                    MultibetBonusAudit = multibetResponse.Result.MultibetBonusAudit
+                };
+
+                return new BaseResponseDTO<MultibetBonusAuditResponseDTO>
+                {
+                    StatusCode = multibetResponse.StatusCode,
+                    Message = multibetResponse.Message,
+                    Result = backOfficeResponse
+                };
+            }
+            else
+            {
+                return new BaseResponseDTO<MultibetBonusAuditResponseDTO>
+                {
+                    StatusCode = multibetResponse.StatusCode,
+                    Message = multibetResponse.Message
+                };
+
+            }
+        }
+        
+        public async Task<BaseResponseDTO<StatusCode>> AddOrUpdateMultibetBonus(MultibetBonusRequestDTO request)
+        {
+            var result = await _platformContext.Client.Where(c => c.ClientIdRef == request.ClientIdRef).FirstOrDefaultAsync();
+            if (result == null)
+            {
+                return new BaseResponseDTO<StatusCode>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString()
+                };
+            }
+            request.ClientId = result.ClientId;
+            return await _bettingRepository.ProcessMultibetBonus(request);
+        }
+
         private DateTime GetFirstDayOfNextMonth()
         {
             DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);

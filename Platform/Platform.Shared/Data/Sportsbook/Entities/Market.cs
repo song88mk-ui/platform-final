@@ -22,6 +22,8 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public int FiStId { get; set; }
         public int CaStId { get; set; }
         public string CaStNa { get; set; }
+        public string ClCo { get; set; }
+        public string ClCoMa { get; set; }
         public List<MarketTranslationMDB> MaNaTr { get; set; }
     }
 

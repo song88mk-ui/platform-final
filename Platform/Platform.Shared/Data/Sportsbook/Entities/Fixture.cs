@@ -60,6 +60,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public string StUr { get; set; }
 
         public bool IsSu { get; set; }
+        public string ClCo { get; set; }
         public List<SportTranslationMDB> SpNaTr { get; set; }
         public List<SegmentTranslationMDB> SegNaTr { get; set; }
         public List<LeagueTranslationMDB> LeNaTr { get; set; }

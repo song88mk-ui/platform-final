@@ -304,10 +304,10 @@ namespace Platform.CashOut.Service.Repository
             if (halfLost == 1 && betSelections.Where(c => c == BetStatus.Void).Count() == betSelections.Count - 1)
                 return BetStatus.HalfLost;
 
-            if (winLoss <= 0)
+            if (payout <= 0) //use payout instead of winloss for V3
                 return BetStatus.Lost;
 
-            if (winLoss > 0)
+            if (payout > 0) //use payout instead of winloss for V3
                 return BetStatus.Won;
 
             return result;

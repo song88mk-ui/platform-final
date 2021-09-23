@@ -10,6 +10,7 @@ namespace Platform.Shared.Models
         {
             ParlayBonus = new List<ParlayBonus>();
         }
+        public decimal MinOdds { get; set; }
         public List<ParlayBonus> ParlayBonus { get; set; }
     }
 

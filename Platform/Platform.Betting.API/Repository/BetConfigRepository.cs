@@ -129,7 +129,7 @@ namespace Platform.Betting.API.Repository
                             isAudit = result.Bonus != parlay.Bonus;
 
                             result.Bonus = parlay.Bonus;
-                            result.MinOdds = parlay.MinOdds;
+                            result.MinOdds = payload.MinOdds;
                             result.ClientId = payload.ClientId;
                             _bettingContext.ParlayBonus.Update(result);
                         }
@@ -141,7 +141,7 @@ namespace Platform.Betting.API.Repository
                                 ClientIdRef = parlay.ClientIdRef,
                                 NoOfSelection = parlay.NoOfSelection,
                                 Bonus = parlay.Bonus,
-                                MinOdds = parlay.MinOdds
+                                MinOdds = payload.MinOdds
                             });
                             isAudit = true;
                         }
@@ -155,7 +155,7 @@ namespace Platform.Betting.API.Repository
                                 NoOfSelection = parlay.NoOfSelection,
                                 Bonus = parlay.Bonus,
                                 TimeStamp = dateCreated,
-                                MinOdds = parlay.MinOdds
+                                MinOdds = payload.MinOdds
                             });
                         }
                     }
@@ -190,24 +190,32 @@ namespace Platform.Betting.API.Repository
                 {
                     var parlay = _bettingContext.ParlayBonus.Where(x => x.ClientId == request.ClientId).ToList();
                     result.ParlayBonus = parlay;
+                    if (parlay.Any())
+                        result.MinOdds = parlay.FirstOrDefault().MinOdds;
                 }
                 else
                 {
-                    var multibet = _bettingContext.ParlayBonus.Where(x => x.ClientIdRef == request.ClientIdRef).ToList();
-                    result.ParlayBonus = multibet;
+                    var parlay = _bettingContext.ParlayBonus.Where(x => x.ClientIdRef == request.ClientIdRef).ToList();
+                    result.ParlayBonus = parlay;
+                    if (parlay.Any())
+                        result.MinOdds = parlay.FirstOrDefault().MinOdds;
                 }
             }
             else
             {
                 if(request.ClientIdRef == 0)
                 {
-                    var multibet = _bettingContext.ParlayBonus.Where(x => x.ClientId == request.ClientId && x.NoOfSelection == request.NoOfSelection).ToList();
-                    result.ParlayBonus = multibet;
+                    var parlay = _bettingContext.ParlayBonus.Where(x => x.ClientId == request.ClientId && x.NoOfSelection == request.NoOfSelection).ToList();
+                    result.ParlayBonus = parlay;
+                    if (parlay.Any())
+                        result.MinOdds = parlay.FirstOrDefault().MinOdds;
                 }
                 else
                 {
-                    var multibet = _bettingContext.ParlayBonus.Where(x => x.ClientIdRef == request.ClientIdRef && x.NoOfSelection == request.NoOfSelection).ToList();
-                    result.ParlayBonus = multibet;
+                    var parlay = _bettingContext.ParlayBonus.Where(x => x.ClientIdRef == request.ClientIdRef && x.NoOfSelection == request.NoOfSelection).ToList();
+                    result.ParlayBonus = parlay;
+                    if (parlay.Any())
+                        result.MinOdds = parlay.FirstOrDefault().MinOdds;
                 }
             }
 

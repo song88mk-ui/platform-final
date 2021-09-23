@@ -2510,7 +2510,8 @@ namespace Platform.API.Repository
             {
                 var backOfficeResponse = new ParlayBonusResponseDTO()
                 {
-                    ParlayBonus = response.Result.ParlayBonus
+                    ParlayBonus = response.Result.ParlayBonus,
+                    MinOdds = response.Result.MinOdds
                 };
 
                 return new BaseResponseDTO<ParlayBonusResponseDTO>

@@ -15,6 +15,8 @@ namespace Platform.Shared.Models
     {
         public int ClientIdRef { get; set; }
         public Guid ClientId { get; set; }
+
+        public decimal MinOdds { get; set; }
         public List<ParlayBonus> ParlayBonus { get; set; }
     }
 

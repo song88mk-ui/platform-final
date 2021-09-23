@@ -8,8 +8,8 @@ namespace Platform.Betting.API.Repository
     public interface IBetConfigRepository
     {
         Task<BaseResponseDTO<StatusCode>> ProcessBetConfig(BackOfficeBetConfigPayloadDTO payload);
-        Task<BaseResponseDTO<StatusCode>> ProcessMultibetBonus(MultibetBonusRequestDTO payload);
-        Task<BaseResponseDTO<MultibetBonusResponseDTO>> GetClientMultibetBonus(GetMultibetBonusRequestDTO request);
-        Task<BaseResponseDTO<MultibetBonusAuditResponseDTO>> GetClientMultibetBonusHistory(GetMultibetBonusRequestDTO request);
+        Task<BaseResponseDTO<StatusCode>> ProcessParlayBonus(ParlayBonusRequestDTO payload);
+        Task<BaseResponseDTO<ParlayBonusResponseDTO>> GetClientParlayBonus(GetParlayBonusRequestDTO request);
+        Task<BaseResponseDTO<ParlayBonusAuditResponseDTO>> GetClientParlayBonusHistory(GetParlayBonusRequestDTO request);
     }
 }

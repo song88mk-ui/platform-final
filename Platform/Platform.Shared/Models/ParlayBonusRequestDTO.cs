@@ -5,17 +5,17 @@ using System.Collections.Generic;
 
 namespace Platform.Shared.Models
 {
-    public class GetMultibetBonusRequestDTO
+    public class GetParlayBonusRequestDTO
     {
         public int ClientIdRef { get; set; }
         public Guid ClientId { get; set; }
-        public int NoOfGames { get; set; }
+        public int NoOfSelection { get; set; }
     }
-    public class MultibetBonusRequestDTO
+    public class ParlayBonusRequestDTO
     {
         public int ClientIdRef { get; set; }
         public Guid ClientId { get; set; }
-        public List<MultibetBonus> MultibetBonus { get; set; }
+        public List<ParlayBonus> ParlayBonus { get; set; }
     }
 
 }

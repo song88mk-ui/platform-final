@@ -251,11 +251,11 @@ namespace Platform.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<StatusCode>> ProcessMultibetBonus(MultibetBonusRequestDTO request)
+        public async Task<BaseResponseDTO<StatusCode>> ProcessParlayBonus(ParlayBonusRequestDTO request)
         {
             try
             {
-                var response = await _httpClient.PostAsync($"/v1/config/multibetbonus", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.PostAsync($"/v1/config/parlaybonus", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
                     return JsonSerializer.Deserialize<BaseResponseDTO<StatusCode>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
@@ -283,21 +283,21 @@ namespace Platform.API.Repository
             }
         }
         
-        public async Task<BaseResponseDTO<MultibetBonusResponseDTO>> GetMultibetBonus(GetMultibetBonusRequestDTO request)
+        public async Task<BaseResponseDTO<ParlayBonusResponseDTO>> GetParlayBonus(GetParlayBonusRequestDTO request)
         {
             try
             {
-                var response = await _httpClient.PostAsync($"/v1/config/multibetbonus/list", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.PostAsync($"/v1/config/parlaybonus/list", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<MultibetBonusResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<BaseResponseDTO<ParlayBonusResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<MultibetBonusResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<BaseResponseDTO<ParlayBonusResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     else
                     {
-                        return new BaseResponseDTO<MultibetBonusResponseDTO>
+                        return new BaseResponseDTO<ParlayBonusResponseDTO>
                         {
                             StatusCode = StatusCode.Error,
                             Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
@@ -307,7 +307,7 @@ namespace Platform.API.Repository
             }
             catch (Exception ex)
             {
-                return new BaseResponseDTO<MultibetBonusResponseDTO>
+                return new BaseResponseDTO<ParlayBonusResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
@@ -315,21 +315,21 @@ namespace Platform.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<MultibetBonusAuditResponseDTO>> GetMultibetBonusHistory(GetMultibetBonusRequestDTO request)
+        public async Task<BaseResponseDTO<ParlayBonusAuditResponseDTO>> GetParlayBonusHistory(GetParlayBonusRequestDTO request)
         {
             try
             {
-                var response = await _httpClient.PostAsync($"/v1/config/multibetbonus/history/list", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.PostAsync($"/v1/config/parlaybonus/history/list", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<MultibetBonusAuditResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<BaseResponseDTO<ParlayBonusAuditResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<MultibetBonusAuditResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<BaseResponseDTO<ParlayBonusAuditResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     else
                     {
-                        return new BaseResponseDTO<MultibetBonusAuditResponseDTO>
+                        return new BaseResponseDTO<ParlayBonusAuditResponseDTO>
                         {
                             StatusCode = StatusCode.Error,
                             Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
@@ -339,7 +339,7 @@ namespace Platform.API.Repository
             }
             catch (Exception ex)
             {
-                return new BaseResponseDTO<MultibetBonusAuditResponseDTO>
+                return new BaseResponseDTO<ParlayBonusAuditResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"

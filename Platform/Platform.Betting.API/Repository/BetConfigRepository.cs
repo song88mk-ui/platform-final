@@ -111,7 +111,7 @@ namespace Platform.Betting.API.Repository
             };
         }
 
-        public async Task<BaseResponseDTO<StatusCode>> ProcessMultibetBonus(MultibetBonusRequestDTO payload)
+        public async Task<BaseResponseDTO<StatusCode>> ProcessParlayBonus(ParlayBonusRequestDTO payload)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
             {
@@ -119,35 +119,45 @@ namespace Platform.Betting.API.Repository
                 {
                     var dateCreated = DateTime.UtcNow;
 
-                    foreach (var multibet in payload.MultibetBonus)
+                    foreach (var parlay in payload.ParlayBonus)
                     {
-                        var result = _bettingContext.MultibetBonus.FirstOrDefault(b => b.ClientIdRef == payload.ClientIdRef 
-                                            && b.NoOfGames == multibet.NoOfGames);
+                        bool isAudit = false;
+                        var result = _bettingContext.ParlayBonus.FirstOrDefault(b => b.ClientIdRef == payload.ClientIdRef 
+                                            && b.NoOfSelection == parlay.NoOfSelection);
                         if (result != null)
                         {
-                            result.Bonus = multibet.Bonus;
+                            isAudit = result.Bonus != parlay.Bonus;
+
+                            result.Bonus = parlay.Bonus;
+                            result.MinOdds = parlay.MinOdds;
                             result.ClientId = payload.ClientId;
-                            _bettingContext.MultibetBonus.Update(result);
+                            _bettingContext.ParlayBonus.Update(result);
                         }
                         else
                         {
-                            _bettingContext.MultibetBonus.Add(new MultibetBonus
+                            _bettingContext.ParlayBonus.Add(new ParlayBonus
                             {
                                 ClientId = payload.ClientId,
-                                ClientIdRef = multibet.ClientIdRef,
-                                NoOfGames = multibet.NoOfGames,
-                                Bonus = multibet.Bonus
+                                ClientIdRef = parlay.ClientIdRef,
+                                NoOfSelection = parlay.NoOfSelection,
+                                Bonus = parlay.Bonus,
+                                MinOdds = parlay.MinOdds
                             });
+                            isAudit = true;
                         }
 
-                        _bettingContext.MultibetBonusAudit.Add(new MultibetBonusAudit
+                        if(isAudit)
                         {
-                            ClientId = payload.ClientId,
-                            ClientIdRef = multibet.ClientIdRef,
-                            NoOfGames = multibet.NoOfGames,
-                            Bonus = multibet.Bonus,
-                            TimeStamp = dateCreated
-                        });
+                            _bettingContext.ParlayBonusAudit.Add(new ParlayBonusAudit
+                            {
+                                ClientId = payload.ClientId,
+                                ClientIdRef = parlay.ClientIdRef,
+                                NoOfSelection = parlay.NoOfSelection,
+                                Bonus = parlay.Bonus,
+                                TimeStamp = dateCreated,
+                                MinOdds = parlay.MinOdds
+                            });
+                        }
                     }
 
                     await _bettingContext.SaveChangesAsync();
@@ -171,37 +181,37 @@ namespace Platform.Betting.API.Repository
             };
         }
         
-        public async Task<BaseResponseDTO<MultibetBonusResponseDTO>> GetClientMultibetBonus(GetMultibetBonusRequestDTO request)
+        public async Task<BaseResponseDTO<ParlayBonusResponseDTO>> GetClientParlayBonus(GetParlayBonusRequestDTO request)
         {
-            var result = new MultibetBonusResponseDTO();
-            if(request.NoOfGames == 0)
+            var result = new ParlayBonusResponseDTO();
+            if(request.NoOfSelection == 0)
             {
                 if(request.ClientIdRef == 0)
                 {
-                    var multibet = _bettingContext.MultibetBonus.Where(x => x.ClientId == request.ClientId).ToList();
-                    result.MultibetBonus = multibet;
+                    var parlay = _bettingContext.ParlayBonus.Where(x => x.ClientId == request.ClientId).ToList();
+                    result.ParlayBonus = parlay;
                 }
                 else
                 {
-                    var multibet = _bettingContext.MultibetBonus.Where(x => x.ClientIdRef == request.ClientIdRef).ToList();
-                    result.MultibetBonus = multibet;
+                    var multibet = _bettingContext.ParlayBonus.Where(x => x.ClientIdRef == request.ClientIdRef).ToList();
+                    result.ParlayBonus = multibet;
                 }
             }
             else
             {
                 if(request.ClientIdRef == 0)
                 {
-                    var multibet = _bettingContext.MultibetBonus.Where(x => x.ClientId == request.ClientId && x.NoOfGames == request.NoOfGames).ToList();
-                    result.MultibetBonus = multibet;
+                    var multibet = _bettingContext.ParlayBonus.Where(x => x.ClientId == request.ClientId && x.NoOfSelection == request.NoOfSelection).ToList();
+                    result.ParlayBonus = multibet;
                 }
                 else
                 {
-                    var multibet = _bettingContext.MultibetBonus.Where(x => x.ClientIdRef == request.ClientIdRef && x.NoOfGames == request.NoOfGames).ToList();
-                    result.MultibetBonus = multibet;
+                    var multibet = _bettingContext.ParlayBonus.Where(x => x.ClientIdRef == request.ClientIdRef && x.NoOfSelection == request.NoOfSelection).ToList();
+                    result.ParlayBonus = multibet;
                 }
             }
 
-            return new BaseResponseDTO<MultibetBonusResponseDTO>
+            return new BaseResponseDTO<ParlayBonusResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
@@ -209,21 +219,21 @@ namespace Platform.Betting.API.Repository
             };
         }
 
-        public async Task<BaseResponseDTO<MultibetBonusAuditResponseDTO>> GetClientMultibetBonusHistory(GetMultibetBonusRequestDTO request)
+        public async Task<BaseResponseDTO<ParlayBonusAuditResponseDTO>> GetClientParlayBonusHistory(GetParlayBonusRequestDTO request)
         {
-            var result = new MultibetBonusAuditResponseDTO();
-            if (request.NoOfGames == 0)
+            var result = new ParlayBonusAuditResponseDTO();
+            if (request.NoOfSelection == 0)
             {
-                var multibet = _bettingContext.MultibetBonusAudit.Where(x => x.ClientIdRef == request.ClientIdRef).ToList();
-                result.MultibetBonusAudit = multibet;
+                var parlay = _bettingContext.ParlayBonusAudit.Where(x => x.ClientIdRef == request.ClientIdRef).ToList();
+                result.ParlayBonusAudit = parlay;
             }
             else
             {
-                var multibet = _bettingContext.MultibetBonusAudit.Where(x => x.ClientIdRef == request.ClientIdRef && x.NoOfGames == request.NoOfGames).ToList();
-                result.MultibetBonusAudit = multibet;
+                var parlay = _bettingContext.ParlayBonusAudit.Where(x => x.ClientIdRef == request.ClientIdRef && x.NoOfSelection == request.NoOfSelection).ToList();
+                result.ParlayBonusAudit = parlay;
             }
 
-            return new BaseResponseDTO<MultibetBonusAuditResponseDTO>
+            return new BaseResponseDTO<ParlayBonusAuditResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),

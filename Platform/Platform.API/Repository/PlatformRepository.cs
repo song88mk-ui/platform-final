@@ -2491,12 +2491,12 @@ namespace Platform.API.Repository
             return await _bettingRepository.CancelBets(request);
         }
 
-        public async Task<BaseResponseDTO<MultibetBonusResponseDTO>> GetClientMultibetBonus(GetMultibetBonusRequestDTO request)
+        public async Task<BaseResponseDTO<ParlayBonusResponseDTO>> GetClientParlayBonus(GetParlayBonusRequestDTO request)
         {
             var clientResult = await _platformContext.Client.Where(c => c.ClientIdRef == request.ClientIdRef).FirstOrDefaultAsync();
             if (clientResult == null)
             {
-                return new BaseResponseDTO<MultibetBonusResponseDTO>
+                return new BaseResponseDTO<ParlayBonusResponseDTO>
                 {
                     StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
                     Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
@@ -2505,38 +2505,38 @@ namespace Platform.API.Repository
 
             request.ClientId = clientResult.ClientId;
 
-            var multibetResponse = await _bettingRepository.GetMultibetBonus(request);
-            if (multibetResponse.StatusCode == StatusCode.Success)
+            var response = await _bettingRepository.GetParlayBonus(request);
+            if (response.StatusCode == StatusCode.Success)
             {
-                var backOfficeResponse = new MultibetBonusResponseDTO()
+                var backOfficeResponse = new ParlayBonusResponseDTO()
                 {
-                    MultibetBonus = multibetResponse.Result.MultibetBonus
+                    ParlayBonus = response.Result.ParlayBonus
                 };
 
-                return new BaseResponseDTO<MultibetBonusResponseDTO>
+                return new BaseResponseDTO<ParlayBonusResponseDTO>
                 {
-                    StatusCode = multibetResponse.StatusCode,
-                    Message = multibetResponse.Message,
+                    StatusCode = response.StatusCode,
+                    Message = response.Message,
                     Result = backOfficeResponse
                 };
             }
             else
             {
-                return new BaseResponseDTO<MultibetBonusResponseDTO>
+                return new BaseResponseDTO<ParlayBonusResponseDTO>
                 {
-                    StatusCode = multibetResponse.StatusCode,
-                    Message = multibetResponse.Message
+                    StatusCode = response.StatusCode,
+                    Message = response.Message
                 };
 
             }
         }
         
-        public async Task<BaseResponseDTO<MultibetBonusAuditResponseDTO>> GetClientMultibetBonusHistory(GetMultibetBonusRequestDTO request)
+        public async Task<BaseResponseDTO<ParlayBonusAuditResponseDTO>> GetClientParlayBonusHistory(GetParlayBonusRequestDTO request)
         {
             var clientResult = await _platformContext.Client.Where(c => c.ClientIdRef == request.ClientIdRef).FirstOrDefaultAsync();
             if (clientResult == null)
             {
-                return new BaseResponseDTO<MultibetBonusAuditResponseDTO>
+                return new BaseResponseDTO<ParlayBonusAuditResponseDTO>
                 {
                     StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
                     Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
@@ -2545,33 +2545,33 @@ namespace Platform.API.Repository
 
             request.ClientId = clientResult.ClientId;
 
-            var multibetResponse = await _bettingRepository.GetMultibetBonusHistory(request);
-            if (multibetResponse.StatusCode == StatusCode.Success)
+            var response = await _bettingRepository.GetParlayBonusHistory(request);
+            if (response.StatusCode == StatusCode.Success)
             {
-                var backOfficeResponse = new MultibetBonusAuditResponseDTO()
+                var backOfficeResponse = new ParlayBonusAuditResponseDTO()
                 {
-                    MultibetBonusAudit = multibetResponse.Result.MultibetBonusAudit
+                    ParlayBonusAudit = response.Result.ParlayBonusAudit
                 };
 
-                return new BaseResponseDTO<MultibetBonusAuditResponseDTO>
+                return new BaseResponseDTO<ParlayBonusAuditResponseDTO>
                 {
-                    StatusCode = multibetResponse.StatusCode,
-                    Message = multibetResponse.Message,
+                    StatusCode = response.StatusCode,
+                    Message = response.Message,
                     Result = backOfficeResponse
                 };
             }
             else
             {
-                return new BaseResponseDTO<MultibetBonusAuditResponseDTO>
+                return new BaseResponseDTO<ParlayBonusAuditResponseDTO>
                 {
-                    StatusCode = multibetResponse.StatusCode,
-                    Message = multibetResponse.Message
+                    StatusCode = response.StatusCode,
+                    Message = response.Message
                 };
 
             }
         }
         
-        public async Task<BaseResponseDTO<StatusCode>> AddOrUpdateMultibetBonus(MultibetBonusRequestDTO request)
+        public async Task<BaseResponseDTO<StatusCode>> AddOrUpdateParlayBonus(ParlayBonusRequestDTO request)
         {
             var result = await _platformContext.Client.Where(c => c.ClientIdRef == request.ClientIdRef).FirstOrDefaultAsync();
             if (result == null)
@@ -2583,7 +2583,7 @@ namespace Platform.API.Repository
                 };
             }
             request.ClientId = result.ClientId;
-            return await _bettingRepository.ProcessMultibetBonus(request);
+            return await _bettingRepository.ProcessParlayBonus(request);
         }
 
         private DateTime GetFirstDayOfNextMonth()

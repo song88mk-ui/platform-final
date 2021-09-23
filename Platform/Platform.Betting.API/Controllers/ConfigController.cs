@@ -31,10 +31,10 @@ namespace Platform.Betting.API.Controllers
             }
         }
 
-        [HttpPost("v1/config/multibetbonus")]
-        public async Task<IActionResult> ProcessBackOfficeClientMultibetBonus([FromBody] MultibetBonusRequestDTO payload)
+        [HttpPost("v1/config/parlaybonus")]
+        public async Task<IActionResult> ProcessBackOfficeClientParlayBonus([FromBody] ParlayBonusRequestDTO payload)
         {
-            var result = await _clientbetconfigRepository.ProcessMultibetBonus(payload);
+            var result = await _clientbetconfigRepository.ProcessParlayBonus(payload);
 
             switch (result.StatusCode)
             {
@@ -45,10 +45,10 @@ namespace Platform.Betting.API.Controllers
             }
         }
 
-        [HttpPost("v1/config/multibetbonus/list")]
-        public async Task<IActionResult> GetClientMultibetBonus([FromBody] GetMultibetBonusRequestDTO request)
+        [HttpPost("v1/config/parlaybonus/list")]
+        public async Task<IActionResult> GetClientParlayBonus([FromBody] GetParlayBonusRequestDTO request)
         {
-            var result = await _clientbetconfigRepository.GetClientMultibetBonus(request);
+            var result = await _clientbetconfigRepository.GetClientParlayBonus(request);
 
             switch (result.StatusCode)
             {
@@ -59,10 +59,10 @@ namespace Platform.Betting.API.Controllers
             }
         }
 
-        [HttpPost("v1/config/multibetbonus/history/list")]
-        public async Task<IActionResult> GetClientMultibetBonusHistory([FromBody] GetMultibetBonusRequestDTO request)
+        [HttpPost("v1/config/parlaybonus/history/list")]
+        public async Task<IActionResult> GetClientParlayBonusHistory([FromBody] GetParlayBonusRequestDTO request)
         {
-            var result = await _clientbetconfigRepository.GetClientMultibetBonusHistory(request);
+            var result = await _clientbetconfigRepository.GetClientParlayBonusHistory(request);
 
             switch (result.StatusCode)
             {

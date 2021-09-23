@@ -222,10 +222,10 @@ namespace Platform.API.Controllers
         /// <summary>
         /// Update multibet bonus of a client.
         /// </summary>
-        [HttpPost("v1/client/multibetbonus")]
-        public async Task<IActionResult> PostClientMultibetBonus([FromBody] MultibetBonusRequestDTO request)
+        [HttpPost("v1/client/parlaybonus")]
+        public async Task<IActionResult> PostClientMultibetBonus([FromBody] ParlayBonusRequestDTO request)
         {
-            var result = await _platformRepository.AddOrUpdateMultibetBonus(request);
+            var result = await _platformRepository.AddOrUpdateParlayBonus(request);
 
             switch (result.StatusCode)
             {
@@ -236,10 +236,10 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v1/client/multibetbonus")]
-        public async Task<IActionResult> GetClientMultibetBonus([FromQuery] GetMultibetBonusRequestDTO request)
+        [HttpGet("v1/client/parlaybonus")]
+        public async Task<IActionResult> GetClientParlayBonus([FromQuery] GetParlayBonusRequestDTO request)
         {
-            var result = await _platformRepository.GetClientMultibetBonus(request);
+            var result = await _platformRepository.GetClientParlayBonus(request);
 
             switch (result.StatusCode)
             {
@@ -250,10 +250,10 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v1/client/multibetbonus/history")]
-        public async Task<IActionResult> GetClientMultibetBonusHistory([FromQuery] GetMultibetBonusRequestDTO request)
+        [HttpGet("v1/client/parlaybonus/history")]
+        public async Task<IActionResult> GetClientParlayBonusHistory([FromQuery] GetParlayBonusRequestDTO request)
         {
-            var result = await _platformRepository.GetClientMultibetBonusHistory(request);
+            var result = await _platformRepository.GetClientParlayBonusHistory(request);
 
             switch (result.StatusCode)
             {

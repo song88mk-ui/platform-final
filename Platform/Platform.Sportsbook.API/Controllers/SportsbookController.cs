@@ -9,6 +9,7 @@ namespace Platform.Sportsbook.API.Controllers
     [ApiController, EnableCors("AllowAllOrigins")]
     public class SportsbookController : ControllerBase
     {
+
         private readonly ISportsbookRepository _sportsbookRepository;
         public SportsbookController(ISportsbookRepository sportsbookRepository)
         {

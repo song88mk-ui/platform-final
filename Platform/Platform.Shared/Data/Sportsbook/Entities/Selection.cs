@@ -32,6 +32,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public double VoPr { get; set; }
         public double HaWoPr { get; set; }
         public double HaLoPr { get; set; }
+        public decimal DeHeFa { get; set; }
         public List<SelectionTranslationMDB> SeNaTr { get; set; }
     }
     public class SelectionFilter

@@ -152,15 +152,11 @@ namespace Platform.Client.API.Repository
         }
         public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetSportsLookup(string apiKey, string clientId, LanguageCode languageCode)
         {
-            var clientCode = (await GetClient(clientId)).Result;
-
             var request = new SportsLookupRequestDTO
             {
                 ClientId = Guid.NewGuid(), //TODO: replace with proper validation
-                LanguageCode = languageCode,
-                ClientCode = clientCode
+                LanguageCode = languageCode
             };
-
             try
             {
                 var response = await _httpClient.PostAsync($"v1/sportsbook/lookup/sports", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
@@ -192,15 +188,11 @@ namespace Platform.Client.API.Repository
         }
         public async Task<BaseResponseDTO<SegmentsLookupResponseDTO>> GetSegmentsLookup(string apiKey, string clientId, LanguageCode languageCode)
         {
-            var clientCode = (await GetClient(clientId)).Result;
-
             var request = new SegmentsLookupRequestDTO
             {
                 ClientId = Guid.NewGuid(), //TODO: replace with proper validation
-                LanguageCode = languageCode,
-                ClientCode = clientCode
+                LanguageCode = languageCode
             };
-
             try
             {
                 var response = await _httpClient.PostAsync($"v1/sportsbook/lookup/segments", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
@@ -232,15 +224,11 @@ namespace Platform.Client.API.Repository
         }
         public async Task<BaseResponseDTO<LeaguesLookupResponseDTO>> GetLeaguesLookup(string apiKey, string clientId, LanguageCode languageCode)
         {
-            var clientCode = (await GetClient(clientId)).Result;
-
             var request = new LeaguesLookupRequestDTO
             {
                 ClientId = Guid.NewGuid(), //TODO: replace with proper validation
-                LanguageCode = languageCode,
-                ClientCode = clientCode
+                LanguageCode = languageCode
             };
-
             try
             {
                 var response = await _httpClient.PostAsync($"v1/sportsbook/lookup/leagues", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
@@ -329,42 +317,6 @@ namespace Platform.Client.API.Repository
                         AppliedTo = s.AppliedTo
                     }).ToList()
                 }
-            };
-        }
-
-        private async Task<BaseResponseDTO<string>> GetClient(string clientId)
-        {
-            var isGuid = Guid.TryParse(clientId, out Guid guid);
-
-            if (isGuid)
-            {
-                var result = await _platformContext.Client.FindAsync(guid);
-
-                if (result == null || result.IsActive == false)
-                {
-                    return new BaseResponseDTO<string>
-                    {
-                        StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
-                        Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' '),
-                        Result = string.Empty
-                    };
-                }
-                else
-                {
-                    return new BaseResponseDTO<string>
-                    {
-                        StatusCode = StatusCode.Success,
-                        Message = StatusCode.Success.ToString().Replace('_', ' '),
-                        Result = result.ClientCode
-                    };
-                }
-            }
-
-            return new BaseResponseDTO<string>
-            {
-                StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
-                Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' '),
-                Result = string.Empty
             };
         }
     }

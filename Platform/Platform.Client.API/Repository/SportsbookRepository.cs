@@ -34,10 +34,13 @@ namespace Platform.Client.API.Repository
         }
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(string apiKey, string clientId, LanguageCode languageCode)
         {
+            var clientCode = (await GetClient(clientId)).Result;
+            
             var request = new ActiveFixturesRequestDTO
             {
                 ClientId = Guid.NewGuid(), //TODO: replace with proper validation
-                LanguageCode = languageCode
+                LanguageCode = languageCode,
+                ClientCode = clientCode
             };
             try
             {
@@ -70,11 +73,14 @@ namespace Platform.Client.API.Repository
         }
         public async Task<BaseResponseDTO<TWLimitedResponseDTO>> GetActiveFixtureDetails(string apiKey, string clientId, string fixtureId, LanguageCode languageCode)
         {
+            var clientCode = (await GetClient(clientId)).Result;
+            
             var request = new TWFixtureDetailsRequestDTO
             {
                 ClientId = Guid.NewGuid(), //TODO: replace with proper validation
                 LanguageCode = languageCode,
-                FixtureId = fixtureId
+                FixtureId = fixtureId,
+                ClientCode = clientCode
             };
             try
             {
@@ -107,10 +113,13 @@ namespace Platform.Client.API.Repository
         }
         public async Task<BaseResponseDTO<ActiveFixtureCountResponseDTO>> GetActiveFixtureCount(string apiKey, string clientId, LanguageCode languageCode)
         {
+            var clientCode = (await GetClient(clientId)).Result;
+
             var request = new ActiveFixtureCountRequestDTO
             {
                 ClientId = Guid.NewGuid(), //TODO: replace with proper validation
-                LanguageCode = languageCode
+                LanguageCode = languageCode,
+                ClientCode = clientCode
             };
             try
             {

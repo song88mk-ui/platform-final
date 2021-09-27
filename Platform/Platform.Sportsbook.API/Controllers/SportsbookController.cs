@@ -526,7 +526,7 @@ namespace Platform.Sportsbook.API.Controllers
         [HttpPost("v1/sportsbook/lookup/sports")]
         public async Task<IActionResult> GetSportsLookup([FromBody] SportsLookupRequestDTO request)
         {
-            var result = await _sportsbookRepository.GetSportsLookup();
+            var result = await _sportsbookRepository.GetSportsLookup(request.ClientCode);
 
             switch (result.StatusCode)
             {
@@ -540,7 +540,7 @@ namespace Platform.Sportsbook.API.Controllers
         [HttpPost("v1/sportsbook/lookup/segments")]
         public async Task<IActionResult> GetSegmentsLookup([FromBody] SegmentsLookupRequestDTO request)
         {
-            var result = await _sportsbookRepository.GetSegmentsLookup();
+            var result = await _sportsbookRepository.GetSegmentsLookup(request.ClientCode);
 
             switch (result.StatusCode)
             {
@@ -554,7 +554,7 @@ namespace Platform.Sportsbook.API.Controllers
         [HttpPost("v1/sportsbook/lookup/leagues")]
         public async Task<IActionResult> GetLeaguesLookup([FromBody] LeaguesLookupRequestDTO request)
         {
-            var result = await _sportsbookRepository.GetLeaguesLookup();
+            var result = await _sportsbookRepository.GetLeaguesLookup(request.ClientCode);
 
             switch (result.StatusCode)
             {
@@ -570,7 +570,7 @@ namespace Platform.Sportsbook.API.Controllers
         {
             foreach (InternalSelectionSettlementMessage row in request.Selections)
             {
-                row.SettlementStatus = Shared.Enums.SettlementStatus.Won;
+                row.SettlementStatus = Shared.Enums.BetStatus.Won;
             }
 
             var result = await _sportsbookRepository.ManualSettlement(request);
@@ -589,7 +589,7 @@ namespace Platform.Sportsbook.API.Controllers
         {
             foreach (InternalSelectionSettlementMessage row in request.Selections)
             {
-                row.SettlementStatus = Shared.Enums.SettlementStatus.Lost;
+                row.SettlementStatus = Shared.Enums.BetStatus.Lost;
             }
 
             var result = await _sportsbookRepository.ManualSettlement(request);
@@ -609,7 +609,7 @@ namespace Platform.Sportsbook.API.Controllers
         {
             foreach (InternalSelectionSettlementMessage row in request.Selections)
             {
-                row.SettlementStatus = Shared.Enums.SettlementStatus.HalfWon;
+                row.SettlementStatus = Shared.Enums.BetStatus.HalfWon;
             }
 
             var result = await _sportsbookRepository.ManualSettlement(request);
@@ -628,7 +628,7 @@ namespace Platform.Sportsbook.API.Controllers
         {
             foreach (InternalSelectionSettlementMessage row in request.Selections)
             {
-                row.SettlementStatus = Shared.Enums.SettlementStatus.HalfLost;
+                row.SettlementStatus = Shared.Enums.BetStatus.HalfLost;
             }
 
             var result = await _sportsbookRepository.ManualSettlement(request);
@@ -666,7 +666,7 @@ namespace Platform.Sportsbook.API.Controllers
         {
             foreach (InternalSelectionSettlementMessage row in request.Selections)
             {
-                row.SettlementStatus = Shared.Enums.SettlementStatus.Void;
+                row.SettlementStatus = Shared.Enums.BetStatus.Void;
             }
 
             var result = await _sportsbookRepository.ManualSettlement(request);
@@ -755,7 +755,7 @@ namespace Platform.Sportsbook.API.Controllers
         [HttpPost("v1/sportsbook/client/sports")]
         public async Task<IActionResult> GetClientSports([FromBody] SportsLookupRequestDTO request)
         {
-            var result = await _sportsbookRepository.GetClientSportsLookup();
+            var result = await _sportsbookRepository.GetClientSportsLookup(request.ClientCode);
 
             switch (result.StatusCode)
             {

@@ -19,8 +19,9 @@ namespace Platform.Shared.Models
     {
         public string MarketId { get; set; }
         public string SelectionId { get; set; }
-
+        public decimal DeadHeatFactor { get; set; } = 1;
         [JsonIgnore]
-        public SettlementStatus SettlementStatus { get; set; }
+        public BetStatus SettlementStatus { get; set; }
+
     }
 }

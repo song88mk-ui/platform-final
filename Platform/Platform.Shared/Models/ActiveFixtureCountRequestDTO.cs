@@ -6,6 +6,7 @@ namespace Platform.Shared.Models
     public class ActiveFixtureCountRequestDTO
     {
         public Guid ClientId { get; set; }
+        public string ClientCode { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }
 }

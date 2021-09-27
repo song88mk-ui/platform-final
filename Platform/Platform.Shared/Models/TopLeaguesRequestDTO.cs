@@ -8,6 +8,7 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public int SportId { get; set; }
+        public string ClientCode { get; set; }
     }
 
     public class TopLeaguesRequest2DTO
@@ -17,5 +18,6 @@ namespace Platform.Shared.Models
         public int SportId { get; set; }
         public int LeagueId { get; set; }
         public int SegmentId { get; set; }
+        public string ClientCode { get; set; }
     }
 }

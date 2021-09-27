@@ -857,7 +857,8 @@ namespace Platform.API.Repository
             { 
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
-                SportId = request.SportId
+                SportId = request.SportId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues(string apiKey, string clientId, string langCode, TopLeaguesRequest request)
@@ -899,7 +900,8 @@ namespace Platform.API.Repository
             {
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
-                SportId = request.SportId
+                SportId = request.SportId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
 
@@ -944,7 +946,8 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode,
                 SportId = request.SportId,
                 LeagueId = request.LeagueId,
-                SegmentId = request.SegmentId
+                SegmentId = request.SegmentId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
 
@@ -987,7 +990,8 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.GetTopFixtureIds(new TWRequestDTO
             {
                 ClientId = clientResponse.Result.ClientId,
-                LanguageCode = languageCode
+                LanguageCode = languageCode,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<MarketTemplateGroupResponseDTO>> GetMarketTemplateGroups(string apiKey, string clientId)
@@ -1043,7 +1047,8 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.GetTopFixtures2(new TWRequestDTO
             {
                 ClientId = clientResponse.Result.ClientId,
-                LanguageCode = languageCode
+                LanguageCode = languageCode,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(string apiKey, string clientId, string langCode)
@@ -1085,6 +1090,7 @@ namespace Platform.API.Repository
             {
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetTodayFixtureCount(string apiKey, string clientId, string langCode, TodayFixtureCountRequest request)
@@ -1127,6 +1133,7 @@ namespace Platform.API.Repository
                 MinuteUTCOffset = request.MinuteUTCOffset,
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixtures(string apiKey, string clientId, string langCode, FixtureRequest request)
@@ -1168,7 +1175,8 @@ namespace Platform.API.Repository
             {
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
-                SportId = request.SportId
+                SportId = request.SportId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixturesByLeague(string apiKey, string clientId, string langCode, FixtureRequest request)
@@ -1212,7 +1220,8 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode,
                 SportId = request.SportId,
                 SegmentId = request.SegmentId,
-                LeagueId = request.LeagueId
+                LeagueId = request.LeagueId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(string apiKey, string clientId, string langCode, TodayFixtureRequest request)
@@ -1255,7 +1264,8 @@ namespace Platform.API.Repository
                 MinuteUTCOffset = request.MinuteUTCOffset,
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
-                SportId = request.SportId
+                SportId = request.SportId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixturesByLeague(string apiKey, string clientId, string langCode, TodayFixtureRequest request)
@@ -1300,7 +1310,8 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode,
                 SportId = request.SportId,
                 SegmentId = request.SegmentId,
-                LeagueId = request.LeagueId
+                LeagueId = request.LeagueId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetUpcomingFixtures(string apiKey, string clientId, string langCode, UpcomingFixtureRequest request)
@@ -1343,7 +1354,8 @@ namespace Platform.API.Repository
                 MinuteUTCOffset = request.MinuteUTCOffset,
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
-                SportId = request.SportId
+                SportId = request.SportId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixtures(string apiKey, string clientId, string langCode, DailyFixtureRequest request)
@@ -1387,7 +1399,8 @@ namespace Platform.API.Repository
                 MinuteUTCOffset = request.MinuteUTCOffset,
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
-                SportId = request.SportId
+                SportId = request.SportId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixturesByLeague(string apiKey, string clientId, string langCode, DailyFixtureRequest request)
@@ -1433,7 +1446,8 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode,
                 SportId = request.SportId,
                 SegmentId = request.SegmentId,
-                LeagueId = request.LeagueId
+                LeagueId = request.LeagueId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopLeagueFixtures(string apiKey, string clientId, string langCode, TopLeagueFixtureRequest request)
@@ -1475,7 +1489,8 @@ namespace Platform.API.Repository
             {
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
-                SportId = request.SportId
+                SportId = request.SportId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetSegmentFixtures(string apiKey, string clientId, string langCode, SegmentFixtureRequest request)
@@ -1518,7 +1533,8 @@ namespace Platform.API.Repository
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
                 SportId = request.SportId,
-                SegmentId = request.SegmentId
+                SegmentId = request.SegmentId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(string apiKey, string clientId, string langCode, LeagueFixtureRequest request)
@@ -1562,7 +1578,8 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode,
                 SportId = request.SportId,
                 SegmentId = request.SegmentId,
-                LeagueId = request.LeagueId
+                LeagueId = request.LeagueId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<SportsResponseDTO>> GetSports(string apiKey, string clientId, string langCode)
@@ -1603,7 +1620,8 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.GetSports(new SportsRequestDTO
             {
                 ClientId = clientResponse.Result.ClientId,
-                LanguageCode = languageCode
+                LanguageCode = languageCode,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(string apiKey, string clientId, string langCode, FixtureDetailsRequest request)
@@ -1645,7 +1663,8 @@ namespace Platform.API.Repository
             {
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
-                FixtureId = request.FixtureId
+                FixtureId = request.FixtureId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetSelectionDetails(string apiKey, string clientId, string langCode, FixtureMarketSelectionDetailsRequest request)
@@ -1689,7 +1708,8 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode,
                 FixtureId = request.FixtureId,
                 MarketId = request.MarketId,
-                SelectionId = request.SelectionId
+                SelectionId = request.SelectionId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetOutrightFixtures(string apiKey, string clientId, string langCode, OutrightFixtureRequest request)
@@ -1731,7 +1751,8 @@ namespace Platform.API.Repository
             {
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
-                SportId = request.SportId
+                SportId = request.SportId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetOutrightFixturesByLeague(string apiKey, string clientId, string langCode, OutrightFixtureRequest request)
@@ -1775,7 +1796,8 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode,
                 SportId = request.SportId,
                 SegmentId = request.SegmentId,
-                LeagueId = request.LeagueId
+                LeagueId = request.LeagueId,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetUserFavorites2(string apiKey, string clientId, string langCode, string operatorToken)
@@ -1889,7 +1911,8 @@ namespace Platform.API.Repository
             {
                 SearchText = request.SearchText,
                 ClientId = clientResponse.Result.ClientId,
-                LanguageCode = languageCode
+                LanguageCode = languageCode,
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(string apiKey, string clientId, string langCode, string operatorToken)
@@ -2223,7 +2246,8 @@ namespace Platform.API.Repository
             var sportsbookRequest = new BackofficeSportsRequestDTO()
             {
                 ClientId = client.ClientId,
-                LanguageCode = LanguageCode.EN
+                LanguageCode = LanguageCode.EN,
+                ClientCode = client.ClientCode
             };
 
             return await _sportsbookRepository.GetSportstreeDetails(sportsbookRequest);

@@ -4316,8 +4316,8 @@ namespace Platform.Sportsbook.API.Repository
                 await _rabbitMQRepository.Settlebet(new MessageRequestDTO()
                 {
                     CorrelationId = Guid.NewGuid().ToString(),
-                    MessageType = "OnBetSettlement",
-                    RoutingKey = $"r.oe.engine.onbetsettlement",
+                    MessageType = "OnBetManualSettlement",
+                    RoutingKey = $"r.oe.engine.onbetmanualsettlement",
                     Payload = JsonSerializer.Serialize(payload)
                 });
             }

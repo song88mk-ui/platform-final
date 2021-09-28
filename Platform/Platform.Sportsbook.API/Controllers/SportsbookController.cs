@@ -570,7 +570,7 @@ namespace Platform.Sportsbook.API.Controllers
         {
             foreach (InternalSelectionSettlementMessage row in request.Selections)
             {
-                row.SettlementStatus = Shared.Enums.BetStatus.Won;
+                row.SelectionStatus = Shared.Enums.BetStatus.Won;
             }
 
             var result = await _sportsbookRepository.ManualSettlement(request);
@@ -589,7 +589,7 @@ namespace Platform.Sportsbook.API.Controllers
         {
             foreach (InternalSelectionSettlementMessage row in request.Selections)
             {
-                row.SettlementStatus = Shared.Enums.BetStatus.Lost;
+                row.SelectionStatus = Shared.Enums.BetStatus.Lost;
             }
 
             var result = await _sportsbookRepository.ManualSettlement(request);
@@ -609,7 +609,7 @@ namespace Platform.Sportsbook.API.Controllers
         {
             foreach (InternalSelectionSettlementMessage row in request.Selections)
             {
-                row.SettlementStatus = Shared.Enums.BetStatus.HalfWon;
+                row.SelectionStatus = Shared.Enums.BetStatus.HalfWon;
             }
 
             var result = await _sportsbookRepository.ManualSettlement(request);
@@ -628,7 +628,7 @@ namespace Platform.Sportsbook.API.Controllers
         {
             foreach (InternalSelectionSettlementMessage row in request.Selections)
             {
-                row.SettlementStatus = Shared.Enums.BetStatus.HalfLost;
+                row.SelectionStatus = Shared.Enums.BetStatus.HalfLost;
             }
 
             var result = await _sportsbookRepository.ManualSettlement(request);
@@ -666,7 +666,7 @@ namespace Platform.Sportsbook.API.Controllers
         {
             foreach (InternalSelectionSettlementMessage row in request.Selections)
             {
-                row.SettlementStatus = Shared.Enums.BetStatus.Void;
+                row.SelectionStatus = Shared.Enums.BetStatus.Void;
             }
 
             var result = await _sportsbookRepository.ManualSettlement(request);

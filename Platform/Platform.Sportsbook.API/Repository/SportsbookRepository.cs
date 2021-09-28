@@ -4300,7 +4300,7 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     MarketId = long.Parse(selection.MarketId),
                     SelectionId = long.Parse(selection.SelectionId),
-                    SettlementStatus = selection.SettlementStatus,
+                    SelectionStatus = selection.SelectionStatus,
                     DeadHeatFactor = selection.DeadHeatFactor
                 });
             }

@@ -19,7 +19,7 @@ namespace Platform.Shared.Models
     {
         public long MarketId { get; set; }
         public long SelectionId { get; set; }
-        public BetStatus SettlementStatus { get; set; }
+        public BetStatus SelectionStatus { get; set; }
         public decimal DeadHeatFactor { get; set; }
     }
 }

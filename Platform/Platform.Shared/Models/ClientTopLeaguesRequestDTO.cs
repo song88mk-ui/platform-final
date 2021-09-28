@@ -16,5 +16,6 @@ namespace Platform.Shared.Models
         public LanguageCode LanguageCode { get; set; }
         public int SegmentId { get; set; }
         public int LeagueId { get; set; }
+        public List<string> ClientCodes { get; set; }
     }
 }

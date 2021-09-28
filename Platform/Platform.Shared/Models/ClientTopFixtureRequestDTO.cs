@@ -13,5 +13,6 @@ namespace Platform.Shared.Models
 
         public List<Guid> ClientIds { get; set; }
         public LanguageCode LanguageCode { get; set; } = LanguageCode.EN;
+        public List<string> ClientCodes { get; set; }
     }
 }

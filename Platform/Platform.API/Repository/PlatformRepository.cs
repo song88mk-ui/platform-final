@@ -2216,11 +2216,13 @@ namespace Platform.API.Repository
 
             var clients = _platformContext.Client.Where(c => clientRefIds.Contains(c.ClientIdRef)).ToList();
             var clientIds = clients.Select(s => s.ClientId).ToList();
+            var clientCodes = clients.Select(s => s.ClientCode).ToList();
 
             var sportsbookRequest = new ClientTopFixtureRequestDTO()
             {
                 ClientIds = clientIds,
-                LanguageCode = LanguageCode.EN
+                LanguageCode = LanguageCode.EN,
+                ClientCodes = clientCodes
             };
 
             var response = await _sportsbookRepository.GetClientTopFixtures(sportsbookRequest);
@@ -2303,7 +2305,8 @@ namespace Platform.API.Repository
                 SportId = request.SportId,
                 LanguageCode = languageCode,
                 LeagueId = request.LeagueId,
-                SegmentId = request.SegmentId
+                SegmentId = request.SegmentId,
+                ClientCodes = clientResult.Select(s => s.ClientCode).ToList()
             };
 
             var clientTopLeaguesResponse = await _sportsbookRepository.GetClientTopLeagues(sportsbookRequest);

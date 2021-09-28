@@ -134,9 +134,9 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetTopLeagues(TopLeaguesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
-            var tempFixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-
-            var fixtures = tempFixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -231,8 +231,9 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues(TopLeaguesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
-            var tempFixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            var fixtures = tempFixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -282,8 +283,9 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues2(TopLeaguesRequest2DTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
-            var tempFixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            var fixtures = tempFixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
             //Addtional Filter
             if (request.SegmentId > 0)
@@ -340,8 +342,9 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TopFixturesResponseDTO>> GetTopFixtures(TopFixturesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 1 && c.FiTyId == (int)FixtureType.Match);
-            var tempFixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            var fixtures = tempFixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -393,8 +396,9 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TopFixturesIdsResponseDTO>> GetTopFixtureIds(TopFixturesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match);
-            var tempFixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            var fixtures = tempFixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -446,8 +450,9 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<SportsResponseDTO>> GetSports(SportsRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
-            var tempFixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            var fixtures = tempFixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -918,8 +923,8 @@ namespace Platform.Sportsbook.API.Repository
                             FixtureStartDate = item.FiStDa,
                             IsLive = item.IsOfLi,
                             IsLiveStream = string.IsNullOrEmpty(item.LiId) ? false : true,
-                            FixtureStatusId = item.ClCo.Contains(request.ClientCode) ? item.FiStId : (int)FixtureStatus.Closed,
-                            FixtureStatusName = item.ClCo.Contains(request.ClientCode) ? item.FiStNa : FixtureStatus.Closed.ToString(),
+                            FixtureStatusId = !IsOEEnable(request.ClientCode) || item.ClCo.Contains(request.ClientCode) ? item.FiStId : (int)FixtureStatus.Closed,
+                            FixtureStatusName = !IsOEEnable(request.ClientCode) || item.ClCo.Contains(request.ClientCode) ? item.FiStNa : FixtureStatus.Closed.ToString(),
                             MarketCount = marketCount.Result.Where(c => c.FiId == item.FiId).Count(),
                             SMSCode = string.Empty,
                             StatisticsURL = GetStatisticsURL(request.ClientId, item.StUr, request.LanguageCode),
@@ -946,7 +951,9 @@ namespace Platform.Sportsbook.API.Repository
 
                 await Task.WhenAll(tempFixtureResult, tempBettingStatus);
 
-                var fixtureResult = tempFixtureResult.Result.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+                var fixtureResult = tempFixtureResult.Result;
+                if (IsOEEnable(request.ClientCode))
+                    fixtureResult = fixtureResult.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
                 var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
                 if (fixtureResult.Count > 0)
@@ -988,8 +995,8 @@ namespace Platform.Sportsbook.API.Repository
                             FixtureStartDate = item.FiStDa,
                             IsLive = item.IsOfLi,
                             IsLiveStream = string.IsNullOrEmpty(item.LiId) ? false : true,
-                            FixtureStatusId = item.FiStId,
-                            FixtureStatusName = item.FiStNa,
+                            FixtureStatusId = !IsOEEnable(request.ClientCode) || item.ClCo.Contains(request.ClientCode) ? item.FiStId : (int)FixtureStatus.Closed,
+                            FixtureStatusName = !IsOEEnable(request.ClientCode) || item.ClCo.Contains(request.ClientCode) ? item.FiStNa : FixtureStatus.Closed.ToString(),
                             MarketCount = marketCount.Result.Where(c => c.FiId == item.FiId).Count(),
                             SMSCode = string.Empty,
                             StatisticsURL = GetStatisticsURL(request.ClientId, item.StUr, request.LanguageCode),
@@ -1058,8 +1065,9 @@ namespace Platform.Sportsbook.API.Repository
             if (fixtureIds.Count > 0)
             {
                 var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && fixtureIds.Contains(c.FiId));
-                var tempFixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-                var fixtureResult = tempFixtureResult.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+                var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+                if (IsOEEnable(request.ClientCode))
+                    fixtureResult = fixtureResult.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
                 foreach (var item in fixtureResult)
                 {
@@ -1145,8 +1153,9 @@ namespace Platform.Sportsbook.API.Repository
             if (fixtureIds.Count > 0)
             {
                 var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && fixtureIds.Contains(c.FiId));
-                var tempFixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-                var fixtureResult = tempFixtureResult.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+                var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+                if (IsOEEnable(request.ClientCode))
+                    fixtureResult = fixtureResult.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
                 foreach (var item in fixtureResult)
                 {
@@ -1204,7 +1213,8 @@ namespace Platform.Sportsbook.API.Repository
             {
                 var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && leagueIds.Contains(c.LeId));
                 var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
-
+                if (IsOEEnable(request.ClientCode))
+                    leagueResult = leagueResult.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
                 foreach (var item in leagueResult)
                 {
                     if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.LeId.ToString())) continue;
@@ -1227,6 +1237,8 @@ namespace Platform.Sportsbook.API.Repository
             {
                 var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && fixtureIds.Contains(c.FiId));
                 var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+                if (IsOEEnable(request.ClientCode))
+                    fixtureResult = fixtureResult.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
                 foreach (var item in fixtureResult)
                 {
@@ -1279,7 +1291,8 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
             var fixtures = tempFixtures.Result.Where(c => (c.FiStId == (int)FixtureStatus.Prematch || c.FiStId == (int)FixtureStatus.Live) && c.FiTyId == (int)FixtureType.Match).ToList();
-            fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
             var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
@@ -1308,8 +1321,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                FixtureStatusId = s.FiStId,
-                FixtureStatusName = s.FiStNa,
+                FixtureStatusId = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                FixtureStatusName = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 MarketCount = 0,
                 SMSCode = string.Empty,
                 StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
@@ -1416,8 +1429,9 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(TWFLiveFixtureCountRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Live && c.FiTyId == (int)FixtureType.Match);
-            var tempFixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            var fixtures = tempFixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -1463,8 +1477,9 @@ namespace Platform.Sportsbook.API.Repository
         {
             var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset);
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
-            var tempFixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            var fixtures = tempFixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -1521,7 +1536,7 @@ namespace Platform.Sportsbook.API.Repository
                 default:
                     return string.IsNullOrEmpty(uriPath) ? string.Empty : $"https://s5.sir.sportradar.com/igaholding3{uriPath}".Replace("{languageCode}", languageCode.ToString().ToLower());
             }
-        } 
+        }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixtures(TWLiveFixtureRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Live && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
@@ -1532,7 +1547,9 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
-            var fixtures = tempFixtures.Result.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = tempFixtures.Result;
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
             var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
@@ -1562,8 +1579,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                FixtureStatusId = s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                FixtureStatusName = s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                FixtureStatusId = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                FixtureStatusName = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 MarketCount = 0,
                 SMSCode = string.Empty,
                 StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
@@ -1659,7 +1676,9 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
-            var fixtures = tempFixtures.Result.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = tempFixtures.Result;
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
             var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
@@ -1690,8 +1709,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                FixtureStatusId = s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                FixtureStatusName = s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                FixtureStatusId = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                FixtureStatusName = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 MarketCount = 0,
                 SMSCode = string.Empty,
                 StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
@@ -1795,7 +1814,10 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
-            var fixtures = tempFixtures.Result.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = tempFixtures.Result;
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+
             var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
@@ -1829,8 +1851,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
                     IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                    FixtureStatusId = s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                    FixtureStatusName = s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                    FixtureStatusId = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                    FixtureStatusName = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                     MarketCount = 0,
                     SMSCode = string.Empty,
                     StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
@@ -1861,8 +1883,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
                     IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                    FixtureStatusId = s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                    FixtureStatusName = s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                    FixtureStatusId = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                    FixtureStatusName = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                     MarketCount = 0,
                     SMSCode = string.Empty,
                     StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
@@ -1951,7 +1973,7 @@ namespace Platform.Sportsbook.API.Repository
                 Result = new TWResponseDTO
                 {
                     Fixtures = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList()
-        }
+                }
             };
 
             return final;
@@ -1974,7 +1996,9 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
-            var fixtures = tempFixtures.Result.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = tempFixtures.Result;
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
             var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
@@ -2008,8 +2032,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
                     IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                    FixtureStatusId = s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                    FixtureStatusName = s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                    FixtureStatusId = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                    FixtureStatusName = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                     MarketCount = 0,
                     SMSCode = string.Empty,
                     StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
@@ -2040,8 +2064,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
                     IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                    FixtureStatusId = s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                    FixtureStatusName = s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                    FixtureStatusId = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                    FixtureStatusName = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                     MarketCount = 0,
                     SMSCode = string.Empty,
                     StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
@@ -2153,7 +2177,9 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
-            var fixtures = tempFixtures.Result.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = tempFixtures.Result;
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
             var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
@@ -2187,8 +2213,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
                     IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                    FixtureStatusId = s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                    FixtureStatusName = s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                    FixtureStatusId = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                    FixtureStatusName = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                     MarketCount = 0,
                     SMSCode = string.Empty,
                     StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
@@ -2219,8 +2245,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
                     IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                    FixtureStatusId = s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                    FixtureStatusName = s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                    FixtureStatusId = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                    FixtureStatusName = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                     MarketCount = 0,
                     SMSCode = string.Empty,
                     StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
@@ -2325,7 +2351,9 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
-            var fixtures = tempFixtures.Result.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = tempFixtures.Result;
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
             var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
@@ -2356,8 +2384,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                FixtureStatusId = s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                FixtureStatusName = s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                FixtureStatusId = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                FixtureStatusName = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 MarketCount = 0,
                 SMSCode = string.Empty,
                 StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
@@ -2459,7 +2487,9 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
-            var fixtures = tempFixtures.Result.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = tempFixtures.Result;
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
             var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
@@ -2490,8 +2520,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                FixtureStatusId = s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                FixtureStatusName = s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                FixtureStatusId = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                FixtureStatusName = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 MarketCount = 0,
                 SMSCode = string.Empty,
                 StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
@@ -2592,7 +2622,9 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
-            var fixtures = tempFixtures.Result.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = tempFixtures.Result;
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
             var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
@@ -2623,8 +2655,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                FixtureStatusId = s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                FixtureStatusName = s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                FixtureStatusId = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                FixtureStatusName = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 MarketCount = 0,
                 SMSCode = string.Empty,
                 StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
@@ -2715,7 +2747,9 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
-            var fixtures = tempFixtures.Result.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = tempFixtures.Result;
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
             var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
@@ -2746,8 +2780,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                FixtureStatusId = s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                FixtureStatusName = s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                FixtureStatusId = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                FixtureStatusName = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 MarketCount = 0,
                 SMSCode = string.Empty,
                 StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
@@ -2838,7 +2872,9 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
-            var fixtures = tempFixtures.Result.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = tempFixtures.Result;
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
             var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
@@ -2924,9 +2960,9 @@ namespace Platform.Sportsbook.API.Repository
             var leagueIds = finalResult.Select(s => s.LeagueId).Distinct().ToList();
 
             var fixtureFilter2 = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && leagueIds.Contains(c.LeId));
-            var tempFixtures2 = await fixtureCollection.Find(fixtureFilter2).ToListAsync();
-            var fixtures2 = tempFixtures2.Where(f => f.ClCo.Contains(request.ClientCode)).ToList();
-
+            var fixtures2 = await fixtureCollection.Find(fixtureFilter2).ToListAsync();
+            if (IsOEEnable(request.ClientCode))
+                fixtures2 = fixtures2.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
             var fixtureIds = fixtures2.Select(s => Convert.ToInt64(s.FiId)).ToList();
             var marketTemplateIds = GetMainMarketTemplates(request.SportId);
 
@@ -2962,8 +2998,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                FixtureStatusId = s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                FixtureStatusName = s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                FixtureStatusId = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                FixtureStatusName = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
                 SMSCode = string.Empty,
                 StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
@@ -2996,7 +3032,9 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
-            var fixtures = tempFixtures.Result.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = tempFixtures.Result;
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
             var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
@@ -3046,8 +3084,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                FixtureStatusId = s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                FixtureStatusName = s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                FixtureStatusId = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                FixtureStatusName = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
                 SMSCode = string.Empty,
                 StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
@@ -3083,7 +3121,9 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
-            var fixtures = tempFixtures.Result.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var fixtures = tempFixtures.Result;
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
             var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
@@ -3131,8 +3171,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                FixtureStatusId = s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                FixtureStatusName = s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                FixtureStatusId = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                FixtureStatusName = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
                 SMSCode = string.Empty,
                 StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
@@ -3184,7 +3224,11 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(leagues, fixtures);
 
             var finalLeagues = leagues.Result;
-            var finalFixtures = fixtures.Result.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (IsOEEnable(request.ClientCode))
+                finalLeagues = finalLeagues.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            var finalFixtures = fixtures.Result;
+            if (IsOEEnable(request.ClientCode))
+                finalFixtures = finalFixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
             if (finalLeagues.Count == 0 && finalFixtures.Count == 0)
             {
@@ -3450,6 +3494,7 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(tempFixture, tempBettingStatus);
 
             var fixture = tempFixture.Result;
+
             var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
             if (fixture == null)
@@ -3518,8 +3563,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureStartDate = fixture.FiStDa,
                     IsLive = fixture.IsOfLi,
                     IsLiveStream = string.IsNullOrEmpty(fixture.LiId) ? false : true,
-                    FixtureStatusId = fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStId : (int)FixtureStatus.Closed,
-                    FixtureStatusName = fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
+                    FixtureStatusId = !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStId : (int)FixtureStatus.Closed,
+                    FixtureStatusName = !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
                     MarketCount = markets.Result.Where(c => c.FiId == fixture.FiId).Count(),
                     SMSCode = string.Empty,
                     StatisticsURL = GetStatisticsURL(request.ClientId, fixture.StUr, request.LanguageCode),
@@ -3596,7 +3641,7 @@ namespace Platform.Sportsbook.API.Repository
                     Home = fixture.FiTyId == (int)FixtureType.Match ? fixture.FiNa.Split(" vs. ").First().Trim() : string.Empty,
                     Away = fixture.FiTyId == (int)FixtureType.Match ? fixture.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
                     FixtureStartDate = fixture.FiStDa,
-                    FixtureStatus = fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
+                    FixtureStatus = !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
                     IsLive = fixture.SpId == 21 ? fixture.FiStId == (int)FixtureStatus.Live ? true : false : fixture.IsOfLi,
                     IsLiveStream = string.IsNullOrEmpty(fixture.LiId) ? false : true,
                     Markets = GetMarketsLimited(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), request.ClientCode)
@@ -3668,8 +3713,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureStartDate = fixture.FiStDa,
                     IsLive = fixture.IsOfLi,
                     IsLiveStream = string.IsNullOrEmpty(fixture.LiId) ? false : true,
-                    FixtureStatusId = fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStId : (int)FixtureStatus.Closed,
-                    FixtureStatusName = fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
+                    FixtureStatusId = !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStId : (int)FixtureStatus.Closed,
+                    FixtureStatusName = !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
                     MarketCount = markets.Result.Where(c => c.FiId == fixture.FiId).Count(),
                     SMSCode = string.Empty,
                     StatisticsURL = GetStatisticsURL(request.ClientId, fixture.StUr, request.LanguageCode),
@@ -3700,7 +3745,7 @@ namespace Platform.Sportsbook.API.Repository
                 MarketId = m.MaId.ToString(),
                 MarketName = m.MaNa,
                 Line = m.Li,
-                MarketStatus = m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
+                MarketStatus = !IsOEEnable(clientCode) || m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
                 Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionLimitedDTO
                 {
                     SelectionId = s.SeId.ToString(),
@@ -3720,8 +3765,8 @@ namespace Platform.Sportsbook.API.Repository
                 MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
                 Line = m.Li,
                 IsCashout = m.CaStId == 1 ? true : false,
-                MarketStatusId = m.ClCo.Contains(clientCode) ? m.MaStId : (int)MarketStatus.Inactive,
-                MarketStatusName = m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
+                MarketStatusId = !IsOEEnable(clientCode) || m.ClCo.Contains(clientCode) ? m.MaStId : (int)MarketStatus.Inactive,
+                MarketStatusName = !IsOEEnable(clientCode) || m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
                 Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
                 {
                     SelectionTemplateId = s.SeTeId,
@@ -3743,8 +3788,8 @@ namespace Platform.Sportsbook.API.Repository
                 MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
                 Line = m.Li,
                 IsCashout = m.CaStId == 1 ? true : false,
-                MarketStatusId = m.ClCo.Contains(clientCode) ? m.MaStId : (int)MarketStatus.Inactive,
-                MarketStatusName = m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
+                MarketStatusId = !IsOEEnable(clientCode) || m.ClCo.Contains(clientCode) ? m.MaStId : (int)MarketStatus.Inactive,
+                MarketStatusName = !IsOEEnable(clientCode) || m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
                 Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
                 {
                     SelectionTemplateId = s.SeTeId,
@@ -3774,8 +3819,8 @@ namespace Platform.Sportsbook.API.Repository
                         MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
                         Line = market.Li,
                         IsCashout = market.CaStId == 1 ? true : false,
-                        MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
-                        MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
+                        MarketStatusId = !IsOEEnable(clientCode) || market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
+                        MarketStatusName = !IsOEEnable(clientCode) || market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
                         Selections = selectionsToAdd.Select(s => new SelectionDTO
                         {
                             SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
@@ -3796,8 +3841,8 @@ namespace Platform.Sportsbook.API.Repository
                         MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
                         Line = market.Li,
                         IsCashout = market.CaStId == 1 ? true : false,
-                        MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
-                        MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
+                        MarketStatusId = !IsOEEnable(clientCode) || market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
+                        MarketStatusName = !IsOEEnable(clientCode) || market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
                         Selections = selectionsToAdd.Select(s => new SelectionDTO
                         {
                             SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
@@ -3812,7 +3857,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
             }
 
-            return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();;
+            return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList(); ;
         }
         private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus> result)
         {
@@ -3972,8 +4017,9 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(ActiveFixturesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
-            var tempFixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            var fixtures = tempFixtures.Where(f => f.ClCo.Contains(request.ClientCode)).ToList();
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -3999,7 +4045,7 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureName = s.FiNa,
                 Home = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").First().Trim() : string.Empty,
                 Away = s.FiTyId == (int)FixtureType.Match ? s.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
-                FixtureStatus = s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                FixtureStatus = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.SpId == 21 ? s.FiStId == (int)FixtureStatus.Live ? true : false : s.IsOfLi,
                 IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
@@ -4018,8 +4064,9 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<ActiveFixtureCountResponseDTO>> GetActiveFixtureCount(ActiveFixtureCountRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
-            var tempFixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            var fixtures = tempFixtures.Where(f => f.ClCo.Contains(request.ClientCode)).ToList();
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode)).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -4052,8 +4099,9 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetSportsLookup(string clientCode)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 12);
-            var tempFixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            var fixtures = tempFixtures.Where(f => f.ClCo.Contains(clientCode)).ToList();
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (IsOEEnable(clientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(clientCode)).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -4093,8 +4141,9 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<SegmentsLookupResponseDTO>> GetSegmentsLookup(string clientCode)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 12);
-            var tempFixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            var fixtures = tempFixtures.Where(f => f.ClCo.Contains(clientCode)).ToList();
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (IsOEEnable(clientCode)) 
+                fixtures = fixtures.Where(f => f.ClCo.Contains(clientCode)).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -4136,8 +4185,9 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<LeaguesLookupResponseDTO>> GetLeaguesLookup(string clientCode)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
-            var tempFixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            var fixtures = tempFixtures.Where(f => f.ClCo.Contains(clientCode)).ToList();
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (IsOEEnable(clientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(clientCode)).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -4470,7 +4520,7 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureName = s.FiNa,
                     StartDate = s.FiStDa,
                     FixtureStatus = s.FiStNa,
-                    SortOrder = leagueSortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() 
+                    SortOrder = leagueSortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                     == 0 ? 1000 : leagueSortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 }).ToList();
 
@@ -4484,7 +4534,7 @@ namespace Platform.Sportsbook.API.Repository
             }).Distinct().OrderBy(o => o.SortOrder).ThenBy(o => o.SportName).ToList();
 
             var finalResult = sportResult.Select(s => new OrderedSport
-            { 
+            {
                 SportId = s.SportId,
                 SportName = s.SportName
             }).ToList();
@@ -4726,7 +4776,7 @@ namespace Platform.Sportsbook.API.Repository
                 // delete existing records
                 var currentTopLeagues = _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == request.ClientId && c.SportId == request.SportId).ToList();
 
-                if(currentTopLeagues.Count > 0)
+                if (currentTopLeagues.Count > 0)
                 {
                     _sportsbookContext.ClientLeagueOrder.RemoveRange(currentTopLeagues);
                 }
@@ -4897,15 +4947,26 @@ namespace Platform.Sportsbook.API.Repository
                 return name;
         }
 
+        private bool IsOEEnable(string clientCode)
+        {
+            if (string.IsNullOrEmpty(clientCode))
+                return false;
+            return _configuration["Custom:ClientCodes"].Contains(clientCode) ? true : false;
+
+        }
+
         private decimal GetClientOdds(IEnumerable<SelectionFilter> selections, SelectionFilter selection, string clientMarketConfig, string clientCode)
         {
+            if (!IsOEEnable(clientCode))
+                return selection.Od;
+
             var activeSelections = selections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
             int activeSelectionCount = activeSelections.Count();
             decimal margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
             var clients = !string.IsNullOrEmpty(clientMarketConfig) ?
                 clientMarketConfig.Split('|').Select(s => new Tuple<string, decimal>(s.Split(':').First(), Convert.ToDecimal(s.Split(':').Last()))).ToList()
-                : new List<Tuple<string, decimal>>{ new Tuple<string, decimal>(clientCode, 0) };
+                : new List<Tuple<string, decimal>> { new Tuple<string, decimal>(clientCode, 0) };
 
             var clientMargin = clients.Where(c => c.Item1 == clientCode).FirstOrDefault();
 
@@ -4957,9 +5018,9 @@ namespace Platform.Sportsbook.API.Repository
                             }
 
                         }
-                        
+
                     }
-                    
+
                 }
                 else
                 {

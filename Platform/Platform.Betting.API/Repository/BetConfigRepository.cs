@@ -61,6 +61,7 @@ namespace Platform.Betting.API.Repository
                             MinStake = config.Parlay.MinBet,
                             MaxStake = config.Parlay.MaxBet,
                             MaxPayout = config.Parlay.MaxPayout,
+                            MaxWinningsBonus = config.Parlay.MaxWinningsBonus
                         });
 
                         var taxJSON = JsonSerializer.Serialize(config.TaxConfig);

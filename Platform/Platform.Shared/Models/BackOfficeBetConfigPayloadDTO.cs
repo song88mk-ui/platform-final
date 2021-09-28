@@ -42,6 +42,7 @@ namespace Platform.Shared.Models
         public decimal MaxBet { get; set; }
 
         public decimal MaxPayout { get; set; }
+        public decimal MaxWinningsBonus { get; set; }
     }
 
     public class CricketBetSetting

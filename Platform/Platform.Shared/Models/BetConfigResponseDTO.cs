@@ -46,5 +46,7 @@ namespace Platform.Shared.Models
         public decimal MaxStake { get; set; }
         [JsonProperty("maxPayout")]
         public decimal MaxPayout { get; set; }
+        [JsonProperty("maxWinningsBonus")]
+        public decimal MaxWinningsBonus { get; set; }
     }
 }

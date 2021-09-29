@@ -694,7 +694,7 @@ namespace Platform.Sportsbook.API.Repository
             var fixtureIds = request.Selections.Select(s => s.FixtureId).ToList();
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
             var fixtures = primaryFixtureCollection.Find(fixtureFilter).ToListAsync();
-
+            
             var marketIds = request.Selections.Select(s => s.MarketId).ToList();
             var marketFilter = Builders<Market>.Filter.Where(c => marketIds.Contains(c.MaId));
             var markets = primaryMarketCollection.Find(marketFilter).ToListAsync();
@@ -708,7 +708,26 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(fixtures, markets, selections, bettingStatus);
 
-            return new Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>(fixtures.Result, markets.Result, selections.Result, bettingStatus.Result);
+            var newFixtures = fixtures.Result;
+            if (IsOEEnable(request.ClientCode))
+                newFixtures = newFixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            var newMarkets = markets.Result;
+            newMarkets.ForEach(m =>
+            {
+                m.MaStId = !IsOEEnable(request.ClientCode) || m.ClCo.Contains(request.ClientCode) ? m.MaStId : (int)MarketStatus.Inactive;
+                m.MaStNa = !IsOEEnable(request.ClientCode) || m.ClCo.Contains(request.ClientCode) ? m.MaStNa : MarketStatus.Inactive.ToString();
+            });
+        
+            var newSelections = selections.Result;
+            newSelections.ForEach(s =>
+            {
+                var market = newMarkets.Where(m => m.MaId == s.MaId).FirstOrDefault();
+                s.Od = GetClientOdds(newSelections.Where(c => c.MaId == market.MaId).Select(sf => new SelectionFilter { IsAc = sf.IsAc, Od = sf.Od }), 
+                        new SelectionFilter { IsAc = s.IsAc, Od = s.Od }, market.ClCoMa, request.ClientCode);
+            });
+
+            return new Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>(newFixtures, newMarkets, newSelections, bettingStatus.Result);
         }
 
         public async Task<BaseResponseDTO<BetSelectionProbabilityResponseDTO>> GetBetSelectionProbabilities(BetSelectionProbabilityRequestDTO request)
@@ -882,6 +901,9 @@ namespace Platform.Sportsbook.API.Repository
                 await Task.WhenAll(tempLeagueResult, tempBettingStatus);
 
                 var leagueResult = tempLeagueResult.Result;
+                if(IsOEEnable(request.ClientCode))
+                    leagueResult = leagueResult.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
+
                 var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
                 if (leagueResult.Count > 0)

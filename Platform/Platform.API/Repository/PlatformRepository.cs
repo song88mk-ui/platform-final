@@ -164,6 +164,7 @@ namespace Platform.API.Repository
 
             var result = await _sportsbookRepository.GetBetFixture(new BetFixtureRequestDTO
             {
+                ClientCode = clientResponse.Result.ClientCode,
                 OddsChangeType = request.OddsChangeType,
                 Selections = request.Selections.Select(s => new BetFixtureSelectionRequestDTO 
                 { 

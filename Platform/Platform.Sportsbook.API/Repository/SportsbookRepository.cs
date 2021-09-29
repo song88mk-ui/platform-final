@@ -718,12 +718,17 @@ namespace Platform.Sportsbook.API.Repository
                 m.MaStId = !IsOEEnable(request.ClientCode) || m.ClCo.Contains(request.ClientCode) ? m.MaStId : (int)MarketStatus.Inactive;
                 m.MaStNa = !IsOEEnable(request.ClientCode) || m.ClCo.Contains(request.ClientCode) ? m.MaStNa : MarketStatus.Inactive.ToString();
             });
-        
+
+            var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+            var marketSelectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+            var marketSelectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr);
+            var marketSelections = primarySelectionCollection.Find(marketSelectionFilter).Project<SelectionFilter>(marketSelectionProjection).ToListAsync();
+
             var newSelections = selections.Result;
             newSelections.ForEach(s =>
             {
                 var market = newMarkets.Where(m => m.MaId == s.MaId).FirstOrDefault();
-                s.Od = GetClientOdds(newSelections.Where(c => c.MaId == market.MaId).Select(sf => new SelectionFilter { IsAc = sf.IsAc, Od = sf.Od }), 
+                s.Od = GetClientOdds(marketSelections.Result.Where(c => c.MaId == s.MaId),
                         new SelectionFilter { IsAc = s.IsAc, Od = s.Od }, market.ClCoMa, request.ClientCode);
             });
 

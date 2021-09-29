@@ -3761,7 +3761,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         private List<MarketLimitedDTO> GetMarketsLimited(List<MarketFilter> markets, List<SelectionFilter> selections, string clientCode)
         {
-            return markets.Select(m => new MarketLimitedDTO
+            return markets.Where(c =>  !IsOEEnable(clientCode) || c.ClCo.Contains(clientCode)).Select(m => new MarketLimitedDTO
             {
                 MarketTemplateId = m.MaTeId,
                 MarketId = m.MaId.ToString(),
@@ -3780,7 +3780,7 @@ namespace Platform.Sportsbook.API.Repository
         {
             var marketTemplates = GetMainMarketTemplates(sportId);
 
-            return markets.Where(c => marketTemplates.Contains(c.MaTeId)).Select(m => new MarketDTO
+            return markets.Where(c => marketTemplates.Contains(c.MaTeId) && (!IsOEEnable(clientCode) || c.ClCo.Contains(clientCode))).Select(m => new MarketDTO
             {
                 MarketTemplateId = m.MaTeId,
                 MarketId = m.MaId.ToString(),
@@ -3803,7 +3803,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         private List<MarketDTO> GetMarkets(List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode)
         {
-            return markets.Select(m => new MarketDTO
+            return markets.Where(c => !IsOEEnable(clientCode) || c.ClCo.Contains(clientCode)).Select(m => new MarketDTO
             {
                 MarketTemplateId = m.MaTeId,
                 MarketId = m.MaId.ToString(),
@@ -3828,7 +3828,7 @@ namespace Platform.Sportsbook.API.Repository
         {
             var result = new List<MarketDTO>();
 
-            foreach (var market in markets.OrderBy(o => o.MaTeId).ThenBy(o => o.MaNa).ToList())
+            foreach (var market in markets.Where(m => !IsOEEnable(clientCode) || m.ClCo.Contains(clientCode)).OrderBy(o => o.MaTeId).ThenBy(o => o.MaNa).ToList())
             {
                 var selectionsToAdd = selections.Where(c => c.MaId == market.MaId).ToList();
 

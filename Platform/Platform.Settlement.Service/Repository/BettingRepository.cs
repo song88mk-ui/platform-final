@@ -462,7 +462,7 @@ namespace Platform.Settlement.Service.Repository
                     bet.SettlementDate = settledDate;
                     bet.SettlementDateOffset = settledDate.AddHours(-4);
 
-                    bet.TaxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
+                    bet.TaxedStake = 0;
                     bet.TaxedWinnings = 0;
 
                     var betEntity = context.Bet.Update(bet).Entity;
@@ -523,7 +523,7 @@ namespace Platform.Settlement.Service.Repository
                     if (bet != null)
                     {
                         var taxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
-                        var stake = message.SelectionStatus == BetStatus.Cancelled || message.SelectionStatus == BetStatus.Void ? bet.TrueStake : bet.TrueStake - taxedStake;
+                        var stake = message.SelectionStatus == BetStatus.Cancelled ? bet.TrueStake : bet.TrueStake - taxedStake;
                         var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), stake);
 
                         var taxedWinnings = (payout - bet.TrueStake) * bet.WinningsTax;
@@ -545,7 +545,7 @@ namespace Platform.Settlement.Service.Repository
                         bet.Payout = payout;
                         bet.SettlementDate = settledDate;
                         bet.SettlementDateOffset = settledDate.AddHours(-4);
-                        bet.TaxedStake = message.SelectionStatus == BetStatus.Cancelled || message.SelectionStatus == BetStatus.Void ? 0 : taxedStake;
+                        bet.TaxedStake = message.SelectionStatus == BetStatus.Cancelled ? 0 : taxedStake;
                         bet.TaxedWinnings = taxedWinnings;
 
                         var betEntity = context.Bet.Update(bet).Entity;
@@ -604,7 +604,7 @@ namespace Platform.Settlement.Service.Repository
 
         private static void ProcessStakeFixtureLimit(OnUOFBetSettlement message, BetSelection betSelection, BettingContext context, List<BetSelection> selections, Bet betEntity)
         {
-            if (selections.Count == 1 && (message.SelectionStatus == BetStatus.Cancelled || message.SelectionStatus == BetStatus.Void))
+            if (selections.Count == 1 && message.SelectionStatus == BetStatus.Cancelled)
             {
                 var stakeLimitFixture = context.StakeLimitFixture.Find($"{betEntity.ClientCode}-{betEntity.UserId}", betSelection.FixtureId);
 
@@ -691,7 +691,7 @@ namespace Platform.Settlement.Service.Repository
                     bet.SettlementDate = settledDate;
                     bet.SettlementDateOffset = settledDate.AddHours(-4);
 
-                    bet.TaxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
+                    bet.TaxedStake = 0;
                     bet.TaxedWinnings = 0;
 
                     var betEntity = context.Bet.Update(bet).Entity;
@@ -752,7 +752,7 @@ namespace Platform.Settlement.Service.Repository
                     if (bet != null)
                     {
                         var taxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
-                        var stake = message.SelectionStatus == BetStatus.Cancelled || message.SelectionStatus == BetStatus.Void ? bet.TrueStake : bet.TrueStake - taxedStake;
+                        var stake = message.SelectionStatus == BetStatus.Cancelled ? bet.TrueStake : bet.TrueStake - taxedStake;
                         var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds)).ToList(), stake);
 
                         var taxedWinnings = (payout - bet.TrueStake) * bet.WinningsTax;
@@ -772,7 +772,7 @@ namespace Platform.Settlement.Service.Repository
                         bet.Payout = payout;
                         bet.SettlementDate = settledDate;
                         bet.SettlementDateOffset = settledDate.AddHours(-4);
-                        bet.TaxedStake = message.SelectionStatus == BetStatus.Cancelled || message.SelectionStatus == BetStatus.Void ? 0 : taxedStake;
+                        bet.TaxedStake = message.SelectionStatus == BetStatus.Cancelled ? 0 : taxedStake;
                         bet.TaxedWinnings = taxedWinnings;
 
                         var betEntity = context.Bet.Update(bet).Entity;

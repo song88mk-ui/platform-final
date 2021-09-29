@@ -4987,6 +4987,9 @@ namespace Platform.Sportsbook.API.Repository
             if (!IsOEEnable(clientCode))
                 return selection.Od;
 
+            if (string.IsNullOrEmpty(clientMarketConfig))
+                return selection.Od;
+
             var activeSelections = selections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
             int activeSelectionCount = activeSelections.Count();
             decimal margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
@@ -5040,8 +5043,10 @@ namespace Platform.Sportsbook.API.Repository
                             else
                             {
                                 var odds = Math.Round(fairOdds / finalOddsInitialDivideBy, 2);
-
-                                newResult = odds;
+                                if (odds < 1.00m)
+                                    newResult = selection.Od;
+                                else
+                                    newResult = odds;
                             }
 
                         }

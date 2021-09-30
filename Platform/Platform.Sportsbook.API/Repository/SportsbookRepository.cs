@@ -4451,6 +4451,14 @@ namespace Platform.Sportsbook.API.Repository
 
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (request.ClientCodes != null && request.ClientCodes.Any())
+            {
+                request.ClientCodes.ForEach(
+                    c => { 
+                        if(IsOEEnable(c))
+                            fixtures = fixtures.Where(f => f.ClCo.Contains(c)).ToList();
+                    });
+            }
 
             if (fixtures.Count == 0)
             {
@@ -4516,8 +4524,9 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(BackofficeSportsRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => (c.FiStId == (int)FixtureStatus.Prematch || c.FiStId == (int)FixtureStatus.Live) && c.SpId < 1000);
-            var tempFixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            var fixtures = tempFixtures.Where(f => f.ClCo.Contains(request.ClientCode)).ToList();
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode)).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -4694,6 +4703,14 @@ namespace Platform.Sportsbook.API.Repository
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (request.ClientCodes != null && request.ClientCodes.Any())
+            {
+                request.ClientCodes.ForEach(
+                    c => {
+                        if (IsOEEnable(c))
+                            fixtures = fixtures.Where(f => f.ClCo.Contains(c)).ToList();
+                    });
+            }
 
             var finalResult = new List<ClientTopLeague>();
 
@@ -4838,8 +4855,9 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetClientSportsLookup(string clientCode)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 12 && c.SpId < 1000);
-            var tempFixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            var fixtures = tempFixtures.Where(f => f.ClCo.Contains(clientCode)).ToList();
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode)).ToList();
 
             if (fixtures.Count == 0)
             {

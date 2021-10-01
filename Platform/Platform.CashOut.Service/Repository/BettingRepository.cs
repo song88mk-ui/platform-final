@@ -191,7 +191,8 @@ namespace Platform.CashOut.Service.Repository
                     VoidProbability = betSelectionEntity.VoidProbability,
                     HalfWonProbability = betSelectionEntity.HalfWonProbability,
                     HalfLostProbability = betSelectionEntity.HalfLostProbability,
-                    CorrelationId = betSelectionEntity.CorrelationId
+                    CorrelationId = betSelectionEntity.CorrelationId,
+                    DeadHeatFactor = betSelectionEntity.DeadHeatFactor
                 });
             }
 

@@ -709,28 +709,31 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(fixtures, markets, selections, bettingStatus);
 
             var newFixtures = fixtures.Result;
+            var newMarkets = markets.Result;
+            var newSelections = selections.Result;
             if (IsOEEnable(request.ClientCode))
+            {
                 newFixtures = newFixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
-            var newMarkets = markets.Result;
-            newMarkets.ForEach(m =>
-            {
-                m.MaStId = !IsOEEnable(request.ClientCode) || m.ClCo.Contains(request.ClientCode) ? m.MaStId : (int)MarketStatus.Inactive;
-                m.MaStNa = !IsOEEnable(request.ClientCode) || m.ClCo.Contains(request.ClientCode) ? m.MaStNa : MarketStatus.Inactive.ToString();
-            });
+                newMarkets.ForEach(m =>
+                {
+                    m.MaStId = m.ClCo.Contains(request.ClientCode) ? m.MaStId : (int)MarketStatus.Inactive;
+                    m.MaStNa = m.ClCo.Contains(request.ClientCode) ? m.MaStNa : MarketStatus.Inactive.ToString();
+                });
 
-            var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
-            var marketSelectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketSelectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr);
-            var marketSelections = primarySelectionCollection.Find(marketSelectionFilter).Project<SelectionFilter>(marketSelectionProjection).ToListAsync();
+                var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+                var marketSelectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+                var marketSelectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr);
+                var marketSelections = primarySelectionCollection.Find(marketSelectionFilter).Project<SelectionFilter>(marketSelectionProjection).ToListAsync();
 
-            var newSelections = selections.Result;
-            newSelections.ForEach(s =>
-            {
-                var market = newMarkets.Where(m => m.MaId == s.MaId).FirstOrDefault();
-                s.Od = GetClientOdds(marketSelections.Result.Where(c => c.MaId == s.MaId),
-                        new SelectionFilter { IsAc = s.IsAc, Od = s.Od }, market.ClCoMa, request.ClientCode);
-            });
+                newSelections.ForEach(s =>
+                {
+                    var market = newMarkets.Where(m => m.MaId == s.MaId).FirstOrDefault();
+                    s.Od = GetClientOdds(marketSelections.Result.Where(c => c.MaId == s.MaId),
+                            new SelectionFilter { IsAc = s.IsAc, Od = s.Od }, market.ClCoMa, request.ClientCode);
+                });
+            }
+                
 
             return new Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>(newFixtures, newMarkets, newSelections, bettingStatus.Result);
         }
@@ -3766,126 +3769,257 @@ namespace Platform.Sportsbook.API.Repository
         }
         private List<MarketLimitedDTO> GetMarketsLimited(List<MarketFilter> markets, List<SelectionFilter> selections, string clientCode)
         {
-            return markets.Where(c =>  !IsOEEnable(clientCode) || c.ClCo.Contains(clientCode)).Select(m => new MarketLimitedDTO
+            if(IsOEEnable(clientCode))
             {
-                MarketTemplateId = m.MaTeId,
-                MarketId = m.MaId.ToString(),
-                MarketName = m.MaNa,
-                Line = m.Li,
-                MarketStatus = !IsOEEnable(clientCode) || m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
-                Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionLimitedDTO
+                return markets.Where(c => c.ClCo.Contains(clientCode)).Select(m => new MarketLimitedDTO
                 {
-                    SelectionId = s.SeId.ToString(),
-                    SelectionName = s.SeNa,
-                    Odds = GetClientOdds(selections, s, m.ClCoMa, clientCode).ToString(),
-                }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
-            }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                    MarketTemplateId = m.MaTeId,
+                    MarketId = m.MaId.ToString(),
+                    MarketName = m.MaNa,
+                    Line = m.Li,
+                    MarketStatus = m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
+                    Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionLimitedDTO
+                    {
+                        SelectionId = s.SeId.ToString(),
+                        SelectionName = s.SeNa,
+                        Odds = GetClientOdds(selections, s, m.ClCoMa, clientCode).ToString(),
+                    }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
+                }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+            }
+            else
+            {
+                return markets.Select(m => new MarketLimitedDTO
+                {
+                    MarketTemplateId = m.MaTeId,
+                    MarketId = m.MaId.ToString(),
+                    MarketName = m.MaNa,
+                    Line = m.Li,
+                    MarketStatus = m.MaStNa,
+                    Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionLimitedDTO
+                    {
+                        SelectionId = s.SeId.ToString(),
+                        SelectionName = s.SeNa,
+                        Odds = s.Od.ToString(),
+                    }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
+                }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+            }
+            
         }
         private List<MarketDTO> GetMarkets(int sportId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode)
         {
             var marketTemplates = GetMainMarketTemplates(sportId);
 
-            return markets.Where(c => marketTemplates.Contains(c.MaTeId) && (!IsOEEnable(clientCode) || c.ClCo.Contains(clientCode))).Select(m => new MarketDTO
+            if(IsOEEnable(clientCode))
             {
-                MarketTemplateId = m.MaTeId,
-                MarketId = m.MaId.ToString(),
-                MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
-                Line = m.Li,
-                IsCashout = m.CaStId == 1 ? true : false,
-                MarketStatusId = !IsOEEnable(clientCode) || m.ClCo.Contains(clientCode) ? m.MaStId : (int)MarketStatus.Inactive,
-                MarketStatusName = !IsOEEnable(clientCode) || m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
-                Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+                return markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo.Contains(clientCode)).Select(m => new MarketDTO
                 {
-                    SelectionTemplateId = s.SeTeId,
-                    SelectionId = s.SeId.ToString(),
-                    SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                    DecimalOdds = GetClientOdds(selections.Where(c => c.MaId == m.MaId), s, m.ClCoMa, clientCode).ToString(),
-                    IsActive = s.IsAc,
-                    CorrelationId = s.CoId,
-                    SortOrder = s.SeSoOr
-                }).OrderBy(o => o.SortOrder).ToList()
-            }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                    MarketTemplateId = m.MaTeId,
+                    MarketId = m.MaId.ToString(),
+                    MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
+                    Line = m.Li,
+                    IsCashout = m.CaStId == 1 ? true : false,
+                    MarketStatusId = m.ClCo.Contains(clientCode) ? m.MaStId : (int)MarketStatus.Inactive,
+                    MarketStatusName = m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
+                    Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+                    {
+                        SelectionTemplateId = s.SeTeId,
+                        SelectionId = s.SeId.ToString(),
+                        SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                        DecimalOdds = GetClientOdds(selections.Where(c => c.MaId == m.MaId), s, m.ClCoMa, clientCode).ToString(),
+                        IsActive = s.IsAc,
+                        CorrelationId = s.CoId,
+                        SortOrder = s.SeSoOr
+                    }).OrderBy(o => o.SortOrder).ToList()
+                }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+            }
+            else
+            {
+                return markets.Where(c => marketTemplates.Contains(c.MaTeId)).Select(m => new MarketDTO
+                {
+                    MarketTemplateId = m.MaTeId,
+                    MarketId = m.MaId.ToString(),
+                    MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
+                    Line = m.Li,
+                    IsCashout = m.CaStId == 1 ? true : false,
+                    MarketStatusId = m.MaStId,
+                    MarketStatusName = m.MaStNa,
+                    Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+                    {
+                        SelectionTemplateId = s.SeTeId,
+                        SelectionId = s.SeId.ToString(),
+                        SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                        DecimalOdds = s.Od.ToString(),
+                        IsActive = s.IsAc,
+                        CorrelationId = s.CoId,
+                        SortOrder = s.SeSoOr
+                    }).OrderBy(o => o.SortOrder).ToList()
+                }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+            }
+            
         }
         private List<MarketDTO> GetMarkets(List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode)
         {
-            return markets.Where(c => !IsOEEnable(clientCode) || c.ClCo.Contains(clientCode)).Select(m => new MarketDTO
+            if(IsOEEnable(clientCode))
             {
-                MarketTemplateId = m.MaTeId,
-                MarketId = m.MaId.ToString(),
-                MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
-                Line = m.Li,
-                IsCashout = m.CaStId == 1 ? true : false,
-                MarketStatusId = !IsOEEnable(clientCode) || m.ClCo.Contains(clientCode) ? m.MaStId : (int)MarketStatus.Inactive,
-                MarketStatusName = !IsOEEnable(clientCode) || m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
-                Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+                return markets.Where(c => c.ClCo.Contains(clientCode)).Select(m => new MarketDTO
                 {
-                    SelectionTemplateId = s.SeTeId,
-                    SelectionId = s.SeId.ToString(),
-                    SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                    DecimalOdds = GetClientOdds(selections.Where(c => c.MaId == m.MaId), s, m.ClCoMa, clientCode).ToString(),
-                    IsActive = s.IsAc,
-                    CorrelationId = s.CoId,
-                    SortOrder = s.SeSoOr
-                }).OrderBy(o => o.SortOrder).ToList()
-            }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                    MarketTemplateId = m.MaTeId,
+                    MarketId = m.MaId.ToString(),
+                    MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
+                    Line = m.Li,
+                    IsCashout = m.CaStId == 1 ? true : false,
+                    MarketStatusId = m.ClCo.Contains(clientCode) ? m.MaStId : (int)MarketStatus.Inactive,
+                    MarketStatusName = m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
+                    Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+                    {
+                        SelectionTemplateId = s.SeTeId,
+                        SelectionId = s.SeId.ToString(),
+                        SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                        DecimalOdds = GetClientOdds(selections.Where(c => c.MaId == m.MaId), s, m.ClCoMa, clientCode).ToString(),
+                        IsActive = s.IsAc,
+                        CorrelationId = s.CoId,
+                        SortOrder = s.SeSoOr
+                    }).OrderBy(o => o.SortOrder).ToList()
+                }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+            }
+            else
+            {
+                return markets.Select(m => new MarketDTO
+                {
+                    MarketTemplateId = m.MaTeId,
+                    MarketId = m.MaId.ToString(),
+                    MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
+                    Line = m.Li,
+                    IsCashout = m.CaStId == 1 ? true : false,
+                    MarketStatusId = m.MaStId,
+                    MarketStatusName = m.MaStNa,
+                    Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+                    {
+                        SelectionTemplateId = s.SeTeId,
+                        SelectionId = s.SeId.ToString(),
+                        SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                        DecimalOdds = s.Od.ToString(),
+                        IsActive = s.IsAc,
+                        CorrelationId = s.CoId,
+                        SortOrder = s.SeSoOr
+                    }).OrderBy(o => o.SortOrder).ToList()
+                }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+            }
         }
         private List<MarketDTO> GetOutrightMarkets(List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode)
         {
             var result = new List<MarketDTO>();
 
-            foreach (var market in markets.Where(m => !IsOEEnable(clientCode) || m.ClCo.Contains(clientCode)).OrderBy(o => o.MaTeId).ThenBy(o => o.MaNa).ToList())
+            if (IsOEEnable(clientCode))
             {
-                var selectionsToAdd = selections.Where(c => c.MaId == market.MaId).ToList();
+                foreach (var market in markets.Where(m => m.ClCo.Contains(clientCode)).OrderBy(o => o.MaTeId).ThenBy(o => o.MaNa).ToList())
+                {
+                    var selectionsToAdd = selections.Where(c => c.MaId == market.MaId).ToList();
 
-                if (selectionsToAdd.Count > 3)
-                {
-                    result.Add(new MarketDTO
+                    if (selectionsToAdd.Count > 3)
                     {
-                        MarketTemplateId = market.MaTeId,
-                        MarketId = market.MaId.ToString(),
-                        MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
-                        Line = market.Li,
-                        IsCashout = market.CaStId == 1 ? true : false,
-                        MarketStatusId = !IsOEEnable(clientCode) || market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
-                        MarketStatusName = !IsOEEnable(clientCode) || market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
-                        Selections = selectionsToAdd.Select(s => new SelectionDTO
+                        result.Add(new MarketDTO
                         {
-                            SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
-                            SelectionId = s.SeId.ToString(),
-                            SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                            DecimalOdds = GetClientOdds(selectionsToAdd, s, market.ClCoMa, clientCode).ToString(),
-                            IsActive = s.IsAc,
-                            CorrelationId = s.CoId,
-                        }).OrderBy(o => Convert.ToDecimal(o.DecimalOdds)).ToList()
-                    });
-                }
-                else
-                {
-                    result.Add(new MarketDTO
+                            MarketTemplateId = market.MaTeId,
+                            MarketId = market.MaId.ToString(),
+                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            Line = market.Li,
+                            IsCashout = market.CaStId == 1 ? true : false,
+                            MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
+                            MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
+                            Selections = selectionsToAdd.Select(s => new SelectionDTO
+                            {
+                                SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
+                                SelectionId = s.SeId.ToString(),
+                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                DecimalOdds = GetClientOdds(selectionsToAdd, s, market.ClCoMa, clientCode).ToString(),
+                                IsActive = s.IsAc,
+                                CorrelationId = s.CoId,
+                            }).OrderBy(o => Convert.ToDecimal(o.DecimalOdds)).ToList()
+                        });
+                    }
+                    else
                     {
-                        MarketTemplateId = market.MaTeId,
-                        MarketId = market.MaId.ToString(),
-                        MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
-                        Line = market.Li,
-                        IsCashout = market.CaStId == 1 ? true : false,
-                        MarketStatusId = !IsOEEnable(clientCode) || market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
-                        MarketStatusName = !IsOEEnable(clientCode) || market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
-                        Selections = selectionsToAdd.Select(s => new SelectionDTO
+                        result.Add(new MarketDTO
                         {
-                            SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
-                            SelectionId = s.SeId.ToString(),
-                            SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                            DecimalOdds = GetClientOdds(selectionsToAdd, s, market.ClCoMa, clientCode).ToString(),
-                            IsActive = s.IsAc,
-                            CorrelationId = s.CoId,
-                            SortOrder = s.SeSoOr
-                        }).OrderBy(o => o.SortOrder).ToList()
-                    });
+                            MarketTemplateId = market.MaTeId,
+                            MarketId = market.MaId.ToString(),
+                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            Line = market.Li,
+                            IsCashout = market.CaStId == 1 ? true : false,
+                            MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
+                            MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
+                            Selections = selectionsToAdd.Select(s => new SelectionDTO
+                            {
+                                SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
+                                SelectionId = s.SeId.ToString(),
+                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                DecimalOdds = GetClientOdds(selectionsToAdd, s, market.ClCoMa, clientCode).ToString(),
+                                IsActive = s.IsAc,
+                                CorrelationId = s.CoId,
+                                SortOrder = s.SeSoOr
+                            }).OrderBy(o => o.SortOrder).ToList()
+                        });
+                    }
                 }
             }
+            else
+            {
+                foreach (var market in markets.OrderBy(o => o.MaTeId).ThenBy(o => o.MaNa).ToList())
+                {
+                    var selectionsToAdd = selections.Where(c => c.MaId == market.MaId).ToList();
 
+                    if (selectionsToAdd.Count > 3)
+                    {
+                        result.Add(new MarketDTO
+                        {
+                            MarketTemplateId = market.MaTeId,
+                            MarketId = market.MaId.ToString(),
+                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            Line = market.Li,
+                            IsCashout = market.CaStId == 1 ? true : false,
+                            MarketStatusId = market.MaStId,
+                            MarketStatusName = market.MaStNa,
+                            Selections = selectionsToAdd.Select(s => new SelectionDTO
+                            {
+                                SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
+                                SelectionId = s.SeId.ToString(),
+                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                DecimalOdds = s.Od.ToString(),
+                                IsActive = s.IsAc,
+                                CorrelationId = s.CoId,
+                            }).OrderBy(o => Convert.ToDecimal(o.DecimalOdds)).ToList()
+                        });
+                    }
+                    else
+                    {
+                        result.Add(new MarketDTO
+                        {
+                            MarketTemplateId = market.MaTeId,
+                            MarketId = market.MaId.ToString(),
+                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            Line = market.Li,
+                            IsCashout = market.CaStId == 1 ? true : false,
+                            MarketStatusId = market.MaStId,
+                            MarketStatusName = market.MaStNa,
+                            Selections = selectionsToAdd.Select(s => new SelectionDTO
+                            {
+                                SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
+                                SelectionId = s.SeId.ToString(),
+                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                DecimalOdds = s.Od.ToString(),
+                                IsActive = s.IsAc,
+                                CorrelationId = s.CoId,
+                                SortOrder = s.SeSoOr
+                            }).OrderBy(o => o.SortOrder).ToList()
+                        });
+                    }
+                }
+            }
+            
             return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList(); ;
         }
+
         private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus> result)
         {
             var fixture = result.Item1.Where(c => c.FiId == current.FixtureId).FirstOrDefault();

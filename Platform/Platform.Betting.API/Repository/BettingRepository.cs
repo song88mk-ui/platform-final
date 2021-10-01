@@ -337,7 +337,8 @@ namespace Platform.Betting.API.Repository
                             VoidProbability = selection.VoidProbability,
                             HalfWonProbability = selection.HalfWonProbability,
                             HalfLostProbability = selection.HalfLostProbability,
-                            CorrelationId = selection.CorrelationId
+                            CorrelationId = selection.CorrelationId,
+                            DeadHeatFactor = 1m
                         }).Entity;
 
                         betSelectionData.Add(betSelectionEntity);
@@ -385,7 +386,8 @@ namespace Platform.Betting.API.Repository
                             VoidProbability = betSelectionEntity.VoidProbability,
                             HalfWonProbability = betSelectionEntity.HalfWonProbability,
                             HalfLostProbability = betSelectionEntity.HalfLostProbability,
-                            CorrelationId = selection.CorrelationId
+                            CorrelationId = selection.CorrelationId,
+                            DeadHeatFactor = betSelectionEntity.DeadHeatFactor
                         });
                     }
 
@@ -763,7 +765,8 @@ namespace Platform.Betting.API.Repository
                             VoidProbability = selection.VoidProbability,
                             HalfWonProbability = selection.HalfWonProbability,
                             HalfLostProbability = selection.HalfLostProbability,
-                            CorrelationId = selection.CorrelationId
+                            CorrelationId = selection.CorrelationId,
+                            DeadHeatFactor = 1m
                         }).Entity;
 
                         betSelectionData.Add(betSelectionEntity);
@@ -811,7 +814,8 @@ namespace Platform.Betting.API.Repository
                             VoidProbability = betSelectionEntity.VoidProbability,
                             HalfWonProbability = betSelectionEntity.HalfWonProbability,
                             HalfLostProbability = betSelectionEntity.HalfLostProbability,
-                            CorrelationId = selection.CorrelationId
+                            CorrelationId = selection.CorrelationId,
+                            DeadHeatFactor = betSelectionEntity.DeadHeatFactor
                         });
                     }
 

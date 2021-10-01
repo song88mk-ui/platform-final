@@ -110,5 +110,8 @@ namespace Platform.Shared.Models
 
         [JsonPropertyName("awayName")]
         public string AwayName { get; set; }
+
+        [JsonPropertyName("deadHeatFactor")]
+        public decimal DeadHeatFactor { get; set; }
     }
 }

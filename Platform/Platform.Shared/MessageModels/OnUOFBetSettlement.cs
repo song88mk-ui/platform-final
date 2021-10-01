@@ -9,5 +9,6 @@ namespace Platform.Shared.MessageModels
         public string SettlementScore { get; set; }
         public long StartTime { get; set; }
         public long EndTime { get; set; }
+        public decimal DeadHeatFactor { get; set; }
     }
 }

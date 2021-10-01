@@ -45,5 +45,7 @@ namespace Platform.Shared.Data.Betting.Entities
         public double HalfWonProbability { get; set; }
         public double HalfLostProbability { get; set; }
         public string CorrelationId { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal DeadHeatFactor { get; set; }
     }
 }

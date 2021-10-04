@@ -1,6 +1,7 @@
 ﻿using Platform.Shared.Enums;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -19,7 +20,8 @@ namespace Platform.Shared.Models
     {
         public string MarketId { get; set; }
         public string SelectionId { get; set; }
-        public decimal DeadHeatFactor { get; set; } = 1;
+        [DefaultValue(1)]
+        public decimal DeadHeatFactor { get; set; } = 1m;
         [JsonIgnore]
         public BetStatus SelectionStatus { get; set; }
 

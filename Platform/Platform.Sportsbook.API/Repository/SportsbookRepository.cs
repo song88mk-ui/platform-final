@@ -4518,19 +4518,49 @@ namespace Platform.Sportsbook.API.Repository
 
             if (request.Selections.Count > 0)
             {
-                var payload = new BetSettlementRequestPayloadDTO
+                if(string.IsNullOrEmpty(_configuration["Custom:ClientCodes"]))
                 {
-                    FixtureId = long.Parse(request.FixtureId),
-                    Selections = selections
-                };
+                    var digit = Convert.ToString(request.FixtureId);
+                    var lastDigit = digit.Substring(digit.Length - 1);
 
-                await _rabbitMQRepository.Settlebet(new MessageRequestDTO()
+                    var payload = new
+                    {
+                        FixtureId = long.Parse(request.FixtureId),
+                        Selections = selections.Select(s =>
+                            new
+                            {
+                                MarketId = s.MarketId,
+                                SelectionId = s.SelectionId,
+                                SettlementStatus = s.SelectionStatus,
+                                DeadHeatFactor = s.DeadHeatFactor
+                            }).ToList()
+                    };
+
+                    await _rabbitMQRepository.Settlebet(new MessageRequestDTO()
+                    {
+                        CorrelationId = Guid.NewGuid().ToString(),
+                        MessageType = "OnBetSettlement",
+                        RoutingKey = $"r.sb.adapter.{lastDigit}.onbetsettlement",
+                        Payload = JsonSerializer.Serialize(payload)
+                    });
+                }
+                else
                 {
-                    CorrelationId = Guid.NewGuid().ToString(),
-                    MessageType = "OnBetManualSettlement",
-                    RoutingKey = $"r.oe.engine.onbetmanualsettlement",
-                    Payload = JsonSerializer.Serialize(payload)
-                });
+                    var payload = new BetSettlementRequestPayloadDTO
+                    {
+                        FixtureId = long.Parse(request.FixtureId),
+                        Selections = selections
+                    };
+
+                    await _rabbitMQRepository.Settlebet(new MessageRequestDTO()
+                    {
+                        CorrelationId = Guid.NewGuid().ToString(),
+                        MessageType = "OnBetManualSettlement",
+                        RoutingKey = $"r.oe.engine.onbetmanualsettlement",
+                        Payload = JsonSerializer.Serialize(payload)
+                    });
+                }
+                
             }
 
             return new BaseResponseDTO<StatusCode>

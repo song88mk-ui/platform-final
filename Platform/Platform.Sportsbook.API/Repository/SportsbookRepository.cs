@@ -4531,7 +4531,7 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 MarketId = s.MarketId,
                                 SelectionId = s.SelectionId,
-                                SettlementStatus = s.SelectionStatus,
+                                SettlementStatus = GetSettlementStatus(s.SelectionStatus),
                                 DeadHeatFactor = s.DeadHeatFactor
                             }).ToList()
                     };
@@ -5154,6 +5154,31 @@ namespace Platform.Sportsbook.API.Repository
                 return result.SeNa;
             else
                 return name;
+        }
+        private SettlementStatus GetSettlementStatus(BetStatus status)
+        {
+            SettlementStatus betStatus = SettlementStatus.Cancelled;
+            switch (status)
+            {
+                case BetStatus.Lost:
+                    betStatus = SettlementStatus.Lost;
+                    break;
+                case BetStatus.Won:
+                    betStatus = SettlementStatus.Won;
+                    break;
+                case BetStatus.Void:
+                    betStatus = SettlementStatus.Void;
+                    break;
+                case BetStatus.HalfWon:
+                    betStatus = SettlementStatus.HalfWon;
+                    break;
+                case BetStatus.HalfLost:
+                    betStatus = SettlementStatus.HalfLost;
+                    break;
+                default:
+                    break;
+            }
+            return betStatus;
         }
 
         private bool IsOEEnable(string clientCode)

@@ -389,6 +389,19 @@ namespace Platform.Settlement.Service.Repository
             }
         }
 
+        private decimal GetStake(List<BetSelection> selections, decimal taxedStake, decimal trueStake)
+        {
+            var totalSelections = selections.Count();
+            var voidSelections = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Void).ToList();
+            var cancelledSelections = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Cancelled).ToList();
+
+            if (voidSelections.Count == totalSelections || cancelledSelections.Count == totalSelections || selections.Any(c => c.BetSelectionStatusId == (int)BetStatus.Lost))
+                return trueStake;
+
+            //apply for Won, HalfWon, HalfLost
+            return trueStake - taxedStake;
+        }
+
         private bool SettleBet(OnUOFBetSettlement message, BetSelection betSelection, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, BetSelection filteredSelection)
         {
             if (filteredSelection.BetSelectionStatusId != (int)BetStatus.Running)
@@ -524,7 +537,7 @@ namespace Platform.Settlement.Service.Repository
                     if (bet != null)
                     {
                         var taxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
-                        var stake = message.SelectionStatus == BetStatus.Cancelled || message.SelectionStatus == BetStatus.Void ? bet.TrueStake : bet.TrueStake - taxedStake;
+                        var stake = GetStake(selections, taxedStake, bet.TrueStake);
                         var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), stake);
 
                         var taxedWinnings = (payout - bet.TrueStake) * bet.WinningsTax;
@@ -546,7 +559,7 @@ namespace Platform.Settlement.Service.Repository
                         bet.Payout = payout;
                         bet.SettlementDate = settledDate;
                         bet.SettlementDateOffset = settledDate.AddHours(-4);
-                        bet.TaxedStake = message.SelectionStatus == BetStatus.Cancelled || message.SelectionStatus == BetStatus.Void ? 0 : taxedStake;
+                        bet.TaxedStake = betStatus == BetStatus.Cancelled || betStatus == BetStatus.Void ? 0 : taxedStake;
                         bet.TaxedWinnings = taxedWinnings;
 
                         var betEntity = context.Bet.Update(bet).Entity;
@@ -754,7 +767,7 @@ namespace Platform.Settlement.Service.Repository
                     if (bet != null)
                     {
                         var taxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
-                        var stake = message.SelectionStatus == BetStatus.Cancelled || message.SelectionStatus == BetStatus.Void ? bet.TrueStake : bet.TrueStake - taxedStake;
+                        var stake = GetStake(selections, taxedStake, bet.TrueStake);
                         var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), stake);
 
                         var taxedWinnings = (payout - bet.TrueStake) * bet.WinningsTax;
@@ -774,7 +787,7 @@ namespace Platform.Settlement.Service.Repository
                         bet.Payout = payout;
                         bet.SettlementDate = settledDate;
                         bet.SettlementDateOffset = settledDate.AddHours(-4);
-                        bet.TaxedStake = message.SelectionStatus == BetStatus.Cancelled || message.SelectionStatus == BetStatus.Void ? 0 : taxedStake;
+                        bet.TaxedStake = betStatus == BetStatus.Cancelled || betStatus == BetStatus.Void ? 0 : taxedStake;
                         bet.TaxedWinnings = taxedWinnings;
 
                         var betEntity = context.Bet.Update(bet).Entity;

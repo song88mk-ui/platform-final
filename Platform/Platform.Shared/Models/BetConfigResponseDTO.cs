@@ -40,13 +40,22 @@ namespace Platform.Shared.Models
 
     public class ParlayConfig
     {
+        public ParlayConfig()
+        {
+            ParlayBonusConfig = new List<ParlayBonusConfig>();
+        }
         [JsonProperty("minStake")] 
         public decimal MinStake { get; set; }
         [JsonProperty("maxStake")]
         public decimal MaxStake { get; set; }
         [JsonProperty("maxPayout")]
         public decimal MaxPayout { get; set; }
-        [JsonProperty("maxWinningsBonus")]
-        public decimal MaxWinningsBonus { get; set; }
+        [JsonProperty("parlayBonusMaxWinnings")]
+        public decimal ParlayBonusMaxWinnings { get; set; }
+        [JsonProperty("parlayBonusMinOdds")]
+        public decimal ParlayBonusMinOdds { get; set; }
+        [JsonProperty("parlayBonusConfig")]
+        public List<ParlayBonusConfig> ParlayBonusConfig { get; set; }
     }
+
 }

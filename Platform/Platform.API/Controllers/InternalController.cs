@@ -220,10 +220,10 @@ namespace Platform.API.Controllers
         }
 
         /// <summary>
-        /// Update multibet bonus of a client.
+        /// Update parlay bonus of a client.
         /// </summary>
         [HttpPost("v1/client/parlaybonus")]
-        public async Task<IActionResult> PostClientMultibetBonus([FromBody] ParlayBonusRequestDTO request)
+        public async Task<IActionResult> PostClientParlayBonus([FromBody] ParlayBonusRequestDTO request)
         {
             var result = await _platformRepository.AddOrUpdateParlayBonus(request);
 
@@ -240,20 +240,6 @@ namespace Platform.API.Controllers
         public async Task<IActionResult> GetClientParlayBonus([FromQuery] GetParlayBonusRequestDTO request)
         {
             var result = await _platformRepository.GetClientParlayBonus(request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
-        [HttpGet("v1/client/parlaybonus/history")]
-        public async Task<IActionResult> GetClientParlayBonusHistory([FromQuery] GetParlayBonusRequestDTO request)
-        {
-            var result = await _platformRepository.GetClientParlayBonusHistory(request);
 
             switch (result.StatusCode)
             {

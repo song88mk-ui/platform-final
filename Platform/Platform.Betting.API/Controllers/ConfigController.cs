@@ -59,18 +59,5 @@ namespace Platform.Betting.API.Controllers
             }
         }
 
-        [HttpPost("v1/config/parlaybonus/history/list")]
-        public async Task<IActionResult> GetClientParlayBonusHistory([FromBody] GetParlayBonusRequestDTO request)
-        {
-            var result = await _clientbetconfigRepository.GetClientParlayBonusHistory(request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
     }
 }

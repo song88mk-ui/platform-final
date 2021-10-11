@@ -42,7 +42,9 @@ namespace Platform.Shared.Models
         public decimal MaxBet { get; set; }
 
         public decimal MaxPayout { get; set; }
-        public decimal MaxWinningsBonus { get; set; }
+        public decimal ParlayBonusMaxWinnings { get; set; }
+        public decimal ParlayBonusMinOdds { get; set; }
+        public List<ParlayBonusConfig> ParlayBonusConfig { get; set; }
     }
 
     public class CricketBetSetting
@@ -50,5 +52,11 @@ namespace Platform.Shared.Models
         public decimal MinBet { get; set; }
         public decimal MaxBet { get; set; }
         public decimal MaxFixtureBet { get; set; }
+    }
+
+    public class ParlayBonusConfig
+    {
+        public int SelectionCount { get; set; }
+        public decimal ParlayBonus { get; set; }
     }
 }

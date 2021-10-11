@@ -10,6 +10,5 @@ namespace Platform.Betting.API.Repository
         Task<BaseResponseDTO<StatusCode>> ProcessBetConfig(BackOfficeBetConfigPayloadDTO payload);
         Task<BaseResponseDTO<StatusCode>> ProcessParlayBonus(ParlayBonusRequestDTO payload);
         Task<BaseResponseDTO<ParlayBonusResponseDTO>> GetClientParlayBonus(GetParlayBonusRequestDTO request);
-        Task<BaseResponseDTO<ParlayBonusAuditResponseDTO>> GetClientParlayBonusHistory(GetParlayBonusRequestDTO request);
     }
 }

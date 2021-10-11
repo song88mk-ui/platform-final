@@ -61,9 +61,7 @@ namespace Platform.Betting.API.Repository
                             MinStake = config.Parlay.MinBet,
                             MaxStake = config.Parlay.MaxBet,
                             MaxPayout = config.Parlay.MaxPayout,
-                            ParlayBonusMaxWinnings = config.Parlay.ParlayBonusMaxWinnings,
-                            ParlayBonusMinOdds = config.Parlay.ParlayBonusMinOdds,
-                            ParlayBonusConfig = config.Parlay.ParlayBonusConfig
+                            MaxWinningsBonus = config.Parlay.MaxWinningsBonus
                         });
 
                         var taxJSON = JsonSerializer.Serialize(config.TaxConfig);
@@ -122,42 +120,45 @@ namespace Platform.Betting.API.Repository
                 {
                     var dateCreated = DateTime.UtcNow;
 
-                    var result = _bettingContext.BetConfig.Where(b => b.ClientId == payload.ClientId);
-                    if (result != null && result.Any())
+                    foreach (var parlay in payload.ParlayBonus)
                     {
-                        foreach(var config in result)
+                        bool isAudit = false;
+                        var result = _bettingContext.ParlayBonus.FirstOrDefault(b => b.ClientIdRef == payload.ClientIdRef 
+                                            && b.NoOfSelection == parlay.NoOfSelection);
+                        if (result != null)
                         {
-                            var parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(config.ParlayConfig);
-                            parlayConfig.ParlayBonusMinOdds = payload.ParlayBonusMinOdds;
-                            parlayConfig.ParlayBonusConfig = payload.ParlayBonusConfig;
+                            isAudit = result.Bonus != parlay.Bonus;
 
-                            config.ParlayConfig = JsonSerializer.Serialize(parlayConfig);
-
-                            _bettingContext.BetConfig.Update(config);
+                            result.Bonus = parlay.Bonus;
+                            result.MinOdds = payload.MinOdds;
+                            result.ClientId = payload.ClientId;
+                            _bettingContext.ParlayBonus.Update(result);
+                        }
+                        else
+                        {
+                            _bettingContext.ParlayBonus.Add(new ParlayBonus
+                            {
+                                ClientId = payload.ClientId,
+                                ClientIdRef = parlay.ClientIdRef,
+                                NoOfSelection = parlay.NoOfSelection,
+                                Bonus = parlay.Bonus,
+                                MinOdds = payload.MinOdds
+                            });
+                            isAudit = true;
                         }
 
-                        foreach (var parlay in payload.ParlayBonusConfig)
+                        if(isAudit)
                         {
                             _bettingContext.ParlayBonusAudit.Add(new ParlayBonusAudit
                             {
                                 ClientId = payload.ClientId,
-                                ClientIdRef = payload.ClientIdRef,
-                                SelectionCount = parlay.SelectionCount,
-                                ParlayBonus = parlay.ParlayBonus,
-                                ParlayBonusMinOdds = payload.ParlayBonusMinOdds,
-                                TimeStamp = dateCreated
+                                ClientIdRef = parlay.ClientIdRef,
+                                NoOfSelection = parlay.NoOfSelection,
+                                Bonus = parlay.Bonus,
+                                TimeStamp = dateCreated,
+                                MinOdds = payload.MinOdds
                             });
                         }
-
-                    }
-                    else
-                    {
-                        scope.Dispose();
-                        return new BaseResponseDTO<StatusCode>
-                        {
-                            StatusCode = StatusCode.Parlay_Bonus_Not_Updated,
-                            Message = StatusCode.Parlay_Bonus_Not_Updated.ToString().Replace('_',' ')
-                        };
                     }
 
                     await _bettingContext.SaveChangesAsync();
@@ -184,49 +185,38 @@ namespace Platform.Betting.API.Repository
         public async Task<BaseResponseDTO<ParlayBonusResponseDTO>> GetClientParlayBonus(GetParlayBonusRequestDTO request)
         {
             var result = new ParlayBonusResponseDTO();
-            
-            if (request.SelectionCount == 0)
+            if(request.NoOfSelection == 0)
             {
-                var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == request.ClientId).FirstOrDefault();
-                if (betConfig != null)
+                if(request.ClientIdRef == 0)
                 {
-                    var parlayBonusAudit = _bettingContext.ParlayBonusAudit.Where(x => x.ClientId == request.ClientId);
-
-                    var parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig);
-                    result.ParlayBonusConfig = parlayConfig.ParlayBonusConfig.Select(s => new ParlayBonusConfigResponse
-                        {
-                            ParlayBonus = s.ParlayBonus,
-                            SelectionCount = s.SelectionCount,
-                            ParlayBonusHistory = parlayBonusAudit.Where(h => h.SelectionCount == s.SelectionCount).ToList().Count <= 1 ? new List<ParlayBonusHistory>() :
-                                parlayBonusAudit.Where(h => h.SelectionCount == s.SelectionCount).Select(bh => new ParlayBonusHistory
-                                {
-                                    ParlayBonus = bh.ParlayBonus,
-                                    LastUpdate = bh.TimeStamp.ToString("dd/MM/yy")
-                                }).ToList()
-                        }).ToList();
-                    result.ParlayBonusMinOdds = parlayConfig.ParlayBonusMinOdds;
+                    var parlay = _bettingContext.ParlayBonus.Where(x => x.ClientId == request.ClientId).ToList();
+                    result.ParlayBonus = parlay;
+                    if (parlay.Any())
+                        result.MinOdds = parlay.FirstOrDefault().MinOdds;
+                }
+                else
+                {
+                    var parlay = _bettingContext.ParlayBonus.Where(x => x.ClientIdRef == request.ClientIdRef).ToList();
+                    result.ParlayBonus = parlay;
+                    if (parlay.Any())
+                        result.MinOdds = parlay.FirstOrDefault().MinOdds;
                 }
             }
             else
             {
-                var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == request.ClientId).FirstOrDefault();
-                if (betConfig != null)
+                if(request.ClientIdRef == 0)
                 {
-                    var parlayBonusAudit = _bettingContext.ParlayBonusAudit.Where(x => x.ClientId == request.ClientId && x.SelectionCount == request.SelectionCount);
-
-                    var parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig);
-                    result.ParlayBonusConfig = parlayConfig.ParlayBonusConfig.Where(p => p.SelectionCount == request.SelectionCount).Select(s => new ParlayBonusConfigResponse
-                        {
-                            ParlayBonus = s.ParlayBonus,
-                            SelectionCount = s.SelectionCount,
-                            ParlayBonusHistory = parlayBonusAudit.Where(h => h.SelectionCount == s.SelectionCount).ToList().Count <= 1 ? new List<ParlayBonusHistory>() :
-                                parlayBonusAudit.Where(h => h.SelectionCount == s.SelectionCount).Select(bh => new ParlayBonusHistory
-                                {
-                                    ParlayBonus = bh.ParlayBonus,
-                                    LastUpdate = bh.TimeStamp.ToString("dd/MM/yy")
-                                }).ToList()
-                        }).ToList();
-                    result.ParlayBonusMinOdds = parlayConfig.ParlayBonusMinOdds;
+                    var parlay = _bettingContext.ParlayBonus.Where(x => x.ClientId == request.ClientId && x.NoOfSelection == request.NoOfSelection).ToList();
+                    result.ParlayBonus = parlay;
+                    if (parlay.Any())
+                        result.MinOdds = parlay.FirstOrDefault().MinOdds;
+                }
+                else
+                {
+                    var parlay = _bettingContext.ParlayBonus.Where(x => x.ClientIdRef == request.ClientIdRef && x.NoOfSelection == request.NoOfSelection).ToList();
+                    result.ParlayBonus = parlay;
+                    if (parlay.Any())
+                        result.MinOdds = parlay.FirstOrDefault().MinOdds;
                 }
             }
 
@@ -238,6 +228,27 @@ namespace Platform.Betting.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<ParlayBonusAuditResponseDTO>> GetClientParlayBonusHistory(GetParlayBonusRequestDTO request)
+        {
+            var result = new ParlayBonusAuditResponseDTO();
+            if (request.NoOfSelection == 0)
+            {
+                var parlay = _bettingContext.ParlayBonusAudit.Where(x => x.ClientIdRef == request.ClientIdRef).ToList();
+                result.ParlayBonusAudit = parlay;
+            }
+            else
+            {
+                var parlay = _bettingContext.ParlayBonusAudit.Where(x => x.ClientIdRef == request.ClientIdRef && x.NoOfSelection == request.NoOfSelection).ToList();
+                result.ParlayBonusAudit = parlay;
+            }
+
+            return new BaseResponseDTO<ParlayBonusAuditResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = result
+            };
+        }
     }
 }
  

@@ -61,8 +61,6 @@
         CashOut_Stake_Changed_From_X_To_Y = 142,
         Bet_Not_Found = 143,
 
-        Parlay_Bonus_Not_Updated = 144,
-
         Error = 1000,
         Operator_Error = 1001
     }

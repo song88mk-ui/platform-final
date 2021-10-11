@@ -350,7 +350,7 @@ namespace Platform.CashOut.Service.Repository
             {
                 if (message.HasLive)
                 {
-                    Thread.Sleep(10000);
+                    Thread.Sleep(Convert.ToInt32(_configuration["Custom:Delay"]));
 
                     var httpClient = new HttpClient
                     {

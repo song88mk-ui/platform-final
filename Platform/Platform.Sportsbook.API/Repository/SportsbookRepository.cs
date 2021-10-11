@@ -775,6 +775,7 @@ namespace Platform.Sportsbook.API.Repository
                     Selections = selections.Select(s => new BetSelectionProbabilityDTO
                     {
                         SelectionId = s.SeId,
+                        FixtureStatusId = fixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.FiStId).FirstOrDefault(),
                         MarketStatusId = markets.Where(c => c.MaId == s.MaId).Select(ss => ss.MaStId).FirstOrDefault(),
                         IsSuspended = fixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.FiStId).FirstOrDefault() > 1 ? true : fixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.IsSu).FirstOrDefault(),
                         IsActive = s.IsAc,

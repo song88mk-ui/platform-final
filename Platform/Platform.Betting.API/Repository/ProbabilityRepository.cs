@@ -166,6 +166,7 @@ namespace Platform.Betting.API.Repository
 
                         var probabilites = new List<Probabilities>();
                         var hasProbabilityChanged = false;
+                        var hasLive = false;
 
                         foreach (var selection in selections)
                         {
@@ -176,6 +177,9 @@ namespace Platform.Betting.API.Repository
                                 isBreak = true;
                                 break;
                             }
+
+                            if (selectionProbability.FixtureStatusId == (int)FixtureStatus.Live)
+                                hasLive = true;
 
                             if (selection.Probability != selectionProbability.Probability)
                                 hasProbabilityChanged = true;
@@ -249,6 +253,7 @@ namespace Platform.Betting.API.Repository
                                     CashOutStake = finalCashOutStake,
                                     TaxedStake = taxedStake,
                                     TaxedWinnings = taxedWinnings,
+                                    HasLive = hasLive,
                                     Probabilities = probabilites.Select(s => new Probabilities
                                     {
                                         BetSelectionId = s.BetSelectionId,
@@ -317,6 +322,7 @@ namespace Platform.Betting.API.Repository
                                     CashOutStake = finalCashOutStake,
                                     TaxedStake = taxedStake,
                                     TaxedWinnings = taxedWinnings,
+                                    HasLive = hasLive,
                                     Probabilities = probabilites.Select(s => new Probabilities
                                     {
                                         BetSelectionId = s.BetSelectionId,

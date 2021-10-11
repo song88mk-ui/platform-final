@@ -1,4 +1,5 @@
-﻿using Platform.Shared.Enums;
+﻿using Platform.Shared.Data.Betting.Entities;
+using Platform.Shared.Enums;
 using System;
 using System.Collections.Generic;
 
@@ -11,10 +12,13 @@ namespace Platform.Shared.MessageModels
             Probabilities = new List<CashedOutProbabilities>();
         }
         public Guid BetId { get; set; }
+        public string UserId { get; set; }
+        public string ClientId { get; set; }
         public CashoutType CashoutType { get; set; }
         public decimal CashOutStake { get; set; }
         public decimal TaxedStake { get; set; }
         public decimal TaxedWinnings { get; set; }
+        public bool HasLive { get; set; }
         public List<CashedOutProbabilities> Probabilities { get; set; }
     }
 

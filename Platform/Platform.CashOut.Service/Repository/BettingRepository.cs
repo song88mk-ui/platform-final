@@ -4,6 +4,7 @@ using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
+using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using Sportradar.MTS.SDK.API;
 using Sportradar.MTS.SDK.Entities.Builders;
@@ -11,6 +12,9 @@ using Sportradar.MTS.SDK.Entities.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading;
 using System.Transactions;
 
 namespace Platform.CashOut.Service.Repository
@@ -24,7 +28,7 @@ namespace Platform.CashOut.Service.Repository
             _configuration = configuration;
         }
 
-        public void ProcesssCashoutBetSettlement(OnCashoutBetSettlement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
+        private void ProcessCashOutSettlement(OnCashoutBetSettlement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
         {
             var bet = new Bet();
 
@@ -340,5 +344,66 @@ namespace Platform.CashOut.Service.Repository
             }
         }
 
+        public void ProcessCashOut(OnCashoutBetSettlement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
+        {
+            try
+            {
+                if (message.HasLive)
+                {
+                    Thread.Sleep(10000);
+
+                    var httpClient = new HttpClient
+                    {
+                        BaseAddress = new Uri(_configuration["API:PlatformBettingAPI"])
+                    };
+
+                    var initial = httpClient.PostAsync("v1/bet/cashout/state", new StringContent(JsonSerializer.Serialize(new CashoutStateRequestDTO { BetId = message.BetId }), System.Text.Encoding.UTF8, "application /json")).Result;
+
+                    if (initial.IsSuccessStatusCode)
+                    {
+                        var result = JsonSerializer.Deserialize<BaseResponseDTO<CashoutStateResponseDTO>>(initial.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                        var payload = new OnCashoutBetSettlement
+                        {
+                            BetId = result.Result.BetId,
+                            CashoutType = result.Result.CashoutType,
+                            CashOutStake = result.Result.CashOutStake,
+                            TaxedStake = result.Result.TaxedStake,
+                            TaxedWinnings = result.Result.TaxedWinnings,
+                            HasLive = message.HasLive,
+                            Probabilities = result.Result.Probabilities
+                        };
+
+                        ProcessCashOutSettlement(payload, mts, messageBroker, correlationId);
+
+                        Console.WriteLine($"{DateTime.UtcNow} : Live Cashout successful - {result.Result.BetId}");
+                    }
+                    else
+                    {
+                        messageBroker.Publish(new OnBetStatus
+                        {
+                            ClientId = message.ClientId,
+                            UserId = message.UserId,
+                            BetId = message.BetId.ToString().ToUpper(),
+                            BetStatus = BetStatus.Running,
+                            Message = "Cashout request has been declined"
+                        }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                        Console.WriteLine($"{DateTime.UtcNow} : Live Cashout declined - {message.BetId}");
+                    }
+                }
+                else
+                {
+                    ProcessCashOutSettlement(message, mts, messageBroker, correlationId);
+
+                    Console.WriteLine($"{DateTime.UtcNow} : Prematch Cashout successful - {message.BetId}");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
     }
 }

@@ -25,6 +25,7 @@ namespace Platform.Shared.Models
     public class BetSelectionProbabilityDTO
     {
         public long SelectionId { get; set; }
+        public int FixtureStatusId { get; set; }
         public int MarketStatusId { get; set; }
         public bool IsSuspended { get; set; }
         public bool IsActive { get; set; }

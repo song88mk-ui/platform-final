@@ -1542,6 +1542,7 @@ namespace Platform.Betting.API.Repository
                     CashOutStake = cashOut.CashOutStake,
                     TaxedStake = cashOut.TaxedStake,
                     TaxedWinnings = cashOut.TaxedWinnings,
+                    HasLive = cashOut.HasLive,
                     Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities
                     {
                         BetSelectionId = s.BetSelectionId,
@@ -1575,6 +1576,69 @@ namespace Platform.Betting.API.Repository
                     }
                 };
             }
+        }
+        public async Task<BaseResponseDTO<CashoutStateResponseDTO>> GetCashOut(CashoutStateRequestDTO request)
+        {
+            var bet = _bettingContext.Bet.Find(request.BetId);
+
+            if (bet == null || bet.BetStatusId != (int)BetStatus.Running)
+            {
+                return new BaseResponseDTO<CashoutStateResponseDTO>
+                {
+                    StatusCode = StatusCode.CashOut_Is_Unavailable,
+                    Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' ')
+                };
+            }
+
+            var betSelections = _bettingContext.BetSelection.Where(c => c.BetId == bet.BetId).AsNoTracking().ToList();
+
+            if (betSelections.Count == 0)
+            {
+                return new BaseResponseDTO<CashoutStateResponseDTO>
+                {
+                    StatusCode = StatusCode.CashOut_Is_Unavailable,
+                    Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' ')
+                };
+            }
+
+            var result = await _probabilityRepository.GetCashOut(new List<Bet> { bet }, betSelections);
+
+            var cashOut = result.Result.Where(c => c.BetId == bet.BetId && c.CashOutStatus == CashOutStatus.Available).FirstOrDefault();
+
+            if (cashOut == null)
+            {
+                return new BaseResponseDTO<CashoutStateResponseDTO>
+                {
+                    StatusCode = StatusCode.CashOut_Is_Unavailable,
+                    Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' ')
+                };
+            }
+
+            var payload = new CashoutStateResponseDTO
+            {
+                BetId = request.BetId,
+                CashoutType = CashoutType.Full,
+                CashOutStake = cashOut.CashOutStake,
+                TaxedStake = cashOut.TaxedStake,
+                TaxedWinnings = cashOut.TaxedWinnings,
+                Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities
+                {
+                    BetSelectionId = s.BetSelectionId,
+                    Probability = s.Probability,
+                    WonProbability = s.WonProbability,
+                    LostProbability = s.LostProbability,
+                    VoidProbability = s.VoidProbability,
+                    HalfWonProbability = s.HalfWonProbability,
+                    HalfLostProbability = s.HalfLostProbability
+                }).ToList()
+            };
+
+            return new BaseResponseDTO<CashoutStateResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = payload
+            };
         }
         private decimal GetMinStake(decimal minStake, decimal exchangeRate, decimal companyShare, string currencyCode)
         {

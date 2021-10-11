@@ -47,6 +47,7 @@ namespace Platform.Shared.Models
         public decimal CashOutStake { get; set; }
         public decimal TaxedStake { get; set; }
         public decimal TaxedWinnings { get; set; }
+        public bool HasLive { get; set; } = false;
         public List<Probabilities> Probabilities { get; set; }
     }
 

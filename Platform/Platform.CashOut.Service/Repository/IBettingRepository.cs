@@ -6,6 +6,6 @@ namespace Platform.CashOut.Service.Repository
 {
     public interface IBettingRepository
     {
-        void ProcesssCashoutBetSettlement(OnCashoutBetSettlement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId);
+        void ProcessCashOut(OnCashoutBetSettlement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId);
     }
 }

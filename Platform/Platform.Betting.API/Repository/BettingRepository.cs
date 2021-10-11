@@ -1502,71 +1502,6 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            ////var result = await _mtsProbabilityRepository.GetCashOut(bet, betSelections);
-
-            ////if (result.StatusCode == StatusCode.Success)
-            ////{
-            ////    if (Math.Round(request.CashOutStake, 2) != Math.Round(result.Result.CashOutStake, 2))
-            ////    {
-            ////        var requestCashOutStake = request.CashOutStake % 1 == 0 ? request.CashOutStake.ToString().TrimEnd('0').TrimEnd('.') : request.CashOutStake.ToString().TrimEnd('0').TrimEnd('.');
-            ////        var resultCashOutStake = result.Result.CashOutStake % 1 == 0 ? result.Result.CashOutStake.ToString().TrimEnd('0').TrimEnd('.') : result.Result.CashOutStake.ToString().TrimEnd('0').TrimEnd('.');
-
-            ////        return new BaseResponseDTO<BetCashOutResponseDTO>
-            ////        {
-            ////            StatusCode = StatusCode.CashOut_Stake_Changed_From_X_To_Y,
-            ////            Message = StatusCode.CashOut_Stake_Changed_From_X_To_Y.ToString().Replace('_', ' ').Replace("X", requestCashOutStake).Replace("Y", resultCashOutStake),
-            ////            Result = new BetCashOutResponseDTO
-            ////            {
-            ////                BetId = bet.BetId.ToString().ToUpper(),
-            ////                BetStatus = (BetStatus)bet.BetStatusId,
-            ////                UserId = bet.UserId,
-            ////                CashOutStake = result.Result.CashOutStake
-            ////            }
-            ////        };
-            ////    }
-            ////    else
-            ////    {
-            ////        var payload = new OnCashoutBetSettlement
-            ////        {
-            ////            BetId = request.BetId,
-            ////            CashoutType = CashoutType.Full,
-            ////            CashOutStake = result.Result.CashOutStake,
-            ////            TaxedStake = result.Result.TaxedStake,
-            ////            TaxedWinnings = result.Result.TaxedWinnings,
-            ////            Probabilities = new List<CashedOutProbabilities>()
-            ////        };
-
-            ////        _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
-            ////        {
-            ////            Payload = JsonSerializer.Serialize(payload),
-            ////            CorrelationId = Guid.NewGuid().ToString().ToUpper(),
-            ////            MessageType = "OnBetFullCashOut",
-            ////            RoutingKey = "r.bet.cashout"
-            ////        });
-
-            ////        return new BaseResponseDTO<BetCashOutResponseDTO>
-            ////        {
-            ////            StatusCode = StatusCode.Success,
-            ////            Message = StatusCode.Success.ToString(),
-            ////            Result = new BetCashOutResponseDTO
-            ////            {
-            ////                BetId = bet.BetId.ToString().ToUpper(),
-            ////                BetStatus = (BetStatus)bet.BetStatusId,
-            ////                UserId = bet.UserId,
-            ////                CashOutStake = result.Result.CashOutStake
-            ////            }
-            ////        };
-            ////    }
-            ////}
-            ////else
-            ////{
-            ////    return new BaseResponseDTO<BetCashOutResponseDTO>
-            ////    {
-            ////        StatusCode = StatusCode.CashOut_Is_Unavailable,
-            ////        Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' ')
-            ////    };
-            ////}
-
             var result = await _probabilityRepository.GetCashOut(new List<Bet> { bet }, betSelections);
 
             var cashOut = result.Result.Where(c => c.BetId == bet.BetId && c.CashOutStatus == CashOutStatus.Available).FirstOrDefault();
@@ -1640,9 +1575,6 @@ namespace Platform.Betting.API.Repository
                     }
                 };
             }
-
-
-
         }
         private decimal GetMinStake(decimal minStake, decimal exchangeRate, decimal companyShare, string currencyCode)
         {

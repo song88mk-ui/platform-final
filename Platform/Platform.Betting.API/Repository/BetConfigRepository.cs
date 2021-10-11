@@ -128,7 +128,7 @@ namespace Platform.Betting.API.Repository
                         foreach(var config in result)
                         {
                             var parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(config.ParlayConfig);
-                            parlayConfig.ParlayBonusMinOdds = payload.MinOdds;
+                            parlayConfig.ParlayBonusMinOdds = payload.ParlayBonusMinOdds;
                             parlayConfig.ParlayBonusConfig = payload.ParlayBonusConfig;
 
                             config.ParlayConfig = JsonSerializer.Serialize(parlayConfig);
@@ -144,7 +144,7 @@ namespace Platform.Betting.API.Repository
                                 ClientIdRef = payload.ClientIdRef,
                                 SelectionCount = parlay.SelectionCount,
                                 ParlayBonus = parlay.ParlayBonus,
-                                MinOdds = payload.MinOdds,
+                                ParlayBonusMinOdds = payload.ParlayBonusMinOdds,
                                 TimeStamp = dateCreated
                             });
                         }

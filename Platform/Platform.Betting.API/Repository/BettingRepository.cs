@@ -1332,10 +1332,7 @@ namespace Platform.Betting.API.Repository
             {
                 MinStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
                 MaxStake = parlayConfig.MaxStake,
-                MaxPayout = parlayConfig.MaxPayout,
-                ParlayBonusMinOdds = parlayConfig.ParlayBonusMinOdds,
-                ParlayBonusMaxWinnings = parlayConfig.ParlayBonusMaxWinnings,
-                ParlayBonusConfig = parlayConfig.ParlayBonusConfig.Select(s => new ParlayBonusConfigFE { ParlayBonus = s.ParlayBonus, SelectionCount = s.SelectionCount }).ToList()
+                MaxPayout = parlayConfig.MaxPayout
             };
 
 

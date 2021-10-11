@@ -8,27 +8,19 @@ namespace Platform.Shared.Models
     {
         public ParlayBonusResponseDTO()
         {
-            ParlayBonusConfig = new List<ParlayBonusConfigResponse>();
+            ParlayBonus = new List<ParlayBonus>();
         }
-        public decimal ParlayBonusMinOdds { get; set; }
-        public List<ParlayBonusConfigResponse> ParlayBonusConfig { get; set; }
+        public decimal MinOdds { get; set; }
+        public List<ParlayBonus> ParlayBonus { get; set; }
     }
 
-    public class ParlayBonusConfigResponse
+    public class ParlayBonusAuditResponseDTO
     {
-        public ParlayBonusConfigResponse()
+        public ParlayBonusAuditResponseDTO()
         {
-            ParlayBonusHistory = new List<ParlayBonusHistory>();
+            ParlayBonusAudit = new List<ParlayBonusAudit>();
         }
-        public int SelectionCount { get; set; }
-        public decimal ParlayBonus { get; set; }
-        public List<ParlayBonusHistory> ParlayBonusHistory { get; set; }
-    }
-
-    public class ParlayBonusHistory
-    {
-        public string LastUpdate { get; set; }
-        public decimal ParlayBonus { get; set; }
+        public List<ParlayBonusAudit> ParlayBonusAudit { get; set; }
     }
 
 }

@@ -2538,8 +2538,8 @@ namespace Platform.API.Repository
             {
                 var backOfficeResponse = new ParlayBonusResponseDTO()
                 {
-                    ParlayBonus = response.Result.ParlayBonus,
-                    MinOdds = response.Result.MinOdds
+                    ParlayBonusConfig = response.Result.ParlayBonusConfig,
+                    ParlayBonusMinOdds = response.Result.ParlayBonusMinOdds
                 };
 
                 return new BaseResponseDTO<ParlayBonusResponseDTO>
@@ -2552,46 +2552,6 @@ namespace Platform.API.Repository
             else
             {
                 return new BaseResponseDTO<ParlayBonusResponseDTO>
-                {
-                    StatusCode = response.StatusCode,
-                    Message = response.Message
-                };
-
-            }
-        }
-        
-        public async Task<BaseResponseDTO<ParlayBonusAuditResponseDTO>> GetClientParlayBonusHistory(GetParlayBonusRequestDTO request)
-        {
-            var clientResult = await _platformContext.Client.Where(c => c.ClientIdRef == request.ClientIdRef).FirstOrDefaultAsync();
-            if (clientResult == null)
-            {
-                return new BaseResponseDTO<ParlayBonusAuditResponseDTO>
-                {
-                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
-                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
-                };
-            }
-
-            request.ClientId = clientResult.ClientId;
-
-            var response = await _bettingRepository.GetParlayBonusHistory(request);
-            if (response.StatusCode == StatusCode.Success)
-            {
-                var backOfficeResponse = new ParlayBonusAuditResponseDTO()
-                {
-                    ParlayBonusAudit = response.Result.ParlayBonusAudit
-                };
-
-                return new BaseResponseDTO<ParlayBonusAuditResponseDTO>
-                {
-                    StatusCode = response.StatusCode,
-                    Message = response.Message,
-                    Result = backOfficeResponse
-                };
-            }
-            else
-            {
-                return new BaseResponseDTO<ParlayBonusAuditResponseDTO>
                 {
                     StatusCode = response.StatusCode,
                     Message = response.Message

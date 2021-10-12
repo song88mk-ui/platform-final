@@ -9,15 +9,14 @@ namespace Platform.Shared.Models
     {
         public int ClientIdRef { get; set; }
         public Guid ClientId { get; set; }
-        public int NoOfSelection { get; set; }
+        public int SelectionCount { get; set; }
     }
     public class ParlayBonusRequestDTO
     {
         public int ClientIdRef { get; set; }
         public Guid ClientId { get; set; }
-
-        public decimal MinOdds { get; set; }
-        public List<ParlayBonus> ParlayBonus { get; set; }
+        public decimal ParlayBonusMinOdds { get; set; }
+        public List<ParlayBonusConfig> ParlayBonusConfig { get; set; }
     }
 
 }

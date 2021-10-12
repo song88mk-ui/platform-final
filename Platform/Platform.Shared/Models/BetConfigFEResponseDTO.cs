@@ -17,7 +17,7 @@ namespace Platform.Shared.Models
 
     public class OverrideSportConfigFE
     {
-        [JsonProperty("sportId")] 
+        [JsonProperty("sportId")]
         public int SportId { get; set; }
         [JsonProperty("sportName")]
         public string SportName { get; set; }
@@ -30,7 +30,7 @@ namespace Platform.Shared.Models
 
     public class DefaultSportConfigFE
     {
-        [JsonProperty("minStake")] 
+        [JsonProperty("minStake")]
         public decimal MinStake { get; set; }
         [JsonProperty("maxStake")]
         public decimal MaxStake { get; set; }
@@ -38,12 +38,29 @@ namespace Platform.Shared.Models
 
     public class ParlayConfigFE
     {
-        [JsonProperty("minStake")] 
+        public ParlayConfigFE()
+        {
+            ParlayBonusConfig = new List<ParlayBonusConfigFE>();
+        }
+        [JsonProperty("minStake")]
         public decimal MinStake { get; set; }
         [JsonProperty("maxStake")]
         public decimal MaxStake { get; set; }
         [JsonProperty("maxPayout")]
         public decimal MaxPayout { get; set; }
+        [JsonProperty("parlayBonusMaxWinnings")]
+        public decimal ParlayBonusMaxWinnings { get; set; }
+        [JsonProperty("parlayBonusMinOdds")]
+        public decimal ParlayBonusMinOdds { get; set; }
+        [JsonProperty("parlayBonusConfig")]
+        public List<ParlayBonusConfigFE> ParlayBonusConfig { get; set; }
+    }
+    public class ParlayBonusConfigFE
+    {
+        [JsonProperty("selectionCount")]
+        public int SelectionCount { get; set; }
+        [JsonProperty("parlayBonus")]
+        public decimal ParlayBonus { get; set; }
     }
 
     public class TaxConfig

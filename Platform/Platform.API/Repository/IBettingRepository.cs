@@ -15,6 +15,5 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<BetModifyResponseDTO>> CancelBets(BetModifyRequestDTO request);
         Task<BaseResponseDTO<StatusCode>> ProcessParlayBonus(ParlayBonusRequestDTO request);
         Task<BaseResponseDTO<ParlayBonusResponseDTO>> GetParlayBonus(GetParlayBonusRequestDTO request);
-        Task<BaseResponseDTO<ParlayBonusAuditResponseDTO>> GetParlayBonusHistory(GetParlayBonusRequestDTO request);
     }
 }

@@ -130,7 +130,15 @@ namespace Platform.Betting.API.Repository
                         {
                             var parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(config.ParlayConfig);
                             parlayConfig.ParlayBonusMinOdds = payload.ParlayBonusMinOdds;
-                            parlayConfig.ParlayBonusConfig = payload.ParlayBonusConfig;
+                            
+                            payload.ParlayBonusConfig.ForEach(p =>
+                            {
+                                var selection = parlayConfig.ParlayBonusConfig.Where(s => s.SelectionCount == p.SelectionCount).FirstOrDefault();
+                                if (selection == null)
+                                    parlayConfig.ParlayBonusConfig.Add(p);
+                                else
+                                    selection.ParlayBonus = p.ParlayBonus;
+                            });
 
                             config.ParlayConfig = JsonSerializer.Serialize(parlayConfig);
 
@@ -191,13 +199,13 @@ namespace Platform.Betting.API.Repository
                 var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == request.ClientId).FirstOrDefault();
                 if (betConfig != null)
                 {
-                    var parlayBonusAudit = await _bettingContext.ParlayBonusAudit.AsNoTracking().Where(x => x.ClientId == request.ClientId)
+                    var parlayBonusAudit = _bettingContext.ParlayBonusAudit.AsNoTracking().Where(x => x.ClientId == request.ClientId).OrderBy(o => o.SelectionCount).ThenByDescending(o => o.TimeStamp)
                         .Select(s => new 
                         {
                             SelectionCount = s.SelectionCount,
                             ParlayBonus = s.ParlayBonus,
-                            LastUpdate = s.TimeStamp.ToString("dd/MM/yy")
-                        }).Distinct().ToListAsync();
+                            LastUpdate = s.TimeStamp.Date == DateTime.UtcNow.Date ? "Today" : s.TimeStamp.ToString("dd/MM/yy")
+                        }).ToList().Distinct();
 
                     var parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig);
                     result.ParlayBonusConfig = parlayConfig.ParlayBonusConfig.Select(s => new ParlayBonusConfigResponse
@@ -206,12 +214,12 @@ namespace Platform.Betting.API.Repository
                             SelectionCount = s.SelectionCount,
                             ParlayBonusHistory = parlayBonusAudit.Where(h => h.SelectionCount == s.SelectionCount).ToList().Count <= 1 ? new List<ParlayBonusHistory>() :
                                 parlayBonusAudit.Where(h => h.SelectionCount == s.SelectionCount)
-                                .Select(s => new ParlayBonusHistory
-                                {
-                                    ParlayBonus = s.ParlayBonus,
-                                    LastUpdate = s.LastUpdate
-                                }).ToList()
-                        }).ToList();
+                                    .Select(s => new ParlayBonusHistory
+                                    {
+                                        ParlayBonus = s.ParlayBonus,
+                                        LastUpdate = s.LastUpdate
+                                    }).ToList()
+                        }).OrderBy(o => o.SelectionCount).ToList();
                     result.ParlayBonusMinOdds = parlayConfig.ParlayBonusMinOdds;
                 }
             }
@@ -220,7 +228,13 @@ namespace Platform.Betting.API.Repository
                 var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == request.ClientId).FirstOrDefault();
                 if (betConfig != null)
                 {
-                    var parlayBonusAudit = _bettingContext.ParlayBonusAudit.Where(x => x.ClientId == request.ClientId && x.SelectionCount == request.SelectionCount);
+                    var parlayBonusAudit = _bettingContext.ParlayBonusAudit.AsNoTracking().Where(x => x.ClientId == request.ClientId && x.SelectionCount == request.SelectionCount).OrderByDescending(o => o.TimeStamp)
+                        .Select(s => new
+                        {
+                            SelectionCount = s.SelectionCount,
+                            ParlayBonus = s.ParlayBonus,
+                            LastUpdate = s.TimeStamp.Date == DateTime.UtcNow.Date ? "Today" : s.TimeStamp.ToString("dd/MM/yy")
+                        }).ToList().Distinct();
 
                     var parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig);
                     result.ParlayBonusConfig = parlayConfig.ParlayBonusConfig.Where(p => p.SelectionCount == request.SelectionCount).Select(s => new ParlayBonusConfigResponse
@@ -228,12 +242,13 @@ namespace Platform.Betting.API.Repository
                             ParlayBonus = s.ParlayBonus,
                             SelectionCount = s.SelectionCount,
                             ParlayBonusHistory = parlayBonusAudit.Where(h => h.SelectionCount == s.SelectionCount).ToList().Count <= 1 ? new List<ParlayBonusHistory>() :
-                                parlayBonusAudit.Where(h => h.SelectionCount == s.SelectionCount).Select(bh => new ParlayBonusHistory
-                                {
-                                    ParlayBonus = bh.ParlayBonus,
-                                    LastUpdate = bh.TimeStamp.ToString("dd/MM/yy")
-                                }).ToList()
-                        }).ToList();
+                                parlayBonusAudit.Where(h => h.SelectionCount == s.SelectionCount)
+                                    .Select(bh => new ParlayBonusHistory
+                                    {
+                                        ParlayBonus = bh.ParlayBonus,
+                                        LastUpdate = bh.LastUpdate
+                                    }).ToList()
+                        }).OrderBy(o => o.SelectionCount).ToList();
                     result.ParlayBonusMinOdds = parlayConfig.ParlayBonusMinOdds;
                 }
             }

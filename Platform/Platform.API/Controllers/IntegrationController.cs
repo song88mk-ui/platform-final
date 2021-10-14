@@ -168,7 +168,7 @@ namespace Platform.API.Controllers
 
         [HttpGet("v1/bet/history")]
         public async Task<IActionResult> GetBetHistory([FromQuery] BetHistoryRequest request)
-        {
+        {//
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();

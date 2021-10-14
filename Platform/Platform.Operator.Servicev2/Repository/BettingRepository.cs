@@ -791,6 +791,12 @@ namespace Platform.Operator.Servicev2.Repository
                 WinningsTax = message.Bet.WinningsTax,
                 TaxedStake = message.Bet.TaxedStake,
                 TaxedWinnings = message.Bet.TaxedWinnings,
+                ParlayBonusWinnings = message.Bet.ParlayBonusWinnings,
+                ParlayBonus = message.Bet.ParlayBonus,
+                StakeReal = message.Bet.StakeReal,
+                StakeBonus = message.Bet.StakeBonus,
+                StakeRealPayout = message.Bet.StakeRealPayout,
+                StakeBonusPayout = message.Bet.StakeBonusPayout,
                 TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                 BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
                 {

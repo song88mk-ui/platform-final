@@ -1247,6 +1247,13 @@ namespace Platform.Betting.API.Repository
                     WinningsTax = bet.WinningsTax,
                     TaxedStake = bet.TaxedStake,
                     TaxedWinnings = bet.TaxedWinnings,
+                    ParlayBonus = bet.ParlayBonus,
+                    ParlayBonusWinnings = bet.ParlayBonusWinnings,
+                    StakeReal = bet.StakeReal,
+                    StakeRealPayout = bet.StakeRealPayout,
+                    StakeBonus = bet.StakeBonus,
+                    StakeBonusPayout = bet.StakeBonusPayout,
+                    IsFreeBet = bet.IsFreeBet,
                     Selections = filteredSelections.Select(s => new BetSelectionHistoryDTO
                     {
                         SportId = s.SportId,

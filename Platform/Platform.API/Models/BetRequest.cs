@@ -15,6 +15,7 @@ namespace Platform.API.Models
         public Channel Channel { get; set; }
         public string IPAddress { get; set; }
         public List<BetSelectionRequest> Selections { get; set; }
+        public bool IsFreeBet { get; set; }
     }
 
     public class BetSelectionRequest

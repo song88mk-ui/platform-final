@@ -206,7 +206,7 @@ namespace Platform.Operator.Servicev2.Repository
                 Message = reason
             }, messageBroker, correlationId);
         }
-        private void AcceptBet(Guid betId, string correlationId, IMessageBroker messageBroker)
+        private void AcceptBet(Guid betId, string correlationId, IMessageBroker messageBroker, OperatorBetResponseDTO operatorResponse)
         {
             var payload = new OnBetPlacement();
 
@@ -225,6 +225,10 @@ namespace Platform.Operator.Servicev2.Repository
                         bet.BetStatusId = (int)betStatus;
                         bet.BetStatusName = betStatus.ToString();
                         bet.Reason = $"1024 - Ticket accepted (Operator)";
+
+                        bet.StakeReal = operatorResponse.StakeReal;
+                        bet.StakeBonus = operatorResponse.StakeBonus;
+                        bet.IsFreeBet = operatorResponse.IsFreeBet;
 
                         var betEntity = context.Bet.Update(bet).Entity;
                         payload.Bet = betEntity;
@@ -537,7 +541,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Timestamp = DateTime.UtcNow
                     });
 
-                    AcceptBet(message.Bet.BetId, correlationId, messageBroker);
+                    AcceptBet(message.Bet.BetId, correlationId, messageBroker, result);
                 }
                 else
                 {

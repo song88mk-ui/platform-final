@@ -143,11 +143,30 @@ namespace Platform.Operator.API.Repository
                     _platformContext.SaveChanges();
                     scope.Complete();
 
-                    return new OperatorBetResponseDTO
+                    var testConfig = _platformContext.TestConfig.Find(id);
+                    if (testConfig != null && testConfig.ClientId == id)
                     {
-                        StatusId = 1000,
-                        Balance = result.Balance
-                    };
+                        return new OperatorBetResponseDTO
+                        {
+                            StatusId = 1000,
+                            Balance = result.Balance,
+                            IsFreeBet = testConfig.IsFreeBet,
+                            StakeReal = (request.Stake * testConfig.StakeRealPercent),
+                            StakeBonus = (request.Stake * testConfig.StakeBonusPercent)
+                        };
+                    }
+                    else
+                    {
+                        return new OperatorBetResponseDTO
+                        {
+                            StatusId = 1000,
+                            Balance = result.Balance,
+                            IsFreeBet = false,
+                            StakeReal = request.Stake,
+                            StakeBonus = 0m
+                        };
+                    }
+
                 }
                 catch (Exception ex)
                 {

@@ -20,6 +20,7 @@ namespace Platform.Shared.Data.Platform
             modelBuilder.Entity<ConfidenceFactor>().HasKey(k => new { k.Timestamp, k.UserId });
             modelBuilder.Entity<OperatorSettlementRetry>().HasKey(k => new { k.BetId });
             modelBuilder.Entity<NegativeTest>().HasKey(k => new { k.ClientId });
+            modelBuilder.Entity<TestConfig>().HasKey(k => new { k.ClientId });
         }
 
         public DbSet<Client> Client { get; set; }
@@ -30,5 +31,6 @@ namespace Platform.Shared.Data.Platform
         public DbSet<ConfidenceFactor> ConfidenceFactor { get; set; }
         public DbSet<OperatorSettlementRetry> OperatorSettlementRetry { get; set; }
         public DbSet<NegativeTest> NegativeTest { get; set; }
+        public DbSet<TestConfig> TestConfig { get; set; }
     }
 }

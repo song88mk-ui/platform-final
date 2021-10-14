@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Platform.Betting.API.Repository
 {
@@ -190,7 +191,13 @@ namespace Platform.Betting.API.Repository
                 var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == request.ClientId).FirstOrDefault();
                 if (betConfig != null)
                 {
-                    var parlayBonusAudit = _bettingContext.ParlayBonusAudit.Where(x => x.ClientId == request.ClientId);
+                    var parlayBonusAudit = await _bettingContext.ParlayBonusAudit.AsNoTracking().Where(x => x.ClientId == request.ClientId)
+                        .Select(s => new 
+                        {
+                            SelectionCount = s.SelectionCount,
+                            ParlayBonus = s.ParlayBonus,
+                            LastUpdate = s.TimeStamp.ToString("dd/MM/yy")
+                        }).Distinct().ToListAsync();
 
                     var parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig);
                     result.ParlayBonusConfig = parlayConfig.ParlayBonusConfig.Select(s => new ParlayBonusConfigResponse
@@ -198,10 +205,11 @@ namespace Platform.Betting.API.Repository
                             ParlayBonus = s.ParlayBonus,
                             SelectionCount = s.SelectionCount,
                             ParlayBonusHistory = parlayBonusAudit.Where(h => h.SelectionCount == s.SelectionCount).ToList().Count <= 1 ? new List<ParlayBonusHistory>() :
-                                parlayBonusAudit.Where(h => h.SelectionCount == s.SelectionCount).Select(bh => new ParlayBonusHistory
+                                parlayBonusAudit.Where(h => h.SelectionCount == s.SelectionCount)
+                                .Select(s => new ParlayBonusHistory
                                 {
-                                    ParlayBonus = bh.ParlayBonus,
-                                    LastUpdate = bh.TimeStamp.ToString("dd/MM/yy")
+                                    ParlayBonus = s.ParlayBonus,
+                                    LastUpdate = s.LastUpdate
                                 }).ToList()
                         }).ToList();
                     result.ParlayBonusMinOdds = parlayConfig.ParlayBonusMinOdds;

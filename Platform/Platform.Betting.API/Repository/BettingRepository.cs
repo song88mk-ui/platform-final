@@ -250,7 +250,14 @@ namespace Platform.Betting.API.Repository
                         StakeTax = taxConfig.StakeTax,
                         WinningsTax = taxConfig.WinningsTax,
                         TaxedStake = taxedStake,
-                        TaxedWinnings = 0
+                        TaxedWinnings = 0,
+                        IsFreeBet = false,
+                        ParlayBonus = 0,
+                        ParlayBonusWinnings = 0,
+                        StakeBonus = 0,
+                        StakeBonusPayout = 0,
+                        StakeReal = 0,
+                        StakeRealPayout = 0,
                     }).Entity;
 
                     betData = betEntity;

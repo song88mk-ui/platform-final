@@ -587,7 +587,7 @@ namespace Platform.Placement.Servicev2.Repository
             #region Get Parlay Bonus
             var parlayBonusWinnings = 0m;
             var parlayBonus = 0m;
-
+            var hasBonus = false;
             // parlay bonus: bet should be Won by default
             if (betSelectionData.Count > 2)
             {
@@ -603,13 +603,20 @@ namespace Platform.Placement.Servicev2.Repository
                     var payout = betSelectionData.Select(s => s.Odds).Aggregate((a, b) => a * b) * betData.TrueStake;
                     parlayBonus = parlayBonusConfig.ParlayBonus;
                     parlayBonusWinnings = (payout * parlayBonusConfig.ParlayBonus) * 10000;
+                    hasBonus = true;
                 }
             }
             #endregion
 
-            var selection = _factory.CreateBetBuilder()
+            var selection = hasBonus ? _factory.CreateBetBuilder()
                                     .SetBetId(betData.BetId.ToString().ToUpper())
                                     .SetBetBonus(Convert.ToInt64(parlayBonusWinnings))
+                                    .SetStake(Convert.ToInt64(stake), StakeType.Total)
+                                    .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
+                                    .AddSelectedSystem(betSelectionData.Count) 
+                                    :
+                                    _factory.CreateBetBuilder()
+                                    .SetBetId(betData.BetId.ToString().ToUpper())
                                     .SetStake(Convert.ToInt64(stake), StakeType.Total)
                                     .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
                                     .AddSelectedSystem(betSelectionData.Count);

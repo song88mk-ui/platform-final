@@ -541,5 +541,61 @@ namespace Platform.Operator.API.Repository
             else
                 return result.Select(s => s.ClientId.ToString()).ToList();
         }
+
+        public bool AddTestConfig(string clientId, bool isFreeBet, decimal stakeRealPercent, decimal stakeBonusPercent)
+        {
+            var isValid = Guid.TryParse(clientId, out Guid id);
+
+            if (isValid)
+            {
+                var result = _platformContext.TestConfig.Find(id);
+
+                if (result == null)
+                {
+                    _platformContext.TestConfig.Add(new TestConfig { 
+                        ClientId = id, 
+                        IsFreeBet = isFreeBet, 
+                        StakeRealPercent = stakeRealPercent,
+                        StakeBonusPercent = stakeBonusPercent
+                    });
+                    _platformContext.SaveChanges();
+                }
+
+                return true;
+            }
+            else
+                return false;
+        }
+
+        public bool RemoveTestConfig(string clientId)
+        {
+            var isValid = Guid.TryParse(clientId, out Guid id);
+
+            if (isValid)
+            {
+                var result = _platformContext.TestConfig.Find(id);
+
+                if (result != null)
+                {
+                    _platformContext.TestConfig.Remove(result);
+                    _platformContext.SaveChanges();
+                }
+
+                return true;
+            }
+            else
+                return false;
+        }
+
+        public List<TestConfig> GetTestConfig()
+        {
+
+            var result = _platformContext.TestConfig.ToList();
+
+            if (result.Count == 0)
+                return new List<TestConfig>();
+            else
+                return result.ToList();
+        }
     }
 }

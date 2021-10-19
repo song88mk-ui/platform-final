@@ -159,5 +159,36 @@ namespace Platform.Operator.API.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("v1/testconfig/add")]
+        public async Task<IActionResult> AddTestConfig([FromBody] string clientId, bool isFreeBet, decimal stakeRealPercent, decimal stakeBonusPercent)
+        {
+            var result = _platformRepository.AddTestConfig(clientId, isFreeBet, stakeRealPercent, stakeBonusPercent);
+
+            if (result == false)
+                return BadRequest();
+
+            return Ok();
+        }
+
+        [HttpPost("v1/testconfig/remove")]
+        public async Task<IActionResult> RemoveTestConfig([FromBody] string clientId)
+        {
+            var result = _platformRepository.RemoveTestConfig(clientId);
+
+            if (result == false)
+                return BadRequest();
+
+            return Ok();
+        }
+
+        [HttpPost("v1/testconfig/get")]
+        public async Task<IActionResult> GetTestConfig()
+        {
+            var result = _platformRepository.GetClients();
+
+            return Ok(result);
+        }
+
     }
 }

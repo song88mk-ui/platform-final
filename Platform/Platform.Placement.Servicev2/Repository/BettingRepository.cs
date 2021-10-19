@@ -4,6 +4,7 @@ using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
+using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using Sportradar.MTS.SDK.API;
 using Sportradar.MTS.SDK.Entities.Builders;
@@ -13,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text.Json;
 using System.Threading;
 using System.Transactions;
 
@@ -582,8 +584,32 @@ namespace Platform.Placement.Servicev2.Repository
 
             var stake = betData.TrueStake * 10000;
 
+            #region Get Parlay Bonus
+            var parlayBonusWinnings = 0m;
+            var parlayBonus = 0m;
+
+            // parlay bonus: bet should be Won by default
+            if (betSelectionData.Count > 2)
+            {
+                var parlayConfig = GetParlayBetConfig(new Guid(betData.ClientId), betData.CurrencyCode);
+                var wonSelectionCount = betSelectionData.Count();
+
+                // to be eligible for parlay bonus, bet should at least have
+                // - 3 minimum selections
+                // - all selection odds must be >= parlay bonus min odds
+                if (wonSelectionCount > 2 && !betSelectionData.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
+                {
+                    var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == wonSelectionCount);
+                    var payout = betSelectionData.Select(s => s.Odds).Aggregate((a, b) => a * b) * betData.TrueStake;
+                    parlayBonus = parlayBonusConfig.ParlayBonus;
+                    parlayBonusWinnings = (payout * parlayBonusConfig.ParlayBonus) * 10000;
+                }
+            }
+            #endregion
+
             var selection = _factory.CreateBetBuilder()
                                     .SetBetId(betData.BetId.ToString().ToUpper())
+                                    .SetBetBonus(Convert.ToInt64(parlayBonusWinnings))
                                     .SetStake(Convert.ToInt64(stake), StakeType.Total)
                                     .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
                                     .AddSelectedSystem(betSelectionData.Count);
@@ -598,6 +624,29 @@ namespace Platform.Placement.Servicev2.Repository
             }
 
             return selection.Build();
+        }
+
+        private ParlayConfig GetParlayBetConfig(Guid clientId, string currencyCode)
+        {
+            try
+            {
+                using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+                {
+                    var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+
+                    using (var context = new BettingContext(optionsBuilder.Options))
+                    {
+                        var betConfig = context.BetConfig.FirstOrDefault(c => c.ClientId == clientId && c.CurrencyCode == currencyCode);
+
+                        return JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ParlayConfig();
+            }
+            
         }
     }
 }

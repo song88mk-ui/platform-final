@@ -47,6 +47,24 @@ namespace Platform.Shared.Models
         [JsonPropertyName("taxedWinnings")]
         public decimal TaxedWinnings { get; set; }
 
+        [JsonPropertyName("parlayBonusWinnings")]
+        public decimal ParlayBonusWinnings { get; set; }
+
+        [JsonPropertyName("parlayBonus")]
+        public decimal ParlayBonus { get; set; }
+
+        [JsonPropertyName("stakeReal")]
+        public decimal StakeReal { get; set; }
+
+        [JsonPropertyName("stakeBonus")]
+        public decimal StakeBonus { get; set; }
+
+        [JsonPropertyName("stakeRealPayout")]
+        public decimal StakeRealPayout { get; set; }
+
+        [JsonPropertyName("stakeBonusPayout")]
+        public decimal StakeBonusPayout { get; set; }
+
         [JsonPropertyName("transactionDate")]
         public string TransactionDate { get; set; }
 

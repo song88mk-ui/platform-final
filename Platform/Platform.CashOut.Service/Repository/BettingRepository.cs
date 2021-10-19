@@ -45,7 +45,7 @@ namespace Platform.CashOut.Service.Repository
 
                         if (bet != null)
                         {
-                            if (bet.BetStatusId != (int)BetStatus.Running)
+                            if (bet.BetStatusId != (int)BetStatus.Running || bet.IsFreeBet)
                             {
                                 messageBroker.Publish(new OnBetStatus
                                 {

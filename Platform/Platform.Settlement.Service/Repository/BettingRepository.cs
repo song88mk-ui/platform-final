@@ -5,10 +5,12 @@ using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
+using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Transactions;
 
 namespace Platform.Settlement.Service.Repository
@@ -100,6 +102,12 @@ namespace Platform.Settlement.Service.Repository
             }
 
             return result;
+        }
+        private ParlayConfig GetParlayBetConfig(BettingContext context, Guid clientId, string currencyCode)
+        {
+            var betConfig = context.BetConfig.FirstOrDefault(c => c.ClientId == clientId && c.CurrencyCode == currencyCode);
+
+            return JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
         }
         private decimal GetPayout(List<Tuple<BetStatus, decimal, decimal>> selections, decimal stake)
         {
@@ -465,7 +473,6 @@ namespace Platform.Settlement.Service.Repository
                 if (bet != null)
                 {
                     var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), bet.TrueStake);
-
                     var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
 
                     bet.WinLoss = payout == 0 ? -bet.Stake : payout - bet.Stake;
@@ -536,11 +543,32 @@ namespace Platform.Settlement.Service.Repository
 
                     if (bet != null)
                     {
-                        var taxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
+                        var taxedStake = bet.StakeReal - (bet.StakeReal / (1 + bet.StakeTax));
                         var stake = GetStake(selections, taxedStake, bet.TrueStake);
                         var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), stake);
+                        var parlayBonusWinnings = 0m;
+                        var parlayBonus = 0m;
 
-                        var taxedWinnings = (payout - bet.TrueStake) * bet.WinningsTax;
+                        // parlay bonus: bet should be Won
+                        if (selections.Count > 2)
+                        {
+                            var parlayConfig = GetParlayBetConfig(context, new Guid(bet.ClientId), bet.CurrencyCode);
+                            var wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won).Count();
+
+                            // to be eligible for parlay bonus, bet should at least have
+                            // - 3 minimum selections
+                            // - all selection odds must be >= parlay bonus min odds
+                            if (wonSelectionCount > 2 && !selections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
+                            {
+                                var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == wonSelectionCount);
+
+                                parlayBonus = parlayBonusConfig.ParlayBonus;
+                                parlayBonusWinnings = payout * parlayBonusConfig.ParlayBonus;
+                            }
+                        }
+
+                        var taxedWinnings = payout + parlayBonusWinnings;
+                        taxedWinnings = (taxedWinnings - bet.StakeReal) * bet.WinningsTax;
 
                         if (payout > bet.TrueStake)
                         {
@@ -553,14 +581,25 @@ namespace Platform.Settlement.Service.Repository
 
                         stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon ? bet.TrueStake : stake;
 
-                        bet.WinLoss = payout == 0 ? -bet.TrueStake : payout - stake;
+                        var totalPayout = payout + parlayBonusWinnings;
+
+                        bet.WinLoss = totalPayout == 0 ? -bet.TrueStake : totalPayout - stake;
                         bet.BetStatusId = (int)betStatus;
                         bet.BetStatusName = betStatus.ToString();
-                        bet.Payout = payout;
+                        bet.Payout = totalPayout;
                         bet.SettlementDate = settledDate;
                         bet.SettlementDateOffset = settledDate.AddHours(-4);
                         bet.TaxedStake = betStatus == BetStatus.Cancelled || betStatus == BetStatus.Void ? 0 : taxedStake;
                         bet.TaxedWinnings = taxedWinnings;
+                        bet.ParlayBonus = parlayBonus;
+                        bet.ParlayBonusWinnings = parlayBonusWinnings;
+
+                        // get percentage of real and bonus payout.
+                        var stakeRealPayoutPercentage = bet.StakeReal / bet.TrueStake;
+                        var stakeBonusPayoutPercentage = 1 - stakeRealPayoutPercentage;
+
+                        bet.StakeRealPayout = payout * stakeRealPayoutPercentage;
+                        bet.StakeBonusPayout = payout * stakeBonusPayoutPercentage;
 
                         var betEntity = context.Bet.Update(bet).Entity;
 
@@ -769,11 +808,34 @@ namespace Platform.Settlement.Service.Repository
                         var taxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
                         var stake = GetStake(selections, taxedStake, bet.TrueStake);
                         var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), stake);
+                        var parlayBonusWinnings = 0m;
+                        var parlayBonus = 0m;
 
-                        var taxedWinnings = (payout - bet.TrueStake) * bet.WinningsTax;
+                        // parlay bonus: bet should be Won
+                        if (selections.Count > 2)
+                        {
+                            var parlayConfig = GetParlayBetConfig(context, new Guid(bet.ClientId), bet.CurrencyCode);
+                            var wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won).Count();
+
+                            // to be eligible for parlay bonus, bet should at least have
+                            // - 3 minimum selections
+                            // - all selection odds must be >= parlay bonus min odds
+                            if (wonSelectionCount > 2 && !selections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
+                            {
+                                var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == wonSelectionCount);
+
+                                parlayBonus = parlayBonusConfig.ParlayBonus;
+                                parlayBonusWinnings = payout * parlayBonusConfig.ParlayBonus;
+                            }
+                        }
+
+                        var taxedWinnings = payout + parlayBonusWinnings;
+                        taxedWinnings = (taxedWinnings - bet.StakeReal) * bet.WinningsTax;
 
                         if (payout > bet.TrueStake)
+                        {
                             payout = payout - taxedWinnings;
+                        }
                         else
                             taxedWinnings = 0;
 
@@ -781,14 +843,25 @@ namespace Platform.Settlement.Service.Repository
 
                         stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon ? bet.TrueStake : stake;
 
-                        bet.WinLoss = payout == 0 ? -bet.TrueStake : payout - stake;
+                        var totalPayout = payout + parlayBonusWinnings;
+
+                        bet.WinLoss = totalPayout == 0 ? -bet.TrueStake : totalPayout - stake;
                         bet.BetStatusId = (int)betStatus;
                         bet.BetStatusName = betStatus.ToString();
-                        bet.Payout = payout;
+                        bet.Payout = totalPayout;
                         bet.SettlementDate = settledDate;
                         bet.SettlementDateOffset = settledDate.AddHours(-4);
                         bet.TaxedStake = betStatus == BetStatus.Cancelled || betStatus == BetStatus.Void ? 0 : taxedStake;
                         bet.TaxedWinnings = taxedWinnings;
+                        bet.ParlayBonus = parlayBonus;
+                        bet.ParlayBonusWinnings = parlayBonusWinnings;
+
+                        // get percentage of real and bonus payout.
+                        var stakeRealPayoutPercentage = bet.StakeReal / bet.TrueStake;
+                        var stakeBonusPayoutPercentage = 1 - stakeRealPayoutPercentage;
+
+                        bet.StakeRealPayout = payout * stakeRealPayoutPercentage;
+                        bet.StakeBonusPayout = payout * stakeBonusPayoutPercentage;
 
                         var betEntity = context.Bet.Update(bet).Entity;
 

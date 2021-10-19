@@ -206,7 +206,7 @@ namespace Platform.Operator.Servicev2.Repository
                 Message = reason
             }, messageBroker, correlationId);
         }
-        private void AcceptBet(Guid betId, string correlationId, IMessageBroker messageBroker)
+        private void AcceptBet(Guid betId, string correlationId, IMessageBroker messageBroker, OperatorBetResponseDTO operatorResponse)
         {
             var payload = new OnBetPlacement();
 
@@ -225,6 +225,10 @@ namespace Platform.Operator.Servicev2.Repository
                         bet.BetStatusId = (int)betStatus;
                         bet.BetStatusName = betStatus.ToString();
                         bet.Reason = $"1024 - Ticket accepted (Operator)";
+
+                        bet.StakeReal = operatorResponse.StakeReal;
+                        bet.StakeBonus = operatorResponse.StakeBonus;
+                        bet.IsFreeBet = operatorResponse.IsFreeBet;
 
                         var betEntity = context.Bet.Update(bet).Entity;
                         payload.Bet = betEntity;
@@ -537,7 +541,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Timestamp = DateTime.UtcNow
                     });
 
-                    AcceptBet(message.Bet.BetId, correlationId, messageBroker);
+                    AcceptBet(message.Bet.BetId, correlationId, messageBroker, result);
                 }
                 else
                 {
@@ -791,6 +795,12 @@ namespace Platform.Operator.Servicev2.Repository
                 WinningsTax = message.Bet.WinningsTax,
                 TaxedStake = message.Bet.TaxedStake,
                 TaxedWinnings = message.Bet.TaxedWinnings,
+                ParlayBonusWinnings = message.Bet.ParlayBonusWinnings,
+                ParlayBonus = message.Bet.ParlayBonus,
+                StakeReal = message.Bet.StakeReal,
+                StakeBonus = message.Bet.StakeBonus,
+                StakeRealPayout = message.Bet.StakeRealPayout,
+                StakeBonusPayout = message.Bet.StakeBonusPayout,
                 TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                 BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
                 {

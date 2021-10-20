@@ -570,7 +570,7 @@ namespace Platform.Settlement.Service.Repository
                         var taxedWinnings = payout + parlayBonusWinnings;
                         taxedWinnings = (taxedWinnings - bet.StakeReal) * bet.WinningsTax;
 
-                        if (payout > bet.TrueStake)
+                        if (payout > bet.TrueStake && !bet.IsFreeBet)
                         {
                             payout = payout - taxedWinnings;
                         }
@@ -832,7 +832,7 @@ namespace Platform.Settlement.Service.Repository
                         var taxedWinnings = payout + parlayBonusWinnings;
                         taxedWinnings = (taxedWinnings - bet.StakeReal) * bet.WinningsTax;
 
-                        if (payout > bet.TrueStake)
+                        if (payout > bet.TrueStake && !bet.IsFreeBet)
                         {
                             payout = payout - taxedWinnings;
                         }

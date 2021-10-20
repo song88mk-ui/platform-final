@@ -1349,7 +1349,7 @@ namespace Platform.Betting.API.Repository
                 MaxPayout = parlayConfig.MaxPayout,
                 ParlayBonusMinOdds = parlayConfig.ParlayBonusMinOdds,
                 ParlayBonusMaxWinnings = parlayConfig.ParlayBonusMaxWinnings,
-                ParlayBonusConfig = parlayConfig.ParlayBonusConfig.Select(s => new ParlayBonusConfigFE { ParlayBonus = s.ParlayBonus, SelectionCount = s.SelectionCount }).ToList()
+                ParlayBonusConfig = parlayConfig.ParlayBonusConfig == null ? new List<ParlayBonusConfigFE>() : parlayConfig.ParlayBonusConfig.Select(s => new ParlayBonusConfigFE { ParlayBonus = s.ParlayBonus, SelectionCount = s.SelectionCount }).ToList()
             };
 
 

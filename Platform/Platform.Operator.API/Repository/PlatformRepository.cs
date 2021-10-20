@@ -141,11 +141,12 @@ namespace Platform.Operator.API.Repository
                     _platformContext.Operator.Update(result);
 
                     _platformContext.SaveChanges();
-                    scope.Complete();
-
+                    
                     var testConfig = _platformContext.TestConfig.Find(id);
                     if (testConfig != null && testConfig.ClientId == id)
                     {
+                        scope.Complete();
+
                         return new OperatorBetResponseDTO
                         {
                             StatusId = 1000,
@@ -157,6 +158,8 @@ namespace Platform.Operator.API.Repository
                     }
                     else
                     {
+                        scope.Complete();
+
                         return new OperatorBetResponseDTO
                         {
                             StatusId = 1000,

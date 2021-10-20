@@ -161,7 +161,7 @@ namespace Platform.Operator.API.Controllers
         }
 
         [HttpPost("v1/testconfig/add")]
-        public async Task<IActionResult> AddTestConfig([FromBody] string clientId, bool isFreeBet, decimal stakeRealPercent, decimal stakeBonusPercent)
+        public async Task<IActionResult> AddTestConfig([FromQuery] string clientId, [FromQuery] bool isFreeBet, [FromQuery] decimal stakeRealPercent, [FromQuery] decimal stakeBonusPercent)
         {
             var result = _platformRepository.AddTestConfig(clientId, isFreeBet, stakeRealPercent, stakeBonusPercent);
 
@@ -172,7 +172,7 @@ namespace Platform.Operator.API.Controllers
         }
 
         [HttpPost("v1/testconfig/remove")]
-        public async Task<IActionResult> RemoveTestConfig([FromBody] string clientId)
+        public async Task<IActionResult> RemoveTestConfig([FromQuery] string clientId)
         {
             var result = _platformRepository.RemoveTestConfig(clientId);
 
@@ -185,7 +185,7 @@ namespace Platform.Operator.API.Controllers
         [HttpPost("v1/testconfig/get")]
         public async Task<IActionResult> GetTestConfig()
         {
-            var result = _platformRepository.GetClients();
+            var result = _platformRepository.GetTestConfig();
 
             return Ok(result);
         }

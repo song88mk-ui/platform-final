@@ -152,8 +152,8 @@ namespace Platform.Operator.API.Repository
                             StatusId = 1000,
                             Balance = result.Balance,
                             IsFreeBet = testConfig.IsFreeBet,
-                            StakeReal = (request.Stake * testConfig.StakeRealPercent),
-                            StakeBonus = (request.Stake * testConfig.StakeBonusPercent)
+                            StakeReal = (request.Stake * (testConfig.StakeRealPercent / 100)),
+                            StakeBonus = (request.Stake * (testConfig.StakeBonusPercent / 100))
                         };
                     }
                     else

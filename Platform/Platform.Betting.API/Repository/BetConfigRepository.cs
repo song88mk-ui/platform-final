@@ -131,7 +131,10 @@ namespace Platform.Betting.API.Repository
                             var parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(config.ParlayConfig);
                             parlayConfig.ParlayBonusMinOdds = payload.ParlayBonusMinOdds;
 
+                            if(parlayConfig.ParlayBonusConfig == null)
+                                parlayConfig.ParlayBonusConfig = new List<ParlayBonusConfig>();
                             parlayConfig.ParlayBonusConfig.Clear();
+
                             payload.ParlayBonusConfig.ForEach(p =>
                             {
                                 parlayConfig.ParlayBonusConfig.Add(p);

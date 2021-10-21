@@ -543,7 +543,7 @@ namespace Platform.Settlement.Service.Repository
 
                     if (bet != null)
                     {
-                        var taxedStake = bet.StakeReal - (bet.StakeReal / (1 + bet.StakeTax));
+                        var taxedStake = !bet.IsFreeBet ? bet.StakeReal - (bet.StakeReal / (1 + bet.StakeTax)) : 0;
                         var stake = GetStake(selections, taxedStake, bet.TrueStake);
                         var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), stake);
                         var parlayBonusWinnings = 0m;
@@ -805,7 +805,7 @@ namespace Platform.Settlement.Service.Repository
 
                     if (bet != null)
                     {
-                        var taxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
+                        var taxedStake = !bet.IsFreeBet ? bet.StakeReal - (bet.StakeReal / (1 + bet.StakeTax)) : 0;
                         var stake = GetStake(selections, taxedStake, bet.TrueStake);
                         var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), stake);
                         var parlayBonusWinnings = 0m;

@@ -120,6 +120,18 @@ namespace Platform.Betting.API.Repository
                     continue;
                 }
 
+                if (bet.IsFreeBet)
+                {
+                    result.Add(new CashOutDetailsReponse
+                    {
+                        BetId = bet.BetId,
+                        CashOutStatus = CashOutStatus.Unavailable,
+                        CashOutStake = 0m
+                    });
+
+                    continue;
+                }
+
                 if (bet.BetStatusId == (int)BetStatus.Running)
                 {
                     var selections = betSelections.Where(c => c.BetId == bet.BetId).ToList();

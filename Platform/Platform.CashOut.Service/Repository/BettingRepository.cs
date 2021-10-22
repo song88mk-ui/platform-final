@@ -215,7 +215,17 @@ namespace Platform.CashOut.Service.Repository
 
             bet.TaxedStake = message.TaxedStake;
             bet.TaxedWinnings = message.TaxedWinnings;
-            
+
+            bet.ParlayBonus = 0;
+            bet.ParlayBonusWinnings = 0;
+
+            // get percentage of real and bonus payout.
+            var stakeRealPayoutPercentage = bet.StakeReal / bet.TrueStake;
+            var stakeBonusPayoutPercentage = 1 - stakeRealPayoutPercentage;
+
+            bet.StakeRealPayout = payout * stakeRealPayoutPercentage;
+            bet.StakeBonusPayout = payout * stakeBonusPayoutPercentage;
+
             var betEntity = context.Bet.Update(bet).Entity;
 
             context.BetAudit.Add(new BetAudit

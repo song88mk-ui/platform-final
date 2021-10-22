@@ -483,8 +483,13 @@ namespace Platform.Settlement.Service.Repository
                     bet.SettlementDate = settledDate;
                     bet.SettlementDateOffset = settledDate.AddHours(-4);
 
-                    bet.TaxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
+                    bet.TaxedStake = !bet.IsFreeBet ? bet.StakeReal - (bet.StakeReal / (1 + bet.StakeTax)) : 0;
                     bet.TaxedWinnings = 0;
+
+                    bet.ParlayBonus = 0;
+                    bet.ParlayBonusWinnings = 0;
+                    bet.StakeRealPayout = 0;
+                    bet.StakeBonusPayout = 0;
 
                     var betEntity = context.Bet.Update(bet).Entity;
 
@@ -543,7 +548,7 @@ namespace Platform.Settlement.Service.Repository
 
                     if (bet != null)
                     {
-                        var taxedStake = bet.StakeReal - (bet.StakeReal / (1 + bet.StakeTax));
+                        var taxedStake = !bet.IsFreeBet ? bet.StakeReal - (bet.StakeReal / (1 + bet.StakeTax)) : 0;
                         var stake = GetStake(selections, taxedStake, bet.TrueStake);
                         var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), stake);
                         var parlayBonusWinnings = 0m;
@@ -745,8 +750,13 @@ namespace Platform.Settlement.Service.Repository
                     bet.SettlementDate = settledDate;
                     bet.SettlementDateOffset = settledDate.AddHours(-4);
 
-                    bet.TaxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
+                    bet.TaxedStake = !bet.IsFreeBet ? bet.StakeReal - (bet.StakeReal / (1 + bet.StakeTax)) : 0;
                     bet.TaxedWinnings = 0;
+
+                    bet.ParlayBonus = 0;
+                    bet.ParlayBonusWinnings = 0;
+                    bet.StakeRealPayout = 0;
+                    bet.StakeBonusPayout = 0;
 
                     var betEntity = context.Bet.Update(bet).Entity;
 
@@ -805,7 +815,7 @@ namespace Platform.Settlement.Service.Repository
 
                     if (bet != null)
                     {
-                        var taxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
+                        var taxedStake = !bet.IsFreeBet ? bet.StakeReal - (bet.StakeReal / (1 + bet.StakeTax)) : 0;
                         var stake = GetStake(selections, taxedStake, bet.TrueStake);
                         var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), stake);
                         var parlayBonusWinnings = 0m;
@@ -987,6 +997,10 @@ namespace Platform.Settlement.Service.Repository
                             bet.SettlementDateOffset = settledDate.AddHours(-4);
                             bet.TaxedStake = 0;
                             bet.TaxedWinnings = 0;
+                            bet.ParlayBonus = 0;
+                            bet.ParlayBonusWinnings = 0;
+                            bet.StakeRealPayout = 0;
+                            bet.StakeBonusPayout = 0;
 
                             var betEntity = context.Bet.Update(bet).Entity;
                             betData = betEntity;

@@ -161,7 +161,8 @@ namespace Platform.Betting.API.Repository
 
                     try
                     {
-                        var taxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
+                        //var taxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
+                        var taxedStake = bet.StakeReal - (bet.StakeReal / (1 + bet.StakeTax));
                         var stake = bet.TrueStake - taxedStake;
 
                         var probabilites = new List<Probabilities>();
@@ -232,7 +233,7 @@ namespace Platform.Betting.API.Repository
 
                             cashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
-                            var taxedWinnings = (cashOutStake - stake) * bet.WinningsTax;
+                            var taxedWinnings = (cashOutStake - bet.StakeReal) * bet.WinningsTax;
 
                             if (cashOutStake > stake)
                                 cashOutStake = cashOutStake - taxedWinnings;

@@ -562,8 +562,8 @@ namespace Platform.Settlement.Service.Repository
                         var parlayBonusWinnings = 0m;
                         var parlayBonus = 0m;
 
-                        // parlay bonus: bet should be Won
-                        if (selections.Count > 2)
+                        // parlay bonus: bet should be Won and isFreeBet = false
+                        if (selections.Count > 2 && !bet.IsFreeBet)
                         {
                             var parlayConfig = GetParlayBetConfig(context, new Guid(bet.ClientId), bet.CurrencyCode);
                             var wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won).Count();
@@ -844,8 +844,8 @@ namespace Platform.Settlement.Service.Repository
                         var parlayBonusWinnings = 0m;
                         var parlayBonus = 0m;
 
-                        // parlay bonus: bet should be Won
-                        if (selections.Count > 2)
+                        // parlay bonus: bet should be Won and isFreeBet = false
+                        if (selections.Count > 2 && !bet.IsFreeBet)
                         {
                             var parlayConfig = GetParlayBetConfig(context, new Guid(bet.ClientId), bet.CurrencyCode);
                             var wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won).Count();

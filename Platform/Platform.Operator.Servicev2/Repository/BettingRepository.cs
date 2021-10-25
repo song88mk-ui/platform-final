@@ -227,6 +227,7 @@ namespace Platform.Operator.Servicev2.Repository
                         bet.BetStatusName = betStatus.ToString();
                         bet.Reason = $"1024 - Ticket accepted (Operator)";
 
+                        bet.ParlayBonus = operatorResponse.IsFreeBet ? 0m : bet.ParlayBonus;
                         bet.StakeReal = operatorResponse.StakeReal;
                         bet.StakeBonus = operatorResponse.StakeBonus;
                         bet.IsFreeBet = operatorResponse.IsFreeBet;

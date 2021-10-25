@@ -48,7 +48,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
             using var scope = _serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<BettingContext>();
 
-            var bets = context.Bet.AsNoTracking().Where(c => c.BetStatusId == (int)BetStatus.Running).Select(s => new BetMemory
+            var bets = context.Bet.AsNoTracking().Where(c => c.BetStatusId == (int)BetStatus.Running && c.IsFreeBet == false).Select(s => new BetMemory
             {
                 BetId = s.BetId,
                 ClientId = s.ClientId,
@@ -104,6 +104,9 @@ namespace Platform.CashOutStake.Servicev2.Repository
         }
         public void AddBet(OnBetPlacement message)
         {
+            if (message.Bet.IsFreeBet == true)
+                return;
+
             var bet = new BetMemory
             {
                 BetId = message.Bet.BetId,

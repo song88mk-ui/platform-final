@@ -251,13 +251,13 @@ namespace Platform.Betting.API.Repository
                         WinningsTax = taxConfig.WinningsTax,
                         TaxedStake = taxedStake,
                         TaxedWinnings = 0,
-                        IsFreeBet = false,
                         ParlayBonus = 0,
                         ParlayBonusWinnings = 0,
-                        StakeBonus = 0,
-                        StakeBonusPayout = 0,
                         StakeReal = 0,
+                        StakeBonus = 0,
                         StakeRealPayout = 0,
+                        StakeBonusPayout = 0,
+                        IsFreeBet = false
                     }).Entity;
 
                     betData = betEntity;
@@ -300,7 +300,14 @@ namespace Platform.Betting.API.Repository
                         StakeTax = betEntity.StakeTax,
                         WinningsTax = betEntity.WinningsTax,
                         TaxedStake = betEntity.TaxedStake,
-                        TaxedWinnings = betEntity.TaxedWinnings
+                        TaxedWinnings = betEntity.TaxedWinnings,
+                        ParlayBonus = betEntity.ParlayBonus,
+                        ParlayBonusWinnings = betEntity.ParlayBonusWinnings,
+                        StakeReal = betEntity.StakeReal,
+                        StakeBonus = betEntity.StakeBonus,
+                        StakeRealPayout = betEntity.StakeRealPayout,
+                        StakeBonusPayout = betEntity.StakeBonusPayout,
+                        IsFreeBet = betEntity.IsFreeBet
                     });
 
                     foreach (var selection in request.Selections)
@@ -685,7 +692,14 @@ namespace Platform.Betting.API.Repository
                         StakeTax = taxConfig.StakeTax,
                         WinningsTax = taxConfig.WinningsTax,
                         TaxedStake = taxedStake,
-                        TaxedWinnings = 0
+                        TaxedWinnings = 0,
+                        ParlayBonus = 0,
+                        ParlayBonusWinnings = 0,
+                        StakeReal = 0,
+                        StakeBonus = 0,
+                        StakeRealPayout = 0,
+                        StakeBonusPayout = 0,
+                        IsFreeBet = false
                     }).Entity;
 
                     betData = betEntity;
@@ -728,7 +742,14 @@ namespace Platform.Betting.API.Repository
                         StakeTax = betEntity.StakeTax,
                         WinningsTax = betEntity.WinningsTax,
                         TaxedStake = betEntity.TaxedStake,
-                        TaxedWinnings = betEntity.TaxedWinnings
+                        TaxedWinnings = betEntity.TaxedWinnings,
+                        ParlayBonus = betEntity.ParlayBonus,
+                        ParlayBonusWinnings = betEntity.ParlayBonusWinnings,
+                        StakeReal = betEntity.StakeReal,
+                        StakeBonus = betEntity.StakeBonus,
+                        StakeRealPayout = betEntity.StakeRealPayout,
+                        StakeBonusPayout = betEntity.StakeBonusPayout,
+                        IsFreeBet = betEntity.IsFreeBet
                     });
 
                     foreach (var selection in request.Selections)

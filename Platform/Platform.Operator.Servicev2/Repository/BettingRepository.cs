@@ -184,7 +184,8 @@ namespace Platform.Operator.Servicev2.Repository
                                 VoidProbability = betSelectionEntity.VoidProbability,
                                 HalfWonProbability = betSelectionEntity.HalfWonProbability,
                                 HalfLostProbability = betSelectionEntity.HalfLostProbability,
-                                CorrelationId = betSelectionEntity.CorrelationId
+                                CorrelationId = betSelectionEntity.CorrelationId,
+                                DeadHeatFactor = betSelectionEntity.DeadHeatFactor
                             });
                         }
 
@@ -322,7 +323,8 @@ namespace Platform.Operator.Servicev2.Repository
                                 VoidProbability = betSelectionEntity.VoidProbability,
                                 HalfWonProbability = betSelectionEntity.HalfWonProbability,
                                 HalfLostProbability = betSelectionEntity.HalfLostProbability,
-                                CorrelationId = betSelectionEntity.CorrelationId
+                                CorrelationId = betSelectionEntity.CorrelationId,
+                                DeadHeatFactor = betSelectionEntity.DeadHeatFactor
                             });
                         }
 

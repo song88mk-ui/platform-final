@@ -463,7 +463,8 @@ namespace Platform.Settlement.Service.Repository
                 VoidProbability = betSelectionEntity.VoidProbability,
                 HalfWonProbability = betSelectionEntity.HalfWonProbability,
                 HalfLostProbability = betSelectionEntity.HalfLostProbability,
-                CorrelationId = betSelection.CorrelationId
+                CorrelationId = betSelection.CorrelationId,
+                DeadHeatFactor = betSelectionEntity.DeadHeatFactor
             });
 
             if (message.SelectionStatus == BetStatus.Lost)
@@ -729,7 +730,8 @@ namespace Platform.Settlement.Service.Repository
                 VoidProbability = betSelectionEntity.VoidProbability,
                 HalfWonProbability = betSelectionEntity.HalfWonProbability,
                 HalfLostProbability = betSelectionEntity.HalfLostProbability,
-                CorrelationId = betSelection.CorrelationId
+                CorrelationId = betSelection.CorrelationId,
+                DeadHeatFactor = betSelectionEntity.DeadHeatFactor
             });
 
             if (message.SelectionStatus == BetStatus.Lost)

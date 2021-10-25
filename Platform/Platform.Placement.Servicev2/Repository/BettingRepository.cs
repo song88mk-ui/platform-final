@@ -96,7 +96,14 @@ namespace Platform.Placement.Servicev2.Repository
                                     StakeTax = betEntity.StakeTax,
                                     WinningsTax = betEntity.WinningsTax,
                                     TaxedStake = betEntity.TaxedStake,
-                                    TaxedWinnings = betEntity.TaxedWinnings
+                                    TaxedWinnings = betEntity.TaxedWinnings,
+                                    ParlayBonus = betEntity.ParlayBonus,
+                                    ParlayBonusWinnings = betEntity.ParlayBonusWinnings,
+                                    StakeReal = betEntity.StakeReal,
+                                    StakeBonus = betEntity.StakeBonus,
+                                    StakeRealPayout = betEntity.StakeRealPayout,
+                                    StakeBonusPayout = betEntity.StakeBonusPayout,
+                                    IsFreeBet = betEntity.IsFreeBet
                                 });
 
                                 var betSelections = context.BetSelection.Where(c => c.BetId == betEntity.BetId).ToList();
@@ -258,7 +265,14 @@ namespace Platform.Placement.Servicev2.Repository
                                     StakeTax = betEntity.StakeTax,
                                     WinningsTax = betEntity.WinningsTax,
                                     TaxedStake = betEntity.TaxedStake,
-                                    TaxedWinnings = betEntity.TaxedWinnings
+                                    TaxedWinnings = betEntity.TaxedWinnings,
+                                    ParlayBonus = betEntity.ParlayBonus,
+                                    ParlayBonusWinnings = betEntity.ParlayBonusWinnings,
+                                    StakeReal = betEntity.StakeReal,
+                                    StakeBonus = betEntity.StakeBonus,
+                                    StakeRealPayout = betEntity.StakeRealPayout,
+                                    StakeBonusPayout = betEntity.StakeBonusPayout,
+                                    IsFreeBet = betEntity.IsFreeBet
                                 });
 
                                 var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();

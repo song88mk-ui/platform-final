@@ -265,7 +265,14 @@ namespace Platform.CashOut.Service.Repository
                 StakeTax = betEntity.StakeTax,
                 WinningsTax = betEntity.WinningsTax,
                 TaxedStake = betEntity.TaxedStake,
-                TaxedWinnings = betEntity.TaxedWinnings
+                TaxedWinnings = betEntity.TaxedWinnings,
+                ParlayBonus = betEntity.ParlayBonus,
+                ParlayBonusWinnings = betEntity.ParlayBonusWinnings,
+                StakeReal = betEntity.StakeReal,
+                StakeBonus = betEntity.StakeBonus,
+                StakeRealPayout = betEntity.StakeRealPayout,
+                StakeBonusPayout = betEntity.StakeBonusPayout,
+                IsFreeBet = betEntity.IsFreeBet
             });
 
             isPublish = true;

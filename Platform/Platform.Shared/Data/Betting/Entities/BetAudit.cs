@@ -51,5 +51,18 @@ namespace Platform.Shared.Data.Betting.Entities
         public decimal TaxedStake { get; set; }
         [Column(TypeName = "decimal(26,12)")]
         public decimal TaxedWinnings { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal ParlayBonus { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal ParlayBonusWinnings { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal StakeReal { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal StakeBonus { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal StakeRealPayout { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal StakeBonusPayout { get; set; }
+        public bool IsFreeBet { get; set; }
     }
 }

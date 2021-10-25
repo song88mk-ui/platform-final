@@ -1257,6 +1257,19 @@ namespace Platform.Betting.API.Repository
                 var cashOut = cashOutList.Result.Where(c => c.BetId == bet.BetId).FirstOrDefault();
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
 
+                #region Get Parlay Bonus
+                if (filteredSelections.Count > 2 && bet.BetStatusId == (int)BetStatus.Running)
+                {
+                    var parlayConfig = GetParlayBetConfig(new Guid(bet.ClientId), bet.CurrencyCode);
+                    var wonSelectionCount = filteredSelections.Count();
+                    if (wonSelectionCount > 2 && !filteredSelections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
+                    {
+                        var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == wonSelectionCount);
+                        bet.ParlayBonus = parlayBonusConfig.ParlayBonus;
+                    }
+                }
+                #endregion
+
                 result.Add(new BetHistoryDTO
                 {
                     BetId = bet.BetId.ToString(),
@@ -1788,6 +1801,19 @@ namespace Platform.Betting.API.Repository
 
             return result;
         }
+        private ParlayConfig GetParlayBetConfig(Guid clientId, string currencyCode)
+        {
+            try
+            {
+                var betConfig = _bettingContext.BetConfig.FirstOrDefault(c => c.ClientId == clientId && c.CurrencyCode == currencyCode);
 
+                return JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            }
+            catch (Exception ex)
+            {
+                return new ParlayConfig();
+            }
+
+        }
     }
 }

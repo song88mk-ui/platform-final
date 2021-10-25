@@ -1499,7 +1499,7 @@ namespace Platform.Betting.API.Repository
         {
             var bet = _bettingContext.Bet.Find(request.BetId);
 
-            if (bet == null || bet.BetStatusId != (int)BetStatus.Running || bet.IsFreeBet)
+            if (bet == null || bet.BetStatusId != (int)BetStatus.Running)
             {
                 return new BaseResponseDTO<BetCashOutResponseDTO>
                 {

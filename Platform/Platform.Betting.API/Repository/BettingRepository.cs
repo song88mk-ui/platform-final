@@ -86,6 +86,7 @@ namespace Platform.Betting.API.Repository
             decimal maxStake = 0;
             decimal maxPerGame = 0;
             decimal stakeFixtureLimit = 0;
+            decimal parlayBonus = 0;
             var odds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
             var taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
 
@@ -200,6 +201,15 @@ namespace Platform.Betting.API.Repository
                         Message = StatusCode.Maximum_Payout_Must_Be_Equal_Or_Lower.ToString().Replace('_', ' ')
                     };
                 }
+
+                if (request.Selections.Count > 2)
+                {
+                    if (!request.Selections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
+                    {
+                        var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == request.Selections.Count);
+                        parlayBonus = parlayBonusConfig.ParlayBonus;
+                    }
+                }
             }
 
             var betData = new Bet();
@@ -251,7 +261,7 @@ namespace Platform.Betting.API.Repository
                         WinningsTax = taxConfig.WinningsTax,
                         TaxedStake = taxedStake,
                         TaxedWinnings = 0,
-                        ParlayBonus = 0,
+                        ParlayBonus = parlayBonus,
                         ParlayBonusWinnings = 0,
                         StakeReal = 0,
                         StakeBonus = 0,
@@ -550,6 +560,7 @@ namespace Platform.Betting.API.Repository
             decimal maxStake = 0;
             decimal maxPerGame = 0;
             decimal stakeFixtureLimit = 0;
+            decimal parlayBonus = 0;
             var odds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
             var taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
 
@@ -642,6 +653,15 @@ namespace Platform.Betting.API.Repository
                         }
                     };
                 }
+
+                if(request.Selections.Count > 2)
+                {
+                    if(!request.Selections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
+                    {
+                        var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == request.Selections.Count);
+                        parlayBonus = parlayBonusConfig.ParlayBonus;
+                    }
+                }
             }
 
             var betData = new Bet();
@@ -693,7 +713,7 @@ namespace Platform.Betting.API.Repository
                         WinningsTax = taxConfig.WinningsTax,
                         TaxedStake = taxedStake,
                         TaxedWinnings = 0,
-                        ParlayBonus = 0,
+                        ParlayBonus = parlayBonus,
                         ParlayBonusWinnings = 0,
                         StakeReal = 0,
                         StakeBonus = 0,
@@ -1257,19 +1277,6 @@ namespace Platform.Betting.API.Repository
                 var cashOut = cashOutList.Result.Where(c => c.BetId == bet.BetId).FirstOrDefault();
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
 
-                #region Get Parlay Bonus
-                if (filteredSelections.Count > 2 && bet.BetStatusId == (int)BetStatus.Running)
-                {
-                    var parlayConfig = GetParlayBetConfig(new Guid(bet.ClientId), bet.CurrencyCode);
-                    var wonSelectionCount = filteredSelections.Count();
-                    if (wonSelectionCount > 2 && !filteredSelections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
-                    {
-                        var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == wonSelectionCount);
-                        bet.ParlayBonus = parlayBonusConfig.ParlayBonus;
-                    }
-                }
-                #endregion
-
                 result.Add(new BetHistoryDTO
                 {
                     BetId = bet.BetId.ToString(),
@@ -1801,19 +1808,6 @@ namespace Platform.Betting.API.Repository
 
             return result;
         }
-        private ParlayConfig GetParlayBetConfig(Guid clientId, string currencyCode)
-        {
-            try
-            {
-                var betConfig = _bettingContext.BetConfig.FirstOrDefault(c => c.ClientId == clientId && c.CurrencyCode == currencyCode);
 
-                return JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-            }
-            catch (Exception ex)
-            {
-                return new ParlayConfig();
-            }
-
-        }
     }
 }

@@ -202,12 +202,14 @@ namespace Platform.Betting.API.Repository
                     };
                 }
 
-                if (request.Selections.Count > 2)
+                if (request.Selections.Count >= 3)
                 {
                     if (!request.Selections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
                     {
                         var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == request.Selections.Count);
-                        parlayBonus = parlayBonusConfig.ParlayBonus;
+
+                        if (parlayBonusConfig != null)
+                            parlayBonus = parlayBonusConfig.ParlayBonus;
                     }
                 }
             }
@@ -659,7 +661,9 @@ namespace Platform.Betting.API.Repository
                     if(!request.Selections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
                     {
                         var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == request.Selections.Count);
-                        parlayBonus = parlayBonusConfig.ParlayBonus;
+
+                        if (parlayBonusConfig != null)
+                            parlayBonus = parlayBonusConfig.ParlayBonus;
                     }
                 }
             }

@@ -105,7 +105,7 @@ namespace Platform.Settlement.Service.Repository
         }
         private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(BettingContext context, Guid clientId, string currencyCode, DateTime betDate)
         {
-            var result = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
+            var result = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate && c.CurrencyCode == currencyCode).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
 
             if (result == null)
                 return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());

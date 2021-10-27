@@ -222,7 +222,7 @@ namespace Platform.CashOut.Service.Repository
 
             // get percentage of real and bonus payout.
             var stakeRealPayoutPercentage = bet.StakeReal / bet.TrueStake;
-            var stakeBonusPayoutPercentage = 1 - stakeRealPayoutPercentage;
+            var stakeBonusPayoutPercentage = bet.StakeBonus / bet.TrueStake;
 
             bet.StakeRealPayout = payout * stakeRealPayoutPercentage;
             bet.StakeBonusPayout = payout * stakeBonusPayoutPercentage;

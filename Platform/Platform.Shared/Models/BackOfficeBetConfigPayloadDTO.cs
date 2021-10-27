@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Platform.Shared.Models
 {
@@ -57,6 +58,7 @@ namespace Platform.Shared.Models
     public class ParlayBonusConfig
     {
         public int SelectionCount { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
         public decimal ParlayBonus { get; set; }
     }
 }

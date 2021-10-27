@@ -137,7 +137,6 @@ namespace Platform.Betting.API.Repository
                             }
 
                             parlayConfig.ParlayBonusConfig.Clear();
-
                             payload.ParlayBonusConfig.ForEach(p =>
                             {
                                 parlayConfig.ParlayBonusConfig.Add(p);

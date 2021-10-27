@@ -11,6 +11,7 @@ namespace Platform.Shared.Data.Betting.Entities
         public int SelectionCount { get; set; }
         public decimal ParlayBonus { get; set; }
         public decimal ParlayBonusMinOdds { get; set; }
+        public decimal ParlayBonusMaxWinnings { get; set; }
         public DateTime TimeStamp { get; set; }
 
     }

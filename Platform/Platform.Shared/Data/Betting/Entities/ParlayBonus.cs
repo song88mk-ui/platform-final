@@ -12,7 +12,7 @@ namespace Platform.Shared.Data.Betting.Entities
         public decimal ParlayBonus { get; set; }
         public decimal ParlayBonusMinOdds { get; set; }
         public decimal ParlayBonusMaxWinnings { get; set; }
+        public string CurrencyCode { get; set; }
         public DateTime TimeStamp { get; set; }
-
     }
 }

@@ -132,7 +132,10 @@ namespace Platform.Betting.API.Repository
                             parlayConfig.ParlayBonusMinOdds = payload.ParlayBonusMinOdds;
                             
                             if (parlayConfig.ParlayBonusConfig == null)
+                            {
                                 parlayConfig.ParlayBonusConfig = new List<ParlayBonusConfig>();
+                            }
+
                             parlayConfig.ParlayBonusConfig.Clear();
 
                             payload.ParlayBonusConfig.ForEach(p =>

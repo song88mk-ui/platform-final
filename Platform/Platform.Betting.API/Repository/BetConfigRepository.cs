@@ -130,32 +130,31 @@ namespace Platform.Betting.API.Repository
                         {
                             var parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(config.ParlayConfig);
                             parlayConfig.ParlayBonusMinOdds = payload.ParlayBonusMinOdds;
-
-                            if(parlayConfig.ParlayBonusConfig == null)
+                            
+                            if (parlayConfig.ParlayBonusConfig == null)
                                 parlayConfig.ParlayBonusConfig = new List<ParlayBonusConfig>();
                             parlayConfig.ParlayBonusConfig.Clear();
 
                             payload.ParlayBonusConfig.ForEach(p =>
                             {
                                 parlayConfig.ParlayBonusConfig.Add(p);
+
+                                _bettingContext.ParlayBonusAudit.Add(new ParlayBonusAudit
+                                {
+                                    ClientId = payload.ClientId,
+                                    ClientIdRef = payload.ClientIdRef,
+                                    SelectionCount = p.SelectionCount,
+                                    ParlayBonus = p.ParlayBonus,
+                                    ParlayBonusMinOdds = payload.ParlayBonusMinOdds,
+                                    ParlayBonusMaxWinnings = parlayConfig.ParlayBonusMaxWinnings,
+                                    CurrencyCode = config.CurrencyCode,
+                                    TimeStamp = dateCreated
+                                });
                             });
 
                             config.ParlayConfig = JsonSerializer.Serialize(parlayConfig);
 
                             _bettingContext.BetConfig.Update(config);
-                        }
-
-                        foreach (var parlay in payload.ParlayBonusConfig)
-                        {
-                            _bettingContext.ParlayBonusAudit.Add(new ParlayBonusAudit
-                            {
-                                ClientId = payload.ClientId,
-                                ClientIdRef = payload.ClientIdRef,
-                                SelectionCount = parlay.SelectionCount,
-                                ParlayBonus = parlay.ParlayBonus,
-                                ParlayBonusMinOdds = payload.ParlayBonusMinOdds,
-                                TimeStamp = dateCreated
-                            });
                         }
 
                     }
@@ -199,7 +198,7 @@ namespace Platform.Betting.API.Repository
                 var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == request.ClientId).FirstOrDefault();
                 if (betConfig != null)
                 {
-                    var parlayBonusAudit = _bettingContext.ParlayBonusAudit.AsNoTracking().Where(x => x.ClientId == request.ClientId).OrderBy(o => o.SelectionCount).ThenByDescending(o => o.TimeStamp)
+                    var parlayBonusAudit = _bettingContext.ParlayBonusAudit.AsNoTracking().Where(x => x.ClientId == request.ClientId && x.CurrencyCode == betConfig.CurrencyCode).OrderBy(o => o.SelectionCount).ThenByDescending(o => o.TimeStamp)
                         .Select(s => new 
                         {
                             SelectionCount = s.SelectionCount,
@@ -228,7 +227,7 @@ namespace Platform.Betting.API.Repository
                 var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == request.ClientId).FirstOrDefault();
                 if (betConfig != null)
                 {
-                    var parlayBonusAudit = _bettingContext.ParlayBonusAudit.AsNoTracking().Where(x => x.ClientId == request.ClientId && x.SelectionCount == request.SelectionCount).OrderByDescending(o => o.TimeStamp)
+                    var parlayBonusAudit = _bettingContext.ParlayBonusAudit.AsNoTracking().Where(x => x.ClientId == request.ClientId && x.CurrencyCode == betConfig.CurrencyCode && x.SelectionCount == request.SelectionCount).OrderByDescending(o => o.TimeStamp)
                         .Select(s => new
                         {
                             SelectionCount = s.SelectionCount,

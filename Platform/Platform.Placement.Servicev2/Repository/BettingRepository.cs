@@ -610,7 +610,7 @@ namespace Platform.Placement.Servicev2.Repository
 
             if (betSelectionData.Count >= 3 && betData.IsFreeBet == false)
             {
-                var parlayConfig = GetParlayBetConfig(Guid.Parse(betData.ClientId), betData.CurrencyCode, betData.BetDate);
+                var parlayConfig = GetParlayBetConfig(Guid.Parse(betData.ClientId), betData.CurrencyCode, betData.BetDate, betSelectionData.Count);
 
                 if (parlayConfig.Item1 == true && betSelectionData.Any(c => c.Odds < parlayConfig.Item2.ParlayBonusMinOdds) == false)
                 {
@@ -647,7 +647,7 @@ namespace Platform.Placement.Servicev2.Repository
             return selection.Build();
         }
 
-        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(Guid clientId, string currencyCode, DateTime betDate)
+        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(Guid clientId, string currencyCode, DateTime betDate, int wonSelectionCount)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
@@ -655,7 +655,8 @@ namespace Platform.Placement.Servicev2.Repository
 
                 using (var context = new BettingContext(optionsBuilder.Options))
                 {
-                    var result = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate && c.CurrencyCode == currencyCode).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
+                    var result = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate
+                            && c.CurrencyCode == currencyCode && wonSelectionCount >= c.SelectionCount).OrderByDescending(o => o.TimeStamp).ThenByDescending(p => p.SelectionCount).FirstOrDefault();
 
                     if (result == null)
                         return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());

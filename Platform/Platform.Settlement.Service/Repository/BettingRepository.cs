@@ -103,9 +103,10 @@ namespace Platform.Settlement.Service.Repository
 
             return result;
         }
-        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(BettingContext context, Guid clientId, string currencyCode, DateTime betDate)
+        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(BettingContext context, Guid clientId, string currencyCode, DateTime betDate, int wonSelectionCount)
         {
-            var result = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate && c.CurrencyCode == currencyCode).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
+            var result = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate 
+                && c.CurrencyCode == currencyCode && wonSelectionCount >= c.SelectionCount ).OrderByDescending(o => o.TimeStamp).ThenByDescending(p => p.SelectionCount).FirstOrDefault();
 
             if (result == null)
                 return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
@@ -574,7 +575,7 @@ namespace Platform.Settlement.Service.Repository
 
                         if (wonSelectionCount >= 3 && bet.IsFreeBet == false)
                         {
-                            var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate);
+                            var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, wonSelectionCount);
 
                             if (parlayConfig.Item1 == true && selections.Any(c => c.Odds < parlayConfig.Item2.ParlayBonusMinOdds) == false)
                             {
@@ -854,7 +855,7 @@ namespace Platform.Settlement.Service.Repository
 
                         if (wonSelectionCount >= 3 && bet.IsFreeBet == false)
                         {
-                            var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate);
+                            var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, wonSelectionCount);
 
                             if (parlayConfig.Item1 == true && selections.Any(c => c.Odds < parlayConfig.Item2.ParlayBonusMinOdds) == false)
                             {

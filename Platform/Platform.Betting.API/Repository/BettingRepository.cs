@@ -206,7 +206,7 @@ namespace Platform.Betting.API.Repository
                 {
                     if (!request.Selections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
                     {
-                        var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == request.Selections.Count);
+                        var parlayBonusConfig = parlayConfig.ParlayBonusConfig.OrderByDescending(o => o.SelectionCount).FirstOrDefault(c => c.SelectionCount <= request.Selections.Count);
 
                         if (parlayBonusConfig != null)
                             parlayBonus = parlayBonusConfig.ParlayBonus;
@@ -660,7 +660,7 @@ namespace Platform.Betting.API.Repository
                 {
                     if(!request.Selections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
                     {
-                        var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == request.Selections.Count);
+                        var parlayBonusConfig = parlayConfig.ParlayBonusConfig.OrderByDescending(o => o.SelectionCount).FirstOrDefault(c => c.SelectionCount <= request.Selections.Count);
 
                         if (parlayBonusConfig != null)
                             parlayBonus = parlayBonusConfig.ParlayBonus;

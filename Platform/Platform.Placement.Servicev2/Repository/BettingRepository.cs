@@ -606,23 +606,20 @@ namespace Platform.Placement.Servicev2.Repository
             var parlayBonus = 0m;
             var hasBonus = false;
             // parlay bonus: bet should be Won by default
-            if (betSelectionData.Count > 2)
-            {
-                var parlayConfig = GetParlayBetConfig(new Guid(betData.ClientId), betData.CurrencyCode);
-                var wonSelectionCount = betSelectionData.Count();
 
-                // to be eligible for parlay bonus, bet should at least have
-                // - 3 minimum selections
-                // - all selection odds must be >= parlay bonus min odds
-                if (wonSelectionCount > 2 && !betSelectionData.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
+
+            if (betSelectionData.Count >= 3 && betData.IsFreeBet == false)
+            {
+                var parlayConfig = GetParlayBetConfig(Guid.Parse(betData.ClientId), betData.CurrencyCode, betData.BetDate);
+
+                if (parlayConfig.Item1 == true && betSelectionData.Any(c => c.Odds < parlayConfig.Item2.ParlayBonusMinOdds) == false)
                 {
-                    var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == wonSelectionCount);
-                    var payout = betSelectionData.Select(s => s.Odds).Aggregate((a, b) => a * b) * betData.TrueStake;
-                    parlayBonus = parlayBonusConfig.ParlayBonus;
-                    parlayBonusWinnings = (payout * parlayBonusConfig.ParlayBonus) * 10000;
+                    parlayBonus = parlayConfig.Item2.ParlayBonus;
+                    parlayBonusWinnings = betData.Payout * parlayConfig.Item2.ParlayBonus;
                     hasBonus = true;
                 }
             }
+
             #endregion
 
             var selection = hasBonus ? _factory.CreateBetBuilder()
@@ -650,27 +647,22 @@ namespace Platform.Placement.Servicev2.Repository
             return selection.Build();
         }
 
-        private ParlayConfig GetParlayBetConfig(Guid clientId, string currencyCode)
+        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(Guid clientId, string currencyCode, DateTime betDate)
         {
-            try
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
-                using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+                var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+
+                using (var context = new BettingContext(optionsBuilder.Options))
                 {
-                    var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+                    var result = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
 
-                    using (var context = new BettingContext(optionsBuilder.Options))
-                    {
-                        var betConfig = context.BetConfig.FirstOrDefault(c => c.ClientId == clientId && c.CurrencyCode == currencyCode);
-
-                        return JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-                    }
+                    if (result == null)
+                        return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
+                    else
+                        return new Tuple<bool, ParlayBonusAudit>(true, result);
                 }
             }
-            catch (Exception ex)
-            {
-                return new ParlayConfig();
-            }
-            
         }
     }
 }

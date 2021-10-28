@@ -202,7 +202,7 @@ namespace Platform.Betting.API.Repository
                     };
                 }
 
-                if (request.Selections.Count >= 3)
+                if (request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
                 {
                     if (!request.Selections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
                     {
@@ -656,7 +656,7 @@ namespace Platform.Betting.API.Repository
                     };
                 }
 
-                if (request.Selections.Count > 2 && parlayConfig.ParlayBonusConfig != null)
+                if (request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
                 {
                     if (!request.Selections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
                     {

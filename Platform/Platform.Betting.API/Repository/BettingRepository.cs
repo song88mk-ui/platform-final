@@ -871,25 +871,25 @@ namespace Platform.Betting.API.Repository
                         });
                     }
 
-                    if (request.Selections.Count == 1)
-                    {
-                        var stakeLimit = _bettingContext.StakeLimitFixture.Find($"{request.ClientCode}-{request.UserId}", request.Selections.First().FixtureId);
+                    //if (request.Selections.Count == 1)
+                    //{
+                    //    var stakeLimit = _bettingContext.StakeLimitFixture.Find($"{request.ClientCode}-{request.UserId}", request.Selections.First().FixtureId);
 
-                        if (stakeLimit == null)
-                        {
-                            _bettingContext.StakeLimitFixture.Add(new StakeLimitFixture
-                            {
-                                UserId = $"{request.ClientCode}-{request.UserId}",
-                                FixtureId = request.Selections.First().FixtureId,
-                                Remaining = stakeFixtureLimit - request.Stake
-                            });
-                        }
-                        else
-                        {
-                            stakeLimit.Remaining -= request.Stake;
-                            _bettingContext.StakeLimitFixture.Update(stakeLimit);
-                        }
-                    }
+                    //    if (stakeLimit == null)
+                    //    {
+                    //        _bettingContext.StakeLimitFixture.Add(new StakeLimitFixture
+                    //        {
+                    //            UserId = $"{request.ClientCode}-{request.UserId}",
+                    //            FixtureId = request.Selections.First().FixtureId,
+                    //            Remaining = stakeFixtureLimit - request.Stake
+                    //        });
+                    //    }
+                    //    else
+                    //    {
+                    //        stakeLimit.Remaining -= request.Stake;
+                    //        _bettingContext.StakeLimitFixture.Update(stakeLimit);
+                    //    }
+                    //}
 
                     _bettingContext.SaveChanges();
                     scope.Complete();

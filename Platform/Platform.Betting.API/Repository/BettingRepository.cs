@@ -656,9 +656,9 @@ namespace Platform.Betting.API.Repository
                     };
                 }
 
-                if(request.Selections.Count > 2)
+                if (request.Selections.Count > 2 && parlayConfig.ParlayBonusConfig != null)
                 {
-                    if(!request.Selections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
+                    if (!request.Selections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
                     {
                         var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == request.Selections.Count);
 

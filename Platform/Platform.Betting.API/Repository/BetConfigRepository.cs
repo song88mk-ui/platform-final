@@ -152,6 +152,7 @@ namespace Platform.Betting.API.Repository
                                         TimeStamp = dateCreated
                                     });
                                 });
+                                parlayConfig.ParlayBonusConfig.Clear();
 
                             }
                             else

@@ -656,7 +656,7 @@ namespace Platform.Placement.Servicev2.Repository
                 using (var context = new BettingContext(optionsBuilder.Options))
                 {
                     var result = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate
-                            && c.CurrencyCode == currencyCode && wonSelectionCount >= c.SelectionCount).OrderByDescending(o => o.TimeStamp).ThenByDescending(p => p.SelectionCount).FirstOrDefault();
+                            && c.CurrencyCode == currencyCode && wonSelectionCount == c.SelectionCount).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
 
                     if (result == null)
                         return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());

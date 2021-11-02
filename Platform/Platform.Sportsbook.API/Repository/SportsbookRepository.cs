@@ -4520,7 +4520,23 @@ namespace Platform.Sportsbook.API.Repository
             if (request.Selections.Count > 0)
             {
                 string manualSettlementConfig = string.IsNullOrEmpty(_configuration["Custom:ManualSettlement"]) ? "Old" : _configuration["Custom:ManualSettlement"];
-                if (manualSettlementConfig.ToUpper() == "OLD")
+                if (manualSettlementConfig.ToUpper() == "NEW")
+                {
+                    var payload = new BetSettlementRequestPayloadDTO
+                    {
+                        FixtureId = long.Parse(request.FixtureId),
+                        Selections = selections
+                    };
+
+                    await _rabbitMQRepository.Settlebet(new MessageRequestDTO()
+                    {
+                        CorrelationId = Guid.NewGuid().ToString(),
+                        MessageType = "OnBetManualSettlement",
+                        RoutingKey = $"r.oe.engine.onbetmanualsettlement",
+                        Payload = JsonSerializer.Serialize(payload)
+                    });
+                }
+                else
                 {
                     var digit = Convert.ToString(request.FixtureId);
                     var lastDigit = digit.Substring(digit.Length - 1);
@@ -4545,22 +4561,7 @@ namespace Platform.Sportsbook.API.Repository
                         RoutingKey = $"r.sb.adapter.{lastDigit}.onbetsettlement",
                         Payload = JsonSerializer.Serialize(payload)
                     });
-                }
-                else
-                {
-                    var payload = new BetSettlementRequestPayloadDTO
-                    {
-                        FixtureId = long.Parse(request.FixtureId),
-                        Selections = selections
-                    };
 
-                    await _rabbitMQRepository.Settlebet(new MessageRequestDTO()
-                    {
-                        CorrelationId = Guid.NewGuid().ToString(),
-                        MessageType = "OnBetManualSettlement",
-                        RoutingKey = $"r.oe.engine.onbetmanualsettlement",
-                        Payload = JsonSerializer.Serialize(payload)
-                    });
                 }
                 
             }

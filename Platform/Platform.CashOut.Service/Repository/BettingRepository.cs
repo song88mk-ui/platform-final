@@ -65,6 +65,9 @@ namespace Platform.CashOut.Service.Repository
                             if (result.Item1 == CashoutAcceptance.Accepted)
                             {
                                 var payload = new OnBetSettlement();
+                                
+                                payload.NonTaxedPayout = message.NonTaxedPayout;
+
                                 var selections = context.BetSelection.Where(c => c.BetId == message.BetId).ToList();
                                 if (selections.Count == 0)
                                 {
@@ -388,6 +391,7 @@ namespace Platform.CashOut.Service.Repository
                             CashOutStake = result.Result.CashOutStake,
                             TaxedStake = result.Result.TaxedStake,
                             TaxedWinnings = result.Result.TaxedWinnings,
+                            NonTaxedPayout = result.Result.NonTaxedPayout,
                             HasLive = message.HasLive,
                             Probabilities = result.Result.Probabilities
                         };

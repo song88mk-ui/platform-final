@@ -9,11 +9,13 @@ namespace Platform.Shared.MessageModels
         {
             BetSelections = new List<BetSelection>();
             IsRetry = false;
-        }    
+        }
+        
         public Bet Bet { get; set; }
         public List<BetSelection> BetSelections { get; set; }
         public string Message { get; set; }
         public bool IsRetry { get; set; }
+        public decimal NonTaxedPayout { get; set; }
     }
 
     public class OnBetSettlementRetry

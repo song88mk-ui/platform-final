@@ -1606,6 +1606,7 @@ namespace Platform.Betting.API.Repository
                     CashOutStake = cashOut.CashOutStake,
                     TaxedStake = cashOut.TaxedStake,
                     TaxedWinnings = cashOut.TaxedWinnings,
+                    NonTaxedPayout = cashOut.NonTaxedPayout,
                     HasLive = cashOut.HasLive,
                     Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities
                     {
@@ -1685,6 +1686,7 @@ namespace Platform.Betting.API.Repository
                 CashOutStake = cashOut.CashOutStake,
                 TaxedStake = cashOut.TaxedStake,
                 TaxedWinnings = cashOut.TaxedWinnings,
+                NonTaxedPayout = cashOut.NonTaxedPayout,
                 Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities
                 {
                     BetSelectionId = s.BetSelectionId,

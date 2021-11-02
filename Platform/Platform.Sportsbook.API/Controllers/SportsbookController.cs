@@ -567,7 +567,7 @@ namespace Platform.Sportsbook.API.Controllers
 
         [HttpPost("v1/sportsbook/manualsettlement/won")]
         public async Task<IActionResult> ManualSettlementWon([FromBody] BetSettlementRequestDTO request)
-        {//test
+        {
             foreach (InternalSelectionSettlementMessage row in request.Selections)
             {
                 row.SelectionStatus = Shared.Enums.BetStatus.Won;

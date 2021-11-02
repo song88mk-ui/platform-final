@@ -4519,7 +4519,8 @@ namespace Platform.Sportsbook.API.Repository
 
             if (request.Selections.Count > 0)
             {
-                if(string.IsNullOrEmpty(_configuration["Custom:ClientCodes"]))
+                string manualSettlementConfig = string.IsNullOrEmpty(_configuration["Custom:ManualSettlement"]) ? "Old" : _configuration["Custom:ManualSettlement"];
+                if (manualSettlementConfig.ToUpper() == "OLD")
                 {
                     var digit = Convert.ToString(request.FixtureId);
                     var lastDigit = digit.Substring(digit.Length - 1);

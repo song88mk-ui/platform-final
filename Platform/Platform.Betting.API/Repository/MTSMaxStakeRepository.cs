@@ -87,7 +87,7 @@ namespace Platform.Betting.API.Repository
                     {
                         BookmakerId = int.Parse(_configuration["Custom:MTSBookmakerId"]),
                         LimitId = request.LimitId,
-                        Currency = request.Currency.ToUpper(),
+                        Currency = request.Currency.ToUpper().Replace("BTC", "mBTC"),
                         EndCustomer = new EndCustomerDTO
                         {
                             LanguageId = request.Language,

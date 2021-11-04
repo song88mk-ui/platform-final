@@ -306,7 +306,7 @@ namespace Platform.Betting.API.Repository
 
                             cashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
-                            var taxedWinnings = (cashOutStake - stake) * bet.WinningsTax;
+                            var taxedWinnings = (cashOutStake - finalStake) * bet.WinningsTax;
 
                             if (cashOutStake > stake)
                                 cashOutStake = cashOutStake - taxedWinnings;

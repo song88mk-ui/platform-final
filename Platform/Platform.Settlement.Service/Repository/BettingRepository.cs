@@ -480,6 +480,8 @@ namespace Platform.Settlement.Service.Repository
                     var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), bet.TrueStake);
                     var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
 
+                    payload.NonTaxedPayout = payout;
+
                     bet.WinLoss = payout == 0 ? -bet.TrueStake : payout - bet.TrueStake;
                     bet.BetStatusId = (int)betStatus;
                     bet.BetStatusName = betStatus.ToString();
@@ -571,6 +573,10 @@ namespace Platform.Settlement.Service.Repository
                         var parlayBonusWinnings = 0m;
                         var parlayBonus = 0m;
 
+                        var nonTaxedStake = bet.TrueStake;
+                        var nonTaxedPayout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), nonTaxedStake);
+                        var nonTaxedParlayBonusWinnings = 0m;
+
                         var wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won).Count();
 
                         if (wonSelectionCount >= 3 && bet.IsFreeBet == false)
@@ -581,6 +587,8 @@ namespace Platform.Settlement.Service.Repository
                             {
                                 parlayBonus = parlayConfig.Item2.ParlayBonus;
                                 parlayBonusWinnings = payout * parlayConfig.Item2.ParlayBonus;
+
+                                nonTaxedParlayBonusWinnings = nonTaxedPayout * parlayConfig.Item2.ParlayBonus;
                             }
                         }
 
@@ -597,6 +605,8 @@ namespace Platform.Settlement.Service.Repository
                         stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon ? bet.TrueStake : stake;
 
                         var totalPayout = payout + parlayBonusWinnings;
+
+                        nonTaxedPayout = nonTaxedPayout + nonTaxedParlayBonusWinnings;
 
                         bet.WinLoss = totalPayout == 0 ? -bet.TrueStake : totalPayout - stake;
                         bet.BetStatusId = (int)betStatus;
@@ -669,6 +679,7 @@ namespace Platform.Settlement.Service.Repository
                         isPublish = true;
                         payload.Bet = betEntity;
                         payload.BetSelections = selections;
+                        payload.NonTaxedPayout = nonTaxedPayout;
                     }
                 }
             }
@@ -759,6 +770,8 @@ namespace Platform.Settlement.Service.Repository
                     var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), bet.TrueStake);
 
                     var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
+                    
+                    payload.NonTaxedPayout = payout;
 
                     bet.WinLoss = payout == 0 ? -bet.Stake : payout - bet.Stake;
                     bet.BetStatusId = (int)betStatus;
@@ -851,6 +864,10 @@ namespace Platform.Settlement.Service.Repository
                         var parlayBonusWinnings = 0m;
                         var parlayBonus = 0m;
 
+                        var nonTaxedStake = bet.TrueStake;
+                        var nonTaxedPayout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), nonTaxedStake);
+                        var nonTaxedParlayBonusWinnings = 0m;
+
                         var wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won).Count();
 
                         if (wonSelectionCount >= 3 && bet.IsFreeBet == false)
@@ -861,6 +878,8 @@ namespace Platform.Settlement.Service.Repository
                             {
                                 parlayBonus = parlayConfig.Item2.ParlayBonus;
                                 parlayBonusWinnings = payout * parlayConfig.Item2.ParlayBonus;
+
+                                nonTaxedParlayBonusWinnings = nonTaxedPayout * parlayConfig.Item2.ParlayBonus;
                             }
                         }
 
@@ -877,6 +896,8 @@ namespace Platform.Settlement.Service.Repository
                         stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon ? bet.TrueStake : stake;
 
                         var totalPayout = payout + parlayBonusWinnings;
+
+                        nonTaxedPayout = nonTaxedPayout + nonTaxedParlayBonusWinnings;
 
                         bet.WinLoss = totalPayout == 0 ? -bet.TrueStake : totalPayout - stake;
                         bet.BetStatusId = (int)betStatus;
@@ -947,6 +968,7 @@ namespace Platform.Settlement.Service.Repository
                         isPublish = true;
                         payload.Bet = betEntity;
                         payload.BetSelections = selections;
+                        payload.NonTaxedPayout = nonTaxedPayout;
                     }
                 }
             }

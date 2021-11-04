@@ -25,6 +25,9 @@ namespace Platform.Shared.Models
 
         [JsonPropertyName("payout")]
         public decimal Payout { get; set; }
+        
+        [JsonPropertyName("nonTaxedPayout")]
+        public decimal NonTaxedPayout { get; set; }
 
         [JsonPropertyName("stake")]
         public decimal Stake { get; set; }

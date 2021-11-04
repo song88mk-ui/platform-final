@@ -180,6 +180,9 @@ namespace Platform.Betting.API.Repository
                         var taxedStake = finalStake - (finalStake / (1 + bet.StakeTax));
                         var stake = bet.TrueStake - taxedStake;
 
+                        var nonTaxedStake = bet.TrueStake;
+                        var nonTaxedPayout = 0m;
+
                         var probabilites = new List<Probabilities>();
                         var hasProbabilityChanged = false;
                         var hasLive = false;
@@ -242,12 +245,27 @@ namespace Platform.Betting.API.Repository
                                 var halfLost = Convert.ToDecimal(probabilites.First().HalfLostProbability) * (stake / 2);
 
                                 cashOutStake = won + lost + voidd + halfWon + halfLost;
+
+                                var nonTaxedWon = Convert.ToDecimal(probabilites.First().WonProbability) * (nonTaxedStake * bet.Odds);
+                                var nonTaxedLost = Convert.ToDecimal(probabilites.First().LostProbability) * (nonTaxedStake * 0);
+                                var nonTaxedVoidd = Convert.ToDecimal(probabilites.First().VoidProbability) * (nonTaxedStake * 1);
+                                var nonTaxedHalfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * (nonTaxedStake * ((bet.Odds + 1) / 2));
+                                var nonTaxedHalfLost = Convert.ToDecimal(probabilites.First().HalfLostProbability) * (nonTaxedStake / 2);
+
+                                nonTaxedPayout = nonTaxedWon + nonTaxedLost + nonTaxedVoidd + nonTaxedHalfWon + nonTaxedHalfLost;
+
                             }
                             else
+                            {
                                 cashOutStake = (stake * bet.Odds) * Convert.ToDecimal(probabilites.First().Probability);
+
+                                nonTaxedPayout = (nonTaxedStake * bet.Odds) * Convert.ToDecimal(probabilites.First().Probability);
+                            }
 
                             cashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
+                            nonTaxedPayout = nonTaxedPayout - (nonTaxedPayout * 0.10m);
+                            
                             var taxedWinnings = (cashOutStake - finalStake) * bet.WinningsTax;
 
                             if (cashOutStake > stake)
@@ -258,7 +276,11 @@ namespace Platform.Betting.API.Repository
                             var finalCashOutStake = cashOutStake;
 
                             if (!hasProbabilityChanged)
+                            {
                                 finalCashOutStake = stake - (stake * 0.10m);
+
+                                nonTaxedPayout = nonTaxedStake - (nonTaxedStake * 0.10m);
+                            }
 
                             if (finalCashOutStake <= stake * bet.Odds)
                             {
@@ -269,6 +291,7 @@ namespace Platform.Betting.API.Repository
                                     CashOutStake = finalCashOutStake,
                                     TaxedStake = taxedStake,
                                     TaxedWinnings = taxedWinnings,
+                                    NonTaxedPayout = nonTaxedPayout,
                                     HasLive = hasLive,
                                     Probabilities = probabilites.Select(s => new Probabilities
                                     {
@@ -306,6 +329,10 @@ namespace Platform.Betting.API.Repository
 
                             cashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
+                            nonTaxedPayout = (nonTaxedStake * bet.Odds) * Convert.ToDecimal(finalProbability);
+
+                            nonTaxedPayout = nonTaxedPayout - (nonTaxedPayout * 0.10m);
+
                             var taxedWinnings = (cashOutStake - finalStake) * bet.WinningsTax;
 
                             if (cashOutStake > stake)
@@ -316,7 +343,11 @@ namespace Platform.Betting.API.Repository
                             var finalCashOutStake = cashOutStake;
 
                             if (!hasProbabilityChanged)
+                            {
                                 finalCashOutStake = stake - (stake * 0.10m);
+
+                                nonTaxedPayout = nonTaxedStake - (nonTaxedStake * 0.10m);
+                            }
 
                             if (finalCashOutStake == 0 || finalCashOutStake > stake * bet.Odds)
                             {
@@ -338,6 +369,7 @@ namespace Platform.Betting.API.Repository
                                     CashOutStake = finalCashOutStake,
                                     TaxedStake = taxedStake,
                                     TaxedWinnings = taxedWinnings,
+                                    NonTaxedPayout = nonTaxedPayout,
                                     HasLive = hasLive,
                                     Probabilities = probabilites.Select(s => new Probabilities
                                     {

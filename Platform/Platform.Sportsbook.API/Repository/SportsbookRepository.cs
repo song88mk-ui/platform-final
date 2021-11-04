@@ -756,6 +756,9 @@ namespace Platform.Sportsbook.API.Repository
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr);
             var selections = await primarySelectionCollection.Find(selectionFilter).Project<SelectionProbabilityFilter>(selectionProjection).ToListAsync();
 
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var bettingStatus = await primaryBettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
             if (selections.Count == 0)
             {
                 return new BaseResponseDTO<BetSelectionProbabilityResponseDTO>
@@ -777,7 +780,7 @@ namespace Platform.Sportsbook.API.Repository
                         SelectionId = s.SeId,
                         FixtureStatusId = fixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.FiStId).FirstOrDefault(),
                         MarketStatusId = markets.Where(c => c.MaId == s.MaId).Select(ss => ss.MaStId).FirstOrDefault(),
-                        IsSuspended = fixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.FiStId).FirstOrDefault() > 1 ? true : fixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.IsSu).FirstOrDefault(),
+                        IsSuspended = bettingStatus.IsBeSo ? true : fixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.FiStId).FirstOrDefault() > 1 ? true : fixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.IsSu).FirstOrDefault(),
                         IsActive = s.IsAc,
                         Probability = s.Pr,
                         WonProbability = s.WoPr,

@@ -22,7 +22,7 @@ namespace Platform.Job.ForexEUR.Repository
         }
         public async Task ProcessForex()
         {
-            var response = await _httpClient.GetAsync("https://openexchangerates.org/api/latest.json?app_id=b2f778983d0d4b11a98e3cf2b4849c01&base=EUR");
+            var response = await _httpClient.GetAsync("https://openexchangerates.org/api/latest.json?app_id=b2f778983d0d4b11a98e3cf2b4849c01&base=EUR&show_alternative=true");
 
             if (response.IsSuccessStatusCode)
             {

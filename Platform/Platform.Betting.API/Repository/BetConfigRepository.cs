@@ -81,7 +81,7 @@ namespace Platform.Betting.API.Repository
                                     MinStake = config.Parlay.MinBet,
                                     MaxStake = config.Parlay.MaxBet,
                                     MaxPayout = config.Parlay.MaxPayout,
-                                    ParlayBonusMaxWinnings = parlayConfig.ParlayBonusMaxWinnings,
+                                    ParlayBonusMaxWinnings = config.Parlay.ParlayBonusMaxWinnings,
                                     ParlayBonusMinOdds = parlayConfig.ParlayBonusMinOdds,
                                     ParlayBonusConfig = parlayConfig.ParlayBonusConfig ?? new List<ParlayBonusConfig>()
                                 });

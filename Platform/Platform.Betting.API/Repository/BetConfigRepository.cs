@@ -78,9 +78,9 @@ namespace Platform.Betting.API.Repository
                             {
                                 parleyJSON = JsonSerializer.Serialize(new ParlayConfig
                                 {
-                                    MinStake = parlayConfig.MinStake,
-                                    MaxStake = parlayConfig.MaxStake,
-                                    MaxPayout = parlayConfig.MaxPayout,
+                                    MinStake = config.Parlay.MinBet,
+                                    MaxStake = config.Parlay.MaxBet,
+                                    MaxPayout = config.Parlay.MaxPayout,
                                     ParlayBonusMaxWinnings = parlayConfig.ParlayBonusMaxWinnings,
                                     ParlayBonusMinOdds = parlayConfig.ParlayBonusMinOdds,
                                     ParlayBonusConfig = parlayConfig.ParlayBonusConfig ?? new List<ParlayBonusConfig>()

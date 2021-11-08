@@ -72,6 +72,21 @@ namespace Platform.Betting.API.Repository
                         var betconfig = _bettingContext.BetConfig.FirstOrDefault(b => b.ClientId == clientID && b.CurrencyCode == config.CurrencyCode);
                         if (betconfig != null)
                         {
+                            //retain existing ParlayBonus config
+                            var parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betconfig.ParlayConfig);
+                            if(parlayConfig != null)
+                            {
+                                parleyJSON = JsonSerializer.Serialize(new ParlayConfig
+                                {
+                                    MinStake = parlayConfig.MinStake,
+                                    MaxStake = parlayConfig.MaxStake,
+                                    MaxPayout = parlayConfig.MaxPayout,
+                                    ParlayBonusMaxWinnings = parlayConfig.ParlayBonusMaxWinnings,
+                                    ParlayBonusMinOdds = parlayConfig.ParlayBonusMinOdds,
+                                    ParlayBonusConfig = parlayConfig.ParlayBonusConfig ?? new List<ParlayBonusConfig>()
+                                });
+                            }
+                            
                             betconfig.DefaultConfig = defaultJSON;
                             betconfig.OverrideConfig = overrideJSON;
                             betconfig.ParlayConfig = parleyJSON;

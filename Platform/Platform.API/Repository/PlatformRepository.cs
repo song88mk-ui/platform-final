@@ -75,6 +75,15 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(string apiKey, string clientId, string operatorToken, BetRequest request)
         {
+            if (request.Selections.Count >= 2 && request.Selections.Any(c => c.SportId > 1000) && request.Selections.Any(c => c.SportId < 1000))
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Virtuals_Cannot_Be_Added_As_Part_Of_Parlay_With_Other_Sports,
+                    Message = StatusCode.Virtuals_Cannot_Be_Added_As_Part_Of_Parlay_With_Other_Sports.ToString().Replace('_', ' '),
+                };
+            }
+
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
                 return new BaseResponseDTO<BetResponseDTO>

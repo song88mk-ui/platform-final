@@ -63,6 +63,8 @@
 
         Parlay_Bonus_Not_Updated = 144,
 
+        Virtuals_Cannot_Be_Added_As_Part_Of_Parlay_With_Other_Sports = 145,
+
         Error = 1000,
         Operator_Error = 1001
     }

@@ -4533,10 +4533,6 @@ namespace Platform.Sportsbook.API.Repository
 
                     var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-                    var marketCountFilter = Builders<Market>.Filter.Where(c => c.FiId == long.Parse(request.FixtureId) && marketStatusIds.Contains(c.MaStId));
-                    var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
-                    var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
-
                     var marketFilter = Builders<Market>.Filter.Where(c => c.FiId == long.Parse(request.FixtureId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
                     var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa);
                     var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
@@ -4544,7 +4540,6 @@ namespace Platform.Sportsbook.API.Repository
                     var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c =>c.PrFiId == fixture.PrFiId && marketTemplateIds.Contains(c.MaTeId));
                     var marketMappingProjection = Builders<MarketMapping>.Projection.Include(c => c.PrFiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaSp);
                     var marketMappings = marketMappingCollection.Find(marketMappingFilter).Project<MarketMappingFilter>(marketMappingProjection).ToListAsync();
-
 
                     var selectionIds = request.Selections.Select(s => long.Parse(s.SelectionId)).ToList();
                     var selectionFilter = Builders<Selection>.Filter.Where(c => c.FiId == long.Parse(request.FixtureId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId) && selectionIds.Contains(c.SeId));

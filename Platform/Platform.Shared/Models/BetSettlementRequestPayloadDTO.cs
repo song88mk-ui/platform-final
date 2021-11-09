@@ -10,11 +10,25 @@ namespace Platform.Shared.Models
     {
         public BetSettlementRequestPayloadDTO()
         {
-            Selections = new List<InternalSelectionSettlementMessagePayload>();
+            Selections = new List<SelectionSettlementMessage>();
         }
-        public long FixtureId { get; set; }
-        public List<InternalSelectionSettlementMessagePayload> Selections { get; set; }
+        public int SportId { get; set; }
+        public string ProviderFixtureId { get; set; }
+        public string HomeScore { get; set; }
+        public string AwayScore { get; set; }
+        public List<SelectionSettlementMessage> Selections { get; set; }
     }
+
+    public class SelectionSettlementMessage
+    {
+        public string MarketTemplateId { get; set; }
+        public string SelectionTemplateId { get; set; }
+        public string MarketSpecifier { get; set; }
+        public bool Result { get; set; }
+        public VoidFactor? VoidFactor { get; set; }
+        public decimal DeadHeatFactor { get; set; }
+    }
+
     public class InternalSelectionSettlementMessagePayload
     {
         public long MarketId { get; set; }

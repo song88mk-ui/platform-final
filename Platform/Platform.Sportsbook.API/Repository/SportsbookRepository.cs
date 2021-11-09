@@ -27,6 +27,7 @@ namespace Platform.Sportsbook.API.Repository
         private readonly IConfiguration _configuration;
         private IMongoCollection<Fixture> fixtureCollection;
         private IMongoCollection<Market> marketCollection;
+        private IMongoCollection<MarketMapping> marketMappingCollection;
         private IMongoCollection<Selection> selectionCollection;
         private IMongoCollection<BettingStatus> bettingStatusCollection;
 
@@ -45,6 +46,7 @@ namespace Platform.Sportsbook.API.Repository
 
             fixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
             marketCollection = _db.GetCollection<Market>("Market").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
+            marketMappingCollection = _db.GetCollection<MarketMapping>("MarketMapping").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
             selectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
             bettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
 
@@ -4509,35 +4511,80 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<StatusCode>> ManualSettlement(BetSettlementRequestDTO request)
         {
-            var selections = new List<InternalSelectionSettlementMessagePayload>();
-
-            foreach (var selection in request.Selections)
-            {
-                selections.Add(new InternalSelectionSettlementMessagePayload
-                {
-                    MarketId = long.Parse(selection.MarketId),
-                    SelectionId = long.Parse(selection.SelectionId),
-                    SelectionStatus = selection.SelectionStatus,
-                    DeadHeatFactor = selection.DeadHeatFactor
-                });
-            }
-
+            
             if (request.Selections.Count > 0)
             {
                 string manualSettlementConfig = string.IsNullOrEmpty(_configuration["Custom:ManualSettlement"]) ? "Old" : _configuration["Custom:ManualSettlement"];
                 if (manualSettlementConfig.ToUpper() == "NEW")
                 {
+                    var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == long.Parse(request.FixtureId));
+                    var fixture = await fixtureCollection.Find(fixtureFilter).FirstOrDefaultAsync();
+
+                    if (fixture == null)
+                    {
+                        return new BaseResponseDTO<StatusCode>
+                        {
+                            StatusCode = StatusCode.Success,
+                            Message = StatusCode.Success.ToString()
+                        };
+                    }
+
+                    var marketTemplateIds = GetMainMarketTemplates(fixture.SpId);
+
+                    var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+                    var marketCountFilter = Builders<Market>.Filter.Where(c => c.FiId == long.Parse(request.FixtureId) && marketStatusIds.Contains(c.MaStId));
+                    var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
+                    var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
+
+                    var marketFilter = Builders<Market>.Filter.Where(c => c.FiId == long.Parse(request.FixtureId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
+                    var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa);
+                    var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
+
+                    var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c =>c.PrFiId == fixture.PrFiId && marketTemplateIds.Contains(c.MaTeId));
+                    var marketMappingProjection = Builders<MarketMapping>.Projection.Include(c => c.PrFiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaSp);
+                    var marketMappings = marketMappingCollection.Find(marketMappingFilter).Project<MarketMappingFilter>(marketMappingProjection).ToListAsync();
+
+
+                    var selectionIds = request.Selections.Select(s => long.Parse(s.SelectionId)).ToList();
+                    var selectionFilter = Builders<Selection>.Filter.Where(c => c.FiId == long.Parse(request.FixtureId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId) && selectionIds.Contains(c.SeId));
+                    var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId);
+                    var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
+
+                    await Task.WhenAll(markets, marketMappings, selections);
+
+                    var selectionPayload = new List<SelectionSettlementMessage>();
+
+                    foreach (var selection in selections.Result)
+                    {
+                        var requestSelection = request.Selections.Where(s => long.Parse(s.SelectionId) == selection.SeId).FirstOrDefault();
+
+                        if (requestSelection == null)
+                            continue;
+
+                        selectionPayload.Add(new SelectionSettlementMessage
+                        {
+                            MarketTemplateId = markets.Result.Where(s => s.MaId == selection.MaId).Select(ss => ss.MaTeId).FirstOrDefault(),
+                            SelectionTemplateId = selection.SeTeId,
+                            MarketSpecifier = marketMappings.Result.Where(s => s.MaId == selection.MaId).Select(ss => ss.MaSp).FirstOrDefault(),
+                            Result = GetResult(requestSelection.SelectionStatus),
+                            VoidFactor = GetVoidFactor(requestSelection.SelectionStatus),
+                            DeadHeatFactor = requestSelection.DeadHeatFactor
+                        });
+                    }
+
                     var payload = new BetSettlementRequestPayloadDTO
                     {
-                        FixtureId = long.Parse(request.FixtureId),
-                        Selections = selections
+                        SportId = fixture.SpId,
+                        ProviderFixtureId = fixture.PrFiId,
+                        Selections = selectionPayload
                     };
 
                     await _rabbitMQRepository.Settlebet(new MessageRequestDTO()
                     {
                         CorrelationId = Guid.NewGuid().ToString(),
-                        MessageType = "OnBetManualSettlement",
-                        RoutingKey = $"r.oe.engine.onbetmanualsettlement",
+                        MessageType = "OnBetSettlement",
+                        RoutingKey = $"r.uof.onbetsettlement",
                         Payload = JsonSerializer.Serialize(payload)
                     });
                 }
@@ -4549,11 +4596,11 @@ namespace Platform.Sportsbook.API.Repository
                     var payload = new
                     {
                         FixtureId = long.Parse(request.FixtureId),
-                        Selections = selections.Select(s =>
+                        Selections = request.Selections.Select(s =>
                             new
                             {
-                                MarketId = s.MarketId,
-                                SelectionId = s.SelectionId,
+                                MarketId = long.Parse(s.MarketId),
+                                SelectionId = long.Parse(s.SelectionId),
                                 SettlementStatus = GetSettlementStatus(s.SelectionStatus),
                                 DeadHeatFactor = s.DeadHeatFactor
                             }).ToList()
@@ -5187,6 +5234,27 @@ namespace Platform.Sportsbook.API.Repository
                     break;
             }
             return betStatus;
+        }
+        
+        private bool GetResult(BetStatus status)
+        {
+            return status == BetStatus.Won || status == BetStatus.HalfWon ? true : false;
+        }
+
+        private VoidFactor GetVoidFactor(BetStatus status)
+        {
+            var voidFactor = VoidFactor.Zero;
+
+            if(status == BetStatus.Won || status == BetStatus.Lost)
+                return VoidFactor.Zero;
+
+            if (status == BetStatus.Void)
+                return VoidFactor.One;
+
+            if (status == BetStatus.HalfWon || status == BetStatus.HalfLost)
+                return VoidFactor.Half;
+
+            return voidFactor;
         }
 
         private bool IsOEEnable(string clientCode)

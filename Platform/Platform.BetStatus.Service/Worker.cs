@@ -60,6 +60,9 @@ namespace Platform.BetStatus.Service
                         var onBetStatus = JsonSerializer.Deserialize<OnBetStatus>(payload);
 
                         _messageBrokerExternal.ExternalPublish(onBetStatus, "OnBetStatus", $"r.bet.onbetstatus.{onBetStatus.ClientId}", correlationId);
+
+                        _logger.LogInformation($"OnBetStatus: {payload}");
+
                         break;
 
                     case "OnCashOutChange":
@@ -71,6 +74,7 @@ namespace Platform.BetStatus.Service
             }
             catch (Exception ex)
             {
+                _logger.LogError($"Error: {ex.Message}");
 
             }
         }

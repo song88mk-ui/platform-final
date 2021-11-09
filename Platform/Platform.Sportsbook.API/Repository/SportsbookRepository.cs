@@ -4572,6 +4572,8 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         SportId = fixture.SpId,
                         ProviderFixtureId = fixture.PrFiId,
+                        HomeScore = string.Empty,
+                        AwayScore = string.Empty,
                         Selections = selectionPayload
                     };
 

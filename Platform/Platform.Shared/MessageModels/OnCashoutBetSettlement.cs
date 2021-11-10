@@ -14,6 +14,7 @@ namespace Platform.Shared.MessageModels
         public Guid BetId { get; set; }
         public string UserId { get; set; }
         public string ClientId { get; set; }
+        public string ClientCode { get; set; }
         public CashoutType CashoutType { get; set; }
         public decimal CashOutStake { get; set; }
         public decimal TaxedStake { get; set; }

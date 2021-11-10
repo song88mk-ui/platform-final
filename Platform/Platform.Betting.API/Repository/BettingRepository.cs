@@ -1602,6 +1602,9 @@ namespace Platform.Betting.API.Repository
                 var payload = new OnCashoutBetSettlement
                 {
                     BetId = request.BetId,
+                    UserId = bet.UserId,
+                    ClientCode = bet.ClientCode,
+                    ClientId = bet.ClientId.ToUpper(),
                     CashoutType = CashoutType.Full,
                     CashOutStake = cashOut.CashOutStake,
                     TaxedStake = cashOut.TaxedStake,

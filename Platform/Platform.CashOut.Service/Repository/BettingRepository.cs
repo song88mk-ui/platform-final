@@ -49,9 +49,9 @@ namespace Platform.CashOut.Service.Repository
                             {
                                 messageBroker.Publish(new OnBetStatus
                                 {
-                                    ClientId = bet.ClientId.ToString().ToUpper(),
-                                    UserId = bet.UserId,
-                                    BetId = bet.BetId.ToString().ToUpper(),
+                                    ClientId = message.ClientId.ToString().ToUpper(),
+                                    UserId = message.UserId,
+                                    BetId = message.BetId.ToString().ToUpper(),
                                     BetStatus = (BetStatus)bet.BetStatusId,
                                     Message = "Cashout request has been declined"
                                 }, "OnBetStatus", "r.bet.betstatus", correlationId);
@@ -97,9 +97,9 @@ namespace Platform.CashOut.Service.Repository
 
                                     messageBroker.Publish(new OnBetStatus
                                     {
-                                        ClientId = payload.Bet.ClientId.ToString().ToUpper(),
-                                        UserId = payload.Bet.UserId,
-                                        BetId = payload.Bet.BetId.ToString().ToUpper(),
+                                        ClientId = message.ClientId.ToString().ToUpper(),
+                                        UserId = message.UserId,
+                                        BetId = message.BetId.ToString().ToUpper(),
                                         BetStatus = (BetStatus)payload.Bet.BetStatusId,
                                         Message = "Cashout request has been accepted"
                                     }, "OnBetStatus", "r.bet.betstatus", correlationId);
@@ -109,9 +109,9 @@ namespace Platform.CashOut.Service.Repository
                             {
                                 messageBroker.Publish(new OnBetStatus
                                 {
-                                    ClientId = bet.ClientId.ToString().ToUpper(),
-                                    UserId = bet.UserId,
-                                    BetId = bet.BetId.ToString().ToUpper(),
+                                    ClientId = message.ClientId.ToString().ToUpper(),
+                                    UserId = message.UserId,
+                                    BetId = message.BetId.ToString().ToUpper(),
                                     BetStatus = BetStatus.Running,
                                     Message = "Cashout request has been declined"
                                 }, "OnBetStatus", "r.bet.betstatus", correlationId);
@@ -125,8 +125,8 @@ namespace Platform.CashOut.Service.Repository
             {
                 messageBroker.Publish(new OnBetStatus
                 {
-                    ClientId = bet.ClientId.ToString().ToUpper(),
-                    UserId = bet.UserId,
+                    ClientId = message.ClientId.ToString().ToUpper(),
+                    UserId = message.UserId,
                     BetId = message.BetId.ToString().ToUpper(),
                     BetStatus = BetStatus.Running,
                     Message = "Cashout request has been declined"

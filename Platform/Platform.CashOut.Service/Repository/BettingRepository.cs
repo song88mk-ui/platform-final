@@ -387,6 +387,8 @@ namespace Platform.CashOut.Service.Repository
                         var payload = new OnCashoutBetSettlement
                         {
                             BetId = result.Result.BetId,
+                            ClientId = message.ClientId,
+                            UserId = message.UserId,
                             CashoutType = result.Result.CashoutType,
                             CashOutStake = result.Result.CashOutStake,
                             TaxedStake = result.Result.TaxedStake,
@@ -424,7 +426,7 @@ namespace Platform.CashOut.Service.Repository
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine($"{DateTime.UtcNow} : Error: {ex.Message} -> Payload: {JsonSerializer.Serialize(message)}");
             }
         }
     }

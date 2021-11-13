@@ -197,6 +197,17 @@ namespace Platform.Betting.API.Repository
                                 break;
                             }
 
+                            if(selectionProbability.Probability == 0
+                                && selectionProbability.WonProbability == 0
+                                && selectionProbability.LostProbability == 0
+                                && selectionProbability.VoidProbability == 0
+                                && selectionProbability.HalfWonProbability == 0
+                                && selectionProbability.HalfLostProbability == 0)
+                            {
+                                isBreak = true;
+                                break;
+                            }
+
                             if (selectionProbability.FixtureStatusId == (int)FixtureStatus.Live)
                                 hasLive = true;
 

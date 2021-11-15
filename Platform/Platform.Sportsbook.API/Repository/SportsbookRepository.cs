@@ -696,7 +696,7 @@ namespace Platform.Sportsbook.API.Repository
             var fixtureIds = request.Selections.Select(s => s.FixtureId).ToList();
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
             var fixtures = primaryFixtureCollection.Find(fixtureFilter).ToListAsync();
-            
+
             var marketIds = request.Selections.Select(s => s.MarketId).ToList();
             var marketFilter = Builders<Market>.Filter.Where(c => marketIds.Contains(c.MaId));
             var markets = primaryMarketCollection.Find(marketFilter).ToListAsync();
@@ -740,7 +740,17 @@ namespace Platform.Sportsbook.API.Repository
 
                         finalMarkets.Add(market);
 
-                        var initialSelections = newSelections.Where(c => c.MaId == market.MaId).ToList();
+
+                        var clientOdds = new List<ClientOdds>();
+
+                        var initialSelections = newSelections.Where(c => c.MaId == market.MaId && c.IsAc == true && c.Od > 0m).ToList();
+
+                        if (initialSelections.Count > 0)
+                        {
+                            var margin = (Math.Round(initialSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+
+                            clientOdds = GetClientOdds(initialSelections.Count, margin, initialSelections, market.ClCoMa, request.ClientCode);
+                        }
 
                         foreach (var selection in initialSelections)
                         {
@@ -764,7 +774,7 @@ namespace Platform.Sportsbook.API.Repository
                                     SeTeId = s.SeTeId
                                 }).ToList();
 
-                                selection.Od = GetClientOdds(newTest, new SelectionFilter { IsAc = selection.IsAc, Od = selection.Od }, market.ClCoMa, request.ClientCode);
+                                selection.Od = clientOdds.Where(c => c.SelectionTemplateId == selection.SeTeId).Select(ss => ss.Odds).FirstOrDefault();
 
                                 finalSelections.Add(selection);
                             }
@@ -957,7 +967,7 @@ namespace Platform.Sportsbook.API.Repository
                 await Task.WhenAll(tempLeagueResult, tempBettingStatus);
 
                 var leagueResult = tempLeagueResult.Result;
-                if(IsOEEnable(request.ClientCode))
+                if (IsOEEnable(request.ClientCode))
                     leagueResult = leagueResult.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
 
                 var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
@@ -1320,7 +1330,7 @@ namespace Platform.Sportsbook.API.Repository
                     fixtureResult = fixtureResult.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
 
                 foreach (var item in fixtureResult)
-                { 
+                {
                     if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.FiId.ToString())) continue;
 
                     result.Add(new UserFavoriteDTO
@@ -3833,7 +3843,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         private List<MarketLimitedDTO> GetMarketsLimited(List<MarketFilter> markets, List<SelectionFilter> selections, string clientCode, int sportId, int fixtureTypeId)
         {
-            if(IsOEEnable(clientCode))
+            if (IsOEEnable(clientCode))
             {
                 if (sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright)
                 {
@@ -3853,20 +3863,40 @@ namespace Platform.Sportsbook.API.Repository
                     }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
 
-                return markets.Where(c => c.ClCo.Contains(clientCode)).Select(m => new MarketLimitedDTO
+                var filteredMarkets = markets.Where(c => c.ClCo.Contains(clientCode)).ToList();
+                var result = new List<MarketLimitedDTO>();
+
+                foreach (var market in filteredMarkets)
                 {
-                    MarketTemplateId = m.MaTeId,
-                    MarketId = m.MaId.ToString(),
-                    MarketName = m.MaNa,
-                    Line = m.Li,
-                    MarketStatus = m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
-                    Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionLimitedDTO
+                    var clientOdds = new List<ClientOdds>();
+
+                    var activeSelections = selections.Where(c => c.MaId == market.MaId && c.IsAc == true && c.Od > 0m).ToList();
+
+                    if (activeSelections.Count > 0)
                     {
-                        SelectionId = s.SeId.ToString(),
-                        SelectionName = s.SeNa,
-                        Odds = GetClientOdds(selections, s, m.ClCoMa, clientCode).ToString(),
-                    }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
-                }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                        var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+
+                        clientOdds = GetClientOdds(activeSelections.Count, margin, activeSelections, market.ClCoMa, clientCode);
+                    }
+
+                    result.Add(new MarketLimitedDTO
+                    {
+                        MarketTemplateId = market.MaTeId,
+                        MarketId = market.MaId.ToString(),
+                        MarketName = market.MaNa,
+                        Line = market.Li,
+                        MarketStatus = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
+                        Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionLimitedDTO
+                        {
+                            SelectionId = s.SeId.ToString(),
+                            SelectionName = s.SeNa,
+                            Odds = clientOdds.Where(c => c.SelectionTemplateId == s.SeTeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
+                        }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
+                    });
+
+                }
+
+                return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
             else
             {
@@ -3885,13 +3915,13 @@ namespace Platform.Sportsbook.API.Repository
                     }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
                 }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
-            
+
         }
         private List<MarketDTO> GetMarkets(int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode)
         {
             var marketTemplates = GetMainMarketTemplates(sportId);
 
-            if(IsOEEnable(clientCode))
+            if (IsOEEnable(clientCode))
             {
                 if (sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright)
                 {
@@ -3917,26 +3947,46 @@ namespace Platform.Sportsbook.API.Repository
                     }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
 
-                return markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo.Contains(clientCode)).Select(m => new MarketDTO
+                var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo.Contains(clientCode)).ToList();
+                var result = new List<MarketDTO>();
+
+                foreach (var market in filteredMarkets)
                 {
-                    MarketTemplateId = m.MaTeId,
-                    MarketId = m.MaId.ToString(),
-                    MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
-                    Line = m.Li,
-                    IsCashout = m.CaStId == 1 ? true : false,
-                    MarketStatusId = m.ClCo.Contains(clientCode) ? m.MaStId : (int)MarketStatus.Inactive,
-                    MarketStatusName = m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
-                    Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+                    var clientOdds = new List<ClientOdds>();
+
+                    var activeSelections = selections.Where(c => c.MaId == market.MaId && c.IsAc == true && c.Od > 0m).ToList();
+
+                    if (activeSelections.Count > 0)
                     {
-                        SelectionTemplateId = s.SeTeId,
-                        SelectionId = s.SeId.ToString(),
-                        SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                        DecimalOdds = GetClientOdds(selections.Where(c => c.MaId == m.MaId), s, m.ClCoMa, clientCode).ToString(),
-                        IsActive = s.IsAc,
-                        CorrelationId = s.CoId,
-                        SortOrder = s.SeSoOr
-                    }).OrderBy(o => o.SortOrder).ToList()
-                }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                        var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+
+                        clientOdds = GetClientOdds(activeSelections.Count, margin, activeSelections, market.ClCoMa, clientCode);
+                    }
+
+                    result.Add(new MarketDTO
+                    {
+                        MarketTemplateId = market.MaTeId,
+                        MarketId = market.MaId.ToString(),
+                        MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                        Line = market.Li,
+                        IsCashout = market.CaStId == 1 ? true : false,
+                        MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
+                        MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
+                        Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
+                        {
+                            SelectionTemplateId = s.SeTeId,
+                            SelectionId = s.SeId.ToString(),
+                            SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                            DecimalOdds = clientOdds.Where(c => c.SelectionTemplateId == s.SeTeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
+                            IsActive = s.IsAc,
+                            CorrelationId = s.CoId,
+                            SortOrder = s.SeSoOr
+                        }).OrderBy(o => o.SortOrder).ToList()
+                    });
+
+                }
+
+                return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
             else
             {
@@ -3961,11 +4011,11 @@ namespace Platform.Sportsbook.API.Repository
                     }).OrderBy(o => o.SortOrder).ToList()
                 }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
-            
+
         }
         private List<MarketDTO> GetMarkets(List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, int sportId, int fixtureTypeId)
         {
-            if(IsOEEnable(clientCode))
+            if (IsOEEnable(clientCode))
             {
                 if (sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright)
                 {
@@ -3991,26 +4041,46 @@ namespace Platform.Sportsbook.API.Repository
                     }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
 
-                return markets.Where(c => c.ClCo.Contains(clientCode)).Select(m => new MarketDTO
+                var filteredMarkets = markets.Where(c => c.ClCo.Contains(clientCode)).ToList();
+                var result = new List<MarketDTO>();
+
+                foreach (var market in filteredMarkets)
                 {
-                    MarketTemplateId = m.MaTeId,
-                    MarketId = m.MaId.ToString(),
-                    MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
-                    Line = m.Li,
-                    IsCashout = m.CaStId == 1 ? true : false,
-                    MarketStatusId = m.ClCo.Contains(clientCode) ? m.MaStId : (int)MarketStatus.Inactive,
-                    MarketStatusName = m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
-                    Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+                    var clientOdds = new List<ClientOdds>();
+
+                    var activeSelections = selections.Where(c => c.MaId == market.MaId && c.IsAc == true && c.Od > 0m).ToList();
+
+                    if (activeSelections.Count > 0)
                     {
-                        SelectionTemplateId = s.SeTeId,
-                        SelectionId = s.SeId.ToString(),
-                        SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                        DecimalOdds = GetClientOdds(selections.Where(c => c.MaId == m.MaId), s, m.ClCoMa, clientCode).ToString(),
-                        IsActive = s.IsAc,
-                        CorrelationId = s.CoId,
-                        SortOrder = s.SeSoOr
-                    }).OrderBy(o => o.SortOrder).ToList()
-                }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                        var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+
+                        clientOdds = GetClientOdds(activeSelections.Count, margin, activeSelections, market.ClCoMa, clientCode);
+                    }
+
+                    result.Add(new MarketDTO
+                    {
+                        MarketTemplateId = market.MaTeId,
+                        MarketId = market.MaId.ToString(),
+                        MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                        Line = market.Li,
+                        IsCashout = market.CaStId == 1 ? true : false,
+                        MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
+                        MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
+                        Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
+                        {
+                            SelectionTemplateId = s.SeTeId,
+                            SelectionId = s.SeId.ToString(),
+                            SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                            DecimalOdds = clientOdds.Where(c => c.SelectionTemplateId == s.SeTeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
+                            IsActive = s.IsAc,
+                            CorrelationId = s.CoId,
+                            SortOrder = s.SeSoOr
+                        }).OrderBy(o => o.SortOrder).ToList()
+                    });
+
+                }
+
+                return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
             else
             {
@@ -4146,7 +4216,7 @@ namespace Platform.Sportsbook.API.Repository
                     }
                 }
             }
-            
+
             return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList(); ;
         }
 
@@ -4433,7 +4503,7 @@ namespace Platform.Sportsbook.API.Repository
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 12);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            if (IsOEEnable(clientCode)) 
+            if (IsOEEnable(clientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(clientCode) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
 
             if (fixtures.Count == 0)
@@ -4635,7 +4705,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<StatusCode>> ManualSettlement(BetSettlementRequestDTO request)
         {
-            
+
             if (request.Selections.Count > 0)
             {
                 string manualSettlementConfig = string.IsNullOrEmpty(_configuration["Custom:ManualSettlement"]) ? "Old" : _configuration["Custom:ManualSettlement"];
@@ -4659,7 +4729,7 @@ namespace Platform.Sportsbook.API.Repository
                     var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa);
                     var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
-                    var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c =>c.PrFiId == fixture.PrFiId && marketTemplateIds.Contains(c.MaTeId));
+                    var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c => c.PrFiId == fixture.PrFiId && marketTemplateIds.Contains(c.MaTeId));
                     var marketMappingProjection = Builders<MarketMapping>.Projection.Include(c => c.PrFiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaSp);
                     var marketMappings = marketMappingCollection.Find(marketMappingFilter).Project<MarketMappingFilter>(marketMappingProjection).ToListAsync();
 
@@ -4734,7 +4804,7 @@ namespace Platform.Sportsbook.API.Repository
                     });
 
                 }
-                
+
             }
 
             return new BaseResponseDTO<StatusCode>
@@ -4792,8 +4862,8 @@ namespace Platform.Sportsbook.API.Repository
             if (request.ClientCodes != null && request.ClientCodes.Any())
             {
                 request.ClientCodes.ForEach(
-                    c => { 
-                        if(IsOEEnable(c))
+                    c => {
+                        if (IsOEEnable(c))
                             fixtures = fixtures.Where(f => f.ClCo.Contains(c)).ToList();
                     });
             }
@@ -5354,7 +5424,7 @@ namespace Platform.Sportsbook.API.Repository
             }
             return betStatus;
         }
-        
+
         private bool GetResult(BetStatus status)
         {
             return status == BetStatus.Won || status == BetStatus.HalfWon ? true : false;
@@ -5364,7 +5434,7 @@ namespace Platform.Sportsbook.API.Repository
         {
             var voidFactor = VoidFactor.Zero;
 
-            if(status == BetStatus.Won || status == BetStatus.Lost)
+            if (status == BetStatus.Won || status == BetStatus.Lost)
                 return VoidFactor.Zero;
 
             if (status == BetStatus.Void)
@@ -5384,109 +5454,303 @@ namespace Platform.Sportsbook.API.Repository
 
         }
 
-        private decimal GetClientOdds(IEnumerable<SelectionFilter> selections, SelectionFilter currentSelection, string clientMarketConfig, string clientCode)
+        //private decimal GetClientOdds(IEnumerable<SelectionFilter> selections, SelectionFilter currentSelection, string clientMarketConfig, string clientCode)
+        //{
+        //    if (!IsOEEnable(clientCode))
+        //        return currentSelection.Od;
+
+        //    if (string.IsNullOrEmpty(clientMarketConfig))
+        //        return currentSelection.Od;
+
+        //    var activeSelections = selections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
+        //    int activeSelectionCount = activeSelections.Count();
+        //    decimal margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+
+        //    var clients = !string.IsNullOrEmpty(clientMarketConfig) ?
+        //        clientMarketConfig.Split('|').Select(s => new Tuple<string, decimal>(s.Split(':').First(), Convert.ToDecimal(s.Split(':').Last()))).ToList()
+        //        : new List<Tuple<string, decimal>> { new Tuple<string, decimal>(clientCode, 0) };
+
+        //    var clientMargin = clients.Where(c => c.Item1 == clientCode).FirstOrDefault();
+
+
+        //    var result = new List<ClientOdds>();
+
+        //    foreach (var selection in selections)
+        //    {
+        //        if (selection.IsAc == true && selection.Od > 0m)
+        //        {
+        //            var targetMargin = clientMargin.Item2;
+
+        //            var fairOddsInitialDivideBy = activeSelectionCount - (margin * selection.Od);
+
+        //            if (fairOddsInitialDivideBy <= 0)
+        //            {
+        //                result.Add(new ClientOdds
+        //                {
+        //                    ClientCode = clientMargin.Item1,
+        //                    Odds = selection.Od,
+        //                    SelectionTemplateId = selection.SeTeId
+        //                });
+
+        //                continue;
+        //            }
+
+        //            var fairOdds = (activeSelectionCount * selection.Od) / fairOddsInitialDivideBy;
+
+        //            if (fairOdds <= 0)
+        //            {
+        //                result.Add(new ClientOdds
+        //                {
+        //                    ClientCode = clientMargin.Item1,
+        //                    Odds = selection.Od,
+        //                    SelectionTemplateId = selection.SeTeId
+        //                });
+
+        //                continue;
+        //            }
+
+        //            var finalOddsInitialDivideBy = ((fairOdds * targetMargin) / activeSelectionCount) + 1;
+
+        //            if (finalOddsInitialDivideBy <= 0)
+        //            {
+        //                result.Add(new ClientOdds
+        //                {
+        //                    ClientCode = clientMargin.Item1,
+        //                    Odds = selection.Od,
+        //                    SelectionTemplateId = selection.SeTeId
+        //                });
+
+        //                continue;
+        //            }
+
+        //            var odds = Math.Round(fairOdds / finalOddsInitialDivideBy, 2);
+
+        //            if (odds < 1.00m)
+        //            {
+        //                result.Add(new ClientOdds
+        //                {
+        //                    ClientCode = clientMargin.Item1,
+        //                    Odds = selection.Od,
+        //                    SelectionTemplateId = selection.SeTeId
+        //                });
+
+        //                continue;
+        //            }
+
+        //            result.Add(new ClientOdds
+        //            {
+        //                ClientCode = clientMargin.Item1,
+        //                Odds = odds,
+        //                SelectionTemplateId = selection.SeTeId
+        //            });
+        //        }
+        //        else
+        //        {
+        //            result.Add(new ClientOdds
+        //            {
+        //                ClientCode = clientMargin.Item1,
+        //                Odds = selection.Od,
+        //                SelectionTemplateId = selection.SeTeId
+        //            });
+        //        }
+        //    }
+
+        //    return result.Where(f => f.SelectionTemplateId == currentSelection.SeTeId).FirstOrDefault().Odds;
+        //}
+
+        private static List<ClientOdds> GetClientOdds(int activeSelectionCount, decimal margin, List<SelectionFilter> selections, string clientMarketConfig, string clientCode)
         {
-            if (!IsOEEnable(clientCode))
-                return currentSelection.Od;
-
             if (string.IsNullOrEmpty(clientMarketConfig))
-                return currentSelection.Od;
+                return new List<ClientOdds>();
 
-            var activeSelections = selections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
-            int activeSelectionCount = activeSelections.Count();
-            decimal margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+            if (!clientMarketConfig.Contains(clientCode))
+                return new List<ClientOdds>();
 
-            var clients = !string.IsNullOrEmpty(clientMarketConfig) ?
-                clientMarketConfig.Split('|').Select(s => new Tuple<string, decimal>(s.Split(':').First(), Convert.ToDecimal(s.Split(':').Last()))).ToList()
-                : new List<Tuple<string, decimal>> { new Tuple<string, decimal>(clientCode, 0) };
-
-            var clientMargin = clients.Where(c => c.Item1 == clientCode).FirstOrDefault();
-
+            var clients = clientMarketConfig.Split('|').Select(s => new Tuple<string, decimal>(s.Split(':').First(), Convert.ToDecimal(s.Split(':').Last()))).Where(c => c.Item1 == clientCode).ToList();
 
             var result = new List<ClientOdds>();
 
-            foreach (var selection in selections)
+            foreach (var client in clients)
             {
-                if (selection.IsAc == true && selection.Od > 0m)
+                foreach (var selection in selections)
                 {
-                    var targetMargin = clientMargin.Item2;
+                    if (selection.IsAc == true && selection.Od > 0m)
+                    {
+                        var targetMargin = client.Item2;
 
-                    var fairOddsInitialDivideBy = activeSelectionCount - (margin * selection.Od);
+                        var fairOddsInitialDivideBy = activeSelectionCount - (margin * selection.Od);
 
-                    if (fairOddsInitialDivideBy <= 0)
+                        if (fairOddsInitialDivideBy <= 0)
+                        {
+                            result.Add(new ClientOdds
+                            {
+                                ClientCode = client.Item1,
+                                Odds = selection.Od,
+                                SelectionTemplateId = selection.SeTeId
+                            });
+
+                            continue;
+                        }
+
+                        var fairOdds = (activeSelectionCount * selection.Od) / fairOddsInitialDivideBy;
+
+                        if (fairOdds <= 0)
+                        {
+                            result.Add(new ClientOdds
+                            {
+                                ClientCode = client.Item1,
+                                Odds = selection.Od,
+                                SelectionTemplateId = selection.SeTeId
+                            });
+
+                            continue;
+                        }
+
+                        var finalOddsInitialDivideBy = ((fairOdds * targetMargin) / activeSelectionCount) + 1;
+
+                        if (finalOddsInitialDivideBy <= 0)
+                        {
+                            result.Add(new ClientOdds
+                            {
+                                ClientCode = client.Item1,
+                                Odds = selection.Od,
+                                SelectionTemplateId = selection.SeTeId
+                            });
+
+                            continue;
+                        }
+
+                        var odds = Math.Round(fairOdds / finalOddsInitialDivideBy, 2);
+
+                        if (odds < 1.00m)
+                        {
+                            result.Add(new ClientOdds
+                            {
+                                ClientCode = client.Item1,
+                                Odds = selection.Od,
+                                SelectionTemplateId = selection.SeTeId
+                            });
+
+                            continue;
+                        }
+
+                        result.Add(new ClientOdds
+                        {
+                            ClientCode = client.Item1,
+                            Odds = odds,
+                            SelectionTemplateId = selection.SeTeId
+                        });
+                    }
+                    else
                     {
                         result.Add(new ClientOdds
                         {
-                            ClientCode = clientMargin.Item1,
+                            ClientCode = client.Item1,
                             Odds = selection.Od,
                             SelectionTemplateId = selection.SeTeId
                         });
-
-                        continue;
                     }
-
-                    var fairOdds = (activeSelectionCount * selection.Od) / fairOddsInitialDivideBy;
-
-                    if (fairOdds <= 0)
-                    {
-                        result.Add(new ClientOdds
-                        {
-                            ClientCode = clientMargin.Item1,
-                            Odds = selection.Od,
-                            SelectionTemplateId = selection.SeTeId
-                        });
-
-                        continue;
-                    }
-
-                    var finalOddsInitialDivideBy = ((fairOdds * targetMargin) / activeSelectionCount) + 1;
-
-                    if (finalOddsInitialDivideBy <= 0)
-                    {
-                        result.Add(new ClientOdds
-                        {
-                            ClientCode = clientMargin.Item1,
-                            Odds = selection.Od,
-                            SelectionTemplateId = selection.SeTeId
-                        });
-
-                        continue;
-                    }
-
-                    var odds = Math.Round(fairOdds / finalOddsInitialDivideBy, 2);
-
-                    if (odds < 1.00m)
-                    {
-                        result.Add(new ClientOdds
-                        {
-                            ClientCode = clientMargin.Item1,
-                            Odds = selection.Od,
-                            SelectionTemplateId = selection.SeTeId
-                        });
-
-                        continue;
-                    }
-
-                    result.Add(new ClientOdds
-                    {
-                        ClientCode = clientMargin.Item1,
-                        Odds = odds,
-                        SelectionTemplateId = selection.SeTeId
-                    });
-                }
-                else
-                {
-                    result.Add(new ClientOdds
-                    {
-                        ClientCode = clientMargin.Item1,
-                        Odds = selection.Od,
-                        SelectionTemplateId = selection.SeTeId
-                    });
                 }
             }
 
-            var finalResult = result.Where(f => f.SelectionTemplateId == currentSelection.SeTeId).FirstOrDefault();
-            return finalResult == null ? currentSelection.Od : result.Where(f => f.SelectionTemplateId == currentSelection.SeTeId).FirstOrDefault().Odds;
+            return result;
+        }
+        private static List<ClientOdds> GetClientOdds(int activeSelectionCount, decimal margin, List<Selection> selections, string clientMarketConfig, string clientCode)
+        {
+            if (string.IsNullOrEmpty(clientMarketConfig))
+                return new List<ClientOdds>();
+
+            if (!clientMarketConfig.Contains(clientCode))
+                return new List<ClientOdds>();
+
+            var clients = clientMarketConfig.Split('|').Select(s => new Tuple<string, decimal>(s.Split(':').First(), Convert.ToDecimal(s.Split(':').Last()))).Where(c => c.Item1 == clientCode).ToList();
+
+            var result = new List<ClientOdds>();
+
+            foreach (var client in clients)
+            {
+                foreach (var selection in selections)
+                {
+                    if (selection.IsAc == true && selection.Od > 0m)
+                    {
+                        var targetMargin = client.Item2;
+
+                        var fairOddsInitialDivideBy = activeSelectionCount - (margin * selection.Od);
+
+                        if (fairOddsInitialDivideBy <= 0)
+                        {
+                            result.Add(new ClientOdds
+                            {
+                                ClientCode = client.Item1,
+                                Odds = selection.Od,
+                                SelectionTemplateId = selection.SeTeId
+                            });
+
+                            continue;
+                        }
+
+                        var fairOdds = (activeSelectionCount * selection.Od) / fairOddsInitialDivideBy;
+
+                        if (fairOdds <= 0)
+                        {
+                            result.Add(new ClientOdds
+                            {
+                                ClientCode = client.Item1,
+                                Odds = selection.Od,
+                                SelectionTemplateId = selection.SeTeId
+                            });
+
+                            continue;
+                        }
+
+                        var finalOddsInitialDivideBy = ((fairOdds * targetMargin) / activeSelectionCount) + 1;
+
+                        if (finalOddsInitialDivideBy <= 0)
+                        {
+                            result.Add(new ClientOdds
+                            {
+                                ClientCode = client.Item1,
+                                Odds = selection.Od,
+                                SelectionTemplateId = selection.SeTeId
+                            });
+
+                            continue;
+                        }
+
+                        var odds = Math.Round(fairOdds / finalOddsInitialDivideBy, 2);
+
+                        if (odds < 1.00m)
+                        {
+                            result.Add(new ClientOdds
+                            {
+                                ClientCode = client.Item1,
+                                Odds = selection.Od,
+                                SelectionTemplateId = selection.SeTeId
+                            });
+
+                            continue;
+                        }
+
+                        result.Add(new ClientOdds
+                        {
+                            ClientCode = client.Item1,
+                            Odds = odds,
+                            SelectionTemplateId = selection.SeTeId
+                        });
+                    }
+                    else
+                    {
+                        result.Add(new ClientOdds
+                        {
+                            ClientCode = client.Item1,
+                            Odds = selection.Od,
+                            SelectionTemplateId = selection.SeTeId
+                        });
+                    }
+                }
+            }
+
+            return result;
         }
 
     }

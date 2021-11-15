@@ -3890,7 +3890,7 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             SelectionId = s.SeId.ToString(),
                             SelectionName = s.SeNa,
-                            Odds = clientOdds.Where(c => c.SelectionTemplateId == s.SeTeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
+                            Odds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
                         }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
                     });
 
@@ -3977,7 +3977,7 @@ namespace Platform.Sportsbook.API.Repository
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
                             SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                            DecimalOdds = clientOdds.Where(c => c.SelectionTemplateId == s.SeTeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
+                            DecimalOdds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
                             IsActive = s.IsAc,
                             CorrelationId = s.CoId,
                             SortOrder = s.SeSoOr
@@ -4071,7 +4071,7 @@ namespace Platform.Sportsbook.API.Repository
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
                             SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                            DecimalOdds = clientOdds.Where(c => c.SelectionTemplateId == s.SeTeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
+                            DecimalOdds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
                             IsActive = s.IsAc,
                             CorrelationId = s.CoId,
                             SortOrder = s.SeSoOr
@@ -5586,7 +5586,8 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 ClientCode = client.Item1,
                                 Odds = selection.Od,
-                                SelectionTemplateId = selection.SeTeId
+                                SelectionTemplateId = selection.SeTeId,
+                                SelectionId = selection.SeId
                             });
 
                             continue;
@@ -5600,7 +5601,8 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 ClientCode = client.Item1,
                                 Odds = selection.Od,
-                                SelectionTemplateId = selection.SeTeId
+                                SelectionTemplateId = selection.SeTeId,
+                                SelectionId = selection.SeId
                             });
 
                             continue;
@@ -5614,7 +5616,8 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 ClientCode = client.Item1,
                                 Odds = selection.Od,
-                                SelectionTemplateId = selection.SeTeId
+                                SelectionTemplateId = selection.SeTeId,
+                                SelectionId = selection.SeId
                             });
 
                             continue;
@@ -5628,7 +5631,8 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 ClientCode = client.Item1,
                                 Odds = selection.Od,
-                                SelectionTemplateId = selection.SeTeId
+                                SelectionTemplateId = selection.SeTeId,
+                                SelectionId = selection.SeId
                             });
 
                             continue;
@@ -5638,7 +5642,8 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             ClientCode = client.Item1,
                             Odds = odds,
-                            SelectionTemplateId = selection.SeTeId
+                            SelectionTemplateId = selection.SeTeId,
+                            SelectionId = selection.SeId
                         });
                     }
                     else
@@ -5647,7 +5652,8 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             ClientCode = client.Item1,
                             Odds = selection.Od,
-                            SelectionTemplateId = selection.SeTeId
+                            SelectionTemplateId = selection.SeTeId,
+                            SelectionId = selection.SeId
                         });
                     }
                 }

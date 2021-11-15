@@ -5460,8 +5460,8 @@ namespace Platform.Sportsbook.API.Repository
                         result.Add(new ClientOdds
                         {
                             ClientCode = clientMargin.Item1,
-                            Odds = selection.Odds,
-                            SelectionTemplateId = selection.SelectionTemplateId
+                            Odds = selection.Od,
+                            SelectionTemplateId = selection.SeTeId
                         });
 
                         continue;
@@ -5469,9 +5469,9 @@ namespace Platform.Sportsbook.API.Repository
 
                     result.Add(new ClientOdds
                     {
-                        ClientCode = client.Item1,
+                        ClientCode = clientMargin.Item1,
                         Odds = odds,
-                        SelectionTemplateId = selection.SelectionTemplateId
+                        SelectionTemplateId = selection.SeTeId
                     });
                 }
                 else
@@ -5479,8 +5479,8 @@ namespace Platform.Sportsbook.API.Repository
                     result.Add(new ClientOdds
                     {
                         ClientCode = clientMargin.Item1,
-                        Odds = selection.Odds,
-                        SelectionTemplateId = selection.SelectionTemplateId
+                        Odds = selection.Od,
+                        SelectionTemplateId = selection.SeTeId
                     });
                 }
             }

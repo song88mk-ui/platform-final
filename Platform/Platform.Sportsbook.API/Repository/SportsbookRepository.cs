@@ -5402,126 +5402,90 @@ namespace Platform.Sportsbook.API.Repository
 
             var clientMargin = clients.Where(c => c.Item1 == clientCode).FirstOrDefault();
 
-            
-            var newResult = new List<ClientOddsModel>();
-            var oldResult = new List<ClientOddsModel>();
-            
-            var source = new List<Tuple<string, bool>>();
 
-            var isContinue = true;
+            var result = new List<ClientOdds>();
 
-            foreach (var selection in selections.OrderByDescending(o => o.Od).ToList())
+            foreach (var selection in selections)
             {
-                oldResult.Add(new ClientOddsModel
+                if (selection.IsAc == true && selection.Od > 0m)
                 {
-                    ClientCode = clientMargin.Item1,
-                    Odds = selection.Od,
-                    SelectionTemplateId = selection.SeTeId,
-                    OldOdds = selection.Od
-                });
+                    var targetMargin = clientMargin.Item2;
 
-                if (isContinue)
-                {
-                    if (selection.IsAc == true && selection.Od > 0m)
+                    var fairOddsInitialDivideBy = activeSelectionCount - (margin * selection.Od);
+
+                    if (fairOddsInitialDivideBy <= 0)
                     {
-                        var targetMargin = clientMargin.Item2;
-
-                        var fairOddsInitialDivideBy = activeSelectionCount - (margin * selection.Od);
-
-                        if (fairOddsInitialDivideBy <= 0)
-                        {
-                            newResult.Add(new ClientOddsModel
-                            {
-                                ClientCode = clientMargin.Item1,
-                                Odds = selection.Od,
-                                SelectionTemplateId = selection.SeTeId,
-                                OldOdds = selection.Od
-                            });
-
-                            isContinue = false;
-                            source.Add(new Tuple<string, bool>(clientMargin.Item1, false));
-                            continue;
-                        }
-
-                        var fairOdds = (activeSelectionCount * selection.Od) / fairOddsInitialDivideBy;
-
-                        if (fairOdds <= 0)
-                        {
-                            newResult.Add(new ClientOddsModel
-                            {
-                                ClientCode = clientMargin.Item1,
-                                Odds = selection.Od,
-                                SelectionTemplateId = selection.SeTeId,
-                                OldOdds = selection.Od
-                            });
-
-                            isContinue = false;
-                            source.Add(new Tuple<string, bool>(clientMargin.Item1, false));
-                            continue;
-                        }
-
-                        var finalOddsInitialDivideBy = ((fairOdds * targetMargin) / activeSelectionCount) + 1;
-
-                        if (finalOddsInitialDivideBy <= 0)
-                        {
-                            newResult.Add(new ClientOddsModel
-                            {
-                                ClientCode = clientMargin.Item1,
-                                Odds = selection.Od,
-                                SelectionTemplateId = selection.SeTeId,
-                                OldOdds = selection.Od
-                            });
-
-                            isContinue = false;
-                            source.Add(new Tuple<string, bool>(clientMargin.Item1, false));
-                            continue;
-                        }
-
-                        var odds = Math.Round(fairOdds / finalOddsInitialDivideBy, 2);
-                        if (odds < 1.00m)
-                        {
-                            newResult.Add(new ClientOddsModel
-                            {
-                                ClientCode = clientMargin.Item1,
-                                Odds = selection.Od,
-                                SelectionTemplateId = selection.SeTeId,
-                                OldOdds = selection.Od
-                            });
-
-                            isContinue = false;
-                            source.Add(new Tuple<string, bool>(clientMargin.Item1, false));
-                            continue;
-                        }
-
-                        newResult.Add(new ClientOddsModel
-                        {
-                            ClientCode = clientMargin.Item1,
-                            Odds = odds,
-                            SelectionTemplateId = selection.SeTeId,
-                            OldOdds = odds
-                        });
-                    }
-                    else
-                    {
-                        newResult.Add(new ClientOddsModel
+                        result.Add(new ClientOdds
                         {
                             ClientCode = clientMargin.Item1,
                             Odds = selection.Od,
-                            SelectionTemplateId = selection.SeTeId,
-                            OldOdds = selection.Od
+                            SelectionTemplateId = selection.SeTeId
                         });
+
+                        continue;
                     }
+
+                    var fairOdds = (activeSelectionCount * selection.Od) / fairOddsInitialDivideBy;
+
+                    if (fairOdds <= 0)
+                    {
+                        result.Add(new ClientOdds
+                        {
+                            ClientCode = clientMargin.Item1,
+                            Odds = selection.Od,
+                            SelectionTemplateId = selection.SeTeId
+                        });
+
+                        continue;
+                    }
+
+                    var finalOddsInitialDivideBy = ((fairOdds * targetMargin) / activeSelectionCount) + 1;
+
+                    if (finalOddsInitialDivideBy <= 0)
+                    {
+                        result.Add(new ClientOdds
+                        {
+                            ClientCode = clientMargin.Item1,
+                            Odds = selection.Od,
+                            SelectionTemplateId = selection.SeTeId
+                        });
+
+                        continue;
+                    }
+
+                    var odds = Math.Round(fairOdds / finalOddsInitialDivideBy, 2);
+
+                    if (odds < 1.00m)
+                    {
+                        result.Add(new ClientOdds
+                        {
+                            ClientCode = clientMargin.Item1,
+                            Odds = selection.Odds,
+                            SelectionTemplateId = selection.SelectionTemplateId
+                        });
+
+                        continue;
+                    }
+
+                    result.Add(new ClientOdds
+                    {
+                        ClientCode = client.Item1,
+                        Odds = odds,
+                        SelectionTemplateId = selection.SelectionTemplateId
+                    });
+                }
+                else
+                {
+                    result.Add(new ClientOdds
+                    {
+                        ClientCode = clientMargin.Item1,
+                        Odds = selection.Odds,
+                        SelectionTemplateId = selection.SelectionTemplateId
+                    });
                 }
             }
 
-            var finalResult = new List<ClientOddsModel>();
-
-            if (source.Any(c => c.Item1 == clientMargin.Item1 && c.Item2 == false))
-                finalResult.AddRange(oldResult.Where(c => c.ClientCode == clientMargin.Item1).ToList());
-            else
-                finalResult.AddRange(newResult.Where(c => c.ClientCode == clientMargin.Item1).ToList());
-
-            return finalResult.Where(f => f.SelectionTemplateId == currentSelection.SeTeId).FirstOrDefault().Odds;
+            return result.Where(f => f.SelectionTemplateId == currentSelection.SeTeId).FirstOrDefault().Odds;
         }
 
     }

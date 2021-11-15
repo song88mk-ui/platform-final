@@ -101,14 +101,6 @@ namespace Platform.Betting.API.Repository
 
                 var response = await _httpClient.PostAsync($"edge/proxy/ClientApi/api/maxStake/v1", new StringContent(JsonSerializer.Serialize(maxStakePayload), System.Text.Encoding.UTF8, "application/json"));
 
-                _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
-                {
-                    Payload = JsonSerializer.Serialize(await response.Content.ReadAsStringAsync()),
-                    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
-                    MessageType = "OnMaxStakeError",
-                    RoutingKey = "r.bet.maxstake.error"
-                });
-
                 if (response.IsSuccessStatusCode)
                 {
                     var initialResult = JsonSerializer.Deserialize<MTSMaxStakeResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });

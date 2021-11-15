@@ -5485,7 +5485,8 @@ namespace Platform.Sportsbook.API.Repository
                 }
             }
 
-            return result.Where(f => f.SelectionTemplateId == currentSelection.SeTeId).FirstOrDefault().Odds;
+            var finalResult = result.Where(f => f.SelectionTemplateId == currentSelection.SeTeId).FirstOrDefault();
+            return finalResult == null ? currentSelection.Od : result.Where(f => f.SelectionTemplateId == currentSelection.SeTeId).FirstOrDefault().Odds;
         }
 
     }

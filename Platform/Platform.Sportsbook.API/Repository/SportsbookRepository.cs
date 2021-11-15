@@ -743,7 +743,10 @@ namespace Platform.Sportsbook.API.Repository
 
                         var clientOdds = new List<ClientOdds>();
 
-                        var initialSelections = newSelections.Where(c => c.MaId == market.MaId && c.IsAc == true && c.Od > 0m).ToList();
+                        var marketSelectionFilter = Builders<Selection>.Filter.Where(c => c.FiId == fixture.FiId && c.MaId == market.MaId);
+                        var marketSelections = await primarySelectionCollection.Find(marketSelectionFilter).ToListAsync();
+
+                        var initialSelections = marketSelections.Where(c => c.MaId == market.MaId && c.IsAc == true && c.Od > 0m).ToList();
 
                         if (initialSelections.Count > 0)
                         {
@@ -760,20 +763,6 @@ namespace Platform.Sportsbook.API.Repository
                             }
                             else
                             {
-                                var newTest = initialSelections.Select(s => new SelectionFilter
-                                {
-                                    CoId = s.CoId,
-                                    FiId = s.FiId,
-                                    IsAc = s.IsAc,
-                                    MaId = s.MaId,
-                                    Od = s.Od,
-                                    SeId = s.SeId,
-                                    SeNa = s.SeNa,
-                                    SeNaTr = s.SeNaTr,
-                                    SeSoOr = s.SeSoOr,
-                                    SeTeId = s.SeTeId
-                                }).ToList();
-
                                 selection.Od = clientOdds.Where(c => c.SelectionId == selection.SeId).Select(ss => ss.Odds).FirstOrDefault();
 
                                 finalSelections.Add(selection);

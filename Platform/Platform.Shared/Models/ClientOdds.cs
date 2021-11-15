@@ -8,6 +8,7 @@ namespace Platform.Shared.Models
         public string ClientCode { get; set; }
         public decimal Odds { get; set; }
         public string SelectionTemplateId { get; set; }
+        public long SelectionId { get; set; }
     }
 
 

@@ -38,6 +38,8 @@ namespace Platform.Shared.Models
 
         [JsonPropertyName("winningsTax")]
         public decimal WinningsTax { get; set; }
+        [JsonPropertyName("parlayBonus")]
+        public decimal ParlayBonus { get; set; }
 
         [JsonPropertyName("transactionDate")]
         public string TransactionDate { get; set; }

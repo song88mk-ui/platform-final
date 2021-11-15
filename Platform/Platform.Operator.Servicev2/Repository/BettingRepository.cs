@@ -492,6 +492,7 @@ namespace Platform.Operator.Servicev2.Repository
                     BetStatus = BetStatus.Running.ToString(),
                     StakeTax = betData.StakeTax,
                     WinningsTax = betData.WinningsTax,
+                    ParlayBonus = betData.ParlayBonus,
                     TransactionDate = betData.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                     BetSelections = betSelectionData.Select(s => new OperatorBetSelectionRequestDTO
                     {

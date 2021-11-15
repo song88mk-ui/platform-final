@@ -286,6 +286,7 @@ namespace Platform.Shared.Models
         public bool IsLiveStream { get; set; }
         public int FixtureStatusId { get; set; }
         public string FixtureStatusName { get; set; }
+        public int FixtureTypeId { get; set; }
         public int MarketCount { get; set; }
         public string SMSCode { get; set; }
         public string StatisticsURL { get; set; }

@@ -3828,13 +3828,31 @@ namespace Platform.Sportsbook.API.Repository
         {
             if(IsOEEnable(clientCode))
             {
+                if (sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright)
+                {
+                    return markets.Select(m => new MarketLimitedDTO
+                    {
+                        MarketTemplateId = m.MaTeId,
+                        MarketId = m.MaId.ToString(),
+                        MarketName = m.MaNa,
+                        Line = m.Li,
+                        MarketStatus = m.MaStNa,
+                        Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionLimitedDTO
+                        {
+                            SelectionId = s.SeId.ToString(),
+                            SelectionName = s.SeNa,
+                            Odds = s.Od.ToString(),
+                        }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
+                    }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                }
+
                 return markets.Where(c => c.ClCo.Contains(clientCode)).Select(m => new MarketLimitedDTO
                 {
                     MarketTemplateId = m.MaTeId,
                     MarketId = m.MaId.ToString(),
                     MarketName = m.MaNa,
                     Line = m.Li,
-                    MarketStatus = sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright ? m.MaStNa : m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
+                    MarketStatus = m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
                     Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionLimitedDTO
                     {
                         SelectionId = s.SeId.ToString(),
@@ -3868,6 +3886,30 @@ namespace Platform.Sportsbook.API.Repository
 
             if(IsOEEnable(clientCode))
             {
+                if (sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright)
+                {
+                    return markets.Where(c => marketTemplates.Contains(c.MaTeId)).Select(m => new MarketDTO
+                    {
+                        MarketTemplateId = m.MaTeId,
+                        MarketId = m.MaId.ToString(),
+                        MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
+                        Line = m.Li,
+                        IsCashout = m.CaStId == 1 ? true : false,
+                        MarketStatusId = m.MaStId,
+                        MarketStatusName = m.MaStNa,
+                        Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+                        {
+                            SelectionTemplateId = s.SeTeId,
+                            SelectionId = s.SeId.ToString(),
+                            SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                            DecimalOdds = s.Od.ToString(),
+                            IsActive = s.IsAc,
+                            CorrelationId = s.CoId,
+                            SortOrder = s.SeSoOr
+                        }).OrderBy(o => o.SortOrder).ToList()
+                    }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                }
+
                 return markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo.Contains(clientCode)).Select(m => new MarketDTO
                 {
                     MarketTemplateId = m.MaTeId,
@@ -3875,8 +3917,8 @@ namespace Platform.Sportsbook.API.Repository
                     MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
                     Line = m.Li,
                     IsCashout = m.CaStId == 1 ? true : false,
-                    MarketStatusId = sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright ? m.MaStId : m.ClCo.Contains(clientCode) ? m.MaStId : (int)MarketStatus.Inactive,
-                    MarketStatusName = sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright ? m.MaStNa : m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
+                    MarketStatusId = m.ClCo.Contains(clientCode) ? m.MaStId : (int)MarketStatus.Inactive,
+                    MarketStatusName = m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
                     Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
                     {
                         SelectionTemplateId = s.SeTeId,
@@ -3918,6 +3960,30 @@ namespace Platform.Sportsbook.API.Repository
         {
             if(IsOEEnable(clientCode))
             {
+                if (sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright)
+                {
+                    return markets.Select(m => new MarketDTO
+                    {
+                        MarketTemplateId = m.MaTeId,
+                        MarketId = m.MaId.ToString(),
+                        MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
+                        Line = m.Li,
+                        IsCashout = m.CaStId == 1 ? true : false,
+                        MarketStatusId = m.MaStId,
+                        MarketStatusName = m.MaStNa,
+                        Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+                        {
+                            SelectionTemplateId = s.SeTeId,
+                            SelectionId = s.SeId.ToString(),
+                            SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                            DecimalOdds = GetClientOdds(selections.Where(c => c.MaId == m.MaId), s, m.ClCoMa, clientCode, sportId, fixtureTypeId).ToString(),
+                            IsActive = s.IsAc,
+                            CorrelationId = s.CoId,
+                            SortOrder = s.SeSoOr
+                        }).OrderBy(o => o.SortOrder).ToList()
+                    }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                }
+
                 return markets.Where(c => c.ClCo.Contains(clientCode)).Select(m => new MarketDTO
                 {
                     MarketTemplateId = m.MaTeId,
@@ -3925,8 +3991,8 @@ namespace Platform.Sportsbook.API.Repository
                     MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
                     Line = m.Li,
                     IsCashout = m.CaStId == 1 ? true : false,
-                    MarketStatusId = sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright ? m.MaStId : m.ClCo.Contains(clientCode) ? m.MaStId : (int)MarketStatus.Inactive,
-                    MarketStatusName = sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright ? m.MaStNa : m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
+                    MarketStatusId = m.ClCo.Contains(clientCode) ? m.MaStId : (int)MarketStatus.Inactive,
+                    MarketStatusName = m.ClCo.Contains(clientCode) ? m.MaStNa : MarketStatus.Inactive.ToString(),
                     Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
                     {
                         SelectionTemplateId = s.SeTeId,
@@ -3969,7 +4035,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (IsOEEnable(clientCode))
             {
-                foreach (var market in markets.Where(m => m.ClCo.Contains(clientCode)).OrderBy(o => o.MaTeId).ThenBy(o => o.MaNa).ToList())
+                foreach (var market in markets.OrderBy(o => o.MaTeId).ThenBy(o => o.MaNa).ToList())
                 {
                     var selectionsToAdd = selections.Where(c => c.MaId == market.MaId).ToList();
 
@@ -3982,14 +4048,14 @@ namespace Platform.Sportsbook.API.Repository
                             MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
                             Line = market.Li,
                             IsCashout = market.CaStId == 1 ? true : false,
-                            MarketStatusId = sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright ? market.MaStId : market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
-                            MarketStatusName = sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright ? market.MaStNa : market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
+                            MarketStatusId = market.MaStId,
+                            MarketStatusName = market.MaStNa,
                             Selections = selectionsToAdd.Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                                DecimalOdds = GetClientOdds(selectionsToAdd, s, market.ClCoMa, clientCode, sportId, fixtureTypeId).ToString(),
+                                DecimalOdds = s.Od.ToString(),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                             }).OrderBy(o => Convert.ToDecimal(o.DecimalOdds)).ToList()
@@ -4004,14 +4070,14 @@ namespace Platform.Sportsbook.API.Repository
                             MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
                             Line = market.Li,
                             IsCashout = market.CaStId == 1 ? true : false,
-                            MarketStatusId = sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright ? market.MaStId : market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
-                            MarketStatusName = sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright ? market.MaStNa : market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
+                            MarketStatusId = market.MaStId,
+                            MarketStatusName = market.MaStNa,
                             Selections = selectionsToAdd.Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                                DecimalOdds = GetClientOdds(selectionsToAdd, s, market.ClCoMa, clientCode, sportId, fixtureTypeId).ToString(),
+                                DecimalOdds = s.Od.ToString(),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                                 SortOrder = s.SeSoOr

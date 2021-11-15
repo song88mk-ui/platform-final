@@ -744,23 +744,30 @@ namespace Platform.Sportsbook.API.Repository
 
                         foreach (var selection in initialSelections)
                         {
-                            var newTest = initialSelections.Select(s => new SelectionFilter
+                            if (fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright)
                             {
-                                CoId = s.CoId,
-                                FiId = s.FiId,
-                                IsAc = s.IsAc,
-                                MaId = s.MaId,
-                                Od = s.Od,
-                                SeId = s.SeId,
-                                SeNa = s.SeNa,
-                                SeNaTr = s.SeNaTr,
-                                SeSoOr = s.SeSoOr,
-                                SeTeId = s.SeTeId
-                            }).ToList();
+                                finalSelections.Add(selection);
+                            }
+                            else
+                            {
+                                var newTest = initialSelections.Select(s => new SelectionFilter
+                                {
+                                    CoId = s.CoId,
+                                    FiId = s.FiId,
+                                    IsAc = s.IsAc,
+                                    MaId = s.MaId,
+                                    Od = s.Od,
+                                    SeId = s.SeId,
+                                    SeNa = s.SeNa,
+                                    SeNaTr = s.SeNaTr,
+                                    SeSoOr = s.SeSoOr,
+                                    SeTeId = s.SeTeId
+                                }).ToList();
 
-                            selection.Od = GetClientOdds(newTest, new SelectionFilter { IsAc = selection.IsAc, Od = selection.Od }, market.ClCoMa, request.ClientCode, fixture.SpId, fixture.FiTyId);
+                                selection.Od = GetClientOdds(newTest, new SelectionFilter { IsAc = selection.IsAc, Od = selection.Od }, market.ClCoMa, request.ClientCode);
 
-                            finalSelections.Add(selection);
+                                finalSelections.Add(selection);
+                            }
                         }
                     }
                 }
@@ -3857,7 +3864,7 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         SelectionId = s.SeId.ToString(),
                         SelectionName = s.SeNa,
-                        Odds = GetClientOdds(selections, s, m.ClCoMa, clientCode, sportId, fixtureTypeId).ToString(),
+                        Odds = GetClientOdds(selections, s, m.ClCoMa, clientCode).ToString(),
                     }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
                 }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
@@ -3924,7 +3931,7 @@ namespace Platform.Sportsbook.API.Repository
                         SelectionTemplateId = s.SeTeId,
                         SelectionId = s.SeId.ToString(),
                         SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                        DecimalOdds = GetClientOdds(selections.Where(c => c.MaId == m.MaId), s, m.ClCoMa, clientCode, sportId, fixtureTypeId).ToString(),
+                        DecimalOdds = GetClientOdds(selections.Where(c => c.MaId == m.MaId), s, m.ClCoMa, clientCode).ToString(),
                         IsActive = s.IsAc,
                         CorrelationId = s.CoId,
                         SortOrder = s.SeSoOr
@@ -3976,7 +3983,7 @@ namespace Platform.Sportsbook.API.Repository
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
                             SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                            DecimalOdds = GetClientOdds(selections.Where(c => c.MaId == m.MaId), s, m.ClCoMa, clientCode, sportId, fixtureTypeId).ToString(),
+                            DecimalOdds = s.Od.ToString(),
                             IsActive = s.IsAc,
                             CorrelationId = s.CoId,
                             SortOrder = s.SeSoOr
@@ -3998,7 +4005,7 @@ namespace Platform.Sportsbook.API.Repository
                         SelectionTemplateId = s.SeTeId,
                         SelectionId = s.SeId.ToString(),
                         SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                        DecimalOdds = GetClientOdds(selections.Where(c => c.MaId == m.MaId), s, m.ClCoMa, clientCode, sportId, fixtureTypeId).ToString(),
+                        DecimalOdds = GetClientOdds(selections.Where(c => c.MaId == m.MaId), s, m.ClCoMa, clientCode).ToString(),
                         IsActive = s.IsAc,
                         CorrelationId = s.CoId,
                         SortOrder = s.SeSoOr
@@ -5377,12 +5384,9 @@ namespace Platform.Sportsbook.API.Repository
 
         }
 
-        private decimal GetClientOdds(IEnumerable<SelectionFilter> selections, SelectionFilter selection, string clientMarketConfig, string clientCode, int sportId, int fixtureTypeId)
+        private decimal GetClientOdds(IEnumerable<SelectionFilter> selections, SelectionFilter selection, string clientMarketConfig, string clientCode)
         {
             if (!IsOEEnable(clientCode))
-                return selection.Od;
-
-            if (sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright)
                 return selection.Od;
 
             if (string.IsNullOrEmpty(clientMarketConfig))

@@ -705,14 +705,18 @@ namespace Platform.Sportsbook.API.Repository
             var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
             var selections = primarySelectionCollection.Find(selectionFilter).ToListAsync();
 
+            var allSelectionFilter = Builders<Selection>.Filter.Where(c => marketIds.Contains(c.SeId));
+            var allSelections = primarySelectionCollection.Find(allSelectionFilter).ToListAsync();
+
             var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
             var bettingStatus = primaryBettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
 
-            await Task.WhenAll(fixtures, markets, selections, bettingStatus);
+            await Task.WhenAll(fixtures, markets, selections, allSelections, bettingStatus);
 
             var newFixtures = fixtures.Result;
             var newMarkets = markets.Result;
             var newSelections = selections.Result;
+            var newAllSelections = allSelections.Result;
 
             if (IsOEEnable(request.ClientCode))
             {
@@ -743,8 +747,7 @@ namespace Platform.Sportsbook.API.Repository
 
                         var clientOdds = new List<ClientOdds>();
 
-                        var marketSelectionFilter = Builders<Selection>.Filter.Where(c => c.FiId == fixture.FiId && c.MaId == market.MaId);
-                        var marketSelections = await primarySelectionCollection.Find(marketSelectionFilter).ToListAsync();
+                        var marketSelections = newAllSelections.Where(c => c.MaId == market.MaId).ToList();
 
                         if (marketSelections.Count > 0)
                         {

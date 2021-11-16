@@ -3838,73 +3838,88 @@ namespace Platform.Sportsbook.API.Repository
             {
                 if (sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright)
                 {
-                    return markets.Select(m => new MarketLimitedDTO
-                    {
-                        MarketTemplateId = m.MaTeId,
-                        MarketId = m.MaId.ToString(),
-                        MarketName = m.MaNa,
-                        Line = m.Li,
-                        MarketStatus = m.MaStNa,
-                        Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionLimitedDTO
-                        {
-                            SelectionId = s.SeId.ToString(),
-                            SelectionName = s.SeNa,
-                            Odds = s.Od.ToString(),
-                        }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
-                    }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
-                }
+                    var result = new List<MarketLimitedDTO>();
 
-                var filteredMarkets = markets.Where(c => c.ClCo.Contains(clientCode)).ToList();
+                    Parallel.ForEach(markets, market =>
+                    {
+                        result.Add(new MarketLimitedDTO
+                        {
+                            MarketTemplateId = market.MaTeId,
+                            MarketId = market.MaId.ToString(),
+                            MarketName = market.MaNa,
+                            Line = market.Li,
+                            MarketStatus = market.MaStNa,
+                            Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionLimitedDTO
+                            {
+                                SelectionId = s.SeId.ToString(),
+                                SelectionName = s.SeNa,
+                                Odds = s.Od.ToString(),
+                            }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
+                        });
+                    });
+
+                    return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                }
+                else
+                {
+                    var filteredMarkets = markets.Where(c => c.ClCo.Contains(clientCode)).ToList();
+                    var result = new List<MarketLimitedDTO>();
+
+                    Parallel.ForEach(filteredMarkets, market =>
+                    {
+                        var clientOdds = new List<ClientOdds>();
+
+                        var tempSelections = selections.Where(c => c.MaId == market.MaId).ToList();
+
+                        if (tempSelections.Count > 0)
+                        {
+                            var margin = (Math.Round(tempSelections.Where(c => c.IsAc == true && c.Od > 0m).Sum(s => 100 / s.Od)) - 100) / 100;
+
+                            clientOdds = GetClientOdds(tempSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
+                        }
+
+                        result.Add(new MarketLimitedDTO
+                        {
+                            MarketTemplateId = market.MaTeId,
+                            MarketId = market.MaId.ToString(),
+                            MarketName = market.MaNa,
+                            Line = market.Li,
+                            MarketStatus = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
+                            Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionLimitedDTO
+                            {
+                                SelectionId = s.SeId.ToString(),
+                                SelectionName = s.SeNa,
+                                Odds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
+                            }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
+                        });
+                    });
+
+                    return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                }
+            }
+            else
+            {
                 var result = new List<MarketLimitedDTO>();
 
-                foreach (var market in filteredMarkets)
+                Parallel.ForEach(markets, market =>
                 {
-                    var clientOdds = new List<ClientOdds>();
-
-                    var tempSelections = selections.Where(c => c.MaId == market.MaId).ToList();
-
-                    if (tempSelections.Count > 0)
-                    {
-                        var margin = (Math.Round(tempSelections.Where(c => c.IsAc == true && c.Od > 0m).Sum(s => 100 / s.Od)) - 100) / 100;
-
-                        clientOdds = GetClientOdds(tempSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
-                    }
-
                     result.Add(new MarketLimitedDTO
                     {
                         MarketTemplateId = market.MaTeId,
                         MarketId = market.MaId.ToString(),
                         MarketName = market.MaNa,
                         Line = market.Li,
-                        MarketStatus = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
+                        MarketStatus = market.MaStNa,
                         Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionLimitedDTO
                         {
                             SelectionId = s.SeId.ToString(),
                             SelectionName = s.SeNa,
-                            Odds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
+                            Odds = s.Od.ToString(),
                         }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
                     });
-
-                }
+                });
 
                 return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
-            }
-            else
-            {
-                return markets.Select(m => new MarketLimitedDTO
-                {
-                    MarketTemplateId = m.MaTeId,
-                    MarketId = m.MaId.ToString(),
-                    MarketName = m.MaNa,
-                    Line = m.Li,
-                    MarketStatus = m.MaStNa,
-                    Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionLimitedDTO
-                    {
-                        SelectionId = s.SeId.ToString(),
-                        SelectionName = s.SeNa,
-                        Odds = s.Od.ToString(),
-                    }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
-                }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
 
         }
@@ -3916,16 +3931,95 @@ namespace Platform.Sportsbook.API.Repository
             {
                 if (sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright)
                 {
-                    return markets.Where(c => marketTemplates.Contains(c.MaTeId)).Select(m => new MarketDTO
+                    var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo.Contains(clientCode)).ToList();
+                    var result = new List<MarketDTO>();
+
+                    Parallel.ForEach(filteredMarkets, market =>
                     {
-                        MarketTemplateId = m.MaTeId,
-                        MarketId = m.MaId.ToString(),
-                        MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
-                        Line = m.Li,
-                        IsCashout = m.CaStId == 1 ? true : false,
-                        MarketStatusId = m.MaStId,
-                        MarketStatusName = m.MaStNa,
-                        Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+                        result.Add(new MarketDTO
+                        {
+                            MarketTemplateId = market.MaTeId,
+                            MarketId = market.MaId.ToString(),
+                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            Line = market.Li,
+                            IsCashout = market.CaStId == 1 ? true : false,
+                            MarketStatusId = market.MaStId,
+                            MarketStatusName = market.MaStNa,
+                            Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
+                            {
+                                SelectionTemplateId = s.SeTeId,
+                                SelectionId = s.SeId.ToString(),
+                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                DecimalOdds = s.Od.ToString(),
+                                IsActive = s.IsAc,
+                                CorrelationId = s.CoId,
+                                SortOrder = s.SeSoOr
+                            }).OrderBy(o => o.SortOrder).ToList()
+                        });
+                    });
+
+                    return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                }
+                else
+                {
+                    var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo.Contains(clientCode)).ToList();
+                    var result = new List<MarketDTO>();
+
+                    Parallel.ForEach(filteredMarkets, market =>
+                    {
+                        var clientOdds = new List<ClientOdds>();
+
+                        var tempSelections = selections.Where(c => c.MaId == market.MaId).ToList();
+
+                        if (tempSelections.Count > 0)
+                        {
+                            var margin = (Math.Round(tempSelections.Where(c => c.IsAc == true && c.Od > 0m).Sum(s => 100 / s.Od)) - 100) / 100;
+
+                            clientOdds = GetClientOdds(tempSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
+                        }
+
+                        result.Add(new MarketDTO
+                        {
+                            MarketTemplateId = market.MaTeId,
+                            MarketId = market.MaId.ToString(),
+                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            Line = market.Li,
+                            IsCashout = market.CaStId == 1 ? true : false,
+                            MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
+                            MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
+                            Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
+                            {
+                                SelectionTemplateId = s.SeTeId,
+                                SelectionId = s.SeId.ToString(),
+                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                DecimalOdds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
+                                IsActive = s.IsAc,
+                                CorrelationId = s.CoId,
+                                SortOrder = s.SeSoOr
+                            }).OrderBy(o => o.SortOrder).ToList()
+                        });
+                    });
+
+                    return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                }
+            }
+            else
+            {
+                var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId)).ToList();
+                var result = new List<MarketDTO>();
+
+                Parallel.ForEach(filteredMarkets, market =>
+                {
+                    result.Add(new MarketDTO
+                    {
+                        MarketTemplateId = market.MaTeId,
+                        MarketId = market.MaId.ToString(),
+                        MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                        Line = market.Li,
+                        IsCashout = market.CaStId == 1 ? true : false,
+                        MarketStatusId = market.MaStId,
+                        MarketStatusName = market.MaStNa,
+                        Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
                         {
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
@@ -3935,71 +4029,10 @@ namespace Platform.Sportsbook.API.Repository
                             CorrelationId = s.CoId,
                             SortOrder = s.SeSoOr
                         }).OrderBy(o => o.SortOrder).ToList()
-                    }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
-                }
-
-                var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo.Contains(clientCode)).ToList();
-                var result = new List<MarketDTO>();
-
-                Parallel.ForEach(filteredMarkets, market =>
-                {
-                    var clientOdds = new List<ClientOdds>();
-
-                    var tempSelections = selections.Where(c => c.MaId == market.MaId).ToList();
-
-                    if (tempSelections.Count > 0)
-                    {
-                        var margin = (Math.Round(tempSelections.Where(c => c.IsAc == true && c.Od > 0m).Sum(s => 100 / s.Od)) - 100) / 100;
-
-                        clientOdds = GetClientOdds(tempSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
-                    }
-
-                    result.Add(new MarketDTO
-                    {
-                        MarketTemplateId = market.MaTeId,
-                        MarketId = market.MaId.ToString(),
-                        MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
-                        Line = market.Li,
-                        IsCashout = market.CaStId == 1 ? true : false,
-                        MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
-                        MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
-                        Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
-                        {
-                            SelectionTemplateId = s.SeTeId,
-                            SelectionId = s.SeId.ToString(),
-                            SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                            DecimalOdds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
-                            IsActive = s.IsAc,
-                            CorrelationId = s.CoId,
-                            SortOrder = s.SeSoOr
-                        }).OrderBy(o => o.SortOrder).ToList()
                     });
                 });
 
                 return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
-            }
-            else
-            {
-                return markets.Where(c => marketTemplates.Contains(c.MaTeId)).Select(m => new MarketDTO
-                {
-                    MarketTemplateId = m.MaTeId,
-                    MarketId = m.MaId.ToString(),
-                    MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
-                    Line = m.Li,
-                    IsCashout = m.CaStId == 1 ? true : false,
-                    MarketStatusId = m.MaStId,
-                    MarketStatusName = m.MaStNa,
-                    Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
-                    {
-                        SelectionTemplateId = s.SeTeId,
-                        SelectionId = s.SeId.ToString(),
-                        SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                        DecimalOdds = s.Od.ToString(),
-                        IsActive = s.IsAc,
-                        CorrelationId = s.CoId,
-                        SortOrder = s.SeSoOr
-                    }).OrderBy(o => o.SortOrder).ToList()
-                }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
 
         }
@@ -4009,16 +4042,93 @@ namespace Platform.Sportsbook.API.Repository
             {
                 if (sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright)
                 {
-                    return markets.Select(m => new MarketDTO
+                    var result = new List<MarketDTO>();
+
+                    Parallel.ForEach(markets, market =>
                     {
-                        MarketTemplateId = m.MaTeId,
-                        MarketId = m.MaId.ToString(),
-                        MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
-                        Line = m.Li,
-                        IsCashout = m.CaStId == 1 ? true : false,
-                        MarketStatusId = m.MaStId,
-                        MarketStatusName = m.MaStNa,
-                        Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
+                        result.Add(new MarketDTO
+                        {
+                            MarketTemplateId = market.MaTeId,
+                            MarketId = market.MaId.ToString(),
+                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            Line = market.Li,
+                            IsCashout = market.CaStId == 1 ? true : false,
+                            MarketStatusId = market.MaStId,
+                            MarketStatusName = market.MaStNa,
+                            Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
+                            {
+                                SelectionTemplateId = s.SeTeId,
+                                SelectionId = s.SeId.ToString(),
+                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                DecimalOdds = s.Od.ToString(),
+                                IsActive = s.IsAc,
+                                CorrelationId = s.CoId,
+                                SortOrder = s.SeSoOr
+                            }).OrderBy(o => o.SortOrder).ToList()
+                        });
+                    });
+
+                    return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                }
+                else
+                {
+                    var filteredMarkets = markets.Where(c => c.ClCo.Contains(clientCode)).ToList();
+                    var result = new List<MarketDTO>();
+
+                    Parallel.ForEach(filteredMarkets, market =>
+                    {
+                        var clientOdds = new List<ClientOdds>();
+
+                        var tempSelections = selections.Where(c => c.MaId == market.MaId).ToList();
+
+                        if (tempSelections.Count > 0)
+                        {
+                            var margin = (Math.Round(tempSelections.Where(c => c.IsAc == true && c.Od > 0m).Sum(s => 100 / s.Od)) - 100) / 100;
+
+                            clientOdds = GetClientOdds(tempSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
+                        }
+
+                        result.Add(new MarketDTO
+                        {
+                            MarketTemplateId = market.MaTeId,
+                            MarketId = market.MaId.ToString(),
+                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            Line = market.Li,
+                            IsCashout = market.CaStId == 1 ? true : false,
+                            MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
+                            MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
+                            Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
+                            {
+                                SelectionTemplateId = s.SeTeId,
+                                SelectionId = s.SeId.ToString(),
+                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                DecimalOdds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
+                                IsActive = s.IsAc,
+                                CorrelationId = s.CoId,
+                                SortOrder = s.SeSoOr
+                            }).OrderBy(o => o.SortOrder).ToList()
+                        });
+                    });
+
+                    return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                }
+            }
+            else
+            {
+                var result = new List<MarketDTO>();
+
+                Parallel.ForEach(markets, market =>
+                {
+                    result.Add(new MarketDTO
+                    {
+                        MarketTemplateId = market.MaTeId,
+                        MarketId = market.MaId.ToString(),
+                        MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                        Line = market.Li,
+                        IsCashout = market.CaStId == 1 ? true : false,
+                        MarketStatusId = market.MaStId,
+                        MarketStatusName = market.MaStNa,
+                        Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
                         {
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
@@ -4028,71 +4138,10 @@ namespace Platform.Sportsbook.API.Repository
                             CorrelationId = s.CoId,
                             SortOrder = s.SeSoOr
                         }).OrderBy(o => o.SortOrder).ToList()
-                    }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
-                }
-
-                var filteredMarkets = markets.Where(c => c.ClCo.Contains(clientCode)).ToList();
-                var result = new List<MarketDTO>();
-
-                Parallel.ForEach(filteredMarkets, market => 
-                {
-                    var clientOdds = new List<ClientOdds>();
-
-                    var tempSelections = selections.Where(c => c.MaId == market.MaId).ToList();
-
-                    if (tempSelections.Count > 0)
-                    {
-                        var margin = (Math.Round(tempSelections.Where(c => c.IsAc == true && c.Od > 0m).Sum(s => 100 / s.Od)) - 100) / 100;
-
-                        clientOdds = GetClientOdds(tempSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
-                    }
-
-                    result.Add(new MarketDTO
-                    {
-                        MarketTemplateId = market.MaTeId,
-                        MarketId = market.MaId.ToString(),
-                        MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
-                        Line = market.Li,
-                        IsCashout = market.CaStId == 1 ? true : false,
-                        MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
-                        MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
-                        Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
-                        {
-                            SelectionTemplateId = s.SeTeId,
-                            SelectionId = s.SeId.ToString(),
-                            SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                            DecimalOdds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
-                            IsActive = s.IsAc,
-                            CorrelationId = s.CoId,
-                            SortOrder = s.SeSoOr
-                        }).OrderBy(o => o.SortOrder).ToList()
                     });
                 });
 
                 return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
-            }
-            else
-            {
-                return markets.Select(m => new MarketDTO
-                {
-                    MarketTemplateId = m.MaTeId,
-                    MarketId = m.MaId.ToString(),
-                    MarketName = GetMarketName(m.MaNa, m.MaNaTr, languageCode),
-                    Line = m.Li,
-                    IsCashout = m.CaStId == 1 ? true : false,
-                    MarketStatusId = m.MaStId,
-                    MarketStatusName = m.MaStNa,
-                    Selections = selections.Where(c => c.MaId == m.MaId).Select(s => new SelectionDTO
-                    {
-                        SelectionTemplateId = s.SeTeId,
-                        SelectionId = s.SeId.ToString(),
-                        SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                        DecimalOdds = s.Od.ToString(),
-                        IsActive = s.IsAc,
-                        CorrelationId = s.CoId,
-                        SortOrder = s.SeSoOr
-                    }).OrderBy(o => o.SortOrder).ToList()
-                }).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
         }
         private List<MarketDTO> GetOutrightMarkets(List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, int sportId, int fixtureTypeId)
@@ -4101,7 +4150,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (IsOEEnable(clientCode))
             {
-                foreach (var market in markets.OrderBy(o => o.MaTeId).ThenBy(o => o.MaNa).ToList())
+                Parallel.ForEach(markets, market =>
                 {
                     var selectionsToAdd = selections.Where(c => c.MaId == market.MaId).ToList();
 
@@ -4150,11 +4199,11 @@ namespace Platform.Sportsbook.API.Repository
                             }).OrderBy(o => o.SortOrder).ToList()
                         });
                     }
-                }
+                });
             }
             else
             {
-                foreach (var market in markets.OrderBy(o => o.MaTeId).ThenBy(o => o.MaNa).ToList())
+                Parallel.ForEach(markets, market =>
                 {
                     var selectionsToAdd = selections.Where(c => c.MaId == market.MaId).ToList();
 
@@ -4203,10 +4252,10 @@ namespace Platform.Sportsbook.API.Repository
                             }).OrderBy(o => o.SortOrder).ToList()
                         });
                     }
-                }
+                });
             }
 
-            return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList(); ;
+            return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
         }
 
         private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus> result)

@@ -751,9 +751,10 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (marketSelections.Count > 0)
                         {
-                            var margin = (Math.Round(marketSelections.Where(c => c.MaId == market.MaId && c.IsAc == true && c.Od > 0m).Sum(s => 100 / s.Od)) - 100) / 100;
+                            var activeSelections = marketSelections.Where(c => c.MaId == market.MaId && c.IsAc == true && c.Od > 0m).ToList();
+                            var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-                            clientOdds = GetClientOdds(marketSelections.Count, margin, marketSelections, market.ClCoMa, request.ClientCode);
+                            clientOdds = GetClientOdds(activeSelections.Count, margin, marketSelections, market.ClCoMa, request.ClientCode);
                         }
 
                         foreach (var selection in marketSelections)
@@ -3880,9 +3881,10 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (tempSelections.Count > 0)
                         {
-                            var margin = (Math.Round(tempSelections.Where(c => c.IsAc == true && c.Od > 0m).Sum(s => 100 / s.Od)) - 100) / 100;
+                            var activeSelections = tempSelections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
+                            var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-                            clientOdds = GetClientOdds(tempSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
+                            clientOdds = GetClientOdds(activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
                         }
 
                         result.Add(new MarketLimitedDTO
@@ -3980,9 +3982,10 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (tempSelections.Count > 0)
                         {
-                            var margin = (Math.Round(tempSelections.Where(c => c.IsAc == true && c.Od > 0m).Sum(s => 100 / s.Od)) - 100) / 100;
+                            var activeSelections = tempSelections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
+                            var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-                            clientOdds = GetClientOdds(tempSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
+                            clientOdds = GetClientOdds(activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
                         }
 
                         result.Add(new MarketDTO
@@ -4090,9 +4093,10 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (tempSelections.Count > 0)
                         {
-                            var margin = (Math.Round(tempSelections.Where(c => c.IsAc == true && c.Od > 0m).Sum(s => 100 / s.Od)) - 100) / 100;
+                            var activeSelections = tempSelections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
+                            var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-                            clientOdds = GetClientOdds(tempSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
+                            clientOdds = GetClientOdds(activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
                         }
 
                         result.Add(new MarketDTO

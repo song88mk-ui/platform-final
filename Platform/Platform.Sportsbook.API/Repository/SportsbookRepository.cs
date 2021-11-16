@@ -3848,7 +3848,7 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     var result = new List<MarketLimitedDTO>();
 
-                    Parallel.ForEach(markets, market =>
+                    foreach (var market in markets)
                     {
                         result.Add(new MarketLimitedDTO
                         {
@@ -3864,7 +3864,7 @@ namespace Platform.Sportsbook.API.Repository
                                 Odds = s.Od.ToString(),
                             }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
                         });
-                    });
+                    }
 
                     return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
@@ -3873,7 +3873,7 @@ namespace Platform.Sportsbook.API.Repository
                     var filteredMarkets = markets.Where(c => c.ClCo.Contains(clientCode)).ToList();
                     var result = new List<MarketLimitedDTO>();
 
-                    Parallel.ForEach(filteredMarkets, market =>
+                    foreach (var market in filteredMarkets)
                     {
                         var clientOdds = new List<ClientOdds>();
 
@@ -3901,7 +3901,7 @@ namespace Platform.Sportsbook.API.Repository
                                 Odds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
                             }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
                         });
-                    });
+                    }
 
                     return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
@@ -3910,7 +3910,7 @@ namespace Platform.Sportsbook.API.Repository
             {
                 var result = new List<MarketLimitedDTO>();
 
-                Parallel.ForEach(markets, market =>
+                foreach (var market in markets)
                 {
                     result.Add(new MarketLimitedDTO
                     {
@@ -3926,7 +3926,7 @@ namespace Platform.Sportsbook.API.Repository
                             Odds = s.Od.ToString(),
                         }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
                     });
-                });
+                }
 
                 return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
@@ -3943,7 +3943,7 @@ namespace Platform.Sportsbook.API.Repository
                     var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo.Contains(clientCode)).ToList();
                     var result = new List<MarketDTO>();
 
-                    Parallel.ForEach(filteredMarkets, market =>
+                    foreach (var market in filteredMarkets)
                     {
                         result.Add(new MarketDTO
                         {
@@ -3965,7 +3965,7 @@ namespace Platform.Sportsbook.API.Repository
                                 SortOrder = s.SeSoOr
                             }).OrderBy(o => o.SortOrder).ToList()
                         });
-                    });
+                    }
 
                     return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
@@ -3974,7 +3974,7 @@ namespace Platform.Sportsbook.API.Repository
                     var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo.Contains(clientCode)).ToList();
                     var result = new List<MarketDTO>();
 
-                    Parallel.ForEach(filteredMarkets, market =>
+                    foreach (var market in filteredMarkets)
                     {
                         var clientOdds = new List<ClientOdds>();
 
@@ -4008,7 +4008,7 @@ namespace Platform.Sportsbook.API.Repository
                                 SortOrder = s.SeSoOr
                             }).OrderBy(o => o.SortOrder).ToList()
                         });
-                    });
+                    }
 
                     return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
@@ -4018,7 +4018,7 @@ namespace Platform.Sportsbook.API.Repository
                 var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId)).ToList();
                 var result = new List<MarketDTO>();
 
-                Parallel.ForEach(filteredMarkets, market =>
+                foreach (var market in filteredMarkets)
                 {
                     result.Add(new MarketDTO
                     {
@@ -4040,7 +4040,7 @@ namespace Platform.Sportsbook.API.Repository
                             SortOrder = s.SeSoOr
                         }).OrderBy(o => o.SortOrder).ToList()
                     });
-                });
+                }
 
                 return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
@@ -4054,7 +4054,7 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     var result = new List<MarketDTO>();
 
-                    Parallel.ForEach(markets, market =>
+                    foreach (var market in markets)
                     {
                         result.Add(new MarketDTO
                         {
@@ -4076,7 +4076,7 @@ namespace Platform.Sportsbook.API.Repository
                                 SortOrder = s.SeSoOr
                             }).OrderBy(o => o.SortOrder).ToList()
                         });
-                    });
+                    }
 
                     return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
@@ -4085,7 +4085,7 @@ namespace Platform.Sportsbook.API.Repository
                     var filteredMarkets = markets.Where(c => c.ClCo.Contains(clientCode)).ToList();
                     var result = new List<MarketDTO>();
 
-                    Parallel.ForEach(filteredMarkets, market =>
+                    foreach (var market in filteredMarkets)
                     {
                         var clientOdds = new List<ClientOdds>();
 
@@ -4119,7 +4119,7 @@ namespace Platform.Sportsbook.API.Repository
                                 SortOrder = s.SeSoOr
                             }).OrderBy(o => o.SortOrder).ToList()
                         });
-                    });
+                    }
 
                     return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
@@ -4128,7 +4128,7 @@ namespace Platform.Sportsbook.API.Repository
             {
                 var result = new List<MarketDTO>();
 
-                Parallel.ForEach(markets, market =>
+                foreach (var market in markets)
                 {
                     result.Add(new MarketDTO
                     {
@@ -4150,7 +4150,7 @@ namespace Platform.Sportsbook.API.Repository
                             SortOrder = s.SeSoOr
                         }).OrderBy(o => o.SortOrder).ToList()
                     });
-                });
+                }
 
                 return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
@@ -4161,7 +4161,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (IsOEEnable(clientCode))
             {
-                Parallel.ForEach(markets, market =>
+                foreach (var market in markets)
                 {
                     var selectionsToAdd = selections.Where(c => c.MaId == market.MaId).ToList();
 
@@ -4210,11 +4210,11 @@ namespace Platform.Sportsbook.API.Repository
                             }).OrderBy(o => o.SortOrder).ToList()
                         });
                     }
-                });
+                }
             }
             else
             {
-                Parallel.ForEach(markets, market =>
+                foreach (var market in markets)
                 {
                     var selectionsToAdd = selections.Where(c => c.MaId == market.MaId).ToList();
 
@@ -4263,7 +4263,7 @@ namespace Platform.Sportsbook.API.Repository
                             }).OrderBy(o => o.SortOrder).ToList()
                         });
                     }
-                });
+                }
             }
 
             return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();

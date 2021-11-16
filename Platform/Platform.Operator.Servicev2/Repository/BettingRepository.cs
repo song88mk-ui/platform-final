@@ -474,7 +474,7 @@ namespace Platform.Operator.Servicev2.Repository
 
         public void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId)
         {
-            var uri = "/v1/bet/placement";
+            var path = "/v1/bet/placement";
 
             var betData = message.Bet;
             var betSelectionData = message.BetSelections;
@@ -525,7 +525,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Direction = "REQUEST",
                     ClientId = betData.ClientId,
                     ClientCode = betData.ClientCode,
-                    URL = $"{betData.Endpoint}{uri}",
+                    URL = $"{betData.Endpoint}{path}",
                     BetId = betData.BetId.ToString().ToUpper(),
                     Info = JsonSerializer.Serialize(payload),
                     OperatorToken = betData.OperatorToken,
@@ -533,7 +533,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(betData.Endpoint, betData.OperatorToken, betData.ClientId).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(betData.Endpoint, betData.OperatorToken, betData.ClientId).PostAsync($"{betData.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -544,7 +544,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Direction = "RESPONSE",
                         ClientId = betData.ClientId,
                         ClientCode = betData.ClientCode,
-                        URL = $"{betData.Endpoint}{uri}",
+                        URL = $"{betData.Endpoint}{path}",
                         BetId = betData.BetId.ToString().ToUpper(),
                         Info = JsonSerializer.Serialize(result),
                         OperatorToken = betData.OperatorToken,
@@ -565,7 +565,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Direction = "RESPONSE",
                             ClientId = betData.ClientId,
                             ClientCode = betData.ClientCode,
-                            URL = $"{betData.Endpoint}{uri}",
+                            URL = $"{betData.Endpoint}{path}",
                             BetId = betData.BetId.ToString().ToUpper(),
                             Info = JsonSerializer.Serialize(result),
                             OperatorToken = betData.OperatorToken,
@@ -593,7 +593,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Direction = "RESPONSE",
                             ClientId = betData.ClientId,
                             ClientCode = betData.ClientCode,
-                            URL = $"{betData.Endpoint}{uri}",
+                            URL = $"{betData.Endpoint}{path}",
                             BetId = betData.BetId.ToString().ToUpper(),
                             Info = JsonSerializer.Serialize(response.ReasonPhrase),
                             OperatorToken = betData.OperatorToken,
@@ -612,7 +612,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Direction = "RESPONSE",
                     ClientId = betData.ClientId,
                     ClientCode = betData.ClientCode,
-                    URL = $"{betData.Endpoint}{uri}",
+                    URL = $"{betData.Endpoint}{path}",
                     BetId = betData.BetId.ToString().ToUpper(),
                     Info = JsonSerializer.Serialize(ex.Message),
                     OperatorToken = betData.OperatorToken,
@@ -636,7 +636,7 @@ namespace Platform.Operator.Servicev2.Repository
                 message.IsRetry = true;
             }
 
-            var uri = "/v1/bet/full/cashout";
+            var path = "/v1/bet/full/cashout";
 
             var payload = new OperatorBetSettlementRequestDTO
             {
@@ -691,7 +691,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Direction = "REQUEST",
                     ClientId = message.Bet.ClientId,
                     ClientCode = message.Bet.ClientCode,
-                    URL = $"{message.Bet.Endpoint}{uri}",
+                    URL = $"{message.Bet.Endpoint}{path}",
                     BetId = message.Bet.BetId.ToString().ToUpper(),
                     Info = JsonSerializer.Serialize(payload),
                     OperatorToken = message.Bet.OperatorToken,
@@ -699,7 +699,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -710,7 +710,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Direction = "RESPONSE",
                         ClientId = message.Bet.ClientId,
                         ClientCode = message.Bet.ClientCode,
-                        URL = $"{message.Bet.Endpoint}{uri}",
+                        URL = $"{message.Bet.Endpoint}{path}",
                         BetId = message.Bet.BetId.ToString().ToUpper(),
                         Info = JsonSerializer.Serialize(result),
                         OperatorToken = message.Bet.OperatorToken,
@@ -731,7 +731,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Direction = "RESPONSE",
                             ClientId = message.Bet.ClientId,
                             ClientCode = message.Bet.ClientCode,
-                            URL = $"{message.Bet.Endpoint}{uri}",
+                            URL = $"{message.Bet.Endpoint}{path}",
                             BetId = message.Bet.BetId.ToString().ToUpper(),
                             Info = JsonSerializer.Serialize(result),
                             OperatorToken = message.Bet.OperatorToken,
@@ -748,7 +748,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Direction = "RESPONSE",
                             ClientId = message.Bet.ClientId,
                             ClientCode = message.Bet.ClientCode,
-                            URL = $"{message.Bet.Endpoint}{uri}",
+                            URL = $"{message.Bet.Endpoint}{path}",
                             BetId = message.Bet.BetId.ToString().ToUpper(),
                             Info = JsonSerializer.Serialize(response.ReasonPhrase),
                             OperatorToken = message.Bet.OperatorToken,
@@ -767,7 +767,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Direction = "RESPONSE",
                     ClientId = message.Bet.ClientId,
                     ClientCode = message.Bet.ClientCode,
-                    URL = $"{message.Bet.Endpoint}{uri}",
+                    URL = $"{message.Bet.Endpoint}{path}",
                     BetId = message.Bet.BetId.ToString().ToUpper(),
                     Info = JsonSerializer.Serialize(ex.Message),
                     OperatorToken = message.Bet.OperatorToken,
@@ -791,7 +791,7 @@ namespace Platform.Operator.Servicev2.Repository
                 message.IsRetry = true;
             }
 
-            var uri = "/v1/bet/settlement";
+            var path = "/v1/bet/settlement";
 
             var payload = new OperatorBetSettlementRequestDTO
             {
@@ -852,7 +852,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Direction = "REQUEST",
                     ClientId = message.Bet.ClientId,
                     ClientCode = message.Bet.ClientCode,
-                    URL = $"{message.Bet.Endpoint}{uri}",
+                    URL = $"{message.Bet.Endpoint}{path}",
                     BetId = message.Bet.BetId.ToString().ToUpper(),
                     Info = JsonSerializer.Serialize(payload),
                     OperatorToken = message.Bet.OperatorToken,
@@ -860,7 +860,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -871,7 +871,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Direction = "RESPONSE",
                         ClientId = message.Bet.ClientId,
                         ClientCode = message.Bet.ClientCode,
-                        URL = $"{message.Bet.Endpoint}{uri}",
+                        URL = $"{message.Bet.Endpoint}{path}",
                         BetId = message.Bet.BetId.ToString().ToUpper(),
                         Info = JsonSerializer.Serialize(result),
                         OperatorToken = message.Bet.OperatorToken,
@@ -892,7 +892,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Direction = "RESPONSE",
                             ClientId = message.Bet.ClientId,
                             ClientCode = message.Bet.ClientCode,
-                            URL = $"{message.Bet.Endpoint}{uri}",
+                            URL = $"{message.Bet.Endpoint}{path}",
                             BetId = message.Bet.BetId.ToString().ToUpper(),
                             Info = JsonSerializer.Serialize(result),
                             OperatorToken = message.Bet.OperatorToken,
@@ -909,7 +909,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Direction = "RESPONSE",
                             ClientId = message.Bet.ClientId,
                             ClientCode = message.Bet.ClientCode,
-                            URL = $"{message.Bet.Endpoint}{uri}",
+                            URL = $"{message.Bet.Endpoint}{path}",
                             BetId = message.Bet.BetId.ToString().ToUpper(),
                             Info = JsonSerializer.Serialize(response.ReasonPhrase),
                             OperatorToken = message.Bet.OperatorToken,
@@ -928,7 +928,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Direction = "RESPONSE",
                     ClientId = message.Bet.ClientId,
                     ClientCode = message.Bet.ClientCode,
-                    URL = $"{message.Bet.Endpoint}{uri}",
+                    URL = $"{message.Bet.Endpoint}{path}",
                     BetId = message.Bet.BetId.ToString().ToUpper(),
                     Info = JsonSerializer.Serialize(ex.Message),
                     OperatorToken = message.Bet.OperatorToken,
@@ -952,7 +952,7 @@ namespace Platform.Operator.Servicev2.Repository
                 message.IsRetry = true;
             }
 
-            var uri = "/v1/bet/cancellation";
+            var path = "/v1/bet/cancellation";
 
             var payload = new OperatorBetSettlementRequestDTO
             {
@@ -1013,7 +1013,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Direction = "REQUEST",
                     ClientId = message.Bet.ClientId,
                     ClientCode = message.Bet.ClientCode,
-                    URL = $"{message.Bet.Endpoint}{uri}",
+                    URL = $"{message.Bet.Endpoint}{path}",
                     BetId = message.Bet.BetId.ToString().ToUpper(),
                     Info = JsonSerializer.Serialize(payload),
                     OperatorToken = message.Bet.OperatorToken,
@@ -1021,7 +1021,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -1032,7 +1032,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Direction = "RESPONSE",
                         ClientId = message.Bet.ClientId,
                         ClientCode = message.Bet.ClientCode,
-                        URL = $"{message.Bet.Endpoint}{uri}",
+                        URL = $"{message.Bet.Endpoint}{path}",
                         BetId = message.Bet.BetId.ToString().ToUpper(),
                         Info = JsonSerializer.Serialize(result),
                         OperatorToken = message.Bet.OperatorToken,
@@ -1053,7 +1053,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Direction = "RESPONSE",
                             ClientId = message.Bet.ClientId,
                             ClientCode = message.Bet.ClientCode,
-                            URL = $"{message.Bet.Endpoint}{uri}",
+                            URL = $"{message.Bet.Endpoint}{path}",
                             BetId = message.Bet.BetId.ToString().ToUpper(),
                             Info = JsonSerializer.Serialize(result),
                             OperatorToken = message.Bet.OperatorToken,
@@ -1071,7 +1071,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Direction = "RESPONSE",
                             ClientId = message.Bet.ClientId,
                             ClientCode = message.Bet.ClientCode,
-                            URL = $"{message.Bet.Endpoint}{uri}",
+                            URL = $"{message.Bet.Endpoint}{path}",
                             BetId = message.Bet.BetId.ToString().ToUpper(),
                             Info = JsonSerializer.Serialize(response.ReasonPhrase),
                             OperatorToken = message.Bet.OperatorToken,
@@ -1091,7 +1091,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Direction = "RESPONSE",
                     ClientId = message.Bet.ClientId,
                     ClientCode = message.Bet.ClientCode,
-                    URL = $"{message.Bet.Endpoint}{uri}",
+                    URL = $"{message.Bet.Endpoint}{path}",
                     BetId = message.Bet.BetId.ToString().ToUpper(),
                     Info = JsonSerializer.Serialize(ex.Message),
                     OperatorToken = message.Bet.OperatorToken,
@@ -1114,7 +1114,7 @@ namespace Platform.Operator.Servicev2.Repository
 
             message.RemainingRetries -= 1;
 
-            var uri = "/v1/bet/full/cashout";
+            var path = "/v1/bet/full/cashout";
 
             try
             {
@@ -1123,7 +1123,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Direction = "REQUEST",
                     ClientId = message.OnBetSettlement.Bet.ClientId,
                     ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                    URL = $"{message.OnBetSettlement.Bet.Endpoint}{uri}",
+                    URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                     BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
                     Info = JsonSerializer.Serialize(payload),
                     OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
@@ -1131,7 +1131,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId).PostAsync($"{message.OnBetSettlement.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -1142,7 +1142,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Direction = "RESPONSE",
                         ClientId = message.OnBetSettlement.Bet.ClientId,
                         ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                        URL = $"{message.OnBetSettlement.Bet.Endpoint}{uri}",
+                        URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                         BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
                         Info = JsonSerializer.Serialize(result),
                         OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
@@ -1161,7 +1161,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Direction = "RESPONSE",
                             ClientId = message.OnBetSettlement.Bet.ClientId,
                             ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                            URL = $"{message.OnBetSettlement.Bet.Endpoint}{uri}",
+                            URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                             BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
                             Info = JsonSerializer.Serialize(result),
                             OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
@@ -1178,7 +1178,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Direction = "RESPONSE",
                             ClientId = message.OnBetSettlement.Bet.ClientId,
                             ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                            URL = $"{message.OnBetSettlement.Bet.Endpoint}{uri}",
+                            URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                             BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
                             Info = JsonSerializer.Serialize(response.ReasonPhrase),
                             OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
@@ -1197,7 +1197,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Direction = "RESPONSE",
                     ClientId = message.OnBetSettlement.Bet.ClientId,
                     ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                    URL = $"{message.OnBetSettlement.Bet.Endpoint}{uri}",
+                    URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                     BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
                     Info = JsonSerializer.Serialize(ex.Message),
                     OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
@@ -1218,7 +1218,7 @@ namespace Platform.Operator.Servicev2.Repository
 
             message.RemainingRetries -= 1;
 
-            var uri = "/v1/bet/settlement";
+            var path = "/v1/bet/settlement";
 
             try
             {
@@ -1227,7 +1227,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Direction = "REQUEST",
                     ClientId = message.OnBetSettlement.Bet.ClientId,
                     ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                    URL = $"{message.OnBetSettlement.Bet.Endpoint}{uri}",
+                    URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                     BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
                     Info = JsonSerializer.Serialize(payload),
                     OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
@@ -1235,7 +1235,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId).PostAsync($"{message.OnBetSettlement.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -1246,7 +1246,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Direction = "RESPONSE",
                         ClientId = message.OnBetSettlement.Bet.ClientId,
                         ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                        URL = $"{message.OnBetSettlement.Bet.Endpoint}{uri}",
+                        URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                         BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
                         Info = JsonSerializer.Serialize(result),
                         OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
@@ -1265,7 +1265,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Direction = "RESPONSE",
                             ClientId = message.OnBetSettlement.Bet.ClientId,
                             ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                            URL = $"{message.OnBetSettlement.Bet.Endpoint}{uri}",
+                            URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                             BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
                             Info = JsonSerializer.Serialize(result),
                             OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
@@ -1282,7 +1282,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Direction = "RESPONSE",
                             ClientId = message.OnBetSettlement.Bet.ClientId,
                             ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                            URL = $"{message.OnBetSettlement.Bet.Endpoint}{uri}",
+                            URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                             BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
                             Info = JsonSerializer.Serialize(response.ReasonPhrase),
                             OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
@@ -1301,7 +1301,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Direction = "RESPONSE",
                     ClientId = message.OnBetSettlement.Bet.ClientId,
                     ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                    URL = $"{message.OnBetSettlement.Bet.Endpoint}{uri}",
+                    URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                     BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
                     Info = JsonSerializer.Serialize(ex.Message),
                     OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
@@ -1322,7 +1322,7 @@ namespace Platform.Operator.Servicev2.Repository
 
             message.RemainingRetries -= 1;
 
-            var uri = "/v1/bet/cancellation";
+            var path = "/v1/bet/cancellation";
 
             try
             {
@@ -1331,7 +1331,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Direction = "REQUEST",
                     ClientId = message.OnBetSettlement.Bet.ClientId,
                     ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                    URL = $"{message.OnBetSettlement.Bet.Endpoint}{uri}",
+                    URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                     BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
                     Info = JsonSerializer.Serialize(payload),
                     OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
@@ -1339,7 +1339,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId).PostAsync(uri, new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId).PostAsync($"{message.OnBetSettlement.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -1350,7 +1350,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Direction = "RESPONSE",
                         ClientId = message.OnBetSettlement.Bet.ClientId,
                         ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                        URL = $"{message.OnBetSettlement.Bet.Endpoint}{uri}",
+                        URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                         BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
                         Info = JsonSerializer.Serialize(result),
                         OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
@@ -1369,7 +1369,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Direction = "RESPONSE",
                             ClientId = message.OnBetSettlement.Bet.ClientId,
                             ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                            URL = $"{message.OnBetSettlement.Bet.Endpoint}{uri}",
+                            URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                             BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
                             Info = JsonSerializer.Serialize(result),
                             OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
@@ -1386,7 +1386,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Direction = "RESPONSE",
                             ClientId = message.OnBetSettlement.Bet.ClientId,
                             ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                            URL = $"{message.OnBetSettlement.Bet.Endpoint}{uri}",
+                            URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                             BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
                             Info = JsonSerializer.Serialize(response.ReasonPhrase),
                             OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
@@ -1405,7 +1405,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Direction = "RESPONSE",
                     ClientId = message.OnBetSettlement.Bet.ClientId,
                     ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                    URL = $"{message.OnBetSettlement.Bet.Endpoint}{uri}",
+                    URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                     BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
                     Info = JsonSerializer.Serialize(ex.Message),
                     OperatorToken = message.OnBetSettlement.Bet.OperatorToken,

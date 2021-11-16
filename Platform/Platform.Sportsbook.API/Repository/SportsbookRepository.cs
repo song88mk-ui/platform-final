@@ -790,20 +790,27 @@ namespace Platform.Sportsbook.API.Repository
 
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
             var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.IsSu).Include(c => c.FiStId);
-            var fixtures = await primaryFixtureCollection.Find(fixtureFilter).Project<FixtureProbabilityFilter>(fixtureProjection).ToListAsync();
+            var fixtures = primaryFixtureCollection.Find(fixtureFilter).Project<FixtureProbabilityFilter>(fixtureProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => marketIds.Contains(c.MaId));
             var marketProjection = Builders<Market>.Projection.Include(c => c.MaId).Include(c => c.MaStId);
-            var markets = await primaryMarketCollection.Find(marketFilter).Project<MarketProbabilityFilter>(marketProjection).ToListAsync();
+            var markets = primaryMarketCollection.Find(marketFilter).Project<MarketProbabilityFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr);
-            var selections = await primarySelectionCollection.Find(selectionFilter).Project<SelectionProbabilityFilter>(selectionProjection).ToListAsync();
+            var selections = primarySelectionCollection.Find(selectionFilter).Project<SelectionProbabilityFilter>(selectionProjection).ToListAsync();
 
             var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
-            var bettingStatus = await primaryBettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+            var bettingStatus = primaryBettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
 
-            if (selections.Count == 0)
+            await Task.WhenAll(fixtures, markets, selections, bettingStatus);
+
+            var newFixtures = fixtures.Result;
+            var newMarkets = markets.Result;
+            var newSelections = selections.Result;
+            var newBettingStatus = bettingStatus.Result;
+
+            if (newSelections.Count == 0)
             {
                 return new BaseResponseDTO<BetSelectionProbabilityResponseDTO>
                 {
@@ -819,12 +826,12 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new BetSelectionProbabilityResponseDTO
                 {
-                    Selections = selections.Select(s => new BetSelectionProbabilityDTO
+                    Selections = newSelections.Select(s => new BetSelectionProbabilityDTO
                     {
                         SelectionId = s.SeId,
-                        FixtureStatusId = fixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.FiStId).FirstOrDefault(),
-                        MarketStatusId = markets.Where(c => c.MaId == s.MaId).Select(ss => ss.MaStId).FirstOrDefault(),
-                        IsSuspended = bettingStatus.IsBeSo ? true : fixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.FiStId).FirstOrDefault() > 1 ? true : fixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.IsSu).FirstOrDefault(),
+                        FixtureStatusId = newFixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.FiStId).FirstOrDefault(),
+                        MarketStatusId = newMarkets.Where(c => c.MaId == s.MaId).Select(ss => ss.MaStId).FirstOrDefault(),
+                        IsSuspended = newBettingStatus.IsBeSo ? true : newFixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.FiStId).FirstOrDefault() > 1 ? true : newFixtures.Where(c => c.FiId == s.FiId).Select(ss => ss.IsSu).FirstOrDefault(),
                         IsActive = s.IsAc,
                         Probability = s.Pr,
                         WonProbability = s.WoPr,

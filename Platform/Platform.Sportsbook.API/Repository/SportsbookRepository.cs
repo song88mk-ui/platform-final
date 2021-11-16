@@ -1011,7 +1011,7 @@ namespace Platform.Sportsbook.API.Repository
                             CurrentMinute = item.CuMi.ToString(),
                             BetStop = item.IsSu ? new List<int> { 1 } : new List<int> { },
                             IsBetStopGlobal = bettingStatus.IsBeSo,
-                            Markets = GetMarkets(item.SpId, item.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), request.LanguageCode, request.ClientCode)
+                            Markets = GetMainMarkets(item.SpId, item.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), request.LanguageCode, request.ClientCode)
                         });
                     }
                 }
@@ -1084,7 +1084,7 @@ namespace Platform.Sportsbook.API.Repository
                             CurrentMinute = item.CuMi.ToString(),
                             BetStop = item.IsSu ? new List<int> { 1 } : new List<int> { },
                             IsBetStopGlobal = bettingStatus.IsBeSo,
-                            Markets = GetMarkets(item.SpId, item.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), request.LanguageCode, request.ClientCode)
+                            Markets = GetMainMarkets(item.SpId, item.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), request.LanguageCode, request.ClientCode)
                         });
                     }
                 }
@@ -1460,7 +1460,7 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in initialResult)
             {
-                var currentMarkets = GetMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode);
+                var currentMarkets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode);
 
                 if (currentMarkets.Count == 0) continue;
 
@@ -1733,7 +1733,7 @@ namespace Platform.Sportsbook.API.Repository
                     BetStop = item.BetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
-                    Markets = GetMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
+                    Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
                 });
             });
 
@@ -1864,7 +1864,7 @@ namespace Platform.Sportsbook.API.Repository
                     BetStop = item.BetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
-                    Markets = GetMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
+                    Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
                 });
             });
 
@@ -2041,7 +2041,7 @@ namespace Platform.Sportsbook.API.Repository
                     BetStop = item.BetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
-                    Markets = GetMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
+                    Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
                 });
             });
 
@@ -2081,9 +2081,10 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(tempFixtures, tempBettingStatus);
 
             var fixtures = tempFixtures.Result;
+            var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
+
             if (IsOEEnable(request.ClientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
-            var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
             if (fixtures.Count == 0)
             {
@@ -2224,7 +2225,7 @@ namespace Platform.Sportsbook.API.Repository
                     BetStop = item.BetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
-                    Markets = GetMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
+                    Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
                 });
             });
 
@@ -2407,7 +2408,7 @@ namespace Platform.Sportsbook.API.Repository
                     BetStop = item.BetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
-                    Markets = GetMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
+                    Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
                 });
             });
 
@@ -2546,7 +2547,7 @@ namespace Platform.Sportsbook.API.Repository
                     BetStop = item.BetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
-                    Markets = GetMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
+                    Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
                 });
             });
 
@@ -2683,7 +2684,7 @@ namespace Platform.Sportsbook.API.Repository
                     BetStop = item.BetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
-                    Markets = GetMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
+                    Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
                 });
             });
 
@@ -3103,7 +3104,7 @@ namespace Platform.Sportsbook.API.Repository
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault(),
-                Markets = GetMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode)
+                Markets = GetMainMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode)
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             return new BaseResponseDTO<TWResponseDTO>
@@ -3189,7 +3190,7 @@ namespace Platform.Sportsbook.API.Repository
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault(),
-                Markets = GetMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode)
+                Markets = GetMainMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode)
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             if (request.SportId == 5)
@@ -3275,7 +3276,7 @@ namespace Platform.Sportsbook.API.Repository
                 CurrentMinute = s.CuMi.ToString(),
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStopGlobal = bettingStatus.IsBeSo,
-                Markets = GetMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode)
+                Markets = GetMainMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode)
             }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             return new BaseResponseDTO<TWResponseDTO>
@@ -3907,7 +3908,7 @@ namespace Platform.Sportsbook.API.Repository
             }
 
         }
-        private List<MarketDTO> GetMarkets(int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode)
+        private List<MarketDTO> GetMainMarkets(int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode)
         {
             var marketTemplates = GetMainMarketTemplates(sportId);
 
@@ -3940,7 +3941,7 @@ namespace Platform.Sportsbook.API.Repository
                 var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo.Contains(clientCode)).ToList();
                 var result = new List<MarketDTO>();
 
-                foreach (var market in filteredMarkets)
+                Parallel.ForEach(filteredMarkets, market =>
                 {
                     var clientOdds = new List<ClientOdds>();
 
@@ -3973,8 +3974,7 @@ namespace Platform.Sportsbook.API.Repository
                             SortOrder = s.SeSoOr
                         }).OrderBy(o => o.SortOrder).ToList()
                     });
-
-                }
+                });
 
                 return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
@@ -4034,7 +4034,7 @@ namespace Platform.Sportsbook.API.Repository
                 var filteredMarkets = markets.Where(c => c.ClCo.Contains(clientCode)).ToList();
                 var result = new List<MarketDTO>();
 
-                foreach (var market in filteredMarkets)
+                Parallel.ForEach(filteredMarkets, market => 
                 {
                     var clientOdds = new List<ClientOdds>();
 
@@ -4067,8 +4067,7 @@ namespace Platform.Sportsbook.API.Repository
                             SortOrder = s.SeSoOr
                         }).OrderBy(o => o.SortOrder).ToList()
                     });
-
-                }
+                });
 
                 return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }

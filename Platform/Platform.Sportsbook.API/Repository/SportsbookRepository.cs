@@ -705,7 +705,7 @@ namespace Platform.Sportsbook.API.Repository
             var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
             var selections = primarySelectionCollection.Find(selectionFilter).ToListAsync();
 
-            var allSelectionFilter = Builders<Selection>.Filter.Where(c => marketIds.Contains(c.SeId));
+            var allSelectionFilter = Builders<Selection>.Filter.Where(c => marketIds.Contains(c.MaId));
             var allSelections = primarySelectionCollection.Find(allSelectionFilter).ToListAsync();
 
             var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");

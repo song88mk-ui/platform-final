@@ -3940,7 +3940,7 @@ namespace Platform.Sportsbook.API.Repository
             {
                 if (sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright)
                 {
-                    var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo.Contains(clientCode)).ToList();
+                    var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId)).ToList();
                     var result = new List<MarketDTO>();
 
                     foreach (var market in filteredMarkets)

@@ -3870,7 +3870,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
                 else
                 {
-                    var filteredMarkets = markets.Where(c => c.ClCo.Contains(clientCode)).ToList();
+                    var filteredMarkets = markets.Where(c => c.ClCo != null && c.ClCo.Contains(clientCode)).ToList();
                     var result = new List<MarketLimitedDTO>();
 
                     foreach (var market in filteredMarkets)
@@ -3971,7 +3971,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
                 else
                 {
-                    var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo.Contains(clientCode)).ToList();
+                    var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo != null && c.ClCo.Contains(clientCode)).ToList();
                     var result = new List<MarketDTO>();
 
                     foreach (var market in filteredMarkets)
@@ -4082,7 +4082,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
                 else
                 {
-                    var filteredMarkets = markets.Where(c => c.ClCo.Contains(clientCode)).ToList();
+                    var filteredMarkets = markets.Where(c => c.ClCo != null && c.ClCo.Contains(clientCode)).ToList();
                     var result = new List<MarketDTO>();
 
                     foreach (var market in filteredMarkets)

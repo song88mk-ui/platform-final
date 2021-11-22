@@ -260,7 +260,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
                 if (market != null)
                 {
-                    marketResult.MaStId = market.MarketStatusId;
+                    marketResult.MaStId = (int)market.MarketStatus;
 
                     _memCache.AddOrUpdateCache(marketKey, marketResult, expiration);
                 }
@@ -507,7 +507,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
         public int SportId { get; set; }
         public long FixtureId { get; set; }
         public DateTime FixtureStartDate { get; set; }
-        public FixtureStatus FixtureStatus { get; set; }
+        public int FixtureStatusId { get; set; }
         public FixtureType FixtureType { get; set; }
         public bool IsSuspended { get; set; }
         public List<ExternalMarketMessage> Markets { get; set; }
@@ -520,15 +520,15 @@ namespace Platform.CashOutStake.Servicev2.Repository
             Selections = new List<ExternalSelectionMessage>();
         }
         public long MarketId { get; set; }
-        public int MarketStatusId { get; set; }
+        public MarketStatus MarketStatus { get; set; }
         public List<ExternalSelectionMessage> Selections { get; set; }
     }
 
     public class ExternalSelectionMessage
     {
         public long SelectionId { get; set; }
-        public long MarketId { get; set; }
-        public int MarketStatusId { get; set; }
+        //public long MarketId { get; set; }
+        //public int MarketStatusId { get; set; }
         public bool IsActive { get; set; }
         public double Probability { get; set; }
         public double WonProbability { get; set; }

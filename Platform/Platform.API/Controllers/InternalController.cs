@@ -58,6 +58,20 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpPost("v1/client/gettopfixtures")]
+        public async Task<IActionResult> GetClientTopFixtures2([FromBody] ClientTopFixtureRequest2 request)
+        {
+            var result = await _platformRepository.GetClientTopFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         /// <summary>
         /// Get list of sports along with the following: Segments, Leagues, and Fixtures. Doesn't include virtual sports and outrights 
         /// </summary>

@@ -2251,6 +2251,37 @@ namespace Platform.API.Repository
             return response;
         }
 
+        public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures(ClientTopFixtureRequest2 request)
+        {
+            var clientRefIds = request.ClientRefIds.Split(',').ToList().ConvertAll(int.Parse);
+
+            var clients = _platformContext.Client.Where(c => clientRefIds.Contains(c.ClientIdRef)).ToList();
+            var clientIds = clients.Select(s => s.ClientId).ToList();
+            var clientCodes = clients.Select(s => s.ClientCode).ToList();
+
+            var sportsbookRequest = new ClientTopFixtureRequestDTO()
+            {
+                ClientIds = clientIds,
+                LanguageCode = LanguageCode.EN,
+                ClientCodes = clientCodes
+            };
+
+            var response = await _sportsbookRepository.GetClientTopFixtures(sportsbookRequest);
+
+            foreach (var topFixture in response.Result.TopFixtures)
+            {
+                var client = clients.FirstOrDefault(c => c.ClientId == topFixture.ClientId);
+
+                if (client != null)
+                {
+                    topFixture.ClientIdRef = client.ClientIdRef;
+                    topFixture.ClientName = client.ClientName;
+                }
+            }
+
+            return response;
+        }
+
         public async Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(int clientRefId)
         {
             var client = _platformContext.Client.FirstOrDefault(c => c.ClientIdRef == clientRefId);

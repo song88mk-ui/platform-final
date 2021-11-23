@@ -4772,18 +4772,18 @@ namespace Platform.Sportsbook.API.Repository
                         };
                     }
 
-                    var marketTemplateIds = GetMainMarketTemplates(fixture.SpId);
+                    //var marketTemplateIds = GetMainMarketTemplates(fixture.SpId);
 
-                    var marketFilter = Builders<Market>.Filter.Where(c => c.FiId == long.Parse(request.FixtureId) && marketTemplateIds.Contains(c.MaTeId));
+                    var marketFilter = Builders<Market>.Filter.Where(c => c.FiId == long.Parse(request.FixtureId));
                     var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa);
                     var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
-                    var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c => c.PrFiId == fixture.PrFiId && marketTemplateIds.Contains(c.MaTeId));
+                    var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c => c.PrFiId == fixture.PrFiId );
                     var marketMappingProjection = Builders<MarketMapping>.Projection.Include(c => c.PrFiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaSp);
                     var marketMappings = marketMappingCollection.Find(marketMappingFilter).Project<MarketMappingFilter>(marketMappingProjection).ToListAsync();
 
                     var selectionIds = request.Selections.Select(s => long.Parse(s.SelectionId)).ToList();
-                    var selectionFilter = Builders<Selection>.Filter.Where(c => c.FiId == long.Parse(request.FixtureId) && marketTemplateIds.Contains(c.MaTeId) && selectionIds.Contains(c.SeId));
+                    var selectionFilter = Builders<Selection>.Filter.Where(c => c.FiId == long.Parse(request.FixtureId) && selectionIds.Contains(c.SeId));
                     var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId);
                     var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 

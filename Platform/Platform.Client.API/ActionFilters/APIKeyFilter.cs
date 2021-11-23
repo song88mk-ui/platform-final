@@ -89,7 +89,8 @@ namespace Platform.Client.API.ActionFilters
                 new Tuple<string, string, List<string>>("sportspunter", "TTFjKkXJsDke4ubu", new List<string> { "207.228.252.8", "207.228.252.24" }),
                 new Tuple<string, string, List<string>>("fresh8", "LsPuZzpzeQu4ea64", new List<string> { "146.148.121.95", "35.240.70.112", "146.148.122.135", "35.234.151.134" }),
                 new Tuple<string, string, List<string>>("mediabuy", "XGsRbcyBk3zy8byZ", new List<string> { "185.45.66.20", "185.45.67.120" }),
-                new Tuple<string, string, List<string>>("oddsscannerin", "ZCB4GjAVF6jbpmWP", new List<string> { "99.79.63.184", "3.97.8.231", "83.240.158.106", "94.63.95.190", "119.94.9.193" })
+                new Tuple<string, string, List<string>>("oddsscannerin", "ZCB4GjAVF6jbpmWP", new List<string> { "99.79.63.184", "3.97.8.231", "83.240.158.106", "94.63.95.190", "119.94.9.193" }),
+                new Tuple<string, string, List<string>>("ankushban92", "2mGAjkUSAMheK4hc", new List<string> { "122.161.183.149" })
             };
 
             return result;

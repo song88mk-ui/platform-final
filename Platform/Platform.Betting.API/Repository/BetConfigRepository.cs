@@ -139,7 +139,7 @@ namespace Platform.Betting.API.Repository
                     var dateCreated = DateTime.UtcNow;
 
                     var result = _bettingContext.BetConfig.Where(b => b.ClientId == payload.ClientId);
-                    var parlayAuditMax = _bettingContext.ParlayBonusAudit.Where(b => b.ClientId == payload.ClientId).Select(s => s.SelectionCount).Max();
+                    var parlayAuditMax = 50;
                     var parlayConfigMax = payload.ParlayBonusConfig.Select(s => s.SelectionCount).Max();
 
                     if (result != null && result.Any())

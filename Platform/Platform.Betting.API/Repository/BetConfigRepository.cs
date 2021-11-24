@@ -198,7 +198,7 @@ namespace Platform.Betting.API.Repository
                             //update parlaybonusaudit
                             if (parlayConfigMax >= 3 && parlayConfigMax < parlayAuditMax)
                             {
-                                for (int i = (parlayConfigMax + 1); i <= parlayConfigMax; i++)
+                                for (int i = (parlayConfigMax + 1); i <= parlayAuditMax; i++)
                                 {
                                     _bettingContext.ParlayBonusAudit.Add(new ParlayBonusAudit
                                     {

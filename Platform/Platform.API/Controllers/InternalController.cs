@@ -58,10 +58,10 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpPost("v1/client/gettopfixtures")]
-        public async Task<IActionResult> GetClientTopFixtures2([FromBody] ClientTopFixtureRequest2 request)
+        [HttpGet("v2/client/topfixtures")]
+        public async Task<IActionResult> GetClientTopFixtures2([FromQuery] string clientCodes)
         {
-            var result = await _platformRepository.GetClientTopFixtures(request);
+            var result = await _platformRepository.GetClientTopFixtures2(clientCodes);
 
             switch (result.StatusCode)
             {

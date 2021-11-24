@@ -18,9 +18,4 @@ namespace Platform.API.Models
         public long FixtureId { get; set; }
         public int SortOrder { get; set; }
     }
-
-    public class ClientTopFixtureRequest2
-    {
-        public string ClientRefIds { get; set; }
-    }
 }

@@ -2251,19 +2251,17 @@ namespace Platform.API.Repository
             return response;
         }
 
-        public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures(ClientTopFixtureRequest2 request)
+        public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures2(string clientCodes)
         {
-            var clientRefIds = request.ClientRefIds.Split(',').ToList().ConvertAll(int.Parse);
+            var strClientCodes = clientCodes.Split(',').ToList();
 
-            var clients = _platformContext.Client.Where(c => clientRefIds.Contains(c.ClientIdRef)).ToList();
-            var clientIds = clients.Select(s => s.ClientId).ToList();
-            var clientCodes = clients.Select(s => s.ClientCode).ToList();
+            var clients = _platformContext.Client.Where(c => strClientCodes.Contains(c.ClientCode)).ToList();
 
             var sportsbookRequest = new ClientTopFixtureRequestDTO()
             {
-                ClientIds = clientIds,
+                ClientIds = clients.Select(s => s.ClientId).ToList(),
                 LanguageCode = LanguageCode.EN,
-                ClientCodes = clientCodes
+                ClientCodes = clients.Select(s => s.ClientCode).ToList()
             };
 
             var response = await _sportsbookRepository.GetClientTopFixtures(sportsbookRequest);

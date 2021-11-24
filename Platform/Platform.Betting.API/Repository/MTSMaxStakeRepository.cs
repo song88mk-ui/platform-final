@@ -105,7 +105,7 @@ namespace Platform.Betting.API.Repository
                 {
                     var initialResult = JsonSerializer.Deserialize<MTSMaxStakeResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                    long.TryParse(initialResult.MaxStake, out long maxStakeReturn);
+                    decimal.TryParse(initialResult.MaxStake, out decimal maxStakeReturn);
 
                     return new BaseResponseDTO<MTSStakeResponseDTO>
                     {

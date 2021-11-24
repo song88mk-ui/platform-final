@@ -4676,6 +4676,8 @@ namespace Platform.Sportsbook.API.Repository
                     return new List<string> { "186", "327", "328" };
                 case 137: //eSoccer
                     return new List<string> { "1", "16", "18" };
+                case 138: //kabaddi
+                    return new List<string> { "1", "16", "18" };
                 case 153: //eBasketball
                     return new List<string> { "219", "223", "225" };
                 case 195: //eIce Hockey

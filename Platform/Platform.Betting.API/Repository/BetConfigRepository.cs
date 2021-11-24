@@ -139,6 +139,9 @@ namespace Platform.Betting.API.Repository
                     var dateCreated = DateTime.UtcNow;
 
                     var result = _bettingContext.BetConfig.Where(b => b.ClientId == payload.ClientId);
+                    var parlayAuditMax = _bettingContext.ParlayBonusAudit.Where(b => b.ClientId == payload.ClientId).Select(s => s.SelectionCount).Max();
+                    var parlayConfigMax = payload.ParlayBonusConfig.Select(s => s.SelectionCount).Max();
+
                     if (result != null && result.Any())
                     {
                         foreach(var config in result)
@@ -167,6 +170,7 @@ namespace Platform.Betting.API.Repository
                                         TimeStamp = dateCreated
                                     });
                                 });
+
                                 parlayConfig.ParlayBonusConfig.Clear();
 
                             }
@@ -190,13 +194,32 @@ namespace Platform.Betting.API.Repository
                                     });
                                 });
                             }
-                            
 
+                            //update parlaybonusaudit
+                            if (parlayConfigMax >= 3 && parlayConfigMax < parlayAuditMax)
+                            {
+                                for (int i = (parlayConfigMax + 1); i <= parlayConfigMax; i++)
+                                {
+                                    _bettingContext.ParlayBonusAudit.Add(new ParlayBonusAudit
+                                    {
+                                        ClientId = payload.ClientId,
+                                        ClientIdRef = payload.ClientIdRef,
+                                        SelectionCount = i,
+                                        ParlayBonus = 0m,
+                                        ParlayBonusMinOdds = payload.ParlayBonusMinOdds,
+                                        ParlayBonusMaxWinnings = parlayConfig.ParlayBonusMaxWinnings,
+                                        CurrencyCode = config.CurrencyCode,
+                                        TimeStamp = dateCreated
+                                    });
+                                }
+                            }
 
                             config.ParlayConfig = JsonSerializer.Serialize(parlayConfig);
 
                             _bettingContext.BetConfig.Update(config);
                         }
+
+
 
                     }
                     else

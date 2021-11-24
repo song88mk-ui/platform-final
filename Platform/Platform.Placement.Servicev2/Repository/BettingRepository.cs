@@ -553,9 +553,6 @@ namespace Platform.Placement.Servicev2.Repository
                 if (!isValidIP)
                     ipAddress = IPAddress.Loopback;
 
-                if (message.Bet.CurrencyCode.ToUpper() == "BTC")
-                    message.Bet.CurrencyCode = "mBTC";
-
                 var bet = _factory.CreateTicketBuilder()
                     .SetTicketId(message.Bet.BetId.ToString().ToUpper())
                     .SetOddsChange(Sportradar.MTS.SDK.Entities.Enums.OddsChangeType.None)

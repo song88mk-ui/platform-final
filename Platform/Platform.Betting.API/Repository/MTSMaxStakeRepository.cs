@@ -64,7 +64,7 @@ namespace Platform.Betting.API.Repository
                 bets.Add(new MTSBetDTO
                 {
                     Id = betId,
-                    Stake = new MTSStakeDTO { Value = crypto.Contains(request.Currency.ToUpper()) ? 10001 : 10000 }
+                    Stake = new MTSStakeDTO { Value = crypto.Contains(request.Currency.ToUpper()) ? 10000000 : 10000 }
                 });
 
                 var betSelections = new List<MTSBetSelectionDTO>();

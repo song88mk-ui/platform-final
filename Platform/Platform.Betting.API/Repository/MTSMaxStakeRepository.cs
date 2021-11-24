@@ -58,11 +58,13 @@ namespace Platform.Betting.API.Repository
             {
                 var betId = Guid.NewGuid().ToString();
 
+                var crypto = new List<string> { "BTC", "ETH" };
+
                 var bets = new List<MTSBetDTO>();
                 bets.Add(new MTSBetDTO
                 {
                     Id = betId,
-                    Stake = new MTSStakeDTO { Value = 10000 }
+                    Stake = new MTSStakeDTO { Value = crypto.Contains(request.Currency.ToUpper()) ? 10001 : 10000 }
                 });
 
                 var betSelections = new List<MTSBetSelectionDTO>();
@@ -89,7 +91,7 @@ namespace Platform.Betting.API.Repository
                     {
                         BookmakerId = int.Parse(_configuration["Custom:MTSBookmakerId"]),
                         LimitId = request.LimitId,
-                        Currency = request.Currency.ToUpper().Replace("BTC", "mBTC"),
+                        Currency = request.Currency.ToUpper(),
                         EndCustomer = new EndCustomerDTO
                         {
                             LanguageId = request.Language,

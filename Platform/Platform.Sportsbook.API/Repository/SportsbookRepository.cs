@@ -4980,6 +4980,88 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures2(ClientTopFixtureRequestDTO2 request)
+        {
+            var result = new List<OrderedClientTopFixture>();
+
+            if (request.ClientInfos != null && request.ClientInfos.Any())
+            {
+                var clientIds = request.ClientInfos.Select(s => s.ClientId).ToList();
+
+                var topFixtures = _sportsbookContext.ClientTopFixture
+                    .Where(c => clientIds.Contains(c.ClientId))
+                    .OrderBy(o => o.ClientId).ThenBy(o => o.SortOrder).ToList();
+
+                var fixtureIds = topFixtures.Select(m => m.FixtureId).Distinct().ToList();
+
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
+                var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+                if (fixtures.Count == 0)
+                {
+                    return new BaseResponseDTO<ClientTopFixtureResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString(),
+                        Result = new ClientTopFixtureResponseDTO()
+                    };
+                }
+
+                var clientFixtures = request.ClientInfos.Select(s => new
+                {
+                    ClientId = s.ClientId,
+                    ClientCode = s.ClientCode,
+                    Fixtures = IsOEEnable(s.ClientCode) ? fixtures.Where(c => c.ClCo.Contains(s.ClientCode)).ToList() : fixtures
+                }).ToList();
+
+                foreach (var clientFixture in clientFixtures)
+                {
+                    var currentTopFixtures = topFixtures.Where(c => c.ClientId == clientFixture.ClientId).ToList();
+                    var fixtureResult = new List<OrderedTopFixture>();
+
+                    foreach (var topfixture in currentTopFixtures)
+                    {
+                        var fixture = fixtures.FirstOrDefault(f => f.FiId == topfixture.FixtureId);
+
+                        if (fixture != null)
+                        {
+                            fixtureResult.Add(new OrderedTopFixture
+                            {
+                                SportId = fixture.SpId,
+                                SportName = fixture.SpNa,
+                                SegmentId = fixture.SegId,
+                                SegmentName = fixture.SegNa,
+                                LeagueId = fixture.LeId,
+                                LeagueName = fixture.LeNa,
+                                FixtureId = fixture.FiId.ToString(),
+                                FixtureName = fixture.FiNa,
+                                FixtureStartDate = fixture.FiStDa,
+                                FixtureStatus = fixture.FiStNa,
+                                SortOrder = topfixture.SortOrder
+                            });
+                        }
+                    }
+
+                    result.Add(new OrderedClientTopFixture
+                    {
+                        ClientId = clientFixture.ClientId,
+                        TopFixtures = fixtureResult.OrderBy(o => o.SortOrder).ToList()
+                    });
+                }
+            }
+
+            return new BaseResponseDTO<ClientTopFixtureResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new ClientTopFixtureResponseDTO()
+                {
+                    TopFixtures = result
+                }
+            };
+        }
+
+
         public async Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(BackofficeSportsRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => (c.FiStId == (int)FixtureStatus.Prematch || c.FiStId == (int)FixtureStatus.Live) && c.SpId < 1000);

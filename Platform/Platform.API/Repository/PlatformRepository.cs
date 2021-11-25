@@ -2257,14 +2257,17 @@ namespace Platform.API.Repository
 
             var clients = _platformContext.Client.Where(c => strClientCodes.Contains(c.ClientCode)).ToList();
 
-            var sportsbookRequest = new ClientTopFixtureRequestDTO()
+            var sportsbookRequest = new ClientTopFixtureRequestDTO2()
             {
-                ClientIds = clients.Select(s => s.ClientId).ToList(),
+                ClientInfos = clients.Select(s => new ClientInfo
+                { 
+                    ClientId = s.ClientId,
+                    ClientCode = s.ClientCode
+                }).ToList(),
                 LanguageCode = LanguageCode.EN,
-                ClientCodes = clients.Select(s => s.ClientCode).ToList()
             };
 
-            var response = await _sportsbookRepository.GetClientTopFixtures(sportsbookRequest);
+            var response = await _sportsbookRepository.GetClientTopFixtures2(sportsbookRequest);
 
             foreach (var topFixture in response.Result.TopFixtures)
             {

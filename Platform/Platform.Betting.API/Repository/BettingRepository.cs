@@ -1140,8 +1140,8 @@ namespace Platform.Betting.API.Repository
                 var openBets = new List<int> { (int)BetStatus.Running };
                 var openBetsResponse = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && openBets.Contains(c.BetStatusId)).ToList();
 
-                var cancelledRejectedBets = new List<int> { (int)BetStatus.Cancelled, (int)BetStatus.Rejected };
-                var cancelledRejectedBetsResponse = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && cancelledRejectedBets.Contains(c.BetStatusId) && c.BetDate.AddMinutes(5) >= DateTime.UtcNow).ToList();
+                var cancelledBets = new List<int> { (int)BetStatus.Cancelled};
+                var cancelledBetsResponse = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && cancelledBets.Contains(c.BetStatusId) && c.BetDate.AddMinutes(5) >= DateTime.UtcNow).ToList();
 
                 if (waitingBetsResponse.Count > 0)
                     transactions.AddRange(waitingBetsResponse);
@@ -1149,8 +1149,8 @@ namespace Platform.Betting.API.Repository
                 if (openBetsResponse.Count > 0)
                     transactions.AddRange(openBetsResponse);
 
-                if (cancelledRejectedBetsResponse.Count > 0)
-                    transactions.AddRange(cancelledRejectedBetsResponse);
+                if (cancelledBetsResponse.Count > 0)
+                    transactions.AddRange(cancelledBetsResponse);
 
                 rowCount = Convert.ToDouble(transactions.Count());
             }
@@ -1178,7 +1178,7 @@ namespace Platform.Betting.API.Repository
 
                 if (request.BetStatusFilter == BetStatusFilter.Settled)
                 {
-                    var rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && c.BetStatusId > (int)BetStatus.Running && c.BetDateOffset.Date >= request.FromDate.Date && c.BetDateOffset.Date <= request.ToDate.Date);
+                    var rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && c.BetStatusId > (int)BetStatus.Running && c.BetStatusId != (int)BetStatus.Rejected && c.BetDateOffset.Date >= request.FromDate.Date && c.BetDateOffset.Date <= request.ToDate.Date);
 
                     rowCount = rawSettled.Count();
                     winLoss = rawSettled.Sum(c => c.WinLoss);

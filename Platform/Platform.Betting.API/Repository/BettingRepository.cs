@@ -1160,7 +1160,7 @@ namespace Platform.Betting.API.Repository
 
                 if (request.BetStatusFilter == BetStatusFilter.All)
                 {
-                    var rawAll = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && c.BetStatusId >= (int)BetStatus.Waiting && c.BetDate.Date >= request.FromDate && c.BetDate.Date <= request.ToDate.Date);
+                    var rawAll = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && c.BetStatusId >= (int)BetStatus.Waiting && c.BetStatusId != (int)BetStatus.Rejected && c.BetDate.Date >= request.FromDate && c.BetDate.Date <= request.ToDate.Date);
 
                     rowCount = rawAll.Count();
                     winLoss = rawAll.Sum(c => c.WinLoss);

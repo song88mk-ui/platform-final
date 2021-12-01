@@ -580,7 +580,9 @@ namespace Platform.Settlement.Service.Repository
                         var wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won).Count();
                         var lostSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
 
-                        if (wonSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
+                        var isOutright = selections.Any(s => s.SportId > 1000 || s.FixtureTypeId == (int)FixtureType.Outright) ? true : false;
+
+                        if (isOutright == false && wonSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
                         {
                             var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, wonSelectionCount);
 
@@ -872,7 +874,10 @@ namespace Platform.Settlement.Service.Repository
                         var wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won).Count();
                         var lostSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
 
-                        if (wonSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
+
+                        var isOutright = selections.Any(s => s.SportId > 1000 || s.FixtureTypeId == (int)FixtureType.Outright) ? true : false;
+
+                        if (isOutright == false && wonSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
                         {
                             var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, wonSelectionCount);
 

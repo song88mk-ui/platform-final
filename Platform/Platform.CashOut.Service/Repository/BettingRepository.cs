@@ -420,13 +420,7 @@ namespace Platform.CashOut.Service.Repository
                             }
                             else
                             {
-                                if (currentProbability.CashOutStatusId != (int)CashOutStatus.Available ||
-                                    currentProbability.Probability != item.Probability ||
-                                    currentProbability.HalfLostProbability != item.HalfLostProbability ||
-                                    currentProbability.HalfWonProbability != item.HalfWonProbability ||
-                                    currentProbability.LostProbability != item.LostProbability ||
-                                    currentProbability.VoidProbability != item.VoidProbability ||
-                                    currentProbability.WonProbability != item.WonProbability)
+                                if (currentProbability.Probability < item.Probability)
                                 {
                                     messageBroker.Publish(new OnBetStatus
                                     {

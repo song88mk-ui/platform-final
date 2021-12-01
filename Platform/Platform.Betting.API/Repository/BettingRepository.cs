@@ -202,9 +202,9 @@ namespace Platform.Betting.API.Repository
                     };
                 }
 
-                var isOutright = request.Selections.Any(s => s.SportId > 1000 || s.FixtureType == FixtureType.Outright) ? true : false;
+                var hasVirtualSport = request.Selections.Any(s => s.SportId > 1000) ? true : false;
 
-                if (isOutright == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
+                if (hasVirtualSport == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
                 {
                     if (!request.Selections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
                     {
@@ -658,9 +658,9 @@ namespace Platform.Betting.API.Repository
                     };
                 }
 
-                var isOutright = request.Selections.Any(s => s.SportId > 1000 || s.FixtureType == FixtureType.Outright) ? true : false;
+                var hasVirtualSport = request.Selections.Any(s => s.SportId > 1000) ? true : false;
 
-                if (isOutright == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
+                if (hasVirtualSport == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
                 {
                     if (!request.Selections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
                     {

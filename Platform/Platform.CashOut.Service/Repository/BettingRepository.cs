@@ -398,9 +398,56 @@ namespace Platform.CashOut.Service.Repository
                             Probabilities = result.Result.Probabilities
                         };
 
-                        ProcessCashOutSettlement(payload, mts, messageBroker, correlationId);
+                        var isSuccess = true;
 
-                        Console.WriteLine($"{DateTime.UtcNow} : Live Cashout successful - {result.Result.BetId}");
+                        foreach (var item in message.Probabilities)
+                        {
+                            var currentProbability = payload.Probabilities.Where(c => c.BetSelectionId == item.BetSelectionId).FirstOrDefault();
+
+                            if (currentProbability == null)
+                            {
+                                messageBroker.Publish(new OnBetStatus
+                                {
+                                    ClientId = message.ClientId,
+                                    UserId = message.UserId,
+                                    BetId = message.BetId.ToString().ToUpper(),
+                                    BetStatus = BetStatus.Running,
+                                    Message = "Cashout request has been declined"
+                                }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                                isSuccess = false;
+                                break;
+                            }
+                            else
+                            {
+                                if (currentProbability.CashOutStatusId != (int)CashOutStatus.Available ||
+                                    currentProbability.Probability != item.Probability ||
+                                    currentProbability.HalfLostProbability != item.HalfLostProbability ||
+                                    currentProbability.HalfWonProbability != item.HalfWonProbability ||
+                                    currentProbability.LostProbability != item.LostProbability ||
+                                    currentProbability.VoidProbability != item.VoidProbability ||
+                                    currentProbability.WonProbability != item.WonProbability)
+                                {
+                                    messageBroker.Publish(new OnBetStatus
+                                    {
+                                        ClientId = message.ClientId,
+                                        UserId = message.UserId,
+                                        BetId = message.BetId.ToString().ToUpper(),
+                                        BetStatus = BetStatus.Running,
+                                        Message = "Cashout request has been declined"
+                                    }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                                    isSuccess = false;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (isSuccess == true)
+                        {
+                            ProcessCashOutSettlement(payload, mts, messageBroker, correlationId);
+                            Console.WriteLine($"{DateTime.UtcNow} : Live Cashout successful - {result.Result.BetId}");
+                        }
                     }
                     else
                     {

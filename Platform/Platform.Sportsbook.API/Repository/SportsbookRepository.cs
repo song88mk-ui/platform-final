@@ -458,7 +458,7 @@ namespace Platform.Sportsbook.API.Repository
                 var sportGroup = GetSportGroups(request.SportGroup);
                 var selectedSportIds = sportGroup != null ? sportGroup.Sports.Split(',').Select(int.Parse).Distinct().ToList() : new List<int>();
 
-                fixtureFilter = fixtureFilter & Builders<Fixture>.Filter.Where(c => selectedSportIds.Contains(c.SpId));
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId < 3 && selectedSportIds.Contains(c.SpId));
             }
 
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
@@ -4765,9 +4765,9 @@ namespace Platform.Sportsbook.API.Repository
         }
         private Shared.Data.Sportsbook.SQLEntities.SportGroup GetSportGroups(Shared.Enums.SportGroup sportGroup)
         {
-            var sportGroupId = (int)sportGroup;
+            var result = _memCache.GetCache($"sg", () => _sportsbookContext.SportGroup.ToList(), 24);
 
-            return _memCache.GetCache($"sg-{sportGroupId}", () => _sportsbookContext.SportGroup.FirstOrDefault(c => c.SportGroupId == sportGroupId), 24);
+            return result == null ? null : result.Where(c => c.SportGroupId == (int)sportGroup).FirstOrDefault();
         }
         public async Task<BaseResponseDTO<StatusCode>> ManualSettlement(BetSettlementRequestDTO request)
         {

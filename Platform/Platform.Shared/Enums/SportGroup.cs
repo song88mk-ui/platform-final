@@ -5,6 +5,7 @@
         All = 0,
         Sports = 1,
         eSports = 2,
-        VirtualSports = 3
+        VirtualSports = 3,
+        SportsAndVirtualSports = 4
     }
 }

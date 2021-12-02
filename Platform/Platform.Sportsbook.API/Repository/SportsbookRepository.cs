@@ -452,13 +452,11 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<SportsResponseDTO>> GetSports(SportsRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
-            var sportGroupIds = !string.IsNullOrEmpty(request.SportGroupIds) ? request.SportGroupIds.Split(',').Select(s => int.Parse(s.Trim())).ToList()
-                : new List<int> { (int)Shared.Enums.SportGroup.All };
 
-            if (!sportGroupIds.Any(c => c == (int)Shared.Enums.SportGroup.All))
+            if (request.SportGroup != Shared.Enums.SportGroup.All)
             {
-                var sportGroup = GetSportGroups(sportGroupIds);
-                var selectedSportIds = sportGroup.SelectMany(s => s.Sports.Split(',')).Select(int.Parse).Distinct().ToList();
+                var sportGroup = GetSportGroups(request.SportGroup);
+                var selectedSportIds = sportGroup != null ? sportGroup.Sports.Split(',').Select(int.Parse).Distinct().ToList() : new List<int>();
 
                 fixtureFilter = fixtureFilter & Builders<Fixture>.Filter.Where(c => selectedSportIds.Contains(c.SpId));
             }
@@ -4765,9 +4763,10 @@ namespace Platform.Sportsbook.API.Repository
         {
             return _memCache.GetCache($"so", () => _sportsbookContext.ClientSportOrder.ToList(), 24);
         }
-        private List<Shared.Data.Sportsbook.SQLEntities.SportGroup> GetSportGroups(List<int> sportGroupIds)
+        private Shared.Data.Sportsbook.SQLEntities.SportGroup GetSportGroups(Shared.Enums.SportGroup sportGroup)
         {
-            return _sportsbookContext.SportGroup.Where(c => sportGroupIds.Contains(c.SportGroupId)).ToList();
+            var sportGroupId = (int)sportGroup;
+            return _sportsbookContext.SportGroup.FirstOrDefault(c => c.SportGroupId == sportGroupId);
         }
         public async Task<BaseResponseDTO<StatusCode>> ManualSettlement(BetSettlementRequestDTO request)
         {

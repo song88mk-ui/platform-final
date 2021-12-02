@@ -1080,16 +1080,19 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/sports")]
-        public async Task<IActionResult> GetSports()
+        public async Task<IActionResult> GetSports([FromQuery] string sportsGroupIds)
         {
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetSports(apiKey, clientId, languageCode);
+            var result = await _platformRepository.GetSports(apiKey, clientId, languageCode, sportsGroupIds);
 
-            var parameters = new { };
+            var parameters = new 
+            {
+                sportsGroupIds
+            };
 
             var properties = new Dictionary<string, string>
                             {

@@ -1592,7 +1592,7 @@ namespace Platform.API.Repository
                 ClientCode = clientResponse.Result.ClientCode
             });
         }
-        public async Task<BaseResponseDTO<SportsResponseDTO>> GetSports(string apiKey, string clientId, string langCode, string sportsGroupIds)
+        public async Task<BaseResponseDTO<SportsResponseDTO>> GetSports(string apiKey, string clientId, string langCode)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -1631,8 +1631,7 @@ namespace Platform.API.Repository
             {
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
-                ClientCode = clientResponse.Result.ClientCode,
-                SportGroupIds = sportsGroupIds
+                ClientCode = clientResponse.Result.ClientCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(string apiKey, string clientId, string langCode, FixtureDetailsRequest request)

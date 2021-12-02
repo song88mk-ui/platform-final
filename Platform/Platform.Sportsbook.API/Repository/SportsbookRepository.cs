@@ -4766,7 +4766,8 @@ namespace Platform.Sportsbook.API.Repository
         private Shared.Data.Sportsbook.SQLEntities.SportGroup GetSportGroups(Shared.Enums.SportGroup sportGroup)
         {
             var sportGroupId = (int)sportGroup;
-            return _sportsbookContext.SportGroup.FirstOrDefault(c => c.SportGroupId == sportGroupId);
+
+            return _memCache.GetCache($"sg-{sportGroupId}", () => _sportsbookContext.SportGroup.FirstOrDefault(c => c.SportGroupId == sportGroupId), 24);
         }
         public async Task<BaseResponseDTO<StatusCode>> ManualSettlement(BetSettlementRequestDTO request)
         {

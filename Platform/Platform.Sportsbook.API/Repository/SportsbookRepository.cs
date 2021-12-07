@@ -4517,7 +4517,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetSportsLookup(string clientCode)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 12);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             if (IsOEEnable(clientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(clientCode) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
@@ -4532,19 +4532,13 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var result = fixtures.Select(s => new SportLookup
-            {
-                SportId = s.SpId,
-                SportName = s.SpNa
-            }).OrderBy(o => o.SportId).ToList();
-
             var finalResult = new List<SportLookup>();
 
-            foreach (var item in result)
+            foreach (var item in fixtures)
             {
-                if (finalResult.Any(c => c.SportId == item.SportId)) continue;
+                if (finalResult.Any(c => c.SportId == item.SpId)) continue;
 
-                finalResult.Add(item);
+                finalResult.Add(new SportLookup { SportId = item.SpId, SportName = item.SpNa });
             }
 
             return new BaseResponseDTO<SportsLookupResponseDTO>
@@ -4553,13 +4547,13 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new SportsLookupResponseDTO
                 {
-                    Sports = finalResult
+                    Sports = finalResult.OrderBy(o => o.SportId).ToList()
                 }
             };
         }
         public async Task<BaseResponseDTO<SegmentsLookupResponseDTO>> GetSegmentsLookup(string clientCode)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 12);
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             if (IsOEEnable(clientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(clientCode) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
@@ -4574,21 +4568,19 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var result = fixtures.Select(s => new SegmentLookup
-            {
-                SportId = s.SpId,
-                SportName = s.SpNa,
-                SegmentId = s.SegId,
-                SegmentName = s.SegNa
-            }).OrderBy(o => o.SegmentId).ToList();
-
             var finalResult = new List<SegmentLookup>();
 
-            foreach (var item in result)
+            foreach (var item in fixtures)
             {
-                if (finalResult.Any(c => c.SegmentId == item.SegmentId)) continue;
+                if (finalResult.Any(c => c.SportId == item.SpId && c.SegmentId == item.SegId)) continue;
 
-                finalResult.Add(item);
+                finalResult.Add(new SegmentLookup
+                {
+                    SportId = item.SpId,
+                    SportName = item.SpNa,
+                    SegmentId = item.SegId,
+                    SegmentName = item.SegNa
+                });
             }
 
             return new BaseResponseDTO<SegmentsLookupResponseDTO>
@@ -4597,7 +4589,7 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new SegmentsLookupResponseDTO
                 {
-                    Segments = finalResult
+                    Segments = finalResult.OrderBy(o => o.SportId).ThenBy(o => o.SegmentId).ToList()
                 }
             };
         }
@@ -4618,23 +4610,21 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var result = fixtures.Select(s => new LeagueLookup
-            {
-                SportId = s.SpId,
-                SportName = s.SpNa,
-                SegmentId = s.SegId,
-                SegmentName = s.SegNa,
-                LeagueId = s.LeId,
-                LeagueName = s.LeNa
-            }).OrderBy(o => o.LeagueId).ToList();
-
             var finalResult = new List<LeagueLookup>();
 
-            foreach (var item in result)
+            foreach (var item in fixtures)
             {
-                if (finalResult.Any(c => c.LeagueId == item.LeagueId)) continue;
+                if (finalResult.Any(c => c.SportId == item.SpId && c.SegmentId == item.SegId && c.LeagueId == item.LeId)) continue;
 
-                finalResult.Add(item);
+                finalResult.Add(new LeagueLookup
+                {
+                    SportId = item.SpId,
+                    SportName = item.SpNa,
+                    SegmentId = item.SegId,
+                    SegmentName = item.SegNa,
+                    LeagueId = item.LeId,
+                    LeagueName = item.LeNa
+                });
             }
 
             return new BaseResponseDTO<LeaguesLookupResponseDTO>
@@ -4643,7 +4633,7 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new LeaguesLookupResponseDTO
                 {
-                    Leagues = finalResult
+                    Leagues = finalResult.OrderBy(o => o.SportId).ThenBy(o => o.SegmentId).ThenBy(o => o.LeagueId).ToList()
                 }
             };
         }

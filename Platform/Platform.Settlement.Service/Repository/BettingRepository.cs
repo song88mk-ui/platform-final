@@ -596,9 +596,9 @@ namespace Platform.Settlement.Service.Repository
                         }
 
                         var taxedWinnings = payout + parlayBonusWinnings;
-                        taxedWinnings = bet.IsFreeBet == false && bet.StakeBonus == bet.TrueStake ? 0 : (taxedWinnings - finalStake) * bet.WinningsTax;
+                        taxedWinnings = bet.StakeBonus == bet.TrueStake ? 0 : (taxedWinnings - finalStake) * bet.WinningsTax;
 
-                        if (payout > bet.TrueStake && bet.IsFreeBet == false)
+                        if (payout > bet.TrueStake)
                             payout = payout - taxedWinnings;
                         else
                             taxedWinnings = 0;
@@ -890,9 +890,9 @@ namespace Platform.Settlement.Service.Repository
                         }
 
                         var taxedWinnings = payout + parlayBonusWinnings;
-                        taxedWinnings = bet.IsFreeBet == false && bet.StakeBonus == bet.TrueStake ? 0 : (taxedWinnings - finalStake) * bet.WinningsTax;
+                        taxedWinnings = bet.StakeBonus == bet.TrueStake ? 0 : (taxedWinnings - finalStake) * bet.WinningsTax;
 
-                        if (payout > bet.TrueStake && bet.IsFreeBet == false)
+                        if (payout > bet.TrueStake)
                             payout = payout - taxedWinnings;
                         else
                             taxedWinnings = 0;

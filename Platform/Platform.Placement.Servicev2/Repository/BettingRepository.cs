@@ -613,7 +613,8 @@ namespace Platform.Placement.Servicev2.Repository
                 {
                     parlayBonus = parlayConfig.Item2.ParlayBonus;
                     parlayBonusWinnings = betData.Payout * parlayConfig.Item2.ParlayBonus;
-                    hasBonus = parlayBonus == 0 ? false : true;
+                    parlayBonusWinnings = parlayBonusWinnings * 10000;
+                    hasBonus = parlayBonusWinnings == 0 ? false : true;
                 }
             }
 

@@ -4653,6 +4653,8 @@ namespace Platform.Sportsbook.API.Repository
                     return new List<string> { "186", "187", "189" };
                 case 6: //handball
                     return new List<string> { "1", "16", "18" };
+                case 10: //Boxing
+                    return new List<string> { "186", "18", "1" };
                 case 21: //cricket
                     return new List<string> { "1", "340" };
                 case 16: //American Football
@@ -4661,6 +4663,8 @@ namespace Platform.Sportsbook.API.Repository
                     return new List<string> { "186", "16", "18" };
                 case 31: //Badminton
                     return new List<string> { "186", "237", "238" };
+                case 36: //Athletics
+                    return new List<string> { "539" };
                 case 118: //Call of Duty
                     return new List<string> { "186" };
                 case 22: //Darts
@@ -4669,6 +4673,8 @@ namespace Platform.Sportsbook.API.Repository
                     return new List<string> { "186", "327", "328" };
                 case 111: //eSport Dota 2
                     return new List<string> { "186", "327", "328" };
+                case 117: //MMA
+                    return new List<string> { "186", "18", "1" };
                 case 134: //ESport King of Glory
                     return new List<string> { "186" };
                 case 110: //eSport LOL
@@ -4695,6 +4701,8 @@ namespace Platform.Sportsbook.API.Repository
                     return new List<string> { "186", "327", "328" };
                 case 20: //Table Tennis
                     return new List<string> { "186", "327", "328" };
+                case 190: //Motorcycle Racing
+                    return new List<string> { "539" };
                 case 1003: //Virtual Baseball
                     return new List<string> { "251", "256", "258" };
                 case 1002: //Virtual Basketball

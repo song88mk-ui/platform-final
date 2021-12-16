@@ -204,7 +204,7 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
-        //test
+
         [HttpPost("v1/config/client")]
         public async Task<IActionResult> ProcessBackOfficeClientBetConfig([FromBody] BackOfficeBetConfigPayloadDTO payload)
         {

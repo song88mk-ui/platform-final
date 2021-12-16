@@ -17,6 +17,7 @@ namespace Platform.Shared.Models
         public AnySportBetSetting OtherSports { get; set; }
         public ParlayBetSetting Parlay { get; set; }
         public CricketBetSetting Cricket { get; set; }
+        public PriceboostBetSetting Priceboost { get; set; }
         public TaxConfig TaxConfig { get; set; }
     }
 
@@ -53,6 +54,11 @@ namespace Platform.Shared.Models
         public decimal MinBet { get; set; }
         public decimal MaxBet { get; set; }
         public decimal MaxFixtureBet { get; set; }
+    }
+
+    public class PriceboostBetSetting
+    {
+        public decimal MaxStake { get; set; }
     }
 
     public class ParlayBonusConfig

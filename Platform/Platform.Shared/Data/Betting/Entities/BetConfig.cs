@@ -10,6 +10,7 @@ namespace Platform.Shared.Data.Betting.Entities
         public string OverrideConfig { get; set; }
         public string ParlayConfig { get; set; }
         public string TaxConfig { get; set; }
+        public string PriceboostConfig { get; set; }
         public DateTime CreatedDate { get; set; }
     }
 }

@@ -206,9 +206,10 @@ namespace Platform.Betting.API.Repository
 
                 if (hasVirtualSport == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
                 {
-                    if (!request.Selections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
+                    var selectionCount = request.Selections.Where(c => c.Odds >= parlayConfig.ParlayBonusMinOdds).Count();
+                    if (selectionCount >= 3)
                     {
-                        var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == request.Selections.Count);
+                        var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == selectionCount);
 
                         if (parlayBonusConfig != null)
                             parlayBonus = parlayBonusConfig.ParlayBonus;
@@ -662,9 +663,10 @@ namespace Platform.Betting.API.Repository
 
                 if (hasVirtualSport == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
                 {
-                    if (!request.Selections.Any(c => c.Odds < parlayConfig.ParlayBonusMinOdds))
+                    var selectionCount = request.Selections.Where(c => c.Odds >= parlayConfig.ParlayBonusMinOdds).Count();
+                    if (selectionCount >= 3)
                     {
-                        var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == request.Selections.Count);
+                        var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == selectionCount);
 
                         if (parlayBonusConfig != null)
                             parlayBonus = parlayBonusConfig.ParlayBonus;

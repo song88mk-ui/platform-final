@@ -103,16 +103,31 @@ namespace Platform.Settlement.Service.Repository
 
             return result;
         }
-        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(BettingContext context, Guid clientId, string currencyCode, DateTime betDate, int wonSelectionCount)
+        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(BettingContext context, Guid clientId, string currencyCode, DateTime betDate, List<BetSelection> selections)
         {
-            var result = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate 
-                && c.CurrencyCode == currencyCode && wonSelectionCount == c.SelectionCount ).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
+            var minimumOdds = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate
+                && c.CurrencyCode == currencyCode).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
 
-            if (result == null)
+            if(minimumOdds == null)
                 return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
+
+            int wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won && c.Odds >= minimumOdds.ParlayBonusMinOdds).Count();
+            
+            if(wonSelectionCount >= 3)
+            {
+                var result = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate
+                && c.CurrencyCode == currencyCode && wonSelectionCount == c.SelectionCount).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
+
+                if (result == null)
+                    return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
+                else
+                    return new Tuple<bool, ParlayBonusAudit>(true, result);
+            }
             else
-                return new Tuple<bool, ParlayBonusAudit>(true, result);
+                return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
+
         }
+
         private decimal GetPayout(List<Tuple<BetStatus, decimal, decimal>> selections, decimal stake)
         {
             var values = new List<decimal>();
@@ -584,9 +599,9 @@ namespace Platform.Settlement.Service.Repository
 
                         if (hasVirtualSport == false && wonSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
                         {
-                            var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, wonSelectionCount);
+                            var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, selections);
 
-                            if (parlayConfig.Item1 == true && selections.Any(c => c.Odds < parlayConfig.Item2.ParlayBonusMinOdds) == false)
+                            if (parlayConfig.Item1 == true)
                             {
                                 parlayBonus = parlayConfig.Item2.ParlayBonus;
                                 parlayBonusWinnings = payout * parlayConfig.Item2.ParlayBonus;
@@ -882,9 +897,9 @@ namespace Platform.Settlement.Service.Repository
 
                         if (hasVirtualSport == false && wonSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
                         {
-                            var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, wonSelectionCount);
+                            var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, selections);
 
-                            if (parlayConfig.Item1 == true && selections.Any(c => c.Odds < parlayConfig.Item2.ParlayBonusMinOdds) == false)
+                            if (parlayConfig.Item1 == true)
                             {
                                 parlayBonus = parlayConfig.Item2.ParlayBonus;
                                 parlayBonusWinnings = payout * parlayConfig.Item2.ParlayBonus;

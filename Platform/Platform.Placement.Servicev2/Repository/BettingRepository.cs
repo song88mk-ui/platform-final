@@ -604,12 +604,13 @@ namespace Platform.Placement.Servicev2.Repository
             var hasBonus = false;
             // parlay bonus: bet should be Won by default
 
+            var hasVirtualSport = betSelectionData.Any(s => s.SportId > 1000) ? true : false;
 
-            if (betSelectionData.Count >= 3 && betData.IsFreeBet == false)
+            if (hasVirtualSport == false && betSelectionData.Count >= 3 && betData.IsFreeBet == false)
             {
-                var parlayConfig = GetParlayBetConfig(Guid.Parse(betData.ClientId), betData.CurrencyCode, betData.BetDate, betSelectionData.Count);
+                var parlayConfig = GetParlayBetConfig(Guid.Parse(betData.ClientId), betData.CurrencyCode, betData.BetDate, betSelectionData);
 
-                if (parlayConfig.Item1 == true && betSelectionData.Any(c => c.Odds < parlayConfig.Item2.ParlayBonusMinOdds) == false)
+                if (parlayConfig.Item1 == true)
                 {
                     parlayBonus = parlayConfig.Item2.ParlayBonus;
                     parlayBonusWinnings = betData.Payout * parlayConfig.Item2.ParlayBonus;
@@ -618,6 +619,7 @@ namespace Platform.Placement.Servicev2.Repository
                 }
             }
 
+
             #endregion
 
             var selection = hasBonus ? _factory.CreateBetBuilder()
@@ -625,7 +627,7 @@ namespace Platform.Placement.Servicev2.Repository
                                     .SetBetBonus(Convert.ToInt64(parlayBonusWinnings))
                                     .SetStake(Convert.ToInt64(stake), StakeType.Total)
                                     .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
-                                    .AddSelectedSystem(betSelectionData.Count) 
+                                    .AddSelectedSystem(betSelectionData.Count)
                                     :
                                     _factory.CreateBetBuilder()
                                     .SetBetId(betData.BetId.ToString().ToUpper())
@@ -645,7 +647,7 @@ namespace Platform.Placement.Servicev2.Repository
             return selection.Build();
         }
 
-        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(Guid clientId, string currencyCode, DateTime betDate, int wonSelectionCount)
+        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(Guid clientId, string currencyCode, DateTime betDate, List<BetSelection> selections)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
@@ -653,13 +655,26 @@ namespace Platform.Placement.Servicev2.Repository
 
                 using (var context = new BettingContext(optionsBuilder.Options))
                 {
-                    var result = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate
-                            && c.CurrencyCode == currencyCode && wonSelectionCount == c.SelectionCount).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
+                    var minimumOdds = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate
+                        && c.CurrencyCode == currencyCode).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
 
-                    if (result == null)
+                    if (minimumOdds == null)
                         return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
+
+                    int wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won && c.Odds >= minimumOdds.ParlayBonusMinOdds).Count();
+
+                    if (wonSelectionCount >= 3)
+                    {
+                        var result = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate
+                          && c.CurrencyCode == currencyCode && wonSelectionCount == c.SelectionCount).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
+
+                        if (result == null)
+                            return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
+                        else
+                            return new Tuple<bool, ParlayBonusAudit>(true, result);
+                    }
                     else
-                        return new Tuple<bool, ParlayBonusAudit>(true, result);
+                        return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
                 }
             }
         }

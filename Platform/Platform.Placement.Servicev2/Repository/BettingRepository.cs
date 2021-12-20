@@ -608,13 +608,14 @@ namespace Platform.Placement.Servicev2.Repository
 
             if (hasVirtualSport == false && betSelectionData.Count >= 3 && betData.IsFreeBet == false)
             {
-                var parlayConfig = GetParlayBetConfig(Guid.Parse(betData.ClientId), betData.CurrencyCode, betData.BetDate, betSelectionData);
+                var parlayConfig = GetParlayBetConfig(Guid.Parse(betData.ClientId), betData.CurrencyCode, betData.BetDate, betSelectionData, betData.Payout, ref parlayBonusWinnings);
 
                 if (parlayConfig.Item1 == true)
                 {
                     parlayBonus = parlayConfig.Item2.ParlayBonus;
                     parlayBonusWinnings = betData.Payout * parlayConfig.Item2.ParlayBonus;
                     parlayBonusWinnings = parlayBonusWinnings * 10000;
+
                     hasBonus = parlayBonusWinnings == 0 ? false : true;
                 }
             }
@@ -647,7 +648,7 @@ namespace Platform.Placement.Servicev2.Repository
             return selection.Build();
         }
 
-        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(Guid clientId, string currencyCode, DateTime betDate, List<BetSelection> selections)
+        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(Guid clientId, string currencyCode, DateTime betDate, List<BetSelection> selections, decimal payout, ref decimal parlayBonusWinnings)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
@@ -668,10 +669,21 @@ namespace Platform.Placement.Servicev2.Repository
                         var result = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate
                           && c.CurrencyCode == currencyCode && wonSelectionCount == c.SelectionCount).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
 
+
                         if (result == null)
                             return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
                         else
-                            return new Tuple<bool, ParlayBonusAudit>(true, result);
+                        {
+                            parlayBonusWinnings = payout * result.ParlayBonus;
+
+                            if (parlayBonusWinnings > result.ParlayBonusMaxWinnings && result.ParlayBonusMaxWinnings > 0)
+                            {
+                                parlayBonusWinnings = 0;
+                                return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
+                            }
+                            else
+                                return new Tuple<bool, ParlayBonusAudit>(true, result);
+                        }
                     }
                     else
                         return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());

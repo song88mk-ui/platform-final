@@ -103,7 +103,7 @@ namespace Platform.Settlement.Service.Repository
 
             return result;
         }
-        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(BettingContext context, Guid clientId, string currencyCode, DateTime betDate, List<BetSelection> selections)
+        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(BettingContext context, Guid clientId, string currencyCode, DateTime betDate, List<BetSelection> selections, decimal payout, ref decimal parlayBonusWinnings)
         {
             var minimumOdds = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate
                 && c.CurrencyCode == currencyCode).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
@@ -121,7 +121,17 @@ namespace Platform.Settlement.Service.Repository
                 if (result == null)
                     return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
                 else
-                    return new Tuple<bool, ParlayBonusAudit>(true, result);
+                {
+                    parlayBonusWinnings = payout * result.ParlayBonus;
+
+                    if(parlayBonusWinnings > result.ParlayBonusMaxWinnings && result.ParlayBonusMaxWinnings > 0)
+                    {
+                        parlayBonusWinnings = 0;
+                        return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
+                    }
+                    else
+                        return new Tuple<bool, ParlayBonusAudit>(true, result);
+                }
             }
             else
                 return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
@@ -599,12 +609,11 @@ namespace Platform.Settlement.Service.Repository
 
                         if (hasVirtualSport == false && wonSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
                         {
-                            var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, selections);
+                            var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, selections, payout, ref parlayBonusWinnings);
 
                             if (parlayConfig.Item1 == true)
                             {
                                 parlayBonus = parlayConfig.Item2.ParlayBonus;
-                                parlayBonusWinnings = payout * parlayConfig.Item2.ParlayBonus;
 
                                 nonTaxedParlayBonusWinnings = nonTaxedPayout * parlayConfig.Item2.ParlayBonus;
                             }
@@ -897,12 +906,11 @@ namespace Platform.Settlement.Service.Repository
 
                         if (hasVirtualSport == false && wonSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
                         {
-                            var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, selections);
+                            var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, selections, payout, ref parlayBonusWinnings);
 
                             if (parlayConfig.Item1 == true)
                             {
                                 parlayBonus = parlayConfig.Item2.ParlayBonus;
-                                parlayBonusWinnings = payout * parlayConfig.Item2.ParlayBonus;
 
                                 nonTaxedParlayBonusWinnings = nonTaxedPayout * parlayConfig.Item2.ParlayBonus;
                             }

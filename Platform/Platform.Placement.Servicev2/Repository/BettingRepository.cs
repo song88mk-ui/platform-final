@@ -608,7 +608,7 @@ namespace Platform.Placement.Servicev2.Repository
 
             if (hasVirtualSport == false && betSelectionData.Count >= 3 && betData.IsFreeBet == false)
             {
-                var parlayConfig = GetParlayBetConfig(Guid.Parse(betData.ClientId), betData.CurrencyCode, betData.BetDate, betSelectionData, betData.Payout, ref parlayBonusWinnings);
+                var parlayConfig = GetParlayBetConfig(Guid.Parse(betData.ClientId), betData.CurrencyCode, betData.BetDate, betSelectionData, betData.Payout);
 
                 if (parlayConfig.Item1 == true)
                 {
@@ -648,7 +648,7 @@ namespace Platform.Placement.Servicev2.Repository
             return selection.Build();
         }
 
-        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(Guid clientId, string currencyCode, DateTime betDate, List<BetSelection> selections, decimal payout, ref decimal parlayBonusWinnings)
+        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(Guid clientId, string currencyCode, DateTime betDate, List<BetSelection> selections, decimal payout)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
@@ -674,13 +674,10 @@ namespace Platform.Placement.Servicev2.Repository
                             return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
                         else
                         {
-                            parlayBonusWinnings = payout * result.ParlayBonus;
+                            var potentialParlayBonusWinnings = payout * result.ParlayBonus;
 
-                            if (parlayBonusWinnings > result.ParlayBonusMaxWinnings && result.ParlayBonusMaxWinnings > 0)
-                            {
-                                parlayBonusWinnings = 0;
+                            if (potentialParlayBonusWinnings > result.ParlayBonusMaxWinnings && result.ParlayBonusMaxWinnings > 0)
                                 return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
-                            }
                             else
                                 return new Tuple<bool, ParlayBonusAudit>(true, result);
                         }

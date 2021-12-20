@@ -110,6 +110,21 @@ namespace Platform.Betting.API.Repository
                                 PriceboostConfig = priceboostJson
                             });
                         }
+
+                        //update paylayBonusAudit
+                        var parlayAudit = _bettingContext.ParlayBonusAudit.Where(c => c.ClientId == clientID && c.CurrencyCode == config.CurrencyCode)
+                                .OrderByDescending(o => o.TimeStamp).FirstOrDefault();
+
+                        if (parlayAudit != null)
+                        {
+                            var parlayBonusAudit = _bettingContext.ParlayBonusAudit.Where(c => c.ClientId == clientID && c.CurrencyCode == config.CurrencyCode && c.TimeStamp == parlayAudit.TimeStamp);
+
+                            foreach(var parlay in parlayBonusAudit)
+                            {
+                                parlay.ParlayBonusMaxWinnings = config.Parlay.ParlayBonusMaxWinnings;
+                                _bettingContext.ParlayBonusAudit.Update(parlay);
+                            }
+                        }
                     }
 
                     await _bettingContext.SaveChangesAsync();

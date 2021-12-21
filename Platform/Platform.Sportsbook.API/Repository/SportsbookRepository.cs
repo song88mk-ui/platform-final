@@ -1005,45 +1005,54 @@ namespace Platform.Sportsbook.API.Repository
         {
             var result = await GetBetFixtures2(request);
 
+            var raw = new List<BetFixtureSelectionResponseDTO>();
+
+            foreach (var selection in request.Selections)
+            {
+                var initialSelection = result.Item3.Where(c => c.SeId == selection.SelectionId).FirstOrDefault();
+
+                raw.Add(new BetFixtureSelectionResponseDTO
+                {
+                    SportId = result.Item1.Where(c => c.FiId == initialSelection.FiId).Select(ss => ss.SpId).FirstOrDefault(),
+                    SportName = result.Item1.Where(c => c.FiId == initialSelection.FiId).Select(ss => ss.SpNa).FirstOrDefault(),
+                    SegmentId = result.Item1.Where(c => c.FiId == initialSelection.FiId).Select(ss => ss.SegId).FirstOrDefault(),
+                    SegmentName = result.Item1.Where(c => c.FiId == initialSelection.FiId).Select(ss => ss.SegNa).FirstOrDefault(),
+                    LeagueId = result.Item1.Where(c => c.FiId == initialSelection.FiId).Select(ss => ss.LeId).FirstOrDefault(),
+                    LeagueName = result.Item1.Where(c => c.FiId == initialSelection.FiId).Select(ss => ss.LeNa).FirstOrDefault(),
+                    FixtureId = result.Item1.Where(c => c.FiId == initialSelection.FiId).Select(ss => ss.FiId).FirstOrDefault(),
+                    FixtureName = result.Item1.Where(c => c.FiId == initialSelection.FiId).Select(ss => ss.FiNa).FirstOrDefault(),
+                    FixtureType = (FixtureType)result.Item1.Where(c => c.FiId == initialSelection.FiId).Select(ss => ss.FiTyId).FirstOrDefault(),
+                    MarketTemplateId = result.Item2.Where(c => c.MaId == initialSelection.MaId).Select(ss => ss.MaTeId).FirstOrDefault(),
+                    MarketId = result.Item2.Where(c => c.MaId == initialSelection.MaId).Select(ss => ss.MaId).FirstOrDefault(),
+                    MarketName = result.Item2.Where(c => c.MaId == initialSelection.MaId).Select(ss => ss.MaNa).FirstOrDefault(),
+                    Line = result.Item2.Where(c => c.MaId == initialSelection.MaId).Select(ss => ss.Li).FirstOrDefault(),
+                    SelectionTemplateId = result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.SeTeId).FirstOrDefault(),
+                    SelectionId = result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.SeId).FirstOrDefault(),
+                    SelectionName = result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.SeNa).FirstOrDefault(),
+                    Odds = result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.Od).FirstOrDefault(),
+                    FixtureStatus = (FixtureStatus)result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.FiStId).FirstOrDefault(),
+                    FixtureStartDate = result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.FiStDa).FirstOrDefault(),
+                    Score = result.Item1.Where(c => c.FiId == initialSelection.FiId).Select(ss => ss.Sc).FirstOrDefault(),
+                    FixtureSpecifier = result.Item1.Where(c => c.FiId == initialSelection.FiId).Select(ss => ss.FiSp).FirstOrDefault(),
+                    SelectionSpecifier = result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.SeSp).FirstOrDefault(),
+                    CorrelationId = result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.CoId).FirstOrDefault(),
+                    Probability = result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.Pr).FirstOrDefault(),
+                    WonProbability = result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.WoPr).FirstOrDefault(),
+                    LostProbability = result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.LoPr).FirstOrDefault(),
+                    VoidProbability = result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.VoPr).FirstOrDefault(),
+                    HalfWonProbability = result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.HaWoPr).FirstOrDefault(),
+                    HalfLostProbability = result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.HaLoPr).FirstOrDefault(),
+                    BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, selection, result)
+                });
+            }
+
             return new BaseResponseDTO<BetFixtureResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
                 Result = new BetFixtureResponseDTO
                 {
-                    Selections = request.Selections.Select(s => new BetFixtureSelectionResponseDTO
-                    {
-                        SportId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SpId).FirstOrDefault(),
-                        SportName = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SpNa).FirstOrDefault(),
-                        SegmentId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SegId).FirstOrDefault(),
-                        SegmentName = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SegNa).FirstOrDefault(),
-                        LeagueId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.LeId).FirstOrDefault(),
-                        LeagueName = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.LeNa).FirstOrDefault(),
-                        FixtureId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiId).FirstOrDefault(),
-                        FixtureName = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiNa).FirstOrDefault(),
-                        FixtureType = (FixtureType)result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiTyId).FirstOrDefault(),
-                        MarketTemplateId = result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.MaTeId).FirstOrDefault(),
-                        MarketId = result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.MaId).FirstOrDefault(),
-                        MarketName = result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.MaNa).FirstOrDefault(),
-                        Line = result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.Li).FirstOrDefault(),
-                        SelectionTemplateId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeTeId).FirstOrDefault(),
-                        SelectionId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeId).FirstOrDefault(),
-                        SelectionName = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeNa).FirstOrDefault(),
-                        Odds = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.Od).FirstOrDefault(),
-                        FixtureStatus = (FixtureStatus)result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.FiStId).FirstOrDefault(),
-                        FixtureStartDate = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.FiStDa).FirstOrDefault(),
-                        Score = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.Sc).FirstOrDefault(),
-                        FixtureSpecifier = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiSp).FirstOrDefault(),
-                        SelectionSpecifier = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeSp).FirstOrDefault(),
-                        CorrelationId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.CoId).FirstOrDefault(),
-                        Probability = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.Pr).FirstOrDefault(),
-                        WonProbability = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.WoPr).FirstOrDefault(),
-                        LostProbability = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.LoPr).FirstOrDefault(),
-                        VoidProbability = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.VoPr).FirstOrDefault(),
-                        HalfWonProbability = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.HaWoPr).FirstOrDefault(),
-                        HalfLostProbability = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.HaLoPr).FirstOrDefault(),
-                        BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, s, result)
-                    }).ToList()
+                    Selections = raw
                 }
             };
         }
@@ -4381,9 +4390,10 @@ namespace Platform.Sportsbook.API.Repository
 
         private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus> result)
         {
-            var fixture = result.Item1.Where(c => c.FiId == current.FixtureId).FirstOrDefault();
-            var market = result.Item2.Where(c => c.MaId == current.MarketId).FirstOrDefault();
             var selection = result.Item3.Where(c => c.SeId == current.SelectionId).FirstOrDefault();
+            var fixture = result.Item1.Where(c => c.FiId == selection.FiId).FirstOrDefault();
+            var market = result.Item2.Where(c => c.MaId == selection.MaId).FirstOrDefault();
+
             var bettingStatus = result.Item4;
 
             if ((fixture.SpId == 1001 || fixture.SpId == 1002 || fixture.SpId == 1055 || fixture.SpId == 1058) && fixture.FiStDa < DateTime.UtcNow)

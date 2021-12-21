@@ -673,14 +673,15 @@ namespace Platform.Placement.Servicev2.Repository
                         if (result == null)
                             return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
                         else
-                        {
-                            var potentialParlayBonusWinnings = payout * result.ParlayBonus;
+                            return new Tuple<bool, ParlayBonusAudit>(true, result);
+                        //{
+                        //    var potentialParlayBonusWinnings = payout * result.ParlayBonus;
 
-                            if (potentialParlayBonusWinnings > result.ParlayBonusMaxWinnings && result.ParlayBonusMaxWinnings > 0)
-                                return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
-                            else
-                                return new Tuple<bool, ParlayBonusAudit>(true, result);
-                        }
+                        //    if (potentialParlayBonusWinnings > result.ParlayBonusMaxWinnings && result.ParlayBonusMaxWinnings > 0)
+                        //        return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
+                        //    else
+                        //        return new Tuple<bool, ParlayBonusAudit>(true, result);
+                        //}
                     }
                     else
                         return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());

@@ -791,6 +791,107 @@ namespace Platform.Sportsbook.API.Repository
 
             return new Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>(newFixtures, newMarkets, newSelections, bettingStatus.Result);
         }
+        private async Task<Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>> GetBetFixtures2(BetFixtureRequestDTO request)
+        {
+            var selectionIds = request.Selections.Select(s => s.SelectionId).ToList();
+            var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
+            var selections = await primarySelectionCollection.Find(selectionFilter).ToListAsync();
+
+            var newFixtures = new List<Fixture>();
+            var newMarkets = new List<Market>();
+            var newSelections = new List<Selection>();
+            var newAllSelections = new List<Selection>();
+            var newBettingStatus = new BettingStatus();
+
+            if (selections.Count > 0)
+            {
+                var fixtureIds = selections.Select(s => s.FiId).Distinct().ToList();
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
+                var fixtures = primaryFixtureCollection.Find(fixtureFilter).ToListAsync();
+
+                var marketIds = selections.Select(s => s.MaId).Distinct().ToList();
+                var marketFilter = Builders<Market>.Filter.Where(c => marketIds.Contains(c.MaId));
+                var markets = primaryMarketCollection.Find(marketFilter).ToListAsync();
+
+                var allSelectionFilter = Builders<Selection>.Filter.Where(c => marketIds.Contains(c.MaId));
+                var allSelections = primarySelectionCollection.Find(allSelectionFilter).ToListAsync();
+
+                var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+                var bettingStatus = primaryBettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+                await Task.WhenAll(fixtures, markets, allSelections, bettingStatus);
+
+                newFixtures = fixtures.Result;
+                newMarkets = markets.Result;
+                newSelections = selections;
+                newAllSelections = allSelections.Result;
+                newBettingStatus = bettingStatus.Result;
+            }
+
+            if (IsOEEnable(request.ClientCode))
+            {
+                newFixtures = newFixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
+
+                var finalMarkets = new List<Market>();
+                var finalSelections = new List<Selection>();
+
+                foreach (var fixture in newFixtures)
+                {
+                    var initialMarkets = newMarkets.Where(c => c.FiId == fixture.FiId).ToList();
+
+                    foreach (var market in initialMarkets)
+                    {
+                        if (fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright)
+                        {
+                            market.MaStId = market.MaStId;
+                            market.MaStNa = market.MaStNa;
+                        }
+                        else
+                        {
+                            market.MaStId = market.ClCo.Contains(request.ClientCode) ? market.MaStId : (int)MarketStatus.Inactive;
+                            market.MaStNa = market.ClCo.Contains(request.ClientCode) ? market.MaStNa : MarketStatus.Inactive.ToString();
+                        }
+
+                        finalMarkets.Add(market);
+
+
+                        var clientOdds = new List<ClientOdds>();
+
+                        var marketSelections = newAllSelections.Where(c => c.MaId == market.MaId).ToList();
+
+                        if (marketSelections.Count > 0)
+                        {
+                            var activeSelections = marketSelections.Where(c => c.MaId == market.MaId && c.IsAc == true && c.Od > 0m).ToList();
+                            var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+
+                            clientOdds = GetClientOdds(activeSelections.Count, margin, marketSelections, market.ClCoMa, request.ClientCode);
+                        }
+
+                        foreach (var selection in marketSelections)
+                        {
+                            if (fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright)
+                            {
+                                finalSelections.Add(selection);
+                            }
+                            else
+                            {
+                                selection.Od = clientOdds.Where(c => c.SelectionId == selection.SeId).Select(ss => ss.Odds).FirstOrDefault();
+
+                                finalSelections.Add(selection);
+                            }
+                        }
+                    }
+                }
+
+                if (finalMarkets.Count > 0)
+                    newMarkets = finalMarkets;
+
+                if (finalSelections.Count > 0)
+                    newSelections = finalSelections;
+            }
+
+            return new Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>(newFixtures, newMarkets, newSelections, newBettingStatus);
+        }
 
         public async Task<BaseResponseDTO<BetSelectionProbabilityResponseDTO>> GetBetSelectionProbabilities(BetSelectionProbabilityRequestDTO request)
         {
@@ -902,7 +1003,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<BetFixtureResponseDTO>> GetBetFixture(BetFixtureRequestDTO request)
         {
-            var result = await GetBetFixtures(request);
+            var result = await GetBetFixtures2(request);
 
             return new BaseResponseDTO<BetFixtureResponseDTO>
             {
@@ -4318,7 +4419,19 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            if (selection.FiId != current.FixtureId || selection.MaId != current.MarketId || selection.SeId != current.SelectionId || selection.SpId != current.SportId)
+            //if (selection.FiId != current.FixtureId || selection.MaId != current.MarketId || selection.SeId != current.SelectionId || selection.SpId != current.SportId)
+            //{
+            //    return new BetSelectionState
+            //    {
+            //        SelectionId = selection.SeId.ToString(),
+            //        Odds = selection.Od,
+            //        CorrelationId = selection.CoId,
+            //        StatusCode = StatusCode.Market_Is_Inactive,
+            //        Message = StatusCode.Market_Is_Inactive.ToString().Replace('_', ' '),
+            //    };
+            //}
+
+            if (selection.SeId != current.SelectionId || selection.SpId != current.SportId)
             {
                 return new BetSelectionState
                 {

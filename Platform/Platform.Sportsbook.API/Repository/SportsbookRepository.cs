@@ -87,6 +87,16 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
+            if (!string.IsNullOrEmpty(fixture.GeRe) && !string.IsNullOrEmpty(request.IPCountryCode))
+            {
+                if(fixture.GeRe.Split(",").Any(g => g.ToUpper() == request.IPCountryCode.ToUpper()))
+                    return new BaseResponseDTO<LivestreamResponseDTO>
+                    {
+                        StatusCode = StatusCode.Livestream_Is_Not_Available_In_Your_Region,
+                        Message = StatusCode.Livestream_Is_Not_Available_In_Your_Region.ToString().Replace('_', ' ')
+                    };
+            }
+
             _httpClient.DefaultRequestHeaders.Remove("X-Real-IP");
             _httpClient.DefaultRequestHeaders.Add("X-Real-IP", request.IPAddress);
 

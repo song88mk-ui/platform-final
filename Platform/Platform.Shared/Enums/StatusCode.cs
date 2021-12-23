@@ -65,6 +65,8 @@
 
         Virtuals_Cannot_Be_Added_As_Part_Of_Parlay_With_Other_Sports = 145,
 
+        Livestream_Is_Not_Available_In_Your_Region = 146,
+
         Error = 1000,
         Operator_Error = 1001
     }

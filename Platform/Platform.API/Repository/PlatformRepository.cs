@@ -777,7 +777,7 @@ namespace Platform.API.Repository
             return await _bettingRepository.BetConfig(payload);
         }
 
-        public async Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(string apiKey, string clientId, string operatorToken, LivestreamRequest request)
+        public async Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(string apiKey, string clientId, string operatorToken, string IPCountryCode, LivestreamRequest request)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
@@ -824,7 +824,8 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.GetLivestream(new LivestreamRequestDTO 
             { 
                 ProviderFixtureId = request.ProviderFixtureId, 
-                IPAddress = request.IPAddress, 
+                IPAddress = request.IPAddress,
+                IPCountryCode = IPCountryCode,
                 IsMobile = request.IsMobile 
             });
         }

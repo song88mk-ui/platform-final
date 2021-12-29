@@ -251,6 +251,7 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
+                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },

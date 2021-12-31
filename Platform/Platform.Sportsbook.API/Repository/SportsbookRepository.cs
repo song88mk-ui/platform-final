@@ -89,7 +89,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (!string.IsNullOrEmpty(fixture.GeRe) && !string.IsNullOrEmpty(request.IPCountryCode))
             {
-                if(fixture.GeRe.Split(",").Any(g => g.ToUpper() == request.IPCountryCode.ToUpper()))
+                if(!fixture.GeRe.Split(",").Any(g => g.ToUpper() == request.IPCountryCode.ToUpper()))
                     return new BaseResponseDTO<LivestreamResponseDTO>
                     {
                         StatusCode = StatusCode.Livestream_Is_Not_Available_In_Your_Region,

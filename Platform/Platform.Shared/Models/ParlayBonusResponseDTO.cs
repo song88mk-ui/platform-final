@@ -1,6 +1,4 @@
-﻿
-using Platform.Shared.Data.Betting.Entities;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Platform.Shared.Models
 {

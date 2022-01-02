@@ -799,5 +799,20 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v1/sportsbook/client/sportgroups")]
+        public async Task<IActionResult> GetSportGroups()
+        {
+            var result = await _sportsbookRepository.GetSportGroups();
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+
     }
 }

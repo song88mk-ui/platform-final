@@ -5582,6 +5582,22 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<SportGroupResponseDTO>> GetSportGroups()
+        {
+            return _memCache.GetCache("sport-groups", () =>
+            {
+                return new BaseResponseDTO<SportGroupResponseDTO>()
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new SportGroupResponseDTO()
+                    {
+                        SportGroups = _sportsbookContext.SportGroup.ToList()
+                    }
+                };
+            }, 24);
+        }
+
         private string GetSportName(string name, List<SportTranslationMDB> translations, LanguageCode languageCode)
         {
             if (translations == null)

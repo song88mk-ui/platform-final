@@ -4,7 +4,6 @@ using Platform.API.ActionFilters;
 using Platform.API.Models;
 using Platform.API.Repository;
 using Platform.Shared.Models;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -254,6 +253,20 @@ namespace Platform.API.Controllers
         public async Task<IActionResult> GetClientParlayBonus([FromQuery] GetParlayBonusRequestDTO request)
         {
             var result = await _platformRepository.GetClientParlayBonus(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/client/sportgroups")]
+        public async Task<IActionResult> GetSportGroups()
+        {
+            var result = await _platformRepository.GetSportGroups();
 
             switch (result.StatusCode)
             {

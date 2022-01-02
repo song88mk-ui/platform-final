@@ -2618,6 +2618,11 @@ namespace Platform.API.Repository
             return await _bettingRepository.ProcessParlayBonus(request);
         }
 
+        public async Task<BaseResponseDTO<SportGroupResponseDTO>> GetSportGroups()
+        {
+            return await _sportsbookRepository.GetSportGroups();
+        }
+
         private DateTime GetFirstDayOfNextMonth()
         {
             DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);

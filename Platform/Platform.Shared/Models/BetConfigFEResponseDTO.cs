@@ -69,5 +69,9 @@ namespace Platform.Shared.Models
         public decimal StakeTax { get; set; }
         [JsonProperty("winningsTax")]
         public decimal WinningsTax { get; set; }
+        [JsonProperty("excludeStakeSportTypes")]
+        public string ExcludeStakeSportTypes { get; set; }
+        [JsonProperty("excludeWinningsSportTypes")]
+        public string ExcludeWinningsSportTypes { get; set; }
     }
 }

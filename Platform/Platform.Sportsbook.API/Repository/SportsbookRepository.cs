@@ -4833,7 +4833,7 @@ namespace Platform.Sportsbook.API.Repository
                 case 112: //StarCraft
                     return new List<string> { "186", "327", "328" };
                 case 20: //Table Tennis
-                    return new List<string> { "186", "327", "328" };
+                    return new List<string> { "186", "237", "238" };
                 case 190: //Motorcycle Racing
                     return new List<string> { "539" };
                 case 1003: //Virtual Baseball

@@ -725,7 +725,7 @@ namespace Platform.Sportsbook.API.Repository
                         MarketTemplateId = s.MarketTemplateId,
                         MarketTemplateCode = s.MarketTemplateCode,
                         SortOrder = s.SortOrder
-                    }).ToList()
+                    }).OrderBy(o => o.SortOrder).ToList()
                 });
             }
 

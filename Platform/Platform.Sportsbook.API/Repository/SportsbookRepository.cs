@@ -4772,87 +4772,16 @@ namespace Platform.Sportsbook.API.Repository
         }
         private List<string> GetMainMarketTemplates(int sportId)
         {
-            switch (sportId)
-            {
-                case 1: //soccer
-                    return new List<string> { "1", "16", "18" };
-                case 2: //basketball
-                    return new List<string> { "219", "223", "225" };
-                case 3: //baseball
-                    return new List<string> { "251", "256", "258" };
-                case 4: //ice hockey
-                    return new List<string> { "406", "410", "412" };
-                case 5: //tennis
-                    return new List<string> { "186", "187", "189" };
-                case 6: //handball
-                    return new List<string> { "1", "16", "18" };
-                case 10: //Boxing
-                    return new List<string> { "186", "18", "1" };
-                case 21: //cricket
-                    return new List<string> { "1", "340" };
-                case 16: //American Football
-                    return new List<string> { "219", "223", "225" };
-                case 13: //Aussie Rules
-                    return new List<string> { "186", "16", "18" };
-                case 31: //Badminton
-                    return new List<string> { "186", "237", "238" };
-                case 36: //Athletics
-                    return new List<string> { "539" };
-                case 118: //Call of Duty
-                    return new List<string> { "186" };
-                case 22: //Darts
-                    return new List<string> { "1", "186", "188", "314" };
-                case 109: //eSport CS GO
-                    return new List<string> { "186", "327", "328" };
-                case 111: //eSport Dota 2
-                    return new List<string> { "186", "327", "328" };
-                case 117: //MMA
-                    return new List<string> { "186", "18", "1" };
-                case 134: //ESport King of Glory
-                    return new List<string> { "186" };
-                case 110: //eSport LOL
-                    return new List<string> { "186", "327", "328" };
-                case 137: //eSoccer
-                    return new List<string> { "1", "16", "18" };
-                case 138: //kabaddi
-                    return new List<string> { "1", "16", "18" };
-                case 153: //eBasketball
-                    return new List<string> { "219", "223", "225" };
-                case 195: //eIce Hockey
-                    return new List<string> { "1", "16", "18" };
-                case 113: //Hearthstone
-                    return new List<string> { "186" };
-                case 121: //Overwatch
-                    return new List<string> { "186" };
-                case 128: //Rocket League
-                    return new List<string> { "186" };
-                case 12: //Rugby
-                    return new List<string> { "1", "16", "18" };
-                case 19: //Snooker
-                    return new List<string> { "1", "186" };
-                case 112: //StarCraft
-                    return new List<string> { "186", "327", "328" };
-                case 20: //Table Tennis
-                    return new List<string> { "186", "237", "238" };
-                case 190: //Motorcycle Racing
-                    return new List<string> { "539" };
-                case 1003: //Virtual Baseball
-                    return new List<string> { "251", "256", "258" };
-                case 1002: //Virtual Basketball
-                    return new List<string> { "219", "223", "225" };
-                case 1058: //Virtual Dog Racing
-                    return new List<string> { "866" };
-                case 1055: //Virtual Horse Racing
-                    return new List<string> { "866" };
-                case 1001: //Virtual Soccer
-                    return new List<string> { "1", "16", "18" };
-                case 1005: //Virtual Tennis
-                    return new List<string> { "186", "187", "189" };
-                case 23: //Volleyball
-                    return new List<string> { "186", "237", "238" };
-                default:
-                    return new List<string>();
-            }
+            var result = GetSelectorMarketTemplate().Where(c => c.SportId == sportId).ToList();
+
+            if (result == null || result.Count == 0)
+                return new List<string>();
+
+            return result.Select(s => s.MarketTemplateId).ToList();
+        }
+        private List<SelectorMarketTemplate> GetSelectorMarketTemplate()
+        {
+            return _memCache.GetCache($"smt", () => _sportsbookContext.SelectorMarketTemplate.ToList(), 24);
         }
         private Tuple<DateTime, DateTime> GetDateTimeRange(DateTime utcDate, int minuteUTCOffset)
         {

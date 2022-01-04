@@ -227,8 +227,31 @@ namespace Platform.Betting.API.Repository
                     Guid betId;
 
                     var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
-                    var taxedStake = request.Stake - (request.Stake / (1 + taxConfig.StakeTax));
+                    var selectionSports = request.Selections.Select(s => s.SportId).ToList();
+
+                    var stakeTax = taxConfig.StakeTax;
+
+
+                    if (stakeTax > 0)
+                    {
+                        var excludedTaxedSport = !string.IsNullOrEmpty(taxConfig.ExcludeStakeSportTypes) ? taxConfig.ExcludeStakeSportTypes.Split(',').Select(int.Parse).Where(c => selectionSports.Contains(c)).ToList() : new List<int>();
+
+                        if (selectionSports.Count == selectionSports.Count)
+                            stakeTax = 0m;
+                    }
+
+                    var taxedStake = request.Stake - (request.Stake / (1 + stakeTax));
                     var stake = request.Stake - taxedStake;
+
+                    var winningsTax = taxConfig.WinningsTax;
+
+                    if (winningsTax > 0)
+                    {
+                        var excludedWinningSport = !string.IsNullOrEmpty(taxConfig.ExcludeWinningsSportTypes) ? taxConfig.ExcludeWinningsSportTypes.Split(',').Select(int.Parse).Where(c => selectionSports.Contains(c)).ToList() : new List<int>();
+
+                        if (selectionSports.Count == selectionSports.Count)
+                            winningsTax = 0m;
+                    }
 
                     var betEntity = _bettingContext.Bet.Update(new Bet
                     {
@@ -262,8 +285,8 @@ namespace Platform.Betting.API.Repository
                         BetDateOffset = request.BetDate.AddHours(-4),
                         SettlementDate = request.BetDate,
                         SettlementDateOffset = request.BetDate.AddHours(-4),
-                        StakeTax = taxConfig.StakeTax,
-                        WinningsTax = taxConfig.WinningsTax,
+                        StakeTax = stakeTax,
+                        WinningsTax = winningsTax,
                         TaxedStake = taxedStake,
                         TaxedWinnings = 0,
                         ParlayBonus = parlayBonus,
@@ -684,8 +707,30 @@ namespace Platform.Betting.API.Repository
                     Guid betId;
 
                     var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
-                    var taxedStake = request.Stake - (request.Stake / (1 + taxConfig.StakeTax));
+                    var selectionSports = request.Selections.Select(s => s.SportId).ToList();
+
+                    var stakeTax = taxConfig.StakeTax;
+
+                    if (stakeTax > 0)
+                    {
+                        var excludedTaxedSport = !string.IsNullOrEmpty(taxConfig.ExcludeStakeSportTypes) ? taxConfig.ExcludeStakeSportTypes.Split(',').Select(int.Parse).Where(c => selectionSports.Contains(c)).ToList() : new List<int>();
+
+                        if (selectionSports.Count == selectionSports.Count)
+                            stakeTax = 0m;
+                    }
+
+                    var taxedStake = request.Stake - (request.Stake / (1 + stakeTax));
                     var stake = request.Stake - taxedStake;
+
+                    var winningsTax = taxConfig.WinningsTax;
+
+                    if (winningsTax > 0)
+                    {
+                        var excludedWinningSport = !string.IsNullOrEmpty(taxConfig.ExcludeWinningsSportTypes) ? taxConfig.ExcludeWinningsSportTypes.Split(',').Select(int.Parse).Where(c => selectionSports.Contains(c)).ToList() : new List<int>();
+
+                        if (selectionSports.Count == selectionSports.Count)
+                            winningsTax = 0m;
+                    }
 
                     var betEntity = _bettingContext.Bet.Update(new Bet
                     {

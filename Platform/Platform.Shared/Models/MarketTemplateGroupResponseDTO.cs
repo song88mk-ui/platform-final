@@ -30,4 +30,21 @@ namespace Platform.Shared.Models
         public int SortOrder { get; set; }
         public List<string> MarketTemplateIds { get; set; }
     }
+
+    public class SportSelectorMarketTemplateDTO
+    {
+        public SportSelectorMarketTemplateDTO()
+        {
+            MarketTemplates = new List<SelectorMarketTemplateDTO>();
+        }
+        public int SportId { get; set; }
+        public List<SelectorMarketTemplateDTO> MarketTemplates { get; set; }
+    }
+
+    public class SelectorMarketTemplateDTO
+    {
+        public string MarketTemplateId { get; set; }
+        public string MarketTemplateCode { get; set; }
+        public int SortOrder { get; set; }
+    }
 }

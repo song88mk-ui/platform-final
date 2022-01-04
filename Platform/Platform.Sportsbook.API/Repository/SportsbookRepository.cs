@@ -710,6 +710,32 @@ namespace Platform.Sportsbook.API.Repository
 
             return initialResult;
         }
+        public async Task<BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>> GetSelectorMarketTemplates()
+        {
+            var result = GetSelectorMarketTemplate();
+            var finalResult = new List<SportSelectorMarketTemplateDTO>();
+
+            foreach (var sport in result.GroupBy(g => g.SportId).ToList())
+            {
+                finalResult.Add(new SportSelectorMarketTemplateDTO
+                {
+                    SportId = sport.Key,
+                    MarketTemplates = sport.Select(s => new SelectorMarketTemplateDTO 
+                    { 
+                        MarketTemplateId = s.MarketTemplateId,
+                        MarketTemplateCode = s.MarketTemplateCode,
+                        SortOrder = s.SortOrder
+                    }).ToList()
+                });
+            }
+
+            return new BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = finalResult
+            };
+        }
         private async Task<Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>> GetBetFixtures(BetFixtureRequestDTO request)
         {
             var fixtureIds = request.Selections.Select(s => s.FixtureId).ToList();

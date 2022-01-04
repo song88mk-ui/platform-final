@@ -207,6 +207,7 @@ namespace Platform.API.Controllers
         [HttpPost("v1/config/client")]
         public async Task<IActionResult> ProcessBackOfficeClientBetConfig([FromBody] BackOfficeBetConfigPayloadDTO payload)
         {
+            //
             var result = await _platformRepository.ProcessBetConfig(payload);
 
             switch (result.StatusCode)

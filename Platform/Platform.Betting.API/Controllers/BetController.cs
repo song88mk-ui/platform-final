@@ -13,7 +13,6 @@ namespace Platform.Betting.API.Controllers
 
         public BetController(IBettingRepository bettingRepository)
         {
-            //
             _bettingRepository = bettingRepository;
         }
 

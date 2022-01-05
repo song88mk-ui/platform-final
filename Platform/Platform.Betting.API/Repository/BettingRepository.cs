@@ -231,12 +231,11 @@ namespace Platform.Betting.API.Repository
 
                     var stakeTax = taxConfig.StakeTax;
 
-
                     if (stakeTax > 0)
                     {
                         var excludedTaxedSport = !string.IsNullOrEmpty(taxConfig.ExcludeStakeSportTypes) ? taxConfig.ExcludeStakeSportTypes.Split(',').Select(int.Parse).Where(c => selectionSports.Contains(c)).ToList() : new List<int>();
 
-                        if (selectionSports.Count == selectionSports.Count)
+                        if (excludedTaxedSport.Count == selectionSports.Count)
                             stakeTax = 0m;
                     }
 
@@ -249,7 +248,7 @@ namespace Platform.Betting.API.Repository
                     {
                         var excludedWinningSport = !string.IsNullOrEmpty(taxConfig.ExcludeWinningsSportTypes) ? taxConfig.ExcludeWinningsSportTypes.Split(',').Select(int.Parse).Where(c => selectionSports.Contains(c)).ToList() : new List<int>();
 
-                        if (selectionSports.Count == selectionSports.Count)
+                        if (excludedWinningSport.Count == selectionSports.Count)
                             winningsTax = 0m;
                     }
 
@@ -715,7 +714,7 @@ namespace Platform.Betting.API.Repository
                     {
                         var excludedTaxedSport = !string.IsNullOrEmpty(taxConfig.ExcludeStakeSportTypes) ? taxConfig.ExcludeStakeSportTypes.Split(',').Select(int.Parse).Where(c => selectionSports.Contains(c)).ToList() : new List<int>();
 
-                        if (selectionSports.Count == selectionSports.Count)
+                        if (excludedTaxedSport.Count == selectionSports.Count)
                             stakeTax = 0m;
                     }
 
@@ -728,7 +727,7 @@ namespace Platform.Betting.API.Repository
                     {
                         var excludedWinningSport = !string.IsNullOrEmpty(taxConfig.ExcludeWinningsSportTypes) ? taxConfig.ExcludeWinningsSportTypes.Split(',').Select(int.Parse).Where(c => selectionSports.Contains(c)).ToList() : new List<int>();
 
-                        if (selectionSports.Count == selectionSports.Count)
+                        if (excludedWinningSport.Count == selectionSports.Count)
                             winningsTax = 0m;
                     }
 
@@ -764,8 +763,8 @@ namespace Platform.Betting.API.Repository
                         BetDateOffset = request.BetDate.AddHours(-4),
                         SettlementDate = request.BetDate,
                         SettlementDateOffset = request.BetDate.AddHours(-4),
-                        StakeTax = taxConfig.StakeTax,
-                        WinningsTax = taxConfig.WinningsTax,
+                        StakeTax = stakeTax,
+                        WinningsTax = winningsTax,
                         TaxedStake = taxedStake,
                         TaxedWinnings = 0,
                         ParlayBonus = parlayBonus,

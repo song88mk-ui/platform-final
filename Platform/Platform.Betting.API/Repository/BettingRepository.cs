@@ -227,7 +227,7 @@ namespace Platform.Betting.API.Repository
                     Guid betId;
 
                     var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
-                    var selectionSports = request.Selections.Select(s => s.SportId).ToList();
+                    var selectionSports = request.Selections.Select(s => s.SportId).Distinct().ToList();
 
                     var stakeTax = taxConfig.StakeTax;
 
@@ -706,7 +706,7 @@ namespace Platform.Betting.API.Repository
                     Guid betId;
 
                     var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
-                    var selectionSports = request.Selections.Select(s => s.SportId).ToList();
+                    var selectionSports = request.Selections.Select(s => s.SportId).Distinct().ToList();
 
                     var stakeTax = taxConfig.StakeTax;
 

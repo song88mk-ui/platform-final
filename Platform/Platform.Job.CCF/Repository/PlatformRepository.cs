@@ -41,12 +41,14 @@ namespace Platform.Job.CCF.Repository
             _httpClient.DefaultRequestHeaders.Remove("Authorization");
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken.Result.Token}");
 
-            var year = DateTime.UtcNow.Year;
-            var lastMonth = DateTime.UtcNow.AddMonths(-1);
+            var currentDate = DateTime.UtcNow;
 
-            var DayAfter = lastMonth.AddDays(1);
+            var year = currentDate.Year;
+            var lastMonth = currentDate.AddMonths(-1);
 
-            var startDate = $"{year}{GetDoubleDigit(DayAfter.Month)}{GetDoubleDigit(DayAfter.Day)}000000";
+            var dayAfter = lastMonth.AddDays(1);
+
+            var startDate = $"{dayAfter.Year}{GetDoubleDigit(dayAfter.Month)}{GetDoubleDigit(dayAfter.Day)}000000";
             var endDate = $"{year}1231000000";
             var response = await _httpClient.GetAsync($"edge/proxy/ReportingCcf/external/api/report/export/history/ccf/changes/client/api?startDatetime={startDate}&endDatetime={endDate}&bookmakerId={_configuration["Custom:MTSBookmakerId"]}");
 

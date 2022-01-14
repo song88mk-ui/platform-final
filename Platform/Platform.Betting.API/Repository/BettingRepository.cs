@@ -535,7 +535,6 @@ namespace Platform.Betting.API.Repository
                 {
                     UserId = request.UserId,
                     BetId = request.BetId.ToString().ToUpper(),
-                    Stake = request.Stake,
                     BetStatus = BetStatus.Waiting
                 }
             };
@@ -1015,7 +1014,6 @@ namespace Platform.Betting.API.Repository
                 {
                     UserId = request.UserId,
                     BetId = request.BetId.ToString().ToUpper(),
-                    Stake = request.Stake,
                     BetStatus = BetStatus.Waiting
                 }
             };

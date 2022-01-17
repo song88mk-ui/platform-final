@@ -13,6 +13,7 @@ namespace Platform.Shared.Models
         public List<OverrideSportConfigFE> OverrideSportConfig { get; set; }
         public ParlayConfigFE Parlayconfig { get; set; }
         public TaxConfig TaxConfig { get; set; }
+        public PriceboostConfig PriceboostConfig { get; set; }
     }
 
     public class OverrideSportConfigFE
@@ -73,5 +74,11 @@ namespace Platform.Shared.Models
         public string ExcludeStakeSportTypes { get; set; }
         [JsonProperty("excludeWinningsSportTypes")]
         public string ExcludeWinningsSportTypes { get; set; }
+    }
+
+    public class PriceboostConfig
+    {
+        [JsonProperty("maxStake")]
+        public decimal MaxStake { get; set; }
     }
 }

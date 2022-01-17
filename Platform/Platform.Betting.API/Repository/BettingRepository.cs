@@ -1421,6 +1421,7 @@ namespace Platform.Betting.API.Repository
             ParlayConfig parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
             List<OverrideSportConfig> overrideSportConfig = JsonSerializer.Deserialize<List<OverrideSportConfig>>(betConfig.OverrideConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
             TaxConfig taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
+            PriceboostConfig priceboostConfig = !string.IsNullOrEmpty(betConfig.PriceboostConfig) ? JsonSerializer.Deserialize<PriceboostConfig>(betConfig.PriceboostConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new PriceboostConfig();
 
             result.DefaultSportConfig = new DefaultSportConfigFE()
             {
@@ -1449,12 +1450,13 @@ namespace Platform.Betting.API.Repository
                 ParlayBonusConfig = parlayConfig.ParlayBonusConfig == null ? new List<ParlayBonusConfigFE>() : parlayConfig.ParlayBonusConfig.Select(s => new ParlayBonusConfigFE { ParlayBonus = s.ParlayBonus, SelectionCount = s.SelectionCount }).ToList()
             };
 
-
             result.TaxConfig = new TaxConfig
             {
                 StakeTax = taxConfig.StakeTax,
                 WinningsTax = taxConfig.WinningsTax
             };
+
+            result.PriceboostConfig = priceboostConfig;
 
             return new BaseResponseDTO<BetConfigFEResponseDTO>
             {

@@ -832,7 +832,7 @@ namespace Platform.Sportsbook.API.Controllers
         //[HttpPost("v1/sportsbook/boostedfixtures")]
         //public async Task<IActionResult> GetBoostedFixtures([FromBody] BoostedFixturesRequestDTO request)
         //{
-        //    //var result = await _sportsbookRepository.GetActiveFixtures(request);
+        //    var result = await _sportsbookRepository.GetActiveFixtures(request);
         //    var result = new BaseResponseDTO<ActiveFixturesResponseDTO>
         //    {
         //        Result = new ActiveFixturesResponseDTO()

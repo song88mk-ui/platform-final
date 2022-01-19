@@ -21,6 +21,7 @@ namespace Platform.Shared.MessageModels
         public decimal TaxedWinnings { get; set; }
         public decimal NonTaxedPayout { get; set; }
         public bool HasLive { get; set; }
+        public string Endpoint { get; set; }
         public List<CashedOutProbabilities> Probabilities { get; set; }
     }
 

@@ -1663,6 +1663,7 @@ namespace Platform.Betting.API.Repository
                     TaxedWinnings = cashOut.TaxedWinnings,
                     NonTaxedPayout = cashOut.NonTaxedPayout,
                     HasLive = cashOut.HasLive,
+                    Endpoint = bet.Endpoint,
                     Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities
                     {
                         BetSelectionId = s.BetSelectionId,

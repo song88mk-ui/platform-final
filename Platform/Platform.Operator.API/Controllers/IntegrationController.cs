@@ -38,6 +38,20 @@ namespace Platform.Operator.API.Controllers
             }
         }
 
+        [HttpPost("v1/cashout/status")]
+        public async Task<IActionResult> CashOutResult([FromBody] CashoutResultRequestDTO request)
+        {
+            var result = await _platformRepository.CashOutResult(request);
+
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return new BadRequestObjectResult(result);
+            }
+        }
+
         [HttpPost("v1/wallet/balance")]
         public async Task<IActionResult> WalletBalance()
         {

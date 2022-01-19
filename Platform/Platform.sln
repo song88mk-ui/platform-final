@@ -44,6 +44,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.CashOutStake.Servi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.BetForwarder.Service", "Platform.BetForwarder.Service\Platform.BetForwarder.Service.csproj", "{4DD52BE5-9E33-4EC6-9440-F21B9AFE8F7E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Operator.Cashout.Service", "Platform.Operator.Cashout.Service\Platform.Operator.Cashout.Service.csproj", "{9EC34A60-5C6B-4AD6-BBE7-01F1C30E5DB5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -126,6 +128,10 @@ Global
 		{4DD52BE5-9E33-4EC6-9440-F21B9AFE8F7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4DD52BE5-9E33-4EC6-9440-F21B9AFE8F7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4DD52BE5-9E33-4EC6-9440-F21B9AFE8F7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9EC34A60-5C6B-4AD6-BBE7-01F1C30E5DB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9EC34A60-5C6B-4AD6-BBE7-01F1C30E5DB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9EC34A60-5C6B-4AD6-BBE7-01F1C30E5DB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9EC34A60-5C6B-4AD6-BBE7-01F1C30E5DB5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

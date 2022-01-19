@@ -55,6 +55,18 @@ namespace Platform.CashOut.Service.Repository
                                     BetStatus = (BetStatus)bet.BetStatusId,
                                     Message = "Cashout request has been declined"
                                 }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                                messageBroker.Publish(new OnCashOutResult
+                                {
+                                    ClientCode = bet.ClientCode.ToUpper(),
+                                    UserId = bet.UserId,
+                                    BetId = bet.BetId.ToString().ToUpper(),
+                                    BetStatus = (BetStatus)bet.BetStatusId,
+                                    CashOutStatus = CashOutStatus.Unavailable,
+                                    CashOutStake = 0,
+                                    Message = "Cashout request has been declined",
+                                    ClientId = bet.ClientId
+                                }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
                                 return;
                             }
                                 
@@ -115,9 +127,20 @@ namespace Platform.CashOut.Service.Repository
                                     BetStatus = BetStatus.Running,
                                     Message = "Cashout request has been declined"
                                 }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                                messageBroker.Publish(new OnCashOutResult
+                                {
+                                    ClientCode = bet.ClientCode.ToUpper(),
+                                    UserId = bet.UserId,
+                                    BetId = bet.BetId.ToString().ToUpper(),
+                                    BetStatus = (BetStatus)bet.BetStatusId,
+                                    CashOutStatus = CashOutStatus.Unavailable,
+                                    CashOutStake = 0,
+                                    Message = "Cashout request has been declined",
+                                    ClientId = bet.ClientId
+                                }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
                             }
                         }
-
                     }
                 }
             }
@@ -131,6 +154,18 @@ namespace Platform.CashOut.Service.Repository
                     BetStatus = BetStatus.Running,
                     Message = "Cashout request has been declined"
                 }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                messageBroker.Publish(new OnCashOutResult
+                {
+                    ClientCode = message.ClientCode.ToUpper(),
+                    UserId = message.UserId,
+                    BetId = message.BetId.ToString().ToUpper(),
+                    BetStatus = (BetStatus)bet.BetStatusId,
+                    CashOutStatus = CashOutStatus.Unavailable,
+                    CashOutStake = 0,
+                    Message = "Cashout request has been declined",
+                    ClientId = message.ClientId,
+                }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
             }
         }
 
@@ -415,6 +450,19 @@ namespace Platform.CashOut.Service.Repository
                                     Message = "Cashout request has been declined"
                                 }, "OnBetStatus", "r.bet.betstatus", correlationId);
 
+                                messageBroker.Publish(new OnCashOutResult
+                                {
+                                    ClientCode = message.ClientCode.ToUpper(),
+                                    UserId = payload.UserId,
+                                    BetId = payload.BetId.ToString().ToUpper(),
+                                    BetStatus = BetStatus.Running,
+                                    CashOutStatus = CashOutStatus.Unavailable,
+                                    CashOutStake = 0,
+                                    Message = "Cashout request has been declined",
+                                    ClientId = payload.ClientId
+                                }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+
+                                Console.WriteLine($"{DateTime.UtcNow} : Live Cashout declined - {message.BetId}");
                                 isSuccess = false;
                                 break;
                             }
@@ -431,6 +479,19 @@ namespace Platform.CashOut.Service.Repository
                                         Message = "Cashout request has been declined"
                                     }, "OnBetStatus", "r.bet.betstatus", correlationId);
 
+                                    messageBroker.Publish(new OnCashOutResult
+                                    {
+                                        ClientCode = message.ClientCode.ToUpper(),
+                                        UserId = payload.UserId,
+                                        BetId = payload.BetId.ToString().ToUpper(),
+                                        BetStatus = BetStatus.Running,
+                                        CashOutStatus = payload.CashOutStake == 0 ? CashOutStatus.Unavailable : CashOutStatus.Available,
+                                        CashOutStake = payload.CashOutStake,
+                                        Message = "Cashout request has been declined",
+                                        ClientId = message.ClientId
+                                    }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+
+                                    Console.WriteLine($"{DateTime.UtcNow} : Live Cashout declined - {message.BetId}");//
                                     isSuccess = false;
                                     break;
                                 }
@@ -454,6 +515,18 @@ namespace Platform.CashOut.Service.Repository
                             Message = "Cashout request has been declined"
                         }, "OnBetStatus", "r.bet.betstatus", correlationId);
 
+                        messageBroker.Publish(new OnCashOutResult
+                        {
+                            ClientCode = message.ClientCode.ToUpper(),
+                            UserId = message.UserId,
+                            BetId = message.BetId.ToString().ToUpper(),
+                            BetStatus = BetStatus.Running,
+                            CashOutStatus = CashOutStatus.Unavailable,
+                            CashOutStake = 0,
+                            Message = "Cashout request has been declined",
+                            ClientId = message.ClientId
+                        }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+
                         Console.WriteLine($"{DateTime.UtcNow} : Live Cashout declined - {message.BetId}");
                     }
                 }
@@ -467,6 +540,18 @@ namespace Platform.CashOut.Service.Repository
             }
             catch (Exception ex)
             {
+                messageBroker.Publish(new OnCashOutResult
+                {
+                    ClientCode = message.ClientCode.ToUpper(),
+                    UserId = message.UserId,
+                    BetId = message.BetId.ToString().ToUpper(),
+                    BetStatus = BetStatus.Running,
+                    CashOutStatus = CashOutStatus.Unavailable,
+                    CashOutStake = 0,
+                    Message = "Cashout request has been declined",
+                    ClientId = message.ClientId
+                }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+
                 Console.WriteLine($"{DateTime.UtcNow} : Error: {ex.Message} -> Payload: {JsonSerializer.Serialize(message)}");
             }
         }

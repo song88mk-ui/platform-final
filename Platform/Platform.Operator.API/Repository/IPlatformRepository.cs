@@ -8,6 +8,7 @@ namespace Platform.Operator.API.Repository
     public interface IPlatformRepository
     {
         Task<AuthenticationResponseDTO> Authenticate(string operatorToken);
+        Task<CashoutResultResponseDTO> CashOutResult(CashoutResultRequestDTO request);
         Task<OperatorBetResponseDTO> WalletBalance(string operatorToken);
         Task<OperatorBetResponseDTO> BetPlacement(OperatorBetRequestDTO request, string operatorToken, string clientId);
         Task<OperatorBetResponseDTO> BetFullCashOut(OperatorBetSettlementRequestDTO request, string clientId);

@@ -54,6 +54,23 @@ namespace Platform.Operator.API.Repository
                 };
             }
         }
+        public async Task<CashoutResultResponseDTO> CashOutResult(CashoutResultRequestDTO request)
+        {
+            try
+            {
+                return new CashoutResultResponseDTO
+                {
+                    StatusId = 1000
+                };
+            }
+            catch (Exception ex)
+            {
+                return new CashoutResultResponseDTO
+                {
+                    StatusId = 1003
+                };
+            }
+        }
         public async Task<OperatorBetResponseDTO> WalletBalance(string operatorToken)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))

@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "Platform.Operator.Cashout.Service": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

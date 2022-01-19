@@ -212,8 +212,8 @@ namespace Platform.Operator.Cashout.Service
                 switch (messageType)
                 {
                     case "OnBetCashOutResult":
-                        var onBetCashOutResult = JsonSerializer.Deserialize<OnBetSettlement>(cashout);
-                        firstChar = onBetCashOutResult.Bet.BetId.ToString().ToUpper().Substring(0, 1);
+                        var onBetCashOutResult = JsonSerializer.Deserialize<OnCashOutResult>(cashout);
+                        firstChar = onBetCashOutResult.BetId.ToUpper().Substring(0, 1);
                         break;
                 }
 

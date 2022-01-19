@@ -62,13 +62,18 @@ namespace Platform.BetStatus.Service
                         _messageBrokerExternal.ExternalPublish(onBetStatus, "OnBetStatus", $"r.bet.onbetstatus.{onBetStatus.ClientId}", correlationId);
 
                         _logger.LogInformation($"OnBetStatus: {payload}");
-
                         break;
 
                     case "OnCashOutChange":
                         var onCashOutChange = JsonSerializer.Deserialize<OnCashOutChange>(payload);
 
                         _messageBrokerExternal.ExternalPublish(onCashOutChange, "OnCashOutChange", $"r.bet.oncashoutchange.{onCashOutChange.ClientId}", correlationId);
+                        break;
+
+                    case "OnWalletChange":
+                        var onWalletChange = JsonSerializer.Deserialize<OnWalletChange>(payload);
+
+                        _messageBrokerExternal.ExternalPublish(onWalletChange, "OnWalletChange", $"r.bet.onwalletchange.{onWalletChange.ClientId}", correlationId);
                         break;
                 }
             }

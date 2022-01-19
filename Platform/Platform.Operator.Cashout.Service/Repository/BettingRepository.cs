@@ -63,12 +63,12 @@ namespace Platform.Operator.Cashout.Service.Repository
                 if (response.IsSuccessStatusCode)
                 {
                     var result = JsonSerializer.Deserialize<CashoutResultResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-                    //TODO : Log To file
+                    Console.WriteLine($"{DateTime.UtcNow} : Success {response}");
                     
                 }
                 else
                 {
-                    //TODO : Log To file
+                    Console.WriteLine($"{DateTime.UtcNow} : Failed {response}");
                 }
             }
             catch (Exception ex)

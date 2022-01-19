@@ -172,7 +172,7 @@ namespace Platform.Shared.Utility
                     _model.QueueDeclare(_queue, true, false, false, null);
 
                     foreach (var routingKey in _routingKey.Split('|'))
-                        _model.QueueBind(_queue, _exchange, routingKey.ToLower(), null);
+                        _model.QueueBind(_queue, _exchange, routingKey, null);
 
                     _model.BasicQos(0, Convert.ToUInt16(_prefetchCount), false);
                     _consumer = new EventingBasicConsumer(_model);

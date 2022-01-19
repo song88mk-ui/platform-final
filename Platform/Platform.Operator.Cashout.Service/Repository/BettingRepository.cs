@@ -42,7 +42,7 @@ namespace Platform.Operator.Cashout.Service.Repository
 
         public void ProcessCashOutResult(OnCashOutResult message, IMessageBroker messageBroker, string correlationId)
         {
-            var endpoint = _configuration["API:ClientOperatorAPI"];
+            var endpoint = message.Endpoint;
             var path = "/v1/cashout/status";
 
             try

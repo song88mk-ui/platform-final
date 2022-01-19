@@ -15,5 +15,7 @@ namespace Platform.Shared.MessageModels
         public string ClientCode { get; set; }
         public string Message { get; set; }
         public string UserId { get; set; }
+
+        public string Endpoint { get; set; }
     }
 }

@@ -829,23 +829,19 @@ namespace Platform.Sportsbook.API.Controllers
         }
 
 
-        //[HttpPost("v1/sportsbook/boostedfixtures")]
-        //public async Task<IActionResult> GetBoostedFixtures([FromBody] BoostedFixturesRequestDTO request)
-        //{
-        //    var result = await _sportsbookRepository.GetActiveFixtures(request);
-        //    var result = new BaseResponseDTO<ActiveFixturesResponseDTO>
-        //    {
-        //        Result = new ActiveFixturesResponseDTO()
-        //    };
+        [HttpPost("v1/sportsbook/boostedfixtures")]
+        public async Task<IActionResult> GetBoostedFixtures([FromBody] BoostedFixturesRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetBoostedFixtures(request);
 
-        //    switch (result.StatusCode)
-        //    {
-        //        case Shared.Enums.StatusCode.Success:
-        //            return Ok(result);
-        //        default:
-        //            return BadRequest(result);
-        //    }
-        //}
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
 
 
     }

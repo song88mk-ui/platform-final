@@ -235,6 +235,7 @@ namespace Platform.Shared.Models
         public List<int> BetStop { get; set; }
         public bool IsBetStopGlobal { get; set; }
         public int SortOrder { get; set; }
+        public bool IsBoosted { get; set; }
         public SportMarketTemplateGroup MarketTemplateGroups { get; set; }
         public List<MarketDTO> Markets { get; set; }
     }
@@ -252,6 +253,7 @@ namespace Platform.Shared.Models
         public bool IsCashout { get; set; }
         public int MarketStatusId { get; set; }
         public string MarketStatusName { get; set; }
+        public bool IsBoosted { get; set; }
         public List<SelectionDTO> Selections { get; set; }
     }
 
@@ -261,6 +263,7 @@ namespace Platform.Shared.Models
         public string SelectionId { get; set; }
         public string SelectionName { get; set; }
         public string DecimalOdds { get; set; }
+        public string BoostedOdds { get; set; }
         public int SortOrder { get; set; }
         public bool IsActive { get; set; }
         public string CorrelationId { get; set; }

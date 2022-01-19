@@ -1297,5 +1297,43 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+
+
+        [HttpGet("v1/sportsbook/boostedfixtures")]
+        public async Task<IActionResult> GetBoostedFixtures()
+        {
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
+
+            var result = await _platformRepository.GetBoostedFixtures(apiKey, clientId, languageCode, new Shared.Models.BoostedFixturesRequestDTO{ ClientId = Guid.Parse(clientId) });
+
+            var parameters = new
+            {
+            };
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "x-operator-token", string.Empty },
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/sportsbook/boostedfixtures", properties);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
     }
 }

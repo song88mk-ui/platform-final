@@ -49,5 +49,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>> AddOrUpdateTopLeagues(ClientTopLeague request);
         Task<BaseResponseDTO<SportsLookupResponseDTO>> GetClientSportsLookup(SportsLookupRequestDTO request);
         Task<BaseResponseDTO<SportGroupResponseDTO>> GetSportGroups();
+        Task<BaseResponseDTO<TWResponseDTO>> GetBoostedFixtures(BoostedFixturesRequestDTO request);
     }
 }

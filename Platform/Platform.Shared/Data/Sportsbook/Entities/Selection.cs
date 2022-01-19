@@ -48,6 +48,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public bool IsAc { get; set; }
         public int SeSoOr { get; set; }
         public string CoId { get; set; }
+        public string ClBoOd { get; set; }
         public List<SelectionTranslationMDB> SeNaTr { get; set; }
     }
 

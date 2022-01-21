@@ -4201,7 +4201,7 @@ namespace Platform.Sportsbook.API.Repository
             }
 
         }
-        private List<MarketDTO> GetMainMarkets2(int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode)
+        private List<BoostedMarketDTO> GetBoostedMarkets(int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode)
         {
             var marketTemplates = GetMainMarketTemplates(sportId);
 
@@ -4209,12 +4209,12 @@ namespace Platform.Sportsbook.API.Repository
             {
                 if (sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright)
                 {
-                    var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId)).ToList();
-                    var result = new List<MarketDTO>();
+                    var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.IsBo == true).ToList();
+                    var result = new List<BoostedMarketDTO>();
 
                     foreach (var market in filteredMarkets)
                     {
-                        result.Add(new MarketDTO
+                        result.Add(new BoostedMarketDTO
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
@@ -4224,7 +4224,7 @@ namespace Platform.Sportsbook.API.Repository
                             MarketStatusId = market.MaStId,
                             MarketStatusName = market.MaStNa,
                             IsBoosted = market.IsBo,
-                            Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
+                            Selections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)).Select(s => new BoostedSelectionDTO
                             {
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
@@ -4242,8 +4242,8 @@ namespace Platform.Sportsbook.API.Repository
                 }
                 else
                 {
-                    var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo != null && c.ClCo.Contains(clientCode)).ToList();
-                    var result = new List<MarketDTO>();
+                    var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo != null && c.ClCo.Contains(clientCode) && c.IsBo == true).ToList();
+                    var result = new List<BoostedMarketDTO>();
 
                     foreach (var market in filteredMarkets)
                     {
@@ -4259,7 +4259,7 @@ namespace Platform.Sportsbook.API.Repository
                             clientOdds = GetClientOdds(activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
                         }
 
-                        result.Add(new MarketDTO
+                        result.Add(new BoostedMarketDTO
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
@@ -4269,7 +4269,7 @@ namespace Platform.Sportsbook.API.Repository
                             MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
                             MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
                             IsBoosted = market.IsBo,
-                            Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
+                            Selections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)).Select(s => new BoostedSelectionDTO
                             {
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
@@ -4288,12 +4288,12 @@ namespace Platform.Sportsbook.API.Repository
             }
             else
             {
-                var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId)).ToList();
-                var result = new List<MarketDTO>();
+                var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.IsBo == true).ToList();
+                var result = new List<BoostedMarketDTO>();
 
                 foreach (var market in filteredMarkets)
                 {
-                    result.Add(new MarketDTO
+                    result.Add(new BoostedMarketDTO
                     {
                         MarketTemplateId = market.MaTeId,
                         MarketId = market.MaId.ToString(),
@@ -4303,7 +4303,7 @@ namespace Platform.Sportsbook.API.Repository
                         MarketStatusId = market.MaStId,
                         MarketStatusName = market.MaStNa,
                         IsBoosted = market.IsBo,
-                        Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
+                        Selections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)).Select(s => new BoostedSelectionDTO
                         {
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
@@ -4916,7 +4916,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetBoostedFixtures(BoostedFixturesRequestDTO request)
+        public async Task<BaseResponseDTO<BoostedResponseDTO>> GetBoostedFixtures(BoostedFixturesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.IsBo == true);
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
@@ -4933,11 +4933,11 @@ namespace Platform.Sportsbook.API.Repository
 
             if (fixtures.Count == 0)
             {
-                return new BaseResponseDTO<TWResponseDTO>
+                return new BaseResponseDTO<BoostedResponseDTO>
                 {
                     StatusCode = StatusCode.Success,
                     Message = StatusCode.Success.ToString(),
-                    Result = new TWResponseDTO()
+                    Result = new BoostedResponseDTO()
                 };
             }
 
@@ -4945,21 +4945,21 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active };
 
-            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && c.IsBo == true);
+            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
             var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
-            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && c.IsBo == true);
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.IsBo).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
-            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && !string.IsNullOrEmpty(c.ClBoOd));
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.ClBoOd).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(marketCount, markets, selections);
 
-            var result = fixtures.Select(s => new FixtureDTO
+            var result = fixtures.Select(s => new BoostedFixtureDTO
             {
                 SportId = s.SpId,
                 SportName = GetSportName(s.SpNa, s.SpNaTr, request.LanguageCode),
@@ -4986,15 +4986,15 @@ namespace Platform.Sportsbook.API.Repository
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 IsBoosted = s.IsBo,
-                Markets = GetMainMarkets2(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode)
+                Markets = GetBoostedMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode)
             }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
 
-            return new BaseResponseDTO<TWResponseDTO>
+            return new BaseResponseDTO<BoostedResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new TWResponseDTO
+                Result = new BoostedResponseDTO
                 {
                     Fixtures = result
                 }

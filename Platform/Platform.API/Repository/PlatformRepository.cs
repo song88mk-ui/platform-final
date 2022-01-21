@@ -2638,13 +2638,13 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.GetSportGroups();
         }
 
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetBoostedFixtures(string apiKey, string clientId, string langCode, BoostedFixturesRequestDTO request)
+        public async Task<BaseResponseDTO<BoostedResponseDTO>> GetBoostedFixtures(string apiKey, string clientId, string langCode, BoostedFixturesRequestDTO request)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
-                return new BaseResponseDTO<TWResponseDTO>
+                return new BaseResponseDTO<BoostedResponseDTO>
                 {
                     StatusCode = StatusCode.Unsupported_LanguageCode,
                     Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
@@ -2655,7 +2655,7 @@ namespace Platform.API.Repository
 
             if (!IsValidLanguageCode(languageCode))
             {
-                return new BaseResponseDTO<TWResponseDTO>
+                return new BaseResponseDTO<BoostedResponseDTO>
                 {
                     StatusCode = StatusCode.Unsupported_LanguageCode,
                     Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
@@ -2666,7 +2666,7 @@ namespace Platform.API.Repository
 
             if (clientResponse.StatusCode != StatusCode.Success)
             {
-                return new BaseResponseDTO<TWResponseDTO>
+                return new BaseResponseDTO<BoostedResponseDTO>
                 {
                     StatusCode = clientResponse.StatusCode,
                     Message = clientResponse.Message

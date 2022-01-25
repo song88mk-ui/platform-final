@@ -4918,7 +4918,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<BoostedResponseDTO>> GetBoostedFixtures(BoostedFixturesRequestDTO request)
         {
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.IsBo == true && c.ClBo.Contains(request.ClientCode));
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 1 && c.IsBo == true && c.ClBo.Contains(request.ClientCode));
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");

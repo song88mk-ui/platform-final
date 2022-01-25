@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "Platform.WebSocket.API": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

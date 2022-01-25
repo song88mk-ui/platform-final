@@ -80,6 +80,21 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
+            if(request.IsBoosted == true)
+            {
+                var boostedSelection = request.Selections.FirstOrDefault();
+                var hasExistingBetPriceBoost = _bettingContext.BetPriceBoost.AsNoTracking().Any(b => b.UserId == request.UserId && b.FixtureId == boostedSelection.FixtureId && b.MarketId == boostedSelection.MarketId);
+                
+                if(hasExistingBetPriceBoost == true)
+                {
+                    return new BaseResponseDTO<BetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Placing_Multiple_Bets_On_The_Same_Boosted_Odds_Is_Not_Allowed,
+                        Message = $"{StatusCode.Placing_Multiple_Bets_On_The_Same_Boosted_Odds_Is_Not_Allowed}".Replace('_', ' '),
+                    };
+                }
+            }
+
             var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == Guid.Parse(request.ClientId) && x.CurrencyCode == request.CurrencyCode.ToString()).FirstOrDefault();
 
             decimal minStake = 0;
@@ -548,6 +563,21 @@ namespace Platform.Betting.API.Repository
                     StatusCode = StatusCode.Error,
                     Message = $"{StatusCode.Error.ToString()} - Missing LimitId",
                 };
+            }
+
+            if (request.IsBoosted == true)
+            {
+                var boostedSelection = request.Selections.FirstOrDefault();
+                var hasExistingBetPriceBoost = _bettingContext.BetPriceBoost.AsNoTracking().Any(b => b.UserId == request.UserId && b.FixtureId == boostedSelection.FixtureId && b.MarketId == boostedSelection.MarketId);
+
+                if (hasExistingBetPriceBoost == true)
+                {
+                    return new BaseResponseDTO<BetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Placing_Multiple_Bets_On_The_Same_Boosted_Odds_Is_Not_Allowed,
+                        Message = $"{StatusCode.Placing_Multiple_Bets_On_The_Same_Boosted_Odds_Is_Not_Allowed}".Replace('_', ' '),
+                    };
+                }
             }
 
             var mtsConfigSelectionRequest = new List<MTSConfigSelectionRequestDTO>();

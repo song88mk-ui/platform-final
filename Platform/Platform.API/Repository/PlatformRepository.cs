@@ -138,6 +138,15 @@ namespace Platform.API.Repository
                 };
             }
 
+            if(request.IsBoosted && request.Selections.Count >= 2)
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Boosted_Odds_Cannot_Be_Parlayed,
+                    Message = StatusCode.Boosted_Odds_Cannot_Be_Parlayed.ToString().Replace('_', ' '),
+                };
+            }
+
             var clientResponse = await GetClient(clientId);
 
             if (clientResponse.StatusCode != StatusCode.Success)
@@ -210,6 +219,15 @@ namespace Platform.API.Repository
                 };
             }
 
+            if (request.IsBoosted && result.Result.Selections.Any(s => s.FixtureStatus >= FixtureStatus.Live))
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Boosted_Odds_Not_Allowed_Once_Fixture_Transitions_To_Live,
+                    Message = StatusCode.Boosted_Odds_Not_Allowed_Once_Fixture_Transitions_To_Live.ToString().Replace('_', ' '),
+                };
+            }
+
             var payload = new BetRequestDTO
             {
                 APIKey = apiKey,
@@ -230,6 +248,7 @@ namespace Platform.API.Repository
                 LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode) == LanguageCode.ZHT ? LanguageCode.ZH : (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode),
                 Channel = request.Channel,
                 IPAddress = request.IPAddress,
+                IsBoosted = request.IsBoosted,
                 Selections = request.Selections.Select(s => new BetSelectionRequestDTO
                 {
                     SportId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SportId).FirstOrDefault(),
@@ -412,6 +431,7 @@ namespace Platform.API.Repository
                 LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode) == LanguageCode.ZHT ? LanguageCode.ZH : (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode),
                 Channel = request.Channel,
                 IPAddress = request.IPAddress,
+                IsBoosted = request.IsBoosted,
                 Selections = request.Selections.Select(s => new BetSelectionRequestDTO
                 {
                     SportId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SportId).FirstOrDefault(),

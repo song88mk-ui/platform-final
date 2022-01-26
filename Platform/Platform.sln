@@ -46,6 +46,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.BetForwarder.Servi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Operator.Cashout.Service", "Platform.Operator.Cashout.Service\Platform.Operator.Cashout.Service.csproj", "{9EC34A60-5C6B-4AD6-BBE7-01F1C30E5DB5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.WebSocket.API", "Platform.WebSocket.API\Platform.WebSocket.API.csproj", "{E53EA40B-CFFD-4215-B283-2A38C2C680CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.WebSocket.Client", "Platform.WebSocket.Client\Platform.WebSocket.Client.csproj", "{62C442E8-78DF-4274-9B2D-5A6EC1CFD297}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -132,6 +136,14 @@ Global
 		{9EC34A60-5C6B-4AD6-BBE7-01F1C30E5DB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9EC34A60-5C6B-4AD6-BBE7-01F1C30E5DB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9EC34A60-5C6B-4AD6-BBE7-01F1C30E5DB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E53EA40B-CFFD-4215-B283-2A38C2C680CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E53EA40B-CFFD-4215-B283-2A38C2C680CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E53EA40B-CFFD-4215-B283-2A38C2C680CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E53EA40B-CFFD-4215-B283-2A38C2C680CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62C442E8-78DF-4274-9B2D-5A6EC1CFD297}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62C442E8-78DF-4274-9B2D-5A6EC1CFD297}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62C442E8-78DF-4274-9B2D-5A6EC1CFD297}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62C442E8-78DF-4274-9B2D-5A6EC1CFD297}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

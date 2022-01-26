@@ -240,7 +240,7 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/livestream")]
         public async Task<IActionResult> GetLivestream([FromQuery] LivestreamRequest request)
         {
-            var ipCountryCode = HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault();
+            var ipCountryCode = string.Empty; // HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();

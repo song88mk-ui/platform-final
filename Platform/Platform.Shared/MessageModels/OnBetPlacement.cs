@@ -11,6 +11,7 @@ namespace Platform.Shared.MessageModels
             BetSelections = new List<BetSelection>();
         }
         public Bet Bet { get; set; }
+        public bool IsBoosted { get; set; }
         public List<BetSelection> BetSelections { get; set; }
     }
 

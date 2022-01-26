@@ -33,6 +33,7 @@ namespace Platform.Placement.Servicev2.Repository
             //Console.WriteLine($"{DateTime.UtcNow} - BEG - {message.Bet.BetId.ToString().ToUpper()}");
 
             var payload = new OnBetPlacement();
+            payload.IsBoosted = message.IsBoosted;
 
             var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
                 message.BetSelections.Any(c => c.SportId > 1000) ? new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled for VS)") :

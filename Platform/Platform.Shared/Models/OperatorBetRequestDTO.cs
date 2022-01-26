@@ -44,6 +44,9 @@ namespace Platform.Shared.Models
         [JsonPropertyName("transactionDate")]
         public string TransactionDate { get; set; }
 
+        [JsonPropertyName("isBoosted")]
+        public bool IsBoosted { get; set; }
+
         [JsonPropertyName("betSelections")]
         public List<OperatorBetSelectionRequestDTO> BetSelections { get; set; }
     }

@@ -26,6 +26,7 @@ namespace Platform.Shared.Utility
         private string _consumerName = string.Empty;
         private string _routingKey = string.Empty;
         private string _prefetchCount = string.Empty;
+        private bool _isExclusive = false;
 
         private ConnectionFactory _externalConnectionFactory;
         private IConnection _externalConnection;
@@ -57,12 +58,13 @@ namespace Platform.Shared.Utility
 
         public void Connect()
         {
+            _isExclusive = string.IsNullOrEmpty(_configuration["MessageBroker:IsExclusive"]) ? false : Convert.ToBoolean(_configuration["MessageBroker:IsExclusive"]);
             _hostName = _configuration["MessageBroker:Host"];
             _userName = _configuration["MessageBroker:Username"];
             _password = _configuration["MessageBroker:Password"];
             _virtualHost = _configuration["MessageBroker:VirtualHost"];
             _exchange = _configuration["MessageBroker:Exchange"];
-            _queue = _configuration["MessageBroker:Queue"];
+            _queue = _isExclusive == true ? $"{_configuration["MessageBroker:Queue"]}.{Environment.MachineName.ToLower()}" : _configuration["MessageBroker:Queue"];
             _consumerName = _configuration["MessageBroker:Consumer"];
             _routingKey = _configuration["MessageBroker:RoutingKey"];
             _prefetchCount = string.IsNullOrEmpty(_configuration["MessageBroker:PrefetchCount"]) ? "1000" : _configuration["MessageBroker:PrefetchCount"];
@@ -89,7 +91,11 @@ namespace Platform.Shared.Utility
                 if (!string.IsNullOrEmpty(_queue))
                 {
                     _model.ExchangeDeclare(_exchange, "topic", true, false, null);
-                    _model.QueueDeclare(_queue, true, false, false, null);
+
+                    if (_isExclusive)
+                        _model.QueueDeclare(_queue, true, true, true, null);
+                    else
+                        _model.QueueDeclare(_queue, true, false, false, null);
 
                     foreach (var routingKey in _routingKey.Split('|'))
                         _model.QueueBind(_queue, _exchange, routingKey.ToLower(), null);

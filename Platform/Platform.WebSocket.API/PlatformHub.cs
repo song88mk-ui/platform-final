@@ -4,5 +4,6 @@ namespace Platform.WebSocket.API
 {
     public class PlatformHub : Hub<IPlatformEvent>
     {
+
     }
 }

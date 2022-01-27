@@ -2,7 +2,6 @@
 using Platform.Shared.Enums;
 using Platform.WebSocket.API.Messages;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Platform.WebSocket.API.Repository

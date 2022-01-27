@@ -11,7 +11,7 @@ namespace Platform.WebSocket.Client
         static async Task Main(string[] args)
         {
             var connection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:61801/platform")
+                .WithUrl("http://localhost:61801/platform")                    
                 .WithAutomaticReconnect()
                 .Build();
 

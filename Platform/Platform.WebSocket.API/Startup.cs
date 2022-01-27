@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
 using Platform.Shared.Utility;
 using Platform.WebSocket.API.Repository;
 
@@ -17,6 +18,11 @@ namespace Platform.WebSocket.API
             services.AddSingleton<IMessageBroker, MessageBroker>();
             services.AddSingleton<IWebSocketRepository, WebSocketRepository>();
             services.AddHostedService<Worker>();
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebSocket API", Version = "v1" });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -26,6 +32,12 @@ namespace Platform.WebSocket.API
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebSocket API V1");
+            });
 
             app.UseRouting();
             app.UseEndpoints(endpoints =>

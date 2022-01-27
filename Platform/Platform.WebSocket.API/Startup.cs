@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
@@ -14,6 +15,26 @@ namespace Platform.WebSocket.API
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAllOrigins",
+                    builder =>
+                    {
+                        builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+                    });
+            });
+
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+                options.KnownNetworks.Clear();
+                options.KnownProxies.Clear();
+            });
+
+            services.AddControllers();
+
             services.AddSignalR();
             services.AddSingleton<IMessageBroker, MessageBroker>();
             services.AddSingleton<IWebSocketRepository, WebSocketRepository>();
@@ -33,6 +54,8 @@ namespace Platform.WebSocket.API
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseForwardedHeaders();
+
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
@@ -40,9 +63,13 @@ namespace Platform.WebSocket.API
             });
 
             app.UseRouting();
+
+            app.UseCors("AllowAllOrigins");
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<PlatformHub>("/platform");
+                endpoints.MapControllers();
             });
         }
     }

@@ -183,14 +183,14 @@ namespace Platform.API.Repository
             var result = await _sportsbookRepository.GetBetFixture(new BetFixtureRequestDTO
             {
                 ClientCode = clientResponse.Result.ClientCode,
-                OddsChangeType = request.OddsChangeType,
+                OddsChangeType = request.IsBoosted == true ? OddsChangeType.Any : request.OddsChangeType,
                 Selections = request.Selections.Select(s => new BetFixtureSelectionRequestDTO 
                 { 
                     SportId = s.SportId,
                     FixtureId = Convert.ToInt64(s.FixtureId),
                     MarketId = Convert.ToInt64(s.MarketId),
                     SelectionId = Convert.ToInt64(s.SelectionId),
-                    Odds = s.Odds,
+                    Odds =  s.Odds,
                     CorrelationId = s.CorrelationId
                 }).ToList()
             });
@@ -267,7 +267,7 @@ namespace Platform.API.Repository
                     SelectionTemplateId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SelectionTemplateId).FirstOrDefault(),
                     SelectionId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SelectionId).FirstOrDefault(),
                     SelectionName = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SelectionName).FirstOrDefault(),
-                    Odds = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Odds).FirstOrDefault(),
+                    Odds = request.IsBoosted == true ? s.Odds : result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Odds).FirstOrDefault(),
                     FixtureStatus = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureStatus).FirstOrDefault(),
                     FixtureStartDate = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureStartDate).FirstOrDefault(),
                     BetScore = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Score).FirstOrDefault(),

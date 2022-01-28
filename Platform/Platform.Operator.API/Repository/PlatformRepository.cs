@@ -164,6 +164,14 @@ namespace Platform.Operator.API.Repository
                     {
                         scope.Complete();
 
+                        if(request.IsBoosted == true && (testConfig.StakeBonusPercent > 0 || testConfig.IsFreeBet))
+                        {
+                            return new OperatorBetResponseDTO
+                            {
+                                StatusId = 1003
+                            };
+                        }
+
                         return new OperatorBetResponseDTO
                         {
                             StatusId = 1000,

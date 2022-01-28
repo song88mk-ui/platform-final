@@ -548,25 +548,6 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                    if(message.IsBoosted && (result.StakeBonus > 0 || result.IsFreeBet == true))
-                    {
-                        AddOperatorLog(new OperatorLog
-                        {
-                            Direction = "RESPONSE",
-                            ClientId = betData.ClientId,
-                            ClientCode = betData.ClientCode,
-                            URL = $"{betData.Endpoint}{path}",
-                            BetId = betData.BetId.ToString().ToUpper(),
-                            Info = JsonSerializer.Serialize(response.ReasonPhrase),
-                            OperatorToken = betData.OperatorToken,
-                            CorrelationId = correlationId,
-                            Timestamp = DateTime.UtcNow
-                        });
-
-                        CancelBet(betData.BetId, "Boosted odds not allowed", Guid.NewGuid().ToString().ToUpper(), messageBroker);
-                        return;
-                    }
-
                     AddOperatorLog(new OperatorLog
                     {
                         Direction = "RESPONSE",

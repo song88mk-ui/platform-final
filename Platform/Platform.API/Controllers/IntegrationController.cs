@@ -21,7 +21,6 @@ namespace Platform.API.Controllers
         private readonly TelemetryClient _telemetryClient;
         public IntegrationController(IPlatformRepository platformRepository, TelemetryClient telemetryClient)
         {
-            //
             _platformRepository = platformRepository;
             _telemetryClient = telemetryClient;
         }

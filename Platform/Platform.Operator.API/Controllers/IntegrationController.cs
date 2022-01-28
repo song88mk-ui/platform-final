@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Cors;
+﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Platform.Operator.API.ActionFilters;
 using Platform.Operator.API.Repository;
 using Platform.Shared.Models;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Platform.Operator.API.Controllers
 {

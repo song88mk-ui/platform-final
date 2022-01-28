@@ -67,6 +67,10 @@
 
         Livestream_Is_Not_Available_In_Your_Region = 146,
 
+        Placing_Multiple_Bets_On_The_Same_Boosted_Odds_Is_Not_Allowed = 147,
+        Boosted_Odds_Cannot_Be_Parlayed = 148,
+        Boosted_Odds_Not_Allowed_Once_Fixture_Transitions_To_Live = 149,
+
         Error = 1000,
         Operator_Error = 1001
     }

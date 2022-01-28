@@ -80,6 +80,21 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
+            if(request.IsBoosted == true)
+            {
+                var boostedSelection = request.Selections.FirstOrDefault();
+                var hasExistingBetPriceBoost = _bettingContext.BetPriceBoost.AsNoTracking().Any(b => b.UserId == request.UserId && b.FixtureId == boostedSelection.FixtureId && b.MarketId == boostedSelection.MarketId);
+                
+                if(hasExistingBetPriceBoost == true)
+                {
+                    return new BaseResponseDTO<BetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Placing_Multiple_Bets_On_The_Same_Boosted_Odds_Is_Not_Allowed,
+                        Message = $"{StatusCode.Placing_Multiple_Bets_On_The_Same_Boosted_Odds_Is_Not_Allowed}".Replace('_', ' '),
+                    };
+                }
+            }
+
             var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == Guid.Parse(request.ClientId) && x.CurrencyCode == request.CurrencyCode.ToString()).FirstOrDefault();
 
             decimal minStake = 0;
@@ -89,6 +104,7 @@ namespace Platform.Betting.API.Repository
             decimal parlayBonus = 0;
             var odds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
             var taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
+            var priceboostConfig = !string.IsNullOrEmpty(betConfig.PriceboostConfig) ? JsonSerializer.Deserialize<PriceboostConfig>(betConfig.PriceboostConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new PriceboostConfig();
 
             if (request.Selections.Count == 1)
             {
@@ -117,6 +133,11 @@ namespace Platform.Betting.API.Repository
                     maxStake = GetMaxStakeForSingleBetWithoutMTS(defaultSportConfig.MaxStake, tierMaxStake.MaxStake, request.ExchangeRate, odds);
                     maxPerGame = tierMaxStake.MaxPerGame * request.ExchangeRate;
                     stakeFixtureLimit = defaultSportConfig.StakeLimitFixture < maxPerGame ? defaultSportConfig.StakeLimitFixture  : maxPerGame;
+                }
+
+                if(request.IsBoosted == true)
+                {
+                    maxStake = priceboostConfig.MaxStake;
                 }
 
                 if (minStake > request.Stake)
@@ -440,6 +461,17 @@ namespace Platform.Betting.API.Repository
                             CorrelationId = selection.CorrelationId,
                             DeadHeatFactor = betSelectionEntity.DeadHeatFactor
                         });
+
+                        if (request.IsBoosted == true)
+                        {
+                            _bettingContext.BetPriceBoost.Add(new BetPriceBoost()
+                            {
+                                BetId = betSelectionEntity.BetId,
+                                UserId = betSelectionEntity.UserId,
+                                FixtureId = betSelectionEntity.FixtureId,
+                                MarketId = betSelectionEntity.MarketId
+                            });
+                        }
                     }
 
                     if (request.Selections.Count == 1)
@@ -474,7 +506,8 @@ namespace Platform.Betting.API.Repository
                     var payload = new OnBetPlacement
                     {
                         Bet = betData,
-                        BetSelections = betSelectionData
+                        BetSelections = betSelectionData,
+                        IsBoosted = request.IsBoosted,
                     };
 
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
@@ -550,6 +583,21 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
+            if (request.IsBoosted == true)
+            {
+                var boostedSelection = request.Selections.FirstOrDefault();
+                var hasExistingBetPriceBoost = _bettingContext.BetPriceBoost.AsNoTracking().Any(b => b.UserId == request.UserId && b.FixtureId == boostedSelection.FixtureId && b.MarketId == boostedSelection.MarketId);
+
+                if (hasExistingBetPriceBoost == true)
+                {
+                    return new BaseResponseDTO<BetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Placing_Multiple_Bets_On_The_Same_Boosted_Odds_Is_Not_Allowed,
+                        Message = $"{StatusCode.Placing_Multiple_Bets_On_The_Same_Boosted_Odds_Is_Not_Allowed}".Replace('_', ' '),
+                    };
+                }
+            }
+
             var mtsConfigSelectionRequest = new List<MTSConfigSelectionRequestDTO>();
             foreach (var betSelection in request.Selections)
             {
@@ -590,6 +638,7 @@ namespace Platform.Betting.API.Repository
             decimal parlayBonus = 0;
             var odds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
             var taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
+            var priceboostConfig = !string.IsNullOrEmpty(betConfig.PriceboostConfig) ? JsonSerializer.Deserialize<PriceboostConfig>(betConfig.PriceboostConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new PriceboostConfig();
 
             if (request.Selections.Count == 1)
             {
@@ -618,6 +667,11 @@ namespace Platform.Betting.API.Repository
                     maxStake = GetMaxStakeForSingleBetWithMTS(defaultSportConfig.MaxStake, tierMaxStake.MaxStake, mtsMaxStake.Result.Stake, request.ExchangeRate, odds, request.CompanyShare);
                     maxPerGame = tierMaxStake.MaxPerGame * request.ExchangeRate;
                     stakeFixtureLimit = defaultSportConfig.StakeLimitFixture < maxPerGame ? defaultSportConfig.StakeLimitFixture : maxPerGame;
+                }
+
+                if (request.IsBoosted == true)
+                {
+                    maxStake = priceboostConfig.MaxStake;
                 }
 
                 if (minStake > request.Stake)
@@ -919,6 +973,18 @@ namespace Platform.Betting.API.Repository
                             CorrelationId = selection.CorrelationId,
                             DeadHeatFactor = betSelectionEntity.DeadHeatFactor
                         });
+
+                        if(request.IsBoosted == true)
+                        {
+                            _bettingContext.BetPriceBoost.Add(new BetPriceBoost()
+                            {
+                                BetId = betSelectionEntity.BetId,
+                                UserId = betSelectionEntity.UserId,
+                                FixtureId = betSelectionEntity.FixtureId,
+                                MarketId = betSelectionEntity.MarketId
+                            });
+                        }
+
                     }
 
                     //if (request.Selections.Count == 1)
@@ -953,7 +1019,8 @@ namespace Platform.Betting.API.Repository
                     var payload = new OnBetPlacement
                     {
                         Bet = betData,
-                        BetSelections = betSelectionData
+                        BetSelections = betSelectionData,
+                        IsBoosted = request.IsBoosted,
                     };
 
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
@@ -1082,6 +1149,7 @@ namespace Platform.Betting.API.Repository
             decimal maxPerGame = 0;
             decimal stakeFixtureLimit = 0;
             var odds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+            var priceboostConfig = !string.IsNullOrEmpty(betConfig.PriceboostConfig) ? JsonSerializer.Deserialize<PriceboostConfig>(betConfig.PriceboostConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new PriceboostConfig();
 
             if (request.Selections.Count == 1)
             {
@@ -1108,6 +1176,11 @@ namespace Platform.Betting.API.Repository
                     maxStake = GetMaxStakeForSingleBetWithoutMTS(defaultSportConfig.MaxStake, tierMaxStake.MaxStake, request.ExchangeRate, odds);
                     maxPerGame = tierMaxStake.MaxPerGame * request.ExchangeRate;
                     stakeFixtureLimit = defaultSportConfig.StakeLimitFixture < maxPerGame ? defaultSportConfig.StakeLimitFixture : maxPerGame;
+                }
+
+                if (request.IsBoosted == true)
+                {
+                    maxStake = priceboostConfig.MaxStake;
                 }
 
                 var stakeFixtureLimitResult = _bettingContext.StakeLimitFixture.AsNoTracking().Where(a => a.UserId == $"{request.ClientCode}-{request.UserId}" && a.FixtureId == request.Selections.FirstOrDefault().FixtureId).FirstOrDefault();
@@ -1258,6 +1331,7 @@ namespace Platform.Betting.API.Repository
 
             var betIds = transactions.Select(s => s.BetId).Distinct().ToList();
             var selections = _bettingContext.BetSelection.AsNoTracking().Where(c => betIds.Contains(c.BetId)).ToList();
+            var betPriceBoosts = _bettingContext.BetPriceBoost.AsNoTracking().Where(c => betIds.Contains(c.BetId)).ToList();
 
             ////var cashOutTasks = new List<Task<BaseResponseDTO<CashOutResponse>>>();
 
@@ -1330,7 +1404,7 @@ namespace Platform.Betting.API.Repository
             {
                 var cashOut = cashOutList.Result.Where(c => c.BetId == bet.BetId).FirstOrDefault();
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
-
+                var isBoosted = betPriceBoosts.Any(b => b.BetId == bet.BetId);
                 result.Add(new BetHistoryDTO
                 {
                     BetId = bet.BetId.ToString(),
@@ -1358,6 +1432,7 @@ namespace Platform.Betting.API.Repository
                     StakeBonus = bet.StakeBonus,
                     StakeBonusPayout = bet.StakeBonusPayout,
                     IsFreeBet = bet.IsFreeBet,
+                    IsBoosted = isBoosted,
                     Selections = filteredSelections.Select(s => new BetSelectionHistoryDTO
                     {
                         SportId = s.SportId,
@@ -1599,6 +1674,17 @@ namespace Platform.Betting.API.Repository
             var bet = _bettingContext.Bet.Find(request.BetId);
 
             if (bet == null || bet.BetStatusId != (int)BetStatus.Running)
+            {
+                return new BaseResponseDTO<BetCashOutResponseDTO>
+                {
+                    StatusCode = StatusCode.CashOut_Is_Unavailable,
+                    Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' ')
+                };
+            }
+
+            var hasExistingBetPriceBoost = _bettingContext.BetPriceBoost.AsNoTracking().Any(b => b.BetId == request.BetId);
+
+            if (hasExistingBetPriceBoost == true)
             {
                 return new BaseResponseDTO<BetCashOutResponseDTO>
                 {

@@ -239,7 +239,7 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/livestream")]
         public async Task<IActionResult> GetLivestream([FromQuery] LivestreamRequest request)
         {
-            var ipCountryCode = string.Empty; // HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault();
+            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
@@ -443,18 +443,20 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/userfavorites/fixtures")]
         public async Task<IActionResult> GetUserFavorites2()
         {
+            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetUserFavorites2(apiKey, clientId, languageCode, operatorToken);
+            var result = await _platformRepository.GetUserFavorites2(apiKey, clientId, languageCode, operatorToken, ipCountryCode);
 
             var parameters = new { };
 
             var properties = new Dictionary<string, string>
                             {
+                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -478,18 +480,20 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/userfavorites")]
         public async Task<IActionResult> GetUserFavorites()
         {
+            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetUserFavorites(apiKey, clientId, languageCode, operatorToken);
+            var result = await _platformRepository.GetUserFavorites(apiKey, clientId, languageCode, operatorToken, ipCountryCode);
 
             var parameters = new { };
 
             var properties = new Dictionary<string, string>
                             {
+                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },

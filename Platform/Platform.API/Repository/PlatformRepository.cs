@@ -1847,7 +1847,7 @@ namespace Platform.API.Repository
                 ClientCode = clientResponse.Result.ClientCode
             });
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetUserFavorites2(string apiKey, string clientId, string langCode, string operatorToken)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetUserFavorites2(string apiKey, string clientId, string langCode, string operatorToken, string ipCountryCode)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -1907,7 +1907,8 @@ namespace Platform.API.Repository
                 ClientId = clientResponse.Result.ClientId,
                 UserId = authenticationResponse.Result.UserId,
                 ClientCode = clientResponse.Result.ClientCode,
-                LanguageCode = languageCode
+                LanguageCode = languageCode,
+                IpCountryCode = ipCountryCode,
             });
         }
         public async Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(string apiKey, string clientId, string langCode, SearchResultRequest request)
@@ -1962,7 +1963,7 @@ namespace Platform.API.Repository
                 ClientCode = clientResponse.Result.ClientCode
             });
         }
-        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(string apiKey, string clientId, string langCode, string operatorToken)
+        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(string apiKey, string clientId, string langCode, string operatorToken, string ipCountryCode)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -2022,7 +2023,8 @@ namespace Platform.API.Repository
                 ClientId = clientResponse.Result.ClientId,
                 UserId = authenticationResponse.Result.UserId,
                 ClientCode = clientResponse.Result.ClientCode,
-                LanguageCode = languageCode
+                LanguageCode = languageCode,
+                IpCountryCode = ipCountryCode,
             });
         }
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> AddUserFavorites(string apiKey, string clientId, string langCode, string operatorToken, InsertDeleteUserFavoritesRequest request)

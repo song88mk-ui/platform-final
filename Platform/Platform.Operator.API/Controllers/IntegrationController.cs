@@ -67,7 +67,7 @@ namespace Platform.Operator.API.Controllers
 
         [HttpPost("v1/bet/placement")]
         public async Task<IActionResult> BetPlacement([FromBody] OperatorBetRequestDTO request)
-        {
+        {//
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 

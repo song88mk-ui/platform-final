@@ -168,7 +168,11 @@ namespace Platform.Operator.API.Repository
                         {
                             return new OperatorBetResponseDTO
                             {
-                                StatusId = 1003
+                                StatusId = 1003,
+                                Balance = result.Balance,
+                                IsFreeBet = testConfig.IsFreeBet,
+                                StakeReal = (request.Stake * (testConfig.StakeRealPercent / 100)),
+                                StakeBonus = (request.Stake * (testConfig.StakeBonusPercent / 100))
                             };
                         }
 

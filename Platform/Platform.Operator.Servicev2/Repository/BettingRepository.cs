@@ -68,7 +68,7 @@ namespace Platform.Operator.Servicev2.Repository
         //    }
 
         //}
-        private void CancelBet(Guid betId, string reason, string correlationId, IMessageBroker messageBroker)
+        private void CancelBet(Guid betId, string reason, string correlationId, IMessageBroker messageBroker, bool isFreebet, bool isBoosted)
         {
             var betData = new Bet();
             var betSelectionData = new List<BetSelection>();
@@ -90,6 +90,7 @@ namespace Platform.Operator.Servicev2.Repository
                         bet.SettlementDateOffset = bet.SettlementDate.AddHours(-4);
                         bet.TaxedStake = 0;
                         bet.TaxedWinnings = 0;
+                        bet.IsFreeBet = isFreebet;
 
                         var betEntity = context.Bet.Update(bet).Entity;
                         betData = betEntity;
@@ -187,6 +188,12 @@ namespace Platform.Operator.Servicev2.Repository
                                 CorrelationId = betSelectionEntity.CorrelationId,
                                 DeadHeatFactor = betSelectionEntity.DeadHeatFactor
                             });
+                        }
+
+                        if(isBoosted == true)
+                        {
+                            var betPriceboost = context.BetPriceBoost.Where(c => c.BetId == bet.BetId).ToList();
+                            context.BetPriceBoost.RemoveRange(betPriceboost);
                         }
 
                         ProcessStakeFixtureLimit(betSelectionData, context, betEntity);
@@ -593,7 +600,7 @@ namespace Platform.Operator.Servicev2.Repository
                         else
                             betMessage = result.Message;
 
-                        CancelBet(betData.BetId, betMessage, Guid.NewGuid().ToString().ToUpper(), messageBroker);
+                        CancelBet(betData.BetId, betMessage, Guid.NewGuid().ToString().ToUpper(), messageBroker, result.IsFreeBet, message.IsBoosted);
                     }
                     else
                     {
@@ -610,7 +617,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker);
+                        CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted);
                     }
                 }
             }
@@ -629,7 +636,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker);
+                CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted);
             }
         }
         public void ProcessBetFullCashOut(OnBetSettlement message, IMessageBroker messageBroker, string correlationId)

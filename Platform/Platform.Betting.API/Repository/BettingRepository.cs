@@ -1398,7 +1398,9 @@ namespace Platform.Betting.API.Repository
             ////    });
             ////}
 
-            var cashOutList = await _probabilityRepository.GetCashOut(transactions, selections);
+            var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => betIds.Contains(b.BetId)).Select(s => s.BetId).ToList();
+
+            var cashOutList = await _probabilityRepository.GetCashOut(transactions, selections, betBoosted);
 
             foreach (var bet in transactions)
             {
@@ -1704,7 +1706,9 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var result = await _probabilityRepository.GetCashOut(new List<Bet> { bet }, betSelections);
+            var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => b.BetId == bet.BetId).Select(s => s.BetId).ToList();
+
+            var result = await _probabilityRepository.GetCashOut(new List<Bet> { bet }, betSelections, betBoosted);
 
             var cashOut = result.Result.Where(c => c.BetId == bet.BetId && c.CashOutStatus == CashOutStatus.Available).FirstOrDefault();
 
@@ -1808,7 +1812,9 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var result = await _probabilityRepository.GetCashOut(new List<Bet> { bet }, betSelections);
+            var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => b.BetId == bet.BetId).Select(s => s.BetId).ToList();
+
+            var result = await _probabilityRepository.GetCashOut(new List<Bet> { bet }, betSelections, betBoosted);
 
             var cashOut = result.Result.Where(c => c.BetId == bet.BetId && c.CashOutStatus == CashOutStatus.Available).FirstOrDefault();
 

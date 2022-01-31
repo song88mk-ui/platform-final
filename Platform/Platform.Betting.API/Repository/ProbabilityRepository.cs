@@ -57,9 +57,10 @@ namespace Platform.Betting.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<List<CashOutDetailsReponse>>> GetCashOut(List<Bet> bets, List<BetSelection> betSelections)
+        public async Task<BaseResponseDTO<List<CashOutDetailsReponse>>> GetCashOut(List<Bet> bets, List<BetSelection> betSelections, List<Guid> boostedList)
         {
             var result = new List<CashOutDetailsReponse>();
+
             var tempSelections = betSelections.Where(c => c.FixtureTypeId == (int)FixtureType.Match && c.SportId < 1000 && c.BetSelectionStatusId == (int)BetStatus.Running).Select(s => new Tuple<long, long, long>(s.FixtureId, s.MarketId, s.SelectionId)).ToList();
             
             if (tempSelections.Count == 0)
@@ -119,6 +120,19 @@ namespace Platform.Betting.API.Repository
 
                     continue;
                 }
+
+                if (boostedList != null && boostedList.Any(b => b == bet.BetId))
+                {
+                    result.Add(new CashOutDetailsReponse
+                    {
+                        BetId = bet.BetId,
+                        CashOutStatus = CashOutStatus.Unavailable,
+                        CashOutStake = 0m
+                    });
+
+                    continue;
+                }
+
 
                 if (bet.IsFreeBet)
                 {

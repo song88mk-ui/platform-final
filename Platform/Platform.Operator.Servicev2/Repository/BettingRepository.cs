@@ -192,8 +192,11 @@ namespace Platform.Operator.Servicev2.Repository
 
                         if(isBoosted == true)
                         {
-                            var betPriceboost = context.BetPriceBoost.Where(c => c.BetId == bet.BetId).ToList();
-                            context.BetPriceBoost.RemoveRange(betPriceboost);
+                            var betPriceboost = context.BetPriceBoost.Where(c => c.BetId == bet.BetId).FirstOrDefault();
+                            betPriceboost.BetStatusId = betEntity.BetStatusId;
+                            betPriceboost.BetStatusName = betEntity.BetStatusName;
+
+                            context.BetPriceBoost.Update(betPriceboost);
                         }
 
                         ProcessStakeFixtureLimit(betSelectionData, context, betEntity);
@@ -342,6 +345,15 @@ namespace Platform.Operator.Servicev2.Repository
                                 CorrelationId = betSelectionEntity.CorrelationId,
                                 DeadHeatFactor = betSelectionEntity.DeadHeatFactor
                             });
+                        }
+
+                        if (isBoosted == true)
+                        {
+                            var betPriceboost = context.BetPriceBoost.Where(c => c.BetId == bet.BetId).FirstOrDefault();
+                            betPriceboost.BetStatusId = betEntity.BetStatusId;
+                            betPriceboost.BetStatusName = betEntity.BetStatusName;
+
+                            context.BetPriceBoost.Update(betPriceboost);
                         }
 
                         context.SaveChanges();

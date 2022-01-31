@@ -8,5 +8,7 @@ namespace Platform.Shared.Data.Betting.Entities
         public string UserId { get; set; }
         public long FixtureId { get; set; }
         public long MarketId { get; set; }
+        public int BetStatusId { get; set; }
+        public string BetStatusName { get; set; }
     }
 }

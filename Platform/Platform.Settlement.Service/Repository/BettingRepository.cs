@@ -496,6 +496,14 @@ namespace Platform.Settlement.Service.Repository
                 DeadHeatFactor = betSelectionEntity.DeadHeatFactor
             });
 
+            var betPriceboost = context.BetPriceBoost.Where(c => c.BetId == betSelectionEntity.BetId).FirstOrDefault();
+            if (betPriceboost != null)
+            {
+                betPriceboost.BetStatusId = betSelectionEntity.BetSelectionStatusId;
+                betPriceboost.BetStatusName = betSelectionEntity.BetSelectionStatusName;
+                context.BetPriceBoost.Update(betPriceboost);
+            }
+
             if (message.SelectionStatus == BetStatus.Lost)
             {
                 var bet = context.Bet.Find(betSelection.BetId);
@@ -715,6 +723,8 @@ namespace Platform.Settlement.Service.Repository
                 }
             }
 
+
+
             context.SaveChanges();
             return isPublish;
         }
@@ -791,6 +801,14 @@ namespace Platform.Settlement.Service.Repository
                 CorrelationId = betSelection.CorrelationId,
                 DeadHeatFactor = betSelectionEntity.DeadHeatFactor
             });
+
+            var betPriceboost = context.BetPriceBoost.Where(c => c.BetId == betSelectionEntity.BetId).FirstOrDefault();
+            if (betPriceboost != null)
+            {
+                betPriceboost.BetStatusId = betSelectionEntity.BetSelectionStatusId;
+                betPriceboost.BetStatusName = betSelectionEntity.BetSelectionStatusName;
+                context.BetPriceBoost.Update(betPriceboost);
+            }
 
             if (message.SelectionStatus == BetStatus.Lost)
             {
@@ -1191,6 +1209,15 @@ namespace Platform.Settlement.Service.Repository
                                     HalfLostProbability = betSelectionEntity.HalfLostProbability,
                                     CorrelationId = betSelectionEntity.CorrelationId
                                 });
+                            }
+
+                            var betPriceboost = context.BetPriceBoost.Where(c => c.BetId == bet.BetId).FirstOrDefault();
+                            if (betPriceboost != null)
+                            {
+                                betPriceboost.BetStatusId = betEntity.BetStatusId;
+                                betPriceboost.BetStatusName = betEntity.BetStatusName;
+
+                                context.BetPriceBoost.Update(betPriceboost);
                             }
 
                             ProcessStakeFixtureLimit(betSelectionData, context, betEntity);

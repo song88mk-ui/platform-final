@@ -83,7 +83,11 @@ namespace Platform.Betting.API.Repository
             if(request.IsBoosted == true)
             {
                 var boostedSelection = request.Selections.FirstOrDefault();
-                var hasExistingBetPriceBoost = _bettingContext.BetPriceBoost.AsNoTracking().Any(b => b.UserId == request.UserId && b.FixtureId == boostedSelection.FixtureId && b.MarketId == boostedSelection.MarketId);
+                var hasExistingBetPriceBoost = _bettingContext.BetPriceBoost.AsNoTracking().Any(b => b.UserId == request.UserId 
+                                                && b.FixtureId == boostedSelection.FixtureId 
+                                                && b.MarketId == boostedSelection.MarketId
+                                                && b.BetStatusId != (int)BetStatus.Rejected
+                                                && b.BetStatusId != (int)BetStatus.Cancelled);
                 
                 if(hasExistingBetPriceBoost == true)
                 {
@@ -469,7 +473,9 @@ namespace Platform.Betting.API.Repository
                                 BetId = betSelectionEntity.BetId,
                                 UserId = betSelectionEntity.UserId,
                                 FixtureId = betSelectionEntity.FixtureId,
-                                MarketId = betSelectionEntity.MarketId
+                                MarketId = betSelectionEntity.MarketId,
+                                BetStatusId = betEntity.BetStatusId,
+                                BetStatusName = betEntity.BetStatusName,
                             });
                         }
                     }
@@ -586,7 +592,11 @@ namespace Platform.Betting.API.Repository
             if (request.IsBoosted == true)
             {
                 var boostedSelection = request.Selections.FirstOrDefault();
-                var hasExistingBetPriceBoost = _bettingContext.BetPriceBoost.AsNoTracking().Any(b => b.UserId == request.UserId && b.FixtureId == boostedSelection.FixtureId && b.MarketId == boostedSelection.MarketId);
+                var hasExistingBetPriceBoost = _bettingContext.BetPriceBoost.AsNoTracking().Any(b => b.UserId == request.UserId 
+                                                && b.FixtureId == boostedSelection.FixtureId 
+                                                && b.MarketId == boostedSelection.MarketId
+                                                && b.BetStatusId != (int)BetStatus.Rejected
+                                                && b.BetStatusId != (int)BetStatus.Cancelled);
 
                 if (hasExistingBetPriceBoost == true)
                 {
@@ -981,7 +991,9 @@ namespace Platform.Betting.API.Repository
                                 BetId = betSelectionEntity.BetId,
                                 UserId = betSelectionEntity.UserId,
                                 FixtureId = betSelectionEntity.FixtureId,
-                                MarketId = betSelectionEntity.MarketId
+                                MarketId = betSelectionEntity.MarketId,
+                                BetStatusId = betEntity.BetStatusId,
+                                BetStatusName = betEntity.BetStatusName,
                             });
                         }
 
@@ -1331,8 +1343,7 @@ namespace Platform.Betting.API.Repository
 
             var betIds = transactions.Select(s => s.BetId).Distinct().ToList();
             var selections = _bettingContext.BetSelection.AsNoTracking().Where(c => betIds.Contains(c.BetId)).ToList();
-            var betPriceBoosts = _bettingContext.BetPriceBoost.AsNoTracking().Where(c => betIds.Contains(c.BetId)).ToList();
-
+            
             ////var cashOutTasks = new List<Task<BaseResponseDTO<CashOutResponse>>>();
 
             ////foreach (var bet in transactions)
@@ -1406,7 +1417,7 @@ namespace Platform.Betting.API.Repository
             {
                 var cashOut = cashOutList.Result.Where(c => c.BetId == bet.BetId).FirstOrDefault();
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
-                var isBoosted = betPriceBoosts.Any(b => b.BetId == bet.BetId);
+                var isBoosted = betBoosted.Any(b => b == bet.BetId);
                 result.Add(new BetHistoryDTO
                 {
                     BetId = bet.BetId.ToString(),
@@ -1706,9 +1717,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => b.BetId == bet.BetId).Select(s => s.BetId).ToList();
-
-            var result = await _probabilityRepository.GetCashOut(new List<Bet> { bet }, betSelections, betBoosted);
+            var result = await _probabilityRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>());
 
             var cashOut = result.Result.Where(c => c.BetId == bet.BetId && c.CashOutStatus == CashOutStatus.Available).FirstOrDefault();
 
@@ -1801,6 +1810,17 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
+            var hasExistingBetPriceBoost = _bettingContext.BetPriceBoost.AsNoTracking().Any(b => b.BetId == request.BetId);
+
+            if (hasExistingBetPriceBoost == true)
+            {
+                return new BaseResponseDTO<CashoutStateResponseDTO>
+                {
+                    StatusCode = StatusCode.CashOut_Is_Unavailable,
+                    Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' ')
+                };
+            }
+
             var betSelections = _bettingContext.BetSelection.Where(c => c.BetId == bet.BetId).AsNoTracking().ToList();
 
             if (betSelections.Count == 0)
@@ -1812,9 +1832,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => b.BetId == bet.BetId).Select(s => s.BetId).ToList();
-
-            var result = await _probabilityRepository.GetCashOut(new List<Bet> { bet }, betSelections, betBoosted);
+            var result = await _probabilityRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>());
 
             var cashOut = result.Result.Where(c => c.BetId == bet.BetId && c.CashOutStatus == CashOutStatus.Available).FirstOrDefault();
 

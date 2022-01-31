@@ -332,6 +332,15 @@ namespace Platform.Placement.Servicev2.Repository
                                     });
                                 }
 
+                                if(message.IsBoosted == true)
+                                {
+                                    var betBoosted = context.BetPriceBoost.Where(c => c.BetId == bet.BetId).FirstOrDefault();
+                                    betBoosted.BetStatusId = bet.BetStatusId;
+                                    betBoosted.BetStatusName = bet.BetStatusName;
+
+                                    context.BetPriceBoost.Update(betBoosted);
+                                }
+
                                 ProcessStakeFixtureLimit(payload, context);
 
                                 context.SaveChanges();

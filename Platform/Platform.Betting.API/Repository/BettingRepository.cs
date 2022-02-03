@@ -181,11 +181,6 @@ namespace Platform.Betting.API.Repository
                         };
                     }
                 }
-                else
-                {
-                    if (stakeFixtureLimit > maxStake)
-                        stakeFixtureLimit = maxStake;
-                }
             }
             else
             {

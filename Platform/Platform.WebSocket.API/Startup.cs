@@ -55,8 +55,6 @@ namespace Platform.WebSocket.API
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseCors("AllowAllOrigins");
-
             app.UseForwardedHeaders();
 
             app.UseSwagger();
@@ -66,6 +64,8 @@ namespace Platform.WebSocket.API
             });
 
             app.UseRouting();
+
+            app.UseCors("AllowAllOrigins");
 
             app.UseEndpoints(endpoints =>
             {

@@ -16,25 +16,6 @@ namespace Platform.WebSocket.API
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<CookiePolicyOptions>(options =>
-            {
-                options.CheckConsentNeeded = context => true;
-                options.MinimumSameSitePolicy = SameSiteMode.None;
-            });
-
-            services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAllOrigins",
-                    builder =>
-                    {
-                        builder
-                       .AllowAnyOrigin()
-                       .AllowAnyMethod()
-                       .AllowAnyHeader()
-                       .AllowCredentials();
-                    });
-            });
-
             services.Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -45,6 +26,20 @@ namespace Platform.WebSocket.API
             services.AddControllers();
 
             services.AddSignalR();
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAllOrigins",
+                    builder =>
+                    {
+                        builder
+                           .SetIsOriginAllowed(origin => true)
+                           .AllowAnyHeader()
+                           .AllowAnyMethod()                           
+                           .AllowCredentials();
+                    });
+            });
+
             services.AddSingleton<IMessageBroker, MessageBroker>();
             services.AddSingleton<IWebSocketRepository, WebSocketRepository>();
             services.AddHostedService<Worker>();

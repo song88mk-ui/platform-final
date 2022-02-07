@@ -22,6 +22,7 @@ namespace Platform.WebSocket.API
                     {
                         builder.AllowAnyOrigin()
                        .AllowAnyMethod()
+                       .SetIsOriginAllowed(_ => true)
                        .AllowAnyHeader();
                     });
             });

@@ -1341,6 +1341,36 @@ namespace Platform.Sportsbook.API.Repository
         {
             var result = new List<UserFavoriteDTO>();
 
+            if (request.UserFavoriteHierarchy == UserFavoriteHierarchy.League)
+            {
+                var leagueIdDataTypeTest = int.TryParse(request.Id, out int tempLeagueId);
+
+                if (leagueIdDataTypeTest == false)
+                {
+                    return new BaseResponseDTO<UserFavoriteResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = "LeagueId is invalid",
+                        Result = new UserFavoriteResponseDTO()
+                    };
+                }
+            }
+
+            if (request.UserFavoriteHierarchy == UserFavoriteHierarchy.Fixture)
+            {
+                var fixtureIdDataTypeTest = long.TryParse(request.Id, out long tempFixtureId);
+
+                if (fixtureIdDataTypeTest == false)
+                {
+                    return new BaseResponseDTO<UserFavoriteResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = "FixtureId is invalid",
+                        Result = new UserFavoriteResponseDTO()
+                    };
+                }
+            }
+
             var favorite = await _sportsbookContext.UserFavorite.FindAsync($"{request.ClientCode}-{request.UserId}", request.Id);
 
             if (favorite == null)

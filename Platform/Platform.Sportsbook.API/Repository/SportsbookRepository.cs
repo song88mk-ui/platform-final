@@ -1358,9 +1358,9 @@ namespace Platform.Sportsbook.API.Repository
 
             if (request.UserFavoriteHierarchy == UserFavoriteHierarchy.Fixture)
             {
-                var fixtureIdDataTypeTest = long.TryParse(request.Id, out long tempFixtureId);
+                var fixtureIdDataTypeTest = int.TryParse(request.Id, out int tempFixtureId);
 
-                if (fixtureIdDataTypeTest == false)
+                if (fixtureIdDataTypeTest == true)
                 {
                     return new BaseResponseDTO<UserFavoriteResponseDTO>
                     {

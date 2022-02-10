@@ -48,7 +48,9 @@ namespace Platform.CashOutStake.Servicev2.Repository
             using var scope = _serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<BettingContext>();
 
-            var bets = context.Bet.AsNoTracking().Where(c => c.BetStatusId == (int)BetStatus.Running && c.IsFreeBet == false).Select(s => new BetMemory
+            var betPriceBoosts = context.BetPriceBoost.AsNoTracking().Where(c => c.BetStatusId == (int)BetStatus.Running).Select(s => s.BetId).ToList();
+
+            var bets = context.Bet.AsNoTracking().Where(c => !betPriceBoosts.Contains(c.BetId) && c.BetStatusId == (int)BetStatus.Running && c.IsFreeBet == false).Select(s => new BetMemory
             {
                 BetId = s.BetId,
                 ClientId = s.ClientId,

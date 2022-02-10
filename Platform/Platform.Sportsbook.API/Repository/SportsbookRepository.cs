@@ -1078,7 +1078,7 @@ namespace Platform.Sportsbook.API.Repository
                     VoidProbability = result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.VoPr).FirstOrDefault(),
                     HalfWonProbability = result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.HaWoPr).FirstOrDefault(),
                     HalfLostProbability = result.Item3.Where(c => c.SeId == selection.SelectionId).Select(ss => ss.HaLoPr).FirstOrDefault(),
-                    BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, selection, result)
+                    BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, selection, result, request.ClientCode, request.IsBoosted)
                 });
             }
 
@@ -4574,13 +4574,20 @@ namespace Platform.Sportsbook.API.Repository
             return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
         }
 
-        private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus> result)
+        private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus> result, string clientCode, bool isBoosted)
         {
             var selection = result.Item3.Where(c => c.SeId == current.SelectionId).FirstOrDefault();
             var fixture = result.Item1.Where(c => c.FiId == selection.FiId).FirstOrDefault();
             var market = result.Item2.Where(c => c.MaId == selection.MaId).FirstOrDefault();
 
             var bettingStatus = result.Item4;
+
+            if(isBoosted)
+            {
+                string boostedOddsStr = GetClientBoostedOdds(selection.ClBoOd, clientCode);
+                if (!string.IsNullOrEmpty(boostedOddsStr))
+                    selection.Od = Convert.ToDecimal(boostedOddsStr);
+            }
 
             if ((fixture.SpId == 1001 || fixture.SpId == 1002 || fixture.SpId == 1055 || fixture.SpId == 1058) && fixture.FiStDa < DateTime.UtcNow)
             {

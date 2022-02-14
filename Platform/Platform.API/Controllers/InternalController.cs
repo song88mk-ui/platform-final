@@ -233,6 +233,20 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpPost("v1/bet/manualsettlement")]
+        public async Task<IActionResult> ManualSettlement([FromBody] ManualBetSettlementRequest request)
+        {
+            var result = await _platformRepository.CancelBets(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         /// <summary>
         /// Update parlay bonus of a client.
         /// </summary>

@@ -1677,6 +1677,106 @@ namespace Platform.Betting.API.Repository
                 };
             }
         }
+
+        public async Task<BaseResponseDTO<BetModifyResponseDTO>> ManualSettlement(ManualBetSettlementRequest request)
+        {
+            BetModifyResponseDTO response = new BetModifyResponseDTO()
+            {
+                Data = request.BetData.Select(m => new BetModifyResponse
+                {
+                    BetId = m.BetId,
+                    IsSuccess = true
+                }).ToList(),
+                IsSuccess = false
+            };
+
+            try
+            {
+                var betIds = response.Data.Select(m => Guid.Parse(m.BetId)).ToList();
+                var bets = _bettingContext.Bet.Where(x => betIds.Contains(x.BetId)).ToList();
+                List<BetManualSettlement> betList = new List<BetManualSettlement>();
+
+                #region Validate Request
+
+                var statuses = new List<int> { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfLost, (int)BetStatus.HalfWon, (int)BetStatus.Void };
+
+                foreach (var data in response.Data)
+                {
+                    var requestData = request.BetData.FirstOrDefault(b => b.BetId == data.BetId);
+                    if (requestData == null)
+                        continue;
+
+                    var betId = Guid.Parse(data.BetId);
+                    var bet = bets.SingleOrDefault(m => m.BetId == betId);
+
+                    betList.Add(new BetManualSettlement
+                    {
+                        BetId = betId,
+                        Reason = requestData.Reason,
+                        NewStatus = requestData.NewStatus,
+                    });
+
+                    data.OldBetStatus = bet != null ? bet.BetStatusName : string.Empty;
+
+                    if (bet == null)
+                    {
+                        data.IsSuccess = false;
+                        data.Message = "Bet ID not found";
+                    }
+                    else if (!statuses.Contains(bet.BetStatusId))
+                    {
+                        data.IsSuccess = false;
+                        data.Message = "Bet settlement not allowed";
+                    }
+                }
+
+                // check if there are any bets that failed the validation
+                // if yes, then don't proceed to the next step
+                if (response.Data.Count(m => !m.IsSuccess) > 0)
+                    return new BaseResponseDTO<BetModifyResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = StatusCode.Error.ToString(),
+                        Result = response
+                    };
+
+                #endregion                
+
+                var payload = new OnBOBetManualSettlement
+                {
+                    Bets = betList
+                };
+
+                _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                {
+                    Payload = JsonSerializer.Serialize(payload),
+                    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                    MessageType = "OnBetBackOfficeManualSettlement",
+                    RoutingKey = "r.bet.settlement"
+                });
+
+                bool success = response.Data.Any(m => m.IsSuccess);
+                response.IsSuccess = success;
+                return new BaseResponseDTO<BetModifyResponseDTO>
+                {
+                    StatusCode = success ? StatusCode.Success : StatusCode.Error,
+                    Message = success ? String.Empty : StatusCode.Error.ToString(),
+                    Result = response
+                };
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return new BaseResponseDTO<BetModifyResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = ex.Message,
+                    Result = response
+                };
+            }
+        }
+
         public async Task<BaseResponseDTO<BetCashOutResponseDTO>> CashOutBet(CashoutBetRequestDTO request)
         {
             var bet = _bettingContext.Bet.Find(request.BetId);

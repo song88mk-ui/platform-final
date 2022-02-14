@@ -2617,6 +2617,11 @@ namespace Platform.API.Repository
             return await _bettingRepository.CancelBets(request);
         }
 
+        public async Task<BaseResponseDTO<BetModifyResponseDTO>> ManualSettlement(ManualBetSettlementRequest request)
+        {
+            return await _bettingRepository.ManualSettlement(request);
+        }
+
         public async Task<BaseResponseDTO<ParlayBonusResponseDTO>> GetClientParlayBonus(GetParlayBonusRequestDTO request)
         {
             var clientResult = await _platformContext.Client.Where(c => c.ClientIdRef == request.ClientIdRef).FirstOrDefaultAsync();

@@ -89,7 +89,7 @@ namespace Platform.Betting.API.Controllers
         [HttpPost("v1/bet/manualsettlement")]
         public async Task<IActionResult> ManualSettlement([FromBody] ManualBetSettlementRequest request)
         {
-            var result = await _bettingRepository.CancelBets(request);
+            var result = await _bettingRepository.ManualSettlement(request);
 
             switch (result.StatusCode)
             {

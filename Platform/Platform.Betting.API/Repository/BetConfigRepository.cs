@@ -158,7 +158,9 @@ namespace Platform.Betting.API.Repository
 
                     var result = _bettingContext.BetConfig.Where(b => b.ClientId == payload.ClientId);
                     var parlayAuditMax = 50;
-                    var parlayConfigMax = payload.ParlayBonusConfig.Select(s => s.SelectionCount).Max();
+                    var parlayConfigMax = 0;
+                    if(payload.ParlayBonusConfig.Any())
+                        parlayConfigMax = payload.ParlayBonusConfig.Select(s => s.SelectionCount).Max();
 
                     if (result != null && result.Any())
                     {

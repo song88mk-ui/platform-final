@@ -92,7 +92,6 @@ namespace Platform.WebSocket.API.Repository
             {
                 SpId = onBetStopFixture.SportId,
                 FiId = onBetStopFixture.FixtureId.ToString(),
-                PrFiId = onBetStopFixture.ProviderFixtureId,
                 IsBeSt = onBetStopFixture.IsBetStop,
                 MaTeGr = onBetStopFixture.MarketTemplateGroups,
                 CoId = onBetStopFixture.CorrelationId

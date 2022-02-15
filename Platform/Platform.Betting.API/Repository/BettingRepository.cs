@@ -1697,7 +1697,7 @@ namespace Platform.Betting.API.Repository
                 List<BetManualSettlement> betList = new List<BetManualSettlement>();
 
                 #region Validate Request
-
+                var rejectedStatus = new List<int> { (int)BetStatus.Rejected, (int)BetStatus.Cancelled, (int)BetStatus.CashedOut };
                 var statuses = new List<int> { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfLost, (int)BetStatus.HalfWon, (int)BetStatus.Void };
 
                 foreach (var data in response.Data)
@@ -1722,6 +1722,12 @@ namespace Platform.Betting.API.Repository
                     {
                         data.IsSuccess = false;
                         data.Message = "Bet ID not found";
+                    }
+                    else if (rejectedStatus.Contains(bet.BetStatusId))
+                    {
+                        // check if status is not on the list
+                        response.IsSuccess = false;
+                        response.Message = "Rejected, Cancelled and Cashout bets cannot be resettled!";
                     }
                     else if (!statuses.Contains(bet.BetStatusId))
                     {

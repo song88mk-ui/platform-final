@@ -94,7 +94,6 @@ namespace Platform.WebSocket.API.Repository
                 FiId = onBetStopFixture.FixtureId.ToString(),
                 IsBeSt = onBetStopFixture.IsBetStop,
                 MaTeGr = onBetStopFixture.MarketTemplateGroups,
-                CoId = onBetStopFixture.CorrelationId
             };
 
             await hubContext.Clients.All.OnBetStopFixture(payload);
@@ -103,8 +102,7 @@ namespace Platform.WebSocket.API.Repository
         {
             var payload = new OutgoingBetStopGlobal
             {
-                IsBeSt = onBetStopGlobal.IsBetStop,
-                CoId = onBetStopGlobal.CorrelationId
+                IsBeSt = onBetStopGlobal.IsBetStop
             };
 
             await hubContext.Clients.All.OnBetStopGlobal(payload);

@@ -86,6 +86,30 @@ namespace Platform.WebSocket.API.Repository
 
             await hubContext.Clients.All.OnOddsChange(payload);
         }
+        public async Task PublishBetStopFixture(IHubContext<PlatformHub, IPlatformEvent> hubContext, IncomingBetStopFixture onBetStopFixture)
+        {
+            var payload = new OutgoingBetStopFixture
+            {
+                SpId = onBetStopFixture.SportId,
+                FiId = onBetStopFixture.FixtureId.ToString(),
+                PrFiId = onBetStopFixture.ProviderFixtureId,
+                IsBeSt = onBetStopFixture.IsBetStop,
+                MaTeGr = onBetStopFixture.MarketTemplateGroups,
+                CoId = onBetStopFixture.CorrelationId
+            };
+
+            await hubContext.Clients.All.OnBetStopFixture(payload);
+        }
+        public async Task PublishBetStopGlobal(IHubContext<PlatformHub, IPlatformEvent> hubContext, IncomingBetStopGlobal onBetStopGlobal)
+        {
+            var payload = new OutgoingBetStopGlobal
+            {
+                IsBeSt = onBetStopGlobal.IsBetStop,
+                CoId = onBetStopGlobal.CorrelationId
+            };
+
+            await hubContext.Clients.All.OnBetStopGlobal(payload);
+        }
         private string GetHomeName(string name, FixtureType fixtureType)
         {
             return fixtureType == FixtureType.Match ? name.Split(" vs. ").First().Trim() : string.Empty;

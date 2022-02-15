@@ -59,6 +59,16 @@ namespace Platform.WebSocket.API
                         var onOddsChange = JsonSerializer.Deserialize<IncomingOddsChange>(payload);
                         await _webSocketRepository.PublishOddsChange(_platformHub, onOddsChange);
                         break;
+
+                    case "OnBetStopFixture":
+                        var onBetStopFixture = JsonSerializer.Deserialize<IncomingBetStopFixture>(payload);
+                        await _webSocketRepository.PublishBetStopFixture(_platformHub, onBetStopFixture);
+                        break;
+
+                    case "OnBetStopGlobal":
+                        var onBetStopGlobal = JsonSerializer.Deserialize<IncomingBetStopGlobal>(payload);
+                        await _webSocketRepository.PublishBetStopGlobal(_platformHub, onBetStopGlobal);
+                        break;
                 }
             }
             catch (Exception)

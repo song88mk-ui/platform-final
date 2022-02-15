@@ -1782,6 +1782,133 @@ namespace Platform.Betting.API.Repository
                 };
             }
         }
+        //public async Task<BaseResponseDTO<ManualBetDetailsResponseDTO>> GetManualBetDetails(ManualBetDetailsRequest request)
+        //{
+        //    request.Page = request.Page <= 0 ? 1 : request.Page;
+        //    request.PageSize = request.PageSize <= 0 ? 10 : request.PageSize;
+        //    request.PageSize = request.PageSize > 50 ? 50 : request.PageSize;
+
+        //    var skip = (request.Page - 1) * request.PageSize;
+        //    double rowCount = 0;
+        //    var result = new List<BetDetailsDTO>();
+            
+        //    var statusIds = string.IsNullOrEmpty(request.StatusIds) ? new List<string>() : request.StatusIds.Split(',').ToList();
+
+
+        //    var rawAll = _bettingContext.Bet.AsNoTracking().Where(c => request.BetIds.Contains(c.BetId.ToString()) && c.IsResettled == true && c.BetDate.Date >= request.FromDate && c.BetDate.Date <= request.ToDate);
+
+        //    rowCount = rawAll.Count();
+        //    winLoss = rawAll.Sum(c => c.WinLoss);
+        //    transactions = rawAll.OrderByDescending(c => c.BetDateOffset).Skip(skip).Take(request.PageSize).ToList();
+
+        //    if (transactions.Count == 0)
+        //    {
+        //        return new BaseResponseDTO<ManualBetDetailsResponseDTO>
+        //        {
+        //            StatusCode = StatusCode.Success,
+        //            Message = StatusCode.Success.ToString(),
+        //            Result = new ManualBetDetailsResponseDTO
+        //            {
+        //                CurrentPage = 1,
+        //                PageCount = 1,
+        //                PageSize = 1,
+        //                RowCount = 0,
+        //                Bets = new List<BetDetailsDTO>()
+        //            }
+        //        };
+        //    }
+
+        //    var betIds = transactions.Select(s => s.BetId).Distinct().ToList();
+        //    var selections = _bettingContext.BetSelection.AsNoTracking().Where(c => betIds.Contains(c.BetId)).ToList();
+
+
+        //    var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => betIds.Contains(b.BetId)).Select(s => s.BetId).ToList();
+
+        //    var cashOutList = await _probabilityRepository.GetCashOut(transactions, selections, betBoosted);
+
+        //    foreach (var bet in transactions)
+        //    {
+        //        var cashOut = cashOutList.Result.Where(c => c.BetId == bet.BetId).FirstOrDefault();
+        //        var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
+        //        var isBoosted = betBoosted.Any(b => b == bet.BetId);
+        //        result.Add(new BetHistoryDTO
+        //        {
+        //            BetId = bet.BetId.ToString(),
+        //            Stake = bet.Stake,
+        //            Odds = bet.Odds,
+        //            Payout = bet.Payout,
+        //            WinLoss = bet.WinLoss,
+        //            BetStatusId = bet.BetStatusId,
+        //            BetStatusName = bet.BetStatusName,
+        //            TransactionDate = bet.BetDate,
+        //            Commission = 0,
+        //            CurrencyCode = bet.CurrencyCode,
+        //            OddsType = bet.OddsTypeName,
+        //            CashOutStake = cashOut.CashOutStake,
+        //            CashOutStatusId = (int)cashOut.CashOutStatus,
+        //            CashOutStatusName = cashOut.CashOutStatus.ToString(),
+        //            StakeTax = bet.StakeTax,
+        //            WinningsTax = bet.WinningsTax,
+        //            TaxedStake = bet.TaxedStake,
+        //            TaxedWinnings = bet.TaxedWinnings,
+        //            ParlayBonus = bet.ParlayBonus,
+        //            ParlayBonusWinnings = bet.ParlayBonusWinnings,
+        //            StakeReal = bet.StakeReal,
+        //            StakeRealPayout = bet.StakeRealPayout,
+        //            StakeBonus = bet.StakeBonus,
+        //            StakeBonusPayout = bet.StakeBonusPayout,
+        //            IsFreeBet = bet.IsFreeBet,
+        //            IsBoosted = isBoosted,
+        //            Selections = filteredSelections.Select(s => new BetSelectionHistoryDTO
+        //            {
+        //                SportId = s.SportId,
+        //                SportName = s.SportName,
+        //                LeagueId = s.LeagueId,
+        //                LeagueName = s.LeagueName,
+        //                FixtureId = s.FixtureId.ToString(),
+        //                FixtureName = s.FixtureName,
+        //                MarketId = s.MarketId.ToString(),
+        //                MarketName = s.MarketName,
+        //                Line = s.Line,
+        //                SelectionId = s.SelectionId.ToString(),
+        //                SelectionName = s.SelectionName,
+        //                Odds = s.Odds,
+        //                BetScore = s.BetScore,
+        //                SettlementScore = s.SettlementScore,
+        //                BetSelectionId = s.BetSelectionId.ToString(),
+        //                FixtureStartDate = s.FixtureStartDate,
+        //                FixtureStatusId = s.FixtureStatusId,
+        //                FixtureStatusName = s.FixtureStatusName,
+        //                MarketTemplateId = s.MarketTemplateId,
+        //                SegmentId = s.SegmentId,
+        //                SegmentName = s.SegmentName,
+        //                SelectionTemplateId = s.SelectionTemplateId,
+        //                BetSelectionStatusId = s.BetSelectionStatusId,
+        //                BetSelectionStatusName = s.BetSelectionStatusName,
+        //                Probability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.Probability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.Probability).FirstOrDefault(),
+        //                WonProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.WonProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.WonProbability).FirstOrDefault(),
+        //                LostProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.LostProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.LostProbability).FirstOrDefault(),
+        //                VoidProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.VoidProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.VoidProbability).FirstOrDefault(),
+        //                HalfWonProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfWonProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfWonProbability).FirstOrDefault(),
+        //                HalfLostProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault()
+        //            }).ToList()
+        //        });
+        //    }
+
+        //    return new BaseResponseDTO<ManualBetDetailsResponseDTO>
+        //    {
+        //        StatusCode = StatusCode.Success,
+        //        Message = StatusCode.Success.ToString(),
+        //        Result = new ManualBetDetailsResponseDTO
+        //        {
+        //            CurrentPage = request.Page,
+        //            PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
+        //            PageSize = request.PageSize,
+        //            RowCount = Convert.ToInt32(rowCount),
+        //            Bets = result.OrderByDescending(o => o.TransactionDate).ToList()
+        //        }
+        //    };
+        //}
 
         public async Task<BaseResponseDTO<BetCashOutResponseDTO>> CashOutBet(CashoutBetRequestDTO request)
         {

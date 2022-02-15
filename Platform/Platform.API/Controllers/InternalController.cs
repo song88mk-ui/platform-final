@@ -247,6 +247,21 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpPost("v1/bet/details")]
+        public async Task<IActionResult> GetManualBetDetails([FromBody] ManualBetDetailsRequest request)
+        {
+            var result = await _platformRepository.GetManualBetDetails(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+
         /// <summary>
         /// Update parlay bonus of a client.
         /// </summary>

@@ -2622,6 +2622,11 @@ namespace Platform.API.Repository
             return await _bettingRepository.ManualSettlement(request);
         }
 
+        public async Task<BaseResponseDTO<ManualBetDetailsResponseDTO>> GetManualBetDetails(ManualBetDetailsRequest request)
+        {
+            return await _bettingRepository.GetManualBetDetails(request);
+        }
+
         public async Task<BaseResponseDTO<ParlayBonusResponseDTO>> GetClientParlayBonus(GetParlayBonusRequestDTO request)
         {
             var clientResult = await _platformContext.Client.Where(c => c.ClientIdRef == request.ClientIdRef).FirstOrDefaultAsync();

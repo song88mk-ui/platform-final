@@ -5939,10 +5939,10 @@ namespace Platform.Sportsbook.API.Repository
 
         private bool IsOEEnable(string clientCode)
         {
-            if (string.IsNullOrEmpty(clientCode))
-                return false;
-            return _configuration["Custom:ClientCodes"].Contains(clientCode) ? true : false;
-
+            return true;
+            //if (string.IsNullOrEmpty(clientCode))
+            //    return false;
+            //return _configuration["Custom:ClientCodes"].Contains(clientCode) ? true : false;
         }
 
         //private decimal GetClientOdds(IEnumerable<SelectionFilter> selections, SelectionFilter currentSelection, string clientMarketConfig, string clientCode)

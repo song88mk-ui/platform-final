@@ -250,9 +250,9 @@ namespace Platform.Settlement.Service.Repository
                             }
 
                             if (filteredSelection.IsSettled == false)
-                                isPublish = SettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection, false);
+                                isPublish = SettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection, false, string.Empty);
                             else
-                                isPublish = ResettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection, false);
+                                isPublish = ResettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection, false, string.Empty);
 
                             scope.Complete();
 
@@ -386,7 +386,7 @@ namespace Platform.Settlement.Service.Repository
                                 continue;
                             }
 
-                            isPublish = SettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection, false);
+                            isPublish = SettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection, false, string.Empty);
 
                             scope.Complete();
 
@@ -440,7 +440,7 @@ namespace Platform.Settlement.Service.Repository
             return trueStake - taxedStake;
         }
 
-        private bool SettleBet(OnUOFBetSettlement message, BetSelection betSelection, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, BetSelection filteredSelection, bool isManualSettle)
+        private bool SettleBet(OnUOFBetSettlement message, BetSelection betSelection, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, BetSelection filteredSelection, bool isManualSettle, string reason)
         {
             if (filteredSelection.BetSelectionStatusId != (int)BetStatus.Running)
                 return false;
@@ -535,7 +535,10 @@ namespace Platform.Settlement.Service.Repository
                     bet.StakeBonusPayout = 0;
                     
                     if (isManualSettle)
+                    {
                         bet.IsResettled = true;
+                        bet.Reason = reason;
+                    }
 
                     var betEntity = context.Bet.Update(bet).Entity;
 
@@ -670,7 +673,10 @@ namespace Platform.Settlement.Service.Repository
                         bet.StakeBonusPayout = payout * stakeBonusPayoutPercentage;
 
                         if (isManualSettle)
+                        {
                             bet.IsResettled = true;
+                            bet.Reason = reason;
+                        }
 
                         var betEntity = context.Bet.Update(bet).Entity;
 
@@ -749,7 +755,7 @@ namespace Platform.Settlement.Service.Repository
             }
         }
 
-        private bool ResettleBet(OnUOFBetSettlement message, BetSelection betSelection, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, BetSelection filteredSelection, bool isManualSettle)
+        private bool ResettleBet(OnUOFBetSettlement message, BetSelection betSelection, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, BetSelection filteredSelection, bool isManualSettle, string reason)
         {
             if (filteredSelection.BetSelectionStatusId == (int)message.SelectionStatus || filteredSelection.BetSelectionStatusId == (int)BetStatus.Waiting || filteredSelection.BetSelectionStatusId == (int)BetStatus.Cancelled || filteredSelection.BetSelectionStatusId == (int)BetStatus.Rejected || filteredSelection.BetSelectionStatusId == (int)BetStatus.CashedOut)
                 return false;
@@ -761,7 +767,8 @@ namespace Platform.Settlement.Service.Repository
 
             filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;
             filteredSelection.BetSelectionStatusName = message.SelectionStatus.ToString();
-            filteredSelection.SettlementScore = message.SettlementScore;
+            if(isManualSettle == false)
+                filteredSelection.SettlementScore = message.SettlementScore;
             filteredSelection.IsSettled = true;
             filteredSelection.IsResettled = true;
             filteredSelection.DeadHeatFactor = message.DeadHeatFactor;
@@ -849,7 +856,10 @@ namespace Platform.Settlement.Service.Repository
                     bet.StakeBonusPayout = 0;
 
                     if (isManualSettle)
+                    {
                         bet.IsResettled = true;
+                        bet.Reason = reason;
+                    }
 
                     var betEntity = context.Bet.Update(bet).Entity;
 
@@ -982,7 +992,10 @@ namespace Platform.Settlement.Service.Repository
                         bet.StakeBonusPayout = payout * stakeBonusPayoutPercentage;
 
                         if (isManualSettle)
+                        {
                             bet.IsResettled = true;
+                            bet.Reason = reason;
+                        }
 
                         var betEntity = context.Bet.Update(bet).Entity;
 
@@ -1299,9 +1312,9 @@ namespace Platform.Settlement.Service.Repository
                             };
 
                             if (filteredSelection.IsSettled == false)
-                                isPublish = SettleBet(request, filteredSelection, isPublish, payload, settledDate, context, selections, filteredSelection, true);
+                                isPublish = SettleBet(request, filteredSelection, isPublish, payload, settledDate, context, selections, filteredSelection, true, betItem.Reason);
                             else
-                                isPublish = ResettleBet(request, filteredSelection, isPublish, payload, settledDate, context, selections, filteredSelection, true);
+                                isPublish = ResettleBet(request, filteredSelection, isPublish, payload, settledDate, context, selections, filteredSelection, true, betItem.Reason);
 
                             scope.Complete();
 

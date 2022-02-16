@@ -103,7 +103,7 @@ namespace Platform.Betting.API.Controllers
         [HttpPost("v1/bet/details")]
         public async Task<IActionResult> GetManualBetDetails([FromBody] ManualBetDetailsRequest request)
         {
-            var result = await _bettingRepository.ManualSettlement(request);
+            var result = await _bettingRepository.GetManualBetDetails(request);
 
             switch (result.StatusCode)
             {

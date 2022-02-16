@@ -15,8 +15,7 @@ namespace Platform.Shared.Models
         public int PageSize { get; set; }
         public string ClientIdRefs { get; set; }
         public string SportIds { get; set; }
-        public string StatusIds { get; set; }
-        public string Accounts { get; set; }
+        public string PlayerNames { get; set; }
         public List<string> BetIds { get; set; }
     }
 

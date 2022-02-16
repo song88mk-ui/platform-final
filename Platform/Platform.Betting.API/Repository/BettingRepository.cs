@@ -1726,8 +1726,8 @@ namespace Platform.Betting.API.Repository
                     else if (rejectedStatus.Contains(bet.BetStatusId))
                     {
                         // check if status is not on the list
-                        response.IsSuccess = false;
-                        response.Message = "Rejected, Cancelled and Cashout bets cannot be resettled!";
+                        data.IsSuccess = false;
+                        data.Message = "Rejected, Cancelled and Cashout bets cannot be resettled!";
                     }
                     else if (!statuses.Contains(bet.BetStatusId))
                     {

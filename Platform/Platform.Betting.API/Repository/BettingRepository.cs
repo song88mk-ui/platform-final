@@ -1795,7 +1795,7 @@ namespace Platform.Betting.API.Repository
             var sportIds = string.IsNullOrEmpty(request.SportIds) ? new List<string>() : request.SportIds.Split(',').ToList();
             var statusIds = string.IsNullOrEmpty(request.StatusIds) ? new List<string>() : request.StatusIds.Split(',').ToList();
             var accounts = string.IsNullOrEmpty(request.Accounts) ? new List<string>() : request.Accounts.Split(',').ToList();
-
+            var isResettledOnly = (request.FromDate == null && request.ToDate == null) ? false : true;
             var selections = _bettingContext.BetSelection.AsNoTracking().Where(s =>
                                 request.BetIds.Contains(s.BetId.ToString()) && (!sportIds.Any() || sportIds.Contains(s.SportId.ToString()))).ToList();
             
@@ -1803,8 +1803,8 @@ namespace Platform.Betting.API.Repository
 
             var rawAll = _bettingContext.Bet.AsNoTracking().Where(c =>
                                 selectionBetIds.Contains(c.BetId.ToString()) &&
-                                c.BetDate.Date >= request.FromDate && c.BetDate.Date <= request.ToDate &&
-                                c.IsResettled == true &&
+                                (!isResettledOnly || (c.BetDate.Date >= request.FromDate && c.BetDate.Date <= request.ToDate)) &&
+                                (!isResettledOnly || c.IsResettled == true) &&
                                 (!clientIdRefs.Any() || clientIdRefs.Contains(c.ClientIdRef.ToString())) &&
                                 (!accounts.Any() || accounts.Contains(c.UserId))).Select(s => new BetDetailsDTO()
                                 {

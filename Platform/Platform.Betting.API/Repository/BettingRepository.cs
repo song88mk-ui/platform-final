@@ -1784,17 +1784,10 @@ namespace Platform.Betting.API.Repository
         }
         public async Task<BaseResponseDTO<ManualBetDetailsResponseDTO>> GetManualBetDetails(ManualBetDetailsRequest request)
         {
-            request.Page = request.Page <= 0 ? 1 : request.Page;
-            request.PageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-            request.PageSize = request.PageSize > 50 ? 50 : request.PageSize;
-
-            var skip = (request.Page - 1) * request.PageSize;
-            double rowCount = 0;
-
             var clientIdRefs = string.IsNullOrEmpty(request.ClientIdRefs) ? new List<string>() : request.ClientIdRefs.Split(',').ToList();
+            var currencies = string.IsNullOrEmpty(request.Currencies) ? new List<string>() : request.Currencies.Split(',').ToList();
             var sportIds = string.IsNullOrEmpty(request.SportIds) ? new List<string>() : request.SportIds.Split(',').ToList();
             var players = string.IsNullOrEmpty(request.PlayerNames) ? new List<string>() : request.PlayerNames.Split(',').ToList();
-            var isResettledOnly = (request.FromDate == null && request.ToDate == null) ? false : true;
             var betGuids = request.BetIds.Select(s => Guid.Parse(s));
 
             var selections = _bettingContext.BetSelection.AsNoTracking().Where(s =>
@@ -1804,9 +1797,8 @@ namespace Platform.Betting.API.Repository
 
             var rawAll = _bettingContext.Bet.AsNoTracking().Where(c =>
                                 selectionBetIds.Contains(c.BetId) &&
-                                (!isResettledOnly || (c.BetDate.Date >= request.FromDate && c.BetDate.Date <= request.ToDate)) &&
-                                (!isResettledOnly || c.IsResettled == true) &&
                                 (!clientIdRefs.Any() || clientIdRefs.Contains(c.ClientIdRef.ToString())) &&
+                                (!currencies.Any() || currencies.Contains(c.CurrencyCode)) &&
                                 (!players.Any() || players.Contains(c.UserId))).Select(s => new BetDetailsDTO()
                                 {
                                     BetId = s.BetId.ToString(),
@@ -1822,12 +1814,9 @@ namespace Platform.Betting.API.Repository
                                 }
                            );
 
+            var result = rawAll.ToList();
 
-            rowCount = rawAll.Count();
-
-            var result = rawAll.OrderByDescending(c => c.TransactionDate).Skip(skip).Take(request.PageSize).ToList();
-
-            if (rowCount == 0)
+            if (result == null || !result.Any())
             {
                 return new BaseResponseDTO<ManualBetDetailsResponseDTO>
                 {
@@ -1835,10 +1824,6 @@ namespace Platform.Betting.API.Repository
                     Message = StatusCode.Success.ToString(),
                     Result = new ManualBetDetailsResponseDTO
                     {
-                        CurrentPage = 1,
-                        PageCount = 1,
-                        PageSize = 1,
-                        RowCount = 0,
                         Bets = new List<BetDetailsDTO>()
                     }
                 };
@@ -1888,10 +1873,6 @@ namespace Platform.Betting.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new ManualBetDetailsResponseDTO
                 {
-                    CurrentPage = request.Page,
-                    PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
-                    PageSize = request.PageSize,
-                    RowCount = Convert.ToInt32(rowCount),
                     Bets = result.OrderByDescending(o => o.TransactionDate).ToList()
                 }
             };

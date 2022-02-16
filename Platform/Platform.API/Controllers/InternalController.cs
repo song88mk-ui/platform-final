@@ -261,10 +261,6 @@ namespace Platform.API.Controllers
             }
         }
 
-
-        /// <summary>
-        /// Update parlay bonus of a client.
-        /// </summary>
         [HttpPost("v1/client/parlaybonus")]
         public async Task<IActionResult> PostClientParlayBonus([FromBody] ParlayBonusRequestDTO request)
         {

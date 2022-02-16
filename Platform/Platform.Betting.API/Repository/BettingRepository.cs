@@ -1793,8 +1793,7 @@ namespace Platform.Betting.API.Repository
 
             var clientIdRefs = string.IsNullOrEmpty(request.ClientIdRefs) ? new List<string>() : request.ClientIdRefs.Split(',').ToList();
             var sportIds = string.IsNullOrEmpty(request.SportIds) ? new List<string>() : request.SportIds.Split(',').ToList();
-            var statusIds = string.IsNullOrEmpty(request.StatusIds) ? new List<string>() : request.StatusIds.Split(',').ToList();
-            var accounts = string.IsNullOrEmpty(request.Accounts) ? new List<string>() : request.Accounts.Split(',').ToList();
+            var players = string.IsNullOrEmpty(request.PlayerNames) ? new List<string>() : request.PlayerNames.Split(',').ToList();
             var isResettledOnly = (request.FromDate == null && request.ToDate == null) ? false : true;
             var betGuids = request.BetIds.Select(s => Guid.Parse(s));
 
@@ -1808,7 +1807,7 @@ namespace Platform.Betting.API.Repository
                                 (!isResettledOnly || (c.BetDate.Date >= request.FromDate && c.BetDate.Date <= request.ToDate)) &&
                                 (!isResettledOnly || c.IsResettled == true) &&
                                 (!clientIdRefs.Any() || clientIdRefs.Contains(c.ClientIdRef.ToString())) &&
-                                (!accounts.Any() || accounts.Contains(c.UserId))).Select(s => new BetDetailsDTO()
+                                (!players.Any() || players.Contains(c.UserId))).Select(s => new BetDetailsDTO()
                                 {
                                     BetId = s.BetId.ToString(),
                                     BetStatusId = s.BetStatusId,

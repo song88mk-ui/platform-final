@@ -1677,6 +1677,225 @@ namespace Platform.Betting.API.Repository
                 };
             }
         }
+
+        public async Task<BaseResponseDTO<BetModifyResponseDTO>> ManualSettlement(ManualBetSettlementRequest request)
+        {
+            BetModifyResponseDTO response = new BetModifyResponseDTO()
+            {
+                Data = request.BetData.Select(m => new BetModifyResponse
+                {
+                    BetId = m.BetId,
+                    IsSuccess = true
+                }).ToList(),
+                IsSuccess = false
+            };
+
+            try
+            {
+                var betIds = response.Data.Select(m => Guid.Parse(m.BetId)).ToList();
+                var bets = _bettingContext.Bet.Where(x => betIds.Contains(x.BetId)).ToList();
+                List<BetManualSettlement> betList = new List<BetManualSettlement>();
+
+                #region Validate Request
+                var rejectedStatus = new List<int> { (int)BetStatus.Rejected, (int)BetStatus.Cancelled, (int)BetStatus.CashedOut };
+                var statuses = new List<int> { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfLost, (int)BetStatus.HalfWon, (int)BetStatus.Void };
+
+                foreach (var data in response.Data)
+                {
+                    var requestData = request.BetData.FirstOrDefault(b => b.BetId == data.BetId);
+                    if (requestData == null)
+                        continue;
+
+                    var betId = Guid.Parse(data.BetId);
+                    var bet = bets.SingleOrDefault(m => m.BetId == betId);
+
+                    betList.Add(new BetManualSettlement
+                    {
+                        BetId = betId,
+                        Reason = requestData.Reason,
+                        NewStatus = requestData.NewStatus,
+                    });
+
+                    data.OldBetStatus = bet != null ? bet.BetStatusName : string.Empty;
+
+                    if (bet == null)
+                    {
+                        data.IsSuccess = false;
+                        data.Message = "Bet ID not found";
+                    }
+                    else if (rejectedStatus.Contains(bet.BetStatusId))
+                    {
+                        // check if status is not on the list
+                        response.IsSuccess = false;
+                        response.Message = "Rejected, Cancelled and Cashout bets cannot be resettled!";
+                    }
+                    else if (!statuses.Contains(bet.BetStatusId))
+                    {
+                        data.IsSuccess = false;
+                        data.Message = "Bet settlement not allowed";
+                    }
+                }
+
+                // check if there are any bets that failed the validation
+                // if yes, then don't proceed to the next step
+                if (response.Data.Count(m => !m.IsSuccess) > 0)
+                    return new BaseResponseDTO<BetModifyResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = StatusCode.Error.ToString(),
+                        Result = response
+                    };
+
+                #endregion                
+
+                var payload = new OnBOBetManualSettlement
+                {
+                    Bets = betList
+                };
+
+                _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                {
+                    Payload = JsonSerializer.Serialize(payload),
+                    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                    MessageType = "OnBetBackOfficeManualSettlement",
+                    RoutingKey = "r.bet.settlement"
+                });
+
+                bool success = response.Data.Any(m => m.IsSuccess);
+                response.IsSuccess = success;
+                return new BaseResponseDTO<BetModifyResponseDTO>
+                {
+                    StatusCode = success ? StatusCode.Success : StatusCode.Error,
+                    Message = success ? String.Empty : StatusCode.Error.ToString(),
+                    Result = response
+                };
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return new BaseResponseDTO<BetModifyResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = ex.Message,
+                    Result = response
+                };
+            }
+        }
+        public async Task<BaseResponseDTO<ManualBetDetailsResponseDTO>> GetManualBetDetails(ManualBetDetailsRequest request)
+        {
+            request.Page = request.Page <= 0 ? 1 : request.Page;
+            request.PageSize = request.PageSize <= 0 ? 10 : request.PageSize;
+            request.PageSize = request.PageSize > 50 ? 50 : request.PageSize;
+
+            var skip = (request.Page - 1) * request.PageSize;
+            double rowCount = 0;
+
+            var clientIdRefs = string.IsNullOrEmpty(request.ClientIdRefs) ? new List<string>() : request.ClientIdRefs.Split(',').ToList();
+            var sportIds = string.IsNullOrEmpty(request.SportIds) ? new List<string>() : request.SportIds.Split(',').ToList();
+            var statusIds = string.IsNullOrEmpty(request.StatusIds) ? new List<string>() : request.StatusIds.Split(',').ToList();
+            var accounts = string.IsNullOrEmpty(request.Accounts) ? new List<string>() : request.Accounts.Split(',').ToList();
+
+            var selections = _bettingContext.BetSelection.AsNoTracking().Where(s =>
+                                request.BetIds.Contains(s.BetId.ToString()) && (!sportIds.Any() || sportIds.Contains(s.SportId.ToString()))).ToList();
+            
+            var selectionBetIds = selections.Select(s => s.BetId.ToString()).Distinct().ToList();
+
+            var rawAll = _bettingContext.Bet.AsNoTracking().Where(c =>
+                                selectionBetIds.Contains(c.BetId.ToString()) &&
+                                c.BetDate.Date >= request.FromDate && c.BetDate.Date <= request.ToDate &&
+                                c.IsResettled == true &&
+                                (!clientIdRefs.Any() || clientIdRefs.Contains(c.ClientIdRef.ToString())) &&
+                                (!accounts.Any() || accounts.Contains(c.UserId))).Select(s => new BetDetailsDTO()
+                                {
+                                    BetId = s.BetId.ToString(),
+                                    BetStatusId = s.BetStatusId,
+                                    BetStatusName = s.BetStatusName,
+                                    ClientCode = s.ClientCode,
+                                    ClientId = s.ClientIdRef,
+                                    ClientName = s.ClientName,
+                                    CurrencyCode = s.CurrencyCode,
+                                    IsFreeBet = s.IsFreeBet,
+                                    Reason = s.Reason,
+                                    TransactionDate = s.BetDate,
+                                }
+                           );
+
+
+            rowCount = rawAll.Count();
+
+            var result = rawAll.OrderByDescending(c => c.TransactionDate).Skip(skip).Take(request.PageSize).ToList();
+
+            if (rowCount == 0)
+            {
+                return new BaseResponseDTO<ManualBetDetailsResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new ManualBetDetailsResponseDTO
+                    {
+                        CurrentPage = 1,
+                        PageCount = 1,
+                        PageSize = 1,
+                        RowCount = 0,
+                        Bets = new List<BetDetailsDTO>()
+                    }
+                };
+            }
+
+            var betIds = result.Select(s => s.BetId).Distinct().ToList();
+            
+            var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => betIds.Contains(b.BetId.ToString())).Select(s => s.BetId).ToList();
+
+            foreach (var bet in result)
+            {
+                var filteredSelections = selections.Where(c => c.BetId.ToString() == bet.BetId).ToList();
+
+                bet.IsBoosted = betBoosted.Any(b => b.ToString() == bet.BetId);
+                bet.Selections = filteredSelections.Select(s => new BetSelectionDetailsDTO
+                {
+                    SportId = s.SportId,
+                    SportName = s.SportName,
+                    LeagueId = s.LeagueId,
+                    LeagueName = s.LeagueName,
+                    FixtureId = s.FixtureId.ToString(),
+                    FixtureName = s.FixtureName,
+                    MarketId = s.MarketId.ToString(),
+                    MarketName = s.MarketName,
+                    Line = s.Line,
+                    SelectionId = s.SelectionId.ToString(),
+                    SelectionName = s.SelectionName,
+                    Odds = s.Odds,
+                    BetScore = s.BetScore,
+                    SettlementScore = s.SettlementScore,
+                    BetSelectionId = s.BetSelectionId.ToString(),
+                    FixtureStartDate = s.FixtureStartDate,
+                    FixtureStatusId = s.FixtureStatusId,
+                    FixtureStatusName = s.FixtureStatusName,
+                    MarketTemplateId = s.MarketTemplateId,
+                    SegmentId = s.SegmentId,
+                    SegmentName = s.SegmentName,
+                    SelectionTemplateId = s.SelectionTemplateId,
+                    BetSelectionStatusId = s.BetSelectionStatusId,
+                    BetSelectionStatusName = s.BetSelectionStatusName,
+                }).ToList();
+            }
+
+            return new BaseResponseDTO<ManualBetDetailsResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new ManualBetDetailsResponseDTO
+                {
+                    CurrentPage = request.Page,
+                    PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
+                    PageSize = request.PageSize,
+                    RowCount = Convert.ToInt32(rowCount),
+                    Bets = result.OrderByDescending(o => o.TransactionDate).ToList()
+                }
+            };
+        }
+
         public async Task<BaseResponseDTO<BetCashOutResponseDTO>> CashOutBet(CashoutBetRequestDTO request)
         {
             var bet = _bettingContext.Bet.Find(request.BetId);

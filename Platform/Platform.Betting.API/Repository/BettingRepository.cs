@@ -1796,13 +1796,15 @@ namespace Platform.Betting.API.Repository
             var statusIds = string.IsNullOrEmpty(request.StatusIds) ? new List<string>() : request.StatusIds.Split(',').ToList();
             var accounts = string.IsNullOrEmpty(request.Accounts) ? new List<string>() : request.Accounts.Split(',').ToList();
             var isResettledOnly = (request.FromDate == null && request.ToDate == null) ? false : true;
+            var betGuids = request.BetIds.Select(s => Guid.Parse(s));
+
             var selections = _bettingContext.BetSelection.AsNoTracking().Where(s =>
-                                request.BetIds.Contains(s.BetId.ToString()) && (!sportIds.Any() || sportIds.Contains(s.SportId.ToString()))).ToList();
+                                betGuids.Contains(s.BetId) && (!sportIds.Any() || sportIds.Contains(s.SportId.ToString()))).ToList();
             
-            var selectionBetIds = selections.Select(s => s.BetId.ToString()).Distinct().ToList();
+            var selectionBetIds = selections.Select(s => s.BetId).Distinct().ToList();
 
             var rawAll = _bettingContext.Bet.AsNoTracking().Where(c =>
-                                selectionBetIds.Contains(c.BetId.ToString()) &&
+                                selectionBetIds.Contains(c.BetId) &&
                                 (!isResettledOnly || (c.BetDate.Date >= request.FromDate && c.BetDate.Date <= request.ToDate)) &&
                                 (!isResettledOnly || c.IsResettled == true) &&
                                 (!clientIdRefs.Any() || clientIdRefs.Contains(c.ClientIdRef.ToString())) &&
@@ -1849,7 +1851,7 @@ namespace Platform.Betting.API.Repository
 
             foreach (var bet in result)
             {
-                var filteredSelections = selections.Where(c => c.BetId.ToString() == bet.BetId).ToList();
+                var filteredSelections = selections.Where(c => c.BetId == Guid.Parse(bet.BetId)).ToList();
 
                 bet.IsBoosted = betBoosted.Any(b => b.ToString() == bet.BetId);
                 bet.Selections = filteredSelections.Select(s => new BetSelectionDetailsDTO

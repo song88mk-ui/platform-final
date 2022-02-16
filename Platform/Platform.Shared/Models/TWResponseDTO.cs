@@ -10,7 +10,6 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
-        public string IpCountryCode { get; set; }
     }
     public class TWFixtureMarketSelectionDetailsRequestDTO
     {
@@ -20,7 +19,6 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
-        public string IpCountryCode { get; set; }
     }
     public class TWTopLeagueFixtureRequestDTO
     {
@@ -28,7 +26,6 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
-        public string IpCountryCode { get; set; }
     }
     public class TWSearchRequestDTO
     {
@@ -69,7 +66,6 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
-        public string IpCountryCode { get; set; }
     }
     public class TWSegmentFixtureRequestDTO
     {
@@ -78,7 +74,6 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
-        public string IpCountryCode { get; set; }
     }
     public class TWLiveFixtureRequestDTO
     {
@@ -86,7 +81,6 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
-        public string IpCountryCode { get; set; }
     }
     public class TWLeagueLiveFixtureRequestDTO
     {
@@ -96,7 +90,6 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
-        public string IpCountryCode { get; set; }
     }
     public class TWOutrightFixtureRequestDTO
     {
@@ -104,7 +97,6 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
-        public string IpCountryCode { get; set; }
     }
     public class TWLeagueOutrightFixtureRequestDTO
     {
@@ -114,7 +106,6 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
-        public string IpCountryCode { get; set; }
     }
     public class TWTodayFixtureRequestDTO
     {
@@ -123,7 +114,6 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
-        public string IpCountryCode { get; set; }
     }
     public class TWUpcomingFixtureRequestDTO
     {
@@ -132,7 +122,6 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
-        public string IpCountryCode { get; set; }
     }
     public class TWLeagueTodayFixtureRequestDTO
     {
@@ -143,7 +132,6 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
-        public string IpCountryCode { get; set; }
     }
     public class TWDailyFixtureRequestDTO
     {
@@ -153,7 +141,6 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
-        public string IpCountryCode { get; set; }
     }
     public class TWLeagueDailyFixtureRequestDTO
     {
@@ -165,7 +152,6 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
-        public string IpCountryCode { get; set; }
     }
     public class TWFTodayFixtureCountRequestDTO
     {
@@ -207,7 +193,6 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
-        public string IpCountryCode { get; set; }
     }
 
     public class TWResponseDTO

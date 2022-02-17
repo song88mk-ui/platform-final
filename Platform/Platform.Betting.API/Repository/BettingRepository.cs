@@ -1810,7 +1810,9 @@ namespace Platform.Betting.API.Repository
                                     CurrencyCode = s.CurrencyCode,
                                     IsFreeBet = s.IsFreeBet,
                                     Reason = s.Reason,
-                                    TransactionDate = s.BetDate,
+                                    BetDate = s.BetDate,
+                                    SettlementDate = s.SettlementDate,
+                                    UserId = s.UserId,
                                 }
                            );
 
@@ -1873,7 +1875,7 @@ namespace Platform.Betting.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new ManualBetDetailsResponseDTO
                 {
-                    Bets = result.OrderByDescending(o => o.TransactionDate).ToList()
+                    Bets = result.OrderByDescending(o => o.SettlementDate).ToList()
                 }
             };
         }

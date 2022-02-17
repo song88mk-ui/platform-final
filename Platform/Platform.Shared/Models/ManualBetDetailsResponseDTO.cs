@@ -27,7 +27,9 @@ namespace Platform.Shared.Models
         public string BetStatusName { get; set; }
         public string CurrencyCode { get; set; }
         public string Reason { get; set; }
-        public DateTime TransactionDate { get; set; }
+        public DateTime BetDate { get; set; }
+        public DateTime SettlementDate { get; set; }
+        public string UserId { get; set; }
         public bool IsFreeBet { get; set; }
         public bool IsBoosted { get; set; }
         public List<BetSelectionDetailsDTO> Selections { get; set; }

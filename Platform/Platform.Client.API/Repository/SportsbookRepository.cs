@@ -302,6 +302,10 @@ namespace Platform.Client.API.Repository
 
                 if (clientId.ToUpper() == "18AD372D-0ADA-4432-47B8-08D999311B35" || clientId.ToUpper() == "54724BB0-B74E-476E-495D-08D9A5CC4213")
                     clientCode = "10C";
+
+                if (clientId.ToUpper() == "BCF2028F-A47F-46FE-F2E4-08D9E2404694" || clientId.ToUpper() == "B041590F-C52D-42A7-81B6-08D9E23C1F40")
+                    clientCode = "GUR";
+
             }
 
             var result = await _platformContext.ConfidenceFactor.Where(c => c.UserId == $"{clientCode}{userId.Replace("-", string.Empty)}").ToListAsync();

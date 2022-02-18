@@ -26,6 +26,9 @@ namespace Platform.Shared.Models
         public string ClientName { get; set; }
         public string BetStatusName { get; set; }
         public string CurrencyCode { get; set; }
+        public decimal Odds { get; set; }
+        public decimal Stake { get; set; }
+        public string OddsType { get; set; }
         public string Reason { get; set; }
         public DateTime BetDate { get; set; }
         public DateTime SettlementDate { get; set; }

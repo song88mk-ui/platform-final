@@ -1811,6 +1811,9 @@ namespace Platform.Betting.API.Repository
                                     IsFreeBet = s.IsFreeBet,
                                     Reason = s.Reason,
                                     BetDate = s.BetDate,
+                                    OddsType = s.OddsTypeName,
+                                    Stake = s.Stake,
+                                    Odds = s.Odds,
                                     SettlementDate = s.SettlementDate,
                                     UserId = s.UserId,
                                 }

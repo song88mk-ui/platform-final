@@ -167,4 +167,15 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public bool IsSu { get; set; }
         public int FiStId { get; set; }
     }
+
+    public class FixtureClientSportFilter
+    {
+        [BsonId]
+        public long FiId { get; set; }
+        public int FiStId { get; set; }
+        public int FiTyId { get; set; }
+        public int SpId { get; set; }
+        public string SpNa { get; set; }
+    }
+
 }

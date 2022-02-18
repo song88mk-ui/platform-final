@@ -296,9 +296,7 @@ namespace Platform.Sportsbook.API.Repository
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            if (IsOEEnable(request.ClientCode))
-                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000).ToList();
-
+           
             //Addtional Filter
             if (request.SegmentId > 0)
                 fixtures = fixtures.Where(s => s.SegId == request.SegmentId).ToList();
@@ -5737,12 +5735,10 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetClientSportsLookup(string clientCode)
         {
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 12 && c.SpId < 1000);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-
-            //if (IsOEEnable(clientCode))
-            //    fixtures = fixtures.Where(f => f.ClCo.Contains(clientCode) || f.FiTyId == (int)FixtureType.Outright).ToList();
-
+            var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.FiTyId).Include(c => c.FiStId).Include(c => c.SpId).Include(c => c.SpNa);
+            var fixtures = await primaryFixtureCollection.Find(fixtureFilter).Project<FixtureClientSportFilter>(fixtureProjection).ToListAsync();
             if (fixtures.Count == 0)
             {
                 return new BaseResponseDTO<SportsLookupResponseDTO>

@@ -5739,8 +5739,9 @@ namespace Platform.Sportsbook.API.Repository
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 12 && c.SpId < 1000);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            if (IsOEEnable(clientCode))
-                fixtures = fixtures.Where(f => f.ClCo.Contains(clientCode) || f.FiTyId == (int)FixtureType.Outright).ToList();
+
+            //if (IsOEEnable(clientCode))
+            //    fixtures = fixtures.Where(f => f.ClCo.Contains(clientCode) || f.FiTyId == (int)FixtureType.Outright).ToList();
 
             if (fixtures.Count == 0)
             {

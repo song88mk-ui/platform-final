@@ -445,9 +445,11 @@ namespace Platform.Settlement.Service.Repository
             if (filteredSelection.BetSelectionStatusId != (int)BetStatus.Running)
                 return false;
 
+            if (!string.IsNullOrEmpty(message.SettlementScore))
+                filteredSelection.SettlementScore = message.SettlementScore;
+
             filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;
             filteredSelection.BetSelectionStatusName = message.SelectionStatus.ToString();
-            filteredSelection.SettlementScore = message.SettlementScore;
             filteredSelection.IsSettled = true;
             filteredSelection.DeadHeatFactor = message.DeadHeatFactor;
 

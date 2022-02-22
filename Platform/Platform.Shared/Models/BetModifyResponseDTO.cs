@@ -36,21 +36,4 @@ namespace Platform.Shared.Models
         }
     }
 
-    public class ManualBetSettlementRequest
-    {
-        public List<ManualBet> BetData { get; set; }
-        public long? ModifiedByUserId { get; set; }
-
-        public ManualBetSettlementRequest()
-        {
-            BetData = new List<ManualBet>();
-        }
-    }
-
-    public class ManualBet
-    {
-        public string BetId { get; set; }
-        public BetStatus NewStatus { get; set; }
-        public string Reason { get; set; }
-    }
 }

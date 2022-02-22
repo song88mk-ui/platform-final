@@ -9,10 +9,6 @@ namespace Platform.Shared.Models
         {
             BetIds = new List<string>();
         }
-        public string ClientIdRefs { get; set; }
-        public string Currencies { get; set; }
-        public string SportIds { get; set; }
-        public string PlayerNames { get; set; }
         public List<string> BetIds { get; set; }
     }
 

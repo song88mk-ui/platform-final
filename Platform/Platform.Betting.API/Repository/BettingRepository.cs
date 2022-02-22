@@ -1698,7 +1698,7 @@ namespace Platform.Betting.API.Repository
 
                 #region Validate Request
                 var rejectedStatus = new List<int> { (int)BetStatus.Rejected, (int)BetStatus.Cancelled, (int)BetStatus.CashedOut };
-                var statuses = new List<int> { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfLost, (int)BetStatus.HalfWon, (int)BetStatus.Void };
+                var statuses = new List<int> { (int)BetStatus.Running, (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfLost, (int)BetStatus.HalfWon, (int)BetStatus.Void };
 
                 foreach (var data in response.Data)
                 {
@@ -1739,12 +1739,15 @@ namespace Platform.Betting.API.Repository
                 // check if there are any bets that failed the validation
                 // if yes, then don't proceed to the next step
                 if (response.Data.Count(m => !m.IsSuccess) > 0)
+                {
+                    response.Message = string.Join(";", response.Data.Where(m => !m.IsSuccess).Select(s => s.Message).Distinct());
                     return new BaseResponseDTO<BetModifyResponseDTO>
                     {
                         StatusCode = StatusCode.Error,
                         Message = StatusCode.Error.ToString(),
                         Result = response
                     };
+                }
 
                 #endregion                
 

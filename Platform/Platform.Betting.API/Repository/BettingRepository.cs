@@ -1678,9 +1678,9 @@ namespace Platform.Betting.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<ManualBetSettlementResponseDTO>> ManualSettlement(ManualBetSettlementRequest request)
+        public async Task<BaseResponseDTO<ManualSettlementResponseDTO>> ManualSettlement(ManualBetSettlementRequest request)
         {
-            ManualBetSettlementResponseDTO response = new ManualBetSettlementResponseDTO()
+            ManualSettlementResponseDTO response = new ManualSettlementResponseDTO()
             {
                 Data = request.BetData.Select(m => new ManualBetResponse
                 {
@@ -1831,7 +1831,7 @@ namespace Platform.Betting.API.Repository
                 if (response.Data.Count(m => !m.IsSuccess) > 0)
                 {
                     response.Message = string.Join(";", response.Data.Where(m => !m.IsSuccess).Select(s => s.Message).Distinct());
-                    return new BaseResponseDTO<ManualBetSettlementResponseDTO>
+                    return new BaseResponseDTO<ManualSettlementResponseDTO>
                     {
                         StatusCode = StatusCode.Error,
                         Message = StatusCode.Error.ToString(),
@@ -1856,7 +1856,7 @@ namespace Platform.Betting.API.Repository
 
                 bool success = response.Data.Any(m => m.IsSuccess);
                 response.IsSuccess = success;
-                return new BaseResponseDTO<ManualBetSettlementResponseDTO>
+                return new BaseResponseDTO<ManualSettlementResponseDTO>
                 {
                     StatusCode = success ? StatusCode.Success : StatusCode.Error,
                     Message = success ? string.Empty : StatusCode.Error.ToString(),
@@ -1867,7 +1867,7 @@ namespace Platform.Betting.API.Repository
             {
                 response.IsSuccess = false;
                 response.Message = ex.Message;
-                return new BaseResponseDTO<ManualBetSettlementResponseDTO>
+                return new BaseResponseDTO<ManualSettlementResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
                     Message = ex.Message,

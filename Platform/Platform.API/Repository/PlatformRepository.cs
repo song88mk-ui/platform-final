@@ -2600,7 +2600,7 @@ namespace Platform.API.Repository
             return await _bettingRepository.CancelBets(request);
         }
 
-        public async Task<BaseResponseDTO<ManualBetDetailsResponseDTO>> ManualSettlement(ManualBetSettlementRequest request)
+        public async Task<BaseResponseDTO<ManualSettlementResponseDTO>> ManualSettlement(ManualBetSettlementRequest request)
         {
             return await _bettingRepository.ManualSettlement(request);
         }

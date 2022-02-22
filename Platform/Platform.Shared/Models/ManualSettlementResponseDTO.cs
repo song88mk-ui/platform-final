@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace Platform.Shared.Models
 {
-    public class ManualBetSettlementResponseDTO
+    public class ManualSettlementResponseDTO
     {
         public List<ManualBetResponse> Data { get; set; }
         public string Message { get; set; }
         public bool IsSuccess { get; set; }
 
-        public ManualBetSettlementResponseDTO()
+        public ManualSettlementResponseDTO()
         {
             Data = new List<ManualBetResponse>();
         }

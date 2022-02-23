@@ -106,5 +106,6 @@ namespace Platform.Shared.Models
         public double HalfLostProbability { get; set; }
         public string CorrelationId { get; set; }
         public decimal DeadHeatFactor { get; set; }
+        public string UserId { get; set; }
     }
 }

@@ -1822,6 +1822,7 @@ namespace Platform.Betting.API.Repository
                             SelectionSpecifier = s.SelectionSpecifier,
                             VoidProbability = s.VoidProbability,
                             WonProbability = s.WonProbability,
+                            UserId = s.UserId,
                         }).ToList();
                     }
                 }

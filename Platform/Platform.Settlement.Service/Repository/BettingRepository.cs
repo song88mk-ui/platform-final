@@ -1290,7 +1290,7 @@ namespace Platform.Settlement.Service.Repository
                     {
                         try
                         {
-                            var selections = context.BetSelection.Where(c => c.BetId == betItem.BetId).ToList();
+                            var selections = context.BetSelection.AsNoTracking().Where(c => c.BetId == betItem.BetId).ToList();
 
                             if (selections.Count != 1) //do not process if parlay or no selection at all
                             {
@@ -1312,6 +1312,8 @@ namespace Platform.Settlement.Service.Repository
                                 DeadHeatFactor = 1,
                                 SelectionStatus = betItem.NewStatus,
                             };
+
+                            betItem.Reason = $"1000 - {betItem.Reason}";
 
                             if (filteredSelection.IsSettled == false)
                                 isPublish = SettleBet(request, filteredSelection, isPublish, payload, settledDate, context, selections, filteredSelection, true, betItem.Reason);

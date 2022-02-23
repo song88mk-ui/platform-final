@@ -1404,7 +1404,8 @@ namespace Platform.Betting.API.Repository
             ////    });
             ////}
 
-            var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => betIds.Contains(b.BetId)).Select(s => s.BetId).ToList();
+            var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => betIds.Contains(b.BetId) && b.BetStatusId != (int)BetStatus.Rejected
+                                                && b.BetStatusId != (int)BetStatus.Cancelled).Select(s => s.BetId).ToList();
 
             var cashOutList = await _probabilityRepository.GetCashOut(transactions, selections, betBoosted);
 
@@ -1701,6 +1702,9 @@ namespace Platform.Betting.API.Repository
                 var betIds = response.Data.Select(m => m.BetDetails.BetId).ToList();
                 var bets = _bettingContext.Bet.Where(x => betIds.Contains(x.BetId)).ToList();
                 var betSelections = _bettingContext.BetSelection.Where(x => betIds.Contains(x.BetId)).ToList();
+                var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => betIds.Contains(b.BetId) && b.BetStatusId != (int)BetStatus.Rejected
+                                                && b.BetStatusId != (int)BetStatus.Cancelled).Select(s => s.BetId).ToList();
+                
                 List<BetManualSettlement> betList = new List<BetManualSettlement>();
 
                 #region Validate Request
@@ -1739,6 +1743,7 @@ namespace Platform.Betting.API.Repository
                     }
                     else
                     {
+
                         var newBet = data.BetDetails;
                         newBet.BetDate = bet.BetDate;
                         newBet.BetDateOffset = bet.BetDateOffset;
@@ -1780,6 +1785,7 @@ namespace Platform.Betting.API.Repository
                         newBet.TrueStake = bet.TrueStake;
                         newBet.WinLoss = bet.WinLoss;
                         newBet.WinningsTax = bet.WinningsTax;
+                        newBet.IsBoosted = betBoosted.Any(b => b == bet.BetId);
 
                         newBet.Selections = betSelections.Where(m => m.BetId == betId).Select(s => new ManualBetSelectionDetailsDTO()
                         {
@@ -1949,7 +1955,8 @@ namespace Platform.Betting.API.Repository
 
             var betIds = result.Select(s => s.BetId).Distinct().ToList();
             
-            var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => betIds.Contains(b.BetId)).Select(s => s.BetId).ToList();
+            var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => betIds.Contains(b.BetId) && b.BetStatusId != (int)BetStatus.Rejected
+                                                && b.BetStatusId != (int)BetStatus.Cancelled).Select(s => s.BetId).ToList();
 
             foreach (var bet in result)
             {
@@ -2024,7 +2031,8 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var hasExistingBetPriceBoost = _bettingContext.BetPriceBoost.AsNoTracking().Any(b => b.BetId == request.BetId);
+            var hasExistingBetPriceBoost = _bettingContext.BetPriceBoost.AsNoTracking().Any(b => b.BetId == request.BetId && b.BetStatusId != (int)BetStatus.Rejected
+                                                && b.BetStatusId != (int)BetStatus.Cancelled);
 
             if (hasExistingBetPriceBoost == true)
             {
@@ -2139,7 +2147,8 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var hasExistingBetPriceBoost = _bettingContext.BetPriceBoost.AsNoTracking().Any(b => b.BetId == request.BetId);
+            var hasExistingBetPriceBoost = _bettingContext.BetPriceBoost.AsNoTracking().Any(b => b.BetId == request.BetId && b.BetStatusId != (int)BetStatus.Rejected
+                                                && b.BetStatusId != (int)BetStatus.Cancelled);
 
             if (hasExistingBetPriceBoost == true)
             {

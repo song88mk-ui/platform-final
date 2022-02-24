@@ -769,7 +769,7 @@ namespace Platform.Settlement.Service.Repository
 
             filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;
             filteredSelection.BetSelectionStatusName = message.SelectionStatus.ToString();
-            if(isManualSettle == false)
+            if(!string.IsNullOrEmpty(message.SettlementScore))
                 filteredSelection.SettlementScore = message.SettlementScore;
             filteredSelection.IsSettled = true;
             filteredSelection.IsResettled = true;

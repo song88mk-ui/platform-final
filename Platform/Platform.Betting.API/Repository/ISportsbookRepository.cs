@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace Platform.Betting.API.Repository
 {
-    public interface IProbabilityRepository
+    public interface ISportsbookRepository
     {
         Task<BaseResponseDTO<List<CashOutDetailsReponse>>> GetCashOut(List<Bet> bets, List<BetSelection> betSelections, List<Guid> boostedList);
+        Task<BaseResponseDTO<BetSettlementScoreResponseDTO>> GetBetSettlementScore(BetSettlementScoreRequestDTO request);
     }
 }

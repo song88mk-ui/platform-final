@@ -842,6 +842,20 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v1/sportsbook/betsettlementscore")]
+        public async Task<IActionResult> GetBetSettlementScore([FromBody] BetSettlementScoreRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetBetSettlementScore(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
 
     }
 }

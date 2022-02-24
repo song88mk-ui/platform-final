@@ -27,19 +27,19 @@ namespace Platform.Betting.API.Repository
         private readonly IMTSAuthRepository _mtsAuthRepository;
         private readonly IMTSMaxStakeRepository _mtsMaxStakeRepository;
         private readonly IMTSProbabilityRepository _mtsProbabilityRepository;
-        private readonly IProbabilityRepository _probabilityRepository;
+        private readonly ISportsbookRepository _sportsbookRepository;
         private readonly IRabbitMQRepository _rabbitMQRepository;
 
         private readonly TelemetryClient _telemetryClient;
 
-        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IHttpClientFactory httpClientFactory, IMTSAuthRepository mtsAuthRepository, IMTSMaxStakeRepository mtsMaxStakeRepository, IMTSProbabilityRepository mtsProbabilityRepository, IProbabilityRepository probabilityRepository, IRabbitMQRepository rabbitMQRepository, TelemetryClient telemetryClient)
+        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IHttpClientFactory httpClientFactory, IMTSAuthRepository mtsAuthRepository, IMTSMaxStakeRepository mtsMaxStakeRepository, IMTSProbabilityRepository mtsProbabilityRepository, ISportsbookRepository sportsbookRepository, IRabbitMQRepository rabbitMQRepository, TelemetryClient telemetryClient)
         {
             _bettingContext = bettingContext;
             _httpClientFactory = httpClientFactory;
             _mtsAuthRepository = mtsAuthRepository;
             _mtsMaxStakeRepository = mtsMaxStakeRepository;
             _mtsProbabilityRepository = mtsProbabilityRepository;
-            _probabilityRepository = probabilityRepository;
+            _sportsbookRepository = sportsbookRepository;
             _rabbitMQRepository = rabbitMQRepository;
             _telemetryClient = telemetryClient;
             _configuration = configuration;
@@ -1407,7 +1407,7 @@ namespace Platform.Betting.API.Repository
             var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => betIds.Contains(b.BetId) && b.BetStatusId != (int)BetStatus.Rejected
                                                 && b.BetStatusId != (int)BetStatus.Cancelled).Select(s => s.BetId).ToList();
 
-            var cashOutList = await _probabilityRepository.GetCashOut(transactions, selections, betBoosted);
+            var cashOutList = await _sportsbookRepository.GetCashOut(transactions, selections, betBoosted);
 
             foreach (var bet in transactions)
             {
@@ -1743,6 +1743,18 @@ namespace Platform.Betting.API.Repository
                     }
                     else
                     {
+                        //update settlement score
+                        foreach (var selection in betSelections)
+                        {
+                            var settlementScoreResult = (await _sportsbookRepository.GetBetSettlementScore(
+                                    new BetSettlementScoreRequestDTO()
+                                    {
+                                        FixtureId = selection.FixtureId,
+                                    })).Result;
+
+                            var settlementScore = settlementScoreResult == null ? string.Empty : settlementScoreResult.Score;
+                            selection.SettlementScore = string.IsNullOrEmpty(settlementScore) ? selection.SettlementScore : settlementScore;
+                        }
 
                         var newBet = data.BetDetails;
                         newBet.BetDate = bet.BetDate;
@@ -2054,7 +2066,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var result = await _probabilityRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>());
+            var result = await _sportsbookRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>());
 
             var cashOut = result.Result.Where(c => c.BetId == bet.BetId && c.CashOutStatus == CashOutStatus.Available).FirstOrDefault();
 
@@ -2170,7 +2182,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var result = await _probabilityRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>());
+            var result = await _sportsbookRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>());
 
             var cashOut = result.Result.Where(c => c.BetId == bet.BetId && c.CashOutStatus == CashOutStatus.Available).FirstOrDefault();
 

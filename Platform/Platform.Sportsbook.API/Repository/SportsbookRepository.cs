@@ -16,6 +16,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
+using System.Xml;
 
 namespace Platform.Sportsbook.API.Repository
 {
@@ -64,6 +65,7 @@ namespace Platform.Sportsbook.API.Repository
             _httpClient.BaseAddress = new Uri("https://av-api.betradar.com");
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer C9SdxJm170K61OY152");
         }
+
         public async Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(LivestreamRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.PrFiId == request.ProviderFixtureId);
@@ -143,6 +145,144 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
         }
+
+        public async Task<BaseResponseDTO<BetSettlementScoreResponseDTO>> GetBetSettlementScore(BetSettlementScoreRequestDTO request)
+        {
+            var setlementScore = string.Empty;
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == request.FixtureId);
+            var fixture = await fixtureCollection.Find(fixtureFilter).FirstOrDefaultAsync();
+
+            if (fixture == null)
+            {
+                return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                {
+                    StatusCode = StatusCode.No_Record_Found,
+                    Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                };
+            }
+
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri("https://api.betradar.com");
+                    client.DefaultRequestHeaders.Add("x-access-token", "wLCaM7vc80CADU33rz");
+
+                    var response = await client.GetAsync($"/v1/sports/en/sport_events/{fixture.FiSp}/summary.xml");
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var result = await response.Content.ReadAsStringAsync();
+
+                        XmlDocument doc = new XmlDocument();
+
+                        doc.LoadXml(result);
+
+                        #region Validate feed
+
+                        var sportStatusNode = doc.ChildNodes[1].ChildNodes[2];
+                        var sportStatus = Convert.ToInt32(sportStatusNode.Attributes["match_status_code"].Value);
+
+                        var _statusCode = "3,4".Split(",").ToList();
+                        var _endMatchStatus = new[] { (int)MatchStatus.Ended, (int)MatchStatus.AET, (int)MatchStatus.AOT, (int)MatchStatus.AP, (int)MatchStatus.Retired };
+                        var _regularPeriodSports = "Soccer,American Football".Split(",").ToList();
+
+                        var sportStatusCode = sportStatusNode.Attributes["status_code"].Value;
+
+                        // if the value of the status_code attribute is not equal to 4 then skip the current iteration.
+                        if (!_statusCode.Contains(sportStatusCode))
+                            return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                            {
+                                StatusCode = StatusCode.No_Record_Found,
+                                Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                            };
+
+                        // check if sport is included in the _regularPeriodSports
+                        var tournamentNode = doc.DocumentElement.GetElementsByTagName("tournament")[0];
+                        var sportNode = tournamentNode.ChildNodes[0];
+
+                        var sport = sportNode.Attributes["name"].Value;
+
+                        // applicable to all sports
+                        if (_endMatchStatus.Contains(sportStatus))
+                        {
+                            // if there are still no final home or away score yet skip the current iteration.
+                            if (sportStatusNode.Attributes["home_score"] == null || sportStatusNode.Attributes["away_score"] == null)
+                            {
+                                return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                                {
+                                    StatusCode = StatusCode.No_Record_Found,
+                                    Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                                };
+                            }
+                            setlementScore = $"{sportStatusNode.Attributes["home_score"].Value} - {sportStatusNode.Attributes["away_score"].Value}";
+                        }
+
+                        //var periodScores = new List<PeriodScore>();
+                        if (sportStatusNode.ChildNodes.Count > 0)
+                        {
+                            var scoresNode = sportStatusNode.ChildNodes[0];
+
+                            // variables are only used in getting the final score for sports in the _regularPeriodSports
+                            var homeScore = 0;
+                            var awayScore = 0;
+
+                            foreach (XmlNode scoreNode in scoresNode.ChildNodes)
+                            {
+                                if (_regularPeriodSports.Contains(sport))
+                                {
+                                    if (scoreNode.Attributes["type"].Value == "regular_period")
+                                    {
+                                        homeScore += Convert.ToInt32(scoreNode.Attributes["home_score"].Value);
+                                        awayScore += Convert.ToInt32(scoreNode.Attributes["away_score"].Value);
+
+                                        //periodScores.Add(PreparePeriodScoreByXmlNode(scoreNode));
+                                    }
+                                }
+                                //else
+                                    //periodScores.Add(PreparePeriodScoreByXmlNode(scoreNode));
+                            }
+
+                            // get the final score for the sports in the _regularPeriodSports (OT and penalties are not counted)
+                            if (_regularPeriodSports.Contains(sport))
+                                setlementScore = $"{homeScore} - {awayScore}";
+                        }
+
+                        #endregion
+
+                        return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                        {
+                            StatusCode = StatusCode.Success,
+                            Message = StatusCode.Success.ToString(),
+                            Result = new BetSettlementScoreResponseDTO
+                            {
+                                Score = setlementScore,
+                            }
+                        };
+                    }
+                    else
+                    {
+                        return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                        {
+                            StatusCode = StatusCode.No_Record_Found,
+                            Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                        };
+                    }
+                }
+
+               
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
+            }
+        }
+
+
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetTopLeagues(TopLeaguesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);

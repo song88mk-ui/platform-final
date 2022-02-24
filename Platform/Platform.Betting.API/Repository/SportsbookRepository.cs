@@ -12,12 +12,12 @@ using System.Threading.Tasks;
 
 namespace Platform.Betting.API.Repository
 {
-    public class ProbabilityRepository : IProbabilityRepository
+    public class SportsbookRepository : ISportsbookRepository
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
 
-        public ProbabilityRepository(HttpClient httpClient, IConfiguration configuration)
+        public SportsbookRepository(HttpClient httpClient, IConfiguration configuration)
         {
             _configuration = configuration;
 
@@ -430,5 +430,37 @@ namespace Platform.Betting.API.Repository
                 Result = result
             };
         }
+        public async Task<BaseResponseDTO<BetSettlementScoreResponseDTO>> GetBetSettlementScore(BetSettlementScoreRequestDTO request)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"v1/sportsbook/betsettlementscore", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                    return JsonSerializer.Deserialize<BaseResponseDTO<BetSettlementScoreResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                        return JsonSerializer.Deserialize<BaseResponseDTO<BetSettlementScoreResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    else
+                    {
+                        return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                        {
+                            StatusCode = StatusCode.Error,
+                            Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
+            }
+        }
+
     }
 }

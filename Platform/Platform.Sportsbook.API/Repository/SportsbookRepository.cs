@@ -91,7 +91,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (!string.IsNullOrEmpty(fixture.GeAl) && !string.IsNullOrEmpty(request.IPCountryCode))
             {
-                if(!fixture.GeAl.Split(",").Any(g => g.ToUpper() == request.IPCountryCode.ToUpper()))
+                if (!fixture.GeAl.Split(",").Any(g => g.ToUpper() == request.IPCountryCode.ToUpper()))
                     return new BaseResponseDTO<LivestreamResponseDTO>
                     {
                         StatusCode = StatusCode.Livestream_Is_Not_Available_In_Your_Region,
@@ -218,34 +218,23 @@ namespace Platform.Sportsbook.API.Repository
                             setlementScore = $"{sportStatusNode.Attributes["home_score"].Value} - {sportStatusNode.Attributes["away_score"].Value}";
                         }
 
-                        //var periodScores = new List<PeriodScore>();
                         if (sportStatusNode.ChildNodes.Count > 0)
                         {
-                            var scoresNode = sportStatusNode.ChildNodes[0];
-
-                            // variables are only used in getting the final score for sports in the _regularPeriodSports
-                            var homeScore = 0;
-                            var awayScore = 0;
-
-                            foreach (XmlNode scoreNode in scoresNode.ChildNodes)
+                            //get from result node
+                            var resultNode = sportStatusNode.ChildNodes[1];
+                            var resultMatchStatusCode = sportStatusNode.Attributes["match_status_code"] == null ? 0 : Convert.ToInt32(sportStatusNode.Attributes["match_status_code"].Value);
+                            if (_endMatchStatus.Contains(resultMatchStatusCode))
                             {
-                                if (_regularPeriodSports.Contains(sport))
+                                if (resultNode.Attributes["home_score"] == null || resultNode.Attributes["away_score"] == null)
                                 {
-                                    if (scoreNode.Attributes["type"].Value == "regular_period")
+                                    return new BaseResponseDTO<BetSettlementScoreResponseDTO>
                                     {
-                                        homeScore += Convert.ToInt32(scoreNode.Attributes["home_score"].Value);
-                                        awayScore += Convert.ToInt32(scoreNode.Attributes["away_score"].Value);
-
-                                        //periodScores.Add(PreparePeriodScoreByXmlNode(scoreNode));
-                                    }
+                                        StatusCode = StatusCode.No_Record_Found,
+                                        Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                                    };
                                 }
-                                //else
-                                    //periodScores.Add(PreparePeriodScoreByXmlNode(scoreNode));
+                                setlementScore = $"{sportStatusNode.Attributes["home_score"].Value} - {sportStatusNode.Attributes["away_score"].Value}";
                             }
-
-                            // get the final score for the sports in the _regularPeriodSports (OT and penalties are not counted)
-                            if (_regularPeriodSports.Contains(sport))
-                                setlementScore = $"{homeScore} - {awayScore}";
                         }
 
                         #endregion
@@ -270,7 +259,7 @@ namespace Platform.Sportsbook.API.Repository
                     }
                 }
 
-               
+
             }
             catch (Exception ex)
             {
@@ -436,7 +425,7 @@ namespace Platform.Sportsbook.API.Repository
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-           
+
             //Addtional Filter
             if (request.SegmentId > 0)
                 fixtures = fixtures.Where(s => s.SegId == request.SegmentId).ToList();
@@ -858,8 +847,8 @@ namespace Platform.Sportsbook.API.Repository
                 finalResult.Add(new SportSelectorMarketTemplateDTO
                 {
                     SportId = sport.Key,
-                    MarketTemplates = sport.Select(s => new SelectorMarketTemplateDTO 
-                    { 
+                    MarketTemplates = sport.Select(s => new SelectorMarketTemplateDTO
+                    {
                         MarketTemplateId = s.MarketTemplateId,
                         MarketTemplateCode = s.MarketTemplateCode,
                         SortOrder = s.SortOrder
@@ -4720,7 +4709,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var bettingStatus = result.Item4;
 
-            if(isBoosted)
+            if (isBoosted)
             {
                 string boostedOddsStr = GetClientBoostedOdds(selection.ClBoOd, clientCode);
                 if (!string.IsNullOrEmpty(boostedOddsStr))
@@ -5260,7 +5249,7 @@ namespace Platform.Sportsbook.API.Repository
                     var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa);
                     var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
-                    var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c => c.PrFiId == fixture.PrFiId );
+                    var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c => c.PrFiId == fixture.PrFiId);
                     var marketMappingProjection = Builders<MarketMapping>.Projection.Include(c => c.PrFiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaSp);
                     var marketMappings = marketMappingCollection.Find(marketMappingFilter).Project<MarketMappingFilter>(marketMappingProjection).ToListAsync();
 
@@ -5393,7 +5382,8 @@ namespace Platform.Sportsbook.API.Repository
             if (request.ClientCodes != null && request.ClientCodes.Any())
             {
                 request.ClientCodes.ForEach(
-                    c => {
+                    c =>
+                    {
                         if (IsOEEnable(c))
                             fixtures = fixtures.Where(f => f.ClCo.Contains(c)).ToList();
                     });
@@ -5727,7 +5717,8 @@ namespace Platform.Sportsbook.API.Repository
             if (request.ClientCodes != null && request.ClientCodes.Any())
             {
                 request.ClientCodes.ForEach(
-                    c => {
+                    c =>
+                    {
                         if (IsOEEnable(c))
                             fixtures = fixtures.Where(f => f.ClCo.Contains(c) || f.SpId > 1000).ToList();
                     });

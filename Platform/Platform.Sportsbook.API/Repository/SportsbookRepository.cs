@@ -16,6 +16,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
+using System.Xml;
 
 namespace Platform.Sportsbook.API.Repository
 {
@@ -64,6 +65,7 @@ namespace Platform.Sportsbook.API.Repository
             _httpClient.BaseAddress = new Uri("https://av-api.betradar.com");
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer C9SdxJm170K61OY152");
         }
+
         public async Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(LivestreamRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.PrFiId == request.ProviderFixtureId);
@@ -89,7 +91,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (!string.IsNullOrEmpty(fixture.GeAl) && !string.IsNullOrEmpty(request.IPCountryCode))
             {
-                if(!fixture.GeAl.Split(",").Any(g => g.ToUpper() == request.IPCountryCode.ToUpper()))
+                if (!fixture.GeAl.Split(",").Any(g => g.ToUpper() == request.IPCountryCode.ToUpper()))
                     return new BaseResponseDTO<LivestreamResponseDTO>
                     {
                         StatusCode = StatusCode.Livestream_Is_Not_Available_In_Your_Region,
@@ -143,6 +145,114 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
         }
+
+        public async Task<BaseResponseDTO<BetSettlementScoreResponseDTO>> GetBetSettlementScore(BetSettlementScoreRequestDTO request)
+        {
+            var setlementScore = string.Empty;
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == request.FixtureId);
+            var fixture = await fixtureCollection.Find(fixtureFilter).FirstOrDefaultAsync();
+
+            if (fixture == null)
+            {
+                return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                {
+                    StatusCode = StatusCode.No_Record_Found,
+                    Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                };
+            }
+
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri("https://api.betradar.com");
+                    client.DefaultRequestHeaders.Add("x-access-token", "wLCaM7vc80CADU33rz");
+
+                    var response = await client.GetAsync($"/v1/sports/en/sport_events/{fixture.FiSp}/summary.xml");
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var result = await response.Content.ReadAsStringAsync();
+
+                        XmlDocument doc = new XmlDocument();
+
+                        doc.LoadXml(result);
+
+                        #region Validate feed
+
+                        var sportStatusNode = doc.ChildNodes[1].ChildNodes[2];
+                        
+                        var _endMatchStatus = new[] { (int)MatchStatus.Ended, (int)MatchStatus.AET, (int)MatchStatus.AOT, (int)MatchStatus.AP, (int)MatchStatus.Retired };
+                        
+                        // applicable to all sports
+                        // if there are still no final home or away score yet skip the current iteration.
+                        if (sportStatusNode.Attributes["home_score"] == null || sportStatusNode.Attributes["away_score"] == null)
+                        {
+                            return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                            {
+                                StatusCode = StatusCode.No_Record_Found,
+                                Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                            };
+                        }
+                        else
+                        {
+                            setlementScore = $"{sportStatusNode.Attributes["home_score"].Value} - {sportStatusNode.Attributes["away_score"].Value}";
+                        }
+
+                        if (sportStatusNode.ChildNodes.Count > 0)
+                        {
+                            //get from result node
+                            var resultNode = sportStatusNode.ChildNodes[1];
+                            var resultMatchStatusCode = sportStatusNode.Attributes["match_status_code"] == null ? 0 : Convert.ToInt32(sportStatusNode.Attributes["match_status_code"].Value);
+                            if (_endMatchStatus.Contains(resultMatchStatusCode))
+                            {
+                                if (resultNode.Attributes["home_score"] == null || resultNode.Attributes["away_score"] == null)
+                                {
+                                    return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                                    {
+                                        StatusCode = StatusCode.No_Record_Found,
+                                        Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                                    };
+                                }
+                                setlementScore = $"{sportStatusNode.Attributes["home_score"].Value} - {sportStatusNode.Attributes["away_score"].Value}";
+                            }
+                        }
+
+                        #endregion
+
+                        return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                        {
+                            StatusCode = StatusCode.Success,
+                            Message = StatusCode.Success.ToString(),
+                            Result = new BetSettlementScoreResponseDTO
+                            {
+                                Score = setlementScore,
+                            }
+                        };
+                    }
+                    else
+                    {
+                        return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                        {
+                            StatusCode = StatusCode.No_Record_Found,
+                            Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                        };
+                    }
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
+            }
+        }
+
+
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetTopLeagues(TopLeaguesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
@@ -296,7 +406,7 @@ namespace Platform.Sportsbook.API.Repository
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-           
+
             //Addtional Filter
             if (request.SegmentId > 0)
                 fixtures = fixtures.Where(s => s.SegId == request.SegmentId).ToList();
@@ -718,8 +828,8 @@ namespace Platform.Sportsbook.API.Repository
                 finalResult.Add(new SportSelectorMarketTemplateDTO
                 {
                     SportId = sport.Key,
-                    MarketTemplates = sport.Select(s => new SelectorMarketTemplateDTO 
-                    { 
+                    MarketTemplates = sport.Select(s => new SelectorMarketTemplateDTO
+                    {
                         MarketTemplateId = s.MarketTemplateId,
                         MarketTemplateCode = s.MarketTemplateCode,
                         SortOrder = s.SortOrder
@@ -4580,7 +4690,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var bettingStatus = result.Item4;
 
-            if(isBoosted)
+            if (isBoosted)
             {
                 string boostedOddsStr = GetClientBoostedOdds(selection.ClBoOd, clientCode);
                 if (!string.IsNullOrEmpty(boostedOddsStr))
@@ -5120,7 +5230,7 @@ namespace Platform.Sportsbook.API.Repository
                     var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa);
                     var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
-                    var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c => c.PrFiId == fixture.PrFiId );
+                    var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c => c.PrFiId == fixture.PrFiId);
                     var marketMappingProjection = Builders<MarketMapping>.Projection.Include(c => c.PrFiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaSp);
                     var marketMappings = marketMappingCollection.Find(marketMappingFilter).Project<MarketMappingFilter>(marketMappingProjection).ToListAsync();
 
@@ -5253,7 +5363,8 @@ namespace Platform.Sportsbook.API.Repository
             if (request.ClientCodes != null && request.ClientCodes.Any())
             {
                 request.ClientCodes.ForEach(
-                    c => {
+                    c =>
+                    {
                         if (IsOEEnable(c))
                             fixtures = fixtures.Where(f => f.ClCo.Contains(c)).ToList();
                     });
@@ -5587,7 +5698,8 @@ namespace Platform.Sportsbook.API.Repository
             if (request.ClientCodes != null && request.ClientCodes.Any())
             {
                 request.ClientCodes.ForEach(
-                    c => {
+                    c =>
+                    {
                         if (IsOEEnable(c))
                             fixtures = fixtures.Where(f => f.ClCo.Contains(c) || f.SpId > 1000).ToList();
                     });

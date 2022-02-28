@@ -181,40 +181,21 @@ namespace Platform.Sportsbook.API.Repository
                         #region Validate feed
 
                         var sportStatusNode = doc.ChildNodes[1].ChildNodes[2];
-                        var sportStatus = Convert.ToInt32(sportStatusNode.Attributes["match_status_code"].Value);
-
-                        var _statusCode = "3,4".Split(",").ToList();
+                        
                         var _endMatchStatus = new[] { (int)MatchStatus.Ended, (int)MatchStatus.AET, (int)MatchStatus.AOT, (int)MatchStatus.AP, (int)MatchStatus.Retired };
-                        var _regularPeriodSports = "Soccer,American Football".Split(",").ToList();
-
-                        var sportStatusCode = sportStatusNode.Attributes["status_code"].Value;
-
-                        // if the value of the status_code attribute is not equal to 4 then skip the current iteration.
-                        if (!_statusCode.Contains(sportStatusCode))
+                        
+                        // applicable to all sports
+                        // if there are still no final home or away score yet skip the current iteration.
+                        if (sportStatusNode.Attributes["home_score"] == null || sportStatusNode.Attributes["away_score"] == null)
+                        {
                             return new BaseResponseDTO<BetSettlementScoreResponseDTO>
                             {
                                 StatusCode = StatusCode.No_Record_Found,
                                 Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
                             };
-
-                        // check if sport is included in the _regularPeriodSports
-                        var tournamentNode = doc.DocumentElement.GetElementsByTagName("tournament")[0];
-                        var sportNode = tournamentNode.ChildNodes[0];
-
-                        var sport = sportNode.Attributes["name"].Value;
-
-                        // applicable to all sports
-                        if (_endMatchStatus.Contains(sportStatus))
+                        }
+                        else
                         {
-                            // if there are still no final home or away score yet skip the current iteration.
-                            if (sportStatusNode.Attributes["home_score"] == null || sportStatusNode.Attributes["away_score"] == null)
-                            {
-                                return new BaseResponseDTO<BetSettlementScoreResponseDTO>
-                                {
-                                    StatusCode = StatusCode.No_Record_Found,
-                                    Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
-                                };
-                            }
                             setlementScore = $"{sportStatusNode.Attributes["home_score"].Value} - {sportStatusNode.Attributes["away_score"].Value}";
                         }
 

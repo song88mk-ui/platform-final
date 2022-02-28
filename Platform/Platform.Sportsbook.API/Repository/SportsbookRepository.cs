@@ -202,20 +202,25 @@ namespace Platform.Sportsbook.API.Repository
                         if (sportStatusNode.ChildNodes.Count > 0)
                         {
                             //get from result node
-                            var resultNode = sportStatusNode.ChildNodes[1];
-                            var resultMatchStatusCode = sportStatusNode.Attributes["match_status_code"] == null ? 0 : Convert.ToInt32(sportStatusNode.Attributes["match_status_code"].Value);
-                            if (_endMatchStatus.Contains(resultMatchStatusCode))
+                            var resultsNode = sportStatusNode.ChildNodes[1];
+                            if(resultsNode.ChildNodes.Count > 0)
                             {
-                                if (resultNode.Attributes["home_score"] == null || resultNode.Attributes["away_score"] == null)
+                                var resultNode = resultsNode.ChildNodes[0];
+                                var resultMatchStatusCode = resultNode.Attributes["match_status_code"] == null ? 0 : Convert.ToInt32(resultNode.Attributes["match_status_code"].Value);
+                                if (_endMatchStatus.Contains(resultMatchStatusCode))
                                 {
-                                    return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                                    if (resultNode.Attributes["home_score"] == null || resultNode.Attributes["away_score"] == null)
                                     {
-                                        StatusCode = StatusCode.No_Record_Found,
-                                        Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
-                                    };
+                                        return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                                        {
+                                            StatusCode = StatusCode.No_Record_Found,
+                                            Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                                        };
+                                    }
+                                    setlementScore = $"{resultNode.Attributes["home_score"].Value} - {resultNode.Attributes["away_score"].Value}";
                                 }
-                                setlementScore = $"{sportStatusNode.Attributes["home_score"].Value} - {sportStatusNode.Attributes["away_score"].Value}";
                             }
+                            
                         }
 
                         #endregion

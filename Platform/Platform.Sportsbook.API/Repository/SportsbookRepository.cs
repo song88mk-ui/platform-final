@@ -163,88 +163,103 @@ namespace Platform.Sportsbook.API.Repository
 
             try
             {
-                using (var client = new HttpClient())
+
+                #region SR API to get score
+                //using (var client = new HttpClient())
+                //{
+                //    client.BaseAddress = new Uri("https://api.betradar.com");
+                //    client.DefaultRequestHeaders.Add("x-access-token", "wLCaM7vc80CADU33rz");
+
+                //    var response = await client.GetAsync($"/v1/sports/en/sport_events/{fixture.FiSp}/summary.xml");
+
+                //    if (response.IsSuccessStatusCode)
+                //    {
+                //        var result = await response.Content.ReadAsStringAsync();
+
+                //        XmlDocument doc = new XmlDocument();
+
+                //        doc.LoadXml(result);
+
+                //        #region Validate feed
+
+                //        var sportStatusNode = doc.ChildNodes[1].ChildNodes[2];
+
+                //        var _endMatchStatus = new[] { (int)MatchStatus.Ended, (int)MatchStatus.AET, (int)MatchStatus.AOT, (int)MatchStatus.AP, (int)MatchStatus.Retired };
+
+                //        // applicable to all sports
+                //        // if there are still no final home or away score yet skip the current iteration.
+                //        if (sportStatusNode.Attributes["home_score"] == null || sportStatusNode.Attributes["away_score"] == null)
+                //        {
+                //            return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                //            {
+                //                StatusCode = StatusCode.No_Record_Found,
+                //                Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                //            };
+                //        }
+                //        else
+                //        {
+                //            setlementScore = $"{sportStatusNode.Attributes["home_score"].Value} - {sportStatusNode.Attributes["away_score"].Value}";
+                //        }
+
+                //        if (sportStatusNode.ChildNodes.Count > 0)
+                //        {
+                //            //get from result node
+                //            var resultsNode = sportStatusNode.ChildNodes[1];
+                //            if(resultsNode.ChildNodes.Count > 0)
+                //            {
+                //                var resultNode = resultsNode.ChildNodes[0];
+                //                var resultMatchStatusCode = resultNode.Attributes["match_status_code"] == null ? 0 : Convert.ToInt32(resultNode.Attributes["match_status_code"].Value);
+                //                if (_endMatchStatus.Contains(resultMatchStatusCode))
+                //                {
+                //                    if (resultNode.Attributes["home_score"] == null || resultNode.Attributes["away_score"] == null)
+                //                    {
+                //                        return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                //                        {
+                //                            StatusCode = StatusCode.No_Record_Found,
+                //                            Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                //                        };
+                //                    }
+                //                    setlementScore = $"{resultNode.Attributes["home_score"].Value} - {resultNode.Attributes["away_score"].Value}";
+                //                }
+                //            }
+
+                //        }
+
+                //        #endregion
+
+                //        return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                //        {
+                //            StatusCode = StatusCode.Success,
+                //            Message = StatusCode.Success.ToString(),
+                //            Result = new BetSettlementScoreResponseDTO
+                //            {
+                //                Score = setlementScore,
+                //            }
+                //        };
+                //    }
+                //    else
+                //    {
+                //        return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                //        {
+                //            StatusCode = StatusCode.No_Record_Found,
+                //            Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                //        };
+                //    }
+                //}
+
+                #endregion
+
+                setlementScore = fixture.Sc;
+
+                return new BaseResponseDTO<BetSettlementScoreResponseDTO>
                 {
-                    client.BaseAddress = new Uri("https://api.betradar.com");
-                    client.DefaultRequestHeaders.Add("x-access-token", "wLCaM7vc80CADU33rz");
-
-                    var response = await client.GetAsync($"/v1/sports/en/sport_events/{fixture.FiSp}/summary.xml");
-
-                    if (response.IsSuccessStatusCode)
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new BetSettlementScoreResponseDTO
                     {
-                        var result = await response.Content.ReadAsStringAsync();
-
-                        XmlDocument doc = new XmlDocument();
-
-                        doc.LoadXml(result);
-
-                        #region Validate feed
-
-                        var sportStatusNode = doc.ChildNodes[1].ChildNodes[2];
-                        
-                        var _endMatchStatus = new[] { (int)MatchStatus.Ended, (int)MatchStatus.AET, (int)MatchStatus.AOT, (int)MatchStatus.AP, (int)MatchStatus.Retired };
-                        
-                        // applicable to all sports
-                        // if there are still no final home or away score yet skip the current iteration.
-                        if (sportStatusNode.Attributes["home_score"] == null || sportStatusNode.Attributes["away_score"] == null)
-                        {
-                            return new BaseResponseDTO<BetSettlementScoreResponseDTO>
-                            {
-                                StatusCode = StatusCode.No_Record_Found,
-                                Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
-                            };
-                        }
-                        else
-                        {
-                            setlementScore = $"{sportStatusNode.Attributes["home_score"].Value} - {sportStatusNode.Attributes["away_score"].Value}";
-                        }
-
-                        if (sportStatusNode.ChildNodes.Count > 0)
-                        {
-                            //get from result node
-                            var resultsNode = sportStatusNode.ChildNodes[1];
-                            if(resultsNode.ChildNodes.Count > 0)
-                            {
-                                var resultNode = resultsNode.ChildNodes[0];
-                                var resultMatchStatusCode = resultNode.Attributes["match_status_code"] == null ? 0 : Convert.ToInt32(resultNode.Attributes["match_status_code"].Value);
-                                if (_endMatchStatus.Contains(resultMatchStatusCode))
-                                {
-                                    if (resultNode.Attributes["home_score"] == null || resultNode.Attributes["away_score"] == null)
-                                    {
-                                        return new BaseResponseDTO<BetSettlementScoreResponseDTO>
-                                        {
-                                            StatusCode = StatusCode.No_Record_Found,
-                                            Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
-                                        };
-                                    }
-                                    setlementScore = $"{resultNode.Attributes["home_score"].Value} - {resultNode.Attributes["away_score"].Value}";
-                                }
-                            }
-                            
-                        }
-
-                        #endregion
-
-                        return new BaseResponseDTO<BetSettlementScoreResponseDTO>
-                        {
-                            StatusCode = StatusCode.Success,
-                            Message = StatusCode.Success.ToString(),
-                            Result = new BetSettlementScoreResponseDTO
-                            {
-                                Score = setlementScore,
-                            }
-                        };
+                        Score = setlementScore,
                     }
-                    else
-                    {
-                        return new BaseResponseDTO<BetSettlementScoreResponseDTO>
-                        {
-                            StatusCode = StatusCode.No_Record_Found,
-                            Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
-                        };
-                    }
-                }
-
+                };
 
             }
             catch (Exception ex)

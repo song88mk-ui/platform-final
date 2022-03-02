@@ -238,7 +238,7 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/livestream")]
         public async Task<IActionResult> GetLivestream([FromQuery] LivestreamRequest request)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
+            var ipCountryCode = string.Empty; // HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
@@ -442,20 +442,18 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/userfavorites/fixtures")]
         public async Task<IActionResult> GetUserFavorites2()
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetUserFavorites2(apiKey, clientId, languageCode, operatorToken, ipCountryCode);
+            var result = await _platformRepository.GetUserFavorites2(apiKey, clientId, languageCode, operatorToken);
 
             var parameters = new { };
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -479,20 +477,18 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/userfavorites")]
         public async Task<IActionResult> GetUserFavorites()
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetUserFavorites(apiKey, clientId, languageCode, operatorToken, ipCountryCode);
+            var result = await _platformRepository.GetUserFavorites(apiKey, clientId, languageCode, operatorToken);
 
             var parameters = new { };
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -516,19 +512,17 @@ namespace Platform.API.Controllers
         [HttpGet("v2/sportsbook/topfixtures")]
         public async Task<IActionResult> GetTopFixtures2()
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetTopFixtures(apiKey, clientId, languageCode, ipCountryCode);
+            var result = await _platformRepository.GetTopFixtures(apiKey, clientId, languageCode);
 
             var parameters = new { };
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -623,13 +617,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/livefixtures")]
         public async Task<IActionResult> GetLiveFixtures([FromQuery] int sportId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetLiveFixtures(apiKey, clientId, languageCode, new FixtureRequest { SportId = sportId }, ipCountryCode);
+            var result = await _platformRepository.GetLiveFixtures(apiKey, clientId, languageCode, new FixtureRequest { SportId = sportId });
 
             var parameters = new
             {
@@ -638,7 +631,6 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -662,13 +654,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/segments/leagues/livefixtures")]
         public async Task<IActionResult> GetLiveFixturesByLeague([FromQuery] int sportId, int segmentId, int leagueId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetLiveFixturesByLeague(apiKey, clientId, languageCode, new FixtureRequest { SportId = sportId, SegmentId = segmentId, LeagueId = leagueId }, ipCountryCode);
+            var result = await _platformRepository.GetLiveFixturesByLeague(apiKey, clientId, languageCode, new FixtureRequest { SportId = sportId, SegmentId = segmentId, LeagueId = leagueId });
 
             var parameters = new
             {
@@ -679,7 +670,6 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -703,13 +693,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/todayfixtures")]
         public async Task<IActionResult> GetTodayFixtures([FromQuery] int sportId, int minuteUTCOffset)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetTodayFixtures(apiKey, clientId, languageCode, new TodayFixtureRequest { SportId = sportId, MinuteUTCOffset = minuteUTCOffset }, ipCountryCode);
+            var result = await _platformRepository.GetTodayFixtures(apiKey, clientId, languageCode, new TodayFixtureRequest { SportId = sportId, MinuteUTCOffset = minuteUTCOffset });
 
             var parameters = new
             {
@@ -719,7 +708,6 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -743,13 +731,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/segments/leagues/todayfixtures")]
         public async Task<IActionResult> GetTodayFixturesByLeague([FromQuery] int sportId, int segmentId, int leagueId, int minuteUTCOffset)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetTodayFixturesByLeague(apiKey, clientId, languageCode, new TodayFixtureRequest { SportId = sportId, SegmentId = segmentId, LeagueId = leagueId, MinuteUTCOffset = minuteUTCOffset }, ipCountryCode);
+            var result = await _platformRepository.GetTodayFixturesByLeague(apiKey, clientId, languageCode, new TodayFixtureRequest { SportId = sportId, SegmentId = segmentId, LeagueId = leagueId, MinuteUTCOffset = minuteUTCOffset });
 
             var parameters = new
             {
@@ -761,7 +748,6 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -785,13 +771,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/upcomingfixtures")]
         public async Task<IActionResult> GetUpcomingFixtures([FromQuery] int sportId, int minuteUTCOffset)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetUpcomingFixtures(apiKey, clientId, languageCode, new UpcomingFixtureRequest { SportId = sportId, MinuteUTCOffset = minuteUTCOffset }, ipCountryCode);
+            var result = await _platformRepository.GetUpcomingFixtures(apiKey, clientId, languageCode, new UpcomingFixtureRequest { SportId = sportId, MinuteUTCOffset = minuteUTCOffset });
 
             var parameters = new
             {
@@ -801,7 +786,6 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -825,13 +809,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/dailyfixtures")]
         public async Task<IActionResult> GetDailyFixtures([FromQuery] int sportId, DateTime dateUTC, int minuteUTCOffset)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetDailyFixtures(apiKey, clientId, languageCode, new DailyFixtureRequest { SportId = sportId, DateUTC = dateUTC, MinuteUTCOffset = minuteUTCOffset }, ipCountryCode);
+            var result = await _platformRepository.GetDailyFixtures(apiKey, clientId, languageCode, new DailyFixtureRequest { SportId = sportId, DateUTC = dateUTC, MinuteUTCOffset = minuteUTCOffset });
 
             var parameters = new
             {
@@ -842,7 +825,6 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -866,13 +848,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/segments/leagues/dailyfixtures")]
         public async Task<IActionResult> GetDailyFixturesByLeague([FromQuery] int sportId, int segmentId, int leagueId, DateTime dateUTC, int minuteUTCOffset)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetDailyFixturesByLeague(apiKey, clientId, languageCode, new DailyFixtureRequest { SportId = sportId, SegmentId = segmentId, LeagueId = leagueId, DateUTC = dateUTC, MinuteUTCOffset = minuteUTCOffset }, ipCountryCode);
+            var result = await _platformRepository.GetDailyFixturesByLeague(apiKey, clientId, languageCode, new DailyFixtureRequest { SportId = sportId, SegmentId = segmentId, LeagueId = leagueId, DateUTC = dateUTC, MinuteUTCOffset = minuteUTCOffset });
 
             var parameters = new
             {
@@ -885,7 +866,6 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -909,13 +889,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/outrightfixtures")]
         public async Task<IActionResult> GetOutrightFixtures([FromQuery] int sportId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetOutrightFixtures(apiKey, clientId, languageCode, new OutrightFixtureRequest { SportId = sportId }, ipCountryCode);
+            var result = await _platformRepository.GetOutrightFixtures(apiKey, clientId, languageCode, new OutrightFixtureRequest { SportId = sportId });
 
             var parameters = new
             {
@@ -924,7 +903,6 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -948,13 +926,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/segments/leagues/outrightfixtures")]
         public async Task<IActionResult> GetOutrightFixturesByLeague([FromQuery] int sportId, int segmentId, int leagueId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetOutrightFixturesByLeague(apiKey, clientId, languageCode, new OutrightFixtureRequest { SportId = sportId, SegmentId = segmentId, LeagueId = leagueId }, ipCountryCode);
+            var result = await _platformRepository.GetOutrightFixturesByLeague(apiKey, clientId, languageCode, new OutrightFixtureRequest { SportId = sportId, SegmentId = segmentId, LeagueId = leagueId });
 
             var parameters = new
             {
@@ -965,7 +942,6 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -989,13 +965,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/topleaguefixtures")]
         public async Task<IActionResult> GetFixtures([FromQuery] int sportId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetTopLeagueFixtures(apiKey, clientId, languageCode, new TopLeagueFixtureRequest { SportId = sportId }, ipCountryCode);
+            var result = await _platformRepository.GetTopLeagueFixtures(apiKey, clientId, languageCode, new TopLeagueFixtureRequest { SportId = sportId });
 
             var parameters = new
             {
@@ -1004,7 +979,6 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -1028,13 +1002,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/segments/fixtures")]
         public async Task<IActionResult> GetFixtures([FromQuery] int sportId, int segmentId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetSegmentFixtures(apiKey, clientId, languageCode, new SegmentFixtureRequest { SportId = sportId, SegmentId = segmentId }, ipCountryCode);
+            var result = await _platformRepository.GetSegmentFixtures(apiKey, clientId, languageCode, new SegmentFixtureRequest { SportId = sportId, SegmentId = segmentId });
 
             var parameters = new
             {
@@ -1044,7 +1017,6 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -1068,13 +1040,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/segments/leagues/fixtures")]
         public async Task<IActionResult> GetFixtures([FromQuery] int sportId, int segmentId, int leagueId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetFixtures(apiKey, clientId, languageCode, new LeagueFixtureRequest { SportId = sportId, SegmentId = segmentId, LeagueId = leagueId }, ipCountryCode);
+            var result = await _platformRepository.GetFixtures(apiKey, clientId, languageCode, new LeagueFixtureRequest { SportId = sportId, SegmentId = segmentId, LeagueId = leagueId });
 
             var parameters = new
             {
@@ -1085,7 +1056,6 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -1183,13 +1153,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/fixturedetails")]
         public async Task<IActionResult> GetFixtureDetails([FromQuery] string fixtureId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetFixtureDetails(apiKey, clientId, languageCode, new FixtureDetailsRequest { FixtureId = fixtureId }, ipCountryCode);
+            var result = await _platformRepository.GetFixtureDetails(apiKey, clientId, languageCode, new FixtureDetailsRequest { FixtureId = fixtureId });
 
             var parameters = new
             {
@@ -1198,7 +1167,6 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -1222,13 +1190,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/selectiondetails")]
         public async Task<IActionResult> GetSelectionDetails([FromQuery] string fixtureId, string marketId, string selectionId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetSelectionDetails(apiKey, clientId, languageCode, new FixtureMarketSelectionDetailsRequest { FixtureId = fixtureId, MarketId = marketId, SelectionId = selectionId }, ipCountryCode);
+            var result = await _platformRepository.GetSelectionDetails(apiKey, clientId, languageCode, new FixtureMarketSelectionDetailsRequest { FixtureId = fixtureId, MarketId = marketId, SelectionId = selectionId });
 
             var parameters = new
             {
@@ -1239,7 +1206,6 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },

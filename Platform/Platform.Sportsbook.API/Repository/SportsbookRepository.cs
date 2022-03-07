@@ -6223,7 +6223,7 @@ namespace Platform.Sportsbook.API.Repository
                             result.Add(new ClientOdds
                             {
                                 ClientCode = client.Item1,
-                                Odds = selection.Od,
+                                Odds = GetMasterOddsWithAddedMargin(selection.Od),
                                 SelectionTemplateId = selection.SeTeId,
                                 SelectionId = selection.SeId
                             });
@@ -6238,7 +6238,7 @@ namespace Platform.Sportsbook.API.Repository
                             result.Add(new ClientOdds
                             {
                                 ClientCode = client.Item1,
-                                Odds = selection.Od,
+                                Odds = GetMasterOddsWithAddedMargin(selection.Od),
                                 SelectionTemplateId = selection.SeTeId,
                                 SelectionId = selection.SeId
                             });
@@ -6253,7 +6253,7 @@ namespace Platform.Sportsbook.API.Repository
                             result.Add(new ClientOdds
                             {
                                 ClientCode = client.Item1,
-                                Odds = selection.Od,
+                                Odds = GetMasterOddsWithAddedMargin(selection.Od),
                                 SelectionTemplateId = selection.SeTeId,
                                 SelectionId = selection.SeId
                             });
@@ -6268,13 +6268,16 @@ namespace Platform.Sportsbook.API.Repository
                             result.Add(new ClientOdds
                             {
                                 ClientCode = client.Item1,
-                                Odds = selection.Od,
+                                Odds = GetMasterOddsWithAddedMargin(selection.Od),
                                 SelectionTemplateId = selection.SeTeId,
                                 SelectionId = selection.SeId
                             });
 
                             continue;
                         }
+
+                        if (odds > selection.Od)
+                            odds = GetMasterOddsWithAddedMargin(selection.Od);
 
                         result.Add(new ClientOdds
                         {
@@ -6326,7 +6329,7 @@ namespace Platform.Sportsbook.API.Repository
                             result.Add(new ClientOdds
                             {
                                 ClientCode = client.Item1,
-                                Odds = selection.Od,
+                                Odds = GetMasterOddsWithAddedMargin(selection.Od),
                                 SelectionTemplateId = selection.SeTeId,
                                 SelectionId = selection.SeId
                             });
@@ -6341,7 +6344,7 @@ namespace Platform.Sportsbook.API.Repository
                             result.Add(new ClientOdds
                             {
                                 ClientCode = client.Item1,
-                                Odds = selection.Od,
+                                Odds = GetMasterOddsWithAddedMargin(selection.Od),
                                 SelectionTemplateId = selection.SeTeId,
                                 SelectionId = selection.SeId
                             });
@@ -6356,7 +6359,7 @@ namespace Platform.Sportsbook.API.Repository
                             result.Add(new ClientOdds
                             {
                                 ClientCode = client.Item1,
-                                Odds = selection.Od,
+                                Odds = GetMasterOddsWithAddedMargin(selection.Od),
                                 SelectionTemplateId = selection.SeTeId,
                                 SelectionId = selection.SeId
                             });
@@ -6371,13 +6374,16 @@ namespace Platform.Sportsbook.API.Repository
                             result.Add(new ClientOdds
                             {
                                 ClientCode = client.Item1,
-                                Odds = selection.Od,
+                                Odds = GetMasterOddsWithAddedMargin(selection.Od),
                                 SelectionTemplateId = selection.SeTeId,
                                 SelectionId = selection.SeId
                             });
 
                             continue;
                         }
+
+                        if (odds > selection.Od)
+                            odds = GetMasterOddsWithAddedMargin(selection.Od);
 
                         result.Add(new ClientOdds
                         {
@@ -6402,7 +6408,10 @@ namespace Platform.Sportsbook.API.Repository
 
             return result;
         }
-
+        private static decimal GetMasterOddsWithAddedMargin(decimal odds)
+        {
+            return Math.Round(100 / ((100 / odds) + 2m), 2);
+        }
     }
 
     public static class CurrentPeriodHelper

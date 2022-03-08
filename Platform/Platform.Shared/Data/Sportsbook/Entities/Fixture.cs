@@ -178,4 +178,14 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public string SpNa { get; set; }
     }
 
+    public class FixtureSettlementFilter
+    {
+        [BsonId]
+        public long FiId { get; set; }
+        public bool IsSu { get; set; }
+        public int FiStId { get; set; }
+        public string FiSp { get; set; }
+        public int SpId { get; set; }
+    }
+
 }

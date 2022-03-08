@@ -2314,7 +2314,7 @@ namespace Platform.Sportsbook.API.Repository
 
                 initialResult.Add(item);
 
-                if (initialResult.Count == 200 && _africaClientCodes.Contains(request.ClientCode))
+                if (initialResult.Count == 200 && _africaClientCodes.Contains(request.ClientCode.ToUpper()))
                     break;
             }
 

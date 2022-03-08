@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29905.134
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32126.317
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.API", "Platform.API\Platform.API.csproj", "{11A8576B-A266-4D75-B18B-6A5C27F582FB}"
 EndProject
@@ -17,8 +17,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Cancellation.Servi
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Settlement.Service", "Platform.Settlement.Service\Platform.Settlement.Service.csproj", "{4CAC3C09-65E3-4F4F-8F49-6EF886C2F6EF}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Betting.API.UnitTest", "Platform.Betting.API.UnitTest\Platform.Betting.API.UnitTest.csproj", "{283367E0-2DB5-459D-A479-3E940840F9F8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Client.API", "Platform.Client.API\Platform.Client.API.csproj", "{7B22A870-0C2A-4EA6-8039-1B8837FD9F82}"
 EndProject
@@ -46,9 +44,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.BetForwarder.Servi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Operator.Cashout.Service", "Platform.Operator.Cashout.Service\Platform.Operator.Cashout.Service.csproj", "{9EC34A60-5C6B-4AD6-BBE7-01F1C30E5DB5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.WebSocket.API", "Platform.WebSocket.API\Platform.WebSocket.API.csproj", "{E53EA40B-CFFD-4215-B283-2A38C2C680CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.WebSocket.API", "Platform.WebSocket.API\Platform.WebSocket.API.csproj", "{E53EA40B-CFFD-4215-B283-2A38C2C680CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.WebSocket.Client", "Platform.WebSocket.Client\Platform.WebSocket.Client.csproj", "{62C442E8-78DF-4274-9B2D-5A6EC1CFD297}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.WebSocket.Client", "Platform.WebSocket.Client\Platform.WebSocket.Client.csproj", "{62C442E8-78DF-4274-9B2D-5A6EC1CFD297}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -80,10 +78,6 @@ Global
 		{4CAC3C09-65E3-4F4F-8F49-6EF886C2F6EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4CAC3C09-65E3-4F4F-8F49-6EF886C2F6EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4CAC3C09-65E3-4F4F-8F49-6EF886C2F6EF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{283367E0-2DB5-459D-A479-3E940840F9F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{283367E0-2DB5-459D-A479-3E940840F9F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{283367E0-2DB5-459D-A479-3E940840F9F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{283367E0-2DB5-459D-A479-3E940840F9F8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7B22A870-0C2A-4EA6-8039-1B8837FD9F82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7B22A870-0C2A-4EA6-8039-1B8837FD9F82}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7B22A870-0C2A-4EA6-8039-1B8837FD9F82}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -34,49 +34,22 @@ namespace Platform.SettlementScore.Service.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<CricketScoreResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                    XmlDocument doc = new XmlDocument();
-
-                    doc.LoadXml(result);
-
-                    #region Validate feed
-
-                    var sportStatusNode = doc.ChildNodes[1].ChildNodes[2];
-
-                    var _endMatchStatus = new[] { (int)MatchStatus.Ended, (int)MatchStatus.AET, (int)MatchStatus.AOT, (int)MatchStatus.AP, (int)MatchStatus.Retired };
-
-                    // applicable to all sports
-                    // if there are still no final home or away score yet skip the current iteration.
-                    if (sportStatusNode.Attributes["home_score"] == null || sportStatusNode.Attributes["away_score"] == null)
+                    if(result != null && result.Score != null)
                     {
-                        return string.Empty;
-                    }
-                    else
-                    {
-                        settlementScore = $"{sportStatusNode.Attributes["home_score"].Value} - {sportStatusNode.Attributes["away_score"].Value}";
-                    }
-
-                    if (sportStatusNode.ChildNodes.Count > 0)
-                    {
-                        //get from result node
-                        var resultsNode = sportStatusNode.ChildNodes[1];
-                        if (resultsNode.ChildNodes.Count > 0)
+                        var innings = result.Score.Innings;
+                        if(innings != null)
                         {
-                            var resultNode = resultsNode.ChildNodes[0];
-                            var resultMatchStatusCode = resultNode.Attributes["match_status_code"] == null ? 0 : Convert.ToInt32(resultNode.Attributes["match_status_code"].Value);
-                            if (_endMatchStatus.Contains(resultMatchStatusCode))
+                            foreach(var inning in innings)
                             {
-                                if (resultNode.Attributes["home_score"] == null || resultNode.Attributes["away_score"] == null)
-                                {
-                                    return string.Empty;
-                                }
-                                settlementScore = $"{resultNode.Attributes["home_score"].Value} - {resultNode.Attributes["away_score"].Value}";
+                                if (inning.InningsNumber == 1)
+                                    settlementScore += $"{inning.Summary} ";
+                                if (inning.InningsNumber == 2)
+                                    settlementScore += $"- {inning.Summary} ({inning.Overs} ov) ";
                             }
                         }
                     }
-
-                    #endregion
                 }
 
                 return settlementScore;

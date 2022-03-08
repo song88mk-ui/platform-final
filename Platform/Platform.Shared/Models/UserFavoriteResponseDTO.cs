@@ -29,6 +29,7 @@ namespace Platform.Shared.Models
         public string ClientCode { get; set; }
         public string UserId { get; set; }
         public LanguageCode LanguageCode { get; set; }
+        public string IpCountryCode { get; set; }
     }
 
     public class UserFavoriteInsertDeleteRequestDTO

@@ -260,6 +260,34 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpPost("v1/bet/resendsettlement")]
+        public async Task<IActionResult> ResendSettlement([FromBody] ResendSettlementRequestDTO request)
+        {
+            var result = await _platformRepository.ResendSettlement(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/bet/resendsettlement/details")]
+        public async Task<IActionResult> GetResendSettlementBetDetails([FromBody] ResendSettlementBetDetailRequestDTO request)
+        {
+            var result = await _platformRepository.GetResendSettlementBetDetails(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/client/parlaybonus")]
         public async Task<IActionResult> PostClientParlayBonus([FromBody] ParlayBonusRequestDTO request)
         {

@@ -2032,7 +2032,7 @@ namespace Platform.Betting.API.Repository
 
         public async Task<BaseResponseDTO<BetCashOutResponseDTO>> CashOutBet(CashoutBetRequestDTO request)
         {
-            var bet = _bettingContext.Bet.Find(request.BetId);
+            var bet = _bettingContext.Bet.AsNoTracking().Where(c => c.BetId == request.BetId).FirstOrDefault();
 
             if (bet == null || bet.BetStatusId != (int)BetStatus.Running)
             {
@@ -2148,7 +2148,7 @@ namespace Platform.Betting.API.Repository
         }
         public async Task<BaseResponseDTO<CashoutStateResponseDTO>> GetCashOut(CashoutStateRequestDTO request)
         {
-            var bet = _bettingContext.Bet.Find(request.BetId);
+            var bet = _bettingContext.Bet.AsNoTracking().Where(c => c.BetId == request.BetId).FirstOrDefault();
 
             if (bet == null || bet.BetStatusId != (int)BetStatus.Running)
             {

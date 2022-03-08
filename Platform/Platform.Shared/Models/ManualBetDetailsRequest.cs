@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Platform.Shared.Models
 {
@@ -11,5 +10,4 @@ namespace Platform.Shared.Models
         }
         public List<string> BetIds { get; set; }
     }
-
 }

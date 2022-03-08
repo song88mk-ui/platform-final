@@ -38,8 +38,9 @@ namespace Platform.Sportsbook.API.Repository
         private IMongoCollection<BettingStatus> primaryBettingStatusCollection;
         private readonly HttpClient _httpClient;
         private readonly IRabbitMQRepository _rabbitMQRepository;
+        private readonly List<string> _africaClientCodes = new List<string> { "10K","10G","10N","10T","10Z","FC4","10D","10M","10E","LBN" };
 
-        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMemCache memCache, IConfiguration configuration, IRabbitMQRepository rabbitMQRepository)
+    public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMemCache memCache, IConfiguration configuration, IRabbitMQRepository rabbitMQRepository)
         {
             _configuration = configuration;
             var client = new MongoClient(_configuration["ConnectionStrings:MongoDB-Sportsbook"]);
@@ -2305,11 +2306,16 @@ namespace Platform.Sportsbook.API.Repository
 
             var initialResult = new List<TempFixtureDTO>();
 
+
+
             foreach (var item in result)
             {
                 if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
 
                 initialResult.Add(item);
+
+                if (initialResult.Count == 200 && _africaClientCodes.Contains(request.ClientCode))
+                    break;
             }
 
             var finalResult = new List<FixtureDTO>();

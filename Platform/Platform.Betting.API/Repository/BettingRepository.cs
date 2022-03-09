@@ -2030,6 +2030,27 @@ namespace Platform.Betting.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<bool>> ResendSettlement(ResendSettlementMessageRequestDTO request)
+        {
+            foreach (var message in request.Messages)
+            {
+                _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                { 
+                    MessageType = message.MessageType,
+                    Payload = message.Info,
+                    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                    RoutingKey = "r.bet.operator"
+                });
+            }
+
+            return new BaseResponseDTO<bool>()
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString().Replace('_', ' '),
+                Result = true
+            };
+        }
+
         public async Task<BaseResponseDTO<BetCashOutResponseDTO>> CashOutBet(CashoutBetRequestDTO request)
         {
             var bet = _bettingContext.Bet.AsNoTracking().Where(c => c.BetId == request.BetId).FirstOrDefault();

@@ -114,6 +114,20 @@ namespace Platform.Betting.API.Controllers
             }
         }
 
+        [HttpPost("v1/bet/resendsettlement")]
+        public async Task<IActionResult> ResendSettlement([FromBody] ResendSettlementMessageRequestDTO request)
+        {
+            var result = await _bettingRepository.ResendSettlement(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/bet/cashout")]
         public async Task<IActionResult> CashoutBet([FromBody] CashoutBetRequestDTO request)
         {

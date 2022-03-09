@@ -5,6 +5,11 @@ namespace Platform.Shared.Models
 {
     public class ResendSettlementBetDetailResponseDTO
     {
+        public ResendSettlementBetDetailResponseDTO()
+        {
+            Bet = new ResendSettlementBetDetailDTO();
+        }
+
         public ResendSettlementBetDetailDTO Bet { get; set; }
     }
 

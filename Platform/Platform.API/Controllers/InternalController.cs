@@ -277,6 +277,7 @@ namespace Platform.API.Controllers
         [HttpPost("v1/bet/resendsettlement/details")]
         public async Task<IActionResult> GetResendSettlementBetDetails([FromBody] ResendSettlementBetDetailRequestDTO request)
         {
+            //
             var result = await _platformRepository.GetResendSettlementBetDetails(request);
 
             switch (result.StatusCode)

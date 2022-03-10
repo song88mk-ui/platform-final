@@ -2279,13 +2279,13 @@ namespace Platform.Betting.API.Repository
         {
             List<decimal> maximumStake = new List<decimal>();
 
-            maximumStake.Add(RoundUpDecimalValue(maxStakeBackOffice));
+            maximumStake.Add(maxStakeBackOffice);
 
             if (maxStakeTier > 0)
-                maximumStake.Add(RoundUpDecimalValue(maxStakeTier * exchangeRate));
+                maximumStake.Add((maxStakeTier * exchangeRate));
 
             if (maxStakeTier > 0)
-                maximumStake.Add(RoundUpDecimalValue((maxStakeTier * exchangeRate) / (odds - 1)));
+                maximumStake.Add(((maxStakeTier * exchangeRate) / (odds - 1)));
 
             return maximumStake.Min();
         }
@@ -2293,8 +2293,8 @@ namespace Platform.Betting.API.Repository
         {
             List<decimal> maximumStake = new List<decimal>();
 
-            maximumStake.Add(RoundUpDecimalValue(maxStakeBackOffice));
-            maximumStake.Add(RoundUpDecimalValue(parlayMaxPayout / odds));
+            maximumStake.Add(maxStakeBackOffice);
+            maximumStake.Add((parlayMaxPayout / odds));
 
             return maximumStake.Min();
         }

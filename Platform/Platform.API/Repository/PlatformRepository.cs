@@ -2651,7 +2651,8 @@ namespace Platform.API.Repository
                 {
                     BetId = s.BetId,
                     MessageType = s.MessageType,
-                    Info = s.Info
+                    Info = s.Info,
+                    CorrelationId = s.CorrelationId
                 }).ToList()
             };
 

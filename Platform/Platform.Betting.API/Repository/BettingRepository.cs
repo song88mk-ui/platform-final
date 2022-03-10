@@ -2038,7 +2038,7 @@ namespace Platform.Betting.API.Repository
                 { 
                     MessageType = message.MessageType,
                     Payload = message.Info,
-                    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                    CorrelationId = message.CorrelationId,
                     RoutingKey = "r.bet.operator"
                 });
             }

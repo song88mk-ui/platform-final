@@ -18,5 +18,6 @@ namespace Platform.Shared.Models
         public Guid BetId { get; set; }
         public string MessageType { get; set; }
         public string Info { get; set; }
+        public string CorrelationId { get; set; }
     }
 }

@@ -430,7 +430,7 @@ namespace Platform.Operator.Servicev2.Repository
                                 var isRetry = bet.RetryCount < 8 ? true : false;
 
                                 bet.Info = JsonSerializer.Serialize(message.OnBetSettlement);
-                                bet.IsRetry = bet.RetryCount + 1 == 8 ? false : true;
+                                bet.IsRetry = bet.RetryCount + 1 >= 8 ? false : true;
                                 bet.RetryCount = isRetry == true ? bet.RetryCount + 1 : bet.RetryCount;
 
                                 context.OperatorSettlementRetry.Update(bet);

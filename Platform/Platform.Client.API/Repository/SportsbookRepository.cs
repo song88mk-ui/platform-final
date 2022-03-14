@@ -32,27 +32,16 @@ namespace Platform.Client.API.Repository
             _httpClient.BaseAddress = new Uri(_configuration["API:PlatformSportsbookAPI"]);
             //_httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
-
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(string apiKey, string clientId, LanguageCode languageCode)
         {
-            var clientResponse = await GetClient(clientId);
-
-            if (clientResponse.StatusCode != StatusCode.Success)
-            {
-                return new BaseResponseDTO<ActiveFixturesResponseDTO>
-                {
-                    StatusCode = clientResponse.StatusCode,
-                    Message = clientResponse.Message
-                };
-            }
+            var clientCode = (await GetClient(clientId)).Result;
 
             var request = new ActiveFixturesRequestDTO
             {
-                ClientId = clientResponse.Result.ClientId,
+                ClientId = Guid.NewGuid(), //TODO: replace with proper validation
                 LanguageCode = languageCode,
-                ClientCode = clientResponse.Result.ClientCode
+                ClientCode = clientCode
             };
-
             try
             {
                 var response = await _httpClient.PostAsync($"v1/sportsbook/activefixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
@@ -84,23 +73,14 @@ namespace Platform.Client.API.Repository
         }
         public async Task<BaseResponseDTO<TWLimitedResponseDTO>> GetActiveFixtureDetails(string apiKey, string clientId, string fixtureId, LanguageCode languageCode)
         {
-            var clientResponse = await GetClient(clientId);
-
-            if (clientResponse.StatusCode != StatusCode.Success)
-            {
-                return new BaseResponseDTO<TWLimitedResponseDTO>
-                {
-                    StatusCode = clientResponse.StatusCode,
-                    Message = clientResponse.Message
-                };
-            }
+            var clientCode = (await GetClient(clientId)).Result;
 
             var request = new TWFixtureDetailsRequestDTO
             {
-                ClientId = clientResponse.Result.ClientId,
+                ClientId = Guid.NewGuid(), //TODO: replace with proper validation
                 LanguageCode = languageCode,
                 FixtureId = fixtureId,
-                ClientCode = clientResponse.Result.ClientCode
+                ClientCode = clientCode
             };
             try
             {
@@ -133,22 +113,13 @@ namespace Platform.Client.API.Repository
         }
         public async Task<BaseResponseDTO<ActiveFixtureCountResponseDTO>> GetActiveFixtureCount(string apiKey, string clientId, LanguageCode languageCode)
         {
-            var clientResponse = await GetClient(clientId);
-
-            if (clientResponse.StatusCode != StatusCode.Success)
-            {
-                return new BaseResponseDTO<ActiveFixtureCountResponseDTO>
-                {
-                    StatusCode = clientResponse.StatusCode,
-                    Message = clientResponse.Message
-                };
-            }
+            var clientCode = (await GetClient(clientId)).Result;
 
             var request = new ActiveFixtureCountRequestDTO
             {
-                ClientId = clientResponse.Result.ClientId,
+                ClientId = Guid.NewGuid(), //TODO: replace with proper validation
                 LanguageCode = languageCode,
-                ClientCode = clientResponse.Result.ClientCode
+                ClientCode = clientCode
             };
             try
             {
@@ -181,22 +152,13 @@ namespace Platform.Client.API.Repository
         }
         public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetSportsLookup(string apiKey, string clientId, LanguageCode languageCode)
         {
-            var clientResponse = await GetClient(clientId);
-
-            if (clientResponse.StatusCode != StatusCode.Success)
-            {
-                return new BaseResponseDTO<SportsLookupResponseDTO>
-                {
-                    StatusCode = clientResponse.StatusCode,
-                    Message = clientResponse.Message
-                };
-            }
+            var clientCode = (await GetClient(clientId)).Result;
 
             var request = new SportsLookupRequestDTO
             {
-                ClientId = clientResponse.Result.ClientId,
+                ClientId = Guid.NewGuid(), //TODO: replace with proper validation
                 LanguageCode = languageCode,
-                ClientCode = clientResponse.Result.ClientCode
+                ClientCode = clientCode
             };
 
             try
@@ -230,22 +192,13 @@ namespace Platform.Client.API.Repository
         }
         public async Task<BaseResponseDTO<SegmentsLookupResponseDTO>> GetSegmentsLookup(string apiKey, string clientId, LanguageCode languageCode)
         {
-            var clientResponse = await GetClient(clientId);
-
-            if (clientResponse.StatusCode != StatusCode.Success)
-            {
-                return new BaseResponseDTO<SegmentsLookupResponseDTO>
-                {
-                    StatusCode = clientResponse.StatusCode,
-                    Message = clientResponse.Message
-                };
-            }
+            var clientCode = (await GetClient(clientId)).Result;
 
             var request = new SegmentsLookupRequestDTO
             {
-                ClientId = clientResponse.Result.ClientId,
+                ClientId = Guid.NewGuid(), //TODO: replace with proper validation
                 LanguageCode = languageCode,
-                ClientCode = clientResponse.Result.ClientCode
+                ClientCode = clientCode
             };
 
             try
@@ -279,22 +232,13 @@ namespace Platform.Client.API.Repository
         }
         public async Task<BaseResponseDTO<LeaguesLookupResponseDTO>> GetLeaguesLookup(string apiKey, string clientId, LanguageCode languageCode)
         {
-            var clientResponse = await GetClient(clientId);
-
-            if (clientResponse.StatusCode != StatusCode.Success)
-            {
-                return new BaseResponseDTO<LeaguesLookupResponseDTO>
-                {
-                    StatusCode = clientResponse.StatusCode,
-                    Message = clientResponse.Message
-                };
-            }
+            var clientCode = (await GetClient(clientId)).Result;
 
             var request = new LeaguesLookupRequestDTO
             {
-                ClientId = clientResponse.Result.ClientId,
+                ClientId = Guid.NewGuid(), //TODO: replace with proper validation
                 LanguageCode = languageCode,
-                ClientCode = clientResponse.Result.ClientCode
+                ClientCode = clientCode
             };
 
             try
@@ -328,18 +272,52 @@ namespace Platform.Client.API.Repository
         }
         public async Task<BaseResponseDTO<CustomerConfidenceFactorResponseDTO>> GetCustomerConfidenceFactor(string apiKey, string clientId, string userId)
         {
-            var clientResponse = await GetClient(clientId);
+            var clientCode = _configuration["Custom:ClientCode"];
 
-            if (clientResponse.StatusCode != StatusCode.Success)
+            if (!string.IsNullOrEmpty(clientId))
             {
-                return new BaseResponseDTO<CustomerConfidenceFactorResponseDTO>
-                {
-                    StatusCode = clientResponse.StatusCode,
-                    Message = clientResponse.Message
-                };
+                //if (clientId.ToUpper() == "5093617A-9367-EB11-89FB-00224815B68B")
+                //    clientCode = "10" ;
+
+                if (clientId.ToUpper() == "5093617A-9367-EB11-89FB-00224815B68B" || clientId.ToUpper() == "BFED6DA4-D1B5-4437-665D-08D8EE99AC1C")
+                    clientCode = "10I";
+
+                if (clientId.ToUpper() == "A96AB8BC-2970-EB11-89FC-00224815B68B" || clientId.ToUpper() == "917070EC-1DC1-4E10-28E8-08D8EE99CA8E")
+                    clientCode = "10J";
+
+                if (clientId.ToUpper() == "18AD372D-0ADA-4432-47B8-08D999311B35" || clientId.ToUpper() == "54724BB0-B74E-476E-495D-08D9A5CC4213")
+                    clientCode = "10C";
+
+                if (clientId.ToUpper() == "BCF2028F-A47F-46FE-F2E4-08D9E2404694" || clientId.ToUpper() == "B041590F-C52D-42A7-81B6-08D9E23C1F40")
+                    clientCode = "GUR";
+
+                if (clientId.ToUpper() == "A15C2C99-1F0E-4C24-CD4C-08D930DC2F4E" || clientId.ToUpper() == "D59C309B-7204-40D5-A986-08D940573A8F")
+                    clientCode = "10K";
+
+                if (clientId.ToUpper() == "BC04ECBB-6A1E-414D-CD4D-08D930DC2F4E" || clientId.ToUpper() == "244F1375-7BC3-48D9-66F9-08D94057C6CB")
+                    clientCode = "10G";
+
+                if (clientId.ToUpper() == "AFD99514-CB77-4667-CD50-08D930DC2F4E" || clientId.ToUpper() == "5E777D88-645A-420E-66FA-08D94057C6CB")
+                    clientCode = "10N";
+
+                if (clientId.ToUpper() == "694CEF9F-4C35-4C7B-CD4E-08D930DC2F4E" || clientId.ToUpper() == "75DD691C-F96C-4816-66FB-08D94057C6CB")
+                    clientCode = "10T";
+
+                if (clientId.ToUpper() == "AE83C5AD-396E-4406-CD4F-08D930DC2F4E" || clientId.ToUpper() == "5245C54C-EB98-42E4-66FC-08D94057C6CB")
+                    clientCode = "10Z";
+
+                if (clientId.ToUpper() == "90C341DB-928A-4B05-9A99-08D9710E7BE7" || clientId.ToUpper() == "FED408C5-9A6B-4977-BADB-08D9711AECF0")
+                    clientCode = "10D";
+
+                if (clientId.ToUpper() == "734D846F-EC9C-4BA2-C527-08D9711147D0" || clientId.ToUpper() == "00C7BFF1-814E-4B5F-BADC-08D9711AECF0")
+                    clientCode = "10M";
+
+                if (clientId.ToUpper() == "7322EC66-07B9-4E0D-C528-08D9711147D0" || clientId.ToUpper() == "6FA4D6C4-3093-4ABB-4853-08D9711DA854")
+                    clientCode = "10E";
+
             }
 
-            var result = await _platformContext.ConfidenceFactor.Where(c => c.UserId == $"{clientResponse.Result.ClientCode}{userId.Replace("-", string.Empty)}").ToListAsync();
+            var result = await _platformContext.ConfidenceFactor.Where(c => c.UserId == $"{clientCode}{userId.Replace("-", string.Empty)}").ToListAsync();
 
             if (result.Count == 0)
             {
@@ -370,60 +348,40 @@ namespace Platform.Client.API.Repository
             };
         }
 
-        private async Task<BaseResponseDTO<ClientResponse>> GetClient(string clientId)
+        private async Task<BaseResponseDTO<string>> GetClient(string clientId)
         {
             var isGuid = Guid.TryParse(clientId, out Guid guid);
 
-            if (isGuid == false)
+            if (isGuid)
             {
-                return new BaseResponseDTO<ClientResponse>
-                {
-                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
-                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
-                };
-            }
+                var result = await _platformContext.Client.FindAsync(guid);
 
-            var result = await _platformContext.Client.FindAsync(guid);
-
-            if (result == null || result.IsActive == false)
-            {
-                return new BaseResponseDTO<ClientResponse>
+                if (result == null || result.IsActive == false)
                 {
-                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
-                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
-                };
-            }
-            else
-            {
-                return new BaseResponseDTO<ClientResponse>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString().Replace('_', ' '),
-                    Result = new ClientResponse
+                    return new BaseResponseDTO<string>
                     {
-                        ClientId = result.ClientId,
-                        ClientName = result.ClientName,
-                        ClientCode = result.ClientCode,
-                        LimitId = result.LimitId,
-                        IsActive = result.IsActive,
-                        Endpoint = result.Endpoint,
-                        CompanyShare = result.EffectiveDate.Date < DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare,
-                        ClientIdRef = result.ClientIdRef
-                    }
-                };
+                        StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                        Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' '),
+                        Result = string.Empty
+                    };
+                }
+                else
+                {
+                    return new BaseResponseDTO<string>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString().Replace('_', ' '),
+                        Result = result.ClientCode
+                    };
+                }
             }
-        }
-    }
 
-    public class ClientResponse
-    {
-        public Guid ClientId { get; set; }
-        public string ClientName { get; set; }
-        public string ClientCode { get; set; }
-        public string LimitId { get; set; }
-        public bool IsActive { get; set; }
-        public string Endpoint { get; set; }
-        public decimal CompanyShare { get; set; }
-        public int ClientIdRef { get; set; }
+            return new BaseResponseDTO<string>
+            {
+                StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' '),
+                Result = string.Empty
+            };
+        }
     }
 }

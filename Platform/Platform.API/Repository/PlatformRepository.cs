@@ -2683,9 +2683,9 @@ namespace Platform.API.Repository
         {
             if (Guid.TryParse(request.BetId, out var betId))
             {
-                var bet = await _platformContext.OperatorSettlementRetry.AsNoTracking().FirstOrDefaultAsync(c => c.BetId == betId);
-
                 var response = new ResendSettlementBetDetailResponseDTO();
+
+                var bet = await _platformContext.OperatorSettlementRetry.AsNoTracking().FirstOrDefaultAsync(c => c.BetId == betId);
 
                 if (bet != null)
                 {
@@ -2781,6 +2781,109 @@ namespace Platform.API.Repository
                             DeadHeatFactor = s.DeadHeatFactor
                         }).ToList()
                     };
+                }
+                else
+                {
+                    // validate if bet is rejected
+                    var manualbetDetails = await _bettingRepository.GetManualBetDetails(new ManualBetDetailsRequest
+                    {
+                        BetIds = new List<string>() { request.BetId }
+                    });
+
+                    if (manualbetDetails.Result.Bets.Any())
+                    {
+                        var betDetail = manualbetDetails.Result.Bets.Select(s => new ResendSettlementBetDetailDTO
+                        {
+                            BetId = s.BetId,
+                            UserId = s.UserId,
+                            Stake = s.Stake,
+                            TrueStake = s.TrueStake,
+                            Odds = s.Odds,
+                            OddsTypeId = s.OddsTypeId,
+                            OddsTypeName = s.OddsTypeName,
+                            Payout = s.Payout,
+                            WinLoss = s.WinLoss,
+                            BetStatusId = s.BetStatusId,
+                            BetStatusName = s.BetStatusName,
+                            Reason = s.Reason,
+                            CurrencyCode = s.CurrencyCode,
+                            LanguageCode = s.LanguageCode,
+                            ExchangeRate = s.ExchangeRate,
+                            IPAddress = s.IPAddress,
+                            Channel = s.Channel,
+                            ClientId = s.ClientId,
+                            ClientIdRef = s.ClientIdRef,
+                            ClientCode = s.ClientCode,
+                            ClientName = s.ClientName,
+                            LimitId = s.LimitId,
+                            Endpoint = s.Endpoint,
+                            OperatorToken = s.OperatorToken,
+                            CompanyShare = s.CompanyShare,
+                            IsResettled = s.IsResettled,
+                            IsCashout = s.IsCashout,
+                            BetDate = s.BetDate,
+                            BetDateOffset = s.BetDateOffset,
+                            SettlementDate = s.SettlementDate,
+                            SettlementDateOffset = s.SettlementDateOffset,
+                            StakeTax = s.StakeTax,
+                            WinningsTax = s.WinningsTax,
+                            TaxedStake = s.TaxedStake,
+                            TaxedWinnings = s.TaxedWinnings,
+                            ParlayBonus = s.ParlayBonus,
+                            ParlayBonusWinnings = s.ParlayBonusWinnings,
+                            StakeReal = s.StakeReal,
+                            StakeBonus = s.StakeBonus,
+                            StakeRealPayout = s.StakeRealPayout,
+                            StakeBonusPayout = s.StakeBonusPayout,
+                            IsFreeBet = s.IsFreeBet,
+                            BetSelections = s.Selections.Select(ss => new ResendSettlementBetSelectionDetailDTO()
+                            {
+                                BetSelectionId = ss.BetSelectionId,
+                                BetId = ss.BetId,
+                                UserId = ss.UserId,
+                                SportId = ss.SportId,
+                                SportName = ss.SportName,
+                                SegmentId = ss.SegmentId,
+                                SegmentName = ss.SegmentName,
+                                LeagueId = ss.LeagueId,
+                                LeagueName = ss.LeagueName,
+                                FixtureId = long.Parse(ss.FixtureId),
+                                FixtureName = ss.FixtureName,
+                                FixtureTypeId = ss.FixtureTypeId,
+                                FixtureTypeName = ss.FixtureTypeName,
+                                MarketTemplateId = ss.MarketTemplateId,
+                                MarketId = long.Parse(ss.MarketId),
+                                MarketName = ss.MarketName,
+                                SelectionTemplateId = ss.SelectionTemplateId,
+                                SelectionId = long.Parse(ss.SelectionId),
+                                SelectionName = ss.SelectionName,
+                                FixtureStatusId = ss.FixtureStatusId,
+                                FixtureStatusName = ss.FixtureStatusName,
+                                Line = ss.Line,
+                                Odds = ss.Odds,
+                                BetSelectionStatusId = ss.BetSelectionStatusId,
+                                BetSelectionStatusName = ss.BetSelectionStatusName,
+                                IsSettled = ss.IsSettled,
+                                IsResettled = ss.IsResettled,
+                                FixtureSpecifier = ss.FixtureSpecifier,
+                                SelectionSpecifier = ss.SelectionSpecifier,
+                                FixtureStartDate = ss.FixtureStartDate,
+                                BetScore = ss.BetScore,
+                                SettlementScore = ss.SettlementScore,
+                                Probability = ss.Probability,
+                                WonProbability = ss.WonProbability,
+                                LostProbability = ss.LostProbability,
+                                VoidProbability = ss.VoidProbability,
+                                HalfWonProbability = ss.HalfWonProbability,
+                                HalfLostProbability = ss.HalfLostProbability,
+                                CorrelationId = ss.CorrelationId,
+                                DeadHeatFactor = ss.DeadHeatFactor
+                            }).ToList()
+                        }).FirstOrDefault();
+
+                        if (betDetail != null && betDetail.BetStatusId == (int)BetStatus.Rejected)
+                            response.Bet = betDetail;
+                    }
                 }
 
                 return new BaseResponseDTO<ResendSettlementBetDetailResponseDTO>()

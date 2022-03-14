@@ -71,6 +71,9 @@
         Boosted_Odds_Cannot_Be_Parlayed = 148,
         Boosted_Odds_Not_Allowed_Once_Fixture_Transitions_To_Live = 149,
 
+        Rejected_Bet_Are_Not_Allowed_To_Be_Resent_To_Operator = 150,
+        Resend_Attempt_Not_Successful_Please_Try_Again = 151,
+
         Error = 1000,
         Operator_Error = 1001
     }

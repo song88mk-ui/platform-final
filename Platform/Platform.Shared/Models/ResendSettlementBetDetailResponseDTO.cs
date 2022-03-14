@@ -62,6 +62,8 @@ namespace Platform.Shared.Models
         public decimal StakeRealPayout { get; set; }
         public decimal StakeBonusPayout { get; set; }
         public bool IsFreeBet { get; set; }
+        public int RetryCount { get; set; }
+        public bool IsSuccess { get; set; }
         public List<ResendSettlementBetSelectionDetailDTO> BetSelections { get; set; }
     }
 

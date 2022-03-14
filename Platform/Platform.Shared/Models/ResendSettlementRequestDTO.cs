@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Platform.Shared.Enums;
+using System.Collections.Generic;
 
 namespace Platform.Shared.Models
 {
@@ -6,9 +7,15 @@ namespace Platform.Shared.Models
     {
         public ResendSettlementRequestDTO()
         {
-            BetIds = new List<string>();
+            Bets = new List<ResendSettlementReques>();
         }
 
-        public List<string> BetIds { get; set; }
+        public List<ResendSettlementReques> Bets { get; set; }
+    }
+
+    public class ResendSettlementReques
+    {
+        public string BetId { get; set; }
+        public BetStatus CurrentStatus { get; set; }
     }
 }

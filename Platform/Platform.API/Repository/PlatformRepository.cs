@@ -2628,20 +2628,40 @@ namespace Platform.API.Repository
             return await _bettingRepository.GetManualBetDetails(request);
         }
 
-        public async Task<BaseResponseDTO<bool>> ResendSettlement(ResendSettlementRequestDTO request)
+        public async Task<BaseResponseDTO<ResendSettlementResponseDTO>> ResendSettlement(ResendSettlementRequestDTO request)
         {
-            var betIds = request.BetIds.Select(Guid.Parse).ToList();
+            var betIds = request.Bets.Select(s => Guid.Parse(s.BetId)).ToList();
+
             var bets = await _platformContext.OperatorSettlementRetry.AsNoTracking()
-                .Where(c => betIds.Contains(c.BetId) && c.RetryCount >= 8 && c.IsSuccess == false)
+                .Where(c => betIds.Contains(c.BetId))
                 .ToListAsync();
 
-            if (betIds.Count != bets.Count)
+            if (!bets.Any())
             {
-                return new BaseResponseDTO<bool>()
+                return new BaseResponseDTO<ResendSettlementResponseDTO>()
                 {
-                    StatusCode = StatusCode.Error,
-                    Message = StatusCode.Error.ToString().Replace('_', ' '),
-                    Result = false
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString().Replace('_', ' '),
+                    Result = new ResendSettlementResponseDTO()
+                };
+            }
+
+            if (bets.Any(c => c.IsSuccess || c.RetryCount < 8))
+            {
+                return new BaseResponseDTO<ResendSettlementResponseDTO>()
+                {
+                    StatusCode = StatusCode.Resend_Attempt_Not_Successful_Please_Try_Again,
+                    Message = StatusCode.Resend_Attempt_Not_Successful_Please_Try_Again.ToString().Replace('_', ' '),
+                    Result = new ResendSettlementResponseDTO()
+                    //Result = new ResendSettlementResponseDTO
+                    //{
+                    //    Data = bets.Select(s => new ResendSettlementResponse
+                    //    {
+                    //        BetId = s.BetId,
+                    //        StatusCode = s.RetryCount >= 8 && s.IsSuccess == false ? StatusCode.Error : StatusCode.Success,
+                    //        Message = s.RetryCount >= 8 && s.IsSuccess == false ? StatusCode.Error.ToString().Replace('_', ' ') : StatusCode.Success.ToString().Replace('_', ' ')
+                    //    }).ToList()
+                    //}
                 };
             }
 
@@ -2661,111 +2681,124 @@ namespace Platform.API.Repository
 
         public async Task<BaseResponseDTO<ResendSettlementBetDetailResponseDTO>> GetResendSettlementBetDetails(ResendSettlementBetDetailRequestDTO request)
         {
-            var betId = Guid.Parse(request.BetId);
-            var bet = await _platformContext.OperatorSettlementRetry.AsNoTracking().FirstOrDefaultAsync(c => c.BetId == betId && c.RetryCount >= 8 && c.IsSuccess == false);
-
-            var response = new ResendSettlementBetDetailResponseDTO();
-
-            if (bet != null)
+            if (Guid.TryParse(request.BetId, out var betId))
             {
-                var onBetSettlement = JsonSerializer.Deserialize<OnBetSettlement>(bet.Info);
+                var bet = await _platformContext.OperatorSettlementRetry.AsNoTracking().FirstOrDefaultAsync(c => c.BetId == betId);
 
-                response.Bet = new ResendSettlementBetDetailDTO()
+                var response = new ResendSettlementBetDetailResponseDTO();
+
+                if (bet != null)
                 {
-                    BetId = onBetSettlement.Bet.BetId,
-                    UserId = onBetSettlement.Bet.UserId,
-                    Stake = onBetSettlement.Bet.Stake,
-                    TrueStake = onBetSettlement.Bet.TrueStake,
-                    Odds = onBetSettlement.Bet.Odds,
-                    OddsTypeId = onBetSettlement.Bet.OddsTypeId,
-                    OddsTypeName = onBetSettlement.Bet.OddsTypeName,
-                    Payout = onBetSettlement.Bet.Payout,
-                    WinLoss = onBetSettlement.Bet.WinLoss,
-                    BetStatusId = onBetSettlement.Bet.BetStatusId,
-                    BetStatusName = onBetSettlement.Bet.BetStatusName,
-                    Reason = onBetSettlement.Bet.Reason,
-                    CurrencyCode = onBetSettlement.Bet.CurrencyCode,
-                    LanguageCode = onBetSettlement.Bet.LanguageCode,
-                    ExchangeRate = onBetSettlement.Bet.ExchangeRate,
-                    IPAddress = onBetSettlement.Bet.IPAddress,
-                    Channel = onBetSettlement.Bet.Channel,
-                    ClientId = onBetSettlement.Bet.ClientId,
-                    ClientIdRef = onBetSettlement.Bet.ClientIdRef,
-                    ClientCode = onBetSettlement.Bet.ClientCode,
-                    ClientName = onBetSettlement.Bet.ClientName,
-                    LimitId = onBetSettlement.Bet.LimitId,
-                    Endpoint = onBetSettlement.Bet.Endpoint,
-                    OperatorToken = onBetSettlement.Bet.OperatorToken,
-                    CompanyShare = onBetSettlement.Bet.CompanyShare,
-                    IsResettled = onBetSettlement.Bet.IsResettled,
-                    IsCashout = onBetSettlement.Bet.IsCashout,
-                    BetDate = onBetSettlement.Bet.BetDate,
-                    BetDateOffset = onBetSettlement.Bet.BetDateOffset,
-                    SettlementDate = onBetSettlement.Bet.SettlementDate,
-                    SettlementDateOffset = onBetSettlement.Bet.SettlementDateOffset,
-                    StakeTax = onBetSettlement.Bet.StakeTax,
-                    WinningsTax = onBetSettlement.Bet.WinningsTax,
-                    TaxedStake = onBetSettlement.Bet.TaxedStake,
-                    TaxedWinnings = onBetSettlement.Bet.TaxedWinnings,
-                    ParlayBonus = onBetSettlement.Bet.ParlayBonus,
-                    ParlayBonusWinnings = onBetSettlement.Bet.ParlayBonusWinnings,
-                    StakeReal = onBetSettlement.Bet.StakeReal,
-                    StakeBonus = onBetSettlement.Bet.StakeBonus,
-                    StakeRealPayout = onBetSettlement.Bet.StakeRealPayout,
-                    StakeBonusPayout = onBetSettlement.Bet.StakeBonusPayout,
-                    IsFreeBet = onBetSettlement.Bet.IsFreeBet,
-                    BetSelections = onBetSettlement.BetSelections.Select(s => new ResendSettlementBetSelectionDetailDTO()
+                    var onBetSettlement = JsonSerializer.Deserialize<OnBetSettlement>(bet.Info);
+
+                    response.Bet = new ResendSettlementBetDetailDTO()
                     {
-                        BetSelectionId = s.BetSelectionId,
-                        BetId = s.BetId,
-                        UserId = s.UserId,
-                        SportId = s.SportId,
-                        SportName = s.SportName,
-                        SegmentId = s.SegmentId,
-                        SegmentName = s.SegmentName,
-                        LeagueId = s.LeagueId,
-                        LeagueName = s.LeagueName,
-                        FixtureId = s.FixtureId,
-                        FixtureName = s.FixtureName,
-                        FixtureTypeId = s.FixtureTypeId,
-                        FixtureTypeName = s.FixtureTypeName,
-                        MarketTemplateId = s.MarketTemplateId,
-                        MarketId = s.MarketId,
-                        MarketName = s.MarketName,
-                        SelectionTemplateId = s.SelectionTemplateId,
-                        SelectionId = s.SelectionId,
-                        SelectionName = s.SelectionName,
-                        FixtureStatusId = s.FixtureStatusId,
-                        FixtureStatusName = s.FixtureStatusName,
-                        Line = s.Line,
-                        Odds = s.Odds,
-                        BetSelectionStatusId = s.BetSelectionStatusId,
-                        BetSelectionStatusName = s.BetSelectionStatusName,
-                        IsSettled = s.IsSettled,
-                        IsResettled = s.IsResettled,
-                        FixtureSpecifier = s.FixtureSpecifier,
-                        SelectionSpecifier = s.SelectionSpecifier,
-                        FixtureStartDate = s.FixtureStartDate,
-                        BetScore = s.BetScore,
-                        SettlementScore = s.SettlementScore,
-                        Probability = s.Probability,
-                        WonProbability = s.WonProbability,
-                        LostProbability = s.LostProbability,
-                        VoidProbability = s.VoidProbability,
-                        HalfWonProbability = s.HalfWonProbability,
-                        HalfLostProbability = s.HalfLostProbability,
-                        CorrelationId = s.CorrelationId,
-                        DeadHeatFactor = s.DeadHeatFactor
-                    }).ToList()
+                        BetId = onBetSettlement.Bet.BetId,
+                        UserId = onBetSettlement.Bet.UserId,
+                        Stake = onBetSettlement.Bet.Stake,
+                        TrueStake = onBetSettlement.Bet.TrueStake,
+                        Odds = onBetSettlement.Bet.Odds,
+                        OddsTypeId = onBetSettlement.Bet.OddsTypeId,
+                        OddsTypeName = onBetSettlement.Bet.OddsTypeName,
+                        Payout = onBetSettlement.Bet.Payout,
+                        WinLoss = onBetSettlement.Bet.WinLoss,
+                        BetStatusId = onBetSettlement.Bet.BetStatusId,
+                        BetStatusName = onBetSettlement.Bet.BetStatusName,
+                        Reason = onBetSettlement.Bet.Reason,
+                        CurrencyCode = onBetSettlement.Bet.CurrencyCode,
+                        LanguageCode = onBetSettlement.Bet.LanguageCode,
+                        ExchangeRate = onBetSettlement.Bet.ExchangeRate,
+                        IPAddress = onBetSettlement.Bet.IPAddress,
+                        Channel = onBetSettlement.Bet.Channel,
+                        ClientId = onBetSettlement.Bet.ClientId,
+                        ClientIdRef = onBetSettlement.Bet.ClientIdRef,
+                        ClientCode = onBetSettlement.Bet.ClientCode,
+                        ClientName = onBetSettlement.Bet.ClientName,
+                        LimitId = onBetSettlement.Bet.LimitId,
+                        Endpoint = onBetSettlement.Bet.Endpoint,
+                        OperatorToken = onBetSettlement.Bet.OperatorToken,
+                        CompanyShare = onBetSettlement.Bet.CompanyShare,
+                        IsResettled = onBetSettlement.Bet.IsResettled,
+                        IsCashout = onBetSettlement.Bet.IsCashout,
+                        BetDate = onBetSettlement.Bet.BetDate,
+                        BetDateOffset = onBetSettlement.Bet.BetDateOffset,
+                        SettlementDate = onBetSettlement.Bet.SettlementDate,
+                        SettlementDateOffset = onBetSettlement.Bet.SettlementDateOffset,
+                        StakeTax = onBetSettlement.Bet.StakeTax,
+                        WinningsTax = onBetSettlement.Bet.WinningsTax,
+                        TaxedStake = onBetSettlement.Bet.TaxedStake,
+                        TaxedWinnings = onBetSettlement.Bet.TaxedWinnings,
+                        ParlayBonus = onBetSettlement.Bet.ParlayBonus,
+                        ParlayBonusWinnings = onBetSettlement.Bet.ParlayBonusWinnings,
+                        StakeReal = onBetSettlement.Bet.StakeReal,
+                        StakeBonus = onBetSettlement.Bet.StakeBonus,
+                        StakeRealPayout = onBetSettlement.Bet.StakeRealPayout,
+                        StakeBonusPayout = onBetSettlement.Bet.StakeBonusPayout,
+                        IsFreeBet = onBetSettlement.Bet.IsFreeBet,
+                        RetryCount = bet.RetryCount,
+                        IsSuccess = bet.IsSuccess,
+                        BetSelections = onBetSettlement.BetSelections.Select(s => new ResendSettlementBetSelectionDetailDTO()
+                        {
+                            BetSelectionId = s.BetSelectionId,
+                            BetId = s.BetId,
+                            UserId = s.UserId,
+                            SportId = s.SportId,
+                            SportName = s.SportName,
+                            SegmentId = s.SegmentId,
+                            SegmentName = s.SegmentName,
+                            LeagueId = s.LeagueId,
+                            LeagueName = s.LeagueName,
+                            FixtureId = s.FixtureId,
+                            FixtureName = s.FixtureName,
+                            FixtureTypeId = s.FixtureTypeId,
+                            FixtureTypeName = s.FixtureTypeName,
+                            MarketTemplateId = s.MarketTemplateId,
+                            MarketId = s.MarketId,
+                            MarketName = s.MarketName,
+                            SelectionTemplateId = s.SelectionTemplateId,
+                            SelectionId = s.SelectionId,
+                            SelectionName = s.SelectionName,
+                            FixtureStatusId = s.FixtureStatusId,
+                            FixtureStatusName = s.FixtureStatusName,
+                            Line = s.Line,
+                            Odds = s.Odds,
+                            BetSelectionStatusId = s.BetSelectionStatusId,
+                            BetSelectionStatusName = s.BetSelectionStatusName,
+                            IsSettled = s.IsSettled,
+                            IsResettled = s.IsResettled,
+                            FixtureSpecifier = s.FixtureSpecifier,
+                            SelectionSpecifier = s.SelectionSpecifier,
+                            FixtureStartDate = s.FixtureStartDate,
+                            BetScore = s.BetScore,
+                            SettlementScore = s.SettlementScore,
+                            Probability = s.Probability,
+                            WonProbability = s.WonProbability,
+                            LostProbability = s.LostProbability,
+                            VoidProbability = s.VoidProbability,
+                            HalfWonProbability = s.HalfWonProbability,
+                            HalfLostProbability = s.HalfLostProbability,
+                            CorrelationId = s.CorrelationId,
+                            DeadHeatFactor = s.DeadHeatFactor
+                        }).ToList()
+                    };
+                }
+
+                return new BaseResponseDTO<ResendSettlementBetDetailResponseDTO>()
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString().Replace('_', ' '),
+                    Result = response
                 };
             }
-
-            return new BaseResponseDTO<ResendSettlementBetDetailResponseDTO>()
+            else
             {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString().Replace('_', ' '),
-                Result = response
-            };
+                return new BaseResponseDTO<ResendSettlementBetDetailResponseDTO>()
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString().Replace('_', ' '),
+                    Result = new ResendSettlementBetDetailResponseDTO()
+                };
+            }
         }
 
         public async Task<BaseResponseDTO<ParlayBonusResponseDTO>> GetClientParlayBonus(GetParlayBonusRequestDTO request)

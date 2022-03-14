@@ -2030,7 +2030,7 @@ namespace Platform.Betting.API.Repository
             };
         }
 
-        public async Task<BaseResponseDTO<bool>> ResendSettlement(ResendSettlementMessageRequestDTO request)
+        public async Task<BaseResponseDTO<ResendSettlementResponseDTO>> ResendSettlement(ResendSettlementMessageRequestDTO request)
         {
             foreach (var message in request.Messages)
             {
@@ -2043,11 +2043,19 @@ namespace Platform.Betting.API.Repository
                 });
             }
 
-            return new BaseResponseDTO<bool>()
+            return new BaseResponseDTO<ResendSettlementResponseDTO>()
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString().Replace('_', ' '),
-                Result = true
+                Result = new ResendSettlementResponseDTO
+                {
+                    Data = request.Messages.Select(s => new ResendSettlementResponse
+                    {
+                        BetId = s.BetId,
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString().Replace('_', ' '),
+                    }).ToList()
+                }
             };
         }
 

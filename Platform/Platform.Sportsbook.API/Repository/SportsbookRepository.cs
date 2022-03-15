@@ -6434,6 +6434,9 @@ namespace Platform.Sportsbook.API.Repository
         }
         private static decimal GetMasterOddsWithAddedMargin(decimal odds)
         {
+            if (Math.Round(odds, 2) <= 1.01m)
+                return odds;
+
             return Math.Round(100 / ((100 / odds) + 2m), 2);
         }
     }

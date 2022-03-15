@@ -11,7 +11,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace Platform.SettlementScore.Service.Repository
+namespace Platform.Job.Operator.Score.Repository
 {
     public class BetradarRepository : IBetradarRepository
     {

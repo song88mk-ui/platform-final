@@ -1,6 +1,6 @@
 ﻿{
   "profiles": {
-    "Platform.SettlementScore.Service": {
+    "Platform.Job.Operator.Score": {
       "commandName": "Project",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"

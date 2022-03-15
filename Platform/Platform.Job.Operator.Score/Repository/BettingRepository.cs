@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Driver;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Enums;
@@ -15,7 +14,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace Platform.SettlementScore.Service.Repository
+namespace Platform.Job.Operator.Score.Repository
 {
     public class BettingRepository : IBettingRepository
     {
@@ -26,10 +25,7 @@ namespace Platform.SettlementScore.Service.Repository
         private readonly ICricketScoreRepository _cricketScoreRepository;
 
         public List<BetMemory> _bets = new List<BetMemory>();
-        public List<Tuple<long, List<Guid>>> _fixtureBetReference = new List<Tuple<long, List<Guid>>>();
-
-        private readonly IMongoDatabase _db;
-        private IMongoCollection<Fixture> fixtureCollection;
+        public List<Tuple<long, int, string, List<BetMemory>>> _fixtureBetReference = new List<Tuple<long, int, string, List<BetMemory>>>();
 
         public BettingRepository(IServiceProvider serviceProvider, IConfiguration configuration, IMemCache memCache, IBetradarRepository betradarRepository, ICricketScoreRepository cricketScoreRepository)
         {
@@ -39,10 +35,10 @@ namespace Platform.SettlementScore.Service.Repository
             _betradarRepository = betradarRepository;
             _cricketScoreRepository = cricketScoreRepository;
 
-            var client = new MongoClient(_configuration["ConnectionStrings:MongoDB-Sportsbook"]);
-            _db = client.GetDatabase("Sportsbook");
 
-            fixtureCollection = _db.GetCollection<Fixture>("Fixture");
+            _bets = new List<BetMemory>();
+            _fixtureBetReference = new List<Tuple<long, int, string, List<BetMemory>>>();
+
         }
 
         private HttpClient GetHttpClient(string endpoint, string clientId)
@@ -58,15 +54,14 @@ namespace Platform.SettlementScore.Service.Repository
             return result;
         }
 
-        public void PreloadActiveBets()
+        public void PreloadSettledBets()
         {
-            _bets = new List<BetMemory>();
-            _fixtureBetReference = new List<Tuple<long, List<Guid>>>();
-
             using var scope = _serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<BettingContext>();
 
-            var bets = context.Bet.AsNoTracking().Where(c => c.BetStatusId == (int)BetStatus.Running).Select(s => new BetMemory
+            var settledStatus = new List<int> { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost, (int)BetStatus.Void };
+
+            var bets = context.Bet.AsNoTracking().Where(c => c.ClientCode == _configuration["Custom:ClientCode"] && c.SettlementDate >= DateTime.UtcNow.AddHours(-2) && c.SettlementDate <= DateTime.UtcNow && settledStatus.Contains(c.BetStatusId)).Select(s => new BetMemory
             {
                 BetId = s.BetId,
                 ClientId = s.ClientId,
@@ -91,9 +86,10 @@ namespace Platform.SettlementScore.Service.Repository
                     MarketId = s.MarketId,
                     SelectionId = s.SelectionId,
                     BetSelectionStatusId = s.BetSelectionStatusId,
+                    FixtureSpecifier = s.FixtureSpecifier,
                 }).ToList();
 
-                if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright || c.BetSelectionStatusId != (int)BetStatus.Running))
+                if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright || !settledStatus.Contains(c.BetSelectionStatusId) ))
                     return;
 
                 bet.BetSelections.AddRange(betSelections);
@@ -106,110 +102,52 @@ namespace Platform.SettlementScore.Service.Repository
 
                     if (copy != null)
                     {
-                        if (copy.Item2.Any(c => c == bet.BetId)) continue;
+                        if (copy.Item4.Any(c => c.BetId == bet.BetId)) continue;
 
-                        copy.Item2.Add(bet.BetId);
+                        copy.Item4.Add(bet);
                     }
                     else
-                        _fixtureBetReference.Add(new Tuple<long, List<Guid>>(betSelection.FixtureId, new List<Guid> { bet.BetId }));
+                        _fixtureBetReference.Add(new Tuple<long, int, string, List<BetMemory>>(betSelection.FixtureId, betSelection.SportId, betSelection.FixtureSpecifier, new List<BetMemory> { bet }));
                 }
             }
         }
-        public void AddBet(OnBetPlacement message)
+
+        public async Task ProcessSettledBets()
         {
-            var bet = new BetMemory
+            if (_fixtureBetReference.Any())
             {
-                BetId = message.Bet.BetId,
-                ClientId = message.Bet.ClientId,
-                UserId = message.Bet.UserId,
-                BetStatusId = message.Bet.BetStatusId,
-                TrueStake = message.Bet.TrueStake,
-                Odds = message.Bet.Odds,
-                StakeTax = message.Bet.StakeTax,
-                WinningsTax = message.Bet.WinningsTax,
-                Endpoint = message.Bet.Endpoint,
-            };
-
-            var betSelections = message.BetSelections.Select(s => new BetSelectionMemory
-            {
-                BetId = s.BetId,
-                BetSelectionId = s.BetSelectionId,
-                SportId = s.SportId,
-                FixtureId = s.FixtureId,
-                FixtureTypeId = s.FixtureTypeId,
-                MarketId = s.MarketId,
-                SelectionId = s.SelectionId,
-                BetSelectionStatusId = s.BetSelectionStatusId,
-            }).ToList();
-
-            if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright || c.BetSelectionStatusId != (int)BetStatus.Running))
-                return;
-
-            bet.BetSelections.AddRange(betSelections);
-
-            _bets.Add(bet);
-
-            foreach (var betSelection in betSelections)
-            {
-                var copy = _fixtureBetReference.Where(c => c.Item1 == betSelection.FixtureId).FirstOrDefault();
-
-                if (copy != null)
-                {
-                    if (copy.Item2.Any(c => c == bet.BetId)) continue;
-
-                    copy.Item2.Add(bet.BetId);
-                }
-                else
-                    _fixtureBetReference.Add(new Tuple<long, List<Guid>>(betSelection.FixtureId, new List<Guid> { bet.BetId }));
-            }
-
-            if (_bets.Any(c => c.BetId == bet.BetId))
-                Console.WriteLine($"{DateTime.UtcNow} - Add Bet : {bet.BetId.ToString().ToUpper()} : True");
-            else
-                Console.WriteLine($"{DateTime.UtcNow} - Add Bet : {bet.BetId.ToString().ToUpper()} : False");
-        }
-
-        public async Task ProcessBet(OnBetSettlement message)
-        {
-            var bet = _bets.Where(c => c.BetId == message.Bet.BetId).FirstOrDefault();
-
-            if (bet != null)
-            {
-                var fixtureIds = bet.BetSelections.Select(s => s.FixtureId).Distinct().ToList();
-
-                var fixtureBetReference = _fixtureBetReference.Where(c => fixtureIds.Contains(c.Item1)).ToList();
-
-                foreach (var fixtureBet in fixtureBetReference)
+                foreach (var fixtureBet in _fixtureBetReference)
                 {
                     var fixtureEntry = fixtureBet.Item1;
 
-                    var filter = Builders<Fixture>.Filter.Eq("FiId", fixtureEntry);
-                    var projection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.FiStId).Include(c => c.IsSu).Include(c => c.FiSp).Include(c => c.SpId);
-                    var fixtureResult = fixtureCollection.Find(filter).Project<FixtureSettlementFilter>(projection).FirstOrDefault();
-
                     var settlementScore = string.Empty;
 
-                    if (fixtureResult != null)
-                    {
+                    var cacheKey = $"fs-score:{_configuration["Custom:ClientCode"]}:{fixtureBet.Item3}";
 
-                        if (fixtureResult.SpId != 21)
-                            settlementScore = (await _betradarRepository.GetScoreSummary(fixtureResult.FiSp));
+                    var fsResult = _memCache.GetCache<string>(cacheKey);
+
+                    if (fsResult == null)
+                    {
+                        if (fixtureBet.Item2 != 21)
+                            settlementScore = (await _betradarRepository.GetScoreSummary(fixtureBet.Item3));
                         else
-                            settlementScore = (await _cricketScoreRepository.GetScoreSummary(fixtureResult.FiSp));
+                            settlementScore = (await _cricketScoreRepository.GetScoreSummary(fixtureBet.Item3));
 
 
                         if (!string.IsNullOrEmpty(settlementScore))
                         {
+                            var betMemory = fixtureBet.Item4.FirstOrDefault();
+
                             //TODO: update logic in sending message to operator
                             //call operator api
                             var payload = new 
                             {
-                                BetId = bet.BetId,
-                                BetStatus = bet.BetStatusId.ToString(),
-                                UserId = bet.UserId
+                                BetId = betMemory.BetId,
+                                UserId = betMemory.UserId,
                             };
+
                             var path = "/v1/settlement/score";
-                            var response = GetHttpClient(bet.Endpoint, bet.ClientId).PostAsync($"{bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                            var response = GetHttpClient(betMemory.Endpoint, betMemory.ClientId).PostAsync($"{betMemory.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                             if (response.IsSuccessStatusCode)
                             {
@@ -219,21 +157,33 @@ namespace Platform.SettlementScore.Service.Repository
                         }
 
                         //remove _fixtureBetReference
-                        if (fixtureResult.FiStId == (int)FixtureStatus.Closed || fixtureResult.FiStId == (int)FixtureStatus.Ended)
-                            _fixtureBetReference.Remove(fixtureBet);
+                        _fixtureBetReference.Remove(fixtureBet);
+                        //add or update fixtureSpecifier memory cache
+                        AddOrUpdateFixtureSpecfier(fixtureBet.Item3);
+
+                        Console.WriteLine($"{DateTime.UtcNow} - Settlement Score : {fixtureBet.Item3}");
 
                     }
                 }
+            }
+        }
 
-                _bets = _bets.Where(c => c.BetId != message.Bet.BetId).ToList();
+        private void AddOrUpdateFixtureSpecfier(string fixtureSpecifier)
+        {
+            var expiration = DateTime.UtcNow.AddHours(6);
 
-                if (_bets.Any(c => c.BetId == message.Bet.BetId))
-                    Console.WriteLine($"{DateTime.UtcNow} - Remove Bet : {message.Bet.BetId.ToString().ToUpper()} : False");
-                else
-                    Console.WriteLine($"{DateTime.UtcNow} - Remove Bet : {message.Bet.BetId.ToString().ToUpper()} : True");
+            var cacheKey = $"fs-score:{_configuration["Custom:ClientCode"]}:{fixtureSpecifier}";
+
+            var fsResult = _memCache.GetCache<string>(cacheKey);
+
+            if (string.IsNullOrEmpty(fsResult))
+            {
+                _memCache.AddOrUpdateCache(cacheKey, fixtureSpecifier, expiration);
             }
         }
     }
+
+    
 
     public class BetMemory
     {
@@ -265,7 +215,9 @@ namespace Platform.SettlementScore.Service.Repository
         public long MarketId { get; set; }
         public long SelectionId { get; set; }
         public int BetSelectionStatusId { get; set; }
+        public string FixtureSpecifier { get; set; }
     }
+
 
     public class OnExternalOddsChangeMessage
     {

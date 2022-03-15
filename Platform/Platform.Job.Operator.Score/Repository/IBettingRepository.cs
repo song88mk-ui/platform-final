@@ -4,12 +4,11 @@ using Platform.Shared.Utility;
 using System;
 using System.Threading.Tasks;
 
-namespace Platform.SettlementScore.Service.Repository
+namespace Platform.Job.Operator.Score.Repository
 {
     public interface IBettingRepository
     {
-        void PreloadActiveBets();
-        void AddBet(OnBetPlacement message);
-        Task ProcessBet(OnBetSettlement message);
+        void PreloadSettledBets();
+        Task ProcessSettledBets();
     }
 }

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Platform.SettlementScore.Service.Repository;
+using Platform.Job.Operator.Score.Repository;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Utility;
 using System;
@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Platform.SettlementScore.Service
+namespace Platform.Job.Operator.Score
 {
     public class Program
     {
@@ -23,11 +23,10 @@ namespace Platform.SettlementScore.Service
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddSingleton<IMemCache, MemCache>();
-                    services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();
                     services.AddDbContext<BettingContext>(o => o.UseSqlServer(hostContext.Configuration["ConnectionStrings:Betting"]));
                     services.AddHttpClient<IBetradarRepository, BetradarRepository>();
-                }).UseWindowsService();
+                });
     }
 }

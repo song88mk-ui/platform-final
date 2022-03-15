@@ -48,7 +48,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.WebSocket.API", "P
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.WebSocket.Client", "Platform.WebSocket.Client\Platform.WebSocket.Client.csproj", "{62C442E8-78DF-4274-9B2D-5A6EC1CFD297}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.ClientPlatform.API", "Platform.ClientPlatform.API\Platform.ClientPlatform.API.csproj", "{94EF98A7-23D8-4097-A0E4-BC316CE16623}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.ClientPlatform.API", "Platform.ClientPlatform.API\Platform.ClientPlatform.API.csproj", "{A872A0BB-2274-4274-B273-2E2BC3A95646}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -140,10 +140,10 @@ Global
 		{62C442E8-78DF-4274-9B2D-5A6EC1CFD297}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62C442E8-78DF-4274-9B2D-5A6EC1CFD297}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{62C442E8-78DF-4274-9B2D-5A6EC1CFD297}.Release|Any CPU.Build.0 = Release|Any CPU
-		{94EF98A7-23D8-4097-A0E4-BC316CE16623}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{94EF98A7-23D8-4097-A0E4-BC316CE16623}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{94EF98A7-23D8-4097-A0E4-BC316CE16623}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{94EF98A7-23D8-4097-A0E4-BC316CE16623}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A872A0BB-2274-4274-B273-2E2BC3A95646}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A872A0BB-2274-4274-B273-2E2BC3A95646}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A872A0BB-2274-4274-B273-2E2BC3A95646}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A872A0BB-2274-4274-B273-2E2BC3A95646}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

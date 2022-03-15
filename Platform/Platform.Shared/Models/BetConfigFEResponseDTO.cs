@@ -26,7 +26,8 @@ namespace Platform.Shared.Models
         public decimal MinStake { get; set; }
         [JsonProperty("maxStake")]
         public decimal MaxStake { get; set; }
-
+        [JsonProperty("maxPerGame")]
+        public decimal MaxPerGame { get; set; }
     }
 
     public class DefaultSportConfigFE
@@ -35,6 +36,8 @@ namespace Platform.Shared.Models
         public decimal MinStake { get; set; }
         [JsonProperty("maxStake")]
         public decimal MaxStake { get; set; }
+        [JsonProperty("maxPerGame")]
+        public decimal MaxPerGame { get; set; }
     }
 
     public class ParlayConfigFE

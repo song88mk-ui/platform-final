@@ -1511,16 +1511,21 @@ namespace Platform.Betting.API.Repository
             {
                 MinStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
                 MaxStake = defaultSportConfig.MaxStake,
+                MaxPerGame = defaultSportConfig.StakeLimitFixture
             };
 
             result.OverrideSportConfig = new List<OverrideSportConfigFE>();
+
             foreach (var overRide in overrideSportConfig)
             {
                 OverrideSportConfigFE newOverrideSport = new OverrideSportConfigFE();
+
                 newOverrideSport.SportId = overRide.SportId;
                 newOverrideSport.SportName = overRide.SportName;
                 newOverrideSport.MinStake = GetMinStake(overRide.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode);
                 newOverrideSport.MaxStake = overRide.MaxStake;
+                newOverrideSport.MaxPerGame = overRide.StakeLimitFixture;
+
                 result.OverrideSportConfig.Add(newOverrideSport);
             }
 

@@ -20,20 +20,24 @@ namespace Platform.Job.Operator.Score
             _bettingRepository = bettingRepository;
         }
 
-        public override Task StartAsync(CancellationToken cancellationToken)
-        {
-            _bettingRepository.PreloadSettledBets();
-
-            return base.StartAsync(cancellationToken);
-        }
-
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (true)
             {
-                await Task.Delay(3600000, stoppingToken);
-                await _bettingRepository.ProcessSettledBets();
+
                 await Task.Delay(1000, stoppingToken);
+                try
+                {
+                    _bettingRepository.PreloadSettledBets();
+                    await _bettingRepository.ProcessSettledBets();
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"{DateTime.UtcNow} - Error : {ex.Message}");
+
+                }
+                await Task.Delay(3600000, stoppingToken);
             }
         }
     }

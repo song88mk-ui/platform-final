@@ -36,9 +36,6 @@ namespace Platform.Job.Operator.Score.Repository
             _cricketScoreRepository = cricketScoreRepository;
 
 
-            _bets = new List<BetMemory>();
-            _fixtureBetReference = new List<Tuple<long, int, string, List<BetMemory>>>();
-
         }
 
         private HttpClient GetHttpClient(string endpoint, string clientId)
@@ -56,6 +53,11 @@ namespace Platform.Job.Operator.Score.Repository
 
         public void PreloadSettledBets()
         {
+            Console.WriteLine($"{DateTime.UtcNow} - Preload Settled Bets : Start");
+
+            _bets = new List<BetMemory>();
+            _fixtureBetReference = new List<Tuple<long, int, string, List<BetMemory>>>();
+
             using var scope = _serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<BettingContext>();
 
@@ -110,24 +112,27 @@ namespace Platform.Job.Operator.Score.Repository
                         _fixtureBetReference.Add(new Tuple<long, int, string, List<BetMemory>>(betSelection.FixtureId, betSelection.SportId, betSelection.FixtureSpecifier, new List<BetMemory> { bet }));
                 }
             }
+            Console.WriteLine($"{DateTime.UtcNow} - Preload Settled Bets : End (Count: {_fixtureBetReference.Count})");
+
         }
 
         public async Task ProcessSettledBets()
         {
+            Console.WriteLine($"{DateTime.UtcNow} - Process Settled Bets : Start");
+
             if (_fixtureBetReference.Any())
             {
                 foreach (var fixtureBet in _fixtureBetReference)
                 {
-                    var fixtureEntry = fixtureBet.Item1;
-
-                    var settlementScore = string.Empty;
-
+                    
                     var cacheKey = $"fs-score:{_configuration["Custom:ClientCode"]}:{fixtureBet.Item3}";
 
                     var fsResult = _memCache.GetCache<string>(cacheKey);
 
                     if (fsResult == null)
                     {
+                        var settlementScore = string.Empty;
+
                         if (fixtureBet.Item2 != 21)
                             settlementScore = (await _betradarRepository.GetScoreSummary(fixtureBet.Item3));
                         else
@@ -144,6 +149,7 @@ namespace Platform.Job.Operator.Score.Repository
                             {
                                 BetId = betMemory.BetId,
                                 UserId = betMemory.UserId,
+                                Score = settlementScore,
                             };
 
                             var path = "/v1/settlement/score";
@@ -156,8 +162,6 @@ namespace Platform.Job.Operator.Score.Repository
                             }
                         }
 
-                        //remove _fixtureBetReference
-                        _fixtureBetReference.Remove(fixtureBet);
                         //add or update fixtureSpecifier memory cache
                         AddOrUpdateFixtureSpecfier(fixtureBet.Item3);
 
@@ -166,6 +170,8 @@ namespace Platform.Job.Operator.Score.Repository
                     }
                 }
             }
+            Console.WriteLine($"{DateTime.UtcNow} - Process Settled Bets : End");
+
         }
 
         private void AddOrUpdateFixtureSpecfier(string fixtureSpecifier)

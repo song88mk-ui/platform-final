@@ -1784,7 +1784,7 @@ namespace Platform.Sportsbook.API.Repository
             {
                 var currentMarkets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode);
 
-                if (currentMarkets.Count == 0) continue;
+                //if (currentMarkets.Count == 0) continue;
 
                 finalResult.Add(new FixtureDTO
                 {

@@ -14,10 +14,10 @@ namespace Platform.Job.Operator.Score
         private readonly ILogger<Worker> _logger;
         private readonly IBettingRepository _bettingRepository;
 
-        public Worker(ILogger<Worker> logger)
+        public Worker(ILogger<Worker> logger, IBettingRepository bettingRepository)
         {
             _logger = logger;
-
+            _bettingRepository = bettingRepository;
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)

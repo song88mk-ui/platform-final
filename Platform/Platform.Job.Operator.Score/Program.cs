@@ -27,6 +27,7 @@ namespace Platform.Job.Operator.Score
                     services.AddHostedService<Worker>();
                     services.AddDbContext<BettingContext>(o => o.UseSqlServer(hostContext.Configuration["ConnectionStrings:Betting"]));
                     services.AddHttpClient<IBetradarRepository, BetradarRepository>();
-                });
+                    services.AddHttpClient<ICricketScoreRepository, CricketScoreRepository>();
+                }).UseWindowsService();
     }
 }

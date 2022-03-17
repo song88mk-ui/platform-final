@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Configuration;
 using Platform.ClientPlatform.API.Controllers;
 using Platform.Shared.Enums;
 using System;
@@ -11,10 +12,12 @@ namespace Platform.ClientPlatform.API.ActionFilters
 {
     public class APIKeyFilter : ActionFilterAttribute
     {
+        private readonly IConfiguration _configuration;
         private List<Tuple<string, string, List<string>>> _allowed { get; set; }
 
-        public APIKeyFilter()
+        public APIKeyFilter(IConfiguration configuration)
         {
+            _configuration = configuration;
             _allowed = GetAllowedClients();
         }
 
@@ -52,7 +55,7 @@ namespace Platform.ClientPlatform.API.ActionFilters
             }
 
             ((IntegrationControllerBase)context.Controller).ClientId = clientId;
-            ((IntegrationControllerBase)context.Controller).ApiKey = "8LKvrh6C2fe8mKXZ"; // Platform.API api key
+            ((IntegrationControllerBase)context.Controller).ApiKey = _configuration["Custom:PlatformAPIKey"];
             ((IntegrationControllerBase)context.Controller).CountryCode = context.HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault();
             ((IntegrationControllerBase)context.Controller).LanguageCode = string.IsNullOrEmpty(context.HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : context.HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
         }

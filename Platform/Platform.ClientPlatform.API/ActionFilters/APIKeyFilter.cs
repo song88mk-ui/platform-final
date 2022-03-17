@@ -66,7 +66,7 @@ namespace Platform.ClientPlatform.API.ActionFilters
 
             foreach (var item in _allowed)
             {
-                if (item.Item3.Contains(clientId))
+                if (item.Item3.Any(c => c.ToUpper() == clientId.ToUpper()))
                 {
                     if (item.Item2 == apiKey)
                     {

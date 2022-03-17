@@ -139,7 +139,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            if(request.IsBoosted && request.Selections.Count >= 2)
+            if (request.IsBoosted && request.Selections.Count >= 2)
             {
                 return new BaseResponseDTO<BetResponseDTO>
                 {
@@ -186,13 +186,13 @@ namespace Platform.API.Repository
                 ClientCode = clientResponse.Result.ClientCode,
                 OddsChangeType = request.IsBoosted == true ? OddsChangeType.None : request.OddsChangeType,
                 IsBoosted = request.IsBoosted,
-                Selections = request.Selections.Select(s => new BetFixtureSelectionRequestDTO 
-                { 
+                Selections = request.Selections.Select(s => new BetFixtureSelectionRequestDTO
+                {
                     SportId = s.SportId,
                     FixtureId = Convert.ToInt64(s.FixtureId),
                     MarketId = Convert.ToInt64(s.MarketId),
                     SelectionId = Convert.ToInt64(s.SelectionId),
-                    Odds =  s.Odds,
+                    Odds = s.Odds,
                     CorrelationId = s.CorrelationId
                 }).ToList()
             });
@@ -543,7 +543,7 @@ namespace Platform.API.Repository
 
                 if (betHistory.Result.Bets.Count == 0)
                     return betHistory;
-               
+
                 var betFixtureTranslation = new BetFixtureTranslationRequestDTO();
                 betFixtureTranslation.LanguageCode = languageCode;
 
@@ -845,12 +845,12 @@ namespace Platform.API.Repository
                 };
             }
 
-            return await _sportsbookRepository.GetLivestream(new LivestreamRequestDTO 
-            { 
-                ProviderFixtureId = request.ProviderFixtureId, 
+            return await _sportsbookRepository.GetLivestream(new LivestreamRequestDTO
+            {
+                ProviderFixtureId = request.ProviderFixtureId,
                 IPAddress = request.IPAddress,
                 IPCountryCode = IPCountryCode,
-                IsMobile = request.IsMobile 
+                IsMobile = request.IsMobile
             });
         }
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetTopLeagues(string apiKey, string clientId, string langCode, TopLeaguesRequest request)
@@ -888,8 +888,8 @@ namespace Platform.API.Repository
                 };
             }
 
-            return await _sportsbookRepository.GetTopLeagues(new TopLeaguesRequestDTO 
-            { 
+            return await _sportsbookRepository.GetTopLeagues(new TopLeaguesRequestDTO
+            {
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
                 SportId = request.SportId,
@@ -2037,8 +2037,8 @@ namespace Platform.API.Repository
                 };
             }
 
-            return await _sportsbookRepository.GetUserFavorites(new UserFavoriteRequestDTO 
-            { 
+            return await _sportsbookRepository.GetUserFavorites(new UserFavoriteRequestDTO
+            {
                 ClientId = clientResponse.Result.ClientId,
                 UserId = authenticationResponse.Result.UserId,
                 ClientCode = clientResponse.Result.ClientCode,
@@ -2191,7 +2191,7 @@ namespace Platform.API.Repository
                     DateTime effectiveDate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
                     if (currentClient != null)
                     {
-                        currentCompanyShare = currentClient.EffectiveDate < DateTime.UtcNow  && currentClient.CurrentCompanyShare != request.CurrentCompanyShare ?
+                        currentCompanyShare = currentClient.EffectiveDate < DateTime.UtcNow && currentClient.CurrentCompanyShare != request.CurrentCompanyShare ?
                                                  currentClient.NextCompanyShare : currentClient.CurrentCompanyShare;
                         effectiveDate = currentClient.EffectiveDate < DateTime.UtcNow && currentClient.CurrentCompanyShare != request.CurrentCompanyShare ?
                                                 GetFirstDayOfNextMonth() : currentClient.EffectiveDate;
@@ -2222,7 +2222,7 @@ namespace Platform.API.Repository
 
                     scope.Complete();
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     scope.Dispose();
                     return new BaseResponseDTO<ClientResponseDTO>
@@ -2318,7 +2318,7 @@ namespace Platform.API.Repository
             var sportsbookRequest = new ClientTopFixtureRequestDTO2()
             {
                 ClientInfos = clients.Select(s => new ClientInfo
-                { 
+                {
                     ClientId = s.ClientId,
                     ClientCode = s.ClientCode
                 }).ToList(),
@@ -2363,7 +2363,7 @@ namespace Platform.API.Repository
             {
                 ClientId = client.ClientId,
                 TopFixtures = request.TopFixtures.Select(s => new Shared.Models.ClientTopFixtureSetup
-                { 
+                {
                     FixtureId = s.FixtureId,
                     SortOrder = s.SortOrder
                 }).ToList()
@@ -2410,7 +2410,7 @@ namespace Platform.API.Repository
             };
 
             var clientTopLeaguesResponse = await _sportsbookRepository.GetClientTopLeagues(sportsbookRequest);
-            if(clientTopLeaguesResponse.StatusCode == StatusCode.Success)
+            if (clientTopLeaguesResponse.StatusCode == StatusCode.Success)
             {
                 var backOfficeResponse = new BackOfficeTopLeaguesResponseDTO()
                 {
@@ -2667,33 +2667,48 @@ namespace Platform.API.Repository
                 };
             }
 
-            if(cancelledBets.Any())
+            if (cancelledBets.Any())
             {
                 var isSuccess = false;
-                var message = string.Empty;
-
-                foreach(var betId in betIds)
+                var response = new ResendSettlementResponseDTO();
+                foreach (var betId in betIds)
                 {
                     var cancelledBetDetail = await _platformContext.OperatorLog.AsNoTracking()
                     .FirstOrDefaultAsync(c => betId.ToString() == c.BetId && c.Direction == "REQUEST" && c.URL.Contains("bet/cancellation"));
 
-                    if(cancelledBetDetail != null)
+                    if (cancelledBetDetail != null)
                     {
                         var operatorResponse = await _operatorRepository.ResendCancellation(cancelledBetDetail.URL, cancelledBetDetail.Info);
                         if (operatorResponse.StatusCode == StatusCode.Success)
+                        {
                             isSuccess = true;
-                        message += $"{operatorResponse.Message};";
+                            response.Data.Add(new ResendSettlementResponse()
+                            {
+                                StatusCode = StatusCode.Success,
+                                BetId = betId,
+                                Message = $"{operatorResponse.Message}"
+                            });
+                        }
+                        else
+                        {
+                            response.Data.Add(new ResendSettlementResponse()
+                            {
+                                StatusCode = StatusCode.Error,
+                                BetId = betId,
+                                Message = $"{operatorResponse.Message}"
+                            });
+                        }
                     }
 
                 }
 
-                if(isSuccess)
+                if (isSuccess)
                 {
                     return new BaseResponseDTO<ResendSettlementResponseDTO>()
                     {
                         StatusCode = StatusCode.Success,
                         Message = StatusCode.Success.ToString().Replace('_', ' '),
-                        Result = new ResendSettlementResponseDTO()
+                        Result = response
                     };
                 }
                 else
@@ -2701,8 +2716,8 @@ namespace Platform.API.Repository
                     return new BaseResponseDTO<ResendSettlementResponseDTO>
                     {
                         StatusCode = StatusCode.Error,
-                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({message})",
-                        Result = new ResendSettlementResponseDTO()
+                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')}",
+                        Result = response
                     };
                 }
 
@@ -2990,7 +3005,7 @@ namespace Platform.API.Repository
 
             }
         }
-        
+
         public async Task<BaseResponseDTO<StatusCode>> AddOrUpdateParlayBonus(ParlayBonusRequestDTO request)
         {
             var result = await _platformContext.Client.Where(c => c.ClientIdRef == request.ClientIdRef).FirstOrDefaultAsync();

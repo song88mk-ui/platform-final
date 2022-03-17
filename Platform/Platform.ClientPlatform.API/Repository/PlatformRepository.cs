@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Platform.Shared.Data.Platform;
+﻿using Microsoft.Extensions.Configuration;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
@@ -11,45 +9,28 @@ using System.Threading.Tasks;
 
 namespace Platform.ClientPlatform.API.Repository
 {
-    public class SportsbookRepository : ISportsbookRepository
+    public class PlatformRepository : IPlatformRepository
     {
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
 
-        private readonly PlatformContext _platformContext;
-
-        public SportsbookRepository(IConfiguration configuration, HttpClient httpClient, PlatformContext platformContext)
+        public PlatformRepository(IConfiguration configuration, HttpClient httpClient)
         {
             _configuration = configuration;
             _httpClient = httpClient;
-            _platformContext = platformContext;
-            _httpClient.BaseAddress = new Uri(_configuration["API:PlatformSportsbookAPI"]);
+            _httpClient.BaseAddress = new Uri(_configuration["API:PlatformAPI"]);
         }
 
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetTopFixtures(string clientId)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetClientTopFixtures(string clientId, string apiKey, string countryCode, string languageCode)
         {
             try
             {
-                var guidClientId = Guid.Parse(clientId);
-                var client = await _platformContext.Client.AsNoTracking().FirstOrDefaultAsync(c => c.ClientId == guidClientId);
+                _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
+                _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
+                _httpClient.DefaultRequestHeaders.Add("x-country-code", countryCode);
+                _httpClient.DefaultRequestHeaders.Add("x-language-code", languageCode);
 
-                if (client == null)
-                {
-                    return new BaseResponseDTO<TWResponseDTO>
-                    {
-                        StatusCode = StatusCode.Error,
-                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')}"
-                    };
-                }
-
-                var request = new TWRequestDTO
-                {
-                    ClientId = client.ClientId,
-                    ClientCode = client.ClientCode,
-                    LanguageCode = LanguageCode.EN
-                };
-
-                var response = await _httpClient.PostAsync($"v2/sportsbook/topfixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.GetAsync($"v2/sportsbook/topfixtures");
 
                 if (response.IsSuccessStatusCode)
                     return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });

@@ -51,7 +51,7 @@ namespace Platform.ClientPlatform.API
 
             services.AddControllers();
 
-            services.AddHttpClient<ISportsbookRepository, SportsbookRepository>();
+            services.AddHttpClient<IPlatformRepository, PlatformRepository>();
 
             services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Platform"]));
         }

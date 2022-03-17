@@ -110,5 +110,57 @@ namespace Platform.API.Repository
                 };
             }
         }
+
+        public async Task<BaseResponseDTO<OperatorBetResponseDTO>> ResendCancellation(string endpoint, string info)
+        {
+            _httpClient.BaseAddress = new Uri(endpoint);
+
+            try
+            {
+                var response = await _httpClient.PostAsync($"{endpoint}", new StringContent(info, System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return new BaseResponseDTO<OperatorBetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString(),
+                        Result = result
+                    };
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                        return new BaseResponseDTO<OperatorBetResponseDTO>
+                        {
+                            StatusCode = StatusCode.Operator_Error,
+                            Message = StatusCode.Operator_Error.ToString(),
+                            Result = result
+                        };
+                    }
+
+                    return new BaseResponseDTO<OperatorBetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Operator_Error,
+                        Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})",
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<OperatorBetResponseDTO>
+                {
+                    StatusCode = StatusCode.Operator_Error,
+                    Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({ex.Message})",
+                };
+            }
+        }
+
+
     }
 }

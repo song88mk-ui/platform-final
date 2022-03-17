@@ -2670,15 +2670,21 @@ namespace Platform.API.Repository
             if(cancelledBets.Any())
             {
                 var isSuccess = false;
-                var cancelledBetDetails = await _platformContext.OperatorLog.AsNoTracking()
-                .Where(c => betIds.Contains(Guid.Parse(c.BetId)) && c.Direction == "RESPONSE" && c.URL.Contains("bet/cancellation"))
-                .ToListAsync();
+                var message = string.Empty;
 
-                foreach(var betDetail in cancelledBetDetails)
+                foreach(var betId in betIds)
                 {
-                    var operatorResponse = await _operatorRepository.ResendCancellation(betDetail.URL, betDetail.Info);
-                    if (operatorResponse.StatusCode == StatusCode.Success)
-                        isSuccess = true;
+                    var cancelledBetDetail = await _platformContext.OperatorLog.AsNoTracking()
+                    .FirstOrDefaultAsync(c => betId.ToString() == c.BetId && c.Direction == "REQUEST" && c.URL.Contains("bet/cancellation"));
+
+                    if(cancelledBetDetail != null)
+                    {
+                        var operatorResponse = await _operatorRepository.ResendCancellation(cancelledBetDetail.URL, cancelledBetDetail.Info);
+                        if (operatorResponse.StatusCode == StatusCode.Success)
+                            isSuccess = true;
+                        message += $"{operatorResponse.Message};";
+                    }
+
                 }
 
                 if(isSuccess)
@@ -2695,7 +2701,7 @@ namespace Platform.API.Repository
                     return new BaseResponseDTO<ResendSettlementResponseDTO>
                     {
                         StatusCode = StatusCode.Error,
-                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')}",
+                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({message})",
                         Result = new ResendSettlementResponseDTO()
                     };
                 }

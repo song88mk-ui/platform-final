@@ -3000,6 +3000,7 @@ namespace Platform.API.Repository
                 };
             }
 
+            request.LanguageCode = languageCode;
             request.ClientCode = clientResponse.Result.ClientCode;
             request.ClientCode = clientResponse.Result.ClientCode;
             request.ClientId = clientResponse.Result.ClientId;

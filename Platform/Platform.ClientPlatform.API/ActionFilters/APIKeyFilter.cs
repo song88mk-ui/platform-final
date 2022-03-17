@@ -81,9 +81,11 @@ namespace Platform.ClientPlatform.API.ActionFilters
 
         private List<Tuple<string, string, List<string>>> GetAllowedClients()
         {
-            // note: put 2 client ids for each API Key (staging, prod)
+            // note: put 2 client ids for each API Key (staging, prod). Except Internal-Preprod and Internal-Prod
             var result = new List<Tuple<string, string, List<string>>>
             {
+                new Tuple<string, string, List<string>>("Internal-Preprod", "zb9rxuPQgtc6ms6e", new List<string> { "CBDA6855-EB7A-4D78-F2E3-08D9E2404694", "9E209944-E5DB-466E-5814-08D9D6FF9237", "42F80942-355A-4A47-0F23-08D9C226B9FE" }),
+                new Tuple<string, string, List<string>>("Internal-Prod", "zb9rxuPQgtc6ms6e", new List<string> { }),
                 new Tuple<string, string, List<string>>("BEC", "Qm2gXMt3npchd6y9", new List<string> { "C6F563F5-1240-47C4-A77C-08D9A9ACA672", "4BE2894A-CEAF-4B4F-58F9-08D9A9AD9D36" })
             };
 

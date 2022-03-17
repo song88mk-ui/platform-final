@@ -2632,11 +2632,13 @@ namespace Platform.API.Repository
         {
             var betIds = request.Bets.Select(s => Guid.Parse(s.BetId)).ToList();
 
+            var cancelledBets = request.Bets.Where(b => b.CurrentStatus == BetStatus.Cancelled).ToList();
+
             var bets = await _platformContext.OperatorSettlementRetry.AsNoTracking()
                 .Where(c => betIds.Contains(c.BetId))
                 .ToListAsync();
 
-            if (!bets.Any())
+            if (!cancelledBets.Any() && !bets.Any())
             {
                 return new BaseResponseDTO<ResendSettlementResponseDTO>()
                 {
@@ -2646,7 +2648,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            if (bets.Any(c => c.IsSuccess || c.RetryCount < 8))
+            if (!cancelledBets.Any() && bets.Any(c => c.IsSuccess || c.RetryCount < 8))
             {
                 return new BaseResponseDTO<ResendSettlementResponseDTO>()
                 {
@@ -2665,18 +2667,56 @@ namespace Platform.API.Repository
                 };
             }
 
-            var messageRequest = new ResendSettlementMessageRequestDTO()
+            if(cancelledBets.Any())
             {
-                Messages = bets.Select(s => new ResendSettlementMessageDTO
-                {
-                    BetId = s.BetId,
-                    MessageType = s.MessageType,
-                    Info = s.Info,
-                    CorrelationId = s.CorrelationId
-                }).ToList()
-            };
+                var isSuccess = false;
+                var cancelledBetDetails = await _platformContext.OperatorLog.AsNoTracking()
+                .Where(c => betIds.Contains(Guid.Parse(c.BetId)) && c.Direction == "RESPONSE" && c.URL.Contains("bet/cancellation"))
+                .ToListAsync();
 
-            return await _bettingRepository.ResendSettlement(messageRequest);
+                foreach(var betDetail in cancelledBetDetails)
+                {
+                    var operatorResponse = await _operatorRepository.ResendCancellation(betDetail.URL, betDetail.Info);
+                    if (operatorResponse.StatusCode == StatusCode.Success)
+                        isSuccess = true;
+                }
+
+                if(isSuccess)
+                {
+                    return new BaseResponseDTO<ResendSettlementResponseDTO>()
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString().Replace('_', ' '),
+                        Result = new ResendSettlementResponseDTO()
+                    };
+                }
+                else
+                {
+                    return new BaseResponseDTO<ResendSettlementResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')}",
+                        Result = new ResendSettlementResponseDTO()
+                    };
+                }
+
+            }
+            else
+            {
+                var messageRequest = new ResendSettlementMessageRequestDTO()
+                {
+                    Messages = bets.Select(s => new ResendSettlementMessageDTO
+                    {
+                        BetId = s.BetId,
+                        MessageType = s.MessageType,
+                        Info = s.Info,
+                        CorrelationId = s.CorrelationId
+                    }).ToList()
+                };
+
+                return await _bettingRepository.ResendSettlement(messageRequest);
+            }
+
         }
 
         public async Task<BaseResponseDTO<ResendSettlementBetDetailResponseDTO>> GetResendSettlementBetDetails(ResendSettlementBetDetailRequestDTO request)
@@ -2784,7 +2824,7 @@ namespace Platform.API.Repository
                 }
                 else
                 {
-                    // validate if bet is rejected
+                    // validate if bet is rejected or cancelled
                     var manualbetDetails = await _bettingRepository.GetManualBetDetails(new ManualBetDetailsRequest
                     {
                         BetIds = new List<string>() { request.BetId }
@@ -2881,7 +2921,7 @@ namespace Platform.API.Repository
                             }).ToList()
                         }).FirstOrDefault();
 
-                        if (betDetail != null && betDetail.BetStatusId == (int)BetStatus.Rejected)
+                        if (betDetail != null && (betDetail.BetStatusId == (int)BetStatus.Rejected || betDetail.BetStatusId == (int)BetStatus.Cancelled))
                             response.Bet = betDetail;
                     }
                 }

@@ -2673,10 +2673,10 @@ namespace Platform.API.Repository
                 var response = new ResendSettlementResponseDTO();
                 foreach (var betId in betIds)
                 {
-                    var cancelledBetDetail = await _platformContext.OperatorLog.AsNoTracking()
-                    .FirstOrDefaultAsync(c => betId.ToString() == c.BetId && c.Direction == "REQUEST" && c.URL.Contains("bet/cancellation"));
+                    var cancelledBetDetail = (await _platformContext.OperatorLog.AsNoTracking()
+                    .Where(c => betId.ToString() == c.BetId && c.Direction == "REQUEST").OrderByDescending(o => o.Timestamp).ToListAsync()).FirstOrDefault();
 
-                    if (cancelledBetDetail != null)
+                    if (cancelledBetDetail != null && cancelledBetDetail.URL.Contains("bet/cancellation"))
                     {
 
                         AddOperatorLog(new OperatorLog
@@ -2728,7 +2728,15 @@ namespace Platform.API.Repository
 
 
                     }
-
+                    else
+                    {
+                        response.Data.Add(new ResendSettlementResponse()
+                        {
+                            StatusCode = StatusCode.Error,
+                            BetId = betId,
+                            Message = $"No cancellation found"
+                        });
+                    }
                 }
 
                 if (isSuccess)

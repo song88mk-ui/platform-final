@@ -4310,7 +4310,25 @@ namespace Platform.Sportsbook.API.Repository
                             clientOdds = GetClientOdds(activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
                         }
 
-                        result.Add(new MarketDTO
+                        var selectionsToAdd = new List<SelectionDTO>();
+
+                        foreach (var item in selections.Where(c => c.MaId == market.MaId).ToList())
+                        {
+                            var odds = clientOdds.Where(c => c.SelectionId == item.SeId).Select(ss => ss.Odds).FirstOrDefault();
+
+                            selectionsToAdd.Add(new SelectionDTO
+                            {
+                                SelectionTemplateId = item.SeTeId,
+                                SelectionId = item.SeId.ToString(),
+                                SelectionName = GetSelectionName(item.SeNa, item.SeNaTr, languageCode),
+                                DecimalOdds = odds.ToString(),
+                                IsActive = odds > 1m && item.IsAc,
+                                CorrelationId = item.CoId,
+                                SortOrder = item.SeSoOr
+                            });
+                        }
+
+                        var marketToAdd = new MarketDTO
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
@@ -4319,17 +4337,10 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
                             MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
-                            Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
-                            {
-                                SelectionTemplateId = s.SeTeId,
-                                SelectionId = s.SeId.ToString(),
-                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                                DecimalOdds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
-                                IsActive = s.IsAc,
-                                CorrelationId = s.CoId,
-                                SortOrder = s.SeSoOr
-                            }).OrderBy(o => o.SortOrder).ToList()
-                        });
+                            Selections = selectionsToAdd.OrderBy(o => o.SortOrder).ToList()
+                        };
+
+                        result.Add(marketToAdd);
                     }
 
                     return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
@@ -4541,7 +4552,25 @@ namespace Platform.Sportsbook.API.Repository
                             clientOdds = GetClientOdds(activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
                         }
 
-                        result.Add(new MarketDTO
+                        var selectionsToAdd = new List<SelectionDTO>();
+
+                        foreach (var item in selections.Where(c => c.MaId == market.MaId).ToList())
+                        {
+                            var odds = clientOdds.Where(c => c.SelectionId == item.SeId).Select(ss => ss.Odds).FirstOrDefault();
+
+                            selectionsToAdd.Add(new SelectionDTO
+                            {
+                                SelectionTemplateId = item.SeTeId,
+                                SelectionId = item.SeId.ToString(),
+                                SelectionName = GetSelectionName(item.SeNa, item.SeNaTr, languageCode),
+                                DecimalOdds = odds.ToString(),
+                                IsActive = odds > 1m && item.IsAc,
+                                CorrelationId = item.CoId,
+                                SortOrder = item.SeSoOr
+                            });
+                        }
+
+                        var marketToAdd = new MarketDTO
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
@@ -4550,17 +4579,10 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
                             MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
-                            Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
-                            {
-                                SelectionTemplateId = s.SeTeId,
-                                SelectionId = s.SeId.ToString(),
-                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                                DecimalOdds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
-                                IsActive = s.IsAc,
-                                CorrelationId = s.CoId,
-                                SortOrder = s.SeSoOr
-                            }).OrderBy(o => o.SortOrder).ToList()
-                        });
+                            Selections = selectionsToAdd.OrderBy(o => o.SortOrder).ToList()
+                        };
+
+                        result.Add(marketToAdd);
                     }
 
                     return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();

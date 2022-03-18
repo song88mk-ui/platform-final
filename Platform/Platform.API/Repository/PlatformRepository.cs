@@ -2678,6 +2678,20 @@ namespace Platform.API.Repository
 
                     if (cancelledBetDetail != null)
                     {
+
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "REQUEST",
+                            ClientId = cancelledBetDetail.ClientId,
+                            ClientCode = cancelledBetDetail.ClientCode,
+                            URL = cancelledBetDetail.URL,
+                            BetId = cancelledBetDetail.BetId.ToUpper(),
+                            Info = cancelledBetDetail.Info,
+                            OperatorToken = cancelledBetDetail.OperatorToken,
+                            CorrelationId = cancelledBetDetail.CorrelationId,
+                            Timestamp = DateTime.UtcNow
+                        });
+
                         var operatorResponse = await _operatorRepository.ResendCancellation(cancelledBetDetail.URL, cancelledBetDetail.Info);
                         if (operatorResponse.StatusCode == StatusCode.Success)
                         {
@@ -2698,6 +2712,21 @@ namespace Platform.API.Repository
                                 Message = $"{operatorResponse.Message}"
                             });
                         }
+                        //add to operator log
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = cancelledBetDetail.ClientId,
+                            ClientCode = cancelledBetDetail.ClientCode,
+                            URL = cancelledBetDetail.URL,
+                            BetId = cancelledBetDetail.BetId.ToUpper(),
+                            Info = JsonSerializer.Serialize(operatorResponse.Result),
+                            OperatorToken = cancelledBetDetail.OperatorToken,
+                            CorrelationId = cancelledBetDetail.CorrelationId,
+                            Timestamp = DateTime.UtcNow
+                        });
+
+
                     }
 
                 }
@@ -3143,6 +3172,22 @@ namespace Platform.API.Repository
             }
 
             return true;
+        }
+        private void AddOperatorLog(OperatorLog operatorLog)
+        {
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                try
+                {
+                    _platformContext.OperatorLog.Add(operatorLog);
+
+                    _platformContext.SaveChanges();
+                    scope.Complete();
+                }
+                catch (Exception)
+                {
+                }
+            }
         }
     }
 }

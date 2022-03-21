@@ -127,6 +127,20 @@ namespace Platform.Operator.API.Controllers
             }
         }
 
+        [HttpPost("v1/fixture/score")]
+        public async Task<IActionResult> FixtureScore([FromBody] FixtureScoreRequestDTO request)
+        {
+            var result = await _platformRepository.FixtureScore(request);
+
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return new BadRequestObjectResult(result);
+            }
+        }
+
         [HttpPost("v1/user")]
         [ServiceFilter(typeof(InternalAPIKeyFilter))]
         public async Task<IActionResult> AddUser([FromBody] GenerateUserRequestDTO request)

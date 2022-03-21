@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "Platform.Job.Operator.Score": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

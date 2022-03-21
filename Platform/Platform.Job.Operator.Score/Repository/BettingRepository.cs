@@ -89,6 +89,7 @@ namespace Platform.Job.Operator.Score.Repository
                     SelectionId = s.SelectionId,
                     BetSelectionStatusId = s.BetSelectionStatusId,
                     FixtureSpecifier = s.FixtureSpecifier,
+                    SettlementScore = s.SettlementScore,
                 }).ToList();
 
                 if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright || !settledStatus.Contains(c.BetSelectionStatusId) ))
@@ -143,21 +144,26 @@ namespace Platform.Job.Operator.Score.Repository
                         {
                             var betMemory = fixtureBet.Item4.FirstOrDefault();
 
-                            //call operator api
-                            var payload = new 
+                            var selectionMemory = betMemory.BetSelections.Where(s => s.FixtureId == fixtureBet.Item1).FirstOrDefault();
+                            if (selectionMemory != null && selectionMemory.SettlementScore != settlementScore)
                             {
-                                FixtureId = fixtureBet.Item1,
-                                Score = settlementScore,
-                            };
+                                //call operator api
+                                var payload = new
+                                {
+                                    FixtureId = fixtureBet.Item1,
+                                    Score = settlementScore,
+                                };
 
-                            var path = "/v1/fixture/score";
-                            var response = GetHttpClient(betMemory.Endpoint, betMemory.ClientId).PostAsync($"{betMemory.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                                var path = "/v1/fixture/score";
+                                var response = GetHttpClient(betMemory.Endpoint, betMemory.ClientId).PostAsync($"{betMemory.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
-                            if (response.IsSuccessStatusCode)
-                            {
+                                if (response.IsSuccessStatusCode)
+                                {
 
-                                //add or update fixtureSpecifier memory cache
-                                AddOrUpdateFixtureSpecfier(fixtureBet.Item3);
+                                    //add or update fixtureSpecifier memory cache
+                                    AddOrUpdateFixtureSpecfier(fixtureBet.Item3);
+
+                                }
 
                             }
                         }
@@ -219,6 +225,7 @@ namespace Platform.Job.Operator.Score.Repository
         public long SelectionId { get; set; }
         public int BetSelectionStatusId { get; set; }
         public string FixtureSpecifier { get; set; }
+        public string SettlementScore { get; set; }
     }
 
 

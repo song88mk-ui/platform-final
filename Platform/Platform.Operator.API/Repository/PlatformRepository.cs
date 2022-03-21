@@ -395,6 +395,24 @@ namespace Platform.Operator.API.Repository
             }
         }
 
+        public async Task<FixtureScoreResponseDTO> FixtureScore(FixtureScoreRequestDTO request)
+        {
+            try
+            {
+                return new FixtureScoreResponseDTO
+                {
+                    StatusId = 1000
+                };
+            }
+            catch (Exception ex)
+            {
+                return new FixtureScoreResponseDTO
+                {
+                    StatusId = 1003
+                };
+            }
+        }
+
         public async Task<BaseResponseDTO<GenerateUserResponseDTO>> AddUser(GenerateUserRequestDTO request)
         {
             if(string.IsNullOrEmpty(request.CurrencyCode) || !Enum.IsDefined(typeof(CurrencyCode), request.CurrencyCode))

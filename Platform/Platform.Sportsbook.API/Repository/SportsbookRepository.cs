@@ -4381,13 +4381,13 @@ namespace Platform.Sportsbook.API.Repository
         }
         private List<BoostedMarketDTO> GetBoostedMarkets(int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode)
         {
-            var marketTemplates = GetMainMarketTemplates(sportId);
+            //var marketTemplates = GetMainMarketTemplates(sportId);
 
             if (IsOEEnable(clientCode))
             {
                 if (sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright)
                 {
-                    var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.IsBo == true).ToList();
+                    var filteredMarkets = markets.Where(c =>  c.IsBo == true).ToList(); //marketTemplates.Contains(c.MaTeId) &&
                     var result = new List<BoostedMarketDTO>();
 
                     foreach (var market in filteredMarkets)
@@ -4420,7 +4420,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
                 else
                 {
-                    var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo != null && c.ClCo.Contains(clientCode) && c.IsBo == true).ToList();
+                    var filteredMarkets = markets.Where(c =>  c.ClCo != null && c.ClCo.Contains(clientCode) && c.IsBo == true).ToList(); //marketTemplates.Contains(c.MaTeId) &&
                     var result = new List<BoostedMarketDTO>();
 
                     foreach (var market in filteredMarkets)
@@ -4466,7 +4466,7 @@ namespace Platform.Sportsbook.API.Repository
             }
             else
             {
-                var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.IsBo == true).ToList();
+                var filteredMarkets = markets.Where(c => c.IsBo == true).ToList(); //marketTemplates.Contains(c.MaTeId) && 
                 var result = new List<BoostedMarketDTO>();
 
                 foreach (var market in filteredMarkets)

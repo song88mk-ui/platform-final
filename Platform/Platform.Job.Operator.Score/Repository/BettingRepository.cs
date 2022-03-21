@@ -143,27 +143,24 @@ namespace Platform.Job.Operator.Score.Repository
                         {
                             var betMemory = fixtureBet.Item4.FirstOrDefault();
 
-                            //TODO: update logic in sending message to operator
                             //call operator api
                             var payload = new 
                             {
-                                BetId = betMemory.BetId,
-                                UserId = betMemory.UserId,
+                                FixtureId = fixtureBet.Item1,
                                 Score = settlementScore,
                             };
 
-                            var path = "/v1/settlement/score";
+                            var path = "/v1/fixture/score";
                             var response = GetHttpClient(betMemory.Endpoint, betMemory.ClientId).PostAsync($"{betMemory.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                             if (response.IsSuccessStatusCode)
                             {
-                                //var result = JsonSerializer.Deserialize<CashoutResultResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                                //add or update fixtureSpecifier memory cache
+                                AddOrUpdateFixtureSpecfier(fixtureBet.Item3);
 
                             }
                         }
-
-                        //add or update fixtureSpecifier memory cache
-                        AddOrUpdateFixtureSpecfier(fixtureBet.Item3);
 
                         Console.WriteLine($"{DateTime.UtcNow} - Settlement Score : {fixtureBet.Item3}");
 

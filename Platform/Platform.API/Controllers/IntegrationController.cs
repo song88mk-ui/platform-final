@@ -1339,7 +1339,7 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetBoostedFixtures(apiKey, clientId, languageCode, new Shared.Models.BoostedFixturesRequestDTO{ ClientId = Guid.Parse(clientId) });
+            var result = await _platformRepository.GetBoostedFixtures(apiKey, clientId, languageCode);
 
             var parameters = new
             {

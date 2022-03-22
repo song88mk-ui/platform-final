@@ -3063,7 +3063,7 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.GetSportGroups();
         }
 
-        public async Task<BaseResponseDTO<BoostedResponseDTO>> GetBoostedFixtures(string apiKey, string clientId, string langCode, BoostedFixturesRequestDTO request)
+        public async Task<BaseResponseDTO<BoostedResponseDTO>> GetBoostedFixtures(string apiKey, string clientId, string langCode)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -3098,12 +3098,12 @@ namespace Platform.API.Repository
                 };
             }
 
-            request.LanguageCode = languageCode;
-            request.ClientCode = clientResponse.Result.ClientCode;
-            request.ClientCode = clientResponse.Result.ClientCode;
-            request.ClientId = clientResponse.Result.ClientId;
-
-            return await _sportsbookRepository.GetBoostedFixtures(request);
+            return await _sportsbookRepository.GetBoostedFixtures(new BoostedFixturesRequestDTO 
+            {
+                ClientId = clientResponse.Result.ClientId,
+                ClientCode = clientResponse.Result.ClientCode,
+                LanguageCode = languageCode
+            });
         }
 
         private DateTime GetFirstDayOfNextMonth()

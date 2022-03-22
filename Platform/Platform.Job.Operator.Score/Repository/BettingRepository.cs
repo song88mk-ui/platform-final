@@ -34,8 +34,6 @@ namespace Platform.Job.Operator.Score.Repository
             _memCache = memCache;
             _betradarRepository = betradarRepository;
             _cricketScoreRepository = cricketScoreRepository;
-
-
         }
 
         private HttpClient GetHttpClient(string endpoint, string clientId)
@@ -58,21 +56,17 @@ namespace Platform.Job.Operator.Score.Repository
             _bets = new List<BetMemory>();
             _fixtureBetReference = new List<Tuple<long, int, string, List<BetMemory>>>();
 
+            var clientCodes = string.IsNullOrEmpty(_configuration["Custom:ClientCodes"]) ? new List<string>() : _configuration["Custom:ClientCodes"].Split(",").ToList();
+
             using var scope = _serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<BettingContext>();
 
             var settledStatus = new List<int> { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost, (int)BetStatus.Void };
 
-            var bets = context.Bet.AsNoTracking().Where(c => c.ClientCode == _configuration["Custom:ClientCode"] && c.SettlementDate >= DateTime.UtcNow.AddHours(-2) && c.SettlementDate <= DateTime.UtcNow && settledStatus.Contains(c.BetStatusId)).Select(s => new BetMemory
+            var bets = context.Bet.AsNoTracking().Where(c => clientCodes.Contains(c.ClientCode) && c.SettlementDate >= DateTime.UtcNow.AddHours(-7) && c.SettlementDate <= DateTime.UtcNow.AddHours(-5) && settledStatus.Contains(c.BetStatusId)).Select(s => new BetMemory
             {
                 BetId = s.BetId,
                 ClientId = s.ClientId,
-                UserId = s.UserId,
-                BetStatusId = s.BetStatusId,
-                TrueStake = s.TrueStake,
-                Odds = s.Odds,
-                StakeTax = s.StakeTax,
-                WinningsTax = s.WinningsTax,
                 Endpoint = s.Endpoint,
             }).ToList();
 
@@ -81,12 +75,9 @@ namespace Platform.Job.Operator.Score.Repository
                 var betSelections = context.BetSelection.AsNoTracking().Where(c => c.BetId == bet.BetId).Select(s => new BetSelectionMemory
                 {
                     BetId = s.BetId,
-                    BetSelectionId = s.BetSelectionId,
                     SportId = s.SportId,
                     FixtureId = s.FixtureId,
                     FixtureTypeId = s.FixtureTypeId,
-                    MarketId = s.MarketId,
-                    SelectionId = s.SelectionId,
                     BetSelectionStatusId = s.BetSelectionStatusId,
                     FixtureSpecifier = s.FixtureSpecifier,
                     SettlementScore = s.SettlementScore,
@@ -126,7 +117,7 @@ namespace Platform.Job.Operator.Score.Repository
                 foreach (var fixtureBet in _fixtureBetReference)
                 {
                     
-                    var cacheKey = $"fs-score:{_configuration["Custom:ClientCode"]}:{fixtureBet.Item3}";
+                    var cacheKey = $"fs-score:{fixtureBet.Item3}";
 
                     var fsResult = _memCache.GetCache<string>(cacheKey);
 
@@ -140,31 +131,36 @@ namespace Platform.Job.Operator.Score.Repository
                             settlementScore = (await _cricketScoreRepository.GetScoreSummary(fixtureBet.Item3));
 
 
-                        if (!string.IsNullOrEmpty(settlementScore))
+                        if (!string.IsNullOrEmpty(settlementScore) && fixtureBet.Item4.Any())
                         {
-                            var betMemory = fixtureBet.Item4.FirstOrDefault();
-
-                            var selectionMemory = betMemory.BetSelections.Where(s => s.FixtureId == fixtureBet.Item1).FirstOrDefault();
-                            if (selectionMemory != null && selectionMemory.SettlementScore != settlementScore)
+                            var clientIds = new List<string>();
+                            foreach(var betMemory in fixtureBet.Item4)
                             {
-                                //call operator api
-                                var payload = new
+                                if (clientIds.Contains(betMemory.ClientId))
+                                    continue;
+
+                                var selectionMemory = betMemory.BetSelections.Where(s => s.FixtureId == fixtureBet.Item1).FirstOrDefault();
+                                if (selectionMemory != null && selectionMemory.SettlementScore != settlementScore)
                                 {
-                                    FixtureId = fixtureBet.Item1,
-                                    Score = settlementScore,
-                                };
+                                    //call operator api
+                                    var payload = new
+                                    {
+                                        FixtureId = fixtureBet.Item1,
+                                        Score = settlementScore,
+                                    };
 
-                                var path = "/v1/fixture/score";
-                                var response = GetHttpClient(betMemory.Endpoint, betMemory.ClientId).PostAsync($"{betMemory.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                                    var path = "/v1/fixture/score";
+                                    var response = GetHttpClient(betMemory.Endpoint, betMemory.ClientId).PostAsync($"{betMemory.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
-                                if (response.IsSuccessStatusCode)
-                                {
+                                    if (response.IsSuccessStatusCode)
+                                    {
+                                        clientIds.Add(betMemory.ClientId);
+                                        //add or update fixtureSpecifier memory cache
+                                        AddOrUpdateFixtureSpecfier(fixtureBet.Item3);
 
-                                    //add or update fixtureSpecifier memory cache
-                                    AddOrUpdateFixtureSpecfier(fixtureBet.Item3);
+                                    }
 
                                 }
-
                             }
                         }
 
@@ -181,7 +177,7 @@ namespace Platform.Job.Operator.Score.Repository
         {
             var expiration = DateTime.UtcNow.AddHours(6);
 
-            var cacheKey = $"fs-score:{_configuration["Custom:ClientCode"]}:{fixtureSpecifier}";
+            var cacheKey = $"fs-score:{fixtureSpecifier}";
 
             var fsResult = _memCache.GetCache<string>(cacheKey);
 
@@ -203,12 +199,6 @@ namespace Platform.Job.Operator.Score.Repository
 
         public Guid BetId { get; set; }
         public string ClientId { get; set; }
-        public string UserId { get; set; }
-        public int BetStatusId { get; set; }
-        public decimal TrueStake { get; set; }
-        public decimal Odds { get; set; }
-        public decimal StakeTax { get; set; }
-        public decimal WinningsTax { get; set; }
         public string Endpoint { get; set; }
 
         public List<BetSelectionMemory> BetSelections { get; set; }
@@ -217,12 +207,9 @@ namespace Platform.Job.Operator.Score.Repository
     public class BetSelectionMemory
     {
         public Guid BetId { get; set; }
-        public Guid BetSelectionId { get; set; }
         public int SportId { get; set; }
         public long FixtureId { get; set; }
         public int FixtureTypeId { get; set; }
-        public long MarketId { get; set; }
-        public long SelectionId { get; set; }
         public int BetSelectionStatusId { get; set; }
         public string FixtureSpecifier { get; set; }
         public string SettlementScore { get; set; }

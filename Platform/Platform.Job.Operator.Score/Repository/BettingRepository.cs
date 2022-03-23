@@ -164,7 +164,7 @@ namespace Platform.Job.Operator.Score.Repository
                             }
                         }
 
-                        Console.WriteLine($"{DateTime.UtcNow} - Settlement Score : {fixtureBet.Item3}");
+                        Console.WriteLine($"{DateTime.UtcNow} - Settlement Score : {fixtureBet.Item3} : {settlementScore} ");
 
                     }
                 }

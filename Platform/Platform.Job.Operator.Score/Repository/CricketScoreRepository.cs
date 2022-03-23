@@ -38,17 +38,24 @@ namespace Platform.Job.Operator.Score.Repository
 
                     if(result != null && result.Score != null)
                     {
+                        var inning1 = string.Empty;
+                        var inning2 = string.Empty;
+                        var inningOvers = string.Empty;
                         var innings = result.Score.Innings;
                         if(innings != null)
                         {
                             foreach(var inning in innings)
                             {
                                 if (inning.InningsNumber == 1)
-                                    settlementScore += $"{inning.Summary} ";
+                                    inning1 = $"{inning.Summary} ";
                                 if (inning.InningsNumber == 2)
-                                    settlementScore += $"- {inning.Summary} ({inning.Overs} ov) ";
+                                {
+                                    inningOvers = $"({inning.Overs} ov)";
+                                    inning2 = $"{inning.Summary}";
+                                }
                             }
                         }
+                        settlementScore = $"{inning2} - {inning1} {inningOvers}";
                     }
                 }
 

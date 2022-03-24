@@ -63,15 +63,18 @@ namespace Platform.Job.Operator.Score.Repository
 
             var settledStatus = new List<int> { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost, (int)BetStatus.Void };
 
+            Console.WriteLine($"{DateTime.UtcNow} - Getting Bets : Start");
             var bets = context.Bet.AsNoTracking().Where(c => clientCodes.Contains(c.ClientCode) && c.SettlementDate >= DateTime.UtcNow.AddHours(-7) && c.SettlementDate <= DateTime.UtcNow.AddHours(-5) && settledStatus.Contains(c.BetStatusId)).Select(s => new BetMemory
             {
                 BetId = s.BetId,
                 ClientId = s.ClientId,
                 Endpoint = s.Endpoint,
             }).ToList();
+            Console.WriteLine($"{DateTime.UtcNow} - Getting Bets : End");
 
             foreach (var bet in bets)
             {
+                Console.WriteLine($"{DateTime.UtcNow} - Getting Bet Selections : Start");
                 var betSelections = context.BetSelection.AsNoTracking().Where(c => c.BetId == bet.BetId).Select(s => new BetSelectionMemory
                 {
                     BetId = s.BetId,
@@ -82,6 +85,7 @@ namespace Platform.Job.Operator.Score.Repository
                     FixtureSpecifier = s.FixtureSpecifier,
                     SettlementScore = s.SettlementScore,
                 }).ToList();
+                Console.WriteLine($"{DateTime.UtcNow} - Getting Bet Selections : End");
 
                 if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright || !settledStatus.Contains(c.BetSelectionStatusId) ))
                     return;
@@ -90,6 +94,7 @@ namespace Platform.Job.Operator.Score.Repository
 
                 _bets.Add(bet);
 
+                Console.WriteLine($"{DateTime.UtcNow} - AddOrUpdate _fixtureBetReference : Start");
                 foreach (var betSelection in betSelections)
                 {
                     var copy = _fixtureBetReference.Where(c => c.Item1 == betSelection.FixtureId).FirstOrDefault();
@@ -103,6 +108,8 @@ namespace Platform.Job.Operator.Score.Repository
                     else
                         _fixtureBetReference.Add(new Tuple<long, int, string, List<BetMemory>>(betSelection.FixtureId, betSelection.SportId, betSelection.FixtureSpecifier, new List<BetMemory> { bet }));
                 }
+                Console.WriteLine($"{DateTime.UtcNow} - AddOrUpdate _fixtureBetReference : End");
+
             }
             Console.WriteLine($"{DateTime.UtcNow} - Preload Settled Bets : End (Count: {_fixtureBetReference.Count})");
 

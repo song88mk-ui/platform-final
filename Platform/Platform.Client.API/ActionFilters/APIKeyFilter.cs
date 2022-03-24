@@ -85,7 +85,7 @@ namespace Platform.Client.API.ActionFilters
                 new Tuple<string, string, List<string>>("casinomobiltbankid", "j6uh5E2W74neCXrv", new List<string> { "111.118.215.154" }),
                 new Tuple<string, string, List<string>>("BilalAlim", "2J8DtUe8ugT3wM7x", new List<string> { "34.93.140.109", "35.244.36.155" }),
                 new Tuple<string, string, List<string>>("betrallyindia", "44MRNepFKUr6tzp9", new List<string> { "67.227.164.101", "67.227.164.102", "67.227.164.103", "104.27.154.210", "104.27.155.210", "172.67.170.132" }),
-                new Tuple<string, string, List<string>>("riviera", "nq737zHSdqyu9VFY", new List<string> { "54.228.183.109", "93.171.241.132", "176.37.75.85", "54.195.248.219" }),
+                new Tuple<string, string, List<string>>("riviera", "nq737zHSdqyu9VFY", new List<string> { "54.228.183.109", "93.171.241.132", "176.37.75.85", "54.195.248.219", "13.235.143.78" }),
                 new Tuple<string, string, List<string>>("sportspunter", "TTFjKkXJsDke4ubu", new List<string> { "207.228.252.8", "207.228.252.24" }),
                 new Tuple<string, string, List<string>>("fresh8", "LsPuZzpzeQu4ea64", new List<string> { "146.148.121.95", "35.240.70.112", "146.148.122.135", "35.234.151.134" }),
                 new Tuple<string, string, List<string>>("mediabuy", "XGsRbcyBk3zy8byZ", new List<string> { "185.45.66.20", "185.45.67.120" }),

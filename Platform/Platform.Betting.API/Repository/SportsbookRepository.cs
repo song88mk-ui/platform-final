@@ -205,39 +205,43 @@ namespace Platform.Betting.API.Repository
                         {
                             var selectionProbability = selectionProbabilities.Where(c => c.SelectionId == selection.SelectionId).FirstOrDefault();
 
-                            if (selectionProbability == null || selectionProbability.MarketStatusId != (int)MarketStatus.Active || selectionProbability.IsActive == false || selectionProbability.IsSuspended == true)
+                            if(selection.BetSelectionStatusId == (int)BetStatus.Running)
                             {
-                                isBreak = true;
-                                break;
+                                if (selectionProbability == null || selectionProbability.MarketStatusId != (int)MarketStatus.Active || selectionProbability.IsActive == false || selectionProbability.IsSuspended == true)
+                                {
+                                    isBreak = true;
+                                    break;
+                                }
+
+                                if (selectionProbability.Probability == 0
+                                    && selectionProbability.WonProbability == 0
+                                    && selectionProbability.LostProbability == 0
+                                    && selectionProbability.VoidProbability == 0
+                                    && selectionProbability.HalfWonProbability == 0
+                                    && selectionProbability.HalfLostProbability == 0)
+                                {
+                                    isBreak = true;
+                                    break;
+                                }
+
+                                if (selectionProbability.FixtureStatusId == (int)FixtureStatus.Live)
+                                    hasLive = true;
+
+                                if (selection.Probability != selectionProbability.Probability)
+                                    hasProbabilityChanged = true;
+
                             }
-
-                            if(selectionProbability.Probability == 0
-                                && selectionProbability.WonProbability == 0
-                                && selectionProbability.LostProbability == 0
-                                && selectionProbability.VoidProbability == 0
-                                && selectionProbability.HalfWonProbability == 0
-                                && selectionProbability.HalfLostProbability == 0)
-                            {
-                                isBreak = true;
-                                break;
-                            }
-
-                            if (selectionProbability.FixtureStatusId == (int)FixtureStatus.Live)
-                                hasLive = true;
-
-                            if (selection.Probability != selectionProbability.Probability)
-                                hasProbabilityChanged = true;
 
                             probabilites.Add(new Probabilities
                             {
                                 BetSelectionId = selection.BetSelectionId,
                                 CashOutStatusId = 1,
-                                Probability = selectionProbability.Probability,
-                                WonProbability = selectionProbability.WonProbability,
-                                LostProbability = selectionProbability.LostProbability,
-                                VoidProbability = selectionProbability.VoidProbability,
-                                HalfWonProbability = selectionProbability.HalfWonProbability,
-                                HalfLostProbability = selectionProbability.HalfLostProbability
+                                Probability = selection.BetSelectionStatusId != (int)BetStatus.Running ? 1 : selectionProbability.Probability,
+                                WonProbability = selection.BetSelectionStatusId != (int)BetStatus.Running ? 0 : selectionProbability.WonProbability,
+                                LostProbability = selection.BetSelectionStatusId != (int)BetStatus.Running ? 0 : selectionProbability.LostProbability,
+                                VoidProbability = selection.BetSelectionStatusId != (int)BetStatus.Running ? 0 : selectionProbability.VoidProbability,
+                                HalfWonProbability = selection.BetSelectionStatusId != (int)BetStatus.Running ? 0 : selectionProbability.HalfWonProbability,
+                                HalfLostProbability = selection.BetSelectionStatusId != (int)BetStatus.Running ? 0 : selectionProbability.HalfLostProbability
                             });
                         }
 
@@ -350,7 +354,9 @@ namespace Platform.Betting.API.Repository
                         {
                             var finalProbability = probabilites.Where(c => c.Probability > 0).Select(s => s.Probability).Aggregate((a, b) => a * b);
 
-                            var cashOutStake = (stake * bet.Odds) * Convert.ToDecimal(finalProbability);
+                            var totalOdds = GetTotalOdds(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList());
+
+                            var cashOutStake = (stake * totalOdds) * Convert.ToDecimal(finalProbability);
 
                             cashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
@@ -374,7 +380,7 @@ namespace Platform.Betting.API.Repository
                                 nonTaxedPayout = nonTaxedStake - (nonTaxedStake * 0.10m);
                             }
 
-                            if (finalCashOutStake == 0 || finalCashOutStake > stake * bet.Odds)
+                            if (finalCashOutStake == 0 || finalCashOutStake > stake * totalOdds)
                             {
                                 result.Add(new CashOutDetailsReponse
                                 {
@@ -462,5 +468,39 @@ namespace Platform.Betting.API.Repository
             }
         }
 
+        private decimal GetTotalOdds(List<Tuple<BetStatus, decimal, decimal>> selections)
+        {
+            var values = new List<decimal>();
+
+            foreach (var selection in selections)
+            {
+                switch (selection.Item1)
+                {
+                    case BetStatus.Lost:
+                        values.Add(0m);
+                        break;
+                    case BetStatus.HalfWon:
+                        values.Add((selection.Item2 + 1) / 2);
+                        break;
+                    case BetStatus.HalfLost:
+                        values.Add(0.5m);
+                        break;
+                    case BetStatus.Won:
+                        values.Add(selection.Item2 * selection.Item3);
+                        break;
+                    case BetStatus.Void:
+                        values.Add(1m);
+                        break;
+                    case BetStatus.Cancelled:
+                        values.Add(1m);
+                        break;
+                    case BetStatus.Running:
+                        values.Add(selection.Item2);
+                        break;
+                }
+            }
+
+            return values.Aggregate((a, b) => a * b) ;
+        }
     }
 }

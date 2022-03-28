@@ -9,6 +9,7 @@ using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text.Json;
 
@@ -79,17 +80,19 @@ namespace Platform.CashOutStake.Servicev2.Repository
                     LostProbability = s.LostProbability,
                     VoidProbability = s.VoidProbability,
                     HalfWonProbability = s.HalfWonProbability,
-                    HalfLostProbability = s.HalfLostProbability
+                    HalfLostProbability = s.HalfLostProbability,
+                    Odds = s.Odds,
+                    DeadHeatFactor = s.DeadHeatFactor,
                 }).ToList();
 
-                if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright || c.BetSelectionStatusId != (int)BetStatus.Running))
+                if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright)) //|| c.BetSelectionStatusId != (int)BetStatus.Running
                     return;
 
                 bet.BetSelections.AddRange(betSelections);
 
                 _bets.Add(bet);
 
-                foreach (var betSelection in betSelections)
+                foreach (var betSelection in betSelections.Where(s => s.BetSelectionStatusId == (int)BetStatus.Running).ToList())
                 {
                     var copy = _fixtureBetReference.Where(c => c.Item1 == betSelection.FixtureId).FirstOrDefault();
 
@@ -138,17 +141,20 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 LostProbability = s.LostProbability,
                 VoidProbability = s.VoidProbability,
                 HalfWonProbability = s.HalfWonProbability,
-                HalfLostProbability = s.HalfLostProbability
+                HalfLostProbability = s.HalfLostProbability,
+                Odds = s.Odds,
+                DeadHeatFactor = s.DeadHeatFactor,
+
             }).ToList();
 
-            if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright || c.BetSelectionStatusId != (int)BetStatus.Running))
+            if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright)) // || c.BetSelectionStatusId != (int)BetStatus.Running
                 return;
 
             bet.BetSelections.AddRange(betSelections);
 
             _bets.Add(bet);
 
-            foreach (var betSelection in betSelections)
+            foreach (var betSelection in betSelections.Where(s => s.BetSelectionStatusId == (int)BetStatus.Running).ToList())
             {
                 var copy = _fixtureBetReference.Where(c => c.Item1 == betSelection.FixtureId).FirstOrDefault();
 
@@ -334,31 +340,35 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 var marketResult = _memCache.GetCache<CashOutMarketFilter>($"market:{betSelection.MarketId}");
                 var selectionResult = _memCache.GetCache<CashOutSelectionFilter>($"selection:{betSelection.SelectionId}");
 
-                if (marketResult == null || selectionResult == null || marketResult.MaStId != (int)MarketStatus.Active || selectionResult.IsAc == false)
+                if (betSelection.BetSelectionStatusId == (int)BetStatus.Running)
                 {
-                    return new OnCashOutChange
+                    if (marketResult == null || selectionResult == null || marketResult.MaStId != (int)MarketStatus.Active || selectionResult.IsAc == false)
                     {
-                        ClientId = bet.ClientId,
-                        UserId = bet.UserId,
-                        BetId = bet.BetId.ToString().ToUpper(),
-                        CashOutStatus = CashOutStatus.Unavailable,
-                        CashOutStake = 0m
-                    };
-                }
+                        return new OnCashOutChange
+                        {
+                            ClientId = bet.ClientId,
+                            UserId = bet.UserId,
+                            BetId = bet.BetId.ToString().ToUpper(),
+                            CashOutStatus = CashOutStatus.Unavailable,
+                            CashOutStake = 0m
+                        };
+                    }
 
-                if (betSelection.Probability != selectionResult.Pr)
-                    hasProbabilityChanged = true;
+                    if (betSelection.Probability != selectionResult.Pr)
+                        hasProbabilityChanged = true;
+
+                }
 
                 probabilites.Add(new Probabilities
                 {
                     BetSelectionId = betSelection.BetSelectionId,
                     CashOutStatusId = 1,
-                    Probability = selectionResult.Pr,
-                    WonProbability = selectionResult.WoPr,
-                    LostProbability = selectionResult.LoPr,
-                    VoidProbability = selectionResult.VoPr,
-                    HalfWonProbability = selectionResult.HaWoPr,
-                    HalfLostProbability = selectionResult.HaLoPr
+                    Probability = betSelection.BetSelectionStatusId != (int)BetStatus.Running ? 1 : selectionResult.Pr,
+                    WonProbability = betSelection.BetSelectionStatusId != (int)BetStatus.Running ? 0 : selectionResult.WoPr,
+                    LostProbability = betSelection.BetSelectionStatusId != (int)BetStatus.Running ? 0 : selectionResult.LoPr,
+                    VoidProbability = betSelection.BetSelectionStatusId != (int)BetStatus.Running ? 0 : selectionResult.VoPr,
+                    HalfWonProbability = betSelection.BetSelectionStatusId != (int)BetStatus.Running ? 0 : selectionResult.HaWoPr,
+                    HalfLostProbability = betSelection.BetSelectionStatusId != (int)BetStatus.Running ? 0 : selectionResult.HaLoPr
                 });
             }
 
@@ -366,7 +376,9 @@ namespace Platform.CashOutStake.Servicev2.Repository
             {
                 var finalProbability = probabilites.Where(c => c.Probability > 0).Select(s => s.Probability).Aggregate((a, b) => a * b);
 
-                var cashOutStake = (stake * bet.Odds) * Convert.ToDecimal(finalProbability);
+                var totalOdds = GetTotalOdds(bet.BetSelections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList());
+
+                var cashOutStake = (stake * totalOdds) * Convert.ToDecimal(finalProbability);
 
                 cashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
@@ -382,7 +394,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 if (!hasProbabilityChanged)
                     finalCashOutStake = stake - (stake * 0.10m);
 
-                if (finalCashOutStake == 0 || finalCashOutStake > stake * bet.Odds)
+                if (finalCashOutStake == 0 || finalCashOutStake > stake * totalOdds)
                 {
                     return new OnCashOutChange
                     {
@@ -464,6 +476,41 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 }
             }
         }
+
+        private decimal GetTotalOdds(List<Tuple<BetStatus, decimal, decimal>> selections)
+        {
+            var values = new List<decimal>();
+
+            foreach (var selection in selections)
+            {
+                switch (selection.Item1)
+                {
+                    case BetStatus.Lost:
+                        values.Add(0m);
+                        break;
+                    case BetStatus.HalfWon:
+                        values.Add((selection.Item2 + 1) / 2);
+                        break;
+                    case BetStatus.HalfLost:
+                        values.Add(0.5m);
+                        break;
+                    case BetStatus.Won:
+                        values.Add(selection.Item2 * selection.Item3);
+                        break;
+                    case BetStatus.Void:
+                        values.Add(1m);
+                        break;
+                    case BetStatus.Cancelled:
+                        values.Add(1m);
+                        break;
+                    case BetStatus.Running:
+                        values.Add(selection.Item2);
+                        break;
+                }
+            }
+
+            return values.Aggregate((a, b) => a * b);
+        }
     }
 
     public class BetMemory
@@ -500,6 +547,10 @@ namespace Platform.CashOutStake.Servicev2.Repository
         public double VoidProbability { get; set; }
         public double HalfWonProbability { get; set; }
         public double HalfLostProbability { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal Odds { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal DeadHeatFactor { get; set; }
     }
 
     public class OnExternalOddsChangeMessage

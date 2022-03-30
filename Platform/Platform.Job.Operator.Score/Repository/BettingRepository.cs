@@ -64,7 +64,7 @@ namespace Platform.Job.Operator.Score.Repository
             var settledStatus = new List<int> { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost, (int)BetStatus.Void };
 
             Console.WriteLine($"{DateTime.UtcNow} - Getting Bets : Start");
-            var bets = context.Bet.AsNoTracking().Where(c => clientCodes.Contains(c.ClientCode) && c.SettlementDate >= DateTime.UtcNow.AddHours(-7) && c.SettlementDate <= DateTime.UtcNow.AddHours(-5) && settledStatus.Contains(c.BetStatusId)).Select(s => new BetMemory
+            var bets = context.Bet.AsNoTracking().Where(c => clientCodes.Contains(c.ClientCode) && c.SettlementDate >= DateTime.UtcNow.AddHours(-5) && settledStatus.Contains(c.BetStatusId)).Select(s => new BetMemory
             {
                 BetId = s.BetId,
                 ClientId = s.ClientId,
@@ -182,7 +182,7 @@ namespace Platform.Job.Operator.Score.Repository
 
         private void AddOrUpdateFixtureSpecfier(string fixtureSpecifier)
         {
-            var expiration = DateTime.UtcNow.AddHours(6);
+            var expiration = DateTime.UtcNow.AddHours(12);
 
             var cacheKey = $"fs-score:{fixtureSpecifier}";
 

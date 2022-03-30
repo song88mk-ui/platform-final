@@ -208,8 +208,8 @@ namespace Platform.Betting.API.Repository
                             var selectionProbability = selectionProbabilities.Where(c => c.SelectionId == selection.SelectionId).FirstOrDefault();
                             
                             if (selectionProbability == null 
-                                || selectionProbability.SelectionStatusId == (int)SettlementStatus.Lost 
-                                || selectionProbability.SelectionStatusId == (int)SettlementStatus.Cancelled 
+                                || selectionProbability.SelectionStatusId == (int)BetStatus.Lost 
+                                || selectionProbability.SelectionStatusId == (int)BetStatus.Cancelled 
                                 || (selectionProbability.IsActive == false && selectionProbability.MarketStatusId == (int)MarketStatus.Active)
                                 || selectionProbability.IsGlobalBetStop == true
                                 || (selectionProbability.IsSuspended == true && selectionProbability.FixtureStatusId < 2))

@@ -1074,7 +1074,7 @@ namespace Platform.Sportsbook.API.Repository
             var markets = primaryMarketCollection.Find(marketFilter).Project<MarketProbabilityFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr);
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr).Include(c => c.SeStId);
             var selections = primarySelectionCollection.Find(selectionFilter).Project<SelectionProbabilityFilter>(selectionProjection).ToListAsync();
 
             var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
@@ -1115,7 +1115,8 @@ namespace Platform.Sportsbook.API.Repository
                         LostProbability = s.LoPr,
                         VoidProbability = s.VoPr,
                         HalfWonProbability = s.HaWoPr,
-                        HalfLostProbability = s.HaLoPr
+                        HalfLostProbability = s.HaLoPr,
+                        SelectionStatusId = s.SeStId,
                     }).ToList()
                 }
             };

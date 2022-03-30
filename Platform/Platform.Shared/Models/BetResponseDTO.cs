@@ -62,5 +62,6 @@ namespace Platform.Shared.Models
         public double HalfLostProbability { get; set; }
         public double Probability { get; set; }
         public int CashOutStatusId { get; set; }
+        public int BetSelectionStatusId { get; set; }
     }
 }

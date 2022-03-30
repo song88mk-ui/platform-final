@@ -5195,7 +5195,7 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new BoostedResponseDTO
                 {
-                    Fixtures = result
+                    Fixtures = result.Where(m => m.Markets.Any()).ToList()
                 }
             };
         }

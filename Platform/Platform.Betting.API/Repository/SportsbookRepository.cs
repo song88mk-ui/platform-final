@@ -61,7 +61,7 @@ namespace Platform.Betting.API.Repository
         {
             var result = new List<CashOutDetailsReponse>();
 
-            var tempSelections = betSelections.Where(c => c.FixtureTypeId == (int)FixtureType.Match && c.SportId < 1000 && c.BetSelectionStatusId == (int)BetStatus.Running).Select(s => new Tuple<long, long, long>(s.FixtureId, s.MarketId, s.SelectionId)).ToList();
+            var tempSelections = betSelections.Where(c => c.FixtureTypeId == (int)FixtureType.Match && c.SportId < 1000).Select(s => new Tuple<long, long, long>(s.FixtureId, s.MarketId, s.SelectionId)).ToList();
 
             if (tempSelections.Count == 0)
             {

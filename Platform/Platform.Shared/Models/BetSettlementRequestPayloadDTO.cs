@@ -14,6 +14,7 @@ namespace Platform.Shared.Models
         }
         public int SportId { get; set; }
         public string ProviderFixtureId { get; set; }
+        public string FixtureSpecifier { get; set; }
         public string HomeScore { get; set; }
         public string AwayScore { get; set; }
         public List<SelectionSettlementMessage> Selections { get; set; }

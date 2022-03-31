@@ -5284,7 +5284,7 @@ namespace Platform.Sportsbook.API.Repository
                     var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa);
                     var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
-                    var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c => c.PrFiId == fixture.PrFiId);
+                    var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c => c.PrFiId == fixture.FiSp);
                     var marketMappingProjection = Builders<MarketMapping>.Projection.Include(c => c.PrFiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaSp);
                     var marketMappings = marketMappingCollection.Find(marketMappingFilter).Project<MarketMappingFilter>(marketMappingProjection).ToListAsync();
 

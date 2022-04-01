@@ -87,7 +87,7 @@ namespace Platform.Job.Operator.Score.Repository
                 }).ToList();
                 Console.WriteLine($"{DateTime.UtcNow} - Getting Bet Selections : End");
 
-                if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright || !settledStatus.Contains(c.BetSelectionStatusId) ))
+                if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright || !settledStatus.Contains(c.BetSelectionStatusId)))
                     return;
 
                 bet.BetSelections.AddRange(betSelections);
@@ -123,12 +123,22 @@ namespace Platform.Job.Operator.Score.Repository
             {
                 foreach (var fixtureBet in _fixtureBetReference)
                 {
+
                     
-                    var cacheKey = $"fs-score:{fixtureBet.Item3}";
+                    var unCachedBetId = new List<Guid>();
 
-                    var fsResult = _memCache.GetCache<string>(cacheKey);
+                    if (fixtureBet.Item4.Any())
+                    {
+                        foreach (var betMemory in fixtureBet.Item4)
+                        {
+                            var cacheKey = $"fs-score:{fixtureBet.Item3}:{betMemory.BetId}";
+                            if (string.IsNullOrEmpty(_memCache.GetCache<string>(cacheKey)))
+                                unCachedBetId.Add(betMemory.BetId);
+                        }
+                    }
 
-                    if (fsResult == null)
+
+                    if (unCachedBetId.Any())
                     {
                         var settlementScore = string.Empty;
 
@@ -141,8 +151,11 @@ namespace Platform.Job.Operator.Score.Repository
                         if (!string.IsNullOrEmpty(settlementScore) && fixtureBet.Item4.Any())
                         {
                             var clientIds = new List<string>();
-                            foreach(var betMemory in fixtureBet.Item4)
+                            foreach (var betMemory in fixtureBet.Item4)
                             {
+                                if (!unCachedBetId.Contains(betMemory.BetId))
+                                    continue;
+
                                 if (clientIds.Contains(betMemory.ClientId))
                                     continue;
 
@@ -163,7 +176,8 @@ namespace Platform.Job.Operator.Score.Repository
                                     {
                                         clientIds.Add(betMemory.ClientId);
                                         //add or update fixtureSpecifier memory cache
-                                        AddOrUpdateFixtureSpecfier(fixtureBet.Item3);
+                                        AddOrUpdateFixtureSpecfier(betMemory.BetId, fixtureBet.Item3);
+                                        Console.WriteLine($"{DateTime.UtcNow} - BetId: {betMemory.BetId} FixtureId: {fixtureBet.Item1} : Settlement Score : {selectionMemory.SettlementScore} Latest score: {settlementScore}");
 
                                     }
 
@@ -171,7 +185,6 @@ namespace Platform.Job.Operator.Score.Repository
                             }
                         }
 
-                        Console.WriteLine($"{DateTime.UtcNow} - Settlement Score : {fixtureBet.Item3} : {settlementScore} ");
 
                     }
                 }
@@ -180,11 +193,11 @@ namespace Platform.Job.Operator.Score.Repository
 
         }
 
-        private void AddOrUpdateFixtureSpecfier(string fixtureSpecifier)
+        private void AddOrUpdateFixtureSpecfier(Guid betId, string fixtureSpecifier)
         {
             var expiration = DateTime.UtcNow.AddHours(12);
 
-            var cacheKey = $"fs-score:{fixtureSpecifier}";
+            var cacheKey = $"fs-score:{fixtureSpecifier}:{betId}";
 
             var fsResult = _memCache.GetCache<string>(cacheKey);
 
@@ -195,7 +208,7 @@ namespace Platform.Job.Operator.Score.Repository
         }
     }
 
-    
+
 
     public class BetMemory
     {

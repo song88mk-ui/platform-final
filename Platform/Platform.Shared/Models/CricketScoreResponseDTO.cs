@@ -34,6 +34,10 @@ namespace Platform.Shared.Models
         public int InningsNumber { get; set; }
         [JsonPropertyName("teamName")]
         public string TeamName { get; set; }
+        [JsonPropertyName("runs")]
+        public decimal Runs { get; set; }
+        [JsonPropertyName("wickets")]
+        public decimal Wickets { get; set; }
         [JsonPropertyName("summary")]
         public string Summary { get; set; }
         [JsonPropertyName("overs")]

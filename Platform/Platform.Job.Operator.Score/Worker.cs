@@ -28,7 +28,6 @@ namespace Platform.Job.Operator.Score
                 await Task.Delay(1000, stoppingToken);
                 try
                 {
-                    _bettingRepository.PreloadSettledBets();
                     await _bettingRepository.ProcessSettledBets();
 
                 }

@@ -47,11 +47,11 @@ namespace Platform.Job.Operator.Score.Repository
                             foreach(var inning in innings)
                             {
                                 if (inning.InningsNumber == 1)
-                                    inning1 = $"{inning.Summary}";
+                                    inning1 = $"{inning.Runs}/{inning.Wickets}";
                                 if (inning.InningsNumber == 2)
                                 {
                                     inningOvers = $"({inning.Overs} ov)";
-                                    inning2 = $"{inning.Summary}";
+                                    inning2 = $"{inning.Runs}/{inning.Wickets}";
                                 }
                             }
                         }

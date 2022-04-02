@@ -74,7 +74,6 @@ namespace Platform.Job.Operator.Score.Repository
 
             foreach (var bet in bets)
             {
-                Console.WriteLine($"{DateTime.UtcNow} - Getting Bet Selections : Start");
                 var betSelections = context.BetSelection.AsNoTracking().Where(c => c.BetId == bet.BetId).Select(s => new BetSelectionMemory
                 {
                     BetId = s.BetId,
@@ -85,10 +84,9 @@ namespace Platform.Job.Operator.Score.Repository
                     FixtureSpecifier = s.FixtureSpecifier,
                     SettlementScore = s.SettlementScore,
                 }).ToList();
-                Console.WriteLine($"{DateTime.UtcNow} - Getting Bet Selections : End");
 
                 if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright || !settledStatus.Contains(c.BetSelectionStatusId)))
-                    return;
+                    continue;
 
                 bet.BetSelections.AddRange(betSelections);
 
@@ -117,6 +115,9 @@ namespace Platform.Job.Operator.Score.Repository
 
         public async Task ProcessSettledBets()
         {
+
+            PreloadSettledBets();
+
             Console.WriteLine($"{DateTime.UtcNow} - Process Settled Bets : Start");
 
             if (_fixtureBetReference.Any())
@@ -147,7 +148,6 @@ namespace Platform.Job.Operator.Score.Repository
                         else
                             settlementScore = (await _cricketScoreRepository.GetScoreSummary(fixtureBet.Item3));
 
-
                         if (!string.IsNullOrEmpty(settlementScore) && fixtureBet.Item4.Any())
                         {
                             var clientIds = new List<string>();
@@ -162,6 +162,8 @@ namespace Platform.Job.Operator.Score.Repository
                                 var selectionMemory = betMemory.BetSelections.Where(s => s.FixtureId == fixtureBet.Item1).FirstOrDefault();
                                 if (selectionMemory != null && selectionMemory.SettlementScore != settlementScore)
                                 {
+                                    Console.WriteLine($"{DateTime.UtcNow} - BetId: {betMemory.BetId} FixtureId: {fixtureBet.Item1} : Settlement Score : {selectionMemory.SettlementScore} Latest score: {settlementScore}");
+
                                     //call operator api
                                     var payload = new
                                     {
@@ -177,7 +179,7 @@ namespace Platform.Job.Operator.Score.Repository
                                         clientIds.Add(betMemory.ClientId);
                                         //add or update fixtureSpecifier memory cache
                                         AddOrUpdateFixtureSpecfier(betMemory.BetId, fixtureBet.Item3);
-                                        Console.WriteLine($"{DateTime.UtcNow} - BetId: {betMemory.BetId} FixtureId: {fixtureBet.Item1} : Settlement Score : {selectionMemory.SettlementScore} Latest score: {settlementScore}");
+                                        Console.WriteLine($"{DateTime.UtcNow} - BetId: {betMemory.BetId} : Sent to Operator!");
 
                                     }
 

@@ -88,7 +88,7 @@ namespace Platform.CashOut.Service.Repository
                                     return;
                                 }
 
-                                var filteredSelections = selections.Where(c => c.BetId == message.BetId && c.IsSettled == false).ToList();
+                                var filteredSelections = selections.Where(c => c.BetId == message.BetId).ToList();
 
                                 if (filteredSelections.Count == 0)
                                 {

@@ -764,14 +764,8 @@ namespace Platform.Settlement.Service.Repository
 
             var bet = context.Bet.Find(betSelection.BetId);
             if (bet != null)
-            {
-                if (bet.BetStatusId == (int)BetStatus.Cancelled || bet.BetStatusId == (int)BetStatus.Rejected || bet.BetStatusId == (int)BetStatus.CashedOut)
-                    return false;
-
                 if (bet.IsResettled && isManualSettle == false)
                     return false;
-
-            }
 
             filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;
             filteredSelection.BetSelectionStatusName = message.SelectionStatus.ToString();

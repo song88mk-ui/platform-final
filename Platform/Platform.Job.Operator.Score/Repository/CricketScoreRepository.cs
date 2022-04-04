@@ -38,8 +38,8 @@ namespace Platform.Job.Operator.Score.Repository
 
                     if(result != null && result.Score != null)
                     {
-                        var inning1 = string.Empty;
-                        var inning2 = string.Empty;
+                        var inning1 = "0/0";
+                        var inning2 = "0/0";
                         var inningOvers = string.Empty;
                         var innings = result.Score.Innings;
                         if(innings != null)
@@ -50,12 +50,12 @@ namespace Platform.Job.Operator.Score.Repository
                                     inning1 = $"{inning.Runs}/{inning.Wickets}";
                                 if (inning.InningsNumber == 2)
                                 {
-                                    inningOvers = $"({inning.Overs} ov)";
+                                    inningOvers = $" ({inning.Overs} ov)";
                                     inning2 = $"{inning.Runs}/{inning.Wickets}";
                                 }
                             }
                         }
-                        settlementScore = $"{inning2} - {inning1} {inningOvers}";
+                        settlementScore = $"{inning2} - {inning1}{inningOvers}";
                     }
                 }
 

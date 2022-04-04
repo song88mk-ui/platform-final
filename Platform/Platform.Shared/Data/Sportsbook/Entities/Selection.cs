@@ -89,5 +89,6 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public double VoPr { get; set; }
         public double HaWoPr { get; set; }
         public double HaLoPr { get; set; }
+        public int SeStId { get; set; }
     }
 }

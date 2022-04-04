@@ -70,8 +70,16 @@ namespace Platform.CashOutStake.Servicev2
                         break;
 
                     case "OnBetSettlement":
-                        var onBetSettlement = JsonSerializer.Deserialize<OnBetSettlement>(payload);
-                        _bettingRepository.RemoveBet(onBetSettlement);
+                        if (e.RoutingKey == "r.oe.bet.settlement")
+                        {
+                            var onBetSettlement = JsonSerializer.Deserialize<OnExternalBetSettlementMessage>(payload);
+                            _bettingRepository.ProcessOnBetSettlement(onBetSettlement, _messageBroker);
+                        }
+                        else
+                        {
+                            var onBetSettlement = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+                            _bettingRepository.RemoveBet(onBetSettlement);
+                        }
                         break;
 
                     case "OnBetFullCashOut":

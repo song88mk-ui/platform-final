@@ -234,18 +234,6 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 Console.WriteLine($"{DateTime.UtcNow} - OddsChange : {JsonSerializer.Serialize(payload)}");
 
                 messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.betstatus", Guid.NewGuid().ToString());
-
-                //var cache = _memCache.GetCache<OnCashOutChange>($"co:{betId.ToString()}");
-
-                //if (cache == null)
-                //    messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.betstatus", Guid.NewGuid().ToString());
-                //else
-                //{
-                //    if (cache.CashOutStake != payload.CashOutStake && cache.CashOutStatus != payload.CashOutStatus)
-                //        messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.betstatus", Guid.NewGuid().ToString());
-                //}
-
-                //_memCache.AddOrUpdateCache($"co:{betId.ToString()}", payload, DateTime.UtcNow.AddHours(1));
             }
         }
         private void PreloadMarket(long marketId, OnExternalOddsChangeMessage message)
@@ -276,6 +264,21 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 }
             }
         }
+        private void UpdateMarketCache(OnExternalBetSettlementMessage message)
+        {
+            var expiration = DateTime.UtcNow.AddHours(6);
+
+            var marketKey = $"market:{message.MarketId}";
+
+            var marketResult = _memCache.GetCache<CashOutMarketFilter>(marketKey);
+
+            if (marketResult != null)
+            {
+                marketResult.MaStId = (int)MarketStatus.Settled;
+
+                _memCache.AddOrUpdateCache(marketKey, marketResult, expiration);
+            }
+        }
         private void PreloadSelection(long marketId, long selectionId, OnExternalOddsChangeMessage message)
         {
             var expiration = DateTime.UtcNow.AddHours(6);
@@ -287,7 +290,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
             if (selectionResult == null)
             {
                 var filter = Builders<Selection>.Filter.Eq("SeId", selectionId);
-                var projection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr);
+                var projection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr).Include(c => c.SeStId);
                 var result = selectionCollection.Find(filter).Project<CashOutSelectionFilter>(projection).FirstOrDefault();
 
                 _memCache.AddOrUpdateCache(selectionKey, result, expiration);
@@ -312,6 +315,26 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
                         _memCache.AddOrUpdateCache(selectionKey, selectionResult, expiration);
                     }
+                }
+            }
+        }
+        private void UpdateSelectionCache(OnExternalBetSettlementMessage message)
+        {
+            var expiration = DateTime.UtcNow.AddHours(6);
+
+            var selectionKey = $"selection:{message.SelectionId}";
+
+            var selectionResult = _memCache.GetCache<CashOutSelectionFilter>(selectionKey);
+
+            if (selectionResult != null)
+            {
+                var validStatus = new List<BetStatus> { BetStatus.Won, BetStatus.HalfWon, BetStatus.HalfLost, BetStatus.Void };
+
+                if (validStatus.Contains(message.SelectionStatus))
+                {
+                    selectionResult.Pr = 1;
+
+                    _memCache.AddOrUpdateCache(selectionKey, selectionResult, expiration);
                 }
             }
         }
@@ -340,7 +363,12 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 var marketResult = _memCache.GetCache<CashOutMarketFilter>($"market:{betSelection.MarketId}");
                 var selectionResult = _memCache.GetCache<CashOutSelectionFilter>($"selection:{betSelection.SelectionId}");
 
-                if (marketResult == null || selectionResult == null || marketResult.MaStId != (int)MarketStatus.Active || selectionResult.IsAc == false)
+                if (marketResult == null 
+                    || selectionResult == null 
+                    || selectionResult.SeStId == (int)BetStatus.Lost
+                    || selectionResult.SeStId == (int)BetStatus.Cancelled
+                    || (selectionResult.IsAc == false && selectionResult.MaStId == (int)MarketStatus.Active)
+                    || (message.IsSuspended == true && message.FixtureStatusId < 2))
                 {
                     return new OnCashOutChange
                     {
@@ -364,15 +392,31 @@ namespace Platform.CashOutStake.Servicev2.Repository
                     LostProbability = selectionResult.LoPr,
                     VoidProbability = selectionResult.VoPr,
                     HalfWonProbability = selectionResult.HaWoPr,
-                    HalfLostProbability = selectionResult.HaLoPr
+                    HalfLostProbability = selectionResult.HaLoPr,
+                    BetSelectionStatusId = betSelection.BetSelectionStatusId
                 });
             }
 
             if (bet.BetSelections.Count > 1)
             {
-                var finalProbability = probabilites.Where(c => c.Probability > 0).Select(s => s.Probability).Aggregate((a, b) => a * b);
+                var parlayProbabilities = new List<Probabilities>();
+                var validStatus = new List<int> { (int)BetStatus.Won, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost, (int)BetStatus.Void };
 
-                var cashOutStake = (stake * bet.Odds) * Convert.ToDecimal(finalProbability);
+                foreach (var probability in probabilites)
+                {
+                    if (validStatus.Contains(probability.BetSelectionStatusId))
+                    {
+                        probability.Probability = 1;
+                        parlayProbabilities.Add(probability);
+                    }
+                    else
+                        parlayProbabilities.Add(probability);
+                }
+
+                var finalProbability = parlayProbabilities.Where(c => c.Probability > 0).Select(s => s.Probability).Aggregate((a, b) => a * b);
+                var totalOdds = GetTotalOdds(bet.BetSelections.Select(ss => new Tuple<BetStatus, decimal, decimal>((BetStatus)ss.BetSelectionStatusId, ss.Odds, ss.DeadHeatFactor)).ToList());
+
+                var cashOutStake = (stake * totalOdds) * Convert.ToDecimal(finalProbability);
 
                 cashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
@@ -388,7 +432,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 if (!hasProbabilityChanged)
                     finalCashOutStake = stake - (stake * 0.10m);
 
-                if (finalCashOutStake == 0 || finalCashOutStake > stake * bet.Odds)
+                if (finalCashOutStake == 0 || finalCashOutStake > stake * totalOdds)
                 {
                     return new OnCashOutChange
                     {
@@ -470,7 +514,46 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 }
             }
         }
+        private static decimal GetTotalOdds(List<Tuple<BetStatus, decimal, decimal>> selections)
+        {
+            var values = new List<decimal>();
 
+            foreach (var selection in selections)
+            {
+                switch (selection.Item1)
+                {
+                    case BetStatus.Lost:
+                        values.Add(0m);
+                        break;
+                    case BetStatus.HalfWon:
+                        values.Add((selection.Item2 + 1) / 2);
+                        break;
+                    case BetStatus.HalfLost:
+                        values.Add(0.5m);
+                        break;
+                    case BetStatus.Won:
+                        values.Add(selection.Item2 * selection.Item3);
+                        break;
+                    case BetStatus.Void:
+                        values.Add(1m);
+                        break;
+                    case BetStatus.Cancelled:
+                        values.Add(1m);
+                        break;
+                    case BetStatus.Running:
+                        values.Add(selection.Item2);
+                        break;
+                }
+            }
+
+            return values.Aggregate((a, b) => a * b);
+        }
+
+        public void ProcessOnBetSettlement(OnExternalBetSettlementMessage onBetSettlement, IMessageBroker messageBroker)
+        {
+            UpdateMarketCache(onBetSettlement);
+            UpdateSelectionCache(onBetSettlement);
+        }
     }
 
     public class BetMemory
@@ -562,5 +645,14 @@ namespace Platform.CashOutStake.Servicev2.Repository
         public double HalfLostProbability { get; set; }
         public double Probability { get; set; }
         public int CashOutStatusId { get; set; }
+        public int BetSelectionStatusId { get; set; }
+    }
+
+    public class OnExternalBetSettlementMessage
+    {
+        public long MarketId { get; set; }
+        public long SelectionId { get; set; }
+        public BetStatus SelectionStatus { get; set; }
+        public decimal DeadHeatFactor { get; set; }
     }
 }

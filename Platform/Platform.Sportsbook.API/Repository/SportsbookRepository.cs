@@ -4643,7 +4643,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
                             MarketStatusName = market.MaStNa,
-                            Selections = selectionsToAdd.Select(s => new SelectionDTO
+                            Selections = selectionsToAdd.Where(c => c.IsAc == true).Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
                                 SelectionId = s.SeId.ToString(),

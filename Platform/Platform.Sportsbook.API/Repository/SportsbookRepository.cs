@@ -38,12 +38,14 @@ namespace Platform.Sportsbook.API.Repository
         private IMongoCollection<BettingStatus> primaryBettingStatusCollection;
         private readonly HttpClient _httpClient;
         private readonly IRabbitMQRepository _rabbitMQRepository;
-        private readonly List<string> _africaClientCodes = new List<string> { "LBN" };
-        //private readonly List<string> _africaClientCodes = new List<string> { "10K","10G","10N","10T","10Z","FC4","10D","10M","10E","LBN" };
+        private readonly List<string> _africaClientCodes = new List<string>();
 
         public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMemCache memCache, IConfiguration configuration, IRabbitMQRepository rabbitMQRepository)
         {
             _configuration = configuration;
+
+            _africaClientCodes = _configuration["ConnectionStrings:MongoDB-Sportsbook"].Split(',').ToList();
+
             var client = new MongoClient(_configuration["ConnectionStrings:MongoDB-Sportsbook"]);
             _db = client.GetDatabase("Sportsbook");
 

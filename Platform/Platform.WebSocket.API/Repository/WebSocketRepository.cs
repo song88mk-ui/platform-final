@@ -50,7 +50,8 @@ namespace Platform.WebSocket.API.Repository
                 HttpFetchDestination = httpFetchDestination,
                 HttpFetchMode = httpFetchMode,
                 HttpFetchSite = httpFetchSite,
-                UserAgent = userAgent
+                UserAgent = userAgent,
+                ConnectedTimestamp = DateTime.UtcNow
             });
 
             await _platformContext.SaveChangesAsync();
@@ -69,9 +70,13 @@ namespace Platform.WebSocket.API.Repository
             var connection = await _platformContext.WebSocket.FindAsync(connectionId);
 
             if (connection != null)
-                _platformContext.WebSocket.Remove(connection);
+            {
+                connection.DisconnectedTimestamp = DateTime.UtcNow;
 
-            await _platformContext.SaveChangesAsync();
+                _platformContext.WebSocket.Update(connection);
+
+                await _platformContext.SaveChangesAsync();
+            }
 
             await base.OnDisconnectedAsync(exception);
         }

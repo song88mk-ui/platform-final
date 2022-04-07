@@ -1,4 +1,6 @@
-﻿namespace Platform.WebSocket.API.Data
+﻿using System;
+
+namespace Platform.WebSocket.API.Data
 {
     public class WebSocket
     {
@@ -13,5 +15,7 @@
         public string HttpFetchDestination { get; internal set; }
         public string HttpFetchMode { get; internal set; }
         public string HttpFetchSite { get; internal set; }
+        public DateTime ConnectedTimestamp { get; internal set; }
+        public DateTime DisconnectedTimestamp { get; internal set; }
     }
 }

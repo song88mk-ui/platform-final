@@ -1,14 +1,66 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
 using Platform.Shared.Enums;
+using Platform.WebSocket.API.Data;
 using Platform.WebSocket.API.Messages;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Platform.WebSocket.API.Repository
 {
-    public class WebSocketRepository : IWebSocketRepository
+    public class WebSocketRepository : Hub<IPlatformEvent>, IWebSocketRepository
     {
-        public async Task PublishOddsChange(IHubContext<PlatformHub, IPlatformEvent> hubContext, IncomingOddsChange message)
+        private readonly IServiceProvider _provider;
+        private PlatformContext _platformContext;
+
+        public WebSocketRepository(IServiceProvider provider)
+        {
+            _provider = provider;
+        }
+        public override async Task OnConnectedAsync()
+        {
+            var ipAddress = Context.GetHttpContext().Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? string.Empty;
+            var ipCountry = Context.GetHttpContext().Request.Headers["CF-IPCountry"].FirstOrDefault() ?? string.Empty;
+            var userAgent = Context.GetHttpContext().Request.Headers["User-Agent"].FirstOrDefault() ?? string.Empty;
+            var connectionId = Context.ConnectionId;
+
+            using var scope = _provider.CreateScope();
+            _platformContext = scope.ServiceProvider.GetRequiredService<PlatformContext>();
+
+            var test = Context.GetHttpContext().Request.Query;
+
+            await _platformContext.WebSocket.AddAsync(new Data.WebSocket
+            {
+                ConnectionId = connectionId,
+                IPAddress = ipAddress,
+                IPCountry = ipCountry,
+                UserAgent = userAgent
+            });
+
+            await _platformContext.SaveChangesAsync();
+
+            await base.OnConnectedAsync();
+        }
+        public override async Task OnDisconnectedAsync(Exception exception)
+        {
+            var connectionId = Context.ConnectionId;
+
+            using var scope = _provider.CreateScope();
+            _platformContext = scope.ServiceProvider.GetRequiredService<PlatformContext>();
+
+            var test = Context.GetHttpContext().Request.Query;
+
+            var connection = await _platformContext.WebSocket.FindAsync(connectionId);
+
+            if (connection != null)
+                _platformContext.WebSocket.Remove(connection);
+
+            await _platformContext.SaveChangesAsync();
+
+            await base.OnDisconnectedAsync(exception);
+        }
+        public async Task PublishOddsChange(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, IncomingOddsChange message)
         {
             var payload = new OutgoingOddsChange
             {
@@ -86,7 +138,7 @@ namespace Platform.WebSocket.API.Repository
 
             await hubContext.Clients.All.OnOddsChange(payload);
         }
-        public async Task PublishBetStopFixture(IHubContext<PlatformHub, IPlatformEvent> hubContext, IncomingBetStopFixture onBetStopFixture)
+        public async Task PublishBetStopFixture(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, IncomingBetStopFixture onBetStopFixture)
         {
             var payload = new OutgoingBetStopFixture
             {
@@ -98,7 +150,7 @@ namespace Platform.WebSocket.API.Repository
 
             await hubContext.Clients.All.OnBetStopFixture(payload);
         }
-        public async Task PublishBetStopGlobal(IHubContext<PlatformHub, IPlatformEvent> hubContext, IncomingBetStopGlobal onBetStopGlobal)
+        public async Task PublishBetStopGlobal(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, IncomingBetStopGlobal onBetStopGlobal)
         {
             var payload = new OutgoingBetStopGlobal
             {
@@ -107,11 +159,11 @@ namespace Platform.WebSocket.API.Repository
 
             await hubContext.Clients.All.OnBetStopGlobal(payload);
         }
-        private string GetHomeName(string name, FixtureType fixtureType)
+        private static string GetHomeName(string name, FixtureType fixtureType)
         {
             return fixtureType == FixtureType.Match ? name.Split(" vs. ").First().Trim() : string.Empty;
         }
-        private string GetAwayName(string name, FixtureType fixtureType)
+        private static string GetAwayName(string name, FixtureType fixtureType)
         {
             return fixtureType == FixtureType.Match ? name.Split(" vs. ").Last().Trim() : string.Empty;
         }

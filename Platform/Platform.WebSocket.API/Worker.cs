@@ -18,9 +18,9 @@ namespace Platform.WebSocket.API
         private readonly ILogger<Worker> _logger;
         private readonly IWebSocketRepository _webSocketRepository;
         private readonly IMessageBroker _messageBroker;
-        private readonly IHubContext<PlatformHub, IPlatformEvent> _platformHub;
+        private readonly IHubContext<WebSocketRepository, IPlatformEvent> _platformHub;
 
-        public Worker(ILogger<Worker> logger, IWebSocketRepository webSocketRepository, IMessageBroker messageBroker, IHubContext<PlatformHub, IPlatformEvent> platformHub)
+        public Worker(ILogger<Worker> logger, IWebSocketRepository webSocketRepository, IMessageBroker messageBroker, IHubContext<WebSocketRepository, IPlatformEvent> platformHub)
         {
             _logger = logger;
             _webSocketRepository = webSocketRepository;

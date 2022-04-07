@@ -1,19 +1,25 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.Shared.Utility;
+using Platform.WebSocket.API.Data;
 using Platform.WebSocket.API.Repository;
 
 namespace Platform.WebSocket.API
 {
     public class Startup
     {
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+        public IConfiguration Configuration { get; }
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<ForwardedHeadersOptions>(options =>
@@ -40,6 +46,7 @@ namespace Platform.WebSocket.API
                     });
             });
 
+            services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Platform"]));
             services.AddSingleton<IMessageBroker, MessageBroker>();
             services.AddSingleton<IWebSocketRepository, WebSocketRepository>();
             services.AddHostedService<Worker>();
@@ -72,7 +79,7 @@ namespace Platform.WebSocket.API
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHub<PlatformHub>("/platform");
+                endpoints.MapHub<WebSocketRepository>("/platform");
                 endpoints.MapControllers();
             });
         }

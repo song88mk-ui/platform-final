@@ -16,6 +16,6 @@ namespace Platform.WebSocket.API.Data
         public string HttpFetchMode { get; internal set; }
         public string HttpFetchSite { get; internal set; }
         public DateTime ConnectedTimestamp { get; internal set; }
-        public DateTime DisconnectedTimestamp { get; internal set; }
+        public DateTime? DisconnectedTimestamp { get; internal set; }
     }
 }

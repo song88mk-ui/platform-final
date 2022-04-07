@@ -24,12 +24,6 @@ namespace Platform.WebSocket.API.Repository
             var ipAddress = Context.GetHttpContext().Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? string.Empty;
             var ipCountry = Context.GetHttpContext().Request.Headers["CF-IPCountry"].FirstOrDefault() ?? string.Empty;
             var userAgent = Context.GetHttpContext().Request.Headers["User-Agent"].FirstOrDefault() ?? string.Empty;
-            var clientHintUserAgent = Context.GetHttpContext().Request.Headers["sec-ch-ua"].FirstOrDefault() ?? string.Empty;
-            var clientHintUserAgentMobile= Context.GetHttpContext().Request.Headers["sec-ch-ua-mobile"].FirstOrDefault() ?? string.Empty;
-            var clientHintUserAgentPlatform = Context.GetHttpContext().Request.Headers["sec-ch-ua-platform"].FirstOrDefault() ?? string.Empty;
-            var httpFetchDestination = Context.GetHttpContext().Request.Headers["sec-fetch-dest"].FirstOrDefault() ?? string.Empty;
-            var httpFetchMode = Context.GetHttpContext().Request.Headers["sec-fetch-mode"].FirstOrDefault() ?? string.Empty;
-            var httpFetchSite = Context.GetHttpContext().Request.Headers["sec-fetch-site"].FirstOrDefault() ?? string.Empty;
 
             var server = Environment.MachineName.ToLower();
 
@@ -44,14 +38,9 @@ namespace Platform.WebSocket.API.Repository
                 IPAddress = ipAddress,
                 IPCountry = ipCountry,
                 Server = server,
-                ClientHintUserAgent = clientHintUserAgent,
-                ClientHintUserAgentMobile = clientHintUserAgentMobile,
-                ClientHintUserAgentPlatform = clientHintUserAgentPlatform,
-                HttpFetchDestination = httpFetchDestination,
-                HttpFetchMode = httpFetchMode,
-                HttpFetchSite = httpFetchSite,
                 UserAgent = userAgent,
-                ConnectedTimestamp = DateTime.UtcNow
+                ConnectedTimestamp = DateTime.UtcNow,
+                DisconnectedTimestamp = null
             });
 
             await _platformContext.SaveChangesAsync();

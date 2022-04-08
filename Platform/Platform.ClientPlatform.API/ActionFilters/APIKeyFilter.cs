@@ -13,7 +13,7 @@ namespace Platform.ClientPlatform.API.ActionFilters
     public class APIKeyFilter : ActionFilterAttribute
     {
         private readonly IConfiguration _configuration;
-        private List<Tuple<string, string, List<string>>> _allowed { get; set; }
+        private readonly List<Tuple<string, string, List<string>>> _allowed;
 
         public APIKeyFilter(IConfiguration configuration)
         {
@@ -23,40 +23,24 @@ namespace Platform.ClientPlatform.API.ActionFilters
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            var passKey = context.HttpContext.Request.Headers["x-pass-key"].FirstOrDefault();
             var apiKey = context.HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = context.HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-            if (!string.IsNullOrEmpty(passKey) && !string.IsNullOrWhiteSpace(passKey))
+            if (string.IsNullOrEmpty(apiKey) || string.IsNullOrWhiteSpace(apiKey) || IsNotAllowed(clientId, apiKey))
             {
-                if (passKey != "fcisong88")
+                context.Result = new UnauthorizedObjectResult(new
                 {
-                    context.Result = new UnauthorizedObjectResult(new
-                    {
-                        StatusCode = StatusCode.Not_Authorized,
-                        Message = StatusCode.Not_Authorized.ToString().Replace('_', ' ')
-                    });
+                    StatusCode = StatusCode.Not_Authorized,
+                    Message = StatusCode.Not_Authorized.ToString().Replace('_', ' ')
+                });
 
-                    return;
-                }
-            }
-            else
-            {
-                if (string.IsNullOrEmpty(apiKey) || string.IsNullOrWhiteSpace(apiKey) || IsNotAllowed(clientId, apiKey))
-                {
-                    context.Result = new UnauthorizedObjectResult(new
-                    {
-                        StatusCode = StatusCode.Not_Authorized,
-                        Message = StatusCode.Not_Authorized.ToString().Replace('_', ' ')
-                    });
-
-                    return;
-                }
+                return;
             }
 
             ((IntegrationControllerBase)context.Controller).ClientId = clientId;
             ((IntegrationControllerBase)context.Controller).ApiKey = _configuration["Custom:PlatformAPIKey"];
             ((IntegrationControllerBase)context.Controller).CountryCode = context.HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault();
+            ((IntegrationControllerBase)context.Controller).LanguageCode = context.HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             ((IntegrationControllerBase)context.Controller).LanguageCode = string.IsNullOrEmpty(context.HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : context.HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
         }
 

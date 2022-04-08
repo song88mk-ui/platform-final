@@ -8,5 +8,6 @@ namespace Platform.ClientPlatform.API.Controllers
         public string ApiKey { get; set; }
         public string CountryCode { get; set; }
         public string LanguageCode { get; set; }
+        public string OperatorToken { get; set; }
     }
 }

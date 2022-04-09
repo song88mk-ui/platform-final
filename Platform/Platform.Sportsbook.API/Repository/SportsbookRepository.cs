@@ -297,7 +297,20 @@ namespace Platform.Sportsbook.API.Repository
             var result = new List<TempTopLeague>();
 
             var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
-            var clientTopLeagues = await _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == request.ClientId).ToListAsync();
+
+            var clientTopLeagues = new List<ClientLeagueOrder>();
+
+            var key = $"clo:{request.ClientId.ToString().ToUpper()}";
+
+            var cache = _memCache.GetCache<List<ClientLeagueOrder>>(key);
+
+            if (cache != null)
+                clientTopLeagues = cache;
+            else
+            {
+                clientTopLeagues = await _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == request.ClientId).ToListAsync();
+                _memCache.AddOrUpdateCache(key, clientTopLeagues, DateTimeOffset.UtcNow.AddMinutes(5));
+            }
 
             if (clientTopLeagues.Count == 0)
             {
@@ -1674,7 +1687,19 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopFixturesTW(TWRequestDTO request)
         {
-            var clientFixtures = await _sportsbookContext.ClientTopFixture.Where(c => c.ClientId == request.ClientId).ToListAsync();
+            var key = $"ctf:{request.ClientId.ToString().ToUpper()}";
+
+            var cache = _memCache.GetCache<List<ClientTopFixture>>(key);
+
+            var clientFixtures = new List<ClientTopFixture>();
+
+            if (cache != null)
+                clientFixtures = cache;
+            else
+            {
+                clientFixtures = await _sportsbookContext.ClientTopFixture.Where(c => c.ClientId == request.ClientId).ToListAsync();
+                _memCache.AddOrUpdateCache(key, clientFixtures, DateTimeOffset.UtcNow.AddMinutes(5));
+            }
 
             if (clientFixtures.Count == 0)
             {
@@ -3318,7 +3343,20 @@ namespace Platform.Sportsbook.API.Repository
             var resultInitial = new List<TempTopLeague>();
 
             var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
-            var clientTopLeagues = await _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == request.ClientId).ToListAsync();
+
+            var clientTopLeagues = new List<ClientLeagueOrder>();
+
+            var key = $"clo:{request.ClientId.ToString().ToUpper()}";
+
+            var cache = _memCache.GetCache<List<ClientLeagueOrder>>(key);
+
+            if (cache != null)
+                clientTopLeagues = cache;
+            else
+            {
+                clientTopLeagues = await _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == request.ClientId).ToListAsync();
+                _memCache.AddOrUpdateCache(key, clientTopLeagues, DateTimeOffset.UtcNow.AddMinutes(5));
+            }
 
             if (clientTopLeagues.Count == 0)
             {

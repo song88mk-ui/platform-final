@@ -6,6 +6,7 @@ using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
+using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,12 +23,14 @@ namespace Platform.API.Repository
         private readonly IBettingRepository _bettingRepository;
         private readonly ISportsbookRepository _sportsbookRepository;
         private readonly PlatformContext _platformContext;
-        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, PlatformContext platformContext)
+        private readonly IMemCache _memCache;
+        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, PlatformContext platformContext, IMemCache memCache)
         {
             _operatorRepository = operatorRepository;
             _bettingRepository = bettingRepository;
             _sportsbookRepository = sportsbookRepository;
             _platformContext = platformContext;
+            _memCache = memCache;
         }
         public async Task<BaseResponseDTO<WalletBalanceResponseDTO>> GetWalletBalance(string clientId, string operatorToken)
         {
@@ -640,6 +643,13 @@ namespace Platform.API.Repository
 
             if (isGuid)
             {
+                var key = $"cc:{guid.ToString().ToUpper()}";
+
+                var cache = _memCache.GetCache<BaseResponseDTO<ClientResponse>>(key);
+
+                if (cache != null)
+                    return cache;
+
                 var result = await _platformContext.Client.FindAsync(guid);
 
                 if (result == null || result.IsActive == false)
@@ -652,7 +662,7 @@ namespace Platform.API.Repository
                 }
                 else
                 {
-                    return new BaseResponseDTO<ClientResponse>
+                    var finalResult = new BaseResponseDTO<ClientResponse>
                     {
                         StatusCode = StatusCode.Success,
                         Message = StatusCode.Success.ToString().Replace('_', ' '),
@@ -668,6 +678,10 @@ namespace Platform.API.Repository
                             ClientIdRef = result.ClientIdRef
                         }
                     };
+
+                    _memCache.AddOrUpdateCache(key, finalResult, 24);
+
+                    return finalResult;
                 }
             }
             else
@@ -677,6 +691,13 @@ namespace Platform.API.Repository
 
                 if (isInteger)
                 {
+                    var key = $"cc:{intClientId.ToString().ToUpper()}";
+
+                    var cache = _memCache.GetCache<BaseResponseDTO<ClientResponse>>(key);
+
+                    if (cache != null)
+                        return cache;
+
                     var result = await _platformContext.Client.Where(c => c.ClientIdRef == intClientId).FirstOrDefaultAsync();
 
                     if (result == null || result.IsActive == false)
@@ -689,7 +710,7 @@ namespace Platform.API.Repository
                     }
                     else
                     {
-                        return new BaseResponseDTO<ClientResponse>
+                        var finalResult = new BaseResponseDTO<ClientResponse>
                         {
                             StatusCode = StatusCode.Success,
                             Message = StatusCode.Success.ToString().Replace('_', ' '),
@@ -705,6 +726,10 @@ namespace Platform.API.Repository
                                 ClientIdRef = result.ClientIdRef
                             }
                         };
+
+                        _memCache.AddOrUpdateCache(key, finalResult, 24);
+
+                        return finalResult;
                     }
                 }
                 else

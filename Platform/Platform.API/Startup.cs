@@ -11,6 +11,7 @@ using Platform.API.ActionFilters;
 using Platform.API.Repository;
 using Platform.Shared.Data;
 using Platform.Shared.Data.Platform;
+using Platform.Shared.Utility;
 using System.IO.Compression;
 using System.Linq;
 
@@ -65,6 +66,7 @@ namespace Platform.API
 
             services.AddControllers();
 
+            services.AddSingleton<IMemCache, MemCache>();
             services.AddScoped<IPlatformRepository, PlatformRepository>();
             services.AddHttpClient<IBettingRepository, BettingRepository>();
             services.AddHttpClient<IOperatorRepository, OperatorRepository>();

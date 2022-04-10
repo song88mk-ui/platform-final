@@ -19,7 +19,7 @@ namespace Platform.API.Repository
         {
             _httpClient = httpClient;
             _telemetryClient = telemetryClient;
-            //_httpClient.Timeout = TimeSpan.FromSeconds(5);
+            _httpClient.Timeout = TimeSpan.FromSeconds(2);
         }
         public async Task<BaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string operatorToken, string endpoint)
         {

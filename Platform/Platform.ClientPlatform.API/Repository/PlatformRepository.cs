@@ -81,7 +81,8 @@ namespace Platform.ClientPlatform.API.Repository
                 _httpClient.DefaultRequestHeaders.Add("x-language-code", languageCode);
                 _httpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
 
-                var queryString = FormUrlEncoded(request);
+                var queryString = await FormUrlEncoded(request);
+
                 var response = await _httpClient.GetAsync($"v1/bet/history{queryString}");
 
                 if (response.IsSuccessStatusCode)

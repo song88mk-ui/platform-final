@@ -58,6 +58,20 @@ namespace Platform.Betting.API.Controllers
             }
         }
 
+        [HttpPost("v1/settlement/history")]
+        public async Task<IActionResult> GetSettlementHistory([FromBody] SettlementHistoryRequestDTO request)
+        {
+            var result = await _bettingRepository.GetSettlementHistory(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/bet/config")]
         public async Task<IActionResult> GetBetConfig([FromBody] BetConfigRequestDTO request)
         {

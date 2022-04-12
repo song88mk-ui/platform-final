@@ -111,11 +111,11 @@ namespace Platform.ClientPlatform.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<SettlementHistoryResponseDTO>> GetSettlementHistory(string apiKey, string clientId, string languageCode, SettlementHistoryRequest request)
+        public async Task<BaseResponseDTO<SettlementHistoryResponseDTO>> GetSettlementHistory(string apiKey, string clientId, string languageCode, string ipAddress, SettlementHistoryRequest request)
         {
             try
             {
-                //todo: check if defaultheaders is being cleared first, check also if ipaddress is being passed in x-forwarded-for
+                _httpClient.DefaultRequestHeaders.Add("X-Forwarded-For", ipAddress);
                 _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
                 _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
                 _httpClient.DefaultRequestHeaders.Add("x-language-code", languageCode);

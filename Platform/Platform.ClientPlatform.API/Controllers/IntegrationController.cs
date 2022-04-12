@@ -50,7 +50,7 @@ namespace Platform.ClientPlatform.API.Controllers
         [HttpGet("v1/settlement/history")]
         public async Task<IActionResult> GetSettlementHistory([FromQuery] SettlementHistoryRequest request)
         {
-            var result = await _platformRepository.GetSettlementHistory(ApiKey, ClientId, LanguageCode, request);
+            var result = await _platformRepository.GetSettlementHistory(ApiKey, ClientId, LanguageCode, IPAddress, request);
 
             switch (result.StatusCode)
             {

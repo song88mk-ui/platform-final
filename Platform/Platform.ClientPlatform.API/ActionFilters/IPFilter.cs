@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
+using Platform.ClientPlatform.API.Controllers;
 using Platform.Shared.Enums;
 using System;
 using System.Collections.Generic;
@@ -34,6 +35,7 @@ namespace Platform.ClientPlatform.API.ActionFilters
                 });
                 return;
             }
+            ((IntegrationControllerBase)context.Controller).IPAddress = ipAddress;
         }
 
         private bool IsNotAllowed(string ipAddress)

@@ -777,7 +777,7 @@ namespace Platform.Betting.API.Repository
                             stakeTax = 0m;
                     }
 
-                    var taxedStake = request.Stake - (request.Stake / (1 + stakeTax));
+                    var taxedStake = 0m; // request.Stake - (request.Stake / (1 + stakeTax));
                     var stake = request.Stake - taxedStake;
 
                     var winningsTax = taxConfig.WinningsTax;

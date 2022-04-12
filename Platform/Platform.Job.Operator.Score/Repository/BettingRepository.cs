@@ -64,7 +64,7 @@ namespace Platform.Job.Operator.Score.Repository
             var settledStatus = new List<int> { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost, (int)BetStatus.Void };
 
             Console.WriteLine($"{DateTime.UtcNow} - Getting Bets : Start");
-            var bets = context.Bet.AsNoTracking().Where(c => clientCodes.Contains(c.ClientCode) && c.SettlementDate >= DateTime.UtcNow.AddHours(-5) && settledStatus.Contains(c.BetStatusId)).Select(s => new BetMemory
+            var bets = context.Bet.AsNoTracking().Where(c => c.SettlementDate >= DateTime.UtcNow.AddHours(-5) && clientCodes.Contains(c.ClientCode) && settledStatus.Contains(c.BetStatusId)).Select(s => new BetMemory
             {
                 BetId = s.BetId,
                 ClientId = s.ClientId,

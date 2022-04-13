@@ -600,6 +600,16 @@ namespace Platform.API.Repository
 
         public async Task<BaseResponseDTO<SettlementHistoryResponseDTO>> GetSettlementHistory(string apiKey, string clientId, string langCode, SettlementHistoryRequest request)
         {
+            //validate From Date and To Date
+            if(request.ToDate.Subtract(request.FromDate).TotalHours > 24)
+            {
+                return new BaseResponseDTO<SettlementHistoryResponseDTO>
+                {
+                    StatusCode = StatusCode.Maximum_Of_24Hrs_Per_Request,
+                    Message = StatusCode.Maximum_Of_24Hrs_Per_Request.ToString().Replace('_', ' ')
+                };
+            }
+
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)

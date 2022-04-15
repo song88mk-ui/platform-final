@@ -4911,6 +4911,18 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
+            if (selection.Od <= 1m)
+            {
+                return new BetSelectionState
+                {
+                    SelectionId = selection.SeId.ToString(),
+                    Odds = selection.Od,
+                    CorrelationId = selection.CoId,
+                    StatusCode = StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1,
+                    Message = StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1.ToString().Replace('_', ' ')
+                };
+            }
+
             switch (oddsChangeType)
             {
                 case OddsChangeType.None:

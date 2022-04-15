@@ -387,7 +387,7 @@ namespace Platform.Betting.API.Repository
 
                             cashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
-                            nonTaxedPayout = (nonTaxedStake * bet.Odds) * Convert.ToDecimal(finalProbability);
+                            nonTaxedPayout = (nonTaxedStake * totalOdds) * Convert.ToDecimal(finalProbability);
 
                             nonTaxedPayout = nonTaxedPayout - (nonTaxedPayout * 0.10m);
 

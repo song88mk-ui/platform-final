@@ -201,40 +201,6 @@ namespace Platform.API.Controllers
             }
         }
 
-
-        [HttpGet("v1/settlement/history")]
-        public async Task<IActionResult> GetSettlementHistory([FromQuery] SettlementHistoryRequest request)
-        {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
-
-            var result = await _platformRepository.GetSettlementHistory(apiKey, clientId, languageCode, request);
-
-            var parameters = request;
-
-            var properties = new Dictionary<string, string>
-                            {
-                                { "ipAddress", ipAddress },
-                                { "x-api-key", apiKey },
-                                { "x-client-id", clientId },
-                                { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
-                            };
-
-            _telemetryClient.TrackEvent("e:v1/settlement/history", properties);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
         [HttpPost("v1/bet/cashout")]
         public async Task<IActionResult> CashoutBet([FromBody] CashoutBetRequest request)
         {

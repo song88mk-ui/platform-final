@@ -40,7 +40,6 @@ namespace Platform.ClientPlatform.API
             });
 
             services.AddScoped<APIKeyFilter>();
-            services.AddScoped<IPFilter>();
 
             services.AddControllers();
 

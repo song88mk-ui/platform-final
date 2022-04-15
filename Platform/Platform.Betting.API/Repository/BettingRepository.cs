@@ -1507,7 +1507,7 @@ namespace Platform.Betting.API.Repository
             var result = new List<SettlementHistoryDTO>();
             var transactions = new List<Bet>();
 
-            var rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.SettlementDate >= request.FromDate && c.SettlementDate <= request.ToDate && c.BetStatusId > (int)BetStatus.Running && c.BetStatusId != (int)BetStatus.Rejected && c.UserId == request.UserId && c.ClientId == request.ClientId);
+            var rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && c.BetStatusId > (int)BetStatus.Running && c.BetStatusId != (int)BetStatus.Rejected && c.SettlementDate.Date >= request.FromDate.Date && c.SettlementDate.Date <= request.ToDate.Date);
 
             rowCount = rawSettled.Count();
             winLoss = rawSettled.Sum(c => c.WinLoss);

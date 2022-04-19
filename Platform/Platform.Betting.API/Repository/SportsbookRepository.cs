@@ -209,7 +209,8 @@ namespace Platform.Betting.API.Repository
                             
                             if (selections.Count == 1)
                             {
-                                if (selectionProbability.IsSuspended == true
+                                if (selectionProbability == null 
+                                    || selectionProbability.IsSuspended == true
                                     || selectionProbability.IsActive == false
                                     || selectionProbability.MarketStatusId != (int)MarketStatus.Active
                                     || selectionProbability.FixtureStatusId > 1

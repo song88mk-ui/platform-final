@@ -212,7 +212,8 @@ namespace Platform.Betting.API.Repository
                                 || selectionProbability.SelectionStatusId == (int)BetStatus.Cancelled 
                                 || (selectionProbability.IsActive == false && selectionProbability.MarketStatusId == (int)MarketStatus.Active)
                                 || selectionProbability.IsGlobalBetStop == true
-                                || (selectionProbability.IsSuspended == true && selectionProbability.FixtureStatusId < 2))
+                                || (selectionProbability.IsSuspended == true && selectionProbability.FixtureStatusId < 2)
+                                || selectionProbability.FixtureStatusId > 1)
                             {
                                 isBreak = true;
                                 break;

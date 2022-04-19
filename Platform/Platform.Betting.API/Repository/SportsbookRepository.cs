@@ -203,18 +203,25 @@ namespace Platform.Betting.API.Repository
 
                         var marketStatus = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Settled };
 
+                        var tempSelectionIds = selections.Select(s => s.SelectionId).ToList();
+                        var betStopCount = selectionProbabilities.Where(c => tempSelectionIds.Contains(c.SelectionId) && c.IsSuspended == true).Count();
+                        var inactiveFixtureCount = selectionProbabilities.Where(c => tempSelectionIds.Contains(c.SelectionId) && c.FixtureStatusId > 1).Count();
+
                         foreach (var selection in selections)
                         {
                             var selectionProbability = selectionProbabilities.Where(c => c.SelectionId == selection.SelectionId).FirstOrDefault();
-                            
+
+                            if (selections.Count == betStopCount || selections.Count == inactiveFixtureCount)
+                            {
+                                isBreak = true;
+                                break;
+                            }
+
                             if (selections.Count == 1)
                             {
                                 if (selectionProbability == null 
-                                    || selectionProbability.IsSuspended == true
                                     || selectionProbability.IsActive == false
-                                    || selectionProbability.MarketStatusId != (int)MarketStatus.Active
-                                    || selectionProbability.FixtureStatusId > 1
-                                    || selectionProbability.IsGlobalBetStop == true)
+                                    || selectionProbability.MarketStatusId != (int)MarketStatus.Active)
                                 {
                                     isBreak = true;
                                     break;

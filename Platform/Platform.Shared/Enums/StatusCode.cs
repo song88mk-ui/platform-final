@@ -74,6 +74,8 @@
         Rejected_Bet_Are_Not_Allowed_To_Be_Resent_To_Operator = 150,
         Resend_Attempt_Not_Successful_Please_Try_Again = 151,
 
+        FromDate_Must_Be_Earlier_Than_ToDate = 152,
+
         Error = 1000,
         Operator_Error = 1001
     }

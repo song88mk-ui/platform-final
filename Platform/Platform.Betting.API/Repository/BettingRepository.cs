@@ -1339,81 +1339,20 @@ namespace Platform.Betting.API.Repository
             var betIds = transactions.Select(s => s.BetId).Distinct().ToList();
             var selections = _bettingContext.BetSelection.AsNoTracking().Where(c => betIds.Contains(c.BetId)).ToList();
             
-            ////var cashOutTasks = new List<Task<BaseResponseDTO<CashOutResponse>>>();
-
-            ////foreach (var bet in transactions)
-            ////{
-            ////    var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
-            ////    cashOutTasks.Add(_mtsProbabilityRepository.GetCashOut(bet, filteredSelections));
-            ////}
-
-            ////await Task.WhenAll(cashOutTasks);
-
-            ////foreach (var bet in transactions)
-            ////{
-            ////    var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
-            ////    var cashOut = cashOutTasks.Where(c => c.Result.Result.BetId == bet.BetId).FirstOrDefault();
-
-            ////    result.Add(new BetHistoryDTO
-            ////    {
-            ////        BetId = bet.BetId.ToString(),
-            ////        Stake = bet.Stake,
-            ////        Odds = bet.Odds,
-            ////        Payout = bet.Payout,
-            ////        WinLoss = bet.WinLoss,
-            ////        BetStatusId = bet.BetStatusId,
-            ////        BetStatusName = bet.BetStatusName,
-            ////        TransactionDate = bet.BetDate,
-            ////        Commission = 0,
-            ////        CurrencyCode = bet.CurrencyCode,
-            ////        OddsType = bet.OddsTypeName,
-            ////        CashOutStake = cashOut.Result.Result.CashOutStake,
-            ////        CashOutStatusId = cashOut.Result.StatusCode == StatusCode.Success ? (int)CashOutStatus.Available : (int)CashOutStatus.Unavailable,
-            ////        CashOutStatusName = cashOut.Result.StatusCode == StatusCode.Success ? CashOutStatus.Available.ToString() : CashOutStatus.Unavailable.ToString(),
-            ////        StakeTax = bet.StakeTax,
-            ////        WinningsTax = bet.WinningsTax,
-            ////        TaxedStake = bet.TaxedStake,
-            ////        TaxedWinnings = bet.TaxedWinnings,
-            ////        Selections = filteredSelections.Select(s => new BetSelectionHistoryDTO
-            ////        {
-            ////            SportId = s.SportId,
-            ////            SportName = s.SportName,
-            ////            LeagueId = s.LeagueId,
-            ////            LeagueName = s.LeagueName,
-            ////            FixtureId = s.FixtureId.ToString(),
-            ////            FixtureName = s.FixtureName,
-            ////            MarketId = s.MarketId.ToString(),
-            ////            MarketName = s.MarketName,
-            ////            Line = s.Line,
-            ////            SelectionId = s.SelectionId.ToString(),
-            ////            SelectionName = s.SelectionName,
-            ////            Odds = s.Odds,
-            ////            BetScore = s.BetScore,
-            ////            SettlementScore = s.SettlementScore,
-            ////            BetSelectionId = s.BetSelectionId.ToString(),
-            ////            FixtureStartDate = s.FixtureStartDate,
-            ////            FixtureStatusId = s.FixtureStatusId,
-            ////            FixtureStatusName = s.FixtureStatusName,
-            ////            MarketTemplateId = s.MarketTemplateId,
-            ////            SegmentId = s.SegmentId,
-            ////            SegmentName = s.SegmentName,
-            ////            SelectionTemplateId = s.SelectionTemplateId,
-            ////            BetSelectionStatusId = s.BetSelectionStatusId,
-            ////            BetSelectionStatusName = s.BetSelectionStatusName
-            ////        }).ToList()
-            ////    });
-            ////}
-
             var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => betIds.Contains(b.BetId) && b.BetStatusId != (int)BetStatus.Rejected
                                                 && b.BetStatusId != (int)BetStatus.Cancelled).Select(s => s.BetId).ToList();
 
-            var cashOutList = await _sportsbookRepository.GetCashOut(transactions, selections, betBoosted);
+            var cashOutList = new BaseResponseDTO<List<CashOutDetailsReponse>>();
+
+            if (request.IsCurrent == true)
+                cashOutList = await _sportsbookRepository.GetCashOut(transactions, selections, betBoosted);
 
             foreach (var bet in transactions)
             {
                 var cashOut = cashOutList.Result.Where(c => c.BetId == bet.BetId).FirstOrDefault();
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
                 var isBoosted = betBoosted.Any(b => b == bet.BetId);
+
                 result.Add(new BetHistoryDTO
                 {
                     BetId = bet.BetId.ToString(),

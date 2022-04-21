@@ -471,6 +471,18 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(string apiKey, string clientId, string langCode, string operatorToken, BetHistoryRequest request)
         {
+            if (request.IsCurrent == false)
+            {
+                if (request.FromDate > request.ToDate)
+                {
+                    return new BaseResponseDTO<BetHistoryResponseDTO>
+                    {
+                        StatusCode = StatusCode.FromDate_Must_Be_Earlier_Than_ToDate,
+                        Message = StatusCode.FromDate_Must_Be_Earlier_Than_ToDate.ToString().Replace('_', ' ')
+                    };
+                }
+            }
+
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)

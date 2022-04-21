@@ -1342,10 +1342,12 @@ namespace Platform.Betting.API.Repository
             var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => betIds.Contains(b.BetId) && b.BetStatusId != (int)BetStatus.Rejected
                                                 && b.BetStatusId != (int)BetStatus.Cancelled).Select(s => s.BetId).ToList();
 
-            var cashOutList = new BaseResponseDTO<List<CashOutDetailsReponse>>();
 
-            if (request.IsCurrent == true)
-                cashOutList = await _sportsbookRepository.GetCashOut(transactions, selections, betBoosted);
+            var runningBets = transactions.Where(c => c.BetStatusId == (int)BetStatus.Running).ToList();
+            var runningBetIds = runningBets.Select(s => s.BetId).Distinct().ToList();
+            var runningSelections = selections.Where(c => runningBetIds.Contains(c.BetId)).ToList();
+
+            var cashOutList = await _sportsbookRepository.GetCashOut(runningBets, runningSelections, betBoosted);
 
             foreach (var bet in transactions)
             {

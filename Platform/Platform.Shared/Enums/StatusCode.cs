@@ -75,6 +75,7 @@
         Resend_Attempt_Not_Successful_Please_Try_Again = 151,
 
         FromDate_Must_Be_Earlier_Than_ToDate = 152,
+        Maximum_Of_24Hrs_Per_Request = 153,
 
         Error = 1000,
         Operator_Error = 1001

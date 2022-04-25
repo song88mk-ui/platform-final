@@ -58,7 +58,7 @@ namespace Platform.ClientPlatform.API.ActionFilters
         {
             var result = new List<Tuple<string, List<string>>>
             {
-                new Tuple<string, List<string>>("Internal-Preprod", new List<string> { "127.0.0.1", "112.198.204.225" }),
+                new Tuple<string, List<string>>("Internal-Preprod", new List<string> { "127.0.0.1", "112.198.204.225", "84.17.47.126", "43.250.225.226" }),
                 new Tuple<string, List<string>>("Internal-Prod", new List<string> { }),
                 new Tuple<string, List<string>>("BEC", new List<string> { })
             };

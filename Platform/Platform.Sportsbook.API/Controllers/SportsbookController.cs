@@ -763,6 +763,20 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v1/sportsbook/client/topfixtures/copy")]
+        public async Task<IActionResult> CopyClientTopFixtures([FromBody] CopyClientTopFixtureRequestDTO request)
+        {
+            var result = await _sportsbookRepository.CopyClientTopFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         /// <summary>
         /// Get top leagues of a client ids.
         /// </summary>
@@ -804,6 +818,20 @@ namespace Platform.Sportsbook.API.Controllers
         public async Task<IActionResult> AddorUpdateTopLeagues([FromBody] ClientTopLeague request)
         {
             var result = await _sportsbookRepository.AddOrUpdateTopLeagues(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/sportsbook/client/topleagues/copy")]
+        public async Task<IActionResult> CopyClientTopLeagues([FromBody] CopyClientTopLeagueRequestDTO request)
+        {
+            var result = await _sportsbookRepository.CopyClientTopLeagues(request);
 
             switch (result.StatusCode)
             {

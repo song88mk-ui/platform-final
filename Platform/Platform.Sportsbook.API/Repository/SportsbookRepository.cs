@@ -5801,6 +5801,95 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>> CopyClientTopFixtures(CopyClientTopFixtureRequestDTO request)
+        {
+            try
+            {
+                // check if fixtures requests are duplicate
+                var duplicateFixtures = request.TopFixtures.GroupBy(g => g.FixtureId).Where(c => c.Count() > 1).ToList();
+
+                if (duplicateFixtures.Count > 0)
+                {
+                    return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Result = new ClientTopFixtureMessageResponseDTO()
+                        {
+                            StatusCode = StatusCode.Cannot_Have_Duplicate_Top_Fixture_Entries,
+                            Message = StatusCode.Cannot_Have_Duplicate_Top_Fixture_Entries.ToString().Replace('_', ' ')
+                        }
+                    };
+                }
+
+                // check if sort order requests are duplicate
+                var duplicateSortOrders = request.TopFixtures.GroupBy(g => g.SortOrder).Where(c => c.Count() > 1).ToList();
+
+                if (duplicateSortOrders.Count > 0)
+                {
+                    return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Result = new ClientTopFixtureMessageResponseDTO()
+                        {
+                            StatusCode = StatusCode.Cannot_Have_Duplicate_Sort_Order_Entries,
+                            Message = StatusCode.Cannot_Have_Duplicate_Sort_Order_Entries.ToString().Replace('_', ' ')
+                        }
+                    };
+                }
+
+                if (request.TopFixtures.Count > 50)
+                {
+                    return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Result = new ClientTopFixtureMessageResponseDTO()
+                        {
+                            StatusCode = StatusCode.Top_Fixture_Entries_Must_Be_Equal_Or_Lower_Than_50,
+                            Message = StatusCode.Top_Fixture_Entries_Must_Be_Equal_Or_Lower_Than_50.ToString().ToString().Replace('_', ' ')
+                        }
+                    };
+                }
+
+                foreach (var clientId in request.ClientIds)
+                {
+                    // delete existing records
+                    var currentTopFixtures = _sportsbookContext.ClientTopFixture.Where(c => c.ClientId == clientId).ToList();
+
+                    if (currentTopFixtures.Count > 0)
+                    {
+                        _sportsbookContext.ClientTopFixture.RemoveRange(currentTopFixtures);
+                    }
+
+                    // insert new records
+                    var newTopFixtures = request.TopFixtures.Select(s => new ClientTopFixture
+                    {
+                        ClientId = clientId,
+                        FixtureId = s.FixtureId,
+                        SortOrder = s.SortOrder
+                    });
+
+                    _sportsbookContext.ClientTopFixture.AddRange(newTopFixtures);
+                }
+
+                await _sportsbookContext.SaveChangesAsync();
+
+                return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString()
+                };
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString()
+                };
+            }
+            
+        }
+
         public async Task<BaseResponseDTO<ClientTopLeaguesResponseDTO>> GetClientIdsTopLeagues(ClientTopLeaguesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
@@ -5953,6 +6042,106 @@ namespace Platform.Sportsbook.API.Repository
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString()
             };
+        }
+
+        public async Task<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>> CopyClientTopLeagues(CopyClientTopLeagueRequestDTO request)
+        {
+            try
+            {
+                using (var scope = new TransactionScope(TransactionScopeOption.Required, new System.Transactions.TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
+                {
+                    // validate requests
+
+                    // check if league entries are duplicate
+                    var duplicateLeagues = request.TopLeagues.GroupBy(g => g.LeagueId).Where(c => c.Count() > 1).ToList();
+
+                    if (duplicateLeagues.Count > 0)
+                    {
+                        return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
+                        {
+                            StatusCode = StatusCode.Success,
+                            Result = new ClientTopLeaguesMessageResponseDTO()
+                            {
+                                StatusCode = StatusCode.Cannot_Have_Duplicate_Top_League_Entries,
+                                Message = StatusCode.Cannot_Have_Duplicate_Top_League_Entries.ToString().Replace('_', ' ')
+                            }
+                        };
+                    }
+
+                    // check if sort order requests are duplicate
+                    var duplicateSortOrders = request.TopLeagues.GroupBy(g => g.SortOrder).Where(c => c.Count() > 1).ToList();
+
+                    if (duplicateSortOrders.Count > 0)
+                    {
+                        return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
+                        {
+                            StatusCode = StatusCode.Success,
+                            Result = new ClientTopLeaguesMessageResponseDTO()
+                            {
+                                StatusCode = StatusCode.Cannot_Have_Duplicate_Sort_Order_Entries,
+                                Message = StatusCode.Cannot_Have_Duplicate_Sort_Order_Entries.ToString().Replace('_', ' ')
+                            }
+                        };
+                    }
+
+                    if (request.TopLeagues.Count > 50)
+                    {
+                        return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
+                        {
+                            StatusCode = StatusCode.Success,
+                            Result = new ClientTopLeaguesMessageResponseDTO()
+                            {
+                                StatusCode = StatusCode.Top_League_Entries_Must_Be_Equal_Or_Lower_Than_50,
+                                Message = StatusCode.Top_League_Entries_Must_Be_Equal_Or_Lower_Than_50.ToString().Replace('_', ' ')
+                            }
+                        };
+                    }
+
+                    foreach (var clientId in request.ClientIds)
+                    {
+                        // delete existing records
+                        var currentTopLeagues = _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == clientId && c.SportId == request.SportId).ToList();
+
+                        if (currentTopLeagues.Count > 0)
+                        {
+                            _sportsbookContext.ClientLeagueOrder.RemoveRange(currentTopLeagues);
+                        }
+
+                        // insert new records
+                        var newTopLeagues = request.TopLeagues.Select(s => new ClientLeagueOrder
+                        {
+                            ClientId = clientId,
+                            LeagueId = s.LeagueId,
+                            LeagueName = s.LeagueName,
+                            SegmentId = s.SegmentId,
+                            SegmentName = s.SegmentName,
+                            SportId = s.SportId,
+                            SportName = s.SportName,
+                            SortOrder = s.SortOrder
+                        });
+
+                        _sportsbookContext.ClientLeagueOrder.AddRange(newTopLeagues);
+                    }
+
+                    await _sportsbookContext.SaveChangesAsync();
+
+                    scope.Complete();
+                }
+
+                return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString()
+                };
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString()
+                };
+            }
         }
 
         public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetClientSportsLookup(string clientCode)

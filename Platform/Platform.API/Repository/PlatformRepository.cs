@@ -2525,6 +2525,37 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.PostClientTopFixtures(sportsbookRequest);
         }
 
+        public async Task<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>> CopyClientTopFixtures(CopyClientTopFixtureRequest request)
+        {
+            // fetch clientids
+            var clientIds = await _platformContext.Client.Where(c => request.ClientIds.Contains(c.ClientIdRef)).Select(s => s.ClientId).ToListAsync();
+
+            if (!clientIds.Any())
+            {
+                return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Result = new ClientTopFixtureMessageResponseDTO()
+                    {
+                        StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                        Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                    }
+                };
+            }
+
+            var sportsbookRequest = new CopyClientTopFixtureRequestDTO
+            {
+                ClientIds = clientIds,
+                TopFixtures = request.TopFixtures.Select(s => new Shared.Models.ClientTopFixtureSetup
+                {
+                    FixtureId = s.FixtureId,
+                    SortOrder = s.SortOrder
+                }).ToList()
+            };
+
+            return await _sportsbookRepository.CopyClientTopFixtures(sportsbookRequest);
+        }
+
         public async Task<BaseResponseDTO<BackOfficeTopLeaguesResponseDTO>> GetClientTopLeagues(BackOfficeTopLeaguesRequestDTO request)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), string.IsNullOrEmpty(request.LanguageCode) ? "EN" : request.LanguageCode.ToUpper()) ? true : false;
@@ -2616,6 +2647,34 @@ namespace Platform.API.Repository
             };
 
             return await _sportsbookRepository.AddOrUpdateTopLeagues(sportsbookRequest);
+        }
+
+        public async Task<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>> CopyClientTopLeagues(BackOfficeCopyClientTopLeague request)
+        {
+            // fetch clientids
+            var clientIds = _platformContext.Client.Where(c => request.ClientIdRefs.Contains(c.ClientIdRef)).Select(s => s.ClientId).ToList();
+
+            if (!clientIds.Any())
+            {
+                return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Result = new ClientTopLeaguesMessageResponseDTO()
+                    {
+                        StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                        Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                    }
+                };
+            }
+
+            var sportsbookRequest = new CopyClientTopLeagueRequestDTO()
+            {
+                ClientIds = clientIds,
+                SportId = request.SportId,
+                TopLeagues = request.TopLeagues
+            };
+
+            return await _sportsbookRepository.CopyClientTopLeagues(sportsbookRequest);
         }
 
         public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetClientSportsLookup(BackofficeClientSportsRequestDTO request)

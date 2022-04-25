@@ -105,6 +105,20 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpPost("v1/client/topfixtures/copy")]
+        public async Task<IActionResult> CopyClientTopFixtures([FromBody] CopyClientTopFixtureRequest request)
+        {
+            var result = await _platformRepository.CopyClientTopFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpGet("v1/client/topleagues")]
         public async Task<IActionResult> GetClientTopLeagues([FromQuery] BackOfficeTopLeaguesRequestDTO request)
         {
@@ -123,6 +137,20 @@ namespace Platform.API.Controllers
         public async Task<IActionResult> AddOrUpdateTopLeagues([FromBody] BackOfficeClientTopLeague request)
         {
             var result = await _platformRepository.AddOrUpdateTopLeagues(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/client/topleagues/copy")]
+        public async Task<IActionResult> CopyClientTopLeagues([FromBody] BackOfficeCopyClientTopLeague request)
+        {
+            var result = await _platformRepository.CopyClientTopLeagues(request);
 
             switch (result.StatusCode)
             {

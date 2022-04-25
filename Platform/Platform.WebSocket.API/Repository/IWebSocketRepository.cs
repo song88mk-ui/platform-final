@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Platform.Shared.Utility;
 using Platform.WebSocket.API.Messages;
 using System.Threading.Tasks;
 

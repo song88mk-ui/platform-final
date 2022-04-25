@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Platform.Shared.Enums;
+using Platform.Shared.Utility;
 using Platform.WebSocket.API.Data;
 using Platform.WebSocket.API.Messages;
 using System;
@@ -13,6 +14,7 @@ namespace Platform.WebSocket.API.Repository
     {
         private readonly IServiceProvider _provider;
         private PlatformContext _platformContext;
+        private IMessageBroker _messageBroker;
 
         public WebSocketRepository(IServiceProvider provider)
         {
@@ -29,8 +31,6 @@ namespace Platform.WebSocket.API.Repository
 
             using var scope = _provider.CreateScope();
             _platformContext = scope.ServiceProvider.GetRequiredService<PlatformContext>();
-
-            var test = Context.GetHttpContext().Request.Query;
 
             await _platformContext.WebSocket.AddAsync(new Data.WebSocket
             {
@@ -68,6 +68,22 @@ namespace Platform.WebSocket.API.Repository
             }
 
             await base.OnDisconnectedAsync(exception);
+        }
+        public async Task SubscribeToEndpoint(EndpointRequest request)
+        {
+            var client = await GetClient(request.ClientId);
+
+            if (client.Item1 == true)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"{client.Item2}:{request.Endpoint.ToLower()}");
+
+                using var scope = _provider.CreateScope();
+
+                _messageBroker = scope.ServiceProvider.GetRequiredService<IMessageBroker>();
+
+                _messageBroker.Publish("test", "test", "q.websocket.test", "");
+            }
+
         }
         public async Task PublishOddsChange(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, IncomingOddsChange message)
         {
@@ -145,6 +161,10 @@ namespace Platform.WebSocket.API.Repository
                 }).OrderBy(o => o.SoOr).ToList()
             };
 
+            //var groups = new List<string>();
+            //IReadOnlyList<string> readOnlyGroups = groups.AsReadOnly();
+
+            //await hubContext.Clients.Groups(readOnlyGroups).OnOddsChange(payload);
             await hubContext.Clients.All.OnOddsChange(payload);
         }
         public async Task PublishBetStopFixture(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, IncomingBetStopFixture onBetStopFixture)
@@ -176,5 +196,29 @@ namespace Platform.WebSocket.API.Repository
         {
             return fixtureType == FixtureType.Match ? name.Split(" vs. ").Last().Trim() : string.Empty;
         }
+        private async Task<Tuple<bool, string>> GetClient(string clientId)
+        {
+            var isGuid = Guid.TryParse(clientId, out Guid guid);
+
+            if (isGuid)
+            {
+                using var scope = _provider.CreateScope();
+                _platformContext = scope.ServiceProvider.GetRequiredService<PlatformContext>();
+
+                var client = await _platformContext.Client.FindAsync(guid);
+
+                if (client != null)
+                    return new Tuple<bool, string>(true, client.ClientCode);
+            }
+
+            return new Tuple<bool, string>(false, string.Empty);
+        }
+    }
+    public class EndpointRequest
+    {
+        public string ClientId { get; set; }
+        public string Endpoint { get; set; }
     }
 }
+
+

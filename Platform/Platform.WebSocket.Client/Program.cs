@@ -11,12 +11,14 @@ namespace Platform.WebSocket.Client
         static async Task Main(string[] args)
         {
             var connection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:61801/platform")                    
+                .WithUrl("http://localhost:5000/platform")                    
                 .WithAutomaticReconnect()
                 .Build();
 
-            connection.On<OutgoingOddsChange>("OnOddsChange", ProcessOddsChange);
             await connection.StartAsync();
+
+            await connection.InvokeAsync("SubscribeToEndpoint", new { ClientId = "5093617A-9367-EB11-89FB-00224815B68B", Endpoint = "test" });
+            connection.On<OutgoingOddsChange>("OnOddsChange", ProcessOddsChange);
 
             Console.ReadLine();
         }

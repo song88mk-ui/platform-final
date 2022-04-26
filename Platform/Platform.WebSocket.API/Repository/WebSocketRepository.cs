@@ -197,7 +197,7 @@ namespace Platform.WebSocket.API.Repository
                             SeTeId = selection.SelectionTemplateId,
                             SeId = selection.SelectionId.ToString(),
                             SeNa = selection.SelectionName,
-                            DeOd = selection.Odds,
+                            DeOd = odds,
                             IsAc = selection.IsActive,
                             SoOr = selection.SortOrder,
                             SeNaTr = selection.SelectionTranslations.Select(ss => new OutgoingSelectionTranslation

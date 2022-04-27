@@ -93,8 +93,7 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task PublishOddsChange(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, string clientCode, OutgoingOddsChange message)
         {
-            await hubContext.Clients.All.OnOddsChange(message);
-            //await hubContext.Clients.Group($"{clientCode}").OnOddsChange(message);
+            await hubContext.Clients.Group($"{clientCode}").OnOddsChange(message);
 
             //var groups = new List<string>();
             //IReadOnlyList<string> readOnlyGroups = groups.AsReadOnly();
@@ -104,13 +103,11 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task PublishBetStopFixture(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, string clientCode, OutgoingBetStopFixture message)
         {
-            await hubContext.Clients.All.OnBetStopFixture(message);
-            //await hubContext.Clients.Group($"{clientCode}").OnBetStopFixture(message);
+            await hubContext.Clients.Group($"{clientCode}").OnBetStopFixture(message);
         }
         public async Task PublishBetStopGlobal(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, string clientCode, OutgoingBetStopGlobal message)
         {
-            await hubContext.Clients.All.OnBetStopGlobal(message);
-            //await hubContext.Clients.Group($"{clientCode}").OnBetStopGlobal(message);
+            await hubContext.Clients.Group($"{clientCode}").OnBetStopGlobal(message);
         }
         private async Task<Tuple<bool, string>> GetClient(string clientId)
         {

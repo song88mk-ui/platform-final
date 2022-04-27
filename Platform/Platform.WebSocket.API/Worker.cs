@@ -56,17 +56,17 @@ namespace Platform.WebSocket.API
                 switch (messageType)
                 {
                     case "OnOddsChange":
-                        var onOddsChange = JsonSerializer.Deserialize<IncomingOddsChange>(payload);
+                        var onOddsChange = JsonSerializer.Deserialize<OutgoingOddsChange>(payload);
                         await _webSocketRepository.PublishOddsChange(_platformHub, onOddsChange);
                         break;
 
                     case "OnBetStopFixture":
-                        var onBetStopFixture = JsonSerializer.Deserialize<IncomingBetStopFixture>(payload);
+                        var onBetStopFixture = JsonSerializer.Deserialize<OutgoingBetStopFixture>(payload);
                         await _webSocketRepository.PublishBetStopFixture(_platformHub, onBetStopFixture);
                         break;
 
                     case "OnBetStopGlobal":
-                        var onBetStopGlobal = JsonSerializer.Deserialize<IncomingBetStopGlobal>(payload);
+                        var onBetStopGlobal = JsonSerializer.Deserialize<OutgoingBetStopGlobal>(payload);
                         await _webSocketRepository.PublishBetStopGlobal(_platformHub, onBetStopGlobal);
                         break;
                 }

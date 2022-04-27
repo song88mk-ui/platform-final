@@ -81,7 +81,7 @@ namespace Platform.WebSocket.API.Repository
 
                 _messageBroker = scope.ServiceProvider.GetRequiredService<IMessageBroker>();
 
-                _messageBroker.Publish(JsonSerializer.Serialize(request), "test", "q.websocket.test", "");
+                _messageBroker.Publish(JsonSerializer.Serialize(request), "test", "r.websocket.test", "");
             }
         }
         public async Task PublishOddsChange(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, string clientCode, OutgoingOddsChange message)

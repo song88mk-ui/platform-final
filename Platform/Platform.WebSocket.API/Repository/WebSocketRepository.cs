@@ -69,24 +69,32 @@ namespace Platform.WebSocket.API.Repository
 
             await base.OnDisconnectedAsync(exception);
         }
-        public async Task SubscribeToEndpoint(EndpointRequest request)
+        public async Task<bool> SubscribeToEndpoint(EndpointRequest request)
         {
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, $"{client.Item2}:{request.Endpoint.ToLower()}");
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"{client.Item2}");
+                //await Groups.AddToGroupAsync(Context.ConnectionId, $"{client.Item2}:{request.Endpoint.ToLower()}");
 
                 using var scope = _provider.CreateScope();
 
                 _messageBroker = scope.ServiceProvider.GetRequiredService<IMessageBroker>();
 
                 _messageBroker.Publish(JsonSerializer.Serialize(request), "test", "r.websocket.test", "");
+
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
         public async Task PublishOddsChange(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, string clientCode, OutgoingOddsChange message)
         {
             await hubContext.Clients.All.OnOddsChange(message);
+            //await hubContext.Clients.Group($"{clientCode}").OnOddsChange(message);
 
             //var groups = new List<string>();
             //IReadOnlyList<string> readOnlyGroups = groups.AsReadOnly();
@@ -97,10 +105,12 @@ namespace Platform.WebSocket.API.Repository
         public async Task PublishBetStopFixture(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, string clientCode, OutgoingBetStopFixture message)
         {
             await hubContext.Clients.All.OnBetStopFixture(message);
+            //await hubContext.Clients.Group($"{clientCode}").OnBetStopFixture(message);
         }
         public async Task PublishBetStopGlobal(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, string clientCode, OutgoingBetStopGlobal message)
         {
             await hubContext.Clients.All.OnBetStopGlobal(message);
+            //await hubContext.Clients.Group($"{clientCode}").OnBetStopGlobal(message);
         }
         private async Task<Tuple<bool, string>> GetClient(string clientId)
         {

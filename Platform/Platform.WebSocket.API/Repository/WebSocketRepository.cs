@@ -95,6 +95,8 @@ namespace Platform.WebSocket.API.Repository
                     webSocket.ClientCode = client.Item2.ToUpper();
                     webSocket.RequestURL = string.IsNullOrEmpty(request.RequestURL) ? string.Empty : request.RequestURL;
 
+                    _platformContext.WebSocket.Update(webSocket);
+
                     await _platformContext.SaveChangesAsync();
                 }
             }

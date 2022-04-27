@@ -5,6 +5,7 @@ using Platform.WebSocket.API.Data;
 using Platform.WebSocket.API.Messages;
 using System;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Platform.WebSocket.API.Repository
@@ -80,11 +81,10 @@ namespace Platform.WebSocket.API.Repository
 
                 _messageBroker = scope.ServiceProvider.GetRequiredService<IMessageBroker>();
 
-                _messageBroker.Publish("test", "test", "q.websocket.test", "");
+                _messageBroker.Publish(JsonSerializer.Serialize(request), "test", "q.websocket.test", "");
             }
-
         }
-        public async Task PublishOddsChange(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, OutgoingOddsChange message)
+        public async Task PublishOddsChange(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, string clientCode, OutgoingOddsChange message)
         {
             await hubContext.Clients.All.OnOddsChange(message);
 
@@ -94,11 +94,11 @@ namespace Platform.WebSocket.API.Repository
             //await hubContext.Clients.Groups(readOnlyGroups).OnOddsChange(payload);
 
         }
-        public async Task PublishBetStopFixture(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, OutgoingBetStopFixture message)
+        public async Task PublishBetStopFixture(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, string clientCode, OutgoingBetStopFixture message)
         {
             await hubContext.Clients.All.OnBetStopFixture(message);
         }
-        public async Task PublishBetStopGlobal(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, OutgoingBetStopGlobal message)
+        public async Task PublishBetStopGlobal(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, string clientCode, OutgoingBetStopGlobal message)
         {
             await hubContext.Clients.All.OnBetStopGlobal(message);
         }
@@ -114,7 +114,7 @@ namespace Platform.WebSocket.API.Repository
                 var client = await _platformContext.Client.FindAsync(guid);
 
                 if (client != null)
-                    return new Tuple<bool, string>(true, client.ClientCode);
+                    return new Tuple<bool, string>(true, client.ClientCode.ToLower());
             }
 
             return new Tuple<bool, string>(false, string.Empty);

@@ -49,7 +49,7 @@ namespace Platform.WebSocket.API
         {
             var payload = Encoding.UTF8.GetString(e.Body);
             var messageType = e.BasicProperties.Type;
-            var correlationId = e.BasicProperties.CorrelationId;
+            var clientCode = e.RoutingKey.Split('.')[4].ToLower();
 
             try
             {
@@ -57,17 +57,17 @@ namespace Platform.WebSocket.API
                 {
                     case "OnOddsChange":
                         var onOddsChange = JsonSerializer.Deserialize<OutgoingOddsChange>(payload);
-                        await _webSocketRepository.PublishOddsChange(_platformHub, onOddsChange);
+                        await _webSocketRepository.PublishOddsChange(_platformHub, clientCode, onOddsChange);
                         break;
 
                     case "OnBetStopFixture":
                         var onBetStopFixture = JsonSerializer.Deserialize<OutgoingBetStopFixture>(payload);
-                        await _webSocketRepository.PublishBetStopFixture(_platformHub, onBetStopFixture);
+                        await _webSocketRepository.PublishBetStopFixture(_platformHub, clientCode, onBetStopFixture);
                         break;
 
                     case "OnBetStopGlobal":
                         var onBetStopGlobal = JsonSerializer.Deserialize<OutgoingBetStopGlobal>(payload);
-                        await _webSocketRepository.PublishBetStopGlobal(_platformHub, onBetStopGlobal);
+                        await _webSocketRepository.PublishBetStopGlobal(_platformHub, clientCode, onBetStopGlobal);
                         break;
                 }
             }

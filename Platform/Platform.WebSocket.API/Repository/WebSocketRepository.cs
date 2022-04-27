@@ -69,7 +69,7 @@ namespace Platform.WebSocket.API.Repository
 
             await base.OnDisconnectedAsync(exception);
         }
-        public async Task<bool> SubscribeToEndpoint(EndpointRequest request)
+        public async Task SubscribeToEndpoint(EndpointRequest request)
         {
             var client = await GetClient(request.ClientId);
 
@@ -83,12 +83,6 @@ namespace Platform.WebSocket.API.Repository
                 _messageBroker = scope.ServiceProvider.GetRequiredService<IMessageBroker>();
 
                 _messageBroker.Publish(JsonSerializer.Serialize(request), "test", "r.websocket.test", "");
-
-                return true;
-            }
-            else
-            {
-                return false;
             }
         }
         public async Task PublishOddsChange(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, string clientCode, OutgoingOddsChange message)

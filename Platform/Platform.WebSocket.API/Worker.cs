@@ -57,17 +57,23 @@ namespace Platform.WebSocket.API
                 {
                     case "OnOddsChange":
                         var onOddsChange = JsonSerializer.Deserialize<OutgoingOddsChange>(payload);
-                        await _webSocketRepository.PublishOddsChange(_platformHub, clientCode, onOddsChange);
+
+                        if (clientCode == "tso")
+                            await _webSocketRepository.PublishOddsChange(_platformHub, clientCode, onOddsChange);
                         break;
 
                     case "OnBetStopFixture":
                         var onBetStopFixture = JsonSerializer.Deserialize<OutgoingBetStopFixture>(payload);
-                        await _webSocketRepository.PublishBetStopFixture(_platformHub, clientCode, onBetStopFixture);
+
+                        if (clientCode == "tso")
+                            await _webSocketRepository.PublishBetStopFixture(_platformHub, clientCode, onBetStopFixture);
                         break;
 
                     case "OnBetStopGlobal":
                         var onBetStopGlobal = JsonSerializer.Deserialize<OutgoingBetStopGlobal>(payload);
-                        await _webSocketRepository.PublishBetStopGlobal(_platformHub, clientCode, onBetStopGlobal);
+
+                        if (clientCode == "tso")
+                            await _webSocketRepository.PublishBetStopGlobal(_platformHub, clientCode, onBetStopGlobal);
                         break;
                 }
             }

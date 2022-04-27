@@ -39,6 +39,8 @@ namespace Platform.WebSocket.API.Repository
                 IPCountry = ipCountry,
                 Server = server,
                 UserAgent = userAgent,
+                ClientCode = string.Empty,
+                RequestURL = string.Empty,
                 ConnectedTimestamp = DateTime.UtcNow,
                 DisconnectedTimestamp = null
             });
@@ -83,6 +85,18 @@ namespace Platform.WebSocket.API.Repository
                 _messageBroker = scope.ServiceProvider.GetRequiredService<IMessageBroker>();
 
                 _messageBroker.Publish(JsonSerializer.Serialize(request), "test", "r.websocket.test", "");
+
+                _platformContext = scope.ServiceProvider.GetRequiredService<PlatformContext>();
+
+                var webSocket = await _platformContext.WebSocket.FindAsync(Context.ConnectionId);
+
+                if (webSocket != null)
+                {
+                    webSocket.ClientCode = client.Item2.ToUpper();
+                    webSocket.RequestURL = string.IsNullOrEmpty(request.RequestURL) ? string.Empty : request.RequestURL;
+
+                    await _platformContext.SaveChangesAsync();
+                }
             }
         }
         public async Task PublishOddsChange(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, string clientCode, OutgoingOddsChange message)
@@ -125,6 +139,7 @@ namespace Platform.WebSocket.API.Repository
     {
         public string ClientId { get; set; }
         public string Endpoint { get; set; }
+        public string RequestURL { get; set; }
     }
 }
 

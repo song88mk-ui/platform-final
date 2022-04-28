@@ -43,6 +43,11 @@ namespace Platform.API
                 options.Level = CompressionLevel.Fastest;
             });
 
+            services.Configure<GzipCompressionProviderOptions>(options =>
+            {
+                options.Level = CompressionLevel.Fastest;
+            });
+
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowAllOrigins",

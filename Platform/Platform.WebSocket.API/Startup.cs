@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,6 +10,7 @@ using Microsoft.OpenApi.Models;
 using Platform.Shared.Utility;
 using Platform.WebSocket.API.Data;
 using Platform.WebSocket.API.Repository;
+using System.Linq;
 
 namespace Platform.WebSocket.API
 {
@@ -32,6 +34,11 @@ namespace Platform.WebSocket.API
             services.AddControllers();
 
             services.AddSignalR();
+            services.AddResponseCompression(opts =>
+            {
+                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+                    new[] { "application/octet-stream" });
+            });
 
             services.AddCors(options =>
             {

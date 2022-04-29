@@ -92,7 +92,8 @@ namespace Platform.Client.API.ActionFilters
                 new Tuple<string, string, List<string>>("oddsscannerin", "ZCB4GjAVF6jbpmWP", new List<string> { "15.223.48.26", "99.79.63.184", "3.97.8.231", "83.240.158.106", "94.63.95.190", "119.94.9.193" }),
                 new Tuple<string, string, List<string>>("ankushban92", "2mGAjkUSAMheK4hc", new List<string> { "122.161.183.149", "182.68.56.189" }),
                 new Tuple<string, string, List<string>>("10betcomgh", "D5zDA9yWsdtKWcxZ", new List<string> { "78.142.168.10","213.208.154.198","213.208.154.199","213.208.154.202" }),
-                new Tuple<string, string, List<string>>("betgenius", "F8cpnm5wabgs5gRG", new List<string> { "34.251.29.46","63.34.140.175","54.72.188.44","63.34.72.4","54.72.237.39","63.34.98.34","54.229.252.155","34.251.2.47","52.49.158.92","18.202.148.182","52.214.13.88","34.253.169.237" })
+                new Tuple<string, string, List<string>>("betgenius", "F8cpnm5wabgs5gRG", new List<string> { "34.251.29.46","63.34.140.175","54.72.188.44","63.34.72.4","54.72.237.39","63.34.98.34","54.229.252.155","34.251.2.47","52.49.158.92","18.202.148.182","52.214.13.88","34.253.169.237" }),
+                new Tuple<string, string, List<string>>("bmaffiliate", "cKNeUCA9PzNFgnP7", new List<string> { "172.105.67.213"})
             };
 
             return result;

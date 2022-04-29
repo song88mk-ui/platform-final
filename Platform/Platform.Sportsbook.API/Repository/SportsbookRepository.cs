@@ -1690,9 +1690,16 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopFixturesTW(TWRequestDTO request)
         {
-            var key = $"ctf:{request.ClientId.ToString().ToUpper()}";
+            var mKey = $"nctf:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}";
 
-            var cache = _memCache.GetCache<List<ClientTopFixture>>(key);
+            var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
+
+            if (mCache != null)
+                return mCache;
+
+            var sKey = $"sctf:{request.ClientId.ToString().ToUpper()}";
+
+            var cache = _memCache.GetCache<List<ClientTopFixture>>(sKey);
 
             var clientFixtures = new List<ClientTopFixture>();
 
@@ -1701,7 +1708,7 @@ namespace Platform.Sportsbook.API.Repository
             else
             {
                 clientFixtures = await _sportsbookContext.ClientTopFixture.Where(c => c.ClientId == request.ClientId).ToListAsync();
-                _memCache.AddOrUpdateCache(key, clientFixtures, DateTimeOffset.UtcNow.AddMinutes(5));
+                _memCache.AddOrUpdateCache(sKey, clientFixtures, DateTimeOffset.UtcNow.AddMinutes(5));
             }
 
             if (clientFixtures.Count == 0)
@@ -1851,7 +1858,7 @@ namespace Platform.Sportsbook.API.Repository
                 if (finalResult.Count == 10) break;
             }
 
-            return new BaseResponseDTO<TWResponseDTO>
+            var returnResult = new BaseResponseDTO<TWResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
@@ -1860,6 +1867,11 @@ namespace Platform.Sportsbook.API.Repository
                     Fixtures = finalResult
                 }
             };
+
+            if (finalResult.Count > 0)
+                _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddSeconds(5));
+
+            return returnResult;
         }
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(TWFLiveFixtureCountRequestDTO request)
         {

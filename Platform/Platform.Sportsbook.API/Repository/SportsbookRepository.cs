@@ -2900,6 +2900,13 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixtures(TWDailyFixtureRequestDTO request)
         {
+            var mKey = $"ndf:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportId}:{request.MinuteUTCOffset}:{request.DateUTC}";
+
+            var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
+
+            if (mCache != null)
+                return mCache;
+
             var dateTimeRange = GetDateTimeRange(request.DateUTC, request.MinuteUTCOffset);
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
@@ -3025,7 +3032,7 @@ namespace Platform.Sportsbook.API.Repository
             else
                 finalResult = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
-            return new BaseResponseDTO<TWResponseDTO>
+            var returnResult = new BaseResponseDTO<TWResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
@@ -3034,6 +3041,16 @@ namespace Platform.Sportsbook.API.Repository
                     Fixtures = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList()
                 }
             };
+
+            if (finalResult.Count > 0)
+            {
+                if (request.DateUTC > DateTime.UtcNow)
+                    _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddMinutes(1));
+                else
+                    _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddSeconds(5));
+            }
+
+            return returnResult;
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixturesByLeague(TWLeagueDailyFixtureRequestDTO request)
         {

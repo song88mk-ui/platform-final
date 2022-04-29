@@ -404,6 +404,13 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues(TopLeaguesRequestDTO request)
         {
+            var mKey = $"nal:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportId}";
+
+            var mCache = _memCache.GetCache<BaseResponseDTO<TopLeaguesResponseDTO>>(mKey);
+
+            if (mCache != null)
+                return mCache;
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             if (IsOEEnable(request.ClientCode))
@@ -443,7 +450,7 @@ namespace Platform.Sportsbook.API.Repository
                 });
             }
 
-            return new BaseResponseDTO<TopLeaguesResponseDTO>
+            var returnResult = new BaseResponseDTO<TopLeaguesResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
@@ -452,6 +459,11 @@ namespace Platform.Sportsbook.API.Repository
                     TopLeagues = finalResult
                 }
             };
+
+            if (finalResult.Count > 0)
+                _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddSeconds(5));
+
+            return returnResult;
         }
 
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues2(TopLeaguesRequest2DTO request)
@@ -621,6 +633,13 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<SportsResponseDTO>> GetSports(SportsRequestDTO request)
         {
+            var mKey = $"ns:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportGroup.ToString().ToUpper()}";
+
+            var mCache = _memCache.GetCache<BaseResponseDTO<SportsResponseDTO>>(mKey);
+
+            if (mCache != null)
+                return mCache;
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
 
             if (request.SportGroup != Shared.Enums.SportGroup.All)
@@ -814,7 +833,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
             }
 
-            return new BaseResponseDTO<SportsResponseDTO>
+            var returnResult = new BaseResponseDTO<SportsResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
@@ -823,6 +842,11 @@ namespace Platform.Sportsbook.API.Repository
                     Sports = final
                 }
             };
+
+            if (final.Count > 0)
+                _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddSeconds(30));
+
+            return returnResult;
         }
         public async Task<BaseResponseDTO<MarketTemplateGroupResponseDTO>> GetMarketTemplateGroups()
         {
@@ -1428,6 +1452,13 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(UserFavoriteRequestDTO request)
         {
+            var mKey = $"nuf:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.UserId.ToUpper()}";
+
+            var mCache = _memCache.GetCache<BaseResponseDTO<UserFavoriteResponseDTO>>(mKey);
+
+            if (mCache != null)
+                return mCache;
+
             var result = new List<UserFavoriteDTO>();
             var favorites = await _sportsbookContext.UserFavorite.Where(c => c.UserId == $"{request.ClientCode}-{request.UserId}").ToListAsync();
 
@@ -1489,7 +1520,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
             }
 
-            return new BaseResponseDTO<UserFavoriteResponseDTO>
+            var returnResult = new BaseResponseDTO<UserFavoriteResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
@@ -1498,6 +1529,11 @@ namespace Platform.Sportsbook.API.Repository
                     Favorites = result.OrderBy(o => o.Name).ToList()
                 }
             };
+
+            if (result.Count > 0)
+                _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddMinutes(1));
+
+            return returnResult;
         }
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> AddFavorites(UserFavoriteInsertDeleteRequestDTO request)
         {

@@ -2200,6 +2200,13 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixturesByLeague(TWLeagueLiveFixtureRequestDTO request)
         {
+            var mKey = $"nlfbl:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportId}:{request.SegmentId}:{request.LeagueId}";
+
+            var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
+
+            if (mCache != null)
+                return mCache;
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Live && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.SegId == request.SegmentId && c.LeId == request.LeagueId);
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
 
@@ -2319,7 +2326,7 @@ namespace Platform.Sportsbook.API.Repository
                 });
             });
 
-            return new BaseResponseDTO<TWResponseDTO>
+            var returnResult = new BaseResponseDTO<TWResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
@@ -2328,6 +2335,11 @@ namespace Platform.Sportsbook.API.Repository
                     Fixtures = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList()
                 }
             };
+
+            if (finalResult.Count > 0)
+                _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddSeconds(5));
+
+            return returnResult;
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(TWTodayFixtureRequestDTO request)
         {
@@ -2530,6 +2542,13 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixturesByLeague(TWLeagueTodayFixtureRequestDTO request)
         {
+            var mKey = $"ntfbl:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.MinuteUTCOffset}:{request.SportId}:{request.SegmentId}:{request.LeagueId}";
+
+            var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
+
+            if (mCache != null)
+                return mCache;
+
             var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset);
 
             FilterDefinition<Fixture> fixtureFilter;
@@ -2710,10 +2729,20 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
 
+            if (finalResult.Count > 0)
+                _memCache.AddOrUpdateCache(mKey, final, DateTimeOffset.UtcNow.AddSeconds(5));
+
             return final;
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetUpcomingFixtures(TWUpcomingFixtureRequestDTO request)
         {
+            var mKey = $"nuf:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.MinuteUTCOffset}:{request.SportId}";
+
+            var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
+
+            if (mCache != null)
+                return mCache;
+
             var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset);
 
             FilterDefinition<Fixture> fixtureFilter;
@@ -2896,6 +2925,9 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
 
+            if (finalResult.Count > 0)
+                _memCache.AddOrUpdateCache(mKey, final, DateTimeOffset.UtcNow.AddSeconds(5));
+
             return final;
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixtures(TWDailyFixtureRequestDTO request)
@@ -3054,6 +3086,13 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixturesByLeague(TWLeagueDailyFixtureRequestDTO request)
         {
+            var mKey = $"ndfbl:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.MinuteUTCOffset}:{request.DateUTC}:{request.SportId}:{request.SegmentId}:{request.LeagueId}";
+
+            var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
+
+            if (mCache != null)
+                return mCache;
+
             var dateTimeRange = GetDateTimeRange(request.DateUTC, request.MinuteUTCOffset);
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.SegId == request.SegmentId && c.LeId == request.LeagueId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
@@ -3179,7 +3218,7 @@ namespace Platform.Sportsbook.API.Repository
             else
                 finalResult = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
-            return new BaseResponseDTO<TWResponseDTO>
+            var returnResult = new BaseResponseDTO<TWResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
@@ -3188,6 +3227,11 @@ namespace Platform.Sportsbook.API.Repository
                     Fixtures = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList()
                 }
             };
+
+            if (finalResult.Count > 0)
+                _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddSeconds(5));
+
+            return returnResult;
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetOutrightFixtures(TWOutrightFixtureRequestDTO request)
         {
@@ -3630,6 +3674,13 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWSegmentFixtureRequestDTO request)
         {
+            var mKey = $"nfbs:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportId}:{request.SegmentId}";
+
+            var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
+
+            if (mCache != null)
+                return mCache;
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.SegId == request.SegmentId);
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
 
@@ -3707,7 +3758,7 @@ namespace Platform.Sportsbook.API.Repository
             if (request.SportId == 5)
                 result = result.OrderBy(o => o.SegmentId).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
-            return new BaseResponseDTO<TWResponseDTO>
+            var returnResult = new BaseResponseDTO<TWResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
@@ -3716,9 +3767,21 @@ namespace Platform.Sportsbook.API.Repository
                     Fixtures = result
                 }
             };
+
+            if (result.Count > 0)
+                _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddSeconds(5));
+
+            return returnResult;
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWLeagueFixtureRequestDTO request)
         {
+            var mKey = $"nfbl:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportId}:{request.SegmentId}:{request.LeagueId}";
+
+            var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
+
+            if (mCache != null)
+                return mCache;
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.SegId == request.SegmentId && c.LeId == request.LeagueId);
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
 
@@ -3790,7 +3853,7 @@ namespace Platform.Sportsbook.API.Repository
                 Markets = GetMainMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode)
             }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
-            return new BaseResponseDTO<TWResponseDTO>
+            var returnResult = new BaseResponseDTO<TWResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
@@ -3799,6 +3862,11 @@ namespace Platform.Sportsbook.API.Repository
                     Fixtures = result
                 }
             };
+
+            if (result.Count > 0)
+                _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddSeconds(5));
+
+            return returnResult;
         }
         public async Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(TWSearchRequestDTO request)
         {

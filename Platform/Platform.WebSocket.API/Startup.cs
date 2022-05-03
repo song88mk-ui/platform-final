@@ -32,7 +32,10 @@ namespace Platform.WebSocket.API
 
             services.AddControllers();
 
-            services.AddSignalR();
+            services.AddSignalR(hubOptions => 
+            {
+                hubOptions.MaximumReceiveMessageSize = 5000000;
+            });
             services.AddResponseCompression(opts =>
             {
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(

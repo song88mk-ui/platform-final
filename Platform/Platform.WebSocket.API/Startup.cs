@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
@@ -86,7 +87,12 @@ namespace Platform.WebSocket.API
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHub<WebSocketRepository>("/platform");
+                endpoints.MapHub<WebSocketRepository>("/platform", options => 
+                {
+                    options.ApplicationMaxBufferSize = 5000000;
+                    options.TransportMaxBufferSize = 5000000;
+                    options.Transports = HttpTransportType.WebSockets | HttpTransportType.ServerSentEvents | HttpTransportType.LongPolling;
+                });
                 endpoints.MapControllers();
             });
         }

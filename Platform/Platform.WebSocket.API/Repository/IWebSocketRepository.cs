@@ -7,8 +7,8 @@ namespace Platform.WebSocket.API.Repository
 {
     public interface IWebSocketRepository
     {
-        Task PublishOddsChange(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, string clientCode, OutgoingOddsChange message);
-        Task PublishBetStopFixture(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, string clientCode, OutgoingBetStopFixture onBetStopFixture);
-        Task PublishBetStopGlobal(IHubContext<WebSocketRepository, IPlatformEvent> hubContext, string clientCode, OutgoingBetStopGlobal onBetStopGlobal);
+        Task PublishOddsChange(string clientCode, OutgoingOddsChange message);
+        Task PublishBetStopFixture(string clientCode, OutgoingBetStopFixture onBetStopFixture);
+        Task PublishBetStopGlobal(string clientCode, OutgoingBetStopGlobal onBetStopGlobal);
     }
 }

@@ -29,6 +29,8 @@ namespace Platform.WebSocket.API.Messages
         public bool IsOfLi { get; set; }
         public int FiStId { get; set; }
         public string FiStNa { get; set; }
+        public int FiTyId { get; set; }
+        public string FiTyNa { get; set; }
         public string Sc { get; set; }
         public string CuPe { get; set; }
         public int CuMi { get; set; }

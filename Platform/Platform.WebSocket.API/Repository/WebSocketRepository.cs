@@ -79,34 +79,10 @@ namespace Platform.WebSocket.API.Repository
             if (client.Item1 == true)
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"{client.Item2}");
-
-                //await Groups.AddToGroupAsync(Context.ConnectionId, $"{client.Item2}:{request.Endpoint.ToLower()}");
-
-                //using var scope = _provider.CreateScope();
-
-                //_platformContext = scope.ServiceProvider.GetRequiredService<PlatformContext>();
-
-                //var webSocket = await _platformContext.WebSocket.FindAsync(Context.ConnectionId);
-
-                //if (webSocket != null)
-                //{
-                //    webSocket.ClientCode = client.Item2.ToUpper();
-                //    webSocket.RequestURL = string.IsNullOrEmpty(request.RequestURL) ? string.Empty : request.RequestURL;
-
-                //    _platformContext.WebSocket.Update(webSocket);
-
-                //    await _platformContext.SaveChangesAsync();
-                //}
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"endpoint:{client.Item2}:{request.ChannelKey ?? string.Empty}");
             }
         }
-        public async Task SubscribeToEndpoint2(EndpointRequest request)
-        {
-            var client = await GetClient(request.ClientId);
-
-            if (client.Item1 == true)
-                await Groups.AddToGroupAsync(Context.ConnectionId, $"endpoint:{client.Item2}:{request.ChannelKey}");
-        }
-        public async Task UnsubsribeToEndpoint2(EndpointRequest request)
+        public async Task UnsubscribeToEndpoint(EndpointRequest request)
         {
             var client = await GetClient(request.ClientId);
 
@@ -144,8 +120,7 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task PublishBetStopFixture(string clientCode, OutgoingBetStopFixture message)
         {
-            await Clients.Group($"onbetslipbetstopfixture:{clientCode}:{message.FiId}").OnBetslipBetStopFixture(message);
-            await Clients.Groups(GetGroups(clientCode, message).AsReadOnly()).OnBetStopFixture(message);
+            await Clients.Group($"{clientCode}").OnBetStopFixture(message);
         }
         public async Task PublishBetStopGlobal(string clientCode, OutgoingBetStopGlobal message)
         {
@@ -176,31 +151,32 @@ namespace Platform.WebSocket.API.Repository
                 $"endpoint:{clientCode}:fixturedetails:{message.FiId}"
             };
 
-            //if (message.FiStId == (int)FixtureStatus.Prematch)
-            //{
-            //    result.Add($"endpoint:{clientCode}:sports:{message.SpId}:todayfixtures:{message.FiId}");
-            //    result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:todayfixtures:{message.FiId}");
-            //    result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:leagues:{message.LeId}:todayfixtures:{message.FiId}");
-            //}
-
-
-            return result;
-        }
-        private static List<string> GetGroups(string clientCode, OutgoingBetStopFixture message)
-        {
-            var result = new List<string>
+            if (message.FiStId == (int)FixtureStatus.Live)
             {
-                $"{clientCode}",
-                $"endpoint:{clientCode}:fixturedetails:{message.FiId}"
-            };
+                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:livefixtures");
+                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:leagues:{message.LeId}:livefixtures");
+            }
 
-            //if (message.FiStId == (int)FixtureStatus.Prematch)
-            //{
-            //    result.Add($"endpoint:{clientCode}:sports:{message.SpId}:todayfixtures:{message.FiId}");
-            //    result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:todayfixtures:{message.FiId}");
-            //    result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:leagues:{message.LeId}:todayfixtures:{message.FiId}");
-            //}
+            if (message.FiStId == (int)FixtureStatus.Prematch && 
+                message.FiStDa.Month == DateTime.UtcNow.Month && 
+                message.FiStDa.Day == DateTime.UtcNow.Day && 
+                message.FiStDa.Year == DateTime.UtcNow.Year &&
+                message.FiTyId == (int)FixtureType.Match)
+            {
+                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:todayfixtures");
+            }
 
+            if (message.FiStId == (int)FixtureStatus.Prematch &&
+                message.FiTyId == (int)FixtureType.Outright)
+            {
+                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:outrightfixtures");
+            }
+
+            result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:fixtures");
+            result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:leagues:{message.LeId}:fixtures");
+
+            //TODO: topleagues
+            //TODO: topfixtures
 
             return result;
         }

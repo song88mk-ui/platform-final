@@ -8,5 +8,8 @@ namespace Platform.WebSocket.API
         Task OnOddsChange(OutgoingOddsChange message);
         Task OnBetStopFixture(OutgoingBetStopFixture message);
         Task OnBetStopGlobal(OutgoingBetStopGlobal message);
+
+        Task OnBetslipOddsChange(OutgoingOddsChange message);
+        Task OnBetslipBetStopFixture(OutgoingBetStopFixture message);
     }
 }

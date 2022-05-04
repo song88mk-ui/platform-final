@@ -4,6 +4,7 @@ using Platform.Shared.Utility;
 using Platform.WebSocket.API.Data;
 using Platform.WebSocket.API.Messages;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -79,30 +80,64 @@ namespace Platform.WebSocket.API.Repository
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"{client.Item2}");
                 //await Groups.AddToGroupAsync(Context.ConnectionId, $"{client.Item2}:{request.Endpoint.ToLower()}");
 
-                using var scope = _provider.CreateScope();
+                //using var scope = _provider.CreateScope();
 
-                _platformContext = scope.ServiceProvider.GetRequiredService<PlatformContext>();
+                //_platformContext = scope.ServiceProvider.GetRequiredService<PlatformContext>();
 
-                var webSocket = await _platformContext.WebSocket.FindAsync(Context.ConnectionId);
+                //var webSocket = await _platformContext.WebSocket.FindAsync(Context.ConnectionId);
 
-                if (webSocket != null)
-                {
-                    webSocket.ClientCode = client.Item2.ToUpper();
-                    webSocket.RequestURL = string.IsNullOrEmpty(request.RequestURL) ? string.Empty : request.RequestURL;
+                //if (webSocket != null)
+                //{
+                //    webSocket.ClientCode = client.Item2.ToUpper();
+                //    webSocket.RequestURL = string.IsNullOrEmpty(request.RequestURL) ? string.Empty : request.RequestURL;
 
-                    _platformContext.WebSocket.Update(webSocket);
+                //    _platformContext.WebSocket.Update(webSocket);
 
-                    await _platformContext.SaveChangesAsync();
-                }
+                //    await _platformContext.SaveChangesAsync();
+                //}
+            }
+        }
+        public async Task SubscribeToBetslip(BetslipRequest request)
+        {
+            var client = await GetClient(request.ClientId);
+
+            if (client.Item1 == true)
+            {
+                var isLong = long.TryParse(request.FixtureId, out long fixtureId);
+
+                if (isLong)
+                    await Groups.AddToGroupAsync(Context.ConnectionId, $"onbetslipoddschange:{client.Item2}:{fixtureId}");
+            }
+        }
+        public async Task UnsubscribeToBetslip(BetslipRequest request)
+        {
+            var client = await GetClient(request.ClientId);
+
+            if (client.Item1 == true)
+            {
+                var isLong = long.TryParse(request.FixtureId, out long fixtureId);
+
+                if (isLong)
+                    await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onbetslipoddschange:{client.Item2}:{fixtureId}");
             }
         }
         public async Task PublishOddsChange(string clientCode, OutgoingOddsChange message)
         {
-            await Clients.Group($"{clientCode}").OnOddsChange(message);
+            await Clients.Group($"onbetslipoddschange:{clientCode}:{message.FiId}").OnBetslipOddsChange(message);
+
+            await Clients.Groups(new List<string>
+            {
+                $"{clientCode}"
+            }.AsReadOnly()).OnOddsChange(message);
         }
         public async Task PublishBetStopFixture(string clientCode, OutgoingBetStopFixture message)
         {
-            await Clients.Group($"{clientCode}").OnBetStopFixture(message);
+            await Clients.Group($"onbetslipbetstopfixture:{clientCode}:{message.FiId}").OnBetslipBetStopFixture(message);
+
+            await Clients.Groups(new List<string>
+            {
+                $"{clientCode}"
+            }.AsReadOnly()).OnBetStopFixture(message);
         }
         public async Task PublishBetStopGlobal(string clientCode, OutgoingBetStopGlobal message)
         {
@@ -129,8 +164,13 @@ namespace Platform.WebSocket.API.Repository
     public class EndpointRequest
     {
         public string ClientId { get; set; }
-        public string Endpoint { get; set; }
         public string RequestURL { get; set; }
+    }
+
+    public class BetslipRequest
+    {
+        public string ClientId { get; set; }
+        public string FixtureId { get; set; }
     }
 }
 

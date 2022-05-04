@@ -164,6 +164,7 @@ namespace Platform.WebSocket.API.Repository
                 message.FiTyId == (int)FixtureType.Match)
             {
                 result.Add($"endpoint:{clientCode}:sports:{message.SpId}:todayfixtures");
+                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:dailyfixtures");
             }
 
             if (message.FiStId == (int)FixtureStatus.Prematch &&

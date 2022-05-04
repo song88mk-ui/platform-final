@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
+using Platform.Shared.Enums;
 using Platform.Shared.Utility;
 using Platform.WebSocket.API.Data;
 using Platform.WebSocket.API.Messages;
@@ -78,6 +79,7 @@ namespace Platform.WebSocket.API.Repository
             if (client.Item1 == true)
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"{client.Item2}");
+
                 //await Groups.AddToGroupAsync(Context.ConnectionId, $"{client.Item2}:{request.Endpoint.ToLower()}");
 
                 //using var scope = _provider.CreateScope();
@@ -96,6 +98,20 @@ namespace Platform.WebSocket.API.Repository
                 //    await _platformContext.SaveChangesAsync();
                 //}
             }
+        }
+        public async Task SubscribeToEndpoint2(EndpointRequest request)
+        {
+            var client = await GetClient(request.ClientId);
+
+            if (client.Item1 == true)
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"endpoint:{client.Item2}:{request.ChannelKey}");
+        }
+        public async Task UnsubsribeToEndpoint2(EndpointRequest request)
+        {
+            var client = await GetClient(request.ClientId);
+
+            if (client.Item1 == true)
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"endpoint:{client.Item2}:{request.ChannelKey}");
         }
         public async Task SubscribeToBetslip(BetslipRequest request)
         {
@@ -124,20 +140,12 @@ namespace Platform.WebSocket.API.Repository
         public async Task PublishOddsChange(string clientCode, OutgoingOddsChange message)
         {
             await Clients.Group($"onbetslipoddschange:{clientCode}:{message.FiId}").OnBetslipOddsChange(message);
-
-            await Clients.Groups(new List<string>
-            {
-                $"{clientCode}"
-            }.AsReadOnly()).OnOddsChange(message);
+            await Clients.Groups(GetGroups(clientCode, message).AsReadOnly()).OnOddsChange(message);
         }
         public async Task PublishBetStopFixture(string clientCode, OutgoingBetStopFixture message)
         {
             await Clients.Group($"onbetslipbetstopfixture:{clientCode}:{message.FiId}").OnBetslipBetStopFixture(message);
-
-            await Clients.Groups(new List<string>
-            {
-                $"{clientCode}"
-            }.AsReadOnly()).OnBetStopFixture(message);
+            await Clients.Groups(GetGroups(clientCode, message).AsReadOnly()).OnBetStopFixture(message);
         }
         public async Task PublishBetStopGlobal(string clientCode, OutgoingBetStopGlobal message)
         {
@@ -160,11 +168,48 @@ namespace Platform.WebSocket.API.Repository
 
             return new Tuple<bool, string>(false, string.Empty);
         }
+        private static List<string> GetGroups(string clientCode, OutgoingOddsChange message)
+        {
+            var result = new List<string>
+            {
+                $"{clientCode}",
+                $"endpoint:{clientCode}:fixturedetails:{message.FiId}"
+            };
+
+            //if (message.FiStId == (int)FixtureStatus.Prematch)
+            //{
+            //    result.Add($"endpoint:{clientCode}:sports:{message.SpId}:todayfixtures:{message.FiId}");
+            //    result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:todayfixtures:{message.FiId}");
+            //    result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:leagues:{message.LeId}:todayfixtures:{message.FiId}");
+            //}
+
+
+            return result;
+        }
+        private static List<string> GetGroups(string clientCode, OutgoingBetStopFixture message)
+        {
+            var result = new List<string>
+            {
+                $"{clientCode}",
+                $"endpoint:{clientCode}:fixturedetails:{message.FiId}"
+            };
+
+            //if (message.FiStId == (int)FixtureStatus.Prematch)
+            //{
+            //    result.Add($"endpoint:{clientCode}:sports:{message.SpId}:todayfixtures:{message.FiId}");
+            //    result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:todayfixtures:{message.FiId}");
+            //    result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:leagues:{message.LeId}:todayfixtures:{message.FiId}");
+            //}
+
+
+            return result;
+        }
     }
     public class EndpointRequest
     {
         public string ClientId { get; set; }
-        public string RequestURL { get; set; }
+        public string ChannelKey { get; set; }
+        public List<string> Ids { get; set; }
     }
 
     public class BetslipRequest

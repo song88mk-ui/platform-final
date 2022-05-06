@@ -41,7 +41,6 @@ namespace Platform.WebSocket.API.Messages
         public List<OutgoingFixtureTranslation> FiNaTr { get; set; }
         public List<OutgoingMarket> Ma { get; set; }
     }
-
     public class OutgoingMarket
     {
         public OutgoingMarket()
@@ -59,7 +58,6 @@ namespace Platform.WebSocket.API.Messages
         public List<OutgoingMarketTranslation> MaNaTr { get; set; }
         public List<OutgoingSelection> Se { get; set; }
     }
-
     public class OutgoingSelection
     {
         public OutgoingSelection()

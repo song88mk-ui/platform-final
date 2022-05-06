@@ -118,6 +118,11 @@ namespace Platform.WebSocket.API.Repository
             await Clients.Group($"onbetslipoddschange:{clientCode}:{message.FiId}").OnBetslipOddsChange(message);
             await Clients.Groups(GetGroups(clientCode, message).AsReadOnly()).OnOddsChange(message);
         }
+        public async Task PublishOddsChangeDelta(string clientCode, OutgoingOddsChangeDelta message)
+        {
+            await Clients.Group($"onbetslipoddschange:{clientCode}:{message.FiId}").OnBetslipOddsChange(message);
+            await Clients.Groups(GetGroups(clientCode, message).AsReadOnly()).OnOddsChange(message);
+        }
         public async Task PublishBetStopFixture(string clientCode, OutgoingBetStopFixture message)
         {
             await Clients.Group($"{clientCode}").OnBetStopFixture(message);
@@ -160,6 +165,44 @@ namespace Platform.WebSocket.API.Repository
             if (message.FiStId == (int)FixtureStatus.Prematch && 
                 message.FiStDa.Month == DateTime.UtcNow.Month && 
                 message.FiStDa.Day == DateTime.UtcNow.Day && 
+                message.FiStDa.Year == DateTime.UtcNow.Year &&
+                message.FiTyId == (int)FixtureType.Match)
+            {
+                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:todayfixtures");
+                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:dailyfixtures");
+            }
+
+            if (message.FiStId == (int)FixtureStatus.Prematch &&
+                message.FiTyId == (int)FixtureType.Outright)
+            {
+                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:outrightfixtures");
+            }
+
+            result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:fixtures");
+            result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:leagues:{message.LeId}:fixtures");
+
+            //TODO: topleagues
+            //TODO: topfixtures
+
+            return result;
+        }
+        private static List<string> GetGroups(string clientCode, OutgoingOddsChangeDelta message)
+        {
+            var result = new List<string>
+            {
+                $"{clientCode}",
+                $"endpoint:{clientCode}:fixturedetails:{message.FiId}"
+            };
+
+            if (message.FiStId == (int)FixtureStatus.Live)
+            {
+                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:livefixtures");
+                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:leagues:{message.LeId}:livefixtures");
+            }
+
+            if (message.FiStId == (int)FixtureStatus.Prematch &&
+                message.FiStDa.Month == DateTime.UtcNow.Month &&
+                message.FiStDa.Day == DateTime.UtcNow.Day &&
                 message.FiStDa.Year == DateTime.UtcNow.Year &&
                 message.FiTyId == (int)FixtureType.Match)
             {

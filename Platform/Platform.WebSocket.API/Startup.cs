@@ -33,7 +33,7 @@ namespace Platform.WebSocket.API
 
             services.AddControllers();
 
-            //services.AddSignalR(hubOptions => 
+            //services.AddSignalR(hubOptions =>
             //{
             //    hubOptions.MaximumReceiveMessageSize = 5000000;
             //});
@@ -41,7 +41,9 @@ namespace Platform.WebSocket.API
             services.AddSignalR(hubOptions =>
             {
                 hubOptions.MaximumReceiveMessageSize = 5000000;
-            }).AddAzureSignalR("Endpoint=https://song88.service.signalr.net;AccessKey=5ES+/AH0OiMLbDQrsMZnXmNFpkHuUlEH2dfn3sFnRyw=;Version=1.0;");
+            })
+            .AddMessagePackProtocol()
+            .AddAzureSignalR("Endpoint=https://song88.service.signalr.net;AccessKey=5ES+/AH0OiMLbDQrsMZnXmNFpkHuUlEH2dfn3sFnRyw=;Version=1.0;");
 
             services.AddResponseCompression(opts =>
             {
@@ -103,7 +105,7 @@ namespace Platform.WebSocket.API
 
             //app.UseEndpoints(endpoints =>
             //{
-            //    endpoints.MapHub<WebSocketRepository>("/platform", options => 
+            //    endpoints.MapHub<WebSocketRepository>("/platform", options =>
             //    {
             //        options.ApplicationMaxBufferSize = 5000000;
             //        options.TransportMaxBufferSize = 5000000;

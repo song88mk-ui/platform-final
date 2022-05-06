@@ -43,13 +43,14 @@ namespace Platform.WebSocket.API
             {
                 hubOptions.MaximumReceiveMessageSize = 5000000;
             })
-            .AddMessagePackProtocol(options =>
-            {
-                options.SerializerOptions = MessagePackSerializerOptions
-                        .Standard
-                        .WithResolver(MessagePack.Resolvers.StandardResolver.Instance)
-                        .WithSecurity(MessagePackSecurity.UntrustedData);
-            })
+            .AddMessagePackProtocol()
+            //.AddMessagePackProtocol(options =>
+            //{
+            //    options.SerializerOptions = MessagePackSerializerOptions
+            //            .Standard
+            //            .WithResolver(MessagePack.Resolvers.StandardResolver.Instance)
+            //            .WithSecurity(MessagePackSecurity.UntrustedData);
+            //})
             .AddAzureSignalR("Endpoint=https://song88.service.signalr.net;AccessKey=5ES+/AH0OiMLbDQrsMZnXmNFpkHuUlEH2dfn3sFnRyw=;Version=1.0;");
 
             services.AddResponseCompression(opts =>

@@ -39,6 +39,12 @@ namespace Platform.WebSocket.API
             //    hubOptions.MaximumReceiveMessageSize = 5000000;
             //});
 
+            services.AddResponseCompression(opts =>
+            {
+                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+                    new[] { "application/octet-stream" });
+            });
+
             services.AddSignalR(hubOptions =>
             {
                 hubOptions.MaximumReceiveMessageSize = 5000000;
@@ -53,11 +59,7 @@ namespace Platform.WebSocket.API
             //})
             .AddAzureSignalR("Endpoint=https://song88.service.signalr.net;AccessKey=5ES+/AH0OiMLbDQrsMZnXmNFpkHuUlEH2dfn3sFnRyw=;Version=1.0;");
 
-            services.AddResponseCompression(opts =>
-            {
-                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-                    new[] { "application/octet-stream" });
-            });
+
 
             services.AddCors(options =>
             {
@@ -105,6 +107,8 @@ namespace Platform.WebSocket.API
             {
                 endpoints.MapControllers();
             });
+
+            app.UseResponseCompression();
 
             app.UseAzureSignalR(endpoints =>
             {

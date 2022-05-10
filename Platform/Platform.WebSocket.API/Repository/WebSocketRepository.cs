@@ -78,8 +78,10 @@ namespace Platform.WebSocket.API.Repository
 
             if (client.Item1 == true)
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, $"{client.Item2}");
-                await Groups.AddToGroupAsync(Context.ConnectionId, $"endpoint:{client.Item2}:{request.ChannelKey ?? string.Empty}");
+                if (string.IsNullOrEmpty(request.ChannelKey) == false)
+                    await Groups.AddToGroupAsync(Context.ConnectionId, $"endpoint:{client.Item2}:{request.ChannelKey}");
+                else
+                    await Groups.AddToGroupAsync(Context.ConnectionId, $"{client.Item2}");
             }
         }
         public async Task UnsubscribeToEndpoint(EndpointRequest request)
@@ -229,7 +231,6 @@ namespace Platform.WebSocket.API.Repository
     {
         public string ClientId { get; set; }
         public string ChannelKey { get; set; }
-        public List<string> Ids { get; set; }
     }
 
     public class BetslipRequest

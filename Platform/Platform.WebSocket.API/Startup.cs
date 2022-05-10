@@ -34,11 +34,6 @@ namespace Platform.WebSocket.API
 
             services.AddControllers();
 
-            //services.AddSignalR(hubOptions =>
-            //{
-            //    hubOptions.MaximumReceiveMessageSize = 5000000;
-            //});
-
             services.AddResponseCompression(opts =>
             {
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
@@ -48,16 +43,21 @@ namespace Platform.WebSocket.API
             services.AddSignalR(hubOptions =>
             {
                 hubOptions.MaximumReceiveMessageSize = 5000000;
-            })
-            .AddMessagePackProtocol()
-            //.AddMessagePackProtocol(options =>
+            });
+
+            //services.AddSignalR(hubOptions =>
             //{
-            //    options.SerializerOptions = MessagePackSerializerOptions
-            //            .Standard
-            //            .WithResolver(MessagePack.Resolvers.StandardResolver.Instance)
-            //            .WithSecurity(MessagePackSecurity.UntrustedData);
+            //    hubOptions.MaximumReceiveMessageSize = 5000000;
             //})
-            .AddAzureSignalR("Endpoint=https://song88.service.signalr.net;AccessKey=5ES+/AH0OiMLbDQrsMZnXmNFpkHuUlEH2dfn3sFnRyw=;Version=1.0;");
+            //.AddMessagePackProtocol()
+            ////.AddMessagePackProtocol(options =>
+            ////{
+            ////    options.SerializerOptions = MessagePackSerializerOptions
+            ////            .Standard
+            ////            .WithResolver(MessagePack.Resolvers.StandardResolver.Instance)
+            ////            .WithSecurity(MessagePackSecurity.UntrustedData);
+            ////})
+            //.AddAzureSignalR("Endpoint=https://song88.service.signalr.net;AccessKey=5ES+/AH0OiMLbDQrsMZnXmNFpkHuUlEH2dfn3sFnRyw=;Version=1.0;");
 
 
 
@@ -103,28 +103,28 @@ namespace Platform.WebSocket.API
 
             app.UseCors("AllowAllOrigins");
 
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
-
             app.UseResponseCompression();
-
-            app.UseAzureSignalR(endpoints =>
-            {
-                endpoints.MapHub<WebSocketRepository>("/platform");
-            });
 
             //app.UseEndpoints(endpoints =>
             //{
-            //    endpoints.MapHub<WebSocketRepository>("/platform", options =>
-            //    {
-            //        options.ApplicationMaxBufferSize = 5000000;
-            //        options.TransportMaxBufferSize = 5000000;
-            //        options.Transports = HttpTransportType.WebSockets | HttpTransportType.ServerSentEvents | HttpTransportType.LongPolling;
-            //    });
             //    endpoints.MapControllers();
             //});
+
+            //app.UseAzureSignalR(endpoints =>
+            //{
+            //    endpoints.MapHub<WebSocketRepository>("/platform");
+            //});
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHub<WebSocketRepository>("/platform", options =>
+                {
+                    options.ApplicationMaxBufferSize = 5000000;
+                    options.TransportMaxBufferSize = 5000000;
+                    options.Transports = HttpTransportType.WebSockets | HttpTransportType.ServerSentEvents | HttpTransportType.LongPolling;
+                });
+                endpoints.MapControllers();
+            });
         }
     }
 }

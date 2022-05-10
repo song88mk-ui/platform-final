@@ -171,7 +171,7 @@ namespace Platform.Placement.Servicev2.Repository
 
                                 scope.Complete();
 
-                                messageBroker.Publish(payload, "OnBetPlacement", "r.bet.operator", correlationId);
+                                messageBroker.Publish(payload, "OnBetPlacement", "r.bet.operator", correlationId, 10);
                             }
                             else
                             {

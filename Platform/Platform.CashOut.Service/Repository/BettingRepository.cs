@@ -106,7 +106,7 @@ namespace Platform.CashOut.Service.Repository
 
                                 if (isPublish)
                                 {
-                                    messageBroker.Publish(payload, "OnBetFullCashOut", "r.bet.operator", correlationId);
+                                    messageBroker.Publish(payload, "OnBetFullCashOut", "r.bet.operator", correlationId, 10);
 
                                     messageBroker.Publish(new OnBetStatus
                                     {

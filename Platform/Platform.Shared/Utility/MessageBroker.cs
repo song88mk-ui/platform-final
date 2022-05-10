@@ -2,6 +2,7 @@
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 
@@ -27,6 +28,7 @@ namespace Platform.Shared.Utility
         private string _routingKey = string.Empty;
         private string _prefetchCount = string.Empty;
         private bool _isExclusive = false;
+        private bool _isPriority = false;
 
         private ConnectionFactory _externalConnectionFactory;
         private IConnection _externalConnection;
@@ -152,6 +154,7 @@ namespace Platform.Shared.Utility
             _consumerName = _configuration["MessageBroker:Consumer"];
             _routingKey = _configuration["MessageBroker:RoutingKey"];
             _prefetchCount = string.IsNullOrEmpty(_configuration["MessageBroker:PrefetchCount"]) ? "1000" : _configuration["MessageBroker:PrefetchCount"];
+            _isPriority = string.IsNullOrEmpty(_configuration["MessageBroker:IsPriority"]) ? false : Convert.ToBoolean(_configuration["MessageBroker:IsPriority"]);
 
             if (_connection == null)
             {
@@ -175,7 +178,16 @@ namespace Platform.Shared.Utility
                 if (!string.IsNullOrEmpty(_queue))
                 {
                     _model.ExchangeDeclare(_exchange, "topic", true, false, null);
-                    _model.QueueDeclare(_queue, true, false, false, null);
+
+                    if (_isPriority)
+                    {
+                        var dictionary = new Dictionary<string, object>();
+                        dictionary.Add("x-max-priority", 10);
+
+                        _model.QueueDeclare(_queue, true, false, false, dictionary);
+                    }
+                    else
+                        _model.QueueDeclare(_queue, true, false, false, null);
 
                     foreach (var routingKey in _routingKey.Split('|'))
                         _model.QueueBind(_queue, _exchange, routingKey, null);
@@ -269,6 +281,18 @@ namespace Platform.Shared.Utility
             properties.CorrelationId = correlationId;
             properties.DeliveryMode = 2;
             properties.Type = messageType;
+
+            var payloadBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload));
+
+            _model.BasicPublish(_exchange, routingKey, properties, payloadBytes);
+        }
+        public void Publish<T>(T payload, string messageType, string routingKey, string correlationId, int priority)
+        {
+            var properties = _model.CreateBasicProperties();
+            properties.CorrelationId = correlationId;
+            properties.DeliveryMode = 2;
+            properties.Type = messageType;
+            properties.Priority = Convert.ToByte(priority);
 
             var payloadBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload));
 

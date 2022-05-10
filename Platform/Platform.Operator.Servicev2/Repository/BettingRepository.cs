@@ -642,7 +642,7 @@ namespace Platform.Operator.Servicev2.Repository
                     ClientCode = betData.ClientCode,
                     URL = $"{betData.Endpoint}{path}",
                     BetId = betData.BetId.ToString().ToUpper(),
-                    Info = JsonSerializer.Serialize(ex.Message),
+                    Info = JsonSerializer.Serialize(new { message = ex.Message, stackTrace = ex.StackTrace }),
                     OperatorToken = betData.OperatorToken,
                     CorrelationId = correlationId,
                     Timestamp = DateTime.UtcNow
@@ -804,7 +804,7 @@ namespace Platform.Operator.Servicev2.Repository
                     ClientCode = message.Bet.ClientCode,
                     URL = $"{message.Bet.Endpoint}{path}",
                     BetId = message.Bet.BetId.ToString().ToUpper(),
-                    Info = JsonSerializer.Serialize(ex.Message),
+                    Info = JsonSerializer.Serialize(new { message = ex.Message, stackTrace = ex.StackTrace }),
                     OperatorToken = message.Bet.OperatorToken,
                     CorrelationId = correlationId,
                     Timestamp = DateTime.UtcNow
@@ -972,7 +972,7 @@ namespace Platform.Operator.Servicev2.Repository
                     ClientCode = message.Bet.ClientCode,
                     URL = $"{message.Bet.Endpoint}{path}",
                     BetId = message.Bet.BetId.ToString().ToUpper(),
-                    Info = JsonSerializer.Serialize(ex.Message),
+                    Info = JsonSerializer.Serialize(new { message = ex.Message, stackTrace = ex.StackTrace }),
                     OperatorToken = message.Bet.OperatorToken,
                     CorrelationId = correlationId,
                     Timestamp = DateTime.UtcNow
@@ -1142,7 +1142,7 @@ namespace Platform.Operator.Servicev2.Repository
                     ClientCode = message.Bet.ClientCode,
                     URL = $"{message.Bet.Endpoint}{path}",
                     BetId = message.Bet.BetId.ToString().ToUpper(),
-                    Info = JsonSerializer.Serialize(ex.Message),
+                    Info = JsonSerializer.Serialize(new { message = ex.Message, stackTrace = ex.StackTrace }),
                     OperatorToken = message.Bet.OperatorToken,
                     CorrelationId = correlationId,
                     Timestamp = DateTime.UtcNow
@@ -1248,7 +1248,7 @@ namespace Platform.Operator.Servicev2.Repository
                     ClientCode = message.OnBetSettlement.Bet.ClientCode,
                     URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                     BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
-                    Info = JsonSerializer.Serialize(ex.Message),
+                    Info = JsonSerializer.Serialize(new { message = ex.Message, stackTrace = ex.StackTrace }),
                     OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
                     CorrelationId = correlationId,
                     Timestamp = DateTime.UtcNow
@@ -1352,7 +1352,7 @@ namespace Platform.Operator.Servicev2.Repository
                     ClientCode = message.OnBetSettlement.Bet.ClientCode,
                     URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                     BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
-                    Info = JsonSerializer.Serialize(ex.Message),
+                    Info = JsonSerializer.Serialize(new { message = ex.Message, stackTrace = ex.StackTrace }),
                     OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
                     CorrelationId = correlationId,
                     Timestamp = DateTime.UtcNow
@@ -1456,7 +1456,7 @@ namespace Platform.Operator.Servicev2.Repository
                     ClientCode = message.OnBetSettlement.Bet.ClientCode,
                     URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
                     BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
-                    Info = JsonSerializer.Serialize(ex.Message),
+                    Info = JsonSerializer.Serialize(new { message = ex.Message, stackTrace = ex.StackTrace }),
                     OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
                     CorrelationId = correlationId,
                     Timestamp = DateTime.UtcNow

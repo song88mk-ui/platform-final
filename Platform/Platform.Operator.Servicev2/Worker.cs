@@ -353,7 +353,7 @@ namespace Platform.Operator.Servicev2
             }
         }
 
-        private void ProcessMessage(BasicDeliverEventArgs e)
+        private void ProcessMessage(BasicDeliverEventArgs e, string threadId)
         {
             var payload = Encoding.UTF8.GetString(e.Body);
             var messageType = e.BasicProperties.Type;
@@ -367,28 +367,28 @@ namespace Platform.Operator.Servicev2
                         var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
                         Console.WriteLine($"{DateTime.UtcNow} {onBetPlacement.Bet.BetId} - OnBetPlacement");
 
-                        _bettingRepository.ProcesssBetPlacement(onBetPlacement, _messageBroker, correlationId);
+                        _bettingRepository.ProcesssBetPlacement(onBetPlacement, _messageBroker, correlationId, threadId);
                         break;
 
                     case "OnBetFullCashOut":
                         var onBetFullCashout = JsonSerializer.Deserialize<OnBetSettlement>(payload);
                         Console.WriteLine($"{DateTime.UtcNow} {onBetFullCashout.Bet.BetId} - OnBetFullCashOut");
 
-                        _bettingRepository.ProcessBetFullCashOut(onBetFullCashout, _messageBroker, correlationId);
+                        _bettingRepository.ProcessBetFullCashOut(onBetFullCashout, _messageBroker, correlationId, threadId);
                         break;
 
                     case "OnBetSettlement":
                         var onBetSettlement = JsonSerializer.Deserialize<OnBetSettlement>(payload);
                         Console.WriteLine($"{DateTime.UtcNow} {onBetSettlement.Bet.BetId} - OnBetSettlement");
 
-                        _bettingRepository.ProcesssBetSettlement(onBetSettlement, _messageBroker, correlationId);
+                        _bettingRepository.ProcesssBetSettlement(onBetSettlement, _messageBroker, correlationId, threadId);
                         break;
 
                     case "OnBetCancellation":
                         var onBetCancellation = JsonSerializer.Deserialize<OnBetSettlement>(payload);
                         Console.WriteLine($"{DateTime.UtcNow} {onBetCancellation.Bet.BetId} - OnBetCancellation");
 
-                        _bettingRepository.ProcesssBetCancellation(onBetCancellation, _messageBroker, correlationId);
+                        _bettingRepository.ProcesssBetCancellation(onBetCancellation, _messageBroker, correlationId, threadId);
                         break;
                 }
 
@@ -406,7 +406,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messages0.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "0");
             }
         }
 
@@ -415,7 +415,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messages1.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "1");
             }
         }
 
@@ -424,7 +424,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messages2.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "2");
             }
         }
 
@@ -433,7 +433,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messages3.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "3");
             }
         }
 
@@ -442,7 +442,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messages4.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "4");
             }
         }
 
@@ -451,7 +451,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messages5.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "5");
             }
         }
 
@@ -460,7 +460,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messages6.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "6");
             }
         }
 
@@ -469,7 +469,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messages7.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "7");
             }
         }
 
@@ -478,7 +478,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messages8.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "8");
             }
         }
 
@@ -487,7 +487,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messages9.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "9");
             }
         }
 
@@ -496,7 +496,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesA.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "A");
             }
         }
 
@@ -505,7 +505,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesB.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "B");
             }
         }
 
@@ -514,7 +514,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesC.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "C");
             }
         }
 
@@ -523,7 +523,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesD.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "D");
             }
         }
 
@@ -532,7 +532,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesE.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "E");
             }
         }
 
@@ -541,7 +541,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesF.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "F");
             }
         }
 
@@ -550,7 +550,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesG.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "G");
             }
         }
 
@@ -559,7 +559,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesH.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "H");
             }
         }
 
@@ -568,7 +568,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesI.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "I");
             }
         }
 
@@ -577,7 +577,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesJ.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "J");
             }
         }
 
@@ -586,7 +586,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesK.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "K");
             }
         }
 
@@ -595,7 +595,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesL.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "L");
             }
         }
 
@@ -604,7 +604,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesM.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "M");
             }
         }
 
@@ -613,7 +613,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesN.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "N");
             }
         }
 
@@ -622,7 +622,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesO.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "O");
             }
         }
 
@@ -631,7 +631,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesP.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "P");
             }
         }
 
@@ -640,7 +640,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesQ.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "Q");
             }
         }
 
@@ -649,7 +649,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesR.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "R");
             }
         }
 
@@ -658,7 +658,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesS.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "S");
             }
         }
 
@@ -667,7 +667,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesT.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "T");
             }
         }
 
@@ -676,7 +676,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesU.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "U");
             }
         }
 
@@ -685,7 +685,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesV.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "V");
             }
         }
 
@@ -694,7 +694,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesW.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "W");
             }
         }
 
@@ -703,7 +703,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesX.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "X");
             }
         }
 
@@ -712,7 +712,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesY.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "Y");
             }
         }
 
@@ -721,7 +721,7 @@ namespace Platform.Operator.Servicev2
             while (true)
             {
                 var message = _messagesZ.Take();
-                ProcessMessage(message);
+                ProcessMessage(message, "Z");
             }
         }
     }

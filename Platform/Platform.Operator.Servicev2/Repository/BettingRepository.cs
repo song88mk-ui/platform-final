@@ -21,54 +21,59 @@ namespace Platform.Operator.Servicev2.Repository
     public class BettingRepository : IBettingRepository
     {
         private readonly IConfiguration _configuration;
-        private List<HttpClient> _httpClients = new List<HttpClient>();
+        private List<Tuple<string, HttpClient>> _httpClients = new List<Tuple<string, HttpClient>>();
+        private readonly object _lock = new object();
         public BettingRepository(IConfiguration configuration)
         {
             _configuration = configuration;
         }
 
-        private HttpClient GetHttpClient(string endpoint, string operatorToken, string clientId)
+        private HttpClient GetHttpClient(string threadId, string endpoint, string operatorToken, string clientId)
         {
-            var result = new HttpClient
+            var client = _httpClients.Where(c => c.Item1 == threadId).ToList();
+            var httpClient = client.Where(c => c.Item2.BaseAddress.OriginalString == endpoint).FirstOrDefault();
+
+            if (httpClient == null)
             {
-                BaseAddress = new Uri(endpoint),
-                Timeout = TimeSpan.FromSeconds(5)
-            };
+                var newHttpClient = new HttpClient
+                {
+                    BaseAddress = new Uri(endpoint),
+                    Timeout = TimeSpan.FromSeconds(5)
+                };
 
-            result.DefaultRequestHeaders.Add("x-client-id", clientId);
-            result.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+                newHttpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
+                newHttpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
 
-            return result;
+                lock (_lock)
+                    _httpClients.Add(new Tuple<string, HttpClient>(threadId, newHttpClient));
+
+                return newHttpClient;
+            }
+            else
+            {
+                httpClient.Item2.DefaultRequestHeaders.Remove("x-client-id");
+                httpClient.Item2.DefaultRequestHeaders.Remove("x-operator-token");
+
+                httpClient.Item2.DefaultRequestHeaders.Add("x-client-id", clientId);
+                httpClient.Item2.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+
+                return httpClient.Item2;
+            }
         }
-
-        //private HttpClient GetHttpClient(string endpoint, string operatorToken)
+        //private HttpClient GetHttpClient(string endpoint, string operatorToken, string clientId)
         //{
-        //    var result = _httpClients.Where(c => c.BaseAddress.OriginalString == endpoint).FirstOrDefault();
-
-        //    if (result == null)
+        //    var result = new HttpClient
         //    {
-        //        var newHttpClient = new HttpClient
-        //        {
-        //            BaseAddress = new Uri(endpoint),
-        //            Timeout = TimeSpan.FromSeconds(5)
-        //        };
+        //        BaseAddress = new Uri(endpoint),
+        //        Timeout = TimeSpan.FromSeconds(5)
+        //    };
 
-        //        newHttpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+        //    result.DefaultRequestHeaders.Add("x-client-id", clientId);
+        //    result.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
 
-        //        _httpClients.Add(newHttpClient);
-
-        //        return newHttpClient;
-        //    }
-        //    else
-        //    {
-        //        result.DefaultRequestHeaders.Remove("x-operator-token");
-        //        result.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
-
-        //        return result;
-        //    }
-
+        //    return result;
         //}
-        private void CancelBet(Guid betId, string reason, string correlationId, IMessageBroker messageBroker, bool isFreebet, bool isBoosted)
+        private void CancelBet(Guid betId, string reason, string correlationId, IMessageBroker messageBroker, bool isFreebet, bool isBoosted, string threadId)
         {
             var betData = new Bet();
             var betSelectionData = new List<BetSelection>();
@@ -215,7 +220,7 @@ namespace Platform.Operator.Servicev2.Repository
                 Bet = betData,
                 BetSelections = betSelectionData,
                 Message = reason
-            }, messageBroker, correlationId);
+            }, messageBroker, correlationId, threadId);
         }
         private void AcceptBet(Guid betId, string correlationId, IMessageBroker messageBroker, OperatorBetResponseDTO operatorResponse, bool isBoosted = false)
         {
@@ -499,7 +504,7 @@ namespace Platform.Operator.Servicev2.Repository
             }
         }
 
-        public void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId)
+        public void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId, string threadId)
         {
             var path = "/v1/bet/placement";
 
@@ -561,7 +566,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(betData.Endpoint, betData.OperatorToken, betData.ClientId).PostAsync($"{betData.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(threadId, betData.Endpoint, betData.OperatorToken, betData.ClientId).PostAsync($"{betData.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -612,7 +617,7 @@ namespace Platform.Operator.Servicev2.Repository
                         else
                             betMessage = result.Message;
 
-                        CancelBet(betData.BetId, betMessage, Guid.NewGuid().ToString().ToUpper(), messageBroker, result.IsFreeBet, message.IsBoosted);
+                        CancelBet(betData.BetId, betMessage, Guid.NewGuid().ToString().ToUpper(), messageBroker, result.IsFreeBet, message.IsBoosted, threadId);
                     }
                     else
                     {
@@ -629,7 +634,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted);
+                        CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId);
                     }
                 }
             }
@@ -648,10 +653,10 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted);
+                CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId);
             }
         }
-        public void ProcessBetFullCashOut(OnBetSettlement message, IMessageBroker messageBroker, string correlationId)
+        public void ProcessBetFullCashOut(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId)
         {
             if (message.IsRetry)
             {
@@ -727,7 +732,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -774,7 +779,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId);
+                        RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId, threadId);
                     }
                     else
                     {
@@ -791,7 +796,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId);
+                        RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId, threadId);
                     }
                 }
             }
@@ -810,10 +815,10 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId);
+                RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId, threadId);
             }
         }
-        public void ProcesssBetSettlement(OnBetSettlement message, IMessageBroker messageBroker, string correlationId)
+        public void ProcesssBetSettlement(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId)
         {
             if (message.IsRetry)
             {
@@ -895,7 +900,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -942,7 +947,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId);
+                        RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
                     }
                     else
                     {
@@ -959,7 +964,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId);
+                        RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
                     }
                 }
             }
@@ -978,10 +983,10 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId);
+                RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
             }
         }
-        public void ProcesssBetCancellation(OnBetSettlement message, IMessageBroker messageBroker, string correlationId)
+        public void ProcesssBetCancellation(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId)
         {
             if (message.IsRetry)
             {
@@ -1063,7 +1068,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -1111,7 +1116,7 @@ namespace Platform.Operator.Servicev2.Repository
                         });
 
                         messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
-                        RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId);
+                        RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId, threadId);
                     }
                     else
                     {
@@ -1129,7 +1134,7 @@ namespace Platform.Operator.Servicev2.Repository
                         });
 
                         messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
-                        RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId);
+                        RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId, threadId);
                     }
                 }
             }
@@ -1149,11 +1154,11 @@ namespace Platform.Operator.Servicev2.Repository
                 });
 
                 messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
-                RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId);
+                RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId, threadId);
             }
         }
 
-        private void RetryBetFullCashOut(OnBetSettlementRetry message, OperatorBetSettlementRequestDTO payload, string messageType, IMessageBroker messageBroker, string correlationId)
+        private void RetryBetFullCashOut(OnBetSettlementRetry message, OperatorBetSettlementRequestDTO payload, string messageType, IMessageBroker messageBroker, string correlationId, string threadId)
         {
             if (message.RemainingRetries == 0)
             {
@@ -1180,7 +1185,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId).PostAsync($"{message.OnBetSettlement.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(threadId, message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId).PostAsync($"{message.OnBetSettlement.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -1218,7 +1223,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetFullCashOut(message, payload, messageType, messageBroker, correlationId);
+                        RetryBetFullCashOut(message, payload, messageType, messageBroker, correlationId, threadId);
                     }
                     else
                     {
@@ -1235,7 +1240,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetFullCashOut(message, payload, messageType, messageBroker, correlationId);
+                        RetryBetFullCashOut(message, payload, messageType, messageBroker, correlationId, threadId);
                     }
                 }
             }
@@ -1254,10 +1259,10 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                RetryBetFullCashOut(message, payload, messageType, messageBroker, correlationId);
+                RetryBetFullCashOut(message, payload, messageType, messageBroker, correlationId, threadId);
             }
         }
-        private void RetryBetSettlement(OnBetSettlementRetry message, OperatorBetSettlementRequestDTO payload, string messageType, IMessageBroker messageBroker, string correlationId)
+        private void RetryBetSettlement(OnBetSettlementRetry message, OperatorBetSettlementRequestDTO payload, string messageType, IMessageBroker messageBroker, string correlationId, string threadId)
         {
             if (message.RemainingRetries == 0)
             {
@@ -1284,7 +1289,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId).PostAsync($"{message.OnBetSettlement.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(threadId, message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId).PostAsync($"{message.OnBetSettlement.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -1322,7 +1327,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetSettlement(message, payload, messageType, messageBroker, correlationId);
+                        RetryBetSettlement(message, payload, messageType, messageBroker, correlationId, threadId);
                     }
                     else
                     {
@@ -1339,7 +1344,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetSettlement(message, payload, messageType, messageBroker, correlationId);
+                        RetryBetSettlement(message, payload, messageType, messageBroker, correlationId, threadId);
                     }
                 }
             }
@@ -1358,10 +1363,10 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                RetryBetSettlement(message, payload, messageType, messageBroker, correlationId);
+                RetryBetSettlement(message, payload, messageType, messageBroker, correlationId, threadId);
             }
         }
-        private void RetryBetCancellation(OnBetSettlementRetry message, OperatorBetSettlementRequestDTO payload, string messageType, IMessageBroker messageBroker, string correlationId)
+        private void RetryBetCancellation(OnBetSettlementRetry message, OperatorBetSettlementRequestDTO payload, string messageType, IMessageBroker messageBroker, string correlationId, string threadId)
         {
             if (message.RemainingRetries == 0)
             {
@@ -1388,7 +1393,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId).PostAsync($"{message.OnBetSettlement.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(threadId, message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId).PostAsync($"{message.OnBetSettlement.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -1426,7 +1431,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetCancellation(message, payload, messageType, messageBroker, correlationId);
+                        RetryBetCancellation(message, payload, messageType, messageBroker, correlationId, threadId);
                     }
                     else
                     {
@@ -1443,7 +1448,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetCancellation(message, payload, messageType, messageBroker, correlationId);
+                        RetryBetCancellation(message, payload, messageType, messageBroker, correlationId, threadId);
                     }
                 }
             }
@@ -1462,7 +1467,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                RetryBetCancellation(message, payload, messageType, messageBroker, correlationId);
+                RetryBetCancellation(message, payload, messageType, messageBroker, correlationId, threadId);
             }
         }
     }

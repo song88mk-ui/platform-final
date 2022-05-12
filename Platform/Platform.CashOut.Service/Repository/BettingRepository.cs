@@ -47,6 +47,7 @@ namespace Platform.CashOut.Service.Repository
                         {
                             if (bet.BetStatusId != (int)BetStatus.Running || bet.IsFreeBet)
                             {
+                                //TODO: delete when TW is no longer the frontend
                                 messageBroker.Publish(new OnBetStatus
                                 {
                                     ClientId = message.ClientId.ToString().ToUpper(),
@@ -55,6 +56,15 @@ namespace Platform.CashOut.Service.Repository
                                     BetStatus = (BetStatus)bet.BetStatusId,
                                     Message = "Cashout request has been declined"
                                 }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                                messageBroker.Publish(new OnBetStatus
+                                {
+                                    ClientId = message.ClientId.ToString().ToUpper(),
+                                    UserId = message.UserId,
+                                    BetId = message.BetId.ToString().ToUpper(),
+                                    BetStatus = (BetStatus)bet.BetStatusId,
+                                    Message = "Cashout request has been declined"
+                                }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
                                 messageBroker.Publish(new OnCashOutResult
                                 {
@@ -108,6 +118,7 @@ namespace Platform.CashOut.Service.Repository
                                 {
                                     messageBroker.Publish(payload, "OnBetFullCashOut", "r.bet.operator", correlationId, 10);
 
+                                    //TODO: delete when TW is no longer the frontend
                                     messageBroker.Publish(new OnBetStatus
                                     {
                                         ClientId = message.ClientId.ToString().ToUpper(),
@@ -116,10 +127,20 @@ namespace Platform.CashOut.Service.Repository
                                         BetStatus = (BetStatus)payload.Bet.BetStatusId,
                                         Message = "Cashout request has been accepted"
                                     }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                                    messageBroker.Publish(new OnBetStatus
+                                    {
+                                        ClientId = message.ClientId.ToString().ToUpper(),
+                                        UserId = message.UserId,
+                                        BetId = message.BetId.ToString().ToUpper(),
+                                        BetStatus = (BetStatus)payload.Bet.BetStatusId,
+                                        Message = "Cashout request has been accepted"
+                                    }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
                                 }
                             }
                             else
                             {
+                                //TODO: delete when TW is no longer the frontend
                                 messageBroker.Publish(new OnBetStatus
                                 {
                                     ClientId = message.ClientId.ToString().ToUpper(),
@@ -128,6 +149,15 @@ namespace Platform.CashOut.Service.Repository
                                     BetStatus = BetStatus.Running,
                                     Message = "Cashout request has been declined"
                                 }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                                messageBroker.Publish(new OnBetStatus
+                                {
+                                    ClientId = message.ClientId.ToString().ToUpper(),
+                                    UserId = message.UserId,
+                                    BetId = message.BetId.ToString().ToUpper(),
+                                    BetStatus = BetStatus.Running,
+                                    Message = "Cashout request has been declined"
+                                }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
                                 messageBroker.Publish(new OnCashOutResult
                                 {
@@ -148,6 +178,7 @@ namespace Platform.CashOut.Service.Repository
             }
             catch (Exception ex)
             {
+                //TODO: delete when TW is no longer the frontend
                 messageBroker.Publish(new OnBetStatus
                 {
                     ClientId = message.ClientId.ToString().ToUpper(),
@@ -156,6 +187,15 @@ namespace Platform.CashOut.Service.Repository
                     BetStatus = BetStatus.Running,
                     Message = "Cashout request has been declined"
                 }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                messageBroker.Publish(new OnBetStatus
+                {
+                    ClientId = message.ClientId.ToString().ToUpper(),
+                    UserId = message.UserId,
+                    BetId = message.BetId.ToString().ToUpper(),
+                    BetStatus = BetStatus.Running,
+                    Message = "Cashout request has been declined"
+                }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
                 messageBroker.Publish(new OnCashOutResult
                 {
@@ -444,6 +484,7 @@ namespace Platform.CashOut.Service.Repository
 
                             if (currentProbability == null)
                             {
+                                //TODO: delete when TW is no longer the frontend
                                 messageBroker.Publish(new OnBetStatus
                                 {
                                     ClientId = message.ClientId,
@@ -452,6 +493,15 @@ namespace Platform.CashOut.Service.Repository
                                     BetStatus = BetStatus.Running,
                                     Message = "Cashout request has been declined"
                                 }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                                messageBroker.Publish(new OnBetStatus
+                                {
+                                    ClientId = message.ClientId,
+                                    UserId = message.UserId,
+                                    BetId = message.BetId.ToString().ToUpper(),
+                                    BetStatus = BetStatus.Running,
+                                    Message = "Cashout request has been declined"
+                                }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
                                 messageBroker.Publish(new OnCashOutResult
                                 {
@@ -474,6 +524,7 @@ namespace Platform.CashOut.Service.Repository
                             {
                                 if (currentProbability.Probability < item.Probability)
                                 {
+                                    //TODO: delete when TW is no longer the frontend
                                     messageBroker.Publish(new OnBetStatus
                                     {
                                         ClientId = message.ClientId,
@@ -482,6 +533,15 @@ namespace Platform.CashOut.Service.Repository
                                         BetStatus = BetStatus.Running,
                                         Message = "Cashout request has been declined"
                                     }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                                    messageBroker.Publish(new OnBetStatus
+                                    {
+                                        ClientId = message.ClientId,
+                                        UserId = message.UserId,
+                                        BetId = message.BetId.ToString().ToUpper(),
+                                        BetStatus = BetStatus.Running,
+                                        Message = "Cashout request has been declined"
+                                    }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
                                     messageBroker.Publish(new OnCashOutResult
                                     {
@@ -511,6 +571,7 @@ namespace Platform.CashOut.Service.Repository
                     }
                     else
                     {
+                        //TODO: delete when TW is no longer the frontend
                         messageBroker.Publish(new OnBetStatus
                         {
                             ClientId = message.ClientId,
@@ -519,6 +580,15 @@ namespace Platform.CashOut.Service.Repository
                             BetStatus = BetStatus.Running,
                             Message = "Cashout request has been declined"
                         }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                        messageBroker.Publish(new OnBetStatus
+                        {
+                            ClientId = message.ClientId,
+                            UserId = message.UserId,
+                            BetId = message.BetId.ToString().ToUpper(),
+                            BetStatus = BetStatus.Running,
+                            Message = "Cashout request has been declined"
+                        }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
                         messageBroker.Publish(new OnCashOutResult
                         {

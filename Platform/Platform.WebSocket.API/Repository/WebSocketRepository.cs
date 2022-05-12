@@ -115,6 +115,48 @@ namespace Platform.WebSocket.API.Repository
                     await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onbetslipoddschange:{client.Item2}:{fixtureId}");
             }
         }
+        public async Task SubscribeToBetStatus(BetStatusRequest request)
+        {
+            var client = await GetClient(request.ClientId);
+
+            if (client.Item1 == true)
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"onbetstatus:{client.Item2}:{request.UserId}");
+        }
+        public async Task UnsubscribeToBetStatus(BetStatusRequest request)
+        {
+            var client = await GetClient(request.ClientId);
+
+            if (client.Item1 == true)
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onbetstatus:{client.Item2}:{request.UserId}");
+        }
+        public async Task SubscribeToCashOutChange(CashOutChangeRequest request)
+        {
+            var client = await GetClient(request.ClientId);
+
+            if (client.Item1 == true)
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"oncashoutchange:{client.Item2}:{request.UserId}");
+        }
+        public async Task UnsubscribeToCashOutChange(CashOutChangeRequest request)
+        {
+            var client = await GetClient(request.ClientId);
+
+            if (client.Item1 == true)
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"oncashoutchange:{client.Item2}:{request.UserId}");
+        }
+        public async Task SubscribeToWalletChange(WalletChangeRequest request)
+        {
+            var client = await GetClient(request.ClientId);
+
+            if (client.Item1 == true)
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"onwalletchange:{client.Item2}:{request.UserId}");
+        }
+        public async Task UnsubscribeToWalletChange(WalletChangeRequest request)
+        {
+            var client = await GetClient(request.ClientId);
+
+            if (client.Item1 == true)
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onwalletchange:{client.Item2}:{request.UserId}");
+        }
         public async Task PublishOddsChange(string clientCode, OutgoingOddsChange message)
         {
             await Clients.Group($"onbetslipoddschange:{clientCode}:{message.FiId}").OnBetslipOddsChange(message);
@@ -132,6 +174,18 @@ namespace Platform.WebSocket.API.Repository
         public async Task PublishBetStopGlobal(string clientCode, OutgoingBetStopGlobal message)
         {
             await Clients.Group($"{clientCode}").OnBetStopGlobal(message);
+        }
+        public async Task PublishBetStatus(string clientCode, OutgoingBetStatus message)
+        {
+            await Clients.Group($"{clientCode}:{message.UsId}").OnBetStatus(message);
+        }
+        public async Task PublishCashOutChange(string clientCode, OutgoingCashOutChange message)
+        {
+            await Clients.Group($"{clientCode}:{message.UsId}").OnCashOutChange(message);
+        }
+        public async Task PublishWalletChange(string clientCode, OutgoingWalletChange message)
+        {
+            await Clients.Group($"{clientCode}:{message.UsId}").OnWalletChange(message);
         }
         private async Task<Tuple<bool, string>> GetClient(string clientId)
         {
@@ -237,6 +291,24 @@ namespace Platform.WebSocket.API.Repository
     {
         public string ClientId { get; set; }
         public string FixtureId { get; set; }
+    }
+
+    public class BetStatusRequest
+    {
+        public string ClientId { get; set; }
+        public string UserId { get; set; }
+    }
+
+    public class CashOutChangeRequest
+    {
+        public string ClientId { get; set; }
+        public string UserId { get; set; }
+    }
+
+    public class WalletChangeRequest
+    {
+        public string ClientId { get; set; }
+        public string UserId { get; set; }
     }
 }
 

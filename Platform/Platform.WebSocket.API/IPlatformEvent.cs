@@ -12,5 +12,8 @@ namespace Platform.WebSocket.API
         Task OnBetslipOddsChange(OutgoingOddsChange message);
         Task OnBetslipOddsChange(OutgoingOddsChangeDelta message);
         Task OnBetslipBetStopFixture(OutgoingBetStopFixture message);
+        Task OnBetStatus(OutgoingBetStatus message);
+        Task OnCashOutChange(OutgoingCashOutChange message);
+        Task OnWalletChange(OutgoingWalletChange message);
     }
 }

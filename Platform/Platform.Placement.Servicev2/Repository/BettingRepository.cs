@@ -191,6 +191,14 @@ namespace Platform.Placement.Servicev2.Repository
                 {
                     //Console.WriteLine($"{DateTime.UtcNow} - END - Error Accepted - {message.Bet.BetId.ToString().ToUpper()} - {ex.Message}");
 
+                    messageBroker.Publish(new OnBetStatus
+                    {
+                        ClientId = message.Bet.ClientId.ToString().ToUpper(),
+                        UserId = message.Bet.UserId,
+                        BetId = message.Bet.BetId.ToString().ToUpper(),
+                        BetStatus = BetStatus.Rejected
+                    }, "OnBetStatus", $"r.bet.betstatus.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+
                     messageBroker.Publish(new OnBetPlacementError
                     {
                         BetId = $"{message.Bet.BetId.ToString().ToUpper()} - Accepted Exception",
@@ -352,6 +360,7 @@ namespace Platform.Placement.Servicev2.Repository
                                 //publish to reports
                                 messageBroker.Publish(payload, "OnBetRejection", "r.bet.reports", correlationId);
 
+                                //TODO: delete when TW is no longer the frontend
                                 messageBroker.Publish(new OnBetStatus
                                 {
                                     ClientId = payload.Bet.ClientId.ToString().ToUpper(),
@@ -359,6 +368,14 @@ namespace Platform.Placement.Servicev2.Repository
                                     BetId = payload.Bet.BetId.ToString().ToUpper(),
                                     BetStatus = (BetStatus)payload.Bet.BetStatusId
                                 }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                                messageBroker.Publish(new OnBetStatus
+                                {
+                                    ClientId = payload.Bet.ClientId.ToString().ToUpper(),
+                                    UserId = payload.Bet.UserId,
+                                    BetId = payload.Bet.BetId.ToString().ToUpper(),
+                                    BetStatus = (BetStatus)payload.Bet.BetStatusId
+                                }, "OnBetStatus", $"r.bet.betstatus.{payload.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
                             }
                         }
                     }
@@ -368,6 +385,14 @@ namespace Platform.Placement.Servicev2.Repository
                 catch (Exception ex)
                 {
                     //Console.WriteLine($"{DateTime.UtcNow} - END - Error Rejected - {message.Bet.BetId.ToString().ToUpper()} - {ex.Message}");
+
+                    messageBroker.Publish(new OnBetStatus
+                    {
+                        ClientId = message.Bet.ClientId.ToString().ToUpper(),
+                        UserId = message.Bet.UserId,
+                        BetId = message.Bet.BetId.ToString().ToUpper(),
+                        BetStatus = BetStatus.Rejected
+                    }, "OnBetStatus", $"r.bet.betstatus.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
                     messageBroker.Publish(new OnBetPlacementError
                     {

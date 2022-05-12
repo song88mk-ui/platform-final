@@ -366,6 +366,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                         messageBroker.Publish(payload, "OnBetPlacement", "r.bet.reports", correlationId);
 
+                        //TODO: delete when TW is no longer the frontend
                         messageBroker.Publish(new OnBetStatus
                         {
                             ClientId = payload.Bet.ClientId.ToString().ToUpper(),
@@ -374,12 +375,28 @@ namespace Platform.Operator.Servicev2.Repository
                             BetStatus = (BetStatus)payload.Bet.BetStatusId
                         }, "OnBetStatus", "r.bet.betstatus", correlationId);
 
+                        messageBroker.Publish(new OnBetStatus
+                        {
+                            ClientId = payload.Bet.ClientId.ToString().ToUpper(),
+                            UserId = payload.Bet.UserId,
+                            BetId = payload.Bet.BetId.ToString().ToUpper(),
+                            BetStatus = (BetStatus)payload.Bet.BetStatusId
+                        }, "OnBetStatus", $"r.bet.betstatus.{payload.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+
+                        //TODO: delete when TW is no longer the frontend
                         messageBroker.Publish(new OnWalletChange
                         {
                             ClientId = payload.Bet.ClientId.ToString().ToUpper(),
                             UserId = payload.Bet.UserId,
                             Balance = operatorResponse.Balance
                         }, "OnWalletChange", "r.bet.betstatus", correlationId);
+
+                        messageBroker.Publish(new OnWalletChange
+                        {
+                            ClientId = payload.Bet.ClientId.ToString().ToUpper(),
+                            UserId = payload.Bet.UserId,
+                            Balance = operatorResponse.Balance
+                        }, "OnWalletChange", $"r.wallet.{payload.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
                     }
                     catch (Exception)
                     {
@@ -751,12 +768,20 @@ namespace Platform.Operator.Servicev2.Repository
                         Timestamp = DateTime.UtcNow
                     });
 
+                    //TODO: delete when TW is no longer the frontend
                     messageBroker.Publish(new OnWalletChange
                     {
                         ClientId = message.Bet.ClientId.ToUpper(),
                         UserId = message.Bet.UserId,
                         Balance = result.Balance
                     }, "OnWalletChange", "r.bet.betstatus", correlationId);
+
+                    messageBroker.Publish(new OnWalletChange
+                    {
+                        ClientId = message.Bet.ClientId.ToUpper(),
+                        UserId = message.Bet.UserId,
+                        Balance = result.Balance
+                    }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
                     AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetFullCashOut", correlationId, response.IsSuccessStatusCode);
                 }
@@ -919,12 +944,20 @@ namespace Platform.Operator.Servicev2.Repository
                         Timestamp = DateTime.UtcNow
                     });
 
+                    //TODO: delete when TW is no longer the frontend
                     messageBroker.Publish(new OnWalletChange
                     {
                         ClientId = message.Bet.ClientId.ToUpper(),
                         UserId = message.Bet.UserId,
                         Balance = result.Balance
                     }, "OnWalletChange", "r.bet.betstatus", correlationId);
+
+                    messageBroker.Publish(new OnWalletChange
+                    {
+                        ClientId = message.Bet.ClientId.ToUpper(),
+                        UserId = message.Bet.UserId,
+                        Balance = result.Balance
+                    }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
                     AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetSettlement", correlationId, response.IsSuccessStatusCode);
                 }
@@ -1041,6 +1074,7 @@ namespace Platform.Operator.Servicev2.Repository
 
             try
             {
+                //TODO: delete when TW is no longer the frontend
                 messageBroker.Publish(new OnBetStatus
                 {
                     ClientId = message.Bet.ClientId.ToString().ToUpper(),
@@ -1049,6 +1083,15 @@ namespace Platform.Operator.Servicev2.Repository
                     BetStatus = (BetStatus)message.Bet.BetStatusId,
                     Message = message.Message
                 }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                messageBroker.Publish(new OnBetStatus
+                {
+                    ClientId = message.Bet.ClientId.ToString().ToUpper(),
+                    UserId = message.Bet.UserId,
+                    BetId = message.Bet.BetId.ToString().ToUpper(),
+                    BetStatus = (BetStatus)message.Bet.BetStatusId,
+                    Message = message.Message
+                }, "OnBetStatus", $"r.bet.betstatus.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
                 if (message.IsRetry == false)
                     messageBroker.Publish(message, "OnBetCancellation", "r.bet.reports", correlationId);
@@ -1087,12 +1130,20 @@ namespace Platform.Operator.Servicev2.Repository
                         Timestamp = DateTime.UtcNow
                     });
 
+                    //TODO: delete when TW is no longer the frontend
                     messageBroker.Publish(new OnWalletChange
                     {
                         ClientId = message.Bet.ClientId.ToUpper(),
                         UserId = message.Bet.UserId,
                         Balance = result.Balance
                     }, "OnWalletChange", "r.bet.betstatus", correlationId);
+
+                    messageBroker.Publish(new OnWalletChange
+                    {
+                        ClientId = message.Bet.ClientId.ToUpper(),
+                        UserId = message.Bet.UserId,
+                        Balance = result.Balance
+                    }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
                     AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetCancellation", correlationId, response.IsSuccessStatusCode);
                 }

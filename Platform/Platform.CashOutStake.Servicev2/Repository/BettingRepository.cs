@@ -54,6 +54,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
             var bets = context.Bet.AsNoTracking().Where(c => !betPriceBoosts.Contains(c.BetId) && c.BetStatusId == (int)BetStatus.Running && c.IsFreeBet == false).Select(s => new BetMemory
             {
                 BetId = s.BetId,
+                ClientCode = s.ClientCode,
                 ClientId = s.ClientId,
                 UserId = s.UserId,
                 BetStatusId = s.BetStatusId,
@@ -117,6 +118,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
             var bet = new BetMemory
             {
                 BetId = message.Bet.BetId,
+                ClientCode = message.Bet.ClientCode,
                 ClientId = message.Bet.ClientId,
                 UserId = message.Bet.UserId,
                 BetStatusId = message.Bet.BetStatusId,
@@ -233,7 +235,10 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
                 Console.WriteLine($"{DateTime.UtcNow} - OddsChange : {JsonSerializer.Serialize(payload)}");
 
+                //TODO: delete when TW is no longer the frontend
                 messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.betstatus", Guid.NewGuid().ToString());
+
+                messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.cashoutchange.{bet.ClientCode.ToString().ToLower()}", Guid.NewGuid().ToString());
             }
         }
         private void PreloadMarket(long marketId, OnExternalOddsChangeMessage message)
@@ -564,6 +569,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
         }
 
         public Guid BetId { get; set; }
+        public string ClientCode { get; set; }
         public string ClientId { get; set; }
         public string UserId { get; set; }
         public int BetStatusId { get; set; }

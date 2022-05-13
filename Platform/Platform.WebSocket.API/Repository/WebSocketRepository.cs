@@ -77,19 +77,16 @@ namespace Platform.WebSocket.API.Repository
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
-            {
                 if (string.IsNullOrEmpty(request.ChannelKey) == false)
                     await Groups.AddToGroupAsync(Context.ConnectionId, $"endpoint:{client.Item2}:{request.ChannelKey}");
-                else
-                    await Groups.AddToGroupAsync(Context.ConnectionId, $"{client.Item2}");
-            }
         }
         public async Task UnsubscribeToEndpoint(EndpointRequest request)
         {
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
-                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"endpoint:{client.Item2}:{request.ChannelKey}");
+                if (string.IsNullOrEmpty(request.ChannelKey) == false)
+                    await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"endpoint:{client.Item2}:{request.ChannelKey}");
         }
         public async Task SubscribeToBetslip(BetslipRequest request)
         {
@@ -100,7 +97,10 @@ namespace Platform.WebSocket.API.Repository
                 var isLong = long.TryParse(request.FixtureId, out long fixtureId);
 
                 if (isLong)
+                {
                     await Groups.AddToGroupAsync(Context.ConnectionId, $"onbetslipoddschange:{client.Item2}:{fixtureId}");
+                    await Groups.AddToGroupAsync(Context.ConnectionId, $"onbetslipbetstopfixture:{client.Item2}:{fixtureId}");
+                }
             }
         }
         public async Task UnsubscribeToBetslip(BetslipRequest request)
@@ -112,7 +112,10 @@ namespace Platform.WebSocket.API.Repository
                 var isLong = long.TryParse(request.FixtureId, out long fixtureId);
 
                 if (isLong)
+                {
                     await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onbetslipoddschange:{client.Item2}:{fixtureId}");
+                    await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onbetslipbetstopfixture:{client.Item2}:{fixtureId}");
+                }
             }
         }
         public async Task SubscribeToBetStatus(BetStatusRequest request)
@@ -169,7 +172,8 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task PublishBetStopFixture(string clientCode, OutgoingBetStopFixture message)
         {
-            await Clients.All.OnBetStopFixture(message);
+            await Clients.Group($"onbetslipbetstopfixture:{clientCode}:{message.FiId}").OnBetslipBetStopFixture(message);
+            await Clients.Groups(GetGroups(clientCode, message).AsReadOnly()).OnBetStopFixture(message);
         }
         public async Task PublishBetStopGlobal(string clientCode, OutgoingBetStopGlobal message)
         {
@@ -208,7 +212,6 @@ namespace Platform.WebSocket.API.Repository
         {
             var result = new List<string>
             {
-                $"{clientCode}",
                 $"endpoint:{clientCode}:fixturedetails:{message.FiId}"
             };
 
@@ -246,7 +249,43 @@ namespace Platform.WebSocket.API.Repository
         {
             var result = new List<string>
             {
-                $"{clientCode}",
+                $"endpoint:{clientCode}:fixturedetails:{message.FiId}"
+            };
+
+            if (message.FiStId == (int)FixtureStatus.Live)
+            {
+                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:livefixtures");
+                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:leagues:{message.LeId}:livefixtures");
+            }
+
+            if (message.FiStId == (int)FixtureStatus.Prematch &&
+                message.FiStDa.Month == DateTime.UtcNow.Month &&
+                message.FiStDa.Day == DateTime.UtcNow.Day &&
+                message.FiStDa.Year == DateTime.UtcNow.Year &&
+                message.FiTyId == (int)FixtureType.Match)
+            {
+                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:todayfixtures");
+                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:dailyfixtures");
+            }
+
+            if (message.FiStId == (int)FixtureStatus.Prematch &&
+                message.FiTyId == (int)FixtureType.Outright)
+            {
+                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:outrightfixtures");
+            }
+
+            result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:fixtures");
+            result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:leagues:{message.LeId}:fixtures");
+
+            //TODO: topleagues
+            //TODO: topfixtures
+
+            return result;
+        }
+        private static List<string> GetGroups(string clientCode, OutgoingBetStopFixture message)
+        {
+            var result = new List<string>
+            {
                 $"endpoint:{clientCode}:fixturedetails:{message.FiId}"
             };
 

@@ -8,6 +8,15 @@ namespace Platform.WebSocket.API.Messages
     {
         public OutgoingOddsChange()
         {
+            Gr = new List<string>();
+        }
+        public List<string> Gr { get; set; }
+        public OddsChangeFixture Fi { get; set; }
+    }
+    public class OddsChangeFixture
+    {
+        public OddsChangeFixture()
+        {
             Ma = new List<OutgoingMarket>();
             SpNaTr = new List<OutgoingSportTranslation>();
             SegNaTr = new List<OutgoingSegmentTranslation>();
@@ -29,8 +38,8 @@ namespace Platform.WebSocket.API.Messages
         public bool IsOfLi { get; set; }
         public int FiStId { get; set; }
         public string FiStNa { get; set; }
-        public int FiTyId { get; set; }
-        public string FiTyNa { get; set; }
+        public int FiTyId { get; internal set; }
+        public string FiTyNa { get; internal set; }
         public string Sc { get; set; }
         public string CuPe { get; set; }
         public int CuMi { get; set; }
@@ -72,7 +81,6 @@ namespace Platform.WebSocket.API.Messages
         public int SoOr { get; set; }
         public List<OutgoingSelectionTranslation> SeNaTr { get; set; }
     }
-
     public class OutgoingSportTranslation
     {
         public string LaCo { get; set; }

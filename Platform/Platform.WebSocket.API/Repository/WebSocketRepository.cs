@@ -162,18 +162,13 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task PublishOddsChange(string clientCode, OutgoingOddsChange message)
         {
-            await Clients.Group($"onbetslipoddschange:{clientCode}:{message.FiId}").OnBetslipOddsChange(message);
-            await Clients.Groups(GetGroups(clientCode, message).AsReadOnly()).OnOddsChange(message);
-        }
-        public async Task PublishOddsChangeDelta(string clientCode, OutgoingOddsChangeDelta message)
-        {
-            await Clients.Group($"onbetslipoddschange:{clientCode}:{message.FiId}").OnBetslipOddsChange(message);
-            await Clients.Groups(GetGroups(clientCode, message).AsReadOnly()).OnOddsChange(message);
+            await Clients.Group($"onbetslipoddschange:{clientCode}:{message.Fi.FiId}").OnBetslipOddsChange(message);
+            await Clients.Groups(message.Gr.AsReadOnly()).OnOddsChange(message);
         }
         public async Task PublishBetStopFixture(string clientCode, OutgoingBetStopFixture message)
         {
-            await Clients.Group($"onbetslipbetstopfixture:{clientCode}:{message.FiId}").OnBetslipBetStopFixture(message);
-            await Clients.Groups(GetGroups(clientCode, message).AsReadOnly()).OnBetStopFixture(message);
+            await Clients.Group($"onbetslipbetstopfixture:{clientCode}:{message.Fi.FiId}").OnBetslipBetStopFixture(message);
+            await Clients.Groups(message.Gr.AsReadOnly()).OnBetStopFixture(message);
         }
         public async Task PublishBetStopGlobal(string clientCode, OutgoingBetStopGlobal message)
         {
@@ -207,117 +202,6 @@ namespace Platform.WebSocket.API.Repository
             }
 
             return new Tuple<bool, string>(false, string.Empty);
-        }
-        private static List<string> GetGroups(string clientCode, OutgoingOddsChange message)
-        {
-            var result = new List<string>
-            {
-                $"endpoint:{clientCode}:fixturedetails:{message.FiId}"
-            };
-
-            if (message.FiStId == (int)FixtureStatus.Live)
-            {
-                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:livefixtures");
-                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:leagues:{message.LeId}:livefixtures");
-            }
-
-            if (message.FiStId == (int)FixtureStatus.Prematch && 
-                message.FiStDa.Month == DateTime.UtcNow.Month && 
-                message.FiStDa.Day == DateTime.UtcNow.Day && 
-                message.FiStDa.Year == DateTime.UtcNow.Year &&
-                message.FiTyId == (int)FixtureType.Match)
-            {
-                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:todayfixtures");
-                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:dailyfixtures");
-            }
-
-            if (message.FiStId == (int)FixtureStatus.Prematch &&
-                message.FiTyId == (int)FixtureType.Outright)
-            {
-                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:outrightfixtures");
-            }
-
-            result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:fixtures");
-            result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:leagues:{message.LeId}:fixtures");
-
-            //TODO: topleagues
-            //TODO: topfixtures
-
-            return result;
-        }
-        private static List<string> GetGroups(string clientCode, OutgoingOddsChangeDelta message)
-        {
-            var result = new List<string>
-            {
-                $"endpoint:{clientCode}:fixturedetails:{message.FiId}"
-            };
-
-            if (message.FiStId == (int)FixtureStatus.Live)
-            {
-                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:livefixtures");
-                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:leagues:{message.LeId}:livefixtures");
-            }
-
-            if (message.FiStId == (int)FixtureStatus.Prematch &&
-                message.FiStDa.Month == DateTime.UtcNow.Month &&
-                message.FiStDa.Day == DateTime.UtcNow.Day &&
-                message.FiStDa.Year == DateTime.UtcNow.Year &&
-                message.FiTyId == (int)FixtureType.Match)
-            {
-                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:todayfixtures");
-                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:dailyfixtures");
-            }
-
-            if (message.FiStId == (int)FixtureStatus.Prematch &&
-                message.FiTyId == (int)FixtureType.Outright)
-            {
-                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:outrightfixtures");
-            }
-
-            result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:fixtures");
-            result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:leagues:{message.LeId}:fixtures");
-
-            //TODO: topleagues
-            //TODO: topfixtures
-
-            return result;
-        }
-        private static List<string> GetGroups(string clientCode, OutgoingBetStopFixture message)
-        {
-            var result = new List<string>
-            {
-                $"endpoint:{clientCode}:fixturedetails:{message.FiId}"
-            };
-
-            if (message.FiStId == (int)FixtureStatus.Live)
-            {
-                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:livefixtures");
-                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:leagues:{message.LeId}:livefixtures");
-            }
-
-            if (message.FiStId == (int)FixtureStatus.Prematch &&
-                message.FiStDa.Month == DateTime.UtcNow.Month &&
-                message.FiStDa.Day == DateTime.UtcNow.Day &&
-                message.FiStDa.Year == DateTime.UtcNow.Year &&
-                message.FiTyId == (int)FixtureType.Match)
-            {
-                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:todayfixtures");
-                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:dailyfixtures");
-            }
-
-            if (message.FiStId == (int)FixtureStatus.Prematch &&
-                message.FiTyId == (int)FixtureType.Outright)
-            {
-                result.Add($"endpoint:{clientCode}:sports:{message.SpId}:outrightfixtures");
-            }
-
-            result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:fixtures");
-            result.Add($"endpoint:{clientCode}:sports:{message.SpId}:segments:{message.SegId}:leagues:{message.LeId}:fixtures");
-
-            //TODO: topleagues
-            //TODO: topfixtures
-
-            return result;
         }
     }
     public class EndpointRequest

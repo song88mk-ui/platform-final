@@ -759,26 +759,26 @@ namespace Platform.Sportsbook.API.Repository
                         }).OrderBy(o => o.SegmentId).ThenBy(o => o.SegmentName).ToList()
                     });
                 }
-                else if (sport.SportId == 1)
+                else if (segmentOrder.Any(x => x.SportId == sport.SportId))
                 {
                     var segment = segmentOrder.Where(x => x.SportId == sport.SportId).ToList();
-
+                   
                     final.Add(new SportDTO
                     {
                         SportId = sport.SportId,
                         SportName = sport.SportName,
-                        Segments = result.Where(c => c.SportId == sport.SportId && segment.Select(x => x.SegmentId).Contains(c.SegmentId)).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
+                        Segments = result.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
                         {
                             SegmentId = s.Key,
                             SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
-                            SortOrder = segment.FirstOrDefault(x => x.SegmentId == s.Key).SortOrder,
+                            SortOrder = segment?.FirstOrDefault(x => x.SegmentId == s.Key)?.SortOrder ?? 1000,
                             Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
                             {
                                 LeagueId = l.Key,
                                 LeagueName = l.Select(le => le.LeagueName).FirstOrDefault(),
                                 SortOrder = l.Select(le => le.LeagueSortOrder).FirstOrDefault()
                             }).OrderBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ToList()
-                        }).OrderBy(o => segment.FirstOrDefault(x => x.SegmentId == o.SegmentId).SortOrder).ToList()
+                        }).OrderBy(o => segment?.FirstOrDefault(x => x.SegmentId == o.SegmentId)?.SortOrder ?? 1000).ThenBy(o => o.SegmentName).ToList()
                     });
                 }
                 else

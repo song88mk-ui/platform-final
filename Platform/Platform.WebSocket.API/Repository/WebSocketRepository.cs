@@ -162,13 +162,13 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task PublishOddsChange(string clientCode, OutgoingOddsChange message)
         {
-            await Clients.Group($"onbetslipoddschange:{clientCode}:{message.Fi.FiId}").OnBetslipOddsChange(message.Fi);
-            await Clients.Groups(message.Gr.AsReadOnly()).OnOddsChange(message.Fi);
+            await Clients.Group($"onbetslipoddschange:{clientCode}:{message.Pa.FiId}").OnBetslipOddsChange(message.Pa);
+            await Clients.Groups(message.Gr).OnOddsChange(message.Pa);
         }
         public async Task PublishBetStopFixture(string clientCode, OutgoingBetStopFixture message)
         {
-            await Clients.Group($"onbetslipbetstopfixture:{clientCode}:{message.Fi.FiId}").OnBetslipBetStopFixture(message.Fi);
-            await Clients.Groups(message.Gr.AsReadOnly()).OnBetStopFixture(message.Fi);
+            await Clients.Group($"onbetslipbetstopfixture:{clientCode}:{message.Pa.FiId}").OnBetslipBetStopFixture(message.Pa);
+            await Clients.Groups(message.Gr).OnBetStopFixture(message.Pa);
         }
         public async Task PublishBetStopGlobal(string clientCode, OutgoingBetStopGlobal message)
         {

@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Platform.WebSocket.API.Messages
 {
     public class OutgoingBetStopFixture
     {
-        public OutgoingBetStopFixture()
-        {
-            Gr = new List<string>();
-        }
-        public List<string> Gr { get; set; }
-        public BetStopFixture Fi { get; set; }
+        public ReadOnlyCollection<string> Gr { get; set; }
+        public BetStopFixture Pa { get; set; }
     }
 
     public class BetStopFixture

@@ -1,13 +1,16 @@
 ﻿using Platform.Shared.Enums;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace Platform.WebSocket.API.Messages
 {
     public class OutgoingOddsChange
     {
-        public ReadOnlyCollection<string> Gr { get; set; }
+        public OutgoingOddsChange()
+        {
+            Gr = new List<string>();
+        }
+        public List<string> Gr { get; set; }
         public OddsChangeFixture Pa { get; set; }
     }
     public class OddsChangeFixture

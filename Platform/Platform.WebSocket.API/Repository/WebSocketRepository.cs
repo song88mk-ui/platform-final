@@ -169,11 +169,11 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task PublishBetStopFixture(string clientCode, OutgoingBetStopFixture message)
         {
-            await Clients.Group($"{clientCode}").OnBetStopFixture(message);
+            await Clients.All.OnBetStopFixture(message);
         }
         public async Task PublishBetStopGlobal(string clientCode, OutgoingBetStopGlobal message)
         {
-            await Clients.Group($"{clientCode}").OnBetStopGlobal(message);
+            await Clients.All.OnBetStopGlobal(message);
         }
         public async Task PublishBetStatus(string clientCode, OutgoingBetStatus message)
         {

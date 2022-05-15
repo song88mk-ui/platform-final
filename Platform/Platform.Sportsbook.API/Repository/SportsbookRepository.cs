@@ -669,6 +669,7 @@ namespace Platform.Sportsbook.API.Repository
             var leagueSortOrder = GetTierLeagueOrder().Where(c => sportIds.Contains(c.SportId)).ToList();
             var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
             var segmentOrder = GetSegmentOrder().Where(x => x.ClientId == request.ClientId).ToList();
+            var segmentLeagueOrder = GetSegmentLeagueOrder().Where(x => x.ClientId == request.ClientId).ToList();
 
             var result = fixtures.Where(c => c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
             {
@@ -678,8 +679,8 @@ namespace Platform.Sportsbook.API.Repository
                 SegmentName = GetSegmentName(s.SegNa, s.SegNaTr, request.LanguageCode),
                 LeagueId = s.LeId,
                 LeagueName = GetLeagueName(s.LeNa, s.LeNaTr, request.LanguageCode),
-                LeagueSortOrder = leagueSortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                == 0 ? 1000 : leagueSortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                LeagueSortOrder = segmentLeagueOrder.FirstOrDefault(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId)?.SortOrder ?? 
+                    leagueSortOrder.FirstOrDefault(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId)?.SortOrder + 1000 ?? 2000
             }).ToList();
 
             var sportResult = fixtures.Select(s => new TempOrderedSport
@@ -713,7 +714,7 @@ namespace Platform.Sportsbook.API.Repository
                             SegmentName = GetSegmentName(temp.SegNa, temp.SegNaTr, request.LanguageCode),
                             LeagueId = temp.LeId,
                             LeagueName = GetLeagueName(temp.LeNa, temp.LeNaTr, request.LanguageCode),
-                            LeagueSortOrder = 1000
+                            LeagueSortOrder = 2000
                         });
                     }
                 }
@@ -5483,6 +5484,10 @@ namespace Platform.Sportsbook.API.Repository
         private List<ClientSegmentOrder> GetSegmentOrder()
         {
             return _memCache.GetCache($"seo", () => _sportsbookContext.ClientSegmentOrder.ToList(), 24);
+        }
+        private List<ClientSegmentLeagueOrder> GetSegmentLeagueOrder()
+        {
+            return _memCache.GetCache($"seleo", () => _sportsbookContext.ClientSegmentLeagueOrder.ToList(), 24);
         }
         private Shared.Data.Sportsbook.SQLEntities.SportGroup GetSportGroups(Shared.Enums.SportGroup sportGroup)
         {

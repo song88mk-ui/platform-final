@@ -4432,7 +4432,7 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = s.SeNa,
-                                Odds = s.Od.ToString(),
+                                Odds = s.Od.ToString("0.00"),
                             }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
                         });
                     }
@@ -4494,7 +4494,7 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             SelectionId = s.SeId.ToString(),
                             SelectionName = s.SeNa,
-                            Odds = s.Od.ToString(),
+                            Odds = s.Od.ToString("0.00"),
                         }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
                     });
                 }
@@ -4530,7 +4530,7 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                                DecimalOdds = s.Od.ToString(),
+                                DecimalOdds = s.Od.ToString("0.00"),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                                 SortOrder = s.SeSoOr
@@ -4616,7 +4616,7 @@ namespace Platform.Sportsbook.API.Repository
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
                             SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                            DecimalOdds = s.Od.ToString(),
+                            DecimalOdds = s.Od.ToString("0.00"),
                             IsActive = s.IsAc,
                             CorrelationId = s.CoId,
                             SortOrder = s.SeSoOr
@@ -4656,7 +4656,7 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                                DecimalOdds = s.Od.ToString(),
+                                DecimalOdds = s.Od.ToString("0.00"),
                                 BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
@@ -4735,7 +4735,7 @@ namespace Platform.Sportsbook.API.Repository
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
                             SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                            DecimalOdds = s.Od.ToString(),
+                            DecimalOdds = s.Od.ToString("0.00"),
                             BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode),
                             IsActive = s.IsAc,
                             CorrelationId = s.CoId,
@@ -4772,7 +4772,7 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                                DecimalOdds = s.Od.ToString(),
+                                DecimalOdds = s.Od.ToString("0.00"),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                                 SortOrder = s.SeSoOr
@@ -4857,7 +4857,7 @@ namespace Platform.Sportsbook.API.Repository
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
                             SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                            DecimalOdds = s.Od.ToString(),
+                            DecimalOdds = s.Od.ToString("0.00"),
                             IsActive = s.IsAc,
                             CorrelationId = s.CoId,
                             SortOrder = s.SeSoOr
@@ -4894,7 +4894,7 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                                DecimalOdds = s.Od.ToString(),
+                                DecimalOdds = s.Od.ToString("0.00"),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                             }).OrderBy(o => Convert.ToDecimal(o.DecimalOdds)).ToList()
@@ -4916,7 +4916,7 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                                DecimalOdds = s.Od.ToString(),
+                                DecimalOdds = s.Od.ToString("0.00"),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                                 SortOrder = s.SeSoOr
@@ -4947,7 +4947,7 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                                DecimalOdds = s.Od.ToString(),
+                                DecimalOdds = s.Od.ToString("0.00"),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                             }).OrderBy(o => Convert.ToDecimal(o.DecimalOdds)).ToList()
@@ -4969,7 +4969,7 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                                DecimalOdds = s.Od.ToString(),
+                                DecimalOdds = s.Od.ToString("0.00"),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                                 SortOrder = s.SeSoOr

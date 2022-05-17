@@ -779,7 +779,7 @@ namespace Platform.Sportsbook.API.Repository
                                 LeagueName = l.Select(le => le.LeagueName).FirstOrDefault(),
                                 SortOrder = l.Select(le => le.LeagueSortOrder).FirstOrDefault()
                             }).OrderBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ToList()
-                        }).OrderBy(o => segment?.FirstOrDefault(x => x.SegmentId == o.SegmentId)?.SortOrder ?? 1000).ThenBy(o => o.SegmentName).ToList()
+                        }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ToList()
                     });
                 }
                 else

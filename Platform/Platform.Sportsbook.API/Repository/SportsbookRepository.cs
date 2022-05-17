@@ -668,8 +668,8 @@ namespace Platform.Sportsbook.API.Repository
 
             var leagueSortOrder = GetTierLeagueOrder().Where(c => sportIds.Contains(c.SportId)).ToList();
             var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
-            var segmentOrder = GetSegmentOrder().Where(x => x.ClientId == request.ClientId).ToList();
-            var segmentLeagueOrder = GetSegmentLeagueOrder().Where(x => x.ClientId == request.ClientId).ToList();
+            var segmentOrder = GetSegmentOrder().Where(c => c.ClientId == request.ClientId).ToList();
+            var segmentLeagueOrder = GetSegmentLeagueOrder().Where(c => c.ClientId == request.ClientId).ToList();
 
             var result = fixtures.Where(c => c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
             {
@@ -760,9 +760,9 @@ namespace Platform.Sportsbook.API.Repository
                         }).OrderBy(o => o.SegmentId).ThenBy(o => o.SegmentName).ToList()
                     });
                 }
-                else if (segmentOrder.Any(x => x.SportId == sport.SportId))
+                else if (segmentOrder.Any(c => c.SportId == sport.SportId))
                 {
-                    var segment = segmentOrder.Where(x => x.SportId == sport.SportId).ToList();
+                    var segment = segmentOrder.Where(c => c.SportId == sport.SportId).ToList();
                    
                     final.Add(new SportDTO
                     {
@@ -772,7 +772,7 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             SegmentId = s.Key,
                             SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
-                            SortOrder = segment?.FirstOrDefault(x => x.SegmentId == s.Key)?.SortOrder ?? 1000,
+                            SortOrder = segment?.FirstOrDefault(c => c.SegmentId == s.Key)?.SortOrder ?? 1000,
                             Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
                             {
                                 LeagueId = l.Key,
@@ -2154,9 +2154,9 @@ namespace Platform.Sportsbook.API.Repository
                 });
             });
 
-            var segmentOrder = GetSegmentOrder().Where(x => x.SportId == request.SportId).ToList();
-            if (request.SportId == 1)
-                finalResult = finalResult.OrderBy(o => segmentOrder?.FirstOrDefault(x => x.SegmentId == o.SegmentId && x.ClientId == request.ClientId)?.SortOrder ?? 1000).ThenBy(o => o.SegmentName).ThenBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+            var segmentOrder = GetSegmentOrder().Where(c => c.SportId == request.SportId).ToList();
+            if (segmentOrder.Any(c => c.SportId == request.SportId))
+                finalResult = finalResult.OrderBy(o => segmentOrder?.FirstOrDefault(c => c.SegmentId == o.SegmentId && c.ClientId == request.ClientId)?.SortOrder ?? 1000).ThenBy(o => o.SegmentName).ThenBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             else
                 finalResult = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
@@ -2497,11 +2497,11 @@ namespace Platform.Sportsbook.API.Repository
                 });
             });
 
-            var segmentOrder = GetSegmentOrder().Where(x => x.SportId == request.SportId).ToList();
+            var segmentOrder = GetSegmentOrder().Where(c => c.SportId == request.SportId).ToList();
             if (request.SportId == 5)
                 finalResult = finalResult.OrderBy(o => o.SegmentId).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
-            else if (request.SportId == 1)
-                finalResult = finalResult.OrderBy(o => segmentOrder?.FirstOrDefault(x => x.SegmentId == o.SegmentId && x.ClientId == request.ClientId)?.SortOrder ?? 1000).ThenBy(o => o.SegmentName).ThenBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+            else if (segmentOrder.Any(c => c.SportId == request.SportId))
+                finalResult = finalResult.OrderBy(o => segmentOrder?.FirstOrDefault(c => c.SegmentId == o.SegmentId && c.ClientId == request.ClientId)?.SortOrder ?? 1000).ThenBy(o => o.SegmentName).ThenBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             else
                 finalResult = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
@@ -2890,11 +2890,11 @@ namespace Platform.Sportsbook.API.Repository
                 });
             });
 
-            var segmentOrder = GetSegmentOrder().Where(x => x.SportId == request.SportId).ToList();
+            var segmentOrder = GetSegmentOrder().Where(c => c.SportId == request.SportId).ToList();
             if (request.SportId == 5)
                 finalResult = finalResult.OrderBy(o => o.SegmentId).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
-            else if(request.SportId == 1)
-                finalResult = finalResult.OrderBy(o => segmentOrder?.FirstOrDefault(x => x.SegmentId == o.SegmentId && x.ClientId == request.ClientId)?.SortOrder ?? 1000).ThenBy(o => o.SegmentName).ThenBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+            else if(segmentOrder.Any(c => c.SportId == request.SportId))
+                finalResult = finalResult.OrderBy(o => segmentOrder?.FirstOrDefault(c => c.SegmentId == o.SegmentId && c.ClientId == request.ClientId)?.SortOrder ?? 1000).ThenBy(o => o.SegmentName).ThenBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             else
                 finalResult = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
@@ -3042,11 +3042,11 @@ namespace Platform.Sportsbook.API.Repository
                 });
             });
             
-            var segmentOrder = GetSegmentOrder().Where(x => x.SportId == request.SportId).ToList();
+            var segmentOrder = GetSegmentOrder().Where(c => c.SportId == request.SportId).ToList();
             if (request.SportId == 5)
                 finalResult = finalResult.OrderBy(o => o.SegmentId).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
-            else if (request.SportId == 1)
-                finalResult = finalResult.OrderBy(o => segmentOrder?.FirstOrDefault(x => x.SegmentId == o.SegmentId && x.ClientId == request.ClientId)?.SortOrder ?? 1000).ThenBy(o => o.SegmentName).ThenBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+            else if (segmentOrder.Any(c => c.SportId == request.SportId))
+                finalResult = finalResult.OrderBy(o => segmentOrder?.FirstOrDefault(c => c.SegmentId == o.SegmentId && c.ClientId == request.ClientId)?.SortOrder ?? 1000).ThenBy(o => o.SegmentName).ThenBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             else
                 finalResult = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 

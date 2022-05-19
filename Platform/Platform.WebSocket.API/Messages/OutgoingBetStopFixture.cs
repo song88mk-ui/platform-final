@@ -17,6 +17,5 @@ namespace Platform.WebSocket.API.Messages
     {
         public string FiId { get; set; }
         public bool IsBeSt { get; set; }
-        public List<int> MaTeGr { get; set; }
     }
 }

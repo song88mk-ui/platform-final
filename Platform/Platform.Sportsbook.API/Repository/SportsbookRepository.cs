@@ -1359,6 +1359,7 @@ namespace Platform.Sportsbook.API.Repository
                             CurrentPeriod = CurrentPeriodHelper.ToShortName(item.CuPe),
                             CurrentMinute = item.CuMi.ToString(),
                             BetStop = item.IsSu ? new List<int> { 1 } : new List<int> { },
+                            IsBetStop = item.IsSu,
                             IsBetStopGlobal = bettingStatus.IsBeSo,
                             Markets = GetMainMarkets(item.SpId, item.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), request.LanguageCode, request.ClientCode)
                         });
@@ -1432,6 +1433,7 @@ namespace Platform.Sportsbook.API.Repository
                             CurrentPeriod = CurrentPeriodHelper.ToShortName(item.CuPe),
                             CurrentMinute = item.CuMi.ToString(),
                             BetStop = item.IsSu ? new List<int> { 1 } : new List<int> { },
+                            IsBetStop = item.IsSu,
                             IsBetStopGlobal = bettingStatus.IsBeSo,
                             Markets = GetMainMarkets(item.SpId, item.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), request.LanguageCode, request.ClientCode)
                         });
@@ -1820,6 +1822,7 @@ namespace Platform.Sportsbook.API.Repository
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = clientFixtures.Where(c => c.FixtureId == s.FiId).Select(s => s.SortOrder).FirstOrDefault()
             }).OrderBy(o => o.SortOrder).ToList();
@@ -1899,6 +1902,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
                     BetStop = item.BetStop,
+                    IsBetStop = item.IsBetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     Markets = currentMarkets
                 });
@@ -2115,6 +2119,7 @@ namespace Platform.Sportsbook.API.Repository
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
@@ -2177,6 +2182,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
                     BetStop = item.BetStop,
+                    IsBetStop = item.IsBetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
                     Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
@@ -2258,6 +2264,7 @@ namespace Platform.Sportsbook.API.Repository
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
@@ -2320,6 +2327,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
                     BetStop = item.BetStop,
+                    IsBetStop = item.IsBetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
                     Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
@@ -2413,6 +2421,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                     CurrentMinute = s.CuMi.ToString(),
                     BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                    IsBetStop = s.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo
                 }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             }
@@ -2446,6 +2455,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                     CurrentMinute = s.CuMi.ToString(),
                     BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                    IsBetStop = s.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo,
                     SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                     == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
@@ -2514,6 +2524,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
                     BetStop = item.BetStop,
+                    IsBetStop = item.IsBetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
                     Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
@@ -2612,6 +2623,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                     CurrentMinute = s.CuMi.ToString(),
                     BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                    IsBetStop = s.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo
                 }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             }
@@ -2645,6 +2657,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                     CurrentMinute = s.CuMi.ToString(),
                     BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                    IsBetStop = s.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo,
                     SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                     == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
@@ -2708,6 +2721,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
                     BetStop = item.BetStop,
+                    IsBetStop = item.IsBetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
                     Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
@@ -2805,6 +2819,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                     CurrentMinute = s.CuMi.ToString(),
                     BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                    IsBetStop = s.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo
                 }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             }
@@ -2838,6 +2853,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                     CurrentMinute = s.CuMi.ToString(),
                     BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                    IsBetStop = s.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo,
                     SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                     == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
@@ -2904,6 +2920,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
                     BetStop = item.BetStop,
+                    IsBetStop = item.IsBetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
                     Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
@@ -2991,6 +3008,7 @@ namespace Platform.Sportsbook.API.Repository
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
@@ -3053,6 +3071,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
                     BetStop = item.BetStop,
+                    IsBetStop = item.IsBetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
                     Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
@@ -3145,6 +3164,7 @@ namespace Platform.Sportsbook.API.Repository
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
@@ -3207,6 +3227,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
                     BetStop = item.BetStop,
+                    IsBetStop = item.IsBetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
                     Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
@@ -3286,6 +3307,7 @@ namespace Platform.Sportsbook.API.Repository
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
@@ -3343,6 +3365,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
                     BetStop = item.BetStop,
+                    IsBetStop = item.IsBetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
                     Markets = GetOutrightMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.SportId, item.FixtureTypeId)
@@ -3412,6 +3435,7 @@ namespace Platform.Sportsbook.API.Repository
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
@@ -3469,6 +3493,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = item.CurrentPeriod,
                     CurrentMinute = item.CurrentMinute,
                     BetStop = item.BetStop,
+                    IsBetStop = item.IsBetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
                     Markets = GetOutrightMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.SportId, item.FixtureTypeId)
@@ -3652,6 +3677,7 @@ namespace Platform.Sportsbook.API.Repository
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = clientTopLeagues.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() == 0 ? sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() : clientTopLeagues.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault(),
                 Markets = GetMainMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode)
@@ -3750,6 +3776,7 @@ namespace Platform.Sportsbook.API.Repository
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault(),
                 Markets = GetMainMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode)
@@ -3849,6 +3876,7 @@ namespace Platform.Sportsbook.API.Repository
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 Markets = GetMainMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode)
             }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -4246,6 +4274,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(fixture.CuPe),
                     CurrentMinute = fixture.CuMi.ToString(),
                     BetStop = fixture.IsSu ? new List<int> { 1 } : new List<int> { },
+                    IsBetStop = fixture.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo,
                     MarketTemplateGroups = marketTemplateGroups,
                     Markets = GetMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), request.LanguageCode, request.ClientCode, fixture.SpId, fixture.FiTyId)
@@ -4396,6 +4425,7 @@ namespace Platform.Sportsbook.API.Repository
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(fixture.CuPe),
                     CurrentMinute = fixture.CuMi.ToString(),
                     BetStop = fixture.IsSu ? new List<int> { 1 } : new List<int> { },
+                    IsBetStop = fixture.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo,
                     Markets = GetMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), request.LanguageCode, request.ClientCode, fixture.SpId, fixture.FiTyId)
                 }

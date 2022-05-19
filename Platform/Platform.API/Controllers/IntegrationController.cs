@@ -37,7 +37,6 @@ namespace Platform.API.Controllers
 
             var parameters = new
             {
-
             };
 
             var properties = new Dictionary<string, string>

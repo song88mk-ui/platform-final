@@ -60,12 +60,38 @@ namespace Platform.Client.API.ActionFilters
 
             foreach (var item in _allowed)
             {
-                if (item.Item3.Contains(ipAddress))
+                //temp approach for CIDR block
+                if (item.Item1 == "betgenius")
                 {
-                    if (item.Item2 == apiKey)
+                    if (ipAddress.Contains("185.107.196"))
                     {
-                        isNotAllowed = false;
-                        break;
+                        if (item.Item2 == apiKey)
+                        {
+                            isNotAllowed = false;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if (item.Item3.Contains(ipAddress))
+                        {
+                            if (item.Item2 == apiKey)
+                            {
+                                isNotAllowed = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (item.Item3.Contains(ipAddress))
+                    {
+                        if (item.Item2 == apiKey)
+                        {
+                            isNotAllowed = false;
+                            break;
+                        }
                     }
                 }
             }

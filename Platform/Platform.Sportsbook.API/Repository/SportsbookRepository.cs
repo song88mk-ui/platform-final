@@ -772,7 +772,8 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             SegmentId = s.Key,
                             SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
-                            SortOrder = segment?.FirstOrDefault(c => c.SegmentId == s.Key)?.SortOrder ?? 1000,
+                            SortOrder = segment?.FirstOrDefault(c => c.SegmentId == s.Key)?.SortOrder == null && s.Select(se => se.SegmentId).FirstOrDefault() == 999999 ? 1001
+                                        : segment?.FirstOrDefault(c => c.SegmentId == s.Key)?.SortOrder ?? 1000,
                             Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
                             {
                                 LeagueId = l.Key,

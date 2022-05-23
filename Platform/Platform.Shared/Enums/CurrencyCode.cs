@@ -34,6 +34,10 @@
         NGN = 30,
         BTC = 31,
         ETH = 32,
-        PKR = 33
+        PKR = 33,
+        BRL = 34,
+        CLP = 35,
+        PEN = 36,
+        MXN = 37,
     }
 }

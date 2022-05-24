@@ -815,7 +815,7 @@ namespace Platform.Sportsbook.API.Controllers
         /// Add or update top leagues of a client.
         /// </summary>
         [HttpPost("v1/sportsbook/client/topleagues/post")]
-        public async Task<IActionResult> AddorUpdateTopLeagues([FromBody] ClientTopLeague request)
+        public async Task<IActionResult> AddorUpdateTopLeagues([FromBody] ClientTopLeagueDTO request)
         {
             var result = await _sportsbookRepository.AddOrUpdateTopLeagues(request);
 

@@ -2639,7 +2639,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var sportsbookRequest = new ClientTopLeague()
+            var sportsbookRequest = new ClientTopLeagueDTO()
             {
                 ClientId = result.ClientId,
                 SportId = request.SportId,

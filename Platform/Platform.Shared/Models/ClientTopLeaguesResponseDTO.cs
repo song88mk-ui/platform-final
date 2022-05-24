@@ -7,12 +7,12 @@ namespace Platform.Shared.Models
     {
         public ClientTopLeaguesResponseDTO()
         {
-            ClientTopLeagues = new List<ClientTopLeague>();
+            ClientTopLeagues = new List<ClientTopLeagueDTO>();
         }
-        public List<ClientTopLeague> ClientTopLeagues { get; set; }
+        public List<ClientTopLeagueDTO> ClientTopLeagues { get; set; }
     }
 
-    public class ClientTopLeague
+    public class ClientTopLeagueDTO
     {
         public Guid ClientId { get; set; }
         public int SportId { get; set; }

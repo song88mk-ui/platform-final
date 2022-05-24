@@ -772,7 +772,7 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             SegmentId = s.Key,
                             SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
-                            SortOrder = segment?.FirstOrDefault(c => c.SegmentId == s.Key)?.SortOrder == null && s.Select(se => se.SegmentId).FirstOrDefault() == 999999 ? 1001
+                            SortOrder = segment?.FirstOrDefault(c => c.SegmentId == s.Key)?.SortOrder == null && s.Select(se => se.SegmentId).FirstOrDefault() == 999999 ? 2000
                                         : segment?.FirstOrDefault(c => c.SegmentId == s.Key)?.SortOrder ?? 1000,
                             Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
                             {
@@ -2156,7 +2156,7 @@ namespace Platform.Sportsbook.API.Repository
                 });
             });
 
-            var segmentOrder = GetSegmentOrder().Where(c => c.SportId == request.SportId && c.ClientId == request.ClientId).ToList();
+            var segmentOrder = GetSegmentOrder().Where(c => c.ClientId == request.ClientId && c.SportId == request.SportId).ToList();
             if (segmentOrder.Count > 0)
                 finalResult = finalResult.OrderBy(o => segmentOrder?.FirstOrDefault(c => c.SegmentId == o.SegmentId)?.SortOrder ?? 1000).ThenBy(o => o.SegmentName).ThenBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             else
@@ -2500,7 +2500,7 @@ namespace Platform.Sportsbook.API.Repository
                 });
             });
 
-            var segmentOrder = GetSegmentOrder().Where(c => c.SportId == request.SportId && c.ClientId == request.ClientId).ToList();
+            var segmentOrder = GetSegmentOrder().Where(c => c.ClientId == request.ClientId && c.SportId == request.SportId).ToList();
             if (request.SportId == 5)
                 finalResult = finalResult.OrderBy(o => o.SegmentId).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             else if (segmentOrder.Count > 0)
@@ -2894,7 +2894,7 @@ namespace Platform.Sportsbook.API.Repository
                 });
             });
 
-            var segmentOrder = GetSegmentOrder().Where(c => c.SportId == request.SportId && c.ClientId == request.ClientId).ToList();
+            var segmentOrder = GetSegmentOrder().Where(c => c.ClientId == request.ClientId && c.SportId == request.SportId).ToList();
             if (request.SportId == 5)
                 finalResult = finalResult.OrderBy(o => o.SegmentId).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             else if (segmentOrder.Count > 0)
@@ -3046,8 +3046,8 @@ namespace Platform.Sportsbook.API.Repository
                     Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode)
                 });
             });
-            
-            var segmentOrder = GetSegmentOrder().Where(c => c.SportId == request.SportId && c.ClientId == request.ClientId).ToList();
+
+            var segmentOrder = GetSegmentOrder().Where(c => c.ClientId == request.ClientId && c.SportId == request.SportId).ToList();
             if (request.SportId == 5)
                 finalResult = finalResult.OrderBy(o => o.SegmentId).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             else if (segmentOrder.Count > 0)

@@ -19,6 +19,8 @@ namespace Platform.Shared.Data.Sportsbook
             modelBuilder.Entity<UserFavorite>().HasKey(k => new { k.UserId, k.Id });
             modelBuilder.Entity<SportGroup>().HasKey(k => new { k.SportGroupId });
             modelBuilder.Entity<SelectorMarketTemplate>().HasKey(k => new { k.SportId, k.MarketTemplateId });
+            modelBuilder.Entity<ClientSegmentOrder>().HasKey(k => new { k.ClientId, k.SportId, k.SegmentId });
+            modelBuilder.Entity<ClientSegmentLeagueOrder>().HasKey(k => new { k.ClientId, k.SportId, k.SegmentId, k.LeagueId });
         }
 
         public DbSet<ClientSportOrder> ClientSportOrder { get; set; }
@@ -29,5 +31,7 @@ namespace Platform.Shared.Data.Sportsbook
         public DbSet<UserFavorite> UserFavorite { get; set; }
         public DbSet<SportGroup> SportGroup { get; set; }
         public DbSet<SelectorMarketTemplate> SelectorMarketTemplate { get; set; }
+        public DbSet<ClientSegmentOrder> ClientSegmentOrder { get; set; }
+        public DbSet<ClientSegmentLeagueOrder> ClientSegmentLeagueOrder { get; set; }
     }
 }

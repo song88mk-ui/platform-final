@@ -23,6 +23,6 @@ namespace Platform.Shared.Models
 
     public class TempOrderedLeague : OrderedLeague
     {
-        public int SortOrder { get; set; }
+        public int LeagueSortOrder { get; set; }
     }
 }

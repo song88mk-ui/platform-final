@@ -308,17 +308,17 @@ namespace Platform.Sportsbook.API.Repository
 
             var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
 
-            var clientTopLeagues = new List<ClientLeagueOrder>();
+            var clientTopLeagues = new List<ClientTopLeague>();
 
             var key = $"clo:{request.ClientId.ToString().ToUpper()}";
 
-            var cache = _memCache.GetCache<List<ClientLeagueOrder>>(key);
+            var cache = _memCache.GetCache<List<ClientTopLeague>>(key);
 
             if (cache != null)
                 clientTopLeagues = cache;
             else
             {
-                clientTopLeagues = await _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == request.ClientId).ToListAsync();
+                clientTopLeagues = await _sportsbookContext.ClientTopLeague.Where(c => c.ClientId == request.ClientId).ToListAsync();
                 _memCache.AddOrUpdateCache(key, clientTopLeagues, DateTimeOffset.UtcNow.AddMinutes(5));
             }
 
@@ -3537,17 +3537,17 @@ namespace Platform.Sportsbook.API.Repository
 
             var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
 
-            var clientTopLeagues = new List<ClientLeagueOrder>();
+            var clientTopLeagues = new List<ClientTopLeague>();
 
             var key = $"clo:{request.ClientId.ToString().ToUpper()}";
 
-            var cache = _memCache.GetCache<List<ClientLeagueOrder>>(key);
+            var cache = _memCache.GetCache<List<ClientTopLeague>>(key);
 
             if (cache != null)
                 clientTopLeagues = cache;
             else
             {
-                clientTopLeagues = await _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == request.ClientId).ToListAsync();
+                clientTopLeagues = await _sportsbookContext.ClientTopLeague.Where(c => c.ClientId == request.ClientId).ToListAsync();
                 _memCache.AddOrUpdateCache(key, clientTopLeagues, DateTimeOffset.UtcNow.AddMinutes(5));
             }
 
@@ -6138,17 +6138,17 @@ namespace Platform.Sportsbook.API.Repository
                     });
             }
 
-            var finalResult = new List<ClientTopLeague>();
+            var finalResult = new List<ClientTopLeagueDTO>();
 
             foreach (var clientId in request.ClientIds)
             {
-                var clientTopLeague = new ClientTopLeague()
+                var clientTopLeague = new ClientTopLeagueDTO()
                 {
                     ClientId = clientId,
                     TopLeagues = new List<SportLeague>()
                 };
 
-                var sportLeague = _sportsbookContext.ClientLeagueOrder
+                var sportLeague = _sportsbookContext.ClientTopLeague
                     .Where(c => c.ClientId == clientId && c.SportId == request.SportId)
                     .OrderBy(c => c.SortOrder).ToList();
 
@@ -6192,7 +6192,7 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
-        public async Task<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>> AddOrUpdateTopLeagues(ClientTopLeague request)
+        public async Task<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>> AddOrUpdateTopLeagues(ClientTopLeagueDTO request)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new System.Transactions.TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
             {
@@ -6244,15 +6244,15 @@ namespace Platform.Sportsbook.API.Repository
                 }
 
                 // delete existing records
-                var currentTopLeagues = _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == request.ClientId && c.SportId == request.SportId).ToList();
+                var currentTopLeagues = _sportsbookContext.ClientTopLeague.Where(c => c.ClientId == request.ClientId && c.SportId == request.SportId).ToList();
 
                 if (currentTopLeagues.Count > 0)
                 {
-                    _sportsbookContext.ClientLeagueOrder.RemoveRange(currentTopLeagues);
+                    _sportsbookContext.ClientTopLeague.RemoveRange(currentTopLeagues);
                 }
 
                 // insert new records
-                var newTopLeagues = request.TopLeagues.Select(s => new ClientLeagueOrder
+                var newTopLeagues = request.TopLeagues.Select(s => new ClientTopLeague
                 {
                     ClientId = request.ClientId,
                     LeagueId = s.LeagueId,
@@ -6264,7 +6264,7 @@ namespace Platform.Sportsbook.API.Repository
                     SortOrder = s.SortOrder
                 });
 
-                _sportsbookContext.ClientLeagueOrder.AddRange(newTopLeagues);
+                _sportsbookContext.ClientTopLeague.AddRange(newTopLeagues);
 
                 await _sportsbookContext.SaveChangesAsync();
 
@@ -6334,15 +6334,15 @@ namespace Platform.Sportsbook.API.Repository
                     foreach (var clientId in request.ClientIds)
                     {
                         // delete existing records
-                        var currentTopLeagues = _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == clientId && c.SportId == request.SportId).ToList();
+                        var currentTopLeagues = _sportsbookContext.ClientTopLeague.Where(c => c.ClientId == clientId && c.SportId == request.SportId).ToList();
 
                         if (currentTopLeagues.Count > 0)
                         {
-                            _sportsbookContext.ClientLeagueOrder.RemoveRange(currentTopLeagues);
+                            _sportsbookContext.ClientTopLeague.RemoveRange(currentTopLeagues);
                         }
 
                         // insert new records
-                        var newTopLeagues = request.TopLeagues.Select(s => new ClientLeagueOrder
+                        var newTopLeagues = request.TopLeagues.Select(s => new ClientTopLeague
                         {
                             ClientId = clientId,
                             LeagueId = s.LeagueId,
@@ -6354,7 +6354,7 @@ namespace Platform.Sportsbook.API.Repository
                             SortOrder = s.SortOrder
                         });
 
-                        _sportsbookContext.ClientLeagueOrder.AddRange(newTopLeagues);
+                        _sportsbookContext.ClientTopLeague.AddRange(newTopLeagues);
                     }
 
                     await _sportsbookContext.SaveChangesAsync();

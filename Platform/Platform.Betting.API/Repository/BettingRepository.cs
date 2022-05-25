@@ -1286,33 +1286,37 @@ namespace Platform.Betting.API.Repository
             }
             else
             {
-                var openBets = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running };
+                if ((request.ToDate - request.FromDate).TotalDays > 30)
+                    request.FromDate = request.ToDate.AddDays(-30);
 
                 if (request.BetStatusFilter == BetStatusFilter.All)
                 {
-                    var rawAll = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && c.BetStatusId > (int)BetStatus.Waiting && c.BetStatusId != (int)BetStatus.Rejected);
+                    var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Rejected };
+                    var rawAll = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
 
-                    //rowCount = rawAll.Count();
+                    rowCount = rawAll.Count();
                     //winLoss = rawAll.Sum(c => c.WinLoss);
-                    transactions = rawAll.OrderByDescending(o => o.BetDate).Take(50).ToList();
+                    transactions = rawAll.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
                 }
 
                 if (request.BetStatusFilter == BetStatusFilter.Open)
                 {
-                    var rawOpen = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && openBets.Contains(c.BetStatusId));
+                    var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running };
+                    var rawOpen = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
 
-                    //rowCount = rawOpen.Count();
+                    rowCount = rawOpen.Count();
                     //winLoss = rawOpen.Sum(c => c.WinLoss);
-                    transactions = rawOpen.OrderByDescending(o => o.BetDate).Take(50).ToList();
+                    transactions = rawOpen.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
                 }
 
                 if (request.BetStatusFilter == BetStatusFilter.Settled)
                 {
-                    var rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && c.BetStatusId > (int)BetStatus.Running && c.BetStatusId != (int)BetStatus.Rejected);
+                    var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running, (int)BetStatus.Rejected };
+                    var rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
 
-                    //rowCount = rawSettled.Count();
+                    rowCount = rawSettled.Count();
                     //winLoss = rawSettled.Sum(c => c.WinLoss);
-                    transactions = rawSettled.OrderByDescending(o => o.BetDate).Take(50).ToList();
+                    transactions = rawSettled.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
                 }
             }
 

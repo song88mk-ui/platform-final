@@ -233,6 +233,7 @@ namespace Platform.Shared.Models
         public string LeagueName { get; set; }
         public string FixtureId { get; set; }
         public string ProviderFixtureId { get; set; }
+        public int fixtureTypeId { get; set; }
         public string FixtureName { get; set; }
         public string HomeName { get; set; }
         public string AwayName { get; set; }

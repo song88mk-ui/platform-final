@@ -123,42 +123,42 @@ namespace Platform.WebSocket.API.Repository
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
-                await Groups.AddToGroupAsync(Context.ConnectionId, $"onbetstatus:{client.Item2}:{request.UserId}");
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"onbetstatus:{client.Item2}:{request.UserId.ToLower()}");
         }
         public async Task UnsubscribeToBetStatus(BetStatusRequest request)
         {
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
-                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onbetstatus:{client.Item2}:{request.UserId}");
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onbetstatus:{client.Item2}:{request.UserId.ToLower()}");
         }
         public async Task SubscribeToCashOutChange(CashOutChangeRequest request)
         {
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
-                await Groups.AddToGroupAsync(Context.ConnectionId, $"oncashoutchange:{client.Item2}:{request.UserId}");
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"oncashoutchange:{client.Item2}:{request.UserId.ToLower()}");
         }
         public async Task UnsubscribeToCashOutChange(CashOutChangeRequest request)
         {
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
-                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"oncashoutchange:{client.Item2}:{request.UserId}");
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"oncashoutchange:{client.Item2}:{request.UserId.ToLower()}");
         }
         public async Task SubscribeToWalletChange(WalletChangeRequest request)
         {
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
-                await Groups.AddToGroupAsync(Context.ConnectionId, $"onwalletchange:{client.Item2}:{request.UserId}");
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"onwalletchange:{client.Item2}:{request.UserId.ToLower()}");
         }
         public async Task UnsubscribeToWalletChange(WalletChangeRequest request)
         {
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
-                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onwalletchange:{client.Item2}:{request.UserId}");
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onwalletchange:{client.Item2}:{request.UserId.ToLower()}");
         }
         public async Task PublishOddsChange(string clientCode, OutgoingOddsChange message)
         {
@@ -176,15 +176,15 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task PublishBetStatus(string clientCode, OutgoingBetStatus message)
         {
-            await Clients.Group($"{clientCode}:{message.UsId}").OnBetStatus(message);
+            await Clients.Group($"onbetstatus:{clientCode}:{message.UsId.ToLower()}").OnBetStatus(message);
         }
         public async Task PublishCashOutChange(string clientCode, OutgoingCashOutChange message)
         {
-            await Clients.Group($"{clientCode}:{message.UsId}").OnCashOutChange(message);
+            await Clients.Group($"oncashoutchange:{clientCode}:{message.UsId.ToLower()}").OnCashOutChange(message);
         }
         public async Task PublishWalletChange(string clientCode, OutgoingWalletChange message)
         {
-            await Clients.Group($"{clientCode}:{message.UsId}").OnWalletChange(message);
+            await Clients.Group($"onwalletchange:{clientCode}:{message.UsId.ToLower()}").OnWalletChange(message);
         }
         private async Task<Tuple<bool, string>> GetClient(string clientId)
         {

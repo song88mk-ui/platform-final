@@ -690,7 +690,7 @@ namespace Platform.Sportsbook.API.Repository
                 HasOutrights = fixtures.Any(c => c.SpId == s.SpId && c.FiTyId == (int)FixtureType.Outright),
                 SortOrder = sportSortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
                     == 0 ? 1000 : sportSortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
-            }).ToList();
+            }).ToList().OrderBy(o => o.SortOrder).ThenBy(o => o.SportName).ToList();
 
             var finalResult = new List<OrderedSport>();
 

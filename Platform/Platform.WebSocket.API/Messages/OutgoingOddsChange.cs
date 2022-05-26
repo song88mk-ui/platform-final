@@ -76,7 +76,7 @@ namespace Platform.WebSocket.API.Messages
         public string SeTeId { get; set; }
         public string SeId { get; set; }
         public string SeNa { get; set; }
-        public decimal DeOd { get; set; }
+        public string DeOd { get; set; }
         public bool IsAc { get; set; }
         public int SoOr { get; set; }
         public List<OutgoingSelectionTranslation> SeNaTr { get; set; }

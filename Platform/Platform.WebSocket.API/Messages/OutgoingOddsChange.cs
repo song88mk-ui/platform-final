@@ -44,6 +44,7 @@ namespace Platform.WebSocket.API.Messages
         public string CuPe { get; set; }
         public int CuMi { get; set; }
         public int SoOr { get; set; }
+        public int MaCo { get; set; }
         public List<OutgoingSportTranslation> SpNaTr { get; set; }
         public List<OutgoingSegmentTranslation> SegNaTr { get; set; }
         public List<OutgoingLeagueTranslation> LeNaTr { get; set; }

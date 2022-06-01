@@ -50,6 +50,8 @@ namespace Platform.WebSocket.API.Messages
         public List<OutgoingLeagueTranslation> LeNaTr { get; set; }
         public List<OutgoingFixtureTranslation> FiNaTr { get; set; }
         public List<OutgoingMarket> Ma { get; set; }
+        public List<OutgoingMarket> InMa { get; set; }
+        public List<OutgoingMarket> UpMa { get; set; }
     }
     public class OutgoingMarket
     {

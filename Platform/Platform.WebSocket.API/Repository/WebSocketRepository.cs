@@ -78,7 +78,10 @@ namespace Platform.WebSocket.API.Repository
 
             if (client.Item1 == true)
                 if (string.IsNullOrEmpty(request.ChannelKey) == false)
+                {
                     await Groups.AddToGroupAsync(Context.ConnectionId, $"endpoint:{client.Item2}:{request.ChannelKey}");
+                    await Groups.AddToGroupAsync(Context.ConnectionId, $"onbetstopglobal:{client.Item2}");
+                }
         }
         public async Task UnsubscribeToEndpoint(EndpointRequest request)
         {
@@ -172,7 +175,7 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task PublishBetStopGlobal(string clientCode, OutgoingBetStopGlobal message)
         {
-            await Clients.All.OnBetStopGlobal(message);
+            await Clients.Group($"onbetstopglobal:{clientCode}").OnBetStopGlobal(message);
         }
         public async Task PublishBetStatus(string clientCode, OutgoingBetStatus message)
         {

@@ -40,23 +40,16 @@ namespace Platform.WebSocket.API
                     new[] { "application/octet-stream" });
             });
 
-            services.AddSignalR(hubOptions =>
-            {
-                hubOptions.MaximumReceiveMessageSize = 5000000;
-            });
-
             //services.AddSignalR(hubOptions =>
             //{
             //    hubOptions.MaximumReceiveMessageSize = 5000000;
-            //})
-            //.AddMessagePackProtocol()
-            ////.AddMessagePackProtocol(options =>
-            ////{
-            ////    options.SerializerOptions = MessagePackSerializerOptions
-            ////            .Standard
-            ////            .WithResolver(MessagePack.Resolvers.StandardResolver.Instance)
-            ////            .WithSecurity(MessagePackSecurity.UntrustedData);
-            ////})
+            //});
+
+            services.AddSignalR(hubOptions =>
+            {
+                hubOptions.MaximumReceiveMessageSize = 5000000;
+            })
+            .AddMessagePackProtocol();
             //.AddAzureSignalR("Endpoint=https://song88.service.signalr.net;AccessKey=5ES+/AH0OiMLbDQrsMZnXmNFpkHuUlEH2dfn3sFnRyw=;Version=1.0;");
 
 

@@ -1528,12 +1528,12 @@ namespace Platform.Sportsbook.API.Repository
             await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO
             {
                 CorrelationId = Guid.NewGuid().ToString(),
-                MessageType = "OnVisitPlayerFavorites",
-                RoutingKey = $"r.oe.sb.engine.onplayerfavorites.{request.ClientCode.ToLower()}",
+                MessageType = "OnVisitFavorites",
+                RoutingKey = $"r.oe.sb.engine.onvisitfavorites.{request.ClientCode.ToLower()}",
                 Payload = JsonSerializer.Serialize(new 
                 {
                     UserId = request.UserId,
-                    result
+                    Favorites = result
                 })
             });
 

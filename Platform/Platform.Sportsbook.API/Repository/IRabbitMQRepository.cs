@@ -5,6 +5,6 @@ namespace Platform.Sportsbook.API.Repository
 {
     public interface IRabbitMQRepository
     {
-        Task<BaseResponseDTO<MessageResponseDTO>> Settlebet(MessageRequestDTO request);
+        Task<BaseResponseDTO<MessageResponseDTO>> PublishToRabbitMQAPI(MessageRequestDTO request);
     }
 }

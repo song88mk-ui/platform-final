@@ -20,7 +20,7 @@ namespace Platform.Sportsbook.API.Repository
             _httpClient.BaseAddress = new Uri(_configuration["API:RabbitMQAPI"]);
         }
 
-        public async Task<BaseResponseDTO<MessageResponseDTO>> Settlebet(MessageRequestDTO request)
+        public async Task<BaseResponseDTO<MessageResponseDTO>> PublishToRabbitMQAPI(MessageRequestDTO request)
         {
             try
             {

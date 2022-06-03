@@ -1525,6 +1525,18 @@ namespace Platform.Sportsbook.API.Repository
             if (result.Count > 0)
                 _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddMinutes(1));
 
+            await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO
+            {
+                CorrelationId = Guid.NewGuid().ToString(),
+                MessageType = "OnVisitPlayerFavorites",
+                RoutingKey = $"r.oe.sb.engine.onplayerfavorites.{request.ClientCode.ToLower()}",
+                Payload = JsonSerializer.Serialize(new 
+                {
+                    UserId = request.UserId,
+                    result
+                })
+            });
+
             return returnResult;
         }
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> AddFavorites(UserFavoriteInsertDeleteRequestDTO request)
@@ -5626,7 +5638,7 @@ namespace Platform.Sportsbook.API.Repository
                         Selections = selectionPayload
                     };
 
-                    await _rabbitMQRepository.Settlebet(new MessageRequestDTO()
+                    await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO()
                     {
                         CorrelationId = Guid.NewGuid().ToString(),
                         MessageType = "OnBetSettlement",
@@ -5652,7 +5664,7 @@ namespace Platform.Sportsbook.API.Repository
                             }).ToList()
                     };
 
-                    await _rabbitMQRepository.Settlebet(new MessageRequestDTO()
+                    await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO()
                     {
                         CorrelationId = Guid.NewGuid().ToString(),
                         MessageType = "OnBetSettlement",

@@ -163,6 +163,20 @@ namespace Platform.WebSocket.API.Repository
             if (client.Item1 == true)
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onwalletchange:{client.Item2}:{request.UserId.ToLower()}");
         }
+        public async Task SubscribeToFavorites(FavoritesRequest request)
+        {
+            var client = await GetClient(request.ClientId);
+
+            if (client.Item1 == true)
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"onfavorites:{client.Item2}:{request.UserId.ToLower()}");
+        }
+        public async Task UnsubscribeToFavorites(WalletChangeRequest request)
+        {
+            var client = await GetClient(request.ClientId);
+
+            if (client.Item1 == true)
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onfavorites:{client.Item2}:{request.UserId.ToLower()}");
+        }
         public async Task PublishOddsChange(string clientCode, OutgoingOddsChange message)
         {
             await Clients.Group($"onbetslipoddschange:{clientCode}:{message.Pa.FiId}").OnBetslipOddsChange(message.Pa);
@@ -232,6 +246,11 @@ namespace Platform.WebSocket.API.Repository
     }
 
     public class WalletChangeRequest
+    {
+        public string ClientId { get; set; }
+        public string UserId { get; set; }
+    }
+    public class FavoritesRequest
     {
         public string ClientId { get; set; }
         public string UserId { get; set; }

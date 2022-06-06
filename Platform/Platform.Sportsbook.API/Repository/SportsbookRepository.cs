@@ -1281,6 +1281,8 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
+            var userFavorites = new List<UserFavoriteDTO>();
+
             var leagues = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.League).Select(s => Convert.ToInt32(s.Id)).Distinct().ToList();
 
             if (leagues.Count > 0)
@@ -1320,6 +1322,19 @@ namespace Platform.Sportsbook.API.Repository
 
                     foreach (var item in leagueResult)
                     {
+                        if (!userFavorites.Any(c => c.SportId == item.SpId && c.Id == item.LeId.ToString() && c.HierarchyId == (int)UserFavoriteHierarchy.League))
+                        {
+                            userFavorites.Add(new UserFavoriteDTO
+                            {
+                                SportId = item.SpId,
+                                SportName = item.SpNa,
+                                HierarchyId = (int)UserFavoriteHierarchy.League,
+                                HierarchyName = UserFavoriteHierarchy.League.ToString(),
+                                Id = item.LeId.ToString(),
+                                Name = item.LeNa
+                            });
+                        }
+
                         if (result.Any(c => c.FixtureId == item.FiId.ToString())) continue;
 
                         result.Add(new FixtureDTO
@@ -1395,6 +1410,19 @@ namespace Platform.Sportsbook.API.Repository
 
                     foreach (var item in fixtureResult)
                     {
+                        if (!userFavorites.Any(c => c.SportId == item.SpId && c.Id == item.FiId.ToString() && c.HierarchyId == (int)UserFavoriteHierarchy.Fixture))
+                        {
+                            userFavorites.Add(new UserFavoriteDTO
+                            {
+                                SportId = item.SpId,
+                                SportName = item.SpNa,
+                                HierarchyId = (int)UserFavoriteHierarchy.Fixture,
+                                HierarchyName = UserFavoriteHierarchy.Fixture.ToString(),
+                                Id = item.FiId.ToString(),
+                                Name = item.FiNa
+                            });
+                        }
+
                         if (result.Any(c => c.FixtureId == item.FiId.ToString())) continue;
 
                         result.Add(new FixtureDTO
@@ -1430,6 +1458,18 @@ namespace Platform.Sportsbook.API.Repository
                     }
                 }
             }
+
+            await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO
+            {
+                CorrelationId = Guid.NewGuid().ToString(),
+                MessageType = "OnVisitFavorites",
+                RoutingKey = $"r.oe.sb.engine.onvisitfavorites.{request.ClientCode.ToLower()}",
+                Payload = JsonSerializer.Serialize(new
+                {
+                    UserId = request.UserId,
+                    Favorites = userFavorites
+                })
+            });
 
             return new BaseResponseDTO<TWResponseDTO>
             {
@@ -1524,18 +1564,6 @@ namespace Platform.Sportsbook.API.Repository
 
             if (result.Count > 0)
                 _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddMinutes(1));
-
-            await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO
-            {
-                CorrelationId = Guid.NewGuid().ToString(),
-                MessageType = "OnVisitFavorites",
-                RoutingKey = $"r.oe.sb.engine.onvisitfavorites.{request.ClientCode.ToLower()}",
-                Payload = JsonSerializer.Serialize(new 
-                {
-                    UserId = request.UserId,
-                    Favorites = result
-                })
-            });
 
             return returnResult;
         }

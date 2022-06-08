@@ -177,7 +177,11 @@ namespace Platform.WebSocket.API.Repository
             if (client.Item1 == true)
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onfavorites:{client.Item2}:{request.UserId.ToLower()}");
         }
-        public async Task PublishOddsChange(string clientCode, OutgoingOddsChange message)
+        public async Task PublishOddsChangeForMainMarkets(string clientCode, OutgoingOddsChange message)
+        {
+            await Clients.Groups(message.Gr).OnOddsChange(message.Pa);
+        }
+        public async Task PublishOddsChangeForAllMarkets(string clientCode, OutgoingOddsChange message)
         {
             await Clients.Group($"onbetslipoddschange:{clientCode}:{message.Pa.FiId}").OnBetslipOddsChange(message.Pa);
             await Clients.Groups(message.Gr).OnOddsChange(message.Pa);

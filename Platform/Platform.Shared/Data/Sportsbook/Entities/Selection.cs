@@ -35,6 +35,8 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public decimal DeHeFa { get; set; }
         public string ClBoOd { get; set; }
         public List<SelectionTranslationMDB> SeNaTr { get; set; }
+        public List<ClientBoostedSelectionNameMDB> ClBoSeNa { get; set; }
+        public List<ClientBoostedSelectionNameTranslationMDB> ClBoSeNaTr { get; set; }
     }
     public class SelectionFilter
     {
@@ -50,6 +52,8 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public string CoId { get; set; }
         public string ClBoOd { get; set; }
         public List<SelectionTranslationMDB> SeNaTr { get; set; }
+        public List<ClientBoostedSelectionNameMDB> ClBoSeNa { get; set; }
+        public List<ClientBoostedSelectionNameTranslationMDB> ClBoSeNaTr { get; set; }
     }
 
     public class SelectionTranslationMDB
@@ -58,7 +62,18 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public string LaCo { get; set; }
         public string SeNa { get; set; }
     }
-
+    public class ClientBoostedSelectionNameMDB
+    {
+        [BsonId]
+        public string ClCo { get; set; }
+        public string BoSeNa { get; set; }
+    }
+    public class ClientBoostedSelectionNameTranslationMDB
+    {
+        [BsonId]
+        public string ClCoLaCo { get; set; }
+        public string BoSeNa { get; set; }
+    }
     public class SelectionProbabilityFilter
     {
         [BsonId]

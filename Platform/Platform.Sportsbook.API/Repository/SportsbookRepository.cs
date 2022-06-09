@@ -4705,13 +4705,11 @@ namespace Platform.Sportsbook.API.Repository
         }
         private List<BoostedMarketDTO> GetBoostedMarkets(int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode)
         {
-            //var marketTemplates = GetMainMarketTemplates(sportId);
-
             if (IsOEEnable(clientCode))
             {
                 if (sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright)
                 {
-                    var filteredMarkets = markets.Where(c =>  c.IsBo == true).ToList(); //marketTemplates.Contains(c.MaTeId) &&
+                    var filteredMarkets = markets.Where(c =>  c.IsBo == true).ToList();
                     var result = new List<BoostedMarketDTO>();
 
                     foreach (var market in filteredMarkets)
@@ -4730,7 +4728,7 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
-                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                SelectionName = GetBoostedSelectionName(clientCode, s.ClBoSeNa, s.ClBoSeNaTr, languageCode),
                                 DecimalOdds = s.Od.ToString("0.00"),
                                 BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode),
                                 IsActive = s.IsAc,
@@ -4775,7 +4773,7 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
-                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                SelectionName = GetBoostedSelectionName(clientCode, s.ClBoSeNa, s.ClBoSeNaTr, languageCode),
                                 DecimalOdds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
                                 BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode),
                                 IsActive = s.IsAc,
@@ -4809,7 +4807,7 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
-                            SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                            SelectionName = GetBoostedSelectionName(clientCode, s.ClBoSeNa, s.ClBoSeNaTr, languageCode),
                             DecimalOdds = s.Od.ToString("0.00"),
                             BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode),
                             IsActive = s.IsAc,
@@ -5486,7 +5484,7 @@ namespace Platform.Sportsbook.API.Repository
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.ClBoOd).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.ClBoOd).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString()).Include(c => c.ClBoSeNa).Include(c => c.ClBoSeNaTr).ElemMatch(c => c.ClBoSeNaTr, cc => cc.ClCoLaCo == $"{request.ClientCode}:{request.LanguageCode.ToString()}");
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(marketCount, markets, selections);
@@ -6583,6 +6581,18 @@ namespace Platform.Sportsbook.API.Repository
                 return result.SeNa;
             else
                 return name;
+        }
+        private string GetBoostedSelectionName(string clientCode, List<ClientBoostedSelectionNameMDB> boostedSelectionNames, List<ClientBoostedSelectionNameTranslationMDB> translations, LanguageCode languageCode)
+        {
+            if (translations == null)
+                return boostedSelectionNames.FirstOrDefault(s => s.ClCo == clientCode).BoSeNa;
+
+            var result = translations.Where(c => c.ClCoLaCo == $"{clientCode}:{languageCode.ToString()}").FirstOrDefault();
+
+            if (result != null)
+                return result.BoSeNa;
+            else
+                return boostedSelectionNames.FirstOrDefault(s => s.ClCo == clientCode).BoSeNa;
         }
         private SettlementStatus GetSettlementStatus(BetStatus status)
         {

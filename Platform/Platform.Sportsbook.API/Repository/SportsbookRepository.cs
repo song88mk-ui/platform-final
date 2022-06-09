@@ -4728,7 +4728,7 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
-                                SelectionName = GetBoostedSelectionName(clientCode, s.ClBoSeNa, s.ClBoSeNaTr, languageCode),
+                                SelectionName = GetBoostedSelectionName(clientCode, s.SeNa, s.ClBoSeNa, s.ClBoSeNaTr, languageCode),
                                 DecimalOdds = s.Od.ToString("0.00"),
                                 BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode),
                                 IsActive = s.IsAc,
@@ -4773,7 +4773,7 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
-                                SelectionName = GetBoostedSelectionName(clientCode, s.ClBoSeNa, s.ClBoSeNaTr, languageCode),
+                                SelectionName = GetBoostedSelectionName(clientCode, s.SeNa, s.ClBoSeNa, s.ClBoSeNaTr, languageCode),
                                 DecimalOdds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
                                 BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode),
                                 IsActive = s.IsAc,
@@ -4807,7 +4807,7 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
-                            SelectionName = GetBoostedSelectionName(clientCode, s.ClBoSeNa, s.ClBoSeNaTr, languageCode),
+                            SelectionName = GetBoostedSelectionName(clientCode, s.SeNa, s.ClBoSeNa, s.ClBoSeNaTr, languageCode),
                             DecimalOdds = s.Od.ToString("0.00"),
                             BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode),
                             IsActive = s.IsAc,
@@ -6582,8 +6582,11 @@ namespace Platform.Sportsbook.API.Repository
             else
                 return name;
         }
-        private string GetBoostedSelectionName(string clientCode, List<ClientBoostedSelectionNameMDB> boostedSelectionNames, List<ClientBoostedSelectionNameTranslationMDB> translations, LanguageCode languageCode)
+        private string GetBoostedSelectionName(string clientCode, string selectionName, List<ClientBoostedSelectionNameMDB> boostedSelectionNames, List<ClientBoostedSelectionNameTranslationMDB> translations, LanguageCode languageCode)
         {
+            if (boostedSelectionNames == null) //backward compatibility
+                return selectionName;
+
             if (translations == null)
                 return boostedSelectionNames.FirstOrDefault(s => s.ClCo == clientCode).BoSeNa;
 

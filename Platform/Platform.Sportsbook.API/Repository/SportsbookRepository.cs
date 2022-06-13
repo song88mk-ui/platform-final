@@ -4266,29 +4266,60 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(markets, selections);
 
-            var initial = GetMarketTemplateGroup().Where(c => c.SportId == fixture.SpId).ToList();
+            var marketTemplateGroups = new SportMarketTemplateGroup();
 
-            var prematch = initial.Where(c => c.FixtureStatusId == 0 && c.MarketTemplates != "0").ToList();
-            var live = initial.Where(c => c.FixtureStatusId == 1 && c.MarketTemplates != "0").ToList();
+            var clientInitial = GetClientMarketTemplateGroups().Where(c => c.SportId == fixture.SpId && c.ClientId == request.ClientId).ToList();
 
-            var marketTemplateGroups = new SportMarketTemplateGroup
+            if (clientInitial.Any())
             {
-                SportId = fixture.SpId,
-                Prematch = prematch.Select(p => new Shared.Models.MarketTemplateGroup
+                var prematch = clientInitial.Where(c => c.FixtureStatusId == 0 && c.MarketTemplates != "0").ToList();
+                var live = clientInitial.Where(c => c.FixtureStatusId == 1 && c.MarketTemplates != "0").ToList();
+
+                marketTemplateGroups = new SportMarketTemplateGroup
                 {
-                    MarketTemplateGroupId = p.Id,
-                    MarketTemplateGroupName = p.Name,
-                    SortOrder = p.SortOrder,
-                    MarketTemplateIds = p.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
-                }).OrderBy(o => o.MarketTemplateGroupId).ToList(),
-                Live = live.Select(l => new Shared.Models.MarketTemplateGroup
+                    SportId = fixture.SpId,
+                    Prematch = prematch.Select(p => new Shared.Models.MarketTemplateGroup
+                    {
+                        MarketTemplateGroupId = p.Id,
+                        MarketTemplateGroupName = p.Name,
+                        SortOrder = p.SortOrder,
+                        MarketTemplateIds = p.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
+                    }).OrderBy(o => o.MarketTemplateGroupId).ToList(),
+                    Live = live.Select(l => new Shared.Models.MarketTemplateGroup
+                    {
+                        MarketTemplateGroupId = l.Id,
+                        MarketTemplateGroupName = l.Name,
+                        SortOrder = l.SortOrder,
+                        MarketTemplateIds = l.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
+                    }).OrderBy(o => o.MarketTemplateGroupId).ToList()
+                };
+            }
+            else
+            {
+                var initial = GetMarketTemplateGroup().Where(c => c.SportId == fixture.SpId).ToList();
+
+                var prematch = initial.Where(c => c.FixtureStatusId == 0 && c.MarketTemplates != "0").ToList();
+                var live = initial.Where(c => c.FixtureStatusId == 1 && c.MarketTemplates != "0").ToList();
+
+                marketTemplateGroups = new SportMarketTemplateGroup
                 {
-                    MarketTemplateGroupId = l.Id,
-                    MarketTemplateGroupName = l.Name,
-                    SortOrder = l.SortOrder,
-                    MarketTemplateIds = l.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
-                }).OrderBy(o => o.MarketTemplateGroupId).ToList()
-            };
+                    SportId = fixture.SpId,
+                    Prematch = prematch.Select(p => new Shared.Models.MarketTemplateGroup
+                    {
+                        MarketTemplateGroupId = p.Id,
+                        MarketTemplateGroupName = p.Name,
+                        SortOrder = p.SortOrder,
+                        MarketTemplateIds = p.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
+                    }).OrderBy(o => o.MarketTemplateGroupId).ToList(),
+                    Live = live.Select(l => new Shared.Models.MarketTemplateGroup
+                    {
+                        MarketTemplateGroupId = l.Id,
+                        MarketTemplateGroupName = l.Name,
+                        SortOrder = l.SortOrder,
+                        MarketTemplateIds = l.MarketTemplates.Split(',').Select(ss => ss.ToString()).ToList()
+                    }).OrderBy(o => o.MarketTemplateGroupId).ToList()
+                };
+            }
 
             var result = new List<FixtureDTO>
             {
@@ -5578,6 +5609,10 @@ namespace Platform.Sportsbook.API.Repository
         private List<Shared.Data.Sportsbook.SQLEntities.MarketTemplateGroup> GetMarketTemplateGroup()
         {
             return _memCache.GetCache($"mtg2", () => _sportsbookContext.MarketTemplateGroup.ToList(), 24);
+        }
+        private List<ClientMarketTemplateGroup> GetClientMarketTemplateGroups()
+        {
+            return _memCache.GetCache($"cmtg", () => _sportsbookContext.ClientMarketTemplateGroup.ToList(), 24);
         }
         private List<ClientSportOrder> GetSportOrder()
         {

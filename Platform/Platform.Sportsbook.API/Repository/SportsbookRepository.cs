@@ -685,7 +685,7 @@ namespace Platform.Sportsbook.API.Repository
             var leagueSortOrder = GetTierLeagueOrder().Where(c => sportIds.Contains(c.SportId)).ToList();
             var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
             var segmentOrder = GetSegmentOrder().Where(c => c.ClientId == request.ClientId).ToList();
-            var segmentLeagueOrder = GetSegmentLeagueOrder().Where(c => c.ClientId == request.ClientId).ToList();
+            var leagueOrder = GetLeagueOrder().Where(c => c.ClientId == request.ClientId).ToList();
 
             var result = fixtures.Where(c => c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
             {
@@ -695,7 +695,7 @@ namespace Platform.Sportsbook.API.Repository
                 SegmentName = GetSegmentName(s.SegNa, s.SegNaTr, request.LanguageCode),
                 LeagueId = s.LeId,
                 LeagueName = GetLeagueName(s.LeNa, s.LeNaTr, request.LanguageCode),
-                LeagueSortOrder = segmentLeagueOrder.FirstOrDefault(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId)?.SortOrder ?? 
+                LeagueSortOrder = leagueOrder.FirstOrDefault(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId)?.SortOrder ?? 
                     leagueSortOrder.FirstOrDefault(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId)?.SortOrder + 1000 ?? 2000
             }).ToList();
 
@@ -5622,9 +5622,9 @@ namespace Platform.Sportsbook.API.Repository
         {
             return _memCache.GetCache($"seo", () => _sportsbookContext.ClientSegmentOrder.ToList(), 24);
         }
-        private List<ClientSegmentLeagueOrder> GetSegmentLeagueOrder()
+        private List<ClientLeagueOrder> GetLeagueOrder()
         {
-            return _memCache.GetCache($"seleo", () => _sportsbookContext.ClientSegmentLeagueOrder.ToList(), 24);
+            return _memCache.GetCache($"leo", () => _sportsbookContext.ClientLeagueOrder.ToList(), 24);
         }
         private Shared.Data.Sportsbook.SQLEntities.SportGroup GetSportGroups(Shared.Enums.SportGroup sportGroup)
         {

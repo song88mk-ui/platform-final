@@ -2,7 +2,7 @@
 
 namespace Platform.Shared.Data.Sportsbook.SQLEntities
 {
-    public class ClientSegmentLeagueOrder
+    public class ClientLeagueOrder
     {
         public Guid ClientId { get; set; }
         public int SportId { get; set; }

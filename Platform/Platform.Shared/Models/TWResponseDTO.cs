@@ -36,6 +36,7 @@ namespace Platform.Shared.Models
         public LanguageCode LanguageCode { get; set; }
         public string SearchText { get; set; }
         public string ClientCode { get; set; }
+        public int SportGroupId { get; set; }
     }
     public class TWSearchResponseDTO
     {
@@ -173,12 +174,14 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
+        public int SportGroupId { get; set; }
     }
     public class TWFLiveFixtureCountRequestDTO
     {
         public Guid ClientId { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
+        public int SportGroupId { get; set; }
     }
 
     public class TWFixtureCountResponseDTO

@@ -584,14 +584,14 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/livefixturecount")]
-        public async Task<IActionResult> GetLiveFixtureCount()
+        public async Task<IActionResult> GetLiveFixtureCount([FromQuery] SportGroup sportGroupId)
         {
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetLiveFixtureCount(apiKey, clientId, languageCode);
+            var result = await _platformRepository.GetLiveFixtureCount(apiKey, clientId, languageCode, sportGroupId);
 
             var parameters = new { };
 
@@ -618,14 +618,14 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/todayfixturecount")]
-        public async Task<IActionResult> GetTodayFixtureCount([FromQuery] int minuteUTCOffset)
+        public async Task<IActionResult> GetTodayFixtureCount([FromQuery] int minuteUTCOffset, SportGroup sportGroupId)
         {
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetTodayFixtureCount(apiKey, clientId, languageCode, new TodayFixtureCountRequest { MinuteUTCOffset = minuteUTCOffset });
+            var result = await _platformRepository.GetTodayFixtureCount(apiKey, clientId, languageCode, new TodayFixtureCountRequest { MinuteUTCOffset = minuteUTCOffset }, sportGroupId);
 
             var parameters = new
             {
@@ -1141,14 +1141,14 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/search")]
-        public async Task<IActionResult> GetSearchResults([FromQuery] string searchText)
+        public async Task<IActionResult> GetSearchResults([FromQuery] string searchText, SportGroup sportGroupId)
         {
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetSearchResults(apiKey, clientId, languageCode, new SearchResultRequest { SearchText = searchText});
+            var result = await _platformRepository.GetSearchResults(apiKey, clientId, languageCode, new SearchResultRequest { SearchText = searchText}, sportGroupId);
 
             var parameters = new
             {

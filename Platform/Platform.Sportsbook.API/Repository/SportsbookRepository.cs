@@ -1958,14 +1958,22 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(TWFLiveFixtureCountRequestDTO request)
         {
-            var mKey = $"nlfc:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}";
+            var mKey = $"nlfc:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportGroupId}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TWFixtureCountResponseDTO>>(mKey);
 
             if (mCache != null)
                 return mCache;
 
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Live && c.FiTyId == (int)FixtureType.Match);
+            FilterDefinition<Fixture> fixtureFilter;
+            if (request.SportGroupId != 0)
+            {
+                var sportsId = (await GetSportGroups()).Result.SportGroups.FirstOrDefault(c => c.SportGroupId == request.SportGroupId).Sports.Split(",").Select(s => Convert.ToInt32(s)).ToList();
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Live && c.FiTyId == (int)FixtureType.Match && sportsId.Contains(c.SpId));
+            }
+            else
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Live && c.FiTyId == (int)FixtureType.Match);
+
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             if (IsOEEnable(request.ClientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
@@ -2017,7 +2025,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetTodayFixtureCount(TWFTodayFixtureCountRequestDTO request)
         {
-            var mKey = $"ntfc:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.MinuteUTCOffset}";
+            var mKey = $"ntfc:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.MinuteUTCOffset}:{request.SportGroupId}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TWFixtureCountResponseDTO>>(mKey);
 
@@ -2025,7 +2033,16 @@ namespace Platform.Sportsbook.API.Repository
                 return mCache;
 
             var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset);
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
+
+            FilterDefinition<Fixture> fixtureFilter;
+            if (request.SportGroupId != 0)
+            {
+                var sportsId = (await GetSportGroups()).Result.SportGroups.FirstOrDefault(c => c.SportGroupId == request.SportGroupId).Sports.Split(",").Select(s => Convert.ToInt32(s)).ToList();
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2 && sportsId.Contains(c.SpId));
+            }
+            else
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
+            
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             if (IsOEEnable(request.ClientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
@@ -3949,20 +3966,40 @@ namespace Platform.Sportsbook.API.Repository
             FilterDefinition<Fixture> fixtureFilter;
             Task<List<Fixture>> fixtures;
 
+            var sportsId = new List<int>();
+            if (request.SportGroupId != 0)
+                sportsId = (await GetSportGroups()).Result.SportGroups.FirstOrDefault(c => c.SportGroupId == request.SportGroupId).Sports.Split(",").Select(s => Convert.ToInt32(s)).ToList();
+
             if (request.LanguageCode == LanguageCode.EN)
             {
-                leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.LeNa.ToLower().Contains(request.SearchText.ToLower()));
+                if (request.SportGroupId != 0)
+                {
+                    leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.LeNa.ToLower().Contains(request.SearchText.ToLower()) && sportsId.Contains(c.SpId));
+                    fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.FiNa.ToLower().Contains(request.SearchText.ToLower()) && sportsId.Contains(c.SpId));
+                }
+                else
+                {
+                    leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.LeNa.ToLower().Contains(request.SearchText.ToLower()));
+                    fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.FiNa.ToLower().Contains(request.SearchText.ToLower()));
+                }
+               
                 leagues = fixtureCollection.Find(leagueFilter).ToListAsync();
-
-                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.FiNa.ToLower().Contains(request.SearchText.ToLower()));
                 fixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
             }
             else
             {
-                leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.LeNaTr.Any(s => s.LeNa.ToLower().Contains(request.SearchText.ToLower())));
+                if (request.SportGroupId != 0)
+                {
+                    leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.LeNaTr.Any(s => s.LeNa.ToLower().Contains(request.SearchText.ToLower())) && sportsId.Contains(c.SpId));
+                    fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.FiNaTr.Any(s => s.FiNa.ToLower().Contains(request.SearchText.ToLower())) && sportsId.Contains(c.SpId));
+                }
+                else
+                {
+                    leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.LeNaTr.Any(s => s.LeNa.ToLower().Contains(request.SearchText.ToLower())));
+                    fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.FiNaTr.Any(s => s.FiNa.ToLower().Contains(request.SearchText.ToLower())));
+                }
+                    
                 leagues = fixtureCollection.Find(leagueFilter).ToListAsync();
-
-                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.FiNaTr.Any(s => s.FiNa.ToLower().Contains(request.SearchText.ToLower())));
                 fixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
             }
 

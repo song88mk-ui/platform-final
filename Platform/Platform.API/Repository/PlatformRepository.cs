@@ -1255,7 +1255,7 @@ namespace Platform.API.Repository
                 IpCountryCode = ipCountryCode,
             });
         }
-        public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(string apiKey, string clientId, string langCode)
+        public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(string apiKey, string clientId, string langCode, SportGroup sportGroupId)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -1294,10 +1294,11 @@ namespace Platform.API.Repository
             {
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
-                ClientCode = clientResponse.Result.ClientCode
+                ClientCode = clientResponse.Result.ClientCode,
+                SportGroupId = (int)sportGroupId
             });
         }
-        public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetTodayFixtureCount(string apiKey, string clientId, string langCode, TodayFixtureCountRequest request)
+        public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetTodayFixtureCount(string apiKey, string clientId, string langCode, TodayFixtureCountRequest request, SportGroup sportGroupId)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -1337,7 +1338,8 @@ namespace Platform.API.Repository
                 MinuteUTCOffset = request.MinuteUTCOffset,
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
-                ClientCode = clientResponse.Result.ClientCode
+                ClientCode = clientResponse.Result.ClientCode,
+                SportGroupId = (int)sportGroupId
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixtures(string apiKey, string clientId, string langCode, FixtureRequest request, string ipCountryCode)
@@ -2083,7 +2085,7 @@ namespace Platform.API.Repository
                 IpCountryCode = ipCountryCode,
             });
         }
-        public async Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(string apiKey, string clientId, string langCode, SearchResultRequest request)
+        public async Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(string apiKey, string clientId, string langCode, SearchResultRequest request, SportGroup sportGroupId)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -2132,7 +2134,8 @@ namespace Platform.API.Repository
                 SearchText = request.SearchText,
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
-                ClientCode = clientResponse.Result.ClientCode
+                ClientCode = clientResponse.Result.ClientCode,
+                SportGroupId = (int)sportGroupId
             });
         }
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(string apiKey, string clientId, string langCode, string operatorToken, string ipCountryCode)

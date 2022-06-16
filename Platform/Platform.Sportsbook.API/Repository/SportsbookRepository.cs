@@ -5784,6 +5784,136 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<BetBuilderSelectionResponseDTO>> GetBetBuilderSelections(BetBuilderSelectionRequestDTO request)
+        {
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == Convert.ToInt64(request.FixtureId));
+            var tempFixture = fixtureCollection.Find(fixtureFilter).FirstOrDefaultAsync();
+
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            await Task.WhenAll(tempFixture, tempBettingStatus);
+
+            var fixture = tempFixture.Result;
+
+            var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
+
+            if (fixture == null)
+            {
+                return new BaseResponseDTO<BetBuilderSelectionResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new BetBuilderSelectionResponseDTO()
+                };
+            }
+
+            var marketFilter = Builders<Market>.Filter.Where(c => c.FiId == fixture.FiId);
+            var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.IsBo).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
+
+            var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c => c.PrFiId == fixture.FiSp);
+            var marketMappingProjection = Builders<MarketMapping>.Projection.Include(c => c.PrFiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaSp);
+            var marketMappings = marketMappingCollection.Find(marketMappingFilter).Project<MarketMappingFilter>(marketMappingProjection).ToListAsync();
+
+            var selectionFilter = Builders<Selection>.Filter.Where(c => c.FiId == fixture.FiId);
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.ClBoOd).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString()).Include(c => c.ClBoSeNa).Include(c => c.ClBoSeNaTr).ElemMatch(c => c.ClBoSeNaTr, cc => cc.ClCoLaCo == $"{request.ClientCode}:{request.LanguageCode.ToString()}");
+            var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
+
+            var marketsResponse = new BetBuilderSelectionResponseDTO();
+            
+            #region SR API to get score
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("https://api.betradar.com");
+                client.DefaultRequestHeaders.Add("x-access-token", "wLCaM7vc80CADU33rz");
+
+                var response = await client.GetAsync($"/v1/custombet/{fixture.FiSp}/available_selections");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = "";
+
+                    XmlDocument doc = new XmlDocument();
+
+                    doc.LoadXml(result);
+
+                    #region Validate response
+                    
+                    XmlElement root = doc.DocumentElement;
+
+                    if (root.Name != "available_selections")
+                    {
+                        return new BaseResponseDTO<BetBuilderSelectionResponseDTO>
+                        {
+                            StatusCode = StatusCode.No_Record_Found,
+                            Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                        };
+                    }
+
+                    var eventElement = root.GetElementsByTagName("event");
+
+                    var eventNode = root.ChildNodes[0];
+
+                    var marketNodes = eventNode.ChildNodes[0];
+
+                    if(eventNode.ChildNodes.Count == 0)
+                    {
+                        return new BaseResponseDTO<BetBuilderSelectionResponseDTO>
+                        {
+                            StatusCode = StatusCode.No_Record_Found,
+                            Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                        };
+                    }
+
+                    foreach (XmlElement marketNode in marketNodes.ChildNodes)
+                    {
+                        var marketTemplateId = marketNode.Attributes["id"].Value;
+                        var specifiers = marketNode.HasAttribute("specifiers") ? marketNode.Attributes["specifiers"].Value : string.Empty;
+
+                        var selectionResponse = new List<BetBuilderSelectionDTO>();
+
+                        foreach (XmlAttribute selectionNode in marketNode.ChildNodes)
+                        {
+                            var selectionTemplateId = selectionNode.Attributes["id"].Value;
+
+                            selectionResponse.Add(new BetBuilderSelectionDTO
+                            {
+                                SelectionTemplateId  = selectionTemplateId
+                            });
+                        }
+
+                        marketsResponse.Markets.Add(new BetBuilderMarketDTO
+                        {
+                            MarketTemplateId = marketTemplateId,
+                            Selections = selectionResponse
+                        });
+
+                    }
+
+                    #endregion
+
+                    return new BaseResponseDTO<BetBuilderSelectionResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString(),
+                        Result = marketsResponse
+                    };
+                }
+                else
+                {
+                    return new BaseResponseDTO<BetBuilderSelectionResponseDTO>
+                    {
+                        StatusCode = StatusCode.No_Record_Found,
+                        Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                    };
+                }
+            }
+
+            #endregion
+
+        }
+
         private List<string> GetMainMarketTemplates(int sportId)
         {
             var result = GetSelectorMarketTemplate().Where(c => c.SportId == sportId).ToList();

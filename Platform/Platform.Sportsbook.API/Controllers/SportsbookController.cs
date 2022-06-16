@@ -910,6 +910,20 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v1/sportsbook/betbuilder/selections")]
+        public async Task<IActionResult> GetBetBuilderSelections([FromBody] BetBuilderSelectionRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetBoostedFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+        
         [HttpPost("v1/sportsbook/client/markettemplategroups")]
         public async Task<IActionResult> GetClientMarketTemplateGroups([FromBody] ClientMarketTemplateGroupRequestDTO request)
         {

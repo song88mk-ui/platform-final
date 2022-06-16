@@ -10,7 +10,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(BetRequestDTO request);
         Task<BaseResponseDTO<MaxStakeResponseDTO>> GetMaxStake(BetRequestDTO request);
         Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(BetHistoryRequestDTO request);
-        Task<BaseResponseDTO<SettlementHistoryResponseDTO>> GetSettlementHistory(SettlementHistoryRequestDTO request);
+        Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistorySettled(BetHistorySettledRequestDTO request);
         Task<BaseResponseDTO<BetConfigFEResponseDTO>> BetConfig(BetConfigRequestDTO request);
         Task<BaseResponseDTO<BetCashOutResponseDTO>> CashOutBet(CashoutBetRequestDTO request);
         Task<BaseResponseDTO<StatusCode>> ProcessBetConfig(BackOfficeBetConfigPayloadDTO request);

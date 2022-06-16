@@ -12,7 +12,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(string apiKey, string clientId, string operatorToken, BetRequest request);
         Task<BaseResponseDTO<MaxStakeResponseDTO>> GetMaxStake(string apiKey, string clientId, string operatorToken, BetRequest request);
         Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(string apiKey, string clientId, string langCode, string operatorToken, BetHistoryRequest request);
-        Task<BaseResponseDTO<SettlementHistoryResponseDTO>> GetSettlementHistory(string apiKey, string clientId, string langCode, SettlementHistoryRequest request);
+        Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistorySettled(string apiKey, string clientId, string langCode, BetHistorySettledRequest request);
         Task<BaseResponseDTO<BetConfigFEResponseDTO>> GetBetConfig(string apiKey, string clientId, BetConfigRequest request);
         Task<BaseResponseDTO<ClientResponseDTO>> AddOrUpdateClient(ClientRequestDTO request);
         Task<BaseResponseDTO<bool>> ProcessStatusUpdate(ClientStatusRequestDTO request);

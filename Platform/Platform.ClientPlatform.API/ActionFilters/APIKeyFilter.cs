@@ -41,6 +41,7 @@ namespace Platform.ClientPlatform.API.ActionFilters
             ((IntegrationControllerBase)context.Controller).ApiKey = _configuration["Custom:PlatformAPIKey"];
             ((IntegrationControllerBase)context.Controller).CountryCode = context.HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault();
             ((IntegrationControllerBase)context.Controller).OperatorToken = context.HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            ((IntegrationControllerBase)context.Controller).IPAddress = context.HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             ((IntegrationControllerBase)context.Controller).LanguageCode = string.IsNullOrEmpty(context.HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : context.HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
         }
 

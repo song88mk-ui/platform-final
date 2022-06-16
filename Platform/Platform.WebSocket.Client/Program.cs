@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+﻿using MessagePack;
+using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 using Platform.WebSocket.API.Messages;
 using System;
 using System.Text.Json;
@@ -11,18 +13,27 @@ namespace Platform.WebSocket.Client
         static async Task Main(string[] args)
         {
             var connection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:5000/platform")                    
+                .WithUrl("https://ws.song88.com/platform")
+                .AddMessagePackProtocol()
                 .WithAutomaticReconnect()
                 .Build();
 
             await connection.StartAsync();
 
-            await connection.InvokeAsync("SubscribeToEndpoint", new { ClientId = "5093617A-9367-EB11-89FB-00224815B68B", Endpoint = "test" });
-            connection.On<OutgoingOddsChange>("OnOddsChange", ProcessOddsChange);
+            await connection.InvokeAsync("SubscribeToBetStatus", new { ClientId = "71BBE7D8-FD04-459C-6D8B-08D9354E5B64", UserId = "user123" });
+            await connection.InvokeAsync("UnsubscribeToBetStatus", new { ClientId = "71BBE7D8-FD04-459C-6D8B-08D9354E5B64", UserId = "user123" });
+
+            await connection.InvokeAsync("SubscribeToCashOutChange", new { ClientId = "71BBE7D8-FD04-459C-6D8B-08D9354E5B64", UserId = "user123" });
+            await connection.InvokeAsync("UnsubscribeToCashOutChange", new { ClientId = "71BBE7D8-FD04-459C-6D8B-08D9354E5B64", UserId = "user123" });
+
+            await connection.InvokeAsync("SubscribeToWalletChange", new { ClientId = "71BBE7D8-FD04-459C-6D8B-08D9354E5B64", UserId = "user123" });
+            await connection.InvokeAsync("UnsubscribeToWalletChange", new { ClientId = "71BBE7D8-FD04-459C-6D8B-08D9354E5B64", UserId = "user123" });
+
+            await connection.InvokeAsync("SubscribeToFavorites", new { ClientId = "71BBE7D8-FD04-459C-6D8B-08D9354E5B64", UserId = "user123" });
+            await connection.InvokeAsync("UnsubscribeToFavorites", new { ClientId = "71BBE7D8-FD04-459C-6D8B-08D9354E5B64", UserId = "user123" });
 
             Console.ReadLine();
         }
-
         private static void ProcessOddsChange(OutgoingOddsChange message)
         {
             Console.WriteLine($"{DateTime.UtcNow} : {JsonSerializer.Serialize(message)}");

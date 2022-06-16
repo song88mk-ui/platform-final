@@ -3,11 +3,11 @@ using System;
 
 namespace Platform.API.Models
 {
-    public class SettlementHistoryRequest
+    public class BetHistorySettledRequest
     {
-        public string UserId { get; set; }
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
+        public string UserId { get; set; }
         public int Page { get; set; }
         public int PageSize { get; set; }
     }

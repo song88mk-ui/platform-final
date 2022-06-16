@@ -110,28 +110,28 @@ namespace Platform.ClientPlatform.API.Repository
                 };
             }
         }
-
-        public async Task<BaseResponseDTO<SettlementHistoryResponseDTO>> GetSettlementHistory(string apiKey, string clientId, string languageCode, string ipAddress, SettlementHistoryRequest request)
+        public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistorySettled(string apiKey, string clientId, string languageCode, string ipAddress, BetHistorySettledRequest request)
         {
             try
             {
-                _httpClient.DefaultRequestHeaders.Add("X-Forwarded-For", ipAddress);
                 _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
                 _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
                 _httpClient.DefaultRequestHeaders.Add("x-language-code", languageCode);
+                _httpClient.DefaultRequestHeaders.Add("X-Forwarded-For", ipAddress);
 
                 var queryString = await FormUrlEncoded(request);
-                var response = await _httpClient.GetAsync($"v1/settlement/history{queryString}");
+
+                var response = await _httpClient.GetAsync($"v1/bet/history/settled{queryString}");
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<SettlementHistoryResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<BaseResponseDTO<BetHistoryResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<SettlementHistoryResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<BaseResponseDTO<BetHistoryResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     else
                     {
-                        return new BaseResponseDTO<SettlementHistoryResponseDTO>
+                        return new BaseResponseDTO<BetHistoryResponseDTO>
                         {
                             StatusCode = StatusCode.Error,
                             Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
@@ -141,14 +141,13 @@ namespace Platform.ClientPlatform.API.Repository
             }
             catch (Exception ex)
             {
-                return new BaseResponseDTO<SettlementHistoryResponseDTO>
+                return new BaseResponseDTO<BetHistoryResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
                 };
             }
         }
-
         public async Task<BaseResponseDTO<BetCashOutResponseDTO>> CashoutBet(string apiKey, string clientId, string operatorToken, CashoutBetRequest request)
         {
             try

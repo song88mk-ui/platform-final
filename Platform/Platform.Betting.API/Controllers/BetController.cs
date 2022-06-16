@@ -58,10 +58,10 @@ namespace Platform.Betting.API.Controllers
             }
         }
 
-        [HttpPost("v1/settlement/history")]
-        public async Task<IActionResult> GetSettlementHistory([FromBody] SettlementHistoryRequestDTO request)
+        [HttpPost("v1/bet/history/settled")]
+        public async Task<IActionResult> GetBetHistorySettled([FromBody] BetHistorySettledRequestDTO request)
         {
-            var result = await _bettingRepository.GetSettlementHistory(request);
+            var result = await _bettingRepository.GetBetHistorySettled(request);
 
             switch (result.StatusCode)
             {

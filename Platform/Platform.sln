@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31727.386
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32126.317
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.API", "Platform.API\Platform.API.csproj", "{11A8576B-A266-4D75-B18B-6A5C27F582FB}"
 EndProject
@@ -48,9 +48,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.WebSocket.API", "P
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.WebSocket.Client", "Platform.WebSocket.Client\Platform.WebSocket.Client.csproj", "{62C442E8-78DF-4274-9B2D-5A6EC1CFD297}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.ClientPlatform.API", "Platform.ClientPlatform.API\Platform.ClientPlatform.API.csproj", "{A872A0BB-2274-4274-B273-2E2BC3A95646}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.ClientPlatform.API", "Platform.ClientPlatform.API\Platform.ClientPlatform.API.csproj", "{A872A0BB-2274-4274-B273-2E2BC3A95646}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Job.Operator.Score", "Platform.Job.Operator.Score\Platform.Job.Operator.Score.csproj", "{0AD6BDB1-9111-4B8B-8A12-97C520540A0B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Job.Operator.Score", "Platform.Job.Operator.Score\Platform.Job.Operator.Score.csproj", "{0AD6BDB1-9111-4B8B-8A12-97C520540A0B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.BetPlacement.Console", "Platform.BetPlacement.Console\Platform.BetPlacement.Console.csproj", "{2E4BE879-0304-4505-A688-42A080B030E8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -150,7 +152,10 @@ Global
 		{0AD6BDB1-9111-4B8B-8A12-97C520540A0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0AD6BDB1-9111-4B8B-8A12-97C520540A0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0AD6BDB1-9111-4B8B-8A12-97C520540A0B}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
+		{2E4BE879-0304-4505-A688-42A080B030E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E4BE879-0304-4505-A688-42A080B030E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E4BE879-0304-4505-A688-42A080B030E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E4BE879-0304-4505-A688-42A080B030E8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

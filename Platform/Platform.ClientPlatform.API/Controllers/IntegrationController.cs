@@ -17,7 +17,6 @@ namespace Platform.ClientPlatform.API.Controllers
             _platformRepository = platformRepository;
         }
 
-        [ServiceFilter(typeof(IPFilter))]
         [HttpGet("v1/sportsbook/topfixtures")]
         public async Task<IActionResult> GetTopFixtures()
         {
@@ -46,11 +45,10 @@ namespace Platform.ClientPlatform.API.Controllers
             }
         }
 
-        [ServiceFilter(typeof(IPFilter))]
-        [HttpGet("v1/settlement/history")]
-        public async Task<IActionResult> GetSettlementHistory([FromQuery] SettlementHistoryRequest request)
+        [HttpGet("v1/bet/history/settled")]
+        public async Task<IActionResult> GetBetHistorySettled([FromQuery] BetHistorySettledRequest request)
         {
-            var result = await _platformRepository.GetSettlementHistory(ApiKey, ClientId, LanguageCode, IPAddress, request);
+            var result = await _platformRepository.GetBetHistorySettled(ApiKey, ClientId, LanguageCode, IPAddress, request);
 
             switch (result.StatusCode)
             {

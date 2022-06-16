@@ -201,16 +201,15 @@ namespace Platform.API.Controllers
             }
         }
 
-
-        [HttpGet("v1/settlement/history")]
-        public async Task<IActionResult> GetSettlementHistory([FromQuery] SettlementHistoryRequest request)
+        [HttpGet("v1/bet/history/settled")]
+        public async Task<IActionResult> GetBetHistorySettled([FromQuery] BetHistorySettledRequest request)
         {
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetSettlementHistory(apiKey, clientId, languageCode, request);
+            var result = await _platformRepository.GetBetHistorySettled(apiKey, clientId, languageCode, request);
 
             var parameters = request;
 

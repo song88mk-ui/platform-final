@@ -609,24 +609,13 @@ namespace Platform.API.Repository
                 };
             }
         }
-
-        public async Task<BaseResponseDTO<SettlementHistoryResponseDTO>> GetSettlementHistory(string apiKey, string clientId, string langCode, SettlementHistoryRequest request)
+        public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistorySettled(string apiKey, string clientId, string langCode, BetHistorySettledRequest request)
         {
-            //validate From Date and To Date
-            if(request.ToDate.Subtract(request.FromDate).TotalHours > 24)
-            {
-                return new BaseResponseDTO<SettlementHistoryResponseDTO>
-                {
-                    StatusCode = StatusCode.Maximum_Of_24Hrs_Per_Request,
-                    Message = StatusCode.Maximum_Of_24Hrs_Per_Request.ToString().Replace('_', ' ')
-                };
-            }
-
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
-                return new BaseResponseDTO<SettlementHistoryResponseDTO>
+                return new BaseResponseDTO<BetHistoryResponseDTO>
                 {
                     StatusCode = StatusCode.Unsupported_LanguageCode,
                     Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
@@ -637,7 +626,7 @@ namespace Platform.API.Repository
 
             if (!IsValidLanguageCode(languageCode))
             {
-                return new BaseResponseDTO<SettlementHistoryResponseDTO>
+                return new BaseResponseDTO<BetHistoryResponseDTO>
                 {
                     StatusCode = StatusCode.Unsupported_LanguageCode,
                     Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
@@ -648,16 +637,15 @@ namespace Platform.API.Repository
 
             if (clientResponse.StatusCode != StatusCode.Success)
             {
-                return new BaseResponseDTO<SettlementHistoryResponseDTO>
+                return new BaseResponseDTO<BetHistoryResponseDTO>
                 {
                     StatusCode = clientResponse.StatusCode,
                     Message = clientResponse.Message
                 };
             }
 
-            var payload = new SettlementHistoryRequestDTO
+            var payload = new BetHistorySettledRequestDTO
             {
-                APIKey = apiKey,
                 ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
                 UserId = request.UserId,
                 FromDate = request.FromDate,
@@ -666,64 +654,7 @@ namespace Platform.API.Repository
                 PageSize = request.PageSize
             };
 
-            if (languageCode == LanguageCode.EN)
-                return await _bettingRepository.GetSettlementHistory(payload);
-            else
-            {
-                var betHistory = await _bettingRepository.GetSettlementHistory(payload);
-
-                if (betHistory.Result.Bets.Count == 0)
-                    return betHistory;
-
-                var betFixtureTranslation = new BetFixtureTranslationRequestDTO();
-                betFixtureTranslation.LanguageCode = languageCode;
-
-                foreach (var bet in betHistory.Result.Bets)
-                {
-                    foreach (var selection in bet.Selections)
-                    {
-                        if (betFixtureTranslation.Selections.Any(c => c.SelectionId == Convert.ToInt64(selection.SelectionId))) continue;
-
-                        betFixtureTranslation.Selections.Add(new BetFixtureSelectionTranslationRequestDTO
-                        {
-                            FixtureId = Convert.ToInt64(selection.FixtureId),
-                            MarketId = Convert.ToInt64(selection.MarketId),
-                            SelectionId = Convert.ToInt64(selection.SelectionId)
-                        });
-                    }
-                }
-
-                var translations = await _sportsbookRepository.GetBetFixtureTranslation(betFixtureTranslation);
-
-                return new BaseResponseDTO<SettlementHistoryResponseDTO>
-                {
-                    Message = betHistory.Message,
-                    StatusCode = betHistory.StatusCode,
-                    Result = new SettlementHistoryResponseDTO
-                    {
-                        Bets = betHistory.Result.Bets.Select(s => new SettlementHistoryDTO
-                        {
-                            BetId = s.BetId,
-                            Stake = s.Stake,
-                            Odds = s.Odds,
-                            Payout = s.Payout,
-                            WinLoss = s.WinLoss,
-                            BetStatusId = s.BetStatusId,
-                            BetStatusName = s.BetStatusName,
-                            TransactionDate = s.TransactionDate,
-                            Commission = s.Commission,
-                            CurrencyCode = s.CurrencyCode,
-                            OddsType = s.OddsType,
-                            CashOutStake = s.CashOutStake,
-                            CashOutStatusId = s.CashOutStatusId,
-                            CashOutStatusName = s.CashOutStatusName,
-                            StakeTax = s.StakeTax,
-                            WinningsTax = s.WinningsTax,
-                            Selections = GetTranslatedBetSelectionHistory(s.Selections, translations.Result.Selections)
-                        }).ToList()
-                    }
-                };
-            }
+            return await _bettingRepository.GetBetHistorySettled(payload);
         }
 
         private List<BetSelectionHistoryDTO> GetTranslatedBetSelectionHistory(List<BetSelectionHistoryDTO> selections, List<BetFixtureSelectionTranslationResponseDTO> translations)

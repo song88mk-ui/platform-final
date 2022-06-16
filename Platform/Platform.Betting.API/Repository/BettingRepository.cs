@@ -1428,7 +1428,7 @@ namespace Platform.Betting.API.Repository
                 }
             };
         }
-        public async Task<BaseResponseDTO<SettlementHistoryResponseDTO>> GetSettlementHistory(SettlementHistoryRequestDTO request)
+        public async Task<BaseResponseDTO<SettlementHistoryResponseDTO>> GetBetHistorySettled(BetHistorySettledRequestDTO request)
         {
             request.Page = request.Page <= 0 ? 1 : request.Page;
             request.PageSize = request.PageSize <= 0 ? 10 : request.PageSize;
@@ -1436,15 +1436,14 @@ namespace Platform.Betting.API.Repository
 
             var skip = (request.Page - 1) * request.PageSize;
             double rowCount = 0;
-            decimal winLoss = 0m;
             var result = new List<SettlementHistoryDTO>();
             var transactions = new List<Bet>();
 
-            var rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.SettlementDate >= request.FromDate && c.SettlementDate <= request.ToDate && c.BetStatusId > (int)BetStatus.Running && c.BetStatusId != (int)BetStatus.Rejected && c.UserId == request.UserId && c.ClientId == request.ClientId);
+            var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running, (int)BetStatus.Rejected };
+            var rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
 
             rowCount = rawSettled.Count();
-            winLoss = rawSettled.Sum(c => c.WinLoss);
-            transactions = rawSettled.OrderByDescending(c => c.SettlementDate).Skip(skip).Take(request.PageSize).ToList();
+            transactions = rawSettled.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
 
             if (transactions.Count == 0)
             {
@@ -1458,9 +1457,6 @@ namespace Platform.Betting.API.Repository
                         PageCount = 1,
                         PageSize = 1,
                         RowCount = 0,
-                        TotalCommission = 0,
-                        TotalWinLoss = 0,
-                        TotalWLC = 0,
                         Bets = new List<SettlementHistoryDTO>()
                     }
                 };
@@ -1469,17 +1465,14 @@ namespace Platform.Betting.API.Repository
             var betIds = transactions.Select(s => s.BetId).Distinct().ToList();
             var selections = _bettingContext.BetSelection.AsNoTracking().Where(c => betIds.Contains(c.BetId)).ToList();
 
-
             var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => betIds.Contains(b.BetId) && b.BetStatusId != (int)BetStatus.Rejected
                                                 && b.BetStatusId != (int)BetStatus.Cancelled).Select(s => s.BetId).ToList();
 
-            var cashOutList = await _sportsbookRepository.GetCashOut(transactions, selections, betBoosted);
-
             foreach (var bet in transactions)
             {
-                var cashOut = cashOutList.Result.Where(c => c.BetId == bet.BetId).FirstOrDefault();
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
                 var isBoosted = betBoosted.Any(b => b == bet.BetId);
+
                 result.Add(new SettlementHistoryDTO
                 {
                     BetId = bet.BetId.ToString(),
@@ -1494,9 +1487,9 @@ namespace Platform.Betting.API.Repository
                     Commission = 0,
                     CurrencyCode = bet.CurrencyCode,
                     OddsType = bet.OddsTypeName,
-                    CashOutStake = cashOut.CashOutStake,
-                    CashOutStatusId = (int)cashOut.CashOutStatus,
-                    CashOutStatusName = cashOut.CashOutStatus.ToString(),
+                    CashOutStake = 0m,
+                    CashOutStatusId = (int)CashOutStatus.Unavailable,
+                    CashOutStatusName = CashOutStatus.Unavailable.ToString(),
                     StakeTax = bet.StakeTax,
                     WinningsTax = bet.WinningsTax,
                     TaxedStake = bet.BetStatusId == (int)BetStatus.Running ? 0.00m : bet.TaxedStake,
@@ -1535,12 +1528,12 @@ namespace Platform.Betting.API.Repository
                         SelectionTemplateId = s.SelectionTemplateId,
                         BetSelectionStatusId = s.BetSelectionStatusId,
                         BetSelectionStatusName = s.BetSelectionStatusName,
-                        Probability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.Probability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.Probability).FirstOrDefault(),
-                        WonProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.WonProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.WonProbability).FirstOrDefault(),
-                        LostProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.LostProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.LostProbability).FirstOrDefault(),
-                        VoidProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.VoidProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.VoidProbability).FirstOrDefault(),
-                        HalfWonProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfWonProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfWonProbability).FirstOrDefault(),
-                        HalfLostProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault()
+                        Probability = filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.Probability).FirstOrDefault(),
+                        WonProbability = filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.WonProbability).FirstOrDefault(),
+                        LostProbability = filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.LostProbability).FirstOrDefault(),
+                        VoidProbability = filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.VoidProbability).FirstOrDefault(),
+                        HalfWonProbability = filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfWonProbability).FirstOrDefault(),
+                        HalfLostProbability = filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault()
                     }).ToList()
                 });
             }
@@ -1555,10 +1548,7 @@ namespace Platform.Betting.API.Repository
                     PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
                     PageSize = request.PageSize,
                     RowCount = Convert.ToInt32(rowCount),
-                    TotalCommission = 0,
-                    TotalWinLoss = winLoss,
-                    TotalWLC = winLoss,
-                    Bets = result.OrderByDescending(o => o.TransactionDate).ToList()
+                    Bets = result
                 }
             };
         }

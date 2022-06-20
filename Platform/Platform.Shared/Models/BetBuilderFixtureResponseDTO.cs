@@ -15,10 +15,6 @@ namespace Platform.Shared.Models
 
     public class BetBuilderFixtureDTO
     {
-        public BetBuilderFixtureDTO()
-        {
-            Markets = new List<BetBuilderMarketDTO>();
-        }
         public int SportId { get; set; }
         public string SportName { get; set; }
         public int SegmentId { get; set; }
@@ -46,7 +42,6 @@ namespace Platform.Shared.Models
         public int SortOrder { get; set; }
         public bool IsBoosted { get; set; }
         public SportMarketTemplateGroup MarketTemplateGroups { get; set; }
-        public List<BetBuilderMarketDTO> Markets { get; set; }
     }
 
     public class BetBuilderMarketDTO

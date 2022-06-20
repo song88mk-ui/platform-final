@@ -86,7 +86,7 @@ namespace Platform.Sportsbook.API.Repository
             _rabbitMQRepository = rabbitMQRepository;
 
             _httpClient.BaseAddress = new Uri("https://av-api.betradar.com");
-            _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer C9SdxJm170K61OY152");
+            _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer D6ewpdvADa8k5U7Xcx");
         }
 
         public async Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(LivestreamRequestDTO request)

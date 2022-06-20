@@ -5784,6 +5784,82 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<BetBuilderFixtureResponseDTO>> GetBetBuilderFixtures(BetBuilderFixtureRequestDTO request)
+        {
+            var sportIds = new List<int> { 1, 2 };
+
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && sportIds.Contains(c.SpId));
+            var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            await Task.WhenAll(tempFixtures, tempBettingStatus);
+
+            var fixtures = tempFixtures.Result;
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
+            var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
+
+            if (fixtures.Count == 0)
+            {
+                return new BaseResponseDTO<BetBuilderFixtureResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new BetBuilderFixtureResponseDTO()
+                };
+            }
+
+            var fixtureIds = fixtures.Select(s => Convert.ToInt64(s.FiId)).ToList();
+
+            var marketStatusIds = new List<int> { (int)MarketStatus.Active };
+
+            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && c.ClBo.Contains(request.ClientCode));
+            var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
+            var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
+
+
+            var result = fixtures.OrderBy(o => o.FiStDa).Select(s => new BetBuilderFixtureDTO
+            {
+                SportId = s.SpId,
+                SportName = GetSportName(s.SpNa, s.SpNaTr, request.LanguageCode),
+                SegmentId = s.SegId,
+                SegmentName = GetSegmentName(s.SegNa, s.SegNaTr, request.LanguageCode),
+                LeagueId = s.LeId,
+                LeagueName = GetLeagueName(s.LeNa, s.LeNaTr, request.LanguageCode),
+                ProviderFixtureId = s.PrFiId,
+                FixtureId = s.FiId.ToString(),
+                FixtureName = GetFixtureName(s.FiNa, s.FiNaTr, request.LanguageCode),
+                HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                FixtureStartDate = s.FiStDa,
+                IsLive = s.IsOfLi,
+                IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
+                FixtureStatusId = s.SpId > 1000 || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                FixtureStatusName = s.SpId > 1000 || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
+                SMSCode = string.Empty,
+                StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
+                Score = s.Sc,
+                CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
+                CurrentMinute = s.CuMi.ToString(),
+                BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                IsBetStopGlobal = bettingStatus.IsBeSo,
+                IsBoosted = s.IsBo,
+            }).ToList();
+
+            return new BaseResponseDTO<BetBuilderFixtureResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BetBuilderFixtureResponseDTO
+                {
+                    Fixtures = result
+                }
+            };
+        }
+
         public async Task<BaseResponseDTO<BetBuilderSelectionResponseDTO>> GetBetBuilderSelections(BetBuilderSelectionRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == Convert.ToInt64(request.FixtureId));

@@ -68,6 +68,8 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<StatusCode>> AddOrUpdateParlayBonus(ParlayBonusRequestDTO request);
         Task<BaseResponseDTO<SportGroupResponseDTO>> GetSportGroups();
         Task<BaseResponseDTO<BoostedResponseDTO>> GetBoostedFixtures(string apiKey, string clientId, string langCode, string ipCountryCode);
+        Task<BaseResponseDTO<BetBuilderFixtureResponseDTO>> GetBetBuilderFixtures(string clientId, string langCode);
+        Task<BaseResponseDTO<BetBuilderSelectionResponseDTO>> GetBetBuilderSelections(string clientId, string langCode, string fixtureId);
         Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>> GetMarketSortOrder(string clientId);
         Task<BaseResponseDTO<ClientFixtureSortOrderResponseDTO>> GetFixtureSortOrder(string clientId);
 

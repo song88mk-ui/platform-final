@@ -938,6 +938,21 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
         
+        
+        [HttpPost("v1/sportsbook/betbuilder/selections/odds")]
+        public async Task<IActionResult> GetBetBuilderSelectionsOdds([FromBody] BetBuilderSelectionsOddsRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetBetBuilderSelectionsOdds(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/sportsbook/client/markettemplategroups")]
         public async Task<IActionResult> GetClientMarketTemplateGroups([FromBody] ClientMarketTemplateGroupRequestDTO request)
         {

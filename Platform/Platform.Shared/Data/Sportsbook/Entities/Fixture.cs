@@ -188,4 +188,14 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public int SpId { get; set; }
     }
 
+    public class FixtureBetBuilderFilter
+    {
+        [BsonId]
+        public long FiId { get; set; }
+        public bool IsSu { get; set; }
+        public int FiStId { get; set; }
+        public string FiSp { get; set; }
+        public int SpId { get; set; }
+    }
+
 }

@@ -858,7 +858,7 @@ namespace Platform.Sportsbook.API.Controllers
 
         [HttpPost("v1/sportsbook/boostedfixtures")]
         public async Task<IActionResult> GetBoostedFixtures([FromBody] BoostedFixturesRequestDTO request)
-        {//
+        {
             var result = await _sportsbookRepository.GetBoostedFixtures(request);
 
             switch (result.StatusCode)
@@ -884,6 +884,60 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v1/sportsbook/client/markettemplategroups")]
+        public async Task<IActionResult> GetClientMarketTemplateGroups([FromBody] ClientMarketTemplateGroupRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetClientMarketTemplateGroups(request);
 
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/sportsbook/client/markettemplates")]
+        public async Task<IActionResult> GetClientMarketTemplates([FromBody] ClientMarketTemplateRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetClientMarketTemplates(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/sportsbook/client/markettemplatesorder")]
+        public async Task<IActionResult> AddOrUpdateClientMarketTemplatesOrder([FromBody] ClientMarketTemplateRequestDTO request)
+        {
+            var result = await _sportsbookRepository.AddOrUpdateClientMarketTemplatesOrder(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/sportsbook/client/add/markettemplategroup")]
+        public async Task<IActionResult> AddClientMarketTemplateGroup([FromBody] ClientAddMarketTemplateGroupRequestDTO request)
+        {
+            var result = await _sportsbookRepository.AddClientMarketTemplateGroup(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

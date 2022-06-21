@@ -6,6 +6,7 @@ using Platform.API.ActionFilters;
 using Platform.API.Models;
 using Platform.API.Repository;
 using Platform.Shared.Enums;
+using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -1568,7 +1569,40 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/selectiondetails", properties);
+            _telemetryClient.TrackEvent("e:v1/sportsbook/betbuilder/selections", properties);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+
+        [HttpPost("v1/sportsbook/betbuilder/selections/odds")]
+        public async Task<IActionResult> GetBetBuilderSelectionsOdds([FromBody] BetBuilderSelectionsOddsRequestDTO request)
+        {
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            
+            var result = await _platformRepository.GetBetBuilderSelectionsOdds(clientId, request);
+
+            var parameters = request;
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/sportsbook/betbuilder/selections/odds", properties);
 
             switch (result.StatusCode)
             {

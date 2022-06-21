@@ -5898,7 +5898,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketsResponse = new BetBuilderSelectionResponseDTO();
             
-            #region SR API to get score
+            #region SR API to get custombet available selections
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri("https://api.betradar.com");
@@ -5979,6 +5979,165 @@ namespace Platform.Sportsbook.API.Repository
                 else
                 {
                     return new BaseResponseDTO<BetBuilderSelectionResponseDTO>
+                    {
+                        StatusCode = StatusCode.No_Record_Found,
+                        Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                    };
+                }
+            }
+
+            #endregion
+
+        }
+
+        public async Task<BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>> GetBetBuilderSelectionsOdds(BetBuilderSelectionsOddsRequestDTO request)
+        {
+            var fixtureIds = request.Selections.Select(s => Convert.ToInt64(s.FixtureId)).Distinct().ToList();
+            var marketIds = request.Selections.Select(s => Convert.ToInt64(s.MarketId)).Distinct().ToList();
+            var selectionIds = request.Selections.Select(s => Convert.ToInt64(s.SelectionId)).Distinct().ToList();
+
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
+            var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.IsSu).Include(c => c.FiStId).Include(c => c.FiSp).Include(c => c.SpId);
+            var fixtures = primaryFixtureCollection.Find(fixtureFilter).Project<FixtureBetBuilderFilter>(fixtureProjection).ToListAsync();
+
+            //var marketFilter = Builders<Market>.Filter.Where(c => marketIds.Contains(c.MaId));
+            //var marketProjection = Builders<Market>.Projection.Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.MaTeId);
+            //var markets = primaryMarketCollection.Find(marketFilter).Project<MarketBetBuilderFilter>(marketProjection).ToListAsync();
+
+            var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c => marketIds.Contains(c.MaId));
+            var marketMappingProjection = Builders<MarketMapping>.Projection.Include(c => c.PrFiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaSp);
+            var marketMappings = marketMappingCollection.Find(marketMappingFilter).Project<MarketMappingFilter>(marketMappingProjection).ToListAsync();
+
+            var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr).Include(c => c.SeStId);
+            var selections = primarySelectionCollection.Find(selectionFilter).Project<SelectionBetBuilderFilter>(selectionProjection).ToListAsync();
+
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+            var bettingStatus = primaryBettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            await Task.WhenAll(fixtures, marketMappings, selections, bettingStatus); //markets, 
+
+            var newFixtures = fixtures.Result;
+            //var newMarkets = markets.Result;
+            var newSelections = selections.Result;
+            var newBettingStatus = bettingStatus.Result;
+
+            if (newSelections.Count == 0)
+            {
+                return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new BetBuilderSelectionsOddsResponseDTO()
+                };
+            }
+
+            var marketsResponse = new BetBuilderSelectionResponseDTO();
+
+            #region SR API to calculate odds
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("https://api.betradar.com");
+                client.DefaultRequestHeaders.Add("x-access-token", "wLCaM7vc80CADU33rz");
+
+                var payload = $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+                if(request.Selections.Any())
+                {
+                    payload = payload + $"<selections xmlns=\"http://schemas.sportradar.com/custombet/v1/endpoints\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://schemas.sportradar.com/custombet/v1/endpoints http://schemas.sportradar.com/custombet/v1/endpoints/Selections.xsd\">";
+
+                    foreach(var sel in request.Selections)
+                    {
+                        var fixture = fixtures.Result.FirstOrDefault(f => f.FiId == Convert.ToInt64(sel.FixtureId));
+                        var marketMapping = marketMappings.Result.FirstOrDefault(f => f.MaId == Convert.ToInt64(sel.MarketId));
+                        var selection = selections.Result.FirstOrDefault(s => s.SeId == Convert.ToInt64(sel.SelectionId));
+
+                        var marketSpecifier = marketMapping.MaSp;
+
+                        if(string.IsNullOrEmpty(marketSpecifier))
+                            payload = payload + $"<selection id=\"{fixture.FiSp}\" market_id=\"{marketMapping.MaTeId}\" outcome_id=\"{selection.SeTeId}\"/>";
+                        else
+                            payload = payload + $"<selection id=\"{fixture.FiSp}\" market_id=\"{marketMapping.MaTeId}\" specifiers=\"{marketSpecifier}\" outcome_id=\"{selection.SeTeId}\"/>";
+                    }
+
+                    payload = payload + $"</selections>";
+                }
+
+
+                var response = await client.PostAsync($"/v1/custombet/calculate", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/xml"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = "";
+
+                    XmlDocument doc = new XmlDocument();
+
+                    doc.LoadXml(result);
+
+                    #region Validate response
+
+                    XmlElement root = doc.DocumentElement;
+
+                    if (root.Name != "available_selections")
+                    {
+                        return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                        {
+                            StatusCode = StatusCode.No_Record_Found,
+                            Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                        };
+                    }
+
+                    var eventElement = root.GetElementsByTagName("event");
+
+                    var eventNode = root.ChildNodes[0];
+
+                    var marketNodes = eventNode.ChildNodes[0];
+
+                    if (eventNode.ChildNodes.Count == 0)
+                    {
+                        return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                        {
+                            StatusCode = StatusCode.No_Record_Found,
+                            Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                        };
+                    }
+
+                    foreach (XmlElement marketNode in marketNodes.ChildNodes)
+                    {
+                        var marketTemplateId = marketNode.Attributes["id"].Value;
+                        var specifiers = marketNode.HasAttribute("specifiers") ? marketNode.Attributes["specifiers"].Value : string.Empty;
+
+                        var selectionResponse = new List<BetBuilderSelectionDTO>();
+
+                        foreach (XmlAttribute selectionNode in marketNode.ChildNodes)
+                        {
+                            var selectionTemplateId = selectionNode.Attributes["id"].Value;
+
+                            selectionResponse.Add(new BetBuilderSelectionDTO
+                            {
+                                SelectionTemplateId = selectionTemplateId
+                            });
+                        }
+
+                        marketsResponse.Markets.Add(new BetBuilderMarketDTO
+                        {
+                            MarketTemplateId = marketTemplateId,
+                            Selections = selectionResponse
+                        });
+
+                    }
+
+                    #endregion
+
+                    return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString(),
+                        //Result = marketsResponse
+                    };
+                }
+                else
+                {
+                    return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
                     {
                         StatusCode = StatusCode.No_Record_Found,
                         Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')

@@ -3443,6 +3443,23 @@ namespace Platform.API.Repository
             });
         }
 
+        public async Task<BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>> GetBetBuilderSelectionsOdds(string clientId, BetBuilderSelectionsOddsRequestDTO request)
+        {
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message,
+                    Result = new BetBuilderSelectionsOddsResponseDTO()
+                };
+            }
+
+            return await _sportsbookRepository.GetBetBuilderSelectionsOdds(request);
+        }
+
         private DateTime GetFirstDayOfNextMonth()
         {
             DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);

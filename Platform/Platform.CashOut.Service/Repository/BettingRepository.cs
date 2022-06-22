@@ -466,6 +466,7 @@ namespace Platform.CashOut.Service.Repository
                         {
                             BetId = result.Result.BetId,
                             ClientId = message.ClientId,
+                            ClientCode = message.ClientCode,
                             UserId = message.UserId,
                             CashoutType = result.Result.CashoutType,
                             CashOutStake = result.Result.CashOutStake,

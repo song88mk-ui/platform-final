@@ -520,6 +520,7 @@ namespace Platform.Betting.API.Repository
                         Bet = betData,
                         BetSelections = betSelectionData,
                         IsBoosted = request.IsBoosted,
+                        IsBetBuilder = request.IsBetBuilder
                     };
 
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
@@ -1050,6 +1051,7 @@ namespace Platform.Betting.API.Repository
                         Bet = betData,
                         BetSelections = betSelectionData,
                         IsBoosted = request.IsBoosted,
+                        IsBetBuilder = request.IsBetBuilder,
                     };
 
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
@@ -1368,6 +1370,7 @@ namespace Platform.Betting.API.Repository
                 var cashOut = cashOutList.Result.Where(c => c.BetId == bet.BetId).FirstOrDefault();
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
                 var isBoosted = betBoosted.Any(b => b == bet.BetId);
+                var isBetBuilder = false; //TODO: fetch isbetBuilder flag
 
                 var hasVirtualSport = filteredSelections.Any(s => s.SportId > 1000) ? true : false;
                 var wonOrRunningSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running).Count();
@@ -1412,6 +1415,7 @@ namespace Platform.Betting.API.Repository
                     StakeBonusPayout = bet.StakeBonusPayout,
                     IsFreeBet = bet.IsFreeBet,
                     IsBoosted = isBoosted,
+                    IsBetBuilder = isBetBuilder,
                     Selections = filteredSelections.Select(s => new BetSelectionHistoryDTO
                     {
                         SportId = s.SportId,
@@ -1510,6 +1514,7 @@ namespace Platform.Betting.API.Repository
             {
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
                 var isBoosted = betBoosted.Any(b => b == bet.BetId);
+                var isBetBuilder = false; //TODO: fetch isbetBuilder flag
 
                 result.Add(new SettlementHistoryDTO
                 {
@@ -1540,6 +1545,7 @@ namespace Platform.Betting.API.Repository
                     StakeBonusPayout = bet.StakeBonusPayout,
                     IsFreeBet = bet.IsFreeBet,
                     IsBoosted = isBoosted,
+                    IsBetBuilder = isBetBuilder,
                     Selections = filteredSelections.Select(s => new BetSelectionHistoryDTO
                     {
                         SportId = s.SportId,

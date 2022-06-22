@@ -560,6 +560,7 @@ namespace Platform.Operator.Servicev2.Repository
                     ParlayBonus = betData.ParlayBonus,
                     TransactionDate = betData.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                     IsBoosted = message.IsBoosted,
+                    IsBetBuilder = message.IsBetBuilder,
                     BetSelections = betSelectionData.Select(s => new OperatorBetSelectionRequestDTO
                     {
                         BetSelectionId = s.BetSelectionId.ToString().ToUpper(),

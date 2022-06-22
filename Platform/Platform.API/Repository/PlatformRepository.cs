@@ -189,6 +189,7 @@ namespace Platform.API.Repository
                 ClientCode = clientResponse.Result.ClientCode,
                 OddsChangeType = request.IsBoosted == true ? OddsChangeType.None : request.OddsChangeType,
                 IsBoosted = request.IsBoosted,
+                IsBetBuilder = request.IsBetBuilder,
                 Selections = request.Selections.Select(s => new BetFixtureSelectionRequestDTO
                 {
                     SportId = s.SportId,

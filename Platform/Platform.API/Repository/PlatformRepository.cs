@@ -3209,7 +3209,7 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.GetSportGroups();
         }
 
-        public async Task<BaseResponseDTO<BoostedResponseDTO>> GetBoostedFixtures(string apiKey, string clientId, string langCode)
+        public async Task<BaseResponseDTO<BoostedResponseDTO>> GetBoostedFixtures(string apiKey, string clientId, string langCode, string ipCountryCode)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -3248,7 +3248,8 @@ namespace Platform.API.Repository
             {
                 ClientId = clientResponse.Result.ClientId,
                 ClientCode = clientResponse.Result.ClientCode,
-                LanguageCode = languageCode
+                LanguageCode = languageCode,
+                IPCountryCode = ipCountryCode
             });
         }
 

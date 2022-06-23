@@ -27,14 +27,16 @@ namespace Platform.Client.API.Controllers
         [HttpGet("v1/sportsbook/activefixtures")]
         public async Task<IActionResult> GetActiveFixtures()
         {
+            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
 
-            var result = await _sportsbookRepository.GetActiveFixtures(apiKey, clientId, LanguageCode.EN);
+            var result = await _sportsbookRepository.GetActiveFixtures(apiKey, clientId, ipCountryCode, LanguageCode.EN);
 
             var properties = new Dictionary<string, string>
                             {
+                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
@@ -57,14 +59,16 @@ namespace Platform.Client.API.Controllers
         [HttpGet("v1/sportsbook/activefixtures/details")]
         public async Task<IActionResult> GetFixtureDetails([FromQuery] string fixtureId)
         {
+            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
 
-            var result = await _sportsbookRepository.GetActiveFixtureDetails(apiKey, clientId, fixtureId, LanguageCode.EN);
+            var result = await _sportsbookRepository.GetActiveFixtureDetails(apiKey, clientId, fixtureId, ipCountryCode, LanguageCode.EN);
 
             var properties = new Dictionary<string, string>
                             {
+                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },

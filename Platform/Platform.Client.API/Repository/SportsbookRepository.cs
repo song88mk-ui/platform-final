@@ -32,7 +32,7 @@ namespace Platform.Client.API.Repository
             _httpClient.BaseAddress = new Uri(_configuration["API:PlatformSportsbookAPI"]);
             //_httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
-        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(string apiKey, string clientId, LanguageCode languageCode)
+        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(string apiKey, string clientId, string ipCountryCode, LanguageCode languageCode)
         {
             var clientCode = (await GetClient(clientId)).Result;
 
@@ -40,7 +40,8 @@ namespace Platform.Client.API.Repository
             {
                 ClientId = Guid.NewGuid(), //TODO: replace with proper validation
                 LanguageCode = languageCode,
-                ClientCode = clientCode
+                ClientCode = clientCode,
+                IPCountryCode = ipCountryCode
             };
             try
             {
@@ -71,7 +72,7 @@ namespace Platform.Client.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<TWLimitedResponseDTO>> GetActiveFixtureDetails(string apiKey, string clientId, string fixtureId, LanguageCode languageCode)
+        public async Task<BaseResponseDTO<TWLimitedResponseDTO>> GetActiveFixtureDetails(string apiKey, string clientId, string fixtureId, string ipCountryCode, LanguageCode languageCode)
         {
             var clientCode = (await GetClient(clientId)).Result;
 
@@ -80,7 +81,8 @@ namespace Platform.Client.API.Repository
                 ClientId = Guid.NewGuid(), //TODO: replace with proper validation
                 LanguageCode = languageCode,
                 FixtureId = fixtureId,
-                ClientCode = clientCode
+                ClientCode = clientCode,
+                IpCountryCode = ipCountryCode
             };
             try
             {

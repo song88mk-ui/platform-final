@@ -1367,12 +1367,13 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/boostedfixtures")]
         public async Task<IActionResult> GetBoostedFixtures()
         {
+            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetBoostedFixtures(apiKey, clientId, languageCode);
+            var result = await _platformRepository.GetBoostedFixtures(apiKey, clientId, languageCode, ipCountryCode);
 
             var parameters = new
             {
@@ -1380,6 +1381,7 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
+                                { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },

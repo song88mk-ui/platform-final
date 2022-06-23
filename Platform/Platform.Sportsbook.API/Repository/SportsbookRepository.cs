@@ -4306,6 +4306,7 @@ namespace Platform.Sportsbook.API.Repository
             var marketTemplateGroups = new SportMarketTemplateGroup();
 
             var clientInitial = GetClientMarketTemplateGroups().Where(c => c.SportId == fixture.SpId && c.ClientId == request.ClientId).ToList();
+            var allMarketTemplates = new List<string>();
 
             if (clientInitial.Any())
             {
@@ -4358,6 +4359,22 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
+            var finalMarkets = GetMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), request.LanguageCode, request.ClientCode, fixture.SpId, fixture.FiTyId);
+
+            if (fixture.FiStId == (int)FixtureStatus.Prematch)
+            {
+                var prematch = marketTemplateGroups.Prematch.FirstOrDefault(c => c.MarketTemplateGroupName.ToLower() == "all markets");
+                allMarketTemplates = prematch != null ? prematch.MarketTemplateIds : new List<string>();
+            }
+            else if (fixture.FiStId == (int)FixtureStatus.Live)
+            {
+                var live = marketTemplateGroups.Live.FirstOrDefault(c => c.MarketTemplateGroupName.ToLower() == "all markets");
+                allMarketTemplates = live != null ? live.MarketTemplateIds : new List<string>();
+            }
+
+            if (allMarketTemplates.Any())
+                finalMarkets = finalMarkets.OrderBy(o => allMarketTemplates.IndexOf(o.MarketTemplateId)).ToList();
+
             var result = new List<FixtureDTO>
             {
                 new FixtureDTO
@@ -4389,7 +4406,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStop = fixture.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo,
                     MarketTemplateGroups = marketTemplateGroups,
-                    Markets = GetMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), request.LanguageCode, request.ClientCode, fixture.SpId, fixture.FiTyId)
+                    Markets = finalMarkets
                 }
             };
 

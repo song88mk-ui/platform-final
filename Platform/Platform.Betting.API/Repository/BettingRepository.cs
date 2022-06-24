@@ -1861,7 +1861,7 @@ namespace Platform.Betting.API.Repository
                         newBet.WinningsTax = bet.WinningsTax;
                         newBet.IsBoosted = betBoosted.Any(b => b == bet.BetId);
 
-                        newBet.Selections = betSelections.Where(m => m.BetId == betId).Select(s => new ManualBetSelectionDetailsDTO()
+                        newBet.Selections = betSelections.Where(m => m.BetId == betId).Select(s => new BetSelectionDetailsDTO()
                         {
                             SportId = s.SportId,
                             SportName = s.SportName,
@@ -2037,7 +2037,7 @@ namespace Platform.Betting.API.Repository
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
 
                 bet.IsBoosted = betBoosted.Any(b => b == bet.BetId);
-                bet.Selections = filteredSelections.Select(s => new ManualBetSelectionDetailsDTO
+                bet.Selections = filteredSelections.Select(s => new BetSelectionDetailsDTO
                 {
                     SportId = s.SportId,
                     SportName = s.SportName,
@@ -2088,6 +2088,82 @@ namespace Platform.Betting.API.Repository
                 Result = new ManualBetDetailsResponseDTO
                 {
                     Bets = result.OrderByDescending(o => o.SettlementDate).ToList()
+                }
+            };
+        }
+
+        public async Task<BaseResponseDTO<BetSelectionDetailsResponseDTO>> GetBetSelections(BetSelectionDetailsRequestDTO request)
+        {
+            var selections = _bettingContext.BetSelection.AsNoTracking().Where(s => s.BetId == request.BetId).ToList();
+
+            if (selections == null || !selections.Any())
+            {
+                return new BaseResponseDTO<BetSelectionDetailsResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new BetSelectionDetailsResponseDTO
+                    {
+                        Selections = new List<BetSelectionDetailsDTO>()
+                    }
+                };
+            }
+
+            var newSelections = new List<BetSelectionDetailsDTO>();
+
+            foreach (var s in selections)
+            {
+                newSelections.Add(new BetSelectionDetailsDTO
+                {
+                    SportId = s.SportId,
+                    SportName = s.SportName,
+                    LeagueId = s.LeagueId,
+                    LeagueName = s.LeagueName,
+                    FixtureId = s.FixtureId.ToString(),
+                    FixtureName = s.FixtureName,
+                    MarketId = s.MarketId.ToString(),
+                    MarketName = s.MarketName,
+                    Line = s.Line,
+                    SelectionId = s.SelectionId.ToString(),
+                    SelectionName = s.SelectionName,
+                    Odds = s.Odds,
+                    BetScore = s.BetScore,
+                    SettlementScore = s.SettlementScore,
+                    BetSelectionId = s.BetSelectionId,
+                    FixtureStartDate = s.FixtureStartDate,
+                    FixtureStatusId = s.FixtureStatusId,
+                    FixtureStatusName = s.FixtureStatusName,
+                    MarketTemplateId = s.MarketTemplateId,
+                    SegmentId = s.SegmentId,
+                    SegmentName = s.SegmentName,
+                    SelectionTemplateId = s.SelectionTemplateId,
+                    BetSelectionStatusId = s.BetSelectionStatusId,
+                    BetSelectionStatusName = s.BetSelectionStatusName,
+                    BetId = s.BetId,
+                    CorrelationId = s.CorrelationId,
+                    DeadHeatFactor = s.DeadHeatFactor,
+                    FixtureSpecifier = s.FixtureSpecifier,
+                    FixtureTypeId = s.FixtureTypeId,
+                    FixtureTypeName = s.FixtureTypeName,
+                    HalfLostProbability = s.HalfLostProbability,
+                    HalfWonProbability = s.HalfWonProbability,
+                    IsResettled = s.IsResettled,
+                    IsSettled = s.IsSettled,
+                    LostProbability = s.LostProbability,
+                    Probability = s.LostProbability,
+                    SelectionSpecifier = s.SelectionSpecifier,
+                    VoidProbability = s.VoidProbability,
+                    WonProbability = s.WonProbability,
+                });
+            }
+
+            return new BaseResponseDTO<BetSelectionDetailsResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BetSelectionDetailsResponseDTO
+                {
+                    Selections = newSelections
                 }
             };
         }

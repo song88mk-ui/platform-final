@@ -17,7 +17,7 @@ namespace Platform.Shared.Models
     {
         public ManualBetDetailsDTO()
         {
-            Selections = new List<ManualBetSelectionDetailsDTO>();
+            Selections = new List<BetSelectionDetailsDTO>();
         }
         public Guid BetId { get; set; }
         public string UserId { get; set; }
@@ -62,10 +62,10 @@ namespace Platform.Shared.Models
         public decimal StakeBonusPayout { get; set; }
         public bool IsFreeBet { get; set; }
         public bool IsBoosted { get; set; }
-        public List<ManualBetSelectionDetailsDTO> Selections { get; set; }
+        public List<BetSelectionDetailsDTO> Selections { get; set; }
     }
 
-    public class ManualBetSelectionDetailsDTO
+    public class BetSelectionDetailsDTO
     {
         public Guid BetId { get; set; }
         public Guid BetSelectionId { get; set; }

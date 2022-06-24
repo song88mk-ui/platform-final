@@ -129,7 +129,7 @@ namespace Platform.Betting.API.Controllers
         }
 
         [HttpPost("v1/bet/selections")]
-        public async Task<IActionResult> GetBetSelections(BetSelectionRequestDTO request)
+        public async Task<IActionResult> GetBetSelections(BetSelectionDetailsRequestDTO request)
         {
             var result = await _bettingRepository.GetBetSelections(request);
 

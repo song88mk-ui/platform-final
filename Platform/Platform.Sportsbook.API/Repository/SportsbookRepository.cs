@@ -5888,7 +5888,9 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var marketFilter = Builders<Market>.Filter.Where(c => c.FiId == fixture.FiId);
+            var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+            var marketFilter = Builders<Market>.Filter.Where(c => c.FiId == fixture.FiId && marketStatusIds.Contains(c.MaStId));
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.IsBo).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
@@ -5896,7 +5898,7 @@ namespace Platform.Sportsbook.API.Repository
             var marketMappingProjection = Builders<MarketMapping>.Projection.Include(c => c.PrFiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaSp);
             var marketMappings = marketMappingCollection.Find(marketMappingFilter).Project<MarketMappingFilter>(marketMappingProjection).ToListAsync();
 
-            var selectionFilter = Builders<Selection>.Filter.Where(c => c.FiId == fixture.FiId);
+            var selectionFilter = Builders<Selection>.Filter.Where(c => c.FiId == fixture.FiId && marketStatusIds.Contains(c.MaStId));
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.ClBoOd).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString()).Include(c => c.ClBoSeNa).Include(c => c.ClBoSeNaTr).ElemMatch(c => c.ClBoSeNaTr, cc => cc.ClCoLaCo == $"{request.ClientCode}:{request.LanguageCode.ToString()}");
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 

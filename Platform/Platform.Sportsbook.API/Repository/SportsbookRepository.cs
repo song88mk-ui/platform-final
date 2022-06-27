@@ -5819,35 +5819,39 @@ namespace Platform.Sportsbook.API.Repository
             var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
             var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
+            var soccerScopes = new List<int> { (int)FixtureStatus.Prematch, (int)FixtureStatus.Live };
+            var basketballScopes = new List<int> { (int)FixtureStatus.Prematch };
 
-            var result = fixtures.OrderBy(o => o.FiStDa).Select(s => new BetBuilderFixtureDTO
-            {
-                SportId = s.SpId,
-                SportName = GetSportName(s.SpNa, s.SpNaTr, request.LanguageCode),
-                SegmentId = s.SegId,
-                SegmentName = GetSegmentName(s.SegNa, s.SegNaTr, request.LanguageCode),
-                LeagueId = s.LeId,
-                LeagueName = GetLeagueName(s.LeNa, s.LeNaTr, request.LanguageCode),
-                ProviderFixtureId = s.PrFiId,
-                FixtureId = s.FiId.ToString(),
-                FixtureName = GetFixtureName(s.FiNa, s.FiNaTr, request.LanguageCode),
-                HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                FixtureStartDate = s.FiStDa,
-                IsLive = s.IsOfLi,
-                IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
-                FixtureStatusId = s.SpId > 1000 || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                FixtureStatusName = s.SpId > 1000 || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
-                MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
-                SMSCode = string.Empty,
-                StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
-                Score = s.Sc,
-                CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
-                CurrentMinute = s.CuMi.ToString(),
-                BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
-                IsBetStopGlobal = bettingStatus.IsBeSo,
-                IsBoosted = s.IsBo,
-            }).ToList();
+            var result = fixtures.Where(f => (f.SpId == 1 && soccerScopes.Contains(f.FiStId)) ||
+                                            (f.SpId == 2 && basketballScopes.Contains(f.FiStId)))
+                                .OrderBy(o => o.FiStDa).Select(s => new BetBuilderFixtureDTO
+                                {
+                                    SportId = s.SpId,
+                                    SportName = GetSportName(s.SpNa, s.SpNaTr, request.LanguageCode),
+                                    SegmentId = s.SegId,
+                                    SegmentName = GetSegmentName(s.SegNa, s.SegNaTr, request.LanguageCode),
+                                    LeagueId = s.LeId,
+                                    LeagueName = GetLeagueName(s.LeNa, s.LeNaTr, request.LanguageCode),
+                                    ProviderFixtureId = s.PrFiId,
+                                    FixtureId = s.FiId.ToString(),
+                                    FixtureName = GetFixtureName(s.FiNa, s.FiNaTr, request.LanguageCode),
+                                    HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                                    AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                                    FixtureStartDate = s.FiStDa,
+                                    IsLive = s.IsOfLi,
+                                    IsLiveStream = string.IsNullOrEmpty(s.LiId) ? false : true,
+                                    FixtureStatusId = s.SpId > 1000 || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
+                                    FixtureStatusName = s.SpId > 1000 || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                                    MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
+                                    SMSCode = string.Empty,
+                                    StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
+                                    Score = s.Sc,
+                                    CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
+                                    CurrentMinute = s.CuMi.ToString(),
+                                    BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
+                                    IsBetStopGlobal = bettingStatus.IsBeSo,
+                                    IsBoosted = s.IsBo,
+                                }).ToList();
 
             return new BaseResponseDTO<BetBuilderFixtureResponseDTO>
             {
@@ -5896,8 +5900,10 @@ namespace Platform.Sportsbook.API.Repository
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.ClBoOd).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString()).Include(c => c.ClBoSeNa).Include(c => c.ClBoSeNaTr).ElemMatch(c => c.ClBoSeNaTr, cc => cc.ClCoLaCo == $"{request.ClientCode}:{request.LanguageCode.ToString()}");
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
+            await Task.WhenAll(markets, marketMappings, selections);
+
             var marketsResponse = new BetBuilderSelectionResponseDTO();
-            
+
             #region SR API to get custombet available selections
             using (var client = new HttpClient())
             {
@@ -5908,14 +5914,15 @@ namespace Platform.Sportsbook.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = "";
+                    //var result = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><available_selections xmlns=\"http://schemas.sportradar.com/custombet/v1/endpoints\" generated_at=\"2022-06-27T07:52:45+00:00\"><event id=\"sr:match:31421215\"><markets><market id=\"65\" specifiers=\"hcp=0:2\"><outcome id=\"1711\"/><outcome id=\"1712\"/><outcome id=\"1713\"/></market><market id=\"65\" specifiers=\"hcp=0:1\"><outcome id=\"1711\"/><outcome id=\"1712\"/><outcome id=\"1713\"/></market><market id=\"18\" specifiers=\"total=2.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"90\" specifiers=\"total=0.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"91\" specifiers=\"total=1.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"25\" specifiers=\"variant=sr:point_range:6+\"><outcome id=\"sr:point_range:6+:1121\"/><outcome id=\"sr:point_range:6+:1122\"/><outcome id=\"sr:point_range:6+:1123\"/><outcome id=\"sr:point_range:6+:1124\"/></market><market id=\"34\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"87\" specifiers=\"hcp=2:0\"><outcome id=\"1711\"/><outcome id=\"1712\"/><outcome id=\"1713\"/></market><market id=\"26\"><outcome id=\"70\"/><outcome id=\"72\"/></market><market id=\"69\" specifiers=\"total=2.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"552\"><outcome id=\"1746\"/><outcome id=\"1747\"/><outcome id=\"1748\"/><outcome id=\"1749\"/><outcome id=\"1805\"/></market><market id=\"51\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"60\"><outcome id=\"1\"/><outcome id=\"2\"/><outcome id=\"3\"/></market><market id=\"77\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"70\" specifiers=\"total=1.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"65\" specifiers=\"hcp=1:0\"><outcome id=\"1711\"/><outcome id=\"1712\"/><outcome id=\"1713\"/></market><market id=\"92\" specifiers=\"total=1.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"19\" specifiers=\"total=1.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"57\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"20\" specifiers=\"total=4.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"96\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"29\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"70\" specifiers=\"total=2.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"19\" specifiers=\"total=2.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"18\" specifiers=\"total=1.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"32\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"91\" specifiers=\"total=2.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"48\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"1\"><outcome id=\"1\"/><outcome id=\"2\"/><outcome id=\"3\"/></market><market id=\"93\" specifiers=\"variant=sr:exact_goals:2+\"><outcome id=\"sr:exact_goals:2+:85\"/><outcome id=\"sr:exact_goals:2+:86\"/><outcome id=\"sr:exact_goals:2+:87\"/></market><market id=\"548\"><outcome id=\"1730\"/><outcome id=\"1731\"/><outcome id=\"1732\"/><outcome id=\"1733\"/><outcome id=\"1734\"/><outcome id=\"1735\"/><outcome id=\"1736\"/><outcome id=\"1737\"/><outcome id=\"1738\"/><outcome id=\"1739\"/><outcome id=\"1740\"/><outcome id=\"1804\"/><outcome id=\"1741\"/><outcome id=\"1742\"/><outcome id=\"1743\"/><outcome id=\"1744\"/><outcome id=\"1745\"/></market><market id=\"49\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"70\" specifiers=\"total=0.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"19\" specifiers=\"total=0.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"81\"><outcome id=\"464\"/><outcome id=\"480\"/><outcome id=\"466\"/><outcome id=\"468\"/><outcome id=\"470\"/><outcome id=\"472\"/><outcome id=\"474\"/><outcome id=\"476\"/><outcome id=\"462\"/><outcome id=\"478\"/></market><market id=\"33\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"881\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"21\" specifiers=\"variant=sr:exact_goals:6+\"><outcome id=\"sr:exact_goals:6+:68\"/><outcome id=\"sr:exact_goals:6+:69\"/><outcome id=\"sr:exact_goals:6+:70\"/><outcome id=\"sr:exact_goals:6+:71\"/><outcome id=\"sr:exact_goals:6+:72\"/><outcome id=\"sr:exact_goals:6+:73\"/><outcome id=\"sr:exact_goals:6+:74\"/></market><market id=\"880\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"74\"><outcome id=\"70\"/><outcome id=\"72\"/></market><market id=\"8\" specifiers=\"goalnr=1\"><outcome id=\"6\"/><outcome id=\"7\"/><outcome id=\"8\"/></market><market id=\"18\" specifiers=\"total=0.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"551\"><outcome id=\"1750\"/><outcome id=\"1751\"/><outcome id=\"1752\"/><outcome id=\"1753\"/><outcome id=\"1754\"/><outcome id=\"1755\"/><outcome id=\"1803\"/><outcome id=\"1756\"/><outcome id=\"1757\"/><outcome id=\"1758\"/><outcome id=\"1759\"/></market><market id=\"76\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"27\"><outcome id=\"70\"/><outcome id=\"72\"/></market><market id=\"71\" specifiers=\"variant=sr:exact_goals:2+\"><outcome id=\"sr:exact_goals:2+:85\"/><outcome id=\"sr:exact_goals:2+:86\"/><outcome id=\"sr:exact_goals:2+:87\"/></market><market id=\"63\"><outcome id=\"9\"/><outcome id=\"10\"/><outcome id=\"11\"/></market><market id=\"68\" specifiers=\"total=2.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"84\" specifiers=\"goalnr=1\"><outcome id=\"6\"/><outcome id=\"7\"/><outcome id=\"8\"/></market><market id=\"92\" specifiers=\"total=0.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"20\" specifiers=\"total=3.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"59\" specifiers=\"total=1.5\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"25\" specifiers=\"variant=sr:goal_range:7+\"><outcome id=\"sr:goal_range:7+:1344\"/><outcome id=\"sr:goal_range:7+:1345\"/><outcome id=\"sr:goal_range:7+:1342\"/><outcome id=\"sr:goal_range:7+:1343\"/></market><market id=\"56\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"68\" specifiers=\"total=1.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"18\" specifiers=\"total=5.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"52\"><outcome id=\"436\"/><outcome id=\"438\"/><outcome id=\"440\"/></market><market id=\"879\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"18\" specifiers=\"total=4.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"45\"><outcome id=\"320\"/><outcome id=\"322\"/><outcome id=\"324\"/><outcome id=\"274\"/><outcome id=\"276\"/><outcome id=\"278\"/><outcome id=\"280\"/><outcome id=\"282\"/><outcome id=\"284\"/><outcome id=\"286\"/><outcome id=\"288\"/><outcome id=\"290\"/><outcome id=\"292\"/><outcome id=\"294\"/><outcome id=\"296\"/><outcome id=\"298\"/><outcome id=\"300\"/><outcome id=\"302\"/><outcome id=\"304\"/><outcome id=\"306\"/><outcome id=\"308\"/><outcome id=\"310\"/><outcome id=\"312\"/><outcome id=\"314\"/><outcome id=\"316\"/><outcome id=\"318\"/></market><market id=\"21\" specifiers=\"variant=sr:exact_goals:5+\"><outcome id=\"sr:exact_goals:5+:1336\"/><outcome id=\"sr:exact_goals:5+:1337\"/><outcome id=\"sr:exact_goals:5+:1338\"/><outcome id=\"sr:exact_goals:5+:1339\"/><outcome id=\"sr:exact_goals:5+:1340\"/><outcome id=\"sr:exact_goals:5+:1341\"/></market><market id=\"30\"><outcome id=\"784\"/><outcome id=\"788\"/><outcome id=\"790\"/><outcome id=\"792\"/></market><market id=\"50\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"20\" specifiers=\"total=1.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"20\" specifiers=\"total=2.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"14\" specifiers=\"hcp=3:0\"><outcome id=\"1711\"/><outcome id=\"1712\"/><outcome id=\"1713\"/></market><market id=\"14\" specifiers=\"hcp=1:0\"><outcome id=\"1711\"/><outcome id=\"1712\"/><outcome id=\"1713\"/></market><market id=\"90\" specifiers=\"total=2.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"14\" specifiers=\"hcp=4:0\"><outcome id=\"1711\"/><outcome id=\"1712\"/><outcome id=\"1713\"/></market><market id=\"19\" specifiers=\"total=3.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"85\"><outcome id=\"9\"/><outcome id=\"10\"/><outcome id=\"11\"/></market><market id=\"69\" specifiers=\"total=0.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"14\" specifiers=\"hcp=0:1\"><outcome id=\"1711\"/><outcome id=\"1712\"/><outcome id=\"1713\"/></market><market id=\"58\" specifiers=\"total=1.5\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"14\" specifiers=\"hcp=0:3\"><outcome id=\"1711\"/><outcome id=\"1712\"/><outcome id=\"1713\"/></market><market id=\"90\" specifiers=\"total=1.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"14\" specifiers=\"hcp=0:2\"><outcome id=\"1711\"/><outcome id=\"1712\"/><outcome id=\"1713\"/></market><market id=\"14\" specifiers=\"hcp=0:4\"><outcome id=\"1711\"/><outcome id=\"1712\"/><outcome id=\"1713\"/></market><market id=\"83\"><outcome id=\"1\"/><outcome id=\"2\"/><outcome id=\"3\"/></market><market id=\"15\" specifiers=\"variant=sr:winning_margin:3+\"><outcome id=\"sr:winning_margin:3+:113\"/><outcome id=\"sr:winning_margin:3+:114\"/><outcome id=\"sr:winning_margin:3+:115\"/><outcome id=\"sr:winning_margin:3+:116\"/><outcome id=\"sr:winning_margin:3+:117\"/><outcome id=\"sr:winning_margin:3+:118\"/><outcome id=\"sr:winning_margin:3+:119\"/></market><market id=\"71\" specifiers=\"variant=sr:exact_goals:3+\"><outcome id=\"sr:exact_goals:3+:88\"/><outcome id=\"sr:exact_goals:3+:89\"/><outcome id=\"sr:exact_goals:3+:90\"/><outcome id=\"sr:exact_goals:3+:91\"/></market><market id=\"28\"><outcome id=\"70\"/><outcome id=\"72\"/></market><market id=\"62\" specifiers=\"goalnr=1\"><outcome id=\"6\"/><outcome id=\"7\"/><outcome id=\"8\"/></market><market id=\"65\" specifiers=\"hcp=2:0\"><outcome id=\"1711\"/><outcome id=\"1712\"/><outcome id=\"1713\"/></market><market id=\"75\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"19\" specifiers=\"total=4.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"54\"><outcome id=\"436\"/><outcome id=\"438\"/><outcome id=\"440\"/></market><market id=\"92\" specifiers=\"total=2.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"23\" specifiers=\"variant=sr:exact_goals:3+\"><outcome id=\"sr:exact_goals:3+:88\"/><outcome id=\"sr:exact_goals:3+:89\"/><outcome id=\"sr:exact_goals:3+:90\"/><outcome id=\"sr:exact_goals:3+:91\"/></market><market id=\"14\" specifiers=\"hcp=2:0\"><outcome id=\"1711\"/><outcome id=\"1712\"/><outcome id=\"1713\"/></market><market id=\"10\"><outcome id=\"9\"/><outcome id=\"10\"/><outcome id=\"11\"/></market><market id=\"98\"><outcome id=\"560\"/><outcome id=\"546\"/><outcome id=\"562\"/><outcome id=\"548\"/><outcome id=\"564\"/><outcome id=\"550\"/><outcome id=\"552\"/><outcome id=\"554\"/><outcome id=\"556\"/><outcome id=\"558\"/></market><market id=\"549\"><outcome id=\"1746\"/><outcome id=\"1747\"/><outcome id=\"1748\"/><outcome id=\"1749\"/><outcome id=\"1805\"/></market><market id=\"31\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"91\" specifiers=\"total=0.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"87\" specifiers=\"hcp=1:0\"><outcome id=\"1711\"/><outcome id=\"1712\"/><outcome id=\"1713\"/></market><market id=\"53\"><outcome id=\"436\"/><outcome id=\"438\"/><outcome id=\"440\"/></market><market id=\"69\" specifiers=\"total=1.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"550\"><outcome id=\"1746\"/><outcome id=\"1747\"/><outcome id=\"1748\"/><outcome id=\"1749\"/><outcome id=\"1805\"/></market><market id=\"41\" specifiers=\"score=0:0\"><outcome id=\"128\"/><outcome id=\"130\"/><outcome id=\"132\"/><outcome id=\"134\"/><outcome id=\"136\"/><outcome id=\"138\"/><outcome id=\"140\"/><outcome id=\"142\"/><outcome id=\"144\"/><outcome id=\"146\"/><outcome id=\"148\"/><outcome id=\"150\"/><outcome id=\"152\"/><outcome id=\"154\"/><outcome id=\"156\"/><outcome id=\"158\"/><outcome id=\"160\"/><outcome id=\"162\"/><outcome id=\"164\"/><outcome id=\"166\"/><outcome id=\"110\"/><outcome id=\"114\"/><outcome id=\"116\"/><outcome id=\"118\"/><outcome id=\"120\"/><outcome id=\"122\"/><outcome id=\"124\"/><outcome id=\"126\"/></market><market id=\"68\" specifiers=\"total=0.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"87\" specifiers=\"hcp=0:1\"><outcome id=\"1711\"/><outcome id=\"1712\"/><outcome id=\"1713\"/></market><market id=\"94\"><outcome id=\"70\"/><outcome id=\"72\"/></market><market id=\"87\" specifiers=\"hcp=0:2\"><outcome id=\"1711\"/><outcome id=\"1712\"/><outcome id=\"1713\"/></market><market id=\"553\"><outcome id=\"1746\"/><outcome id=\"1747\"/><outcome id=\"1748\"/><outcome id=\"1749\"/><outcome id=\"1805\"/></market><market id=\"95\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"20\" specifiers=\"total=0.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"24\" specifiers=\"variant=sr:exact_goals:3+\"><outcome id=\"sr:exact_goals:3+:88\"/><outcome id=\"sr:exact_goals:3+:89\"/><outcome id=\"sr:exact_goals:3+:90\"/><outcome id=\"sr:exact_goals:3+:91\"/></market><market id=\"97\"><outcome id=\"74\"/><outcome id=\"76\"/></market><market id=\"18\" specifiers=\"total=3.5\"><outcome id=\"12\"/><outcome id=\"13\"/></market><market id=\"47\"><outcome id=\"432\"/><outcome id=\"418\"/><outcome id=\"434\"/><outcome id=\"420\"/><outcome id=\"422\"/><outcome id=\"424\"/><outcome id=\"426\"/><outcome id=\"428\"/><outcome id=\"430\"/></market></markets></event></available_selections>";
+                    var result = await response.Content.ReadAsStringAsync();
 
                     XmlDocument doc = new XmlDocument();
 
                     doc.LoadXml(result);
 
                     #region Validate response
-                    
+
                     XmlElement root = doc.DocumentElement;
 
                     if (root.Name != "available_selections")
@@ -5933,7 +5940,7 @@ namespace Platform.Sportsbook.API.Repository
 
                     var marketNodes = eventNode.ChildNodes[0];
 
-                    if(eventNode.ChildNodes.Count == 0)
+                    if (eventNode.ChildNodes.Count == 0)
                     {
                         return new BaseResponseDTO<BetBuilderSelectionResponseDTO>
                         {
@@ -5947,21 +5954,43 @@ namespace Platform.Sportsbook.API.Repository
                         var marketTemplateId = marketNode.Attributes["id"].Value;
                         var specifiers = marketNode.HasAttribute("specifiers") ? marketNode.Attributes["specifiers"].Value : string.Empty;
 
+                        var marketMapped = marketMappings.Result.FirstOrDefault(m => m.MaTeId == marketTemplateId && m.MaSp == specifiers);
+                        if (marketMapped == null)
+                            continue;
+                        var market = markets.Result.FirstOrDefault(m => marketMapped.MaId == m.MaId);
+                        if (market == null)
+                            continue;
+
                         var selectionResponse = new List<BetBuilderSelectionDTO>();
 
-                        foreach (XmlAttribute selectionNode in marketNode.ChildNodes)
+                        foreach (XmlElement selectionNode in marketNode.ChildNodes)
                         {
                             var selectionTemplateId = selectionNode.Attributes["id"].Value;
 
+                            var selection = selections.Result.FirstOrDefault(m => marketMapped.MaId == m.MaId);
+                            if (selection == null)
+                                continue;
+
                             selectionResponse.Add(new BetBuilderSelectionDTO
                             {
-                                SelectionTemplateId  = selectionTemplateId
+                                SelectionId = selection.SeId.ToString(),
+                                SelectionName = selection.SeNa,
+                                SelectionTemplateId = selectionTemplateId,
+                                IsActive = selection.IsAc,
+                                CorrelationId = selection.CoId,
+                                SortOrder = selection.SeSoOr
                             });
                         }
 
                         marketsResponse.Markets.Add(new BetBuilderMarketDTO
                         {
                             MarketTemplateId = marketTemplateId,
+                            MarketId = market.MaId.ToString(),
+                            MarketName = market.MaId.ToString(),
+                            Line = market.Li,
+                            IsCashout = market.CaStId == 1 ? true : false,
+                            MarketStatusId = market.MaStId,
+                            MarketStatusName = market.MaStNa,
                             Selections = selectionResponse
                         });
 
@@ -6041,11 +6070,11 @@ namespace Platform.Sportsbook.API.Repository
                 client.DefaultRequestHeaders.Add("x-access-token", "wLCaM7vc80CADU33rz");
 
                 var payload = $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
-                if(request.Selections.Any())
+                if (request.Selections.Any())
                 {
                     payload = payload + $"<selections xmlns=\"http://schemas.sportradar.com/custombet/v1/endpoints\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://schemas.sportradar.com/custombet/v1/endpoints http://schemas.sportradar.com/custombet/v1/endpoints/Selections.xsd\">";
 
-                    foreach(var sel in request.Selections)
+                    foreach (var sel in request.Selections)
                     {
                         var fixture = fixtures.Result.FirstOrDefault(f => f.FiId == Convert.ToInt64(sel.FixtureId));
                         var marketMapping = marketMappings.Result.FirstOrDefault(f => f.MaId == Convert.ToInt64(sel.MarketId));
@@ -6053,7 +6082,7 @@ namespace Platform.Sportsbook.API.Repository
 
                         var marketSpecifier = marketMapping.MaSp;
 
-                        if(string.IsNullOrEmpty(marketSpecifier))
+                        if (string.IsNullOrEmpty(marketSpecifier))
                             payload = payload + $"<selection id=\"{fixture.FiSp}\" market_id=\"{marketMapping.MaTeId}\" outcome_id=\"{selection.SeTeId}\"/>";
                         else
                             payload = payload + $"<selection id=\"{fixture.FiSp}\" market_id=\"{marketMapping.MaTeId}\" specifiers=\"{marketSpecifier}\" outcome_id=\"{selection.SeTeId}\"/>";

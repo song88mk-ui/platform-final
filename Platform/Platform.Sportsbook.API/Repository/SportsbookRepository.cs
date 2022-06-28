@@ -4521,11 +4521,32 @@ namespace Platform.Sportsbook.API.Repository
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
-            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && c.SeId == Convert.ToInt64(request.SelectionId));
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(markets, selections);
+
+            var tempMarkets = GetMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), request.LanguageCode, request.ClientCode, fixture.SpId, fixture.FiTyId);
+            
+            var finalMarkets = new List<MarketDTO>();
+            foreach(var market in tempMarkets)
+            {
+                if(market.Selections.Any(s => s.SelectionId == request.SelectionId))
+                {
+                    finalMarkets.Add(new MarketDTO
+                    {
+                        MarketId = market.MarketId,
+                        MarketName = market.MarketName,
+                        MarketStatusId = market.MarketStatusId,
+                        MarketStatusName = market.MarketStatusName,
+                        MarketTemplateId = market.MarketTemplateId,
+                        Line = market.Line,
+                        IsCashout = market.IsCashout,
+                        Selections = market.Selections.Where(s => s.SelectionId == request.SelectionId).ToList()
+                    });
+                }
+            }
 
             var result = new List<FixtureDTO>
             {
@@ -4557,7 +4578,7 @@ namespace Platform.Sportsbook.API.Repository
                     BetStop = fixture.IsSu ? new List<int> { 1 } : new List<int> { },
                     IsBetStop = fixture.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo,
-                    Markets = GetMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), request.LanguageCode, request.ClientCode, fixture.SpId, fixture.FiTyId)
+                    Markets = finalMarkets
                 }
             };
 

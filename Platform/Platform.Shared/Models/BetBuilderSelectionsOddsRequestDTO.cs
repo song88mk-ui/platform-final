@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Platform.Shared.Enums;
+using System;
 using System.Collections.Generic;
 
 namespace Platform.Shared.Models
@@ -10,6 +11,7 @@ namespace Platform.Shared.Models
             Selections = new List<BetSelectionOddsRequest>();
         }
         public List<BetSelectionOddsRequest> Selections { get; set; }
+        public LanguageCode LanguageCode { get; set; }
     }
 
     public class BetSelectionOddsRequest

@@ -97,24 +97,6 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public int SeStId { get; set; }
     }
 
-    public class SelectionBetBuilderFilter
-    {
-        [BsonId]
-        public long SeId { get; set; }
-        public long FiId { get; set; }
-        public long MaId { get; set; }
-        public int MaStId { get; set; }
-        public bool IsAc { get; set; }
-        public double Pr { get; set; }
-        public double WoPr { get; set; }
-        public double LoPr { get; set; }
-        public double VoPr { get; set; }
-        public double HaWoPr { get; set; }
-        public double HaLoPr { get; set; }
-        public int SeStId { get; set; }
-        public string SeTeId { get; set; }
-    }
-
     public class CashOutSelectionFilter
     {
         [BsonId]

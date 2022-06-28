@@ -1582,13 +1582,14 @@ namespace Platform.API.Controllers
 
 
         [HttpPost("v1/sportsbook/betbuilder/selections/odds")]
-        public async Task<IActionResult> GetBetBuilderSelectionsOdds([FromBody] BetBuilderSelectionsOddsRequestDTO request)
+        public async Task<IActionResult> GetBetBuilderSelectionsOdds([FromBody] BetBuilderSelectionsOddsRequest request)
         {
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-            
-            var result = await _platformRepository.GetBetBuilderSelectionsOdds(clientId, request);
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
+
+            var result = await _platformRepository.GetBetBuilderSelectionsOdds(clientId, languageCode, request);
 
             var parameters = request;
 

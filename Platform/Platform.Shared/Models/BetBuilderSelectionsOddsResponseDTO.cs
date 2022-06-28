@@ -7,9 +7,9 @@ namespace Platform.Shared.Models
 
         public BetBuilderSelectionsOddsResponseDTO()
         {
-            Selections = new List<BetSelectionOddsRequest>();
+            Markets = new List<BetBuilderMarketDTO>();
         }
-        public List<BetSelectionOddsRequest> Selections { get; set; }
+        public List<BetBuilderMarketDTO> Markets { get; set; }
         public decimal Odds { get; set; }
         public decimal Probability { get; set; }
     }

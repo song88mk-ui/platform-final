@@ -3444,8 +3444,30 @@ namespace Platform.API.Repository
             });
         }
 
-        public async Task<BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>> GetBetBuilderSelectionsOdds(string clientId, BetBuilderSelectionsOddsRequestDTO request)
+        public async Task<BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>> GetBetBuilderSelectionsOdds(string clientId, string langCode, BetBuilderSelectionsOddsRequest request)
         {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
             var clientResponse = await GetClient(clientId);
 
             if (clientResponse.StatusCode != StatusCode.Success)
@@ -3458,7 +3480,11 @@ namespace Platform.API.Repository
                 };
             }
 
-            return await _sportsbookRepository.GetBetBuilderSelectionsOdds(request);
+            return await _sportsbookRepository.GetBetBuilderSelectionsOdds(new BetBuilderSelectionsOddsRequestDTO
+            {
+                LanguageCode = languageCode,
+                Selections = request.Selections
+            });
         }
 
         private DateTime GetFirstDayOfNextMonth()

@@ -5625,6 +5625,16 @@ namespace Platform.Sportsbook.API.Repository
                 Markets = GetBoostedMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode)
             }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
+            await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO
+            {
+                CorrelationId = Guid.NewGuid().ToString(),
+                MessageType = "OnVisitBoostedFixtures",
+                RoutingKey = $"r.oe.sb.engine.onvisitboostedfixtures.{request.ClientCode.ToLower()}",
+                Payload = JsonSerializer.Serialize(new
+                {
+                    FixtureIds = fixtureIds
+                })
+            });
 
             return new BaseResponseDTO<BoostedResponseDTO>
             {

@@ -1297,6 +1297,8 @@ namespace Platform.Sportsbook.API.Repository
 
             var raw = new List<BetFixtureSelectionResponseDTO>();
 
+            var isValidBetBuilder = await IsValidBetBuilderOdds(request.OddsChangeType, request.Selections, request.CalculatedOdds);
+
             foreach (var selection in request.Selections)
             {
                 var initialSelectionExtension = result.Item3.Where(c => c.SeId == selection.SelectionId).FirstOrDefault();
@@ -5294,6 +5296,7 @@ namespace Platform.Sportsbook.API.Repository
 
         private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>> result, string clientCode, bool isBoosted)
         {
+            
             var selection = result.Item3.Where(c => c.SeId == current.SelectionId).FirstOrDefault();
             var fixture = result.Item1.Where(c => c.FiId == selection.FiId).FirstOrDefault();
             var market = result.Item2.Where(c => c.MaId == selection.MaId).FirstOrDefault();
@@ -5307,6 +5310,8 @@ namespace Platform.Sportsbook.API.Repository
             //        selection.Od = Convert.ToDecimal(boostedOddsStr);
             //}
 
+
+
             if ((fixture.SpId == 1001 || fixture.SpId == 1002 || fixture.SpId == 1055 || fixture.SpId == 1058) && fixture.FiStDa < DateTime.UtcNow)
             {
                 return new BetSelectionState
@@ -5317,7 +5322,7 @@ namespace Platform.Sportsbook.API.Repository
                     Message = StatusCode.Market_Is_Not_Offered.ToString().Replace('_', ' ')
                 };
             }
-
+            
             if (bettingStatus != null && bettingStatus.IsBeSo == true)
             {
                 return new BetSelectionState
@@ -5424,7 +5429,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            if (selection.Od <= 1m)
+            if (isBetBuilder == false && selection.Od <= 1m)
             {
                 return new BetSelectionState
                 {
@@ -5439,7 +5444,7 @@ namespace Platform.Sportsbook.API.Repository
             switch (oddsChangeType)
             {
                 case OddsChangeType.None:
-                    if (current.Odds != selection.Od)
+                    if (isBetBuilder == false && current.Odds != selection.Od)
                     {
                         return new BetSelectionState
                         {
@@ -5454,7 +5459,7 @@ namespace Platform.Sportsbook.API.Repository
                 case OddsChangeType.Any:
                     break;
                 case OddsChangeType.Higher:
-                    if (current.Odds > selection.Od)
+                    if (isBetBuilder == false && current.Odds > selection.Od)
                     {
                         return new BetSelectionState
                         {
@@ -5479,6 +5484,47 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString()
             };
         }
+        private async Task<bool> IsValidBetBuilderOdds(OddsChangeType oddsChangeType, List<BetFixtureSelectionRequestDTO> selections, decimal calculatedOdds)
+        {
+            var result = await GetBetBuilderSelectionsOdds(new BetBuilderSelectionsOddsRequestDTO
+            {
+                Selections = selections.Select(s => new BetSelectionOddsRequest
+                {
+                    FixtureId = s.FixtureId.ToString(),
+                    MarketId = s.MarketId.ToString(),
+                    SelectionId = s.SelectionId.ToString(),
+                    SportId = s.SportId,
+                    CorrelationId = s.CorrelationId
+                }).ToList(),
+                LanguageCode = LanguageCode.EN
+            });
+
+            if (result.StatusCode != StatusCode.Success)
+                return false;
+
+            switch (oddsChangeType)
+            {
+                case OddsChangeType.None:
+                    if (result.Result.Odds != calculatedOdds)
+                    {
+                        return false;
+                    }
+                    break;
+                case OddsChangeType.Any:
+                    break;
+                case OddsChangeType.Higher:
+                    if (result.Result.Odds > calculatedOdds)
+                    {
+                        return false;
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            return true;
+        }
+
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(ActiveFixturesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);

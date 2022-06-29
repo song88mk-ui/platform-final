@@ -133,7 +133,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            if (!IsValidOdds(request.Selections.Select(s => s.Odds).ToList()))
+            if (request.IsBetBuilder == false && !IsValidOdds(request.Selections.Select(s => s.Odds).ToList()))
             {
                 return new BaseResponseDTO<BetResponseDTO>
                 {
@@ -148,6 +148,33 @@ namespace Platform.API.Repository
                 {
                     StatusCode = StatusCode.Boosted_Odds_Cannot_Be_Parlayed,
                     Message = StatusCode.Boosted_Odds_Cannot_Be_Parlayed.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (request.IsBetBuilder && !IsValidOdds(new List<decimal> { request.CalculatedOdds }))
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1,
+                    Message = StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (request.IsBetBuilder && request.Selections.Count <= 1)
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Bet_Builder_Must_Have_2_Or_More_Selections,
+                    Message = StatusCode.Bet_Builder_Must_Have_2_Or_More_Selections.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (request.IsBetBuilder && request.Selections.Count > 10)
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Bet_Builder_Cannot_Be_More_Than_10_Selections,
+                    Message = StatusCode.Bet_Builder_Cannot_Be_More_Than_10_Selections.ToString().Replace('_', ' '),
                 };
             }
 
@@ -190,6 +217,7 @@ namespace Platform.API.Repository
                 OddsChangeType = request.IsBoosted == true ? OddsChangeType.None : request.OddsChangeType,
                 IsBoosted = request.IsBoosted,
                 IsBetBuilder = request.IsBetBuilder,
+                CalculatedOdds = request.CalculatedOdds,
                 Selections = request.Selections.Select(s => new BetFixtureSelectionRequestDTO
                 {
                     SportId = s.SportId,
@@ -298,6 +326,7 @@ namespace Platform.API.Repository
                 IPAddress = request.IPAddress,
                 IsBoosted = request.IsBoosted,
                 Selections = selections
+                CalculatedOdds = request.CalculatedOdds,
             };
 
             return await _bettingRepository.PlaceBet(payload);

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Platform.ClientPlatform.API.Controllers
 {
-    [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(APIKeyFilter))]
+    [ApiController, EnableCors("AllowAllOrigins")]
     public class IntegrationController : IntegrationControllerBase
     {
         private readonly IPlatformRepository _platformRepository;
@@ -59,10 +59,24 @@ namespace Platform.ClientPlatform.API.Controllers
             }
         }
 
+        [HttpGet("v1/bet/history/running")]
+        public async Task<IActionResult> GetBetHistoryRunning()
+        {
+            var result = await _platformRepository.GetBetHistoryRunning(ClientId, LanguageCode, IPAddress);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/bet/cashout")]
         public async Task<IActionResult> CashoutBet([FromBody] CashoutBetRequest request)
         {
-            var result = await _platformRepository.CashoutBet(ApiKey, ClientId, OperatorToken, request);
+            var result = await _platformRepository.CashoutBet(ClientId, OperatorToken, IPAddress, request);
 
             switch (result.StatusCode)
             {

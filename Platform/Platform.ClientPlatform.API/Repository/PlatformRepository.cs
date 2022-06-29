@@ -148,25 +148,25 @@ namespace Platform.ClientPlatform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<BetCashOutResponseDTO>> CashoutBet(string apiKey, string clientId, string operatorToken, CashoutBetRequest request)
+        public async Task<BaseResponseDTO<BetHistoryRunningFilteredResponseDTO>> GetBetHistoryRunning(string clientId, string operatorToken, string ipAddress)
         {
             try
             {
-                _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
+                _httpClient.DefaultRequestHeaders.Add("X-Forwarded-For", ipAddress);
                 _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
                 _httpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
 
-                var response = await _httpClient.PostAsync($"v1/bet/cashout", new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"));
+                var response = await _httpClient.GetAsync($"v1/bet/history/running");
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<BetCashOutResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<BaseResponseDTO<BetHistoryRunningFilteredResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<BetCashOutResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<BaseResponseDTO<BetHistoryRunningFilteredResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     else
                     {
-                        return new BaseResponseDTO<BetCashOutResponseDTO>
+                        return new BaseResponseDTO<BetHistoryRunningFilteredResponseDTO>
                         {
                             StatusCode = StatusCode.Error,
                             Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
@@ -176,7 +176,42 @@ namespace Platform.ClientPlatform.API.Repository
             }
             catch (Exception ex)
             {
-                return new BaseResponseDTO<BetCashOutResponseDTO>
+                return new BaseResponseDTO<BetHistoryRunningFilteredResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
+            }
+        }
+        public async Task<BaseResponseDTO<BetCashOutResponseFilteredDTO>> CashoutBet(string clientId, string operatorToken, string ipAddress, CashoutBetRequest request)
+        {
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Add("X-Forwarded-For", ipAddress);
+                _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
+                _httpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+
+                var response = await _httpClient.PostAsync($"v1/bet/cashout", new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                    return JsonSerializer.Deserialize<BaseResponseDTO<BetCashOutResponseFilteredDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                        return JsonSerializer.Deserialize<BaseResponseDTO<BetCashOutResponseFilteredDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    else
+                    {
+                        return new BaseResponseDTO<BetCashOutResponseFilteredDTO>
+                        {
+                            StatusCode = StatusCode.Error,
+                            Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<BetCashOutResponseFilteredDTO>
                 {
                     StatusCode = StatusCode.Error,
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"

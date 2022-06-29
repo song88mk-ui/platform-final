@@ -1552,6 +1552,66 @@ namespace Platform.Betting.API.Repository
                 }
             };
         }
+        public async Task<BaseResponseDTO<BetHistoryRunningFilteredResponseDTO>> GetBetHistoryRunning(BetHistoryRunningRequestDTO request)
+        {
+            var result = new List<BetHistoryRunning>();
+            var transactions = new List<Bet>();
+
+            var openBets = new List<int> { (int)BetStatus.Running };
+            var openBetsResponse = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && openBets.Contains(c.BetStatusId)).ToList();
+
+            if (openBetsResponse.Count > 0)
+                transactions.AddRange(openBetsResponse);
+
+
+            if (transactions.Count == 0)
+            {
+                return new BaseResponseDTO<BetHistoryRunningFilteredResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new BetHistoryRunningFilteredResponseDTO()
+                };
+            }
+
+            var betIds = transactions.Select(s => s.BetId).Distinct().ToList();
+            var selections = _bettingContext.BetSelection.AsNoTracking().Where(c => betIds.Contains(c.BetId)).ToList();
+
+            var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => betIds.Contains(b.BetId) && b.BetStatusId != (int)BetStatus.Rejected
+                                                && b.BetStatusId != (int)BetStatus.Cancelled).Select(s => s.BetId).ToList();
+
+
+            var runningBets = transactions.Where(c => c.BetStatusId == (int)BetStatus.Running).ToList();
+            var runningBetIds = runningBets.Select(s => s.BetId).Distinct().ToList();
+            var runningSelections = selections.Where(c => runningBetIds.Contains(c.BetId)).ToList();
+
+            var cashOutList = await _sportsbookRepository.GetCashOut(runningBets, runningSelections, betBoosted);
+
+            foreach (var bet in transactions)
+            {
+                var cashOut = cashOutList.Result.Where(c => c.BetId == bet.BetId).FirstOrDefault();
+                var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
+                var isBoosted = betBoosted.Any(b => b == bet.BetId);
+
+                result.Add(new BetHistoryRunning
+                {
+                    BetId = bet.BetId.ToString(),
+                    CashOutStake = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStake : 0,
+                    CashOutStatusId = bet.BetStatusId == (int)BetStatus.Running ? (int)cashOut.CashOutStatus : (int)CashOutStatus.Unavailable,
+                    CashOutStatusName = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStatus.ToString() : CashOutStatus.Unavailable.ToString()
+                });
+            }
+
+            return new BaseResponseDTO<BetHistoryRunningFilteredResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BetHistoryRunningFilteredResponseDTO
+                {
+                    Bets = result
+                }
+            };
+        }
         public async Task<BaseResponseDTO<BetConfigFEResponseDTO>> GetBetConfig(BetConfigRequestDTO request)
         {
             var result = new BetConfigFEResponseDTO();

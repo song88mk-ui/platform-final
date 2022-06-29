@@ -62,7 +62,7 @@ namespace Platform.ClientPlatform.API.Controllers
         [HttpGet("v1/bet/history/running")]
         public async Task<IActionResult> GetBetHistoryRunning()
         {
-            var result = await _platformRepository.GetBetHistoryRunning(ClientId, LanguageCode, IPAddress);
+            var result = await _platformRepository.GetBetHistoryRunning(ApiKey, ClientId, LanguageCode, IPAddress);
 
             switch (result.StatusCode)
             {
@@ -76,7 +76,7 @@ namespace Platform.ClientPlatform.API.Controllers
         [HttpPost("v1/bet/cashout")]
         public async Task<IActionResult> CashoutBet([FromBody] CashoutBetRequest request)
         {
-            var result = await _platformRepository.CashoutBet(ClientId, OperatorToken, IPAddress, request);
+            var result = await _platformRepository.CashoutBet(ApiKey, ClientId, OperatorToken, IPAddress, request);
 
             switch (result.StatusCode)
             {

@@ -148,10 +148,11 @@ namespace Platform.ClientPlatform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<BetHistoryRunningFilteredResponseDTO>> GetBetHistoryRunning(string clientId, string operatorToken, string ipAddress)
+        public async Task<BaseResponseDTO<BetHistoryRunningFilteredResponseDTO>> GetBetHistoryRunning(string apiKey, string clientId, string operatorToken, string ipAddress)
         {
             try
             {
+                _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
                 _httpClient.DefaultRequestHeaders.Add("X-Forwarded-For", ipAddress);
                 _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
                 _httpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
@@ -183,10 +184,11 @@ namespace Platform.ClientPlatform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<BetCashOutResponseFilteredDTO>> CashoutBet(string clientId, string operatorToken, string ipAddress, CashoutBetRequest request)
+        public async Task<BaseResponseDTO<BetCashOutResponseFilteredDTO>> CashoutBet(string apiKey, string clientId, string operatorToken, string ipAddress, CashoutBetRequest request)
         {
             try
             {
+                _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
                 _httpClient.DefaultRequestHeaders.Add("X-Forwarded-For", ipAddress);
                 _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
                 _httpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);

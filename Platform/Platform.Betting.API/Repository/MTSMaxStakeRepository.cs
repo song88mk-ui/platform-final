@@ -24,7 +24,7 @@ namespace Platform.Betting.API.Repository
             _httpClient.BaseAddress = new Uri(_configuration["API:MTSMaxStakeAPI"]);
         }
 
-        public async Task<BaseResponseDTO<MTSStakeResponseDTO>> GetMTSMaxStake(string authToken, MTSConfigRequestDTO request, decimal companyShare)
+        public async Task<BaseResponseDTO<MTSStakeResponseDTO>> GetMTSMaxStake(string authToken, MTSConfigRequestDTO request, decimal companyShare, bool isBetBuilder, decimal calculatedOdds)
         {
             if (request.BetSelections.Any(c => c.SportId > 1000))
             {
@@ -59,11 +59,25 @@ namespace Platform.Betting.API.Repository
                 var betId = Guid.NewGuid().ToString();
 
                 var bets = new List<MTSBetDTO>();
-                bets.Add(new MTSBetDTO
+                if(isBetBuilder == true)
                 {
-                    Id = betId,
-                    Stake = new MTSStakeDTO { Value = 10000 }
-                });
+                    bets.Add(new MTSBetDTO
+                    {
+                        CustomBet = true,
+                        CalculationOdds = Convert.ToInt32(calculatedOdds * 10000),
+                        Id = betId,
+                        Stake = new MTSStakeDTO { Value = 10000 }
+                    });
+                }
+                else
+                {
+                    bets.Add(new MTSBetDTO
+                    {
+                        Id = betId,
+                        Stake = new MTSStakeDTO { Value = 10000 }
+                    });
+                }
+
 
                 var betSelections = new List<MTSBetSelectionDTO>();
                 foreach (var req in request.BetSelections)

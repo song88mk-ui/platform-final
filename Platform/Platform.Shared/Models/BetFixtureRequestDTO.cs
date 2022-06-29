@@ -14,6 +14,7 @@ namespace Platform.Shared.Models
         public OddsChangeType OddsChangeType { get; set; }
         public bool IsBoosted { get; set; }
         public bool IsBetBuilder { get; set; }
+        public decimal CalculatedOdds { get; set; }
         public List<BetFixtureSelectionRequestDTO> Selections { get; set; }
     }
 

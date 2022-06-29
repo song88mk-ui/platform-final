@@ -77,6 +77,9 @@
         FromDate_Must_Be_Earlier_Than_ToDate = 152,
         Maximum_Of_24Hrs_Per_Request = 153,
 
+        Bet_Builder_Must_Have_2_Or_More_Selections = 154,
+        Bet_Builder_Cannot_Be_More_Than_10_Selections = 155,
+
         Error = 1000,
         Operator_Error = 1001
     }

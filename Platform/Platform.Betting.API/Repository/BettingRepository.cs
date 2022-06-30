@@ -1670,6 +1670,7 @@ namespace Platform.Betting.API.Repository
             List<OverrideSportConfig> overrideSportConfig = JsonSerializer.Deserialize<List<OverrideSportConfig>>(betConfig.OverrideConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
             TaxConfig taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
             PriceboostConfig priceboostConfig = !string.IsNullOrEmpty(betConfig.PriceboostConfig) ? JsonSerializer.Deserialize<PriceboostConfig>(betConfig.PriceboostConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new PriceboostConfig();
+            BetBuilderConfig betBuilderConfig = !string.IsNullOrEmpty(betConfig.BetBuilderConfig) ? JsonSerializer.Deserialize<BetBuilderConfig>(betConfig.BetBuilderConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new BetBuilderConfig();
 
             result.DefaultSportConfig = new DefaultSportConfigFE()
             {
@@ -1710,6 +1711,7 @@ namespace Platform.Betting.API.Repository
             };
 
             result.PriceboostConfig = priceboostConfig;
+            result.BetBuilderConfig = betBuilderConfig;
 
             return new BaseResponseDTO<BetConfigFEResponseDTO>
             {

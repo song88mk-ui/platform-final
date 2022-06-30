@@ -69,6 +69,7 @@ namespace Platform.Betting.API.Repository
 
                         var taxJSON = JsonSerializer.Serialize(config.TaxConfig);
                         var priceboostJson = JsonSerializer.Serialize(config.Priceboost);
+                        var betBuilderJson = JsonSerializer.Serialize(config.BetBuilder);
 
                         var betconfig = _bettingContext.BetConfig.FirstOrDefault(b => b.ClientId == clientID && b.CurrencyCode == config.CurrencyCode);
                         if (betconfig != null)
@@ -94,6 +95,7 @@ namespace Platform.Betting.API.Repository
                             betconfig.CreatedDate = dateCreated;
                             betconfig.TaxConfig = taxJSON;
                             betconfig.PriceboostConfig = priceboostJson;
+                            betconfig.BetBuilderConfig = betBuilderJson;
                             _bettingContext.BetConfig.Update(betconfig);
                         }
                         else
@@ -107,7 +109,8 @@ namespace Platform.Betting.API.Repository
                                 ParlayConfig = parleyJSON,
                                 CreatedDate = dateCreated,
                                 TaxConfig = taxJSON,
-                                PriceboostConfig = priceboostJson
+                                PriceboostConfig = priceboostJson,
+                                BetBuilderConfig = betBuilderJson
                             });
                         }
 

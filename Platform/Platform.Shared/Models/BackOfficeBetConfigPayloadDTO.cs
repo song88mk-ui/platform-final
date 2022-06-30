@@ -18,6 +18,7 @@ namespace Platform.Shared.Models
         public ParlayBetSetting Parlay { get; set; }
         public CricketBetSetting Cricket { get; set; }
         public PriceboostBetSetting Priceboost { get; set; }
+        public BetBuilderBetSetting BetBuilder { get; set; }
         public TaxConfig TaxConfig { get; set; }
     }
 
@@ -58,6 +59,12 @@ namespace Platform.Shared.Models
 
     public class PriceboostBetSetting
     {
+        public decimal MaxStake { get; set; }
+    }
+
+    public class BetBuilderBetSetting
+    {
+        public decimal MinStake { get; set; }
         public decimal MaxStake { get; set; }
     }
 

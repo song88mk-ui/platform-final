@@ -160,7 +160,7 @@ namespace Platform.Operator.API.Repository
                     _platformContext.SaveChanges();
                     
                     var testConfig = _platformContext.TestConfig.Find(id);
-                    if (testConfig != null && testConfig.ClientId == id)
+                    if (request.IsBetBuilder == false && testConfig != null && testConfig.ClientId == id)
                     {
                         scope.Complete();
 
@@ -233,6 +233,15 @@ namespace Platform.Operator.API.Repository
                     StatusId = 1003
                 };
             }
+
+            if(request.IsBetBuilder)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003
+                };
+            }
+
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {

@@ -137,6 +137,7 @@ namespace Platform.Operator.Servicev2.Repository
                             WinningsTax = betEntity.WinningsTax,
                             TaxedStake = betEntity.TaxedStake,
                             TaxedWinnings = betEntity.TaxedWinnings,
+                            IsFreeBet = betEntity.IsFreeBet,
                             BetTypeId = betEntity.BetTypeId,
                             BetTypeName = betEntity.BetTypeName,
                             OddsRef = betEntity.OddsRef

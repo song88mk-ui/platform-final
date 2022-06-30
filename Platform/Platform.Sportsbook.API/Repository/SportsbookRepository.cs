@@ -1079,11 +1079,13 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             if (fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright)
                             {
+                                selection.Od = Convert.ToDecimal(GetClientBoostedOdds(selection.ClBoOd, request.ClientCode, request.IsBoosted, selection.Od.ToString("0.00")));
+
                                 finalSelections.Add(selection);
                             }
                             else
                             {
-                                selection.Od = clientOdds.Where(c => c.SelectionId == selection.SeId).Select(ss => ss.Odds).FirstOrDefault();
+                                selection.Od = Convert.ToDecimal(GetClientBoostedOdds(selection.ClBoOd, request.ClientCode, request.IsBoosted, clientOdds.Where(c => c.SelectionId == selection.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString("0.00")));
 
                                 finalSelections.Add(selection);
                             }
@@ -1219,9 +1221,9 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var selection in request.Selections)
             {
-                var initialSelection = result.Item3.Where(c => c.SeId == selection.SelectionId).FirstOrDefault() ?? new Selection();
-                var initialFixture = result.Item1.Where(c => c.FiId == initialSelection.FiId).FirstOrDefault() ?? new Fixture();
-                var initialMarket = result.Item2.Where(c => c.MaId == initialSelection.MaId).FirstOrDefault() ?? new Market();
+                var initialSelection = result.Item3.Where(c => c.SeId == selection.SelectionId).FirstOrDefault();
+                var initialFixture = result.Item1.Where(c => c.FiId == initialSelection.FiId).FirstOrDefault();
+                var initialMarket = result.Item2.Where(c => c.MaId == initialSelection.MaId).FirstOrDefault();
                 var selectionCount = result.Item5.Where(c => c.MaId == initialMarket.MaId).Count();
 
                 raw.Add(new BetFixtureSelectionResponseDTO
@@ -4813,7 +4815,7 @@ namespace Platform.Sportsbook.API.Repository
             }
 
         }
-        private List<BoostedMarketDTO> GetBoostedMarkets(int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode)
+        private List<BoostedMarketDTO> GetBoostedMarkets(int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, bool isBoosted)
         {
             if (IsOEEnable(clientCode))
             {
@@ -4840,7 +4842,7 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetBoostedSelectionName(clientCode, s.SeNa, s.ClBoSeNa, s.ClBoSeNaTr, languageCode),
                                 DecimalOdds = s.Od.ToString("0.00"),
-                                BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode),
+                                BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode, isBoosted, s.Od.ToString("0.00")),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                                 SortOrder = s.SeSoOr,
@@ -4884,8 +4886,8 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetBoostedSelectionName(clientCode, s.SeNa, s.ClBoSeNa, s.ClBoSeNaTr, languageCode),
-                                DecimalOdds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
-                                BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode),
+                                DecimalOdds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString("0.00"),
+                                BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode, isBoosted, clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString("0.00")),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                                 SortOrder = s.SeSoOr
@@ -4919,7 +4921,7 @@ namespace Platform.Sportsbook.API.Repository
                             SelectionId = s.SeId.ToString(),
                             SelectionName = GetBoostedSelectionName(clientCode, s.SeNa, s.ClBoSeNa, s.ClBoSeNaTr, languageCode),
                             DecimalOdds = s.Od.ToString("0.00"),
-                            BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode),
+                            BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode, isBoosted, s.Od.ToString("0.00")),
                             IsActive = s.IsAc,
                             CorrelationId = s.CoId,
                             SortOrder = s.SeSoOr
@@ -5173,12 +5175,12 @@ namespace Platform.Sportsbook.API.Repository
 
             var bettingStatus = result.Item4;
 
-            if (isBoosted)
-            {
-                string boostedOddsStr = GetClientBoostedOdds(selection.ClBoOd, clientCode);
-                if (!string.IsNullOrEmpty(boostedOddsStr))
-                    selection.Od = Convert.ToDecimal(boostedOddsStr);
-            }
+            //if (isBoosted)
+            //{
+            //    string boostedOddsStr = GetClientBoostedOdds(selection.ClBoOd, clientCode);
+            //    if (!string.IsNullOrEmpty(boostedOddsStr))
+            //        selection.Od = Convert.ToDecimal(boostedOddsStr);
+            //}
 
             if ((fixture.SpId == 1001 || fixture.SpId == 1002 || fixture.SpId == 1055 || fixture.SpId == 1058) && fixture.FiStDa < DateTime.UtcNow)
             {
@@ -5626,7 +5628,7 @@ namespace Platform.Sportsbook.API.Repository
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 IsBoosted = s.IsBo,
-                Markets = GetBoostedMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode)
+                Markets = GetBoostedMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, true)
             }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO
@@ -7354,22 +7356,29 @@ namespace Platform.Sportsbook.API.Repository
         //    return result.Where(f => f.SelectionTemplateId == currentSelection.SeTeId).FirstOrDefault().Odds;
         //}
 
-        private static string GetClientBoostedOdds(string clientBoostedOdds, string clientCode)
+        private static string GetClientBoostedOdds(string clientBoostedOdds, string clientCode, bool isBoosted, string odds)
         {
             var boostedOdds = string.Empty;
 
-            if (string.IsNullOrEmpty(clientBoostedOdds))
+            if (isBoosted)
+            {
+                if (string.IsNullOrEmpty(clientBoostedOdds))
+                    return boostedOdds;
+
+
+                var split = clientBoostedOdds.Split("|").ToList();
+                boostedOdds = split.Where(s => s.Contains(clientCode)).FirstOrDefault();
+                if (string.IsNullOrEmpty(boostedOdds))
+                    return string.Empty;
+
+                boostedOdds = boostedOdds.Split(":")[1];
+
                 return boostedOdds;
-
-
-            var split = clientBoostedOdds.Split("|").ToList();
-            boostedOdds = split.Where(s => s.Contains(clientCode)).FirstOrDefault();
-            if (string.IsNullOrEmpty(boostedOdds))
-                return string.Empty;
-
-            boostedOdds = boostedOdds.Split(":")[1];
-
-            return boostedOdds;
+            }
+            else
+            {
+                return odds;
+            }
         }
 
         private static List<ClientOdds> GetClientOdds(int activeSelectionCount, decimal margin, List<SelectionFilter> selections, string clientMarketConfig, string clientCode)

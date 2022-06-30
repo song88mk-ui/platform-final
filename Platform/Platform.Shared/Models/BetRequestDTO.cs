@@ -67,5 +67,6 @@ namespace Platform.Shared.Models
         public double VoidProbability { get; set; }
         public double HalfWonProbability { get; set; }
         public double HalfLostProbability { get; set; }
+        public bool IsBinary { get; set; }
     }
 }

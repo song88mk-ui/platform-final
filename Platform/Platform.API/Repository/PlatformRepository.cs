@@ -233,6 +233,47 @@ namespace Platform.API.Repository
                 };
             }
 
+            var selections = new List<BetSelectionRequestDTO>();
+
+            foreach (var selection in request.Selections)
+            {
+                var initialSelection = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(selection.SelectionId)).FirstOrDefault();
+
+                selections.Add(new BetSelectionRequestDTO
+                {
+                    SportId = initialSelection.SportId,
+                    SportName = initialSelection.SportName,
+                    SegmentId = initialSelection.SegmentId,
+                    SegmentName = initialSelection.SegmentName,
+                    LeagueId = initialSelection.LeagueId,
+                    LeagueName = initialSelection.LeagueName,
+                    FixtureId = initialSelection.FixtureId,
+                    FixtureName = initialSelection.FixtureName,
+                    FixtureType = initialSelection.FixtureType,
+                    MarketTemplateId = initialSelection.MarketTemplateId,
+                    MarketId = initialSelection.MarketId,
+                    MarketName = initialSelection.MarketName,
+                    Line = initialSelection.Line,
+                    SelectionTemplateId = initialSelection.SelectionTemplateId,
+                    SelectionId = initialSelection.SelectionId,
+                    SelectionName = initialSelection.SelectionName,
+                    Odds = initialSelection.Odds,
+                    FixtureStatus = initialSelection.FixtureStatus,
+                    FixtureStartDate = initialSelection.FixtureStartDate,
+                    BetScore = initialSelection.Score,
+                    FixtureSpecifier = initialSelection.FixtureSpecifier,
+                    SelectionSpecifier = initialSelection.SelectionSpecifier,
+                    CorrelationId = initialSelection.CorrelationId,
+                    Probability = initialSelection.Probability,
+                    WonProbability = initialSelection.WonProbability,
+                    LostProbability = initialSelection.LostProbability,
+                    VoidProbability = initialSelection.VoidProbability,
+                    HalfWonProbability = initialSelection.HalfWonProbability,
+                    HalfLostProbability = initialSelection.HalfLostProbability,
+                    IsBinary = initialSelection.SelectionCount > 2 ? false : true
+                });
+            }
+
             var payload = new BetRequestDTO
             {
                 APIKey = apiKey,
@@ -254,38 +295,7 @@ namespace Platform.API.Repository
                 Channel = request.Channel,
                 IPAddress = request.IPAddress,
                 IsBoosted = request.IsBoosted,
-                Selections = request.Selections.Select(s => new BetSelectionRequestDTO
-                {
-                    SportId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SportId).FirstOrDefault(),
-                    SportName = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SportName).FirstOrDefault(),
-                    SegmentId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SegmentId).FirstOrDefault(),
-                    SegmentName = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SegmentName).FirstOrDefault(),
-                    LeagueId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.LeagueId).FirstOrDefault(),
-                    LeagueName = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.LeagueName).FirstOrDefault(),
-                    FixtureId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureId).FirstOrDefault(),
-                    FixtureName = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureName).FirstOrDefault(),
-                    FixtureType = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureType).FirstOrDefault(),
-                    MarketTemplateId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.MarketTemplateId).FirstOrDefault(),
-                    MarketId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.MarketId).FirstOrDefault(),
-                    MarketName = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.MarketName).FirstOrDefault(),
-                    Line = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Line).FirstOrDefault(),
-                    SelectionTemplateId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SelectionTemplateId).FirstOrDefault(),
-                    SelectionId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SelectionId).FirstOrDefault(),
-                    SelectionName = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SelectionName).FirstOrDefault(),
-                    Odds = request.IsBoosted == true ? s.Odds : result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Odds).FirstOrDefault(),
-                    FixtureStatus = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureStatus).FirstOrDefault(),
-                    FixtureStartDate = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureStartDate).FirstOrDefault(),
-                    BetScore = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Score).FirstOrDefault(),
-                    FixtureSpecifier = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.FixtureSpecifier).FirstOrDefault(),
-                    SelectionSpecifier = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SelectionSpecifier).FirstOrDefault(),
-                    CorrelationId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.CorrelationId).FirstOrDefault(),
-                    Probability = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.Probability).FirstOrDefault(),
-                    WonProbability = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.WonProbability).FirstOrDefault(),
-                    LostProbability = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.LostProbability).FirstOrDefault(),
-                    VoidProbability = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.VoidProbability).FirstOrDefault(),
-                    HalfWonProbability = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.HalfWonProbability).FirstOrDefault(),
-                    HalfLostProbability = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.HalfLostProbability).FirstOrDefault()
-                }).ToList()
+                Selections = selections
             };
 
             return await _bettingRepository.PlaceBet(payload);

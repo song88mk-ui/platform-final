@@ -227,10 +227,11 @@ namespace Platform.Operator.Servicev2.Repository
                 Message = reason
             }, messageBroker, correlationId, threadId);
         }
-        private void AcceptBet(Guid betId, string correlationId, IMessageBroker messageBroker, OperatorBetResponseDTO operatorResponse, bool isBoosted = false)
+        private void AcceptBet(Guid betId, string correlationId, IMessageBroker messageBroker, OperatorBetResponseDTO operatorResponse, bool isBoosted = false, bool isBetBuilder = false)
         {
             var payload = new OnBetPlacement();
             payload.IsBoosted = isBoosted;
+            payload.IsBetBuilder = isBetBuilder;
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
@@ -620,7 +621,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Timestamp = DateTime.UtcNow
                     });
 
-                    AcceptBet(message.Bet.BetId, correlationId, messageBroker, result, message.IsBoosted);
+                    AcceptBet(message.Bet.BetId, correlationId, messageBroker, result, message.IsBoosted, message.IsBetBuilder);
                 }
                 else
                 {
@@ -1072,6 +1073,7 @@ namespace Platform.Operator.Servicev2.Repository
                 Odds = message.Bet.Odds,
                 BetStatus = message.Bet.BetStatusName,
                 TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                IsBetBuilder = message.Bet.IsBetBuilder,
                 BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
                 {
                     BetSelectionId = s.BetSelectionId.ToString().ToUpper(),

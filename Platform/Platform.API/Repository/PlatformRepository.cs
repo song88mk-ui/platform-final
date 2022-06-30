@@ -160,7 +160,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            if (request.IsBetBuilder && request.Selections.Count <= 1)
+            if (request.IsBetBuilder && request.Selections.Count < 2)
             {
                 return new BaseResponseDTO<BetResponseDTO>
                 {

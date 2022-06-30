@@ -226,7 +226,7 @@ namespace Platform.Betting.API.Repository
 
                 var hasVirtualSport = request.Selections.Any(s => s.SportId > 1000) ? true : false;
 
-                if (hasVirtualSport == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
+                if (request.IsBetBuilder == false && hasVirtualSport == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
                 {
                     var selectionCount = request.Selections.Where(c => c.Odds >= parlayConfig.ParlayBonusMinOdds).Count();
                     if (selectionCount >= 3)
@@ -657,6 +657,7 @@ namespace Platform.Betting.API.Repository
             var odds = request.IsBetBuilder ? request.CalculatedOdds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
             var taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
             var priceboostConfig = !string.IsNullOrEmpty(betConfig.PriceboostConfig) ? JsonSerializer.Deserialize<PriceboostConfig>(betConfig.PriceboostConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new PriceboostConfig();
+            var betBuilderConfig = !string.IsNullOrEmpty(betConfig.BetBuilderConfig) ? JsonSerializer.Deserialize<BetBuilderConfig>(betConfig.BetBuilderConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new BetBuilderConfig();
 
             if (request.Selections.Count == 1)
             {
@@ -727,8 +728,17 @@ namespace Platform.Betting.API.Repository
             {
 
                 ParlayConfig parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-                minStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
-                maxStake = GetMaxStakeForParlayBetWithMTS(parlayConfig.MaxStake, mtsMaxStake.Result.Stake, parlayConfig.MaxPayout, odds, request.CompanyShare);
+                
+                if(request.IsBetBuilder)
+                {
+                    minStake = GetMinStake(betBuilderConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
+                    maxStake = GetMaxStakeForBetBuilderWithMTS(parlayConfig.MaxStake, mtsMaxStake.Result.Stake, request.CompanyShare);
+                }
+                else
+                {
+                    minStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
+                    maxStake = GetMaxStakeForParlayBetWithMTS(parlayConfig.MaxStake, mtsMaxStake.Result.Stake, parlayConfig.MaxPayout, odds, request.CompanyShare);
+                }
 
                 if (minStake > request.Stake)
                 {
@@ -755,7 +765,7 @@ namespace Platform.Betting.API.Repository
 
                 var hasVirtualSport = request.Selections.Any(s => s.SportId > 1000) ? true : false;
 
-                if (hasVirtualSport == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
+                if (request.IsBetBuilder == false && hasVirtualSport == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
                 {
                     var selectionCount = request.Selections.Where(c => c.Odds >= parlayConfig.ParlayBonusMinOdds).Count();
                     if (selectionCount >= 3)
@@ -2570,6 +2580,17 @@ namespace Platform.Betting.API.Repository
 
             if (maxStakeMTS == 0)
                 maximumStake.Add(GetMaxStakeForParlayBetWithoutMTS(maxStakeBackOffice, parlayMaxPayout, odds));
+            else
+                maximumStake.Add(maxStakeMTS);
+
+            return maximumStake.Min();
+        }
+        private decimal GetMaxStakeForBetBuilderWithMTS(decimal maxStakeBackOffice, decimal maxStakeMTS, decimal companyShare)
+        {
+            List<decimal> maximumStake = new List<decimal>();
+
+            if (maxStakeMTS == 0)
+                maximumStake.Add(maxStakeBackOffice);
             else
                 maximumStake.Add(maxStakeMTS);
 

@@ -11,6 +11,7 @@ namespace Platform.Shared.Data.Betting.Entities
         public string ParlayConfig { get; set; }
         public string TaxConfig { get; set; }
         public string PriceboostConfig { get; set; }
+        public string BetBuilderConfig { get; set; }
         public DateTime CreatedDate { get; set; }
     }
 }

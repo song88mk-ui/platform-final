@@ -14,6 +14,7 @@ namespace Platform.Shared.Models
         public ParlayConfigFE Parlayconfig { get; set; }
         public TaxConfig TaxConfig { get; set; }
         public PriceboostConfig PriceboostConfig { get; set; }
+        public BetBuilderConfig BetBuilderConfig { get; set; }
     }
 
     public class OverrideSportConfigFE
@@ -81,6 +82,13 @@ namespace Platform.Shared.Models
 
     public class PriceboostConfig
     {
+        [JsonProperty("maxStake")]
+        public decimal MaxStake { get; set; }
+    }
+    public class BetBuilderConfig
+    {
+        [JsonProperty("minStake")]
+        public decimal MinStake { get; set; }
         [JsonProperty("maxStake")]
         public decimal MaxStake { get; set; }
     }

@@ -11,6 +11,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.WebSocket.API.Data;
 using Platform.WebSocket.API.Repository;
+using System;
 using System.Linq;
 
 namespace Platform.WebSocket.API
@@ -40,19 +41,23 @@ namespace Platform.WebSocket.API
                     new[] { "application/octet-stream" });
             });
 
-            //services.AddSignalR(hubOptions =>
-            //{
-            //    hubOptions.MaximumReceiveMessageSize = 5000000;
-            //});
-
-            services.AddSignalR(hubOptions =>
+            if (Convert.ToBoolean(Configuration["Custom:IsProduction"]))
             {
-                hubOptions.MaximumReceiveMessageSize = 5000000;
-            })
-            .AddMessagePackProtocol();
-            //.AddAzureSignalR("Endpoint=https://song88.service.signalr.net;AccessKey=5ES+/AH0OiMLbDQrsMZnXmNFpkHuUlEH2dfn3sFnRyw=;Version=1.0;");
-
-
+                services.AddSignalR(hubOptions =>
+                {
+                    hubOptions.MaximumReceiveMessageSize = 5000000;
+                })
+                .AddMessagePackProtocol()
+                .AddAzureSignalR("Endpoint=https://song88.service.signalr.net;AccessKey=5ES+/AH0OiMLbDQrsMZnXmNFpkHuUlEH2dfn3sFnRyw=;Version=1.0;");
+            }
+            else
+            {
+                services.AddSignalR(hubOptions =>
+                {
+                    hubOptions.MaximumReceiveMessageSize = 5000000;
+                })
+                .AddMessagePackProtocol();
+            }
 
             services.AddCors(options =>
             {
@@ -98,26 +103,31 @@ namespace Platform.WebSocket.API
 
             app.UseResponseCompression();
 
-            //app.UseEndpoints(endpoints =>
-            //{
-            //    endpoints.MapControllers();
-            //});
-
-            //app.UseAzureSignalR(endpoints =>
-            //{
-            //    endpoints.MapHub<WebSocketRepository>("/platform");
-            //});
-
-            app.UseEndpoints(endpoints =>
+            if (Convert.ToBoolean(Configuration["Custom:IsProduction"]))
             {
-                endpoints.MapHub<WebSocketRepository>("/platform", options =>
+                app.UseEndpoints(endpoints =>
                 {
-                    options.ApplicationMaxBufferSize = 5000000;
-                    options.TransportMaxBufferSize = 5000000;
-                    options.Transports = HttpTransportType.WebSockets | HttpTransportType.ServerSentEvents | HttpTransportType.LongPolling;
+                    endpoints.MapControllers();
                 });
-                endpoints.MapControllers();
-            });
+
+                app.UseAzureSignalR(endpoints =>
+                {
+                    endpoints.MapHub<WebSocketRepository>("/platform");
+                });
+            }
+            else
+            {
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapHub<WebSocketRepository>("/platform", options =>
+                    {
+                        options.ApplicationMaxBufferSize = 5000000;
+                        options.TransportMaxBufferSize = 5000000;
+                        options.Transports = HttpTransportType.WebSockets | HttpTransportType.ServerSentEvents | HttpTransportType.LongPolling;
+                    });
+                    endpoints.MapControllers();
+                });
+            }
         }
     }
 }

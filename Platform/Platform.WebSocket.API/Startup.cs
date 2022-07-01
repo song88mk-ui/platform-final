@@ -47,16 +47,14 @@ namespace Platform.WebSocket.API
                 {
                     hubOptions.MaximumReceiveMessageSize = 5000000;
                 })
-                .AddMessagePackProtocol()
-                .AddAzureSignalR("Endpoint=https://song88.service.signalr.net;AccessKey=5ES+/AH0OiMLbDQrsMZnXmNFpkHuUlEH2dfn3sFnRyw=;Version=1.0;");
+                .AddAzureSignalR("Endpoint=https://ws.song88.com;AccessKey=5ES+/AH0OiMLbDQrsMZnXmNFpkHuUlEH2dfn3sFnRyw=;Version=1.0;");
             }
             else
             {
                 services.AddSignalR(hubOptions =>
                 {
                     hubOptions.MaximumReceiveMessageSize = 5000000;
-                })
-                .AddMessagePackProtocol();
+                });
             }
 
             services.AddCors(options =>

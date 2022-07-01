@@ -1,4 +1,3 @@
-using MessagePack;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
@@ -101,31 +100,16 @@ namespace Platform.WebSocket.API
 
             app.UseResponseCompression();
 
-            if (Convert.ToBoolean(Configuration["Custom:IsProduction"]))
+            app.UseEndpoints(endpoints =>
             {
-                app.UseEndpoints(endpoints =>
+                endpoints.MapHub<WebSocketRepository>("/platform", options =>
                 {
-                    endpoints.MapControllers();
+                    options.ApplicationMaxBufferSize = 5000000;
+                    options.TransportMaxBufferSize = 5000000;
+                    options.Transports = HttpTransportType.WebSockets | HttpTransportType.ServerSentEvents | HttpTransportType.LongPolling;
                 });
-
-                app.UseAzureSignalR(endpoints =>
-                {
-                    endpoints.MapHub<WebSocketRepository>("/platform");
-                });
-            }
-            else
-            {
-                app.UseEndpoints(endpoints =>
-                {
-                    endpoints.MapHub<WebSocketRepository>("/platform", options =>
-                    {
-                        options.ApplicationMaxBufferSize = 5000000;
-                        options.TransportMaxBufferSize = 5000000;
-                        options.Transports = HttpTransportType.WebSockets | HttpTransportType.ServerSentEvents | HttpTransportType.LongPolling;
-                    });
-                    endpoints.MapControllers();
-                });
-            }
+                endpoints.MapControllers();
+            });
         }
     }
 }

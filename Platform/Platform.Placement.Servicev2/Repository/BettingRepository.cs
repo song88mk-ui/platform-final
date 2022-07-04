@@ -35,7 +35,7 @@ namespace Platform.Placement.Servicev2.Repository
             var payload = new OnBetPlacement();
             payload.IsBoosted = message.IsBoosted;
             payload.IsBetBuilder = message.IsBetBuilder;
-            payload.CalculatedOdds = message.CalculatedOdds;
+            payload.Odds = message.Odds;
 
             var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
                 message.BetSelections.Any(c => c.SportId > 1000) ? new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled for VS)") :
@@ -618,7 +618,7 @@ namespace Platform.Placement.Servicev2.Repository
                     .SetDeviceId($"{message.Bet.ClientCode}{message.Bet.UserId.Replace("-", "")}")
                     .Build())
                     .Build())
-                    .AddBet(BuildBet(message.Bet, message.BetSelections, message.IsBetBuilder, message.CalculatedOdds))
+                    .AddBet(BuildBet(message.Bet, message.BetSelections, message.IsBetBuilder, message.Odds))
                     .BuildTicket();
 
                 var response = mts.SendTicketBlocking(bet);

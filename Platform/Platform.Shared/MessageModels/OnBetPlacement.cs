@@ -13,7 +13,7 @@ namespace Platform.Shared.MessageModels
         public Bet Bet { get; set; }
         public bool IsBoosted { get; set; }
         public bool IsBetBuilder { get; set; }
-        public decimal CalculatedOdds { get; set; }
+        public decimal Odds { get; set; }
         public List<BetSelection> BetSelections { get; set; }
     }
 

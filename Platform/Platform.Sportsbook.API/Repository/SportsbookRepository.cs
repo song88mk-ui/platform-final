@@ -7363,7 +7363,7 @@ namespace Platform.Sportsbook.API.Repository
             if (isBoosted)
             {
                 if (string.IsNullOrEmpty(clientBoostedOdds))
-                    return boostedOdds;
+                    return odds;
 
 
                 var split = clientBoostedOdds.Split("|").ToList();

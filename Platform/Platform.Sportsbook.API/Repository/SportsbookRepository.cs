@@ -4850,7 +4850,7 @@ namespace Platform.Sportsbook.API.Repository
                         });
                     }
 
-                    return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                    return result.Where(m => m.Selections.Any()).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
                 else
                 {
@@ -4895,7 +4895,7 @@ namespace Platform.Sportsbook.API.Repository
                         });
                     }
 
-                    return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                    return result.Where(m => m.Selections.Any()).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
             }
             else
@@ -4929,7 +4929,7 @@ namespace Platform.Sportsbook.API.Repository
                     });
                 }
 
-                return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                return result.Where(m => m.Selections.Any()).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
 
         }

@@ -1299,7 +1299,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var betBuilderOddsStatus = StatusCode.Success;
             if(request.IsBetBuilder)
-                betBuilderOddsStatus = await GetBetBuilderOddsStatus(request.OddsChangeType, request.Selections, request.CalculatedOdds);
+                betBuilderOddsStatus = await GetBetBuilderOddsStatus(request.OddsChangeType, request.Selections, request.Odds);
 
             foreach (var selection in request.Selections)
             {

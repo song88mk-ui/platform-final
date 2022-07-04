@@ -151,7 +151,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            if (request.IsBetBuilder && !IsValidOdds(new List<decimal> { request.CalculatedOdds }))
+            if (request.IsBetBuilder && !IsValidOdds(new List<decimal> { request.Odds }))
             {
                 return new BaseResponseDTO<BetResponseDTO>
                 {
@@ -217,7 +217,7 @@ namespace Platform.API.Repository
                 OddsChangeType = request.IsBoosted == true ? OddsChangeType.None : request.OddsChangeType,
                 IsBoosted = request.IsBoosted,
                 IsBetBuilder = request.IsBetBuilder,
-                CalculatedOdds = request.CalculatedOdds,
+                Odds = request.Odds,
                 Selections = request.Selections.Select(s => new BetFixtureSelectionRequestDTO
                 {
                     SportId = s.SportId,
@@ -325,8 +325,8 @@ namespace Platform.API.Repository
                 Channel = request.Channel,
                 IPAddress = request.IPAddress,
                 IsBoosted = request.IsBoosted,
-                Selections = selections
-                CalculatedOdds = request.CalculatedOdds,
+                Selections = selections,
+                Odds = request.Odds,
             };
 
             return await _bettingRepository.PlaceBet(payload);

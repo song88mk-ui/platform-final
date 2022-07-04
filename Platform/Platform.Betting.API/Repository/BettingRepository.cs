@@ -108,7 +108,7 @@ namespace Platform.Betting.API.Repository
             decimal maxPerGame = 0;
             decimal stakeFixtureLimit = 0;
             decimal parlayBonus = 0;
-            var odds = request.IsBetBuilder ? request.CalculatedOdds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+            var odds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
             var taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
             var priceboostConfig = !string.IsNullOrEmpty(betConfig.PriceboostConfig) ? JsonSerializer.Deserialize<PriceboostConfig>(betConfig.PriceboostConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new PriceboostConfig();
 
@@ -248,7 +248,7 @@ namespace Platform.Betting.API.Repository
                 {
                     Guid betId;
 
-                    var totalOdds = request.IsBetBuilder ? request.CalculatedOdds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+                    var totalOdds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
                     var totalOddsRef = request.Selections.Select(s => s.OddsRef).Aggregate((a, b) => a * b); 
                     var selectionSports = request.Selections.Select(s => s.SportId).Distinct().ToList();
 
@@ -521,7 +521,7 @@ namespace Platform.Betting.API.Repository
                         BetSelections = betSelectionData,
                         IsBoosted = request.IsBoosted,
                         IsBetBuilder = request.IsBetBuilder,
-                        CalculatedOdds = request.CalculatedOdds
+                        Odds = request.Odds
                     };
 
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
@@ -642,7 +642,7 @@ namespace Platform.Betting.API.Repository
             if (mtsAuthToken.StatusCode != StatusCode.Success)
                 return await PlaceBetWithoutMTS(request);
 
-            var mtsMaxStake = await _mtsMaxStakeRepository.GetMTSMaxStake(mtsAuthToken.Result.Token, mtsConfigRequest, request.CompanyShare, request.IsBetBuilder, request.CalculatedOdds);
+            var mtsMaxStake = await _mtsMaxStakeRepository.GetMTSMaxStake(mtsAuthToken.Result.Token, mtsConfigRequest, request.CompanyShare, request.IsBetBuilder, request.Odds);
 
             if (mtsMaxStake.StatusCode != StatusCode.Success)
                 return await PlaceBetWithoutMTS(request);
@@ -654,7 +654,7 @@ namespace Platform.Betting.API.Repository
             decimal maxPerGame = 0;
             decimal stakeFixtureLimit = 0;
             decimal parlayBonus = 0;
-            var odds = request.IsBetBuilder ? request.CalculatedOdds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+            var odds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
             var taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
             var priceboostConfig = !string.IsNullOrEmpty(betConfig.PriceboostConfig) ? JsonSerializer.Deserialize<PriceboostConfig>(betConfig.PriceboostConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new PriceboostConfig();
             var betBuilderConfig = !string.IsNullOrEmpty(betConfig.BetBuilderConfig) ? JsonSerializer.Deserialize<BetBuilderConfig>(betConfig.BetBuilderConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new BetBuilderConfig();
@@ -787,7 +787,7 @@ namespace Platform.Betting.API.Repository
                 {
                     Guid betId;
 
-                    var totalOdds = request.IsBetBuilder ? request.CalculatedOdds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+                    var totalOdds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
                     var totalOddsRef = request.Selections.Select(s => s.OddsRef).Aggregate((a, b) => a * b);
                     var selectionSports = request.Selections.Select(s => s.SportId).Distinct().ToList();
 
@@ -1063,7 +1063,7 @@ namespace Platform.Betting.API.Repository
                         BetSelections = betSelectionData,
                         IsBoosted = request.IsBoosted,
                         IsBetBuilder = request.IsBetBuilder,
-                        CalculatedOdds = request.CalculatedOdds
+                        Odds = request.Odds
                     };
 
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
@@ -1156,7 +1156,7 @@ namespace Platform.Betting.API.Repository
             if (mtsAuthToken.StatusCode != StatusCode.Success)
                 return await GetMaxStakeWithoutMTS(request);
 
-            var mtsMaxStake = await _mtsMaxStakeRepository.GetMTSMaxStake(mtsAuthToken.Result.Token, mtsConfigRequest, request.CompanyShare, request.IsBetBuilder, request.CalculatedOdds);
+            var mtsMaxStake = await _mtsMaxStakeRepository.GetMTSMaxStake(mtsAuthToken.Result.Token, mtsConfigRequest, request.CompanyShare, request.IsBetBuilder, request.Odds);
 
             if (mtsMaxStake.StatusCode != StatusCode.Success)
                 return await GetMaxStakeWithoutMTS(request);

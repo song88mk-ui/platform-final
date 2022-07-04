@@ -1297,7 +1297,9 @@ namespace Platform.Sportsbook.API.Repository
 
             var raw = new List<BetFixtureSelectionResponseDTO>();
 
-            var isValidBetBuilder = await IsValidBetBuilderOdds(request.OddsChangeType, request.Selections, request.CalculatedOdds);
+            var betBuilderOddsStatus = StatusCode.Success;
+            if(request.IsBetBuilder)
+                betBuilderOddsStatus = await GetBetBuilderOddsStatus(request.OddsChangeType, request.Selections, request.CalculatedOdds);
 
             foreach (var selection in request.Selections)
             {
@@ -1339,7 +1341,7 @@ namespace Platform.Sportsbook.API.Repository
                     HalfWonProbability = initialSelectionExtension.HaWoPr,
                     HalfLostProbability = initialSelectionExtension.HaLoPr,
                     SelectionCount = selectionCount,
-                    BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, selection, result, request.ClientCode, request.IsBoosted)
+                    BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, selection, result, request.ClientCode, request.IsBetBuilder, betBuilderOddsStatus)
                 });
             }
 
@@ -5294,7 +5296,7 @@ namespace Platform.Sportsbook.API.Repository
             return result.OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
         }
 
-        private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>> result, string clientCode, bool isBoosted)
+        private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>> result, string clientCode, bool isBetBuilder, StatusCode betBuilderOddsStatus)
         {
             
             var selection = result.Item3.Where(c => c.SeId == current.SelectionId).FirstOrDefault();
@@ -5311,6 +5313,16 @@ namespace Platform.Sportsbook.API.Repository
             //}
 
 
+            if (isBetBuilder == true && betBuilderOddsStatus != StatusCode.Success)
+            {
+                return new BetSelectionState
+                {
+                    SelectionId = current.SelectionId.ToString(),
+                    Odds = current.Odds,
+                    StatusCode = betBuilderOddsStatus,
+                    Message = betBuilderOddsStatus.ToString().Replace('_', ' ')
+                };
+            }
 
             if ((fixture.SpId == 1001 || fixture.SpId == 1002 || fixture.SpId == 1055 || fixture.SpId == 1058) && fixture.FiStDa < DateTime.UtcNow)
             {
@@ -5484,7 +5496,7 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString()
             };
         }
-        private async Task<bool> IsValidBetBuilderOdds(OddsChangeType oddsChangeType, List<BetFixtureSelectionRequestDTO> selections, decimal calculatedOdds)
+        private async Task<StatusCode> GetBetBuilderOddsStatus(OddsChangeType oddsChangeType, List<BetFixtureSelectionRequestDTO> selections, decimal calculatedOdds)
         {
             var result = await GetBetBuilderSelectionsOdds(new BetBuilderSelectionsOddsRequestDTO
             {
@@ -5500,29 +5512,25 @@ namespace Platform.Sportsbook.API.Repository
             });
 
             if (result.StatusCode != StatusCode.Success)
-                return false;
+                return StatusCode.Market_Is_Inactive;
 
             switch (oddsChangeType)
             {
                 case OddsChangeType.None:
                     if (result.Result.Odds != calculatedOdds)
-                    {
-                        return false;
-                    }
+                        return StatusCode.Odds_Is_Stale;
                     break;
                 case OddsChangeType.Any:
                     break;
                 case OddsChangeType.Higher:
                     if (result.Result.Odds > calculatedOdds)
-                    {
-                        return false;
-                    }
+                        return StatusCode.Odds_Is_Stale;
                     break;
                 default:
                     break;
             }
 
-            return true;
+            return StatusCode.Success;
         }
 
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(ActiveFixturesRequestDTO request)

@@ -64,7 +64,7 @@ namespace Platform.Shared.Models
         public int MarketStatusId { get; set; }
         public string MarketStatusName { get; set; }
         public bool IsBoosted { get; set; }
-        public string SortOrder { get; set; }
+        public int SortOrder { get; set; }
         public List<BoostedSelectionDTO> Selections { get; set; }
     }
 

@@ -4712,7 +4712,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
                             MarketStatusName = market.MaStNa,
-                            SortOrder = market.MaTeId,
+                            SortOrder = Convert.ToInt32(market.MaTeId),
                             Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeTeId,
@@ -4774,7 +4774,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
                             MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
-                            SortOrder = market.MaTeId,
+                            SortOrder = Convert.ToInt32(market.MaTeId),
                             Selections = selectionsToAdd.OrderBy(o => o.SortOrder).ToList()
                         };
 
@@ -4800,7 +4800,7 @@ namespace Platform.Sportsbook.API.Repository
                         IsCashout = market.CaStId == 1 ? true : false,
                         MarketStatusId = market.MaStId,
                         MarketStatusName = market.MaStNa,
-                        SortOrder = market.MaTeId,
+                        SortOrder = Convert.ToInt32(market.MaTeId),
                         Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
                         {
                             SelectionTemplateId = s.SeTeId,
@@ -4839,7 +4839,7 @@ namespace Platform.Sportsbook.API.Repository
                             MarketStatusId = market.MaStId,
                             MarketStatusName = market.MaStNa,
                             IsBoosted = market.IsBo,
-                            SortOrder = market.MaTeId,
+                            SortOrder = Convert.ToInt32(market.MaTeId),
                             Selections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)).Select(s => new BoostedSelectionDTO
                             {
                                 SelectionTemplateId = s.SeTeId,
@@ -4885,7 +4885,7 @@ namespace Platform.Sportsbook.API.Repository
                             MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
                             MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
                             IsBoosted = market.IsBo,
-                            SortOrder = market.MaTeId,
+                            SortOrder = Convert.ToInt32(market.MaTeId),
                             Selections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)).Select(s => new BoostedSelectionDTO
                             {
                                 SelectionTemplateId = s.SeTeId,
@@ -4920,7 +4920,7 @@ namespace Platform.Sportsbook.API.Repository
                         MarketStatusId = market.MaStId,
                         MarketStatusName = market.MaStNa,
                         IsBoosted = market.IsBo,
-                        SortOrder = market.MaTeId,
+                        SortOrder = Convert.ToInt32(market.MaTeId),
                         Selections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)).Select(s => new BoostedSelectionDTO
                         {
                             SelectionTemplateId = s.SeTeId,
@@ -4958,7 +4958,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
                             MarketStatusName = market.MaStNa,
-                            SortOrder = market.MaTeId,
+                            SortOrder = Convert.ToInt32(market.MaTeId),
                             Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeTeId,
@@ -5020,7 +5020,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
                             MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
-                            SortOrder = market.MaTeId,
+                            SortOrder = Convert.ToInt32(market.MaTeId),
                             Selections = selectionsToAdd.OrderBy(o => o.SortOrder).ToList()
                         };
 
@@ -5045,7 +5045,7 @@ namespace Platform.Sportsbook.API.Repository
                         IsCashout = market.CaStId == 1 ? true : false,
                         MarketStatusId = market.MaStId,
                         MarketStatusName = market.MaStNa,
-                        SortOrder = market.MaTeId,
+                        SortOrder = Convert.ToInt32(market.MaTeId),
                         Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
                         {
                             SelectionTemplateId = s.SeTeId,
@@ -5083,7 +5083,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
                             MarketStatusName = market.MaStNa,
-                            SortOrder = market.MaTeId,
+                            SortOrder = Convert.ToInt32(market.MaTeId),
                             Selections = selectionsToAdd.Where(c => c.IsAc == true).Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
@@ -5106,7 +5106,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
                             MarketStatusName = market.MaStNa,
-                            SortOrder = market.MaTeId,
+                            SortOrder = Convert.ToInt32(market.MaTeId),
                             Selections = selectionsToAdd.Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
@@ -5138,7 +5138,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
                             MarketStatusName = market.MaStNa,
-                            SortOrder = market.MaTeId,
+                            SortOrder = Convert.ToInt32(market.MaTeId),
                             Selections = selectionsToAdd.Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
@@ -5161,7 +5161,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
                             MarketStatusName = market.MaStNa,
-                            SortOrder = market.MaTeId,
+                            SortOrder = Convert.ToInt32(market.MaTeId),
                             Selections = selectionsToAdd.Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,

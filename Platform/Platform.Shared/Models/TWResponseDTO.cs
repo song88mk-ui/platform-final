@@ -272,7 +272,7 @@ namespace Platform.Shared.Models
         public bool IsCashout { get; set; }
         public int MarketStatusId { get; set; }
         public string MarketStatusName { get; set; }
-        public string SortOrder { get; set; }
+        public int SortOrder { get; set; }
         public List<SelectionDTO> Selections { get; set; }
     }
 

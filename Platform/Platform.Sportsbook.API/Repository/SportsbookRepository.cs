@@ -4712,6 +4712,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
                             MarketStatusName = market.MaStNa,
+                            SortOrder = market.MaTeId,
                             Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeTeId,
@@ -4725,7 +4726,7 @@ namespace Platform.Sportsbook.API.Repository
                         });
                     }
 
-                    return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                    return result.OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
                 else
                 {
@@ -4773,13 +4774,14 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
                             MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
+                            SortOrder = market.MaTeId,
                             Selections = selectionsToAdd.OrderBy(o => o.SortOrder).ToList()
                         };
 
                         result.Add(marketToAdd);
                     }
 
-                    return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                    return result.OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
             }
             else
@@ -4798,6 +4800,7 @@ namespace Platform.Sportsbook.API.Repository
                         IsCashout = market.CaStId == 1 ? true : false,
                         MarketStatusId = market.MaStId,
                         MarketStatusName = market.MaStNa,
+                        SortOrder = market.MaTeId,
                         Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
                         {
                             SelectionTemplateId = s.SeTeId,
@@ -4811,7 +4814,7 @@ namespace Platform.Sportsbook.API.Repository
                     });
                 }
 
-                return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                return result.OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
 
         }
@@ -4836,6 +4839,7 @@ namespace Platform.Sportsbook.API.Repository
                             MarketStatusId = market.MaStId,
                             MarketStatusName = market.MaStNa,
                             IsBoosted = market.IsBo,
+                            SortOrder = market.MaTeId,
                             Selections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)).Select(s => new BoostedSelectionDTO
                             {
                                 SelectionTemplateId = s.SeTeId,
@@ -4850,7 +4854,7 @@ namespace Platform.Sportsbook.API.Repository
                         });
                     }
 
-                    return result.Where(m => m.Selections.Any()).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                    return result.Where(m => m.Selections.Any()).OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
                 else
                 {
@@ -4881,6 +4885,7 @@ namespace Platform.Sportsbook.API.Repository
                             MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
                             MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
                             IsBoosted = market.IsBo,
+                            SortOrder = market.MaTeId,
                             Selections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)).Select(s => new BoostedSelectionDTO
                             {
                                 SelectionTemplateId = s.SeTeId,
@@ -4895,7 +4900,7 @@ namespace Platform.Sportsbook.API.Repository
                         });
                     }
 
-                    return result.Where(m => m.Selections.Any()).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                    return result.Where(m => m.Selections.Any()).OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
             }
             else
@@ -4915,6 +4920,7 @@ namespace Platform.Sportsbook.API.Repository
                         MarketStatusId = market.MaStId,
                         MarketStatusName = market.MaStNa,
                         IsBoosted = market.IsBo,
+                        SortOrder = market.MaTeId,
                         Selections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)).Select(s => new BoostedSelectionDTO
                         {
                             SelectionTemplateId = s.SeTeId,
@@ -4929,7 +4935,7 @@ namespace Platform.Sportsbook.API.Repository
                     });
                 }
 
-                return result.Where(m => m.Selections.Any()).OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                return result.Where(m => m.Selections.Any()).OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
 
         }
@@ -4952,6 +4958,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
                             MarketStatusName = market.MaStNa,
+                            SortOrder = market.MaTeId,
                             Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeTeId,
@@ -4965,7 +4972,7 @@ namespace Platform.Sportsbook.API.Repository
                         });
                     }
 
-                    return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                    return result.OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
                 else
                 {
@@ -5013,13 +5020,14 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
                             MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
+                            SortOrder = market.MaTeId,
                             Selections = selectionsToAdd.OrderBy(o => o.SortOrder).ToList()
                         };
 
                         result.Add(marketToAdd);
                     }
 
-                    return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                    return result.OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
             }
             else
@@ -5037,6 +5045,7 @@ namespace Platform.Sportsbook.API.Repository
                         IsCashout = market.CaStId == 1 ? true : false,
                         MarketStatusId = market.MaStId,
                         MarketStatusName = market.MaStNa,
+                        SortOrder = market.MaTeId,
                         Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
                         {
                             SelectionTemplateId = s.SeTeId,
@@ -5050,7 +5059,7 @@ namespace Platform.Sportsbook.API.Repository
                     });
                 }
 
-                return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                return result.OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
         }
         private List<MarketDTO> GetOutrightMarkets(List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, int sportId, int fixtureTypeId)
@@ -5074,6 +5083,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
                             MarketStatusName = market.MaStNa,
+                            SortOrder = market.MaTeId,
                             Selections = selectionsToAdd.Where(c => c.IsAc == true).Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
@@ -5096,6 +5106,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
                             MarketStatusName = market.MaStNa,
+                            SortOrder = market.MaTeId,
                             Selections = selectionsToAdd.Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
@@ -5127,6 +5138,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
                             MarketStatusName = market.MaStNa,
+                            SortOrder = market.MaTeId,
                             Selections = selectionsToAdd.Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
@@ -5149,6 +5161,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
                             MarketStatusName = market.MaStNa,
+                            SortOrder = market.MaTeId,
                             Selections = selectionsToAdd.Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
@@ -5164,7 +5177,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
             }
 
-            return result.OrderBy(o => Convert.ToInt32(o.MarketTemplateId)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+            return result.OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
         }
 
         private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus, List<Selection>> result, string clientCode, bool isBoosted)

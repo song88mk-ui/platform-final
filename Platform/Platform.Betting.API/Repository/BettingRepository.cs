@@ -166,7 +166,7 @@ namespace Platform.Betting.API.Repository
                     };
                 }
 
-                var stakeFixtureLimitResult = _bettingContext.StakeLimitFixture.AsNoTracking().Where(a => a.UserId == $"{request.ClientCode}-{request.UserId}" && a.FixtureId == request.Selections.FirstOrDefault().FixtureId).FirstOrDefault();
+                var stakeFixtureLimitResult = _bettingContext.StakeLimitFixture.Find($"{request.ClientCode}-{request.UserId}", request.Selections.First().FixtureId);
 
                 if (stakeFixtureLimitResult != null)
                 {
@@ -702,13 +702,13 @@ namespace Platform.Betting.API.Repository
                     };
                 }
 
-                var stakeFixtureLimitResult = _bettingContext.StakeLimitFixture.AsNoTracking().Where(a => a.UserId == $"{request.ClientCode}-{request.UserId}" && a.FixtureId == request.Selections.FirstOrDefault().FixtureId).FirstOrDefault();
+                //var stakeFixtureLimitResult = _bettingContext.StakeLimitFixture.Find($"{request.ClientCode}-{request.UserId}", request.Selections.First().FixtureId);
 
-                if (stakeFixtureLimitResult == null)
-                {
-                    if (stakeFixtureLimit > maxStake)
-                        stakeFixtureLimit = maxStake;
-                }
+                //if (stakeFixtureLimitResult == null)
+                //{
+                //    if (stakeFixtureLimit > maxStake)
+                //        stakeFixtureLimit = maxStake;
+                //}
             }
             else
             {

@@ -516,7 +516,7 @@ namespace Platform.API.Controllers
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-            var result = await _platformRepository.GetSelectorMarketTemplates(apiKey, clientId);
+            var result = await _platformRepository.GetMarketSortOrder(clientId);
 
             var parameters = new { };
 
@@ -531,7 +531,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/markettemplategroups", properties);
+            _telemetryClient.TrackEvent("e:v1/sportsbook/marketsortorder", properties);
 
             switch (result.StatusCode)
             {

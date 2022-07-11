@@ -1218,7 +1218,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            return await _sportsbookRepository.GetSelectorMarketTemplates();
+            return await _sportsbookRepository.GetMarketSortOrder(new MarketSortOrderRequestDTO { ClientId = clientResponse.Result.ClientId });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopFixtures(string apiKey, string clientId, string langCode, string ipCountryCode)
         {

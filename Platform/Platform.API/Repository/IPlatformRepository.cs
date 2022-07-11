@@ -68,7 +68,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<StatusCode>> AddOrUpdateParlayBonus(ParlayBonusRequestDTO request);
         Task<BaseResponseDTO<SportGroupResponseDTO>> GetSportGroups();
         Task<BaseResponseDTO<BoostedResponseDTO>> GetBoostedFixtures(string apiKey, string clientId, string langCode, string ipCountryCode);
-        Task<BaseResponseDTO<List<ClientMarketTemplateGroupResponseDTO2>>> GetMarketSortOrder(string clientId);
+        Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>> GetMarketSortOrder(string clientId);
 
     }
 }

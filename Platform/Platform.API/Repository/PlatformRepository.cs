@@ -1205,13 +1205,13 @@ namespace Platform.API.Repository
 
             return await _sportsbookRepository.GetSelectorMarketTemplates();
         }
-        public async Task<BaseResponseDTO<List<ClientMarketTemplateGroupResponseDTO2>>> GetMarketSortOrder(string clientId)
+        public async Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>> GetMarketSortOrder(string clientId)
         {
             var clientResponse = await GetClient(clientId);
 
             if (clientResponse.StatusCode != StatusCode.Success)
             {
-                return new BaseResponseDTO<List<ClientMarketTemplateGroupResponseDTO2>>
+                return new BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>
                 {
                     StatusCode = clientResponse.StatusCode,
                     Message = clientResponse.Message

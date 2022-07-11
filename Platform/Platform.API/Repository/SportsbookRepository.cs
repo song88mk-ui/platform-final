@@ -243,21 +243,21 @@ namespace Platform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<List<ClientMarketTemplateGroupResponseDTO2>>> GetMarketSortOrder(MarketSortOrderRequestDTO request)
+        public async Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>> GetMarketSortOrder(MarketSortOrderRequestDTO request)
         {
             try
             {
                 var response = await _httpClient.PostAsync($"v1/sportsbook/marketsortorder", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<List<ClientMarketTemplateGroupResponseDTO2>>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<List<ClientMarketTemplateGroupResponseDTO2>>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     else
                     {
-                        return new BaseResponseDTO<List<ClientMarketTemplateGroupResponseDTO2>>
+                        return new BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>
                         {
                             StatusCode = StatusCode.Error,
                             Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
@@ -267,7 +267,7 @@ namespace Platform.API.Repository
             }
             catch (Exception ex)
             {
-                return new BaseResponseDTO<List<ClientMarketTemplateGroupResponseDTO2>>
+                return new BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>
                 {
                     StatusCode = StatusCode.Error,
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"

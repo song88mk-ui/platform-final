@@ -6017,16 +6017,16 @@ namespace Platform.Sportsbook.API.Repository
                         Message = StatusCode.Success.ToString(),
                         Result = marketsResponse
                     };
-                }
-                else
-                {
-                    return new BaseResponseDTO<BetBuilderSelectionResponseDTO>
-                    {
-                        StatusCode = StatusCode.No_Record_Found,
-                        Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
-                    };
-                }
             }
+                else
+            {
+                return new BaseResponseDTO<BetBuilderSelectionResponseDTO>
+                {
+                    StatusCode = StatusCode.No_Record_Found,
+                    Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                };
+            }
+        }
 
             #endregion
 
@@ -6143,7 +6143,7 @@ namespace Platform.Sportsbook.API.Repository
                         }
                         else if(node.Name == "available_selections")
                         {
-                            var eventNode = root.ChildNodes[0];
+                            var eventNode = node.ChildNodes[0];
 
                             if (eventNode.ChildNodes.Count == 0)
                                 continue;
@@ -6165,16 +6165,16 @@ namespace Platform.Sportsbook.API.Repository
                         Message = StatusCode.Success.ToString(),
                         Result = selectionOddsResponse
                     };
-                }
-                else
-                {
-                    return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
-                    {
-                        StatusCode = StatusCode.No_Record_Found,
-                        Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
-                    };
-                }
             }
+                else
+            {
+                return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                {
+                    StatusCode = StatusCode.No_Record_Found,
+                    Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                };
+            }
+        }
 
             #endregion
 

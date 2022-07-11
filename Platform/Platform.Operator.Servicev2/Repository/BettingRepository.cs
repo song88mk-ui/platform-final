@@ -398,8 +398,16 @@ namespace Platform.Operator.Servicev2.Repository
                             Balance = operatorResponse.Balance
                         }, "OnWalletChange", $"r.wallet.{payload.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
+                        messageBroker.Publish(new OnBetPlacementError
+                        {
+                            BetId = betId.ToString(),
+                            Error = ex.Message,
+                            StackTrace = ex.StackTrace,
+                            InnerException = ex.InnerException.ToString()
+                        }, "OnBetPlacementError", "r.bet.placement.error", correlationId);
+
                     }
                 }
             }

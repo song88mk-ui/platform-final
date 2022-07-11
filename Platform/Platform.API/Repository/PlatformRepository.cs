@@ -1205,6 +1205,21 @@ namespace Platform.API.Repository
 
             return await _sportsbookRepository.GetSelectorMarketTemplates();
         }
+        public async Task<BaseResponseDTO<List<ClientMarketTemplateGroupResponseDTO2>>> GetMarketSortOrder(string clientId)
+        {
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<List<ClientMarketTemplateGroupResponseDTO2>>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetSelectorMarketTemplates();
+        }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopFixtures(string apiKey, string clientId, string langCode, string ipCountryCode)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;

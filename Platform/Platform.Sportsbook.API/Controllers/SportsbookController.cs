@@ -465,6 +465,20 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v1/sportsbook/marketsortorder")]
+        public async Task<IActionResult> GetMarketSortOrder([FromBody] MarketSortOrderRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetClientMarketSortOrder(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v2/sportsbook/fixtures/details/limited")]
         public async Task<IActionResult> GetFixtureDetailsLimited([FromBody] TWFixtureDetailsRequestDTO request)
         {

@@ -5748,6 +5748,27 @@ namespace Platform.Sportsbook.API.Repository
         {
             return _memCache.GetCache($"cmtg", () => _sportsbookContext.ClientMarketTemplateGroup.ToList(), 24);
         }
+        public async Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>> GetClientMarketSortOrder(MarketSortOrderRequestDTO request)
+        {
+            var initialResult = GetClientMarketTemplateGroups();
+
+            var result = initialResult.Where(c => c.ClientId == request.ClientId && c.Id == 1).Select(s => new ClientMarketTemplateGroupDTO
+            {
+                FixtureStatusId = s.FixtureStatusId,
+                SportId = s.SportId,
+                MarketTemplateIds = s.MarketTemplates
+            }).ToList();
+
+            return new BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new ClientMarketTemplateGroupResponseDTO2
+                {
+                    MarketTemplateGroups = result
+                }
+            };
+        }
         private List<ClientSportOrder> GetSportOrder()
         {
             return _memCache.GetCache($"so", () => _sportsbookContext.ClientSportOrder.ToList(), 24);

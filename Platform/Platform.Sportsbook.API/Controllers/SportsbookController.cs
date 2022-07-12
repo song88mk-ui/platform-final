@@ -478,6 +478,19 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+        [HttpPost("v1/sportsbook/fixturesortorder")]
+        public async Task<IActionResult> GetFixtureSortOrder([FromBody] FixtureSortOrderRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetClientFixtureSortOrder(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
 
         [HttpPost("v2/sportsbook/fixtures/details/limited")]
         public async Task<IActionResult> GetFixtureDetailsLimited([FromBody] TWFixtureDetailsRequestDTO request)

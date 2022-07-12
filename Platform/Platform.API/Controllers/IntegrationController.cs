@@ -542,6 +542,39 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpGet("v1/sportsbook/fixturesortorder")]
+        public async Task<IActionResult> GetFixtureSortOrder()
+        {
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetFixtureSortOrder(clientId);
+
+            var parameters = new { };
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "x-operator-token", string.Empty },
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/sportsbook/fixturesortorder", properties);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpGet("v1/sportsbook/userfavorites/fixtures")]
         public async Task<IActionResult> GetUserFavorites2()
         {

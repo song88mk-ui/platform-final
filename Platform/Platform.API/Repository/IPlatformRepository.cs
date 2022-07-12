@@ -69,6 +69,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<SportGroupResponseDTO>> GetSportGroups();
         Task<BaseResponseDTO<BoostedResponseDTO>> GetBoostedFixtures(string apiKey, string clientId, string langCode, string ipCountryCode);
         Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>> GetMarketSortOrder(string clientId);
+        Task<BaseResponseDTO<ClientFixtureSortOrderResponseDTO>> GetFixtureSortOrder(string clientId);
 
     }
 }

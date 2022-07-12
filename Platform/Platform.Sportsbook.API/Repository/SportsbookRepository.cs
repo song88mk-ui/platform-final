@@ -5769,6 +5769,28 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+        public async Task<BaseResponseDTO<ClientFixtureSortOrderResponseDTO>> GetClientFixtureSortOrder(FixtureSortOrderRequestDTO request)
+        {
+            var initialResult = GetTierLeagueOrder();
+
+            var result = initialResult.Select(s => new ClientFixtureSortOrderDTO
+            {
+                SportId = s.SportId,
+                SegmentId = s.SegmentId,
+                LeagueId = s.LeagueId,
+                SortOrder = s.SortOrder
+            }).ToList();
+
+            return new BaseResponseDTO<ClientFixtureSortOrderResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new ClientFixtureSortOrderResponseDTO
+                {
+                    Fixtures = result
+                }
+            };
+        }
         private List<ClientSportOrder> GetSportOrder()
         {
             return _memCache.GetCache($"so", () => _sportsbookContext.ClientSportOrder.ToList(), 24);

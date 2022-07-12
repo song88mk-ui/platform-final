@@ -1220,6 +1220,21 @@ namespace Platform.API.Repository
 
             return await _sportsbookRepository.GetMarketSortOrder(new MarketSortOrderRequestDTO { ClientId = clientResponse.Result.ClientId });
         }
+        public async Task<BaseResponseDTO<ClientFixtureSortOrderResponseDTO>> GetFixtureSortOrder(string clientId)
+        {
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<ClientFixtureSortOrderResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetFixtureSortOrder(new FixtureSortOrderRequestDTO { ClientId = clientResponse.Result.ClientId });
+        }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopFixtures(string apiKey, string clientId, string langCode, string ipCountryCode)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;

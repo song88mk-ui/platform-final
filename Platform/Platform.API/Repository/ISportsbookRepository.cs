@@ -53,5 +53,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<SportGroupResponseDTO>> GetSportGroups();
         Task<BaseResponseDTO<BoostedResponseDTO>> GetBoostedFixtures(BoostedFixturesRequestDTO request);
         Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>> GetMarketSortOrder(MarketSortOrderRequestDTO request);
+        Task<BaseResponseDTO<ClientFixtureSortOrderResponseDTO>> GetFixtureSortOrder(FixtureSortOrderRequestDTO request);
     }
 }

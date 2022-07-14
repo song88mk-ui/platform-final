@@ -960,6 +960,15 @@ namespace Platform.Operator.Servicev2.Repository
                         Balance = result.Balance
                     }, "OnWalletChange", "r.bet.betstatus", correlationId);
 
+                    messageBroker.Publish(new OnBetStatus
+                    {
+                        ClientId = message.Bet.ClientId.ToUpper(),
+                        UserId = message.Bet.UserId,
+                        BetId = message.Bet.BetId.ToString().ToUpper(),
+                        BetStatus = (BetStatus)message.Bet.BetStatusId,
+                        Message = message.Message
+                    }, "OnBetStatus", $"r.bet.betstatus.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+
                     messageBroker.Publish(new OnWalletChange
                     {
                         ClientId = message.Bet.ClientId.ToUpper(),

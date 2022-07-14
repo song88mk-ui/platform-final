@@ -136,6 +136,19 @@ namespace Platform.CashOut.Service.Repository
                                         BetStatus = (BetStatus)payload.Bet.BetStatusId,
                                         Message = "Cashout request has been accepted"
                                     }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
+
+                                    messageBroker.Publish(new OnCashOutResult
+                                    {
+                                        ClientCode = message.ClientCode.ToString().ToUpper(),
+                                        UserId = message.UserId,
+                                        BetId = message.BetId.ToString().ToUpper(),
+                                        BetStatus = (BetStatus)payload.Bet.BetStatusId,
+                                        CashOutStatus = CashOutStatus.Unavailable,
+                                        CashOutStake = 0,
+                                        Message = "Cashout request has been accepted",
+                                        ClientId = message.ClientId.ToString().ToUpper(),
+                                        Endpoint = message.Endpoint
+                                    }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
                                 }
                             }
                             else
@@ -168,7 +181,7 @@ namespace Platform.CashOut.Service.Repository
                                     CashOutStatus = CashOutStatus.Unavailable,
                                     CashOutStake = 0,
                                     Message = "Cashout request has been declined",
-                                    ClientId = bet.ClientId,
+                                    ClientId = message.ClientId.ToString().ToUpper(),
                                     Endpoint = message.Endpoint
                                 }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
                             }

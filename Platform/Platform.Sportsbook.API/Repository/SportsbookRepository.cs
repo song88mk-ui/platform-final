@@ -3874,15 +3874,7 @@ namespace Platform.Sportsbook.API.Repository
             if (mCache != null)
                 return mCache;
 
-            FilterDefinition<Fixture> fixtureFilter;
-
-            if (request.SportId == 1055 || request.SportId == 1058)
-                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Outright && c.SpId == request.SportId && c.SegId == request.SegmentId && c.LeId == request.LeagueId);
-            else
-                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.SegId == request.SegmentId && c.LeId == request.LeagueId);
-
-            //var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.SegId == request.SegmentId && c.LeId == request.LeagueId);
-
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.SegId == request.SegmentId && c.LeId == request.LeagueId);
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
 
             var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");

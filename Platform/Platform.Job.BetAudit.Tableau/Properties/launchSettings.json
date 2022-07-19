@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "Platform.Job.BetAudit.Tableau": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

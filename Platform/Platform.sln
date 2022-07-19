@@ -52,7 +52,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.ClientPlatform.API
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Job.Operator.Score", "Platform.Job.Operator.Score\Platform.Job.Operator.Score.csproj", "{0AD6BDB1-9111-4B8B-8A12-97C520540A0B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.BetPlacement.Console", "Platform.BetPlacement.Console\Platform.BetPlacement.Console.csproj", "{2E4BE879-0304-4505-A688-42A080B030E8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.BetPlacement.Console", "Platform.BetPlacement.Console\Platform.BetPlacement.Console.csproj", "{2E4BE879-0304-4505-A688-42A080B030E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Job.BetAudit.Tableau", "Platform.Job.BetAudit.Tableau\Platform.Job.BetAudit.Tableau.csproj", "{30E9FA1B-CF2F-4D05-BF6B-3F0198A7F8DC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -156,6 +158,10 @@ Global
 		{2E4BE879-0304-4505-A688-42A080B030E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E4BE879-0304-4505-A688-42A080B030E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E4BE879-0304-4505-A688-42A080B030E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30E9FA1B-CF2F-4D05-BF6B-3F0198A7F8DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30E9FA1B-CF2F-4D05-BF6B-3F0198A7F8DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30E9FA1B-CF2F-4D05-BF6B-3F0198A7F8DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30E9FA1B-CF2F-4D05-BF6B-3F0198A7F8DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

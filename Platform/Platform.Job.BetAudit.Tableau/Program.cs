@@ -1,9 +1,9 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Platform.Job.BetAudit.Tableau.Data;
+using Platform.Job.BetAudit.Tableau.Data.Betting;
+using Platform.Job.BetAudit.Tableau.Repository;
 
 namespace Platform.Job.BetAudit.Tableau
 {
@@ -18,7 +18,10 @@ namespace Platform.Job.BetAudit.Tableau
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddSingleton<ITableauRepository, TableauRepository>();
+                    services.AddDbContext<BettingContext>(o => o.UseSqlServer(hostContext.Configuration["ConnectionStrings:Betting"]));
+                    services.AddDbContext<TableauContext>(o => o.UseSqlServer(hostContext.Configuration["ConnectionStrings:Tableau"]));
                     services.AddHostedService<Worker>();
-                });
+                }).UseWindowsService();
     }
 }

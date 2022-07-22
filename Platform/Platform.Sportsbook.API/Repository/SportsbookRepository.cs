@@ -7037,7 +7037,7 @@ namespace Platform.Sportsbook.API.Repository
                 Result = new ClientMarketTemplateResponseDTO
                 {
                     ClientId = request.ClientId,
-                    SportId = sportId,
+                    SportId = request.SportId,
                     MarketTemplates = request.MarketTemplates.Select(s => new ClientMarketTemplateModel
                     {
                         MarketTemplateGroupNames = s.MarketTemplateGroupNames,

@@ -6955,10 +6955,10 @@ namespace Platform.Sportsbook.API.Repository
 
                     if (marketTemplateGroupName.ToLower() == "all markets")
                     {
-                        _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateToClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
+                        _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
                             request.ClientId.ToString(), sportId, (int)FixtureStatus.Prematch, marketTemplateGroupName, finalMarketTemplateIds);
 
-                        _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateToClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
+                        _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
                             request.ClientId.ToString(), sportId, (int)FixtureStatus.Live, marketTemplateGroupName, finalMarketTemplateIds);
                     }
                     else
@@ -7001,7 +7001,7 @@ namespace Platform.Sportsbook.API.Repository
                             if (marketGroup.FixtureStatusId == request.FixtureStatusId)
                             {
                                 // modify marketTemplateIds (add or remove, sort order)
-                                _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateToClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
+                                _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
                                     request.ClientId.ToString(), sportId, request.FixtureStatusId, marketTemplateGroupName, finalMarketTemplateIds);
                             }
                             else
@@ -7017,7 +7017,7 @@ namespace Platform.Sportsbook.API.Repository
 
                                 finalMarketTemplateIds = string.Join(",", selectedMarketTemplateIds);
 
-                                _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateToClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
+                                _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
                                     request.ClientId.ToString(), sportId, marketGroup.FixtureStatusId, marketTemplateGroupName, finalMarketTemplateIds);
                             }
                         }
@@ -7102,7 +7102,7 @@ namespace Platform.Sportsbook.API.Repository
                     // order market template by sort order
                     foreach (var fixtureStatusId in request.FixtureStatusIds)
                     {
-                        _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateToClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
+                        _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
                                 request.ClientId.ToString(), sportId, fixtureStatusId, request.Name, string.Join(',', finalMarketTemplateOrders));
                     }
                 }
@@ -7113,7 +7113,7 @@ namespace Platform.Sportsbook.API.Repository
                         .Where(c => c.SportId == sportId)
                         .ToList();
 
-                    if (!marketTemplateGroups.Any() || marketTemplateGroups.Any(c => c.Name.ToLower() != "all markets"))
+                    if (!marketTemplateGroups.Any() || !marketTemplateGroups.Any(c => c.Name.ToLower() == "all markets"))
                     {
                         if (!marketTemplateGroups.Any())
                         {
@@ -7126,7 +7126,7 @@ namespace Platform.Sportsbook.API.Repository
                                 MarketTemplates = string.Join(',', request.MarketTemplates.Select(s => s.MarketTemplateId))
                             });
                         }
-                        else if (marketTemplateGroups.Any(c => c.Name.ToLower() != "all markets"))
+                        else if (!marketTemplateGroups.Any(c => c.Name.ToLower() == "all markets"))
                         {
                             marketTemplateGroups.Insert(0, new Shared.Data.Sportsbook.SQLEntities.MarketTemplateGroup
                             {
@@ -7143,15 +7143,15 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         if (marketTemplateGroup.Name.ToLower() == "all markets")
                         {
-                            _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateToClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
+                            _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
                                 request.ClientId.ToString(), sportId, (int)FixtureStatus.Prematch, marketTemplateGroup.Name, marketTemplateGroup.MarketTemplates);
 
-                            _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateToClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
+                            _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
                                 request.ClientId.ToString(), sportId, (int)FixtureStatus.Live, marketTemplateGroup.Name, marketTemplateGroup.MarketTemplates);
                         }
                         else
                         {
-                            _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateToClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
+                            _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
                                 request.ClientId.ToString(), sportId, marketTemplateGroup.FixtureStatusId, marketTemplateGroup.Name, marketTemplateGroup.MarketTemplates);
                         }
                     }
@@ -7159,7 +7159,7 @@ namespace Platform.Sportsbook.API.Repository
                     // order market template by sort order
                     foreach (var fixtureStatusId in request.FixtureStatusIds)
                     {
-                        _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateToClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
+                        _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
                                 request.ClientId.ToString(), sportId, fixtureStatusId, request.Name, string.Join(',', finalMarketTemplateOrders));
                     }
                 }

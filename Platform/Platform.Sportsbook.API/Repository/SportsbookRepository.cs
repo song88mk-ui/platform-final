@@ -1299,7 +1299,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var betBuilderOddsStatus = new Tuple<decimal, StatusCode>(0m, StatusCode.Success);
             if (request.IsBetBuilder)
-                betBuilderOddsStatus = await GetBetBuilderOddsStatus(request.OddsChangeType, request.Selections, request.Odds);
+                betBuilderOddsStatus = await GetBetBuilderOddsStatus(request.OddsChangeType, request.Selections, result, request.TotalOdds);
 
             foreach (var selection in request.Selections)
             {
@@ -1341,10 +1341,9 @@ namespace Platform.Sportsbook.API.Repository
                     HalfWonProbability = initialSelectionExtension.HaWoPr,
                     HalfLostProbability = initialSelectionExtension.HaLoPr,
                     SelectionCount = selectionCount,
-                    BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, selection, result, request.ClientCode, request.IsBetBuilder, betBuilderOddsStatus.Item2)
+                    BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, selection, result, request.ClientCode, request.IsBetBuilder)
                 });
             }
-
 
             return new BaseResponseDTO<BetFixtureResponseDTO>
             {
@@ -5488,10 +5487,13 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
-        private async Task<Tuple<decimal,StatusCode>> GetBetBuilderOddsStatus(OddsChangeType oddsChangeType, List<BetFixtureSelectionRequestDTO> selections, Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus, List<Selection>> result, decimal calculatedOdds)
+        private async Task<Tuple<decimal,StatusCode>> GetBetBuilderOddsStatus(OddsChangeType oddsChangeType, List<BetFixtureSelectionRequestDTO> selections, Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus, List<Selection>> result, decimal currentTotalOdds)
         {
 
-            var result = await GetBetBuilderSelectionsOdds(new BetBuilderSelectionsOddsRequestDTO
+            if (result.Item1.Select(f => f.FiId).Distinct().Count() > 1)
+                return new Tuple<decimal, StatusCode>(currentTotalOdds, StatusCode.Market_Is_Inactive);
+
+            var oddsResult = await GetBetBuilderSelectionsOdds(new BetBuilderSelectionsOddsRequestDTO
             {
                 Selections = selections.Select(s => new BetSelectionOddsRequest
                 {
@@ -5504,50 +5506,26 @@ namespace Platform.Sportsbook.API.Repository
                 LanguageCode = LanguageCode.EN
             });
 
-            if (result.StatusCode != StatusCode.Success)
-                return new Tuple<decimal, StatusCode>(result.Result.TotalOdds,  StatusCode.Market_Is_Inactive);
+            if (oddsResult.StatusCode != StatusCode.Success)
+                return new Tuple<decimal, StatusCode>(oddsResult.Result.TotalOdds,  StatusCode.Market_Is_Inactive);
 
             switch (oddsChangeType)
             {
                 case OddsChangeType.None:
-                    if (result.Result.TotalOdds != calculatedOdds)
-                        return new Tuple<decimal, StatusCode>(result.Result.TotalOdds, StatusCode.Odds_Is_Stale);
+                    if (oddsResult.Result.TotalOdds != currentTotalOdds)
+                        return new Tuple<decimal, StatusCode>(oddsResult.Result.TotalOdds, StatusCode.Odds_Is_Stale);
                     break;
                 case OddsChangeType.Any:
                     break;
                 case OddsChangeType.Higher:
-                    if (result.Result.TotalOdds > calculatedOdds)
-                        return new Tuple<decimal, StatusCode>(result.Result.TotalOdds, StatusCode.Odds_Is_Stale);
+                    if (oddsResult.Result.TotalOdds > currentTotalOdds)
+                        return new Tuple<decimal, StatusCode>(oddsResult.Result.TotalOdds, StatusCode.Odds_Is_Stale);
                     break;
                 default:
                     break;
             }
-
-
-            //if (result.Item1.Select(f => f.FiId).Distinct().Count() > 1)
-            //{
-            //    return new BetSelectionState
-            //    {
-            //        SelectionId = current.SelectionId.ToString(),
-            //        Odds = current.Odds,
-            //        StatusCode = StatusCode.Bet_Builder_Must_Be_On_The_Same_Fixture,
-            //        Message = StatusCode.Bet_Builder_Must_Be_On_The_Same_Fixture.ToString().Replace('_', ' ')
-            //    };
-            //}
-
-            //if (betBuilderOddsStatus != StatusCode.Success)
-            //{
-            //    return new BetSelectionState
-            //    {
-            //        SelectionId = current.SelectionId.ToString(),
-            //        Odds = current.Odds,
-            //        StatusCode = betBuilderOddsStatus,
-            //        Message = betBuilderOddsStatus.ToString().Replace('_', ' ')
-            //    };
-            //}
-
-
-            return new Tuple<decimal, StatusCode>(result.Result.TotalOdds, StatusCode.Success);
+            
+            return new Tuple<decimal, StatusCode>(oddsResult.Result.TotalOdds, StatusCode.Success);
         }
 
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(ActiveFixturesRequestDTO request)

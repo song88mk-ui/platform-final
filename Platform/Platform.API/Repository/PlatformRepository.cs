@@ -226,7 +226,7 @@ namespace Platform.API.Repository
                 OddsChangeType = request.IsBoosted == true ? OddsChangeType.None : request.OddsChangeType,
                 IsBoosted = request.IsBoosted,
                 IsBetBuilder = request.IsBetBuilder,
-                Odds = request.Odds,
+                TotalOdds = request.TotalOdds,
                 Selections = request.Selections.Select(s => new BetFixtureSelectionRequestDTO
                 {
                     SportId = s.SportId,
@@ -240,11 +240,26 @@ namespace Platform.API.Repository
 
             if (result.StatusCode != StatusCode.Success)
             {
-                return new BaseResponseDTO<BetResponseDTO>
+                if(request.IsBetBuilder)
                 {
-                    StatusCode = StatusCode.Error,
-                    Message = StatusCode.Error.ToString().Replace('_', ' '),
-                };
+                    return new BaseResponseDTO<BetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = StatusCode.Error.ToString().Replace('_', ' '),
+                        Result = new BetResponseDTO
+                        {
+                            TotalOdds = result.Result.TotalOdds
+                        }
+                    };
+                }
+                else
+                {
+                    return new BaseResponseDTO<BetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = StatusCode.Error.ToString().Replace('_', ' '),
+                    };
+                }
             }
 
             if (result.Result.Selections.Any(s => s.BetSelectionState.StatusCode != StatusCode.Success))
@@ -335,7 +350,8 @@ namespace Platform.API.Repository
                 IPAddress = request.IPAddress,
                 IsBoosted = request.IsBoosted,
                 Selections = selections,
-                Odds = request.Odds,
+                IsBetBuilder = request.IsBetBuilder,
+                Odds = request.TotalOdds,
             };
 
             return await _bettingRepository.PlaceBet(payload);

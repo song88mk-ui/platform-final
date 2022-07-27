@@ -142,6 +142,15 @@ namespace Platform.API.Repository
                 };
             }
 
+            if (request.IsBetBuilder == true && request.TotalOdds <= 1m)
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Total_Odds_Must_Be_Greater_Or_Higher_To_1,
+                    Message = StatusCode.Total_Odds_Must_Be_Greater_Or_Higher_To_1.ToString().Replace('_', ' '),
+                };
+            }
+
             if (request.IsBoosted && request.Selections.Count >= 2)
             {
                 return new BaseResponseDTO<BetResponseDTO>
@@ -150,13 +159,13 @@ namespace Platform.API.Repository
                     Message = StatusCode.Boosted_Odds_Cannot_Be_Parlayed.ToString().Replace('_', ' '),
                 };
             }
-
-            if (request.IsBetBuilder && !IsValidOdds(new List<decimal> { request.Odds }))
+            
+            if (request.IsBoosted && request.IsBetBuilder)
             {
                 return new BaseResponseDTO<BetResponseDTO>
                 {
-                    StatusCode = StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1,
-                    Message = StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1.ToString().Replace('_', ' '),
+                    StatusCode = StatusCode.Boosted_Odds_Cannot_Be_Combined_With_Bet_Builder,
+                    Message = StatusCode.Boosted_Odds_Cannot_Be_Combined_With_Bet_Builder.ToString().Replace('_', ' '),
                 };
             }
 

@@ -16,7 +16,7 @@ namespace Platform.API.Models
         public string IPAddress { get; set; }
         public bool IsBoosted { get; set; } = false;
         public bool IsBetBuilder { get; set; } = false;
-        public decimal Odds { get; set; }
+        public decimal TotalOdds { get; set; }
         public List<BetSelectionRequest> Selections { get; set; }
     }
 

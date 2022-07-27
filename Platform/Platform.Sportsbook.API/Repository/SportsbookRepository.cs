@@ -1297,8 +1297,8 @@ namespace Platform.Sportsbook.API.Repository
 
             var raw = new List<BetFixtureSelectionResponseDTO>();
 
-            var betBuilderOddsStatus = StatusCode.Success;
-            if(request.IsBetBuilder)
+            var betBuilderOddsStatus = new Tuple<decimal, StatusCode>(0m, StatusCode.Success);
+            if (request.IsBetBuilder)
                 betBuilderOddsStatus = await GetBetBuilderOddsStatus(request.OddsChangeType, request.Selections, request.Odds);
 
             foreach (var selection in request.Selections)
@@ -1341,16 +1341,18 @@ namespace Platform.Sportsbook.API.Repository
                     HalfWonProbability = initialSelectionExtension.HaWoPr,
                     HalfLostProbability = initialSelectionExtension.HaLoPr,
                     SelectionCount = selectionCount,
-                    BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, selection, result, request.ClientCode, request.IsBetBuilder, betBuilderOddsStatus)
+                    BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, selection, result, request.ClientCode, request.IsBetBuilder, betBuilderOddsStatus.Item2)
                 });
             }
 
+
             return new BaseResponseDTO<BetFixtureResponseDTO>
             {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
+                StatusCode = request.IsBetBuilder ? betBuilderOddsStatus.Item2 : StatusCode.Success,
+                Message = request.IsBetBuilder ? betBuilderOddsStatus.Item2.ToString() : StatusCode.Success.ToString(),
                 Result = new BetFixtureResponseDTO
                 {
+                    TotalOdds = betBuilderOddsStatus.Item1,
                     Selections = raw
                 }
             };
@@ -5296,9 +5298,9 @@ namespace Platform.Sportsbook.API.Repository
             return result.OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
         }
 
-        private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>> result, string clientCode, bool isBetBuilder, StatusCode betBuilderOddsStatus)
+        private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>> result, string clientCode, bool isBetBuilder)
         {
-            
+
             var selection = result.Item3.Where(c => c.SeId == current.SelectionId).FirstOrDefault();
             var fixture = result.Item1.Where(c => c.FiId == selection.FiId).FirstOrDefault();
             var market = result.Item2.Where(c => c.MaId == selection.MaId).FirstOrDefault();
@@ -5313,17 +5315,6 @@ namespace Platform.Sportsbook.API.Repository
             //}
 
 
-            if (isBetBuilder == true && betBuilderOddsStatus != StatusCode.Success)
-            {
-                return new BetSelectionState
-                {
-                    SelectionId = current.SelectionId.ToString(),
-                    Odds = current.Odds,
-                    StatusCode = betBuilderOddsStatus,
-                    Message = betBuilderOddsStatus.ToString().Replace('_', ' ')
-                };
-            }
-
             if ((fixture.SpId == 1001 || fixture.SpId == 1002 || fixture.SpId == 1055 || fixture.SpId == 1058) && fixture.FiStDa < DateTime.UtcNow)
             {
                 return new BetSelectionState
@@ -5334,7 +5325,7 @@ namespace Platform.Sportsbook.API.Repository
                     Message = StatusCode.Market_Is_Not_Offered.ToString().Replace('_', ' ')
                 };
             }
-            
+
             if (bettingStatus != null && bettingStatus.IsBeSo == true)
             {
                 return new BetSelectionState
@@ -5496,8 +5487,10 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString()
             };
         }
-        private async Task<StatusCode> GetBetBuilderOddsStatus(OddsChangeType oddsChangeType, List<BetFixtureSelectionRequestDTO> selections, decimal calculatedOdds)
+
+        private async Task<Tuple<decimal,StatusCode>> GetBetBuilderOddsStatus(OddsChangeType oddsChangeType, List<BetFixtureSelectionRequestDTO> selections, Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus, List<Selection>> result, decimal calculatedOdds)
         {
+
             var result = await GetBetBuilderSelectionsOdds(new BetBuilderSelectionsOddsRequestDTO
             {
                 Selections = selections.Select(s => new BetSelectionOddsRequest
@@ -5512,25 +5505,49 @@ namespace Platform.Sportsbook.API.Repository
             });
 
             if (result.StatusCode != StatusCode.Success)
-                return StatusCode.Market_Is_Inactive;
+                return new Tuple<decimal, StatusCode>(result.Result.TotalOdds,  StatusCode.Market_Is_Inactive);
 
             switch (oddsChangeType)
             {
                 case OddsChangeType.None:
-                    if (result.Result.Odds != calculatedOdds)
-                        return StatusCode.Odds_Is_Stale;
+                    if (result.Result.TotalOdds != calculatedOdds)
+                        return new Tuple<decimal, StatusCode>(result.Result.TotalOdds, StatusCode.Odds_Is_Stale);
                     break;
                 case OddsChangeType.Any:
                     break;
                 case OddsChangeType.Higher:
-                    if (result.Result.Odds > calculatedOdds)
-                        return StatusCode.Odds_Is_Stale;
+                    if (result.Result.TotalOdds > calculatedOdds)
+                        return new Tuple<decimal, StatusCode>(result.Result.TotalOdds, StatusCode.Odds_Is_Stale);
                     break;
                 default:
                     break;
             }
 
-            return StatusCode.Success;
+
+            //if (result.Item1.Select(f => f.FiId).Distinct().Count() > 1)
+            //{
+            //    return new BetSelectionState
+            //    {
+            //        SelectionId = current.SelectionId.ToString(),
+            //        Odds = current.Odds,
+            //        StatusCode = StatusCode.Bet_Builder_Must_Be_On_The_Same_Fixture,
+            //        Message = StatusCode.Bet_Builder_Must_Be_On_The_Same_Fixture.ToString().Replace('_', ' ')
+            //    };
+            //}
+
+            //if (betBuilderOddsStatus != StatusCode.Success)
+            //{
+            //    return new BetSelectionState
+            //    {
+            //        SelectionId = current.SelectionId.ToString(),
+            //        Odds = current.Odds,
+            //        StatusCode = betBuilderOddsStatus,
+            //        Message = betBuilderOddsStatus.ToString().Replace('_', ' ')
+            //    };
+            //}
+
+
+            return new Tuple<decimal, StatusCode>(result.Result.TotalOdds, StatusCode.Success);
         }
 
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(ActiveFixturesRequestDTO request)
@@ -6006,7 +6023,7 @@ namespace Platform.Sportsbook.API.Repository
 
                     var marketResponse = GetBetBuilderMarketsXml(marketNodes.ChildNodes, marketMappings.Result, markets.Result, selections.Result, request.LanguageCode);
 
-                    if(marketResponse.Any())
+                    if (marketResponse.Any())
                         marketsResponse.Markets.AddRange(marketResponse);
 
                     #endregion
@@ -6017,16 +6034,16 @@ namespace Platform.Sportsbook.API.Repository
                         Message = StatusCode.Success.ToString(),
                         Result = marketsResponse
                     };
-            }
+                }
                 else
-            {
-                return new BaseResponseDTO<BetBuilderSelectionResponseDTO>
                 {
-                    StatusCode = StatusCode.No_Record_Found,
-                    Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
-                };
+                    return new BaseResponseDTO<BetBuilderSelectionResponseDTO>
+                    {
+                        StatusCode = StatusCode.No_Record_Found,
+                        Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                    };
+                }
             }
-        }
 
             #endregion
 
@@ -6059,7 +6076,7 @@ namespace Platform.Sportsbook.API.Repository
             var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
             var bettingStatus = primaryBettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
 
-            await Task.WhenAll(fixtures, markets, marketMappings, selections, bettingStatus); 
+            await Task.WhenAll(fixtures, markets, marketMappings, selections, bettingStatus);
 
             var newFixtures = fixtures.Result;
             var newMarkets = markets.Result;
@@ -6131,29 +6148,29 @@ namespace Platform.Sportsbook.API.Repository
                         };
                     }
 
-                    selectionOddsResponse.Odds = 0.0m;
-                    selectionOddsResponse.Probability = 0.0m;
+                    selectionOddsResponse.TotalOdds = 0.0m;
+                    //selectionOddsResponse.Probability = 0.0m;
 
                     foreach (XmlElement node in root.ChildNodes)
                     {
                         if (node.Name == "calculation")
                         {
-                            selectionOddsResponse.Odds = Convert.ToDecimal(node.Attributes["odds"].Value);
-                            selectionOddsResponse.Probability = Convert.ToDecimal(node.Attributes["probability"].Value);
+                            selectionOddsResponse.TotalOdds = Convert.ToDecimal(node.Attributes["odds"].Value);
+                            //selectionOddsResponse.Probability = Convert.ToDecimal(node.Attributes["probability"].Value);
                         }
-                        else if(node.Name == "available_selections")
-                        {
-                            var eventNode = node.ChildNodes[0];
+                        //else if (node.Name == "available_selections")
+                        //{
+                        //    var eventNode = node.ChildNodes[0];
 
-                            if (eventNode.ChildNodes.Count == 0)
-                                continue;
+                        //    if (eventNode.ChildNodes.Count == 0)
+                        //        continue;
 
-                            var marketNodes = eventNode.ChildNodes[0];
+                        //    var marketNodes = eventNode.ChildNodes[0];
 
-                            var marketResponse = GetBetBuilderMarketsXml(marketNodes.ChildNodes, newMarketMappings, newMarkets, newSelections, request.LanguageCode);
-                            if (marketResponse.Any())
-                                selectionOddsResponse.Markets.AddRange(marketResponse);
-                        }
+                        //    var marketResponse = GetBetBuilderMarketsXml(marketNodes.ChildNodes, newMarketMappings, newMarkets, newSelections, request.LanguageCode);
+                        //    if (marketResponse.Any())
+                        //        selectionOddsResponse.Markets.AddRange(marketResponse);
+                        //}
                     }
 
 
@@ -6165,22 +6182,22 @@ namespace Platform.Sportsbook.API.Repository
                         Message = StatusCode.Success.ToString(),
                         Result = selectionOddsResponse
                     };
-            }
+                }
                 else
-            {
-                return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
                 {
-                    StatusCode = StatusCode.No_Record_Found,
-                    Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
-                };
+                    return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                    {
+                        StatusCode = StatusCode.No_Record_Found,
+                        Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                    };
+                }
             }
-        }
 
             #endregion
 
         }
 
-        
+
         private List<string> GetMainMarketTemplates(int sportId)
         {
             var result = GetSelectorMarketTemplate().Where(c => c.SportId == sportId).ToList();

@@ -80,6 +80,11 @@
         Bet_Builder_Must_Have_2_Or_More_Selections = 154,
         Bet_Builder_Cannot_Be_More_Than_10_Selections = 155,
 
+        Boosted_Odds_Cannot_Be_Combined_With_Bet_Builder = 156,
+        Bet_Builder_Must_Be_On_The_Same_Fixture = 157,
+
+        Total_Odds_Must_Be_Greater_Or_Higher_To_1 = 158,
+
         Error = 1000,
         Operator_Error = 1001
     }

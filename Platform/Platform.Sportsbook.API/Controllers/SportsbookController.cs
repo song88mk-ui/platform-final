@@ -910,7 +910,7 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
-        [HttpPost("v1/sportsbook/betbuilder")]
+        [HttpPost("v1/sportsbook/betbuilder/fixtures")]
         public async Task<IActionResult> GetBetBuilderFixtures([FromBody] BetBuilderFixtureRequestDTO request)
         {
             var result = await _sportsbookRepository.GetBetBuilderFixtures(request);
@@ -924,7 +924,7 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
-        [HttpPost("v1/sportsbook/betbuilder/selections")]
+        [HttpPost("v1/sportsbook/betbuilder/fixtures/details")]
         public async Task<IActionResult> GetBetBuilderSelections([FromBody] BetBuilderSelectionRequestDTO request)
         {
             var result = await _sportsbookRepository.GetBetBuilderSelections(request);
@@ -939,7 +939,7 @@ namespace Platform.Sportsbook.API.Controllers
         }
         
         
-        [HttpPost("v1/sportsbook/betbuilder/selections/odds")]
+        [HttpPost("v1/sportsbook/betbuilder/fixtures/totalodds")]
         public async Task<IActionResult> GetBetBuilderSelectionsOdds([FromBody] BetBuilderSelectionsOddsRequestDTO request)
         {
             var result = await _sportsbookRepository.GetBetBuilderSelectionsOdds(request);

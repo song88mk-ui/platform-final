@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Platform.Job.BetAudit.Tableau.Data;
 using Platform.Job.BetAudit.Tableau.Data.Betting;
 using System;
@@ -10,122 +9,131 @@ namespace Platform.Job.BetAudit.Tableau.Repository
 {
     public class TableauRepository : ITableauRepository
     {
-        //Insert into BetAudit and BetSelectionAudit tables in BI database
-        //Before insert, check the instance count then add 1
-
         private readonly IServiceProvider _serviceProvider;
-        private readonly IConfiguration _configuration;
 
-        public TableauRepository(IServiceProvider serviceProvider, IConfiguration configuration)
+        public TableauRepository(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
-            _configuration = configuration;
         }
 
         public void ProcessBets()
         {
-            using var scope = _serviceProvider.CreateScope();
-            var tableauContext = scope.ServiceProvider.GetRequiredService<TableauContext>();
-            var bettingContext = scope.ServiceProvider.GetRequiredService<BettingContext>();
-
-            var lastRun = tableauContext.LastRunBetHK.Find(1);
-
-            if (lastRun != null)
+            try
             {
-                var bets = bettingContext.BetAudit.Where(c => c.Id > lastRun.LastId).OrderBy(o => o.Id).Take(100).ToList();
+                using var scope = _serviceProvider.CreateScope();
+                var tableauContext = scope.ServiceProvider.GetRequiredService<TableauContext>();
+                var bettingContext = scope.ServiceProvider.GetRequiredService<BettingContext>();
 
-                if (bets.Count == 0)
+                var lastRun = tableauContext.LastRunBetHK.Find(1);
+
+                if (lastRun != null)
                 {
-                    Console.WriteLine($"{DateTime.Now} : SLEEPING ProcessBets for 5 seconds");
-                    Thread.Sleep(5000);
-                }
+                    var bets = bettingContext.BetAudit.Where(c => c.Id > lastRun.LastId).OrderBy(o => o.Id).Take(100).ToList();
 
-
-                foreach (var bet in bets)
-                {
-                    var betSelectionCount = bettingContext.BetSelection.Where(c => c.BetId == bet.BetId).Count();
-
-                    var isParlay = false;
-
-                    if (betSelectionCount > 1)
-                        isParlay = true;
-
-                    var count = tableauContext.BetAuditHK.Where(c => c.BetId == bet.BetId).Count();
-
-                    var betAudit = new Data.BetAuditHK
+                    if (bets.Count == 0)
                     {
-                        Id = bet.Id,
-                        BetId = bet.BetId,
-                        BetSequence = count + 1,
-                        IsParlay = isParlay,
-                        IsLastBet = true,
-                        Timestamp = bet.Timestamp
-                    };
-
-                    lastRun.LastId = bet.Id;
-
-                    var previousBet = tableauContext.BetAuditHK.Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.Timestamp).Take(1).FirstOrDefault();
-
-                    if (previousBet != null)
-                    {
-                        previousBet.IsLastBet = false;
-
-                        tableauContext.BetAuditHK.Update(previousBet);
+                        Console.WriteLine($"{DateTime.Now} : SLEEPING ProcessBets for 5 seconds");
+                        Thread.Sleep(5000);
                     }
 
-                    tableauContext.LastRunBetHK.Update(lastRun);
-                    tableauContext.BetAuditHK.Add(betAudit);
-                    tableauContext.SaveChanges();
+
+                    foreach (var bet in bets)
+                    {
+                        var betSelectionCount = bettingContext.BetSelection.Where(c => c.BetId == bet.BetId).Count();
+
+                        var isParlay = false;
+
+                        if (betSelectionCount > 1)
+                            isParlay = true;
+
+                        var count = tableauContext.BetAuditHK.Where(c => c.BetId == bet.BetId).Count();
+
+                        var betAudit = new Data.BetAuditHK
+                        {
+                            Id = bet.Id,
+                            BetId = bet.BetId,
+                            BetSequence = count + 1,
+                            IsParlay = isParlay,
+                            IsLastBet = true,
+                            Timestamp = bet.Timestamp
+                        };
+
+                        lastRun.LastId = bet.Id;
+
+                        var previousBet = tableauContext.BetAuditHK.Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.Timestamp).Take(1).FirstOrDefault();
+
+                        if (previousBet != null)
+                        {
+                            previousBet.IsLastBet = false;
+
+                            tableauContext.BetAuditHK.Update(previousBet);
+                        }
+
+                        tableauContext.LastRunBetHK.Update(lastRun);
+                        tableauContext.BetAuditHK.Add(betAudit);
+                        tableauContext.SaveChanges();
+                    }
                 }
+            }
+            catch (Exception)
+            {
+                Thread.Sleep(5000);
             }
         }
         public void ProcessBetSelections()
         {
-            using var scope = _serviceProvider.CreateScope();
-            var tableauContext = scope.ServiceProvider.GetRequiredService<TableauContext>();
-            var bettingContext = scope.ServiceProvider.GetRequiredService<BettingContext>();
-
-            var lastRun = tableauContext.LastRunBetSelectionHK.Find(1);
-
-            if (lastRun != null)
+            try
             {
-                var betSelections = bettingContext.BetSelectionAudit.Where(c => c.Id > lastRun.LastId).OrderBy(o => o.Id).Take(100).ToList();
+                using var scope = _serviceProvider.CreateScope();
+                var tableauContext = scope.ServiceProvider.GetRequiredService<TableauContext>();
+                var bettingContext = scope.ServiceProvider.GetRequiredService<BettingContext>();
 
-                if (betSelections.Count == 0)
+                var lastRun = tableauContext.LastRunBetSelectionHK.Find(1);
+
+                if (lastRun != null)
                 {
-                    Console.WriteLine($"{DateTime.Now} : SLEEPING ProcessBetSelections for 5 seconds");
-                    Thread.Sleep(5000);
-                }
+                    var betSelections = bettingContext.BetSelectionAudit.Where(c => c.Id > lastRun.LastId).OrderBy(o => o.Id).Take(100).ToList();
 
-                foreach (var betSelection in betSelections)
-                {
-                    var count = tableauContext.BetSelectionAuditHK.Where(c => c.BetSelectionId == betSelection.BetSelectionId).Count();
-
-                    var betSelectionAudit = new Data.BetSelectionAuditHK
+                    if (betSelections.Count == 0)
                     {
-                        Id = betSelection.Id,
-                        BetId = betSelection.BetId,
-                        BetSelectionId = betSelection.BetSelectionId,
-                        BetSelectionSequence = count + 1,
-                        IsLastBetSelection = true,
-                        Timestamp = betSelection.Timestamp
-                    };
-
-                    lastRun.LastId = betSelection.Id;
-
-                    var previousBetSelection = tableauContext.BetSelectionAuditHK.Where(c => c.BetSelectionId == betSelection.BetSelectionId).OrderByDescending(o => o.Timestamp).Take(1).FirstOrDefault();
-
-                    if (previousBetSelection != null)
-                    {
-                        previousBetSelection.IsLastBetSelection = false;
-
-                        tableauContext.BetSelectionAuditHK.Update(previousBetSelection);
+                        Console.WriteLine($"{DateTime.Now} : SLEEPING ProcessBetSelections for 5 seconds");
+                        Thread.Sleep(5000);
                     }
 
-                    tableauContext.LastRunBetSelectionHK.Update(lastRun);
-                    tableauContext.BetSelectionAuditHK.Add(betSelectionAudit);
-                    tableauContext.SaveChanges();
+                    foreach (var betSelection in betSelections)
+                    {
+                        var count = tableauContext.BetSelectionAuditHK.Where(c => c.BetSelectionId == betSelection.BetSelectionId).Count();
+
+                        var betSelectionAudit = new Data.BetSelectionAuditHK
+                        {
+                            Id = betSelection.Id,
+                            BetId = betSelection.BetId,
+                            BetSelectionId = betSelection.BetSelectionId,
+                            BetSelectionSequence = count + 1,
+                            IsLastBetSelection = true,
+                            Timestamp = betSelection.Timestamp
+                        };
+
+                        lastRun.LastId = betSelection.Id;
+
+                        var previousBetSelection = tableauContext.BetSelectionAuditHK.Where(c => c.BetSelectionId == betSelection.BetSelectionId).OrderByDescending(o => o.Timestamp).Take(1).FirstOrDefault();
+
+                        if (previousBetSelection != null)
+                        {
+                            previousBetSelection.IsLastBetSelection = false;
+
+                            tableauContext.BetSelectionAuditHK.Update(previousBetSelection);
+                        }
+
+                        tableauContext.LastRunBetSelectionHK.Update(lastRun);
+                        tableauContext.BetSelectionAuditHK.Add(betSelectionAudit);
+                        tableauContext.SaveChanges();
+                    }
                 }
+            }
+            catch (Exception)
+            {
+                Thread.Sleep(5000);
             }
         }
     }

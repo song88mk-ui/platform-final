@@ -5671,7 +5671,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 IsBoosted = s.IsBo,
                 Markets = GetBoostedMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, true, s.FiStId, clientInitial.Where(c => c.SportId == s.SpId && c.ClientId == request.ClientId).ToList())
-            }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+            }).ToList();
 
             await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO
             {
@@ -5684,13 +5684,15 @@ namespace Platform.Sportsbook.API.Repository
                 })
             });
 
+            var sportOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
+
             return new BaseResponseDTO<BoostedResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
                 Result = new BoostedResponseDTO
                 {
-                    Fixtures = result.Where(m => m.Markets.Any()).ToList()
+                    Fixtures = result.Where(m => m.Markets.Any()).OrderBy(o => sportOrder.Where(so => so.SportId == o.SportId).FirstOrDefault().SortOrder).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList()
                 }
             };
         }

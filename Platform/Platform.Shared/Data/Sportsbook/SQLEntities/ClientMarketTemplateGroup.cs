@@ -10,6 +10,7 @@ namespace Platform.Shared.Data.Sportsbook.SQLEntities
         public int Id { get; set; }
         public string Name { get; set; }
         public int SortOrder { get; set; }
+        public bool IsActive { get; set; }
         public string MarketTemplates { get; set; }
     }
 }

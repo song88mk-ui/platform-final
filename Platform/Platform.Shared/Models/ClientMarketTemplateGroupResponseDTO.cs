@@ -21,6 +21,8 @@ namespace Platform.Shared.Models
         public int MarketTemplateGroupId { get; set; }
         public string Name { get; set; }
         public int SortOrder { get; set; }
+        public bool IsActive { get; set; }
+        public int FixtureStatusId { get; set; }
         public string MarketTemplateIds { get; set; }
     }
 

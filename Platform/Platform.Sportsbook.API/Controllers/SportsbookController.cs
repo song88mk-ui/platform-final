@@ -966,5 +966,20 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+
+
+        [HttpPost("v1/sportsbook/client/markettemplategroup/post")]
+        public async Task<IActionResult> AddOrUpdateClientMarketTemplateGroup([FromBody] ClientPostMarketTemplateGroupRequestDTO request)
+        {
+            var result = await _sportsbookRepository.AddOrUpdateClientMarketTemplateGroup(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

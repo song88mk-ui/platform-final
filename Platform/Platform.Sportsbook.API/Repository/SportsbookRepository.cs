@@ -7233,8 +7233,9 @@ namespace Platform.Sportsbook.API.Repository
 
                     if (hasClientMarketTemplateGroup)
                     {
-                        _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup2 {0}, {1}, {2}, {3}, {4}, {5}, {6}",
-                            request.ClientId.ToString(), sportId, marketTemplateGroup.FixtureStatusId, marketTemplateGroup.MarketTemplateGroupId, marketTemplateGroup.Name, marketTemplateGroup.SortOrder, marketTemplateGroup.IsActive);
+                        _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup2 {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}",
+                            request.ClientId.ToString(), sportId, marketTemplateGroup.FixtureStatusId, marketTemplateGroup.MarketTemplateGroupId, 
+                            marketTemplateGroup.Name, marketTemplateGroup.SortOrder, (marketTemplateGroup.IsActive ? 1 : 0), marketTemplateGroup.MarketTemplateIds);
                     }
                     else
                     {

@@ -28,17 +28,19 @@ namespace Platform.Job.BetAudit.Tableau.Repository
 
                 if (lastRun != null)
                 {
-                    var bets = bettingContext.BetAudit.Where(c => c.Id > lastRun.LastId).OrderBy(o => o.Id).Take(100).ToList();
+                    var bets = bettingContext.BetAudit.Where(c => c.Id > lastRun.LastId).OrderBy(o => o.Id).Take(1000).ToList();
 
                     if (bets.Count == 0)
                     {
-                        Console.WriteLine($"{DateTime.Now} : SLEEPING ProcessBets for 5 seconds");
-                        Thread.Sleep(5000);
+                        Console.WriteLine($"{DateTime.Now} : SLEEPING ProcessBets for 10 seconds");
+                        Thread.Sleep(10000);
+                        return;
                     }
-
 
                     foreach (var bet in bets)
                     {
+                        using var transaction = tableauContext.Database.BeginTransaction();
+
                         var betSelectionCount = bettingContext.BetSelection.Where(c => c.BetId == bet.BetId).Count();
 
                         var isParlay = false;
@@ -69,15 +71,18 @@ namespace Platform.Job.BetAudit.Tableau.Repository
                             tableauContext.BetAuditHK.Update(previousBet);
                         }
 
-                        tableauContext.LastRunBetHK.Update(lastRun);
                         tableauContext.BetAuditHK.Add(betAudit);
+                        tableauContext.LastRunBetHK.Update(lastRun);
                         tableauContext.SaveChanges();
+
+                        transaction.Commit();
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Thread.Sleep(5000);
+                Console.WriteLine($"{DateTime.Now} : {ex.Message}");
+                Thread.Sleep(10000);
             }
         }
         public void ProcessBetSelections()
@@ -92,16 +97,19 @@ namespace Platform.Job.BetAudit.Tableau.Repository
 
                 if (lastRun != null)
                 {
-                    var betSelections = bettingContext.BetSelectionAudit.Where(c => c.Id > lastRun.LastId).OrderBy(o => o.Id).Take(100).ToList();
+                    var betSelections = bettingContext.BetSelectionAudit.Where(c => c.Id > lastRun.LastId).OrderBy(o => o.Id).Take(1000).ToList();
 
                     if (betSelections.Count == 0)
                     {
-                        Console.WriteLine($"{DateTime.Now} : SLEEPING ProcessBetSelections for 5 seconds");
-                        Thread.Sleep(5000);
+                        Console.WriteLine($"{DateTime.Now} : SLEEPING ProcessBetSelections for 10 seconds");
+                        Thread.Sleep(10000);
+                        return;
                     }
 
                     foreach (var betSelection in betSelections)
                     {
+                        using var transaction = tableauContext.Database.BeginTransaction();
+
                         var count = tableauContext.BetSelectionAuditHK.Where(c => c.BetSelectionId == betSelection.BetSelectionId).Count();
 
                         var betSelectionAudit = new Data.BetSelectionAuditHK
@@ -125,15 +133,18 @@ namespace Platform.Job.BetAudit.Tableau.Repository
                             tableauContext.BetSelectionAuditHK.Update(previousBetSelection);
                         }
 
-                        tableauContext.LastRunBetSelectionHK.Update(lastRun);
                         tableauContext.BetSelectionAuditHK.Add(betSelectionAudit);
+                        tableauContext.LastRunBetSelectionHK.Update(lastRun);
                         tableauContext.SaveChanges();
+
+                        transaction.Commit();
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Thread.Sleep(5000);
+                Console.WriteLine($"{DateTime.Now} : {ex.Message}");
+                Thread.Sleep(10000);
             }
         }
     }

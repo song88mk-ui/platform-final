@@ -7306,6 +7306,37 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<bool>> DeleteClientMarketTemplateGroup(ClientDeleteMarketTemplateGroupRequestDTO request)
+        {
+            try
+            {
+                var marketGroup = await _sportsbookContext.ClientMarketTemplateGroup.FirstOrDefaultAsync(f => f.ClientId == request.ClientId && f.SportId == request.SportId && f.FixtureStatusId == request.FixtureStatusId && f.Id == request.MarketTemplateGroup.MarketTemplateGroupId);
+
+                if (marketGroup != null)
+                {
+                    _sportsbookContext.ClientMarketTemplateGroup.Remove(marketGroup);
+                    _sportsbookContext.SaveChanges();
+                }
+
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = true
+                };
+            }
+            catch (Exception)
+            {
+            }
+
+            return new BaseResponseDTO<bool>
+            {
+                StatusCode = StatusCode.Error,
+                Message = StatusCode.Error.ToString(),
+                Result = false
+            };
+        }
+
         private string GetSportName(string name, List<SportTranslationMDB> translations, LanguageCode languageCode)
         {
             if (translations == null)

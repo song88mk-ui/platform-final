@@ -981,5 +981,19 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/sportsbook/client/markettemplategroup/delete")]
+        public async Task<IActionResult> DeleteClientMarketTemplateGroup([FromBody] ClientDeleteMarketTemplateGroupRequestDTO request)
+        {
+            var result = await _sportsbookRepository.DeleteClientMarketTemplateGroup(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

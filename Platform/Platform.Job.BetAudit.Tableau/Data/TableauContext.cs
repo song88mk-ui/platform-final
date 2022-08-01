@@ -9,6 +9,9 @@ namespace Platform.Job.BetAudit.Tableau.Data
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<LastRunBetHKFirst>().HasKey(k => new { k.Id });
+            modelBuilder.Entity<LastRunBetSelectionHKFirst>().HasKey(k => new { k.Id });
+
             modelBuilder.Entity<LastRunBetHK>().HasKey(k => new { k.Id });
             modelBuilder.Entity<LastRunBetSelectionHK>().HasKey(k => new { k.Id });
             modelBuilder.Entity<BetAuditHK>().HasKey(k => new { k.Id });
@@ -19,6 +22,9 @@ namespace Platform.Job.BetAudit.Tableau.Data
             modelBuilder.Entity<BetAuditSA>().HasKey(k => new { k.Id });
             modelBuilder.Entity<BetSelectionAuditSA>().HasKey(k => new { k.Id });
         }
+
+        public DbSet<LastRunBetHKFirst> LastRunBetHKFirst { get; set; }
+        public DbSet<LastRunBetSelectionHKFirst> LastRunBetSelectionHKFirst { get; set; }
 
         public DbSet<LastRunBetHK> LastRunBetHK { get; set; }
         public DbSet<LastRunBetSelectionHK> LastRunBetSelectionHK { get; set; }

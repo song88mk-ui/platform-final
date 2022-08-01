@@ -5,6 +5,7 @@ namespace Platform.Job.BetAudit.Tableau.Data
     public class BetSelectionAuditSA
     {
         public long Id { get; set; }
+        public long RefId { get; set; }
         public Guid BetId { get; set; }
         public Guid BetSelectionId { get; set; }
         public int BetSelectionSequence { get; set; }

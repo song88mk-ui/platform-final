@@ -2,7 +2,10 @@
 {
     public interface ITableauRepository
     {
-        void ProcessBets();
-        void ProcessBetSelections();
+        void ProcessBetsHK();
+        void ProcessBetSelectionsHK();
+
+        void ProcessBetsSA();
+        void ProcessBetSelectionsSA();
     }
 }

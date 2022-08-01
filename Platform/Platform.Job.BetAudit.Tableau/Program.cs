@@ -19,7 +19,8 @@ namespace Platform.Job.BetAudit.Tableau
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddSingleton<ITableauRepository, TableauRepository>();
-                    services.AddDbContext<BettingContext>(o => o.UseSqlServer(hostContext.Configuration["ConnectionStrings:Betting"]));
+                    services.AddDbContext<BettingContextHK>(o => o.UseSqlServer(hostContext.Configuration["ConnectionStrings:BettingHK"]));
+                    services.AddDbContext<BettingContextSA>(o => o.UseSqlServer(hostContext.Configuration["ConnectionStrings:BettingSA"]));
                     services.AddDbContext<TableauContext>(o => o.UseSqlServer(hostContext.Configuration["ConnectionStrings:Tableau"]));
                     services.AddHostedService<Worker>();
                 }).UseWindowsService();

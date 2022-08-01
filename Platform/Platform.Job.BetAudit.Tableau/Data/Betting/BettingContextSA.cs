@@ -2,9 +2,9 @@
 
 namespace Platform.Job.BetAudit.Tableau.Data.Betting
 {
-    public class BettingContext : DbContext
+    public class BettingContextSA : DbContext
     {
-        public BettingContext(DbContextOptions<BettingContext> options) : base(options)
+        public BettingContextSA(DbContextOptions<BettingContextSA> options) : base(options)
         {
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)

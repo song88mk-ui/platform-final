@@ -12,9 +12,11 @@ namespace Platform.Job.BetAudit.Tableau
         private readonly ILogger<Worker> _logger;
         private readonly ITableauRepository _tableauRepository;
 
-        private Thread _threadBetAudit;
-        private Thread _threadBetSelectionAudit;
+        private Thread _threadBetAuditHK;
+        private Thread _threadBetSelectionAuditHK;
 
+        private Thread _threadBetAuditSA;
+        private Thread _threadBetSelectionAuditSA;
         public Worker(ILogger<Worker> logger, ITableauRepository tableauRepository)
         {
             _logger = logger;
@@ -23,29 +25,55 @@ namespace Platform.Job.BetAudit.Tableau
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _threadBetAudit = new Thread(ThreadBetAudit);
-            _threadBetSelectionAudit = new Thread(ThreadBetSelectionAudit);
+            _threadBetAuditHK = new Thread(ThreadBetAuditHK);
+            _threadBetSelectionAuditHK = new Thread(ThreadBetSelectionAuditHK);
 
-            _threadBetAudit.Start();
-            _threadBetSelectionAudit.Start();
+            _threadBetAuditSA = new Thread(ThreadBetAuditSA);
+            _threadBetSelectionAuditSA = new Thread(ThreadBetSelectionAuditSA);
+
+            _threadBetAuditHK.Start();
+            _threadBetSelectionAuditHK.Start();
+
+            _threadBetAuditSA.Start();
+            _threadBetSelectionAuditSA.Start();
         }
-        private void ThreadBetAudit(object obj)
+        private void ThreadBetAuditHK(object obj)
         {
             while (true)
             {
-                Console.WriteLine($"{DateTime.Now} : BEGIN ProcessBets");
-                _tableauRepository.ProcessBets();
-                Console.WriteLine($"{DateTime.Now} : END ProcessBets");
+                Console.WriteLine($"{DateTime.Now} : BEGIN HK ProcessBets");
+                _tableauRepository.ProcessBetsHK();
+                Console.WriteLine($"{DateTime.Now} : END HK ProcessBets");
             }
         }
 
-        private void ThreadBetSelectionAudit(object obj)
+        private void ThreadBetSelectionAuditHK(object obj)
         {
             while (true)
             {
-                Console.WriteLine($"{DateTime.Now} : BEGIN ProcessBetSelections");
-                _tableauRepository.ProcessBetSelections();
-                Console.WriteLine($"{DateTime.Now} : END ProcessBetSelections");
+                Console.WriteLine($"{DateTime.Now} : BEGIN HK ProcessBetSelections");
+                _tableauRepository.ProcessBetSelectionsHK();
+                Console.WriteLine($"{DateTime.Now} : END HK ProcessBetSelections");
+            }
+        }
+
+        private void ThreadBetAuditSA(object obj)
+        {
+            while (true)
+            {
+                Console.WriteLine($"{DateTime.Now} : BEGIN SA ProcessBets");
+                _tableauRepository.ProcessBetsSA();
+                Console.WriteLine($"{DateTime.Now} : END SA ProcessBets");
+            }
+        }
+
+        private void ThreadBetSelectionAuditSA(object obj)
+        {
+            while (true)
+            {
+                Console.WriteLine($"{DateTime.Now} : BEGIN SA ProcessBetSelections");
+                _tableauRepository.ProcessBetSelectionsSA();
+                Console.WriteLine($"{DateTime.Now} : END SA ProcessBetSelections");
             }
         }
     }

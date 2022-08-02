@@ -995,5 +995,19 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/sportsbook/client/markettemplategroup/copy")]
+        public async Task<IActionResult> CopyClientMarketTemplateGroup([FromBody] ClientCopyMarketTemplateGroupRequestDTO request)
+        {
+            var result = await _sportsbookRepository.CopyClientMarketTemplateGroup(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

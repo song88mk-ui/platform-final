@@ -7336,6 +7336,55 @@ namespace Platform.Sportsbook.API.Repository
                 Result = false
             };
         }
+        public async Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO>> CopyClientMarketTemplateGroup(ClientCopyMarketTemplateGroupRequestDTO request)
+        {
+            try
+            {
+                _sportsbookContext.Database.ExecuteSqlRaw("CopyClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}, {5}",
+                        request.ClientId.ToString(), request.SportId, request.FixtureStatusId, request.CopyToClientId.ToString(), request.CopyToSportId, request.CopyToFixtureStatusId);
+
+                var rawMarketTemplateGroupNames = _sportsbookContext.ClientMarketTemplateGroup.AsNoTracking()
+                    .Where(c => c.ClientId == request.CopyToClientId && c.SportId == request.CopyToSportId && c.FixtureStatusId == request.CopyToFixtureStatusId)
+                    .Select(s => new ClientMarketTemplateGroupModel
+                    {
+                        FixtureStatusId = s.FixtureStatusId,
+                        MarketTemplateGroupId = s.Id,
+                        Name = s.Name,
+                        MarketTemplateIds = s.MarketTemplates,
+                        IsActive = s.IsActive,
+                        SortOrder = s.SortOrder
+                    })
+                    .ToList();
+
+                return new BaseResponseDTO<ClientMarketTemplateGroupResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new ClientMarketTemplateGroupResponseDTO
+                    {
+                        ClientId = request.CopyToClientId,
+                        SportId = request.CopyToSportId,
+                        FixtureStatusId = request.CopyToFixtureStatusId,
+                        ClientMarketTemplateGroups = rawMarketTemplateGroupNames,
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<ClientMarketTemplateGroupResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString(),
+                    Result = new ClientMarketTemplateGroupResponseDTO
+                    {
+                        ClientId = request.CopyToClientId,
+                        SportId = request.CopyToSportId,
+                        FixtureStatusId = request.CopyToFixtureStatusId,
+                        ClientMarketTemplateGroups = new List<ClientMarketTemplateGroupModel>()
+                    }
+                };
+            }
+        }
 
         private string GetSportName(string name, List<SportTranslationMDB> translations, LanguageCode languageCode)
         {

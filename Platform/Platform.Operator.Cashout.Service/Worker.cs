@@ -352,7 +352,8 @@ namespace Platform.Operator.Cashout.Service
                         var onBetCashOutResult = JsonSerializer.Deserialize<OnCashOutResult>(cashout);
                         Console.WriteLine($"{DateTime.UtcNow} {onBetCashOutResult.BetId} - OnBetCashOutResult");
 
-                        _bettingRepository.ProcessCashOutResult(onBetCashOutResult, _messageBroker, correlationId);
+                        if (onBetCashOutResult.BetStatus != Shared.Enums.BetStatus.CashedOut)
+                            _bettingRepository.ProcessCashOutResult(onBetCashOutResult, _messageBroker, correlationId);
                         break;
                 }
 

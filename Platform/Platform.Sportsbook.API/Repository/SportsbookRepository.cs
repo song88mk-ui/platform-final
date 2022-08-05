@@ -2044,10 +2044,10 @@ namespace Platform.Sportsbook.API.Repository
             if (request.SportGroupId != 0)
             {
                 var sportsId = (await GetSportGroups()).Result.SportGroups.FirstOrDefault(c => c.SportGroupId == request.SportGroupId).Sports.Split(",").Select(s => Convert.ToInt32(s)).ToList();
-                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2 && sportsId.Contains(c.SpId));
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId < 2 && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2 && sportsId.Contains(c.SpId));
             }
             else
-                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId < 2 && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             if (IsOEEnable(request.ClientCode))

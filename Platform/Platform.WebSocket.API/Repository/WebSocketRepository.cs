@@ -32,23 +32,23 @@ namespace Platform.WebSocket.API.Repository
 
             var server = Environment.MachineName.ToLower();
 
-            using var scope = _provider.CreateScope();
-            _platformContext = scope.ServiceProvider.GetRequiredService<PlatformContext>();
+            //using var scope = _provider.CreateScope();
+            //_platformContext = scope.ServiceProvider.GetRequiredService<PlatformContext>();
 
-            await _platformContext.WebSocket.AddAsync(new Data.WebSocket
-            {
-                ConnectionId = connectionId,
-                IPAddress = ipAddress,
-                IPCountry = ipCountry,
-                Server = server,
-                UserAgent = userAgent,
-                ClientCode = string.Empty,
-                RequestURL = string.Empty,
-                ConnectedTimestamp = DateTime.UtcNow,
-                DisconnectedTimestamp = null
-            });
+            //await _platformContext.WebSocket.AddAsync(new Data.WebSocket
+            //{
+            //    ConnectionId = connectionId,
+            //    IPAddress = ipAddress,
+            //    IPCountry = ipCountry,
+            //    Server = server,
+            //    UserAgent = userAgent,
+            //    ClientCode = string.Empty,
+            //    RequestURL = string.Empty,
+            //    ConnectedTimestamp = DateTime.UtcNow,
+            //    DisconnectedTimestamp = null
+            //});
 
-            await _platformContext.SaveChangesAsync();
+            //await _platformContext.SaveChangesAsync();
 
             await base.OnConnectedAsync();
         }
@@ -56,21 +56,21 @@ namespace Platform.WebSocket.API.Repository
         {
             var connectionId = Context.ConnectionId;
 
-            using var scope = _provider.CreateScope();
-            _platformContext = scope.ServiceProvider.GetRequiredService<PlatformContext>();
+            //using var scope = _provider.CreateScope();
+            //_platformContext = scope.ServiceProvider.GetRequiredService<PlatformContext>();
 
-            var test = Context.GetHttpContext().Request.Query;
+            //var test = Context.GetHttpContext().Request.Query;
 
-            var connection = await _platformContext.WebSocket.FindAsync(connectionId);
+            //var connection = await _platformContext.WebSocket.FindAsync(connectionId);
 
-            if (connection != null)
-            {
-                connection.DisconnectedTimestamp = DateTime.UtcNow;
+            //if (connection != null)
+            //{
+            //    connection.DisconnectedTimestamp = DateTime.UtcNow;
 
-                _platformContext.WebSocket.Update(connection);
+            //    _platformContext.WebSocket.Update(connection);
 
-                await _platformContext.SaveChangesAsync();
-            }
+            //    await _platformContext.SaveChangesAsync();
+            //}
 
             await base.OnDisconnectedAsync(exception);
         }

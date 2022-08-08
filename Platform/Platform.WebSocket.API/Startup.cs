@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Platform.Shared.Utility;
 using Platform.WebSocket.API.Data;
 using Platform.WebSocket.API.Repository;
 using System;
@@ -70,6 +71,7 @@ namespace Platform.WebSocket.API
             });
 
             services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Platform"]));
+            services.AddSingleton<IMemCache, MemCache>();
             services.AddSingleton<IWebSocketRepository, WebSocketRepository>();
 
             services.AddSwaggerGen(c =>

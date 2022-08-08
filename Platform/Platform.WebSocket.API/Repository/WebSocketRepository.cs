@@ -16,10 +16,12 @@ namespace Platform.WebSocket.API.Repository
     {
         private readonly IServiceProvider _provider;
         private PlatformContext _platformContext;
+        private readonly IMemCache _memCache;
 
-        public WebSocketRepository(IServiceProvider provider)
+        public WebSocketRepository(IServiceProvider provider, IMemCache memCache)
         {
             _provider = provider;
+            _memCache = memCache;
         }
         public override async Task OnConnectedAsync()
         {
@@ -209,19 +211,29 @@ namespace Platform.WebSocket.API.Repository
         }
         private async Task<Tuple<bool, string>> GetClient(string clientId)
         {
+            var key = $"cc:{clientId.ToUpper()}";
             var isGuid = Guid.TryParse(clientId, out Guid guid);
 
             if (isGuid)
             {
+                var cache = _memCache.GetCache<Tuple<bool, string>>(key);
+
+                if (cache != null)
+                    return cache;
+
                 using var scope = _provider.CreateScope();
                 _platformContext = scope.ServiceProvider.GetRequiredService<PlatformContext>();
 
                 var client = await _platformContext.Client.FindAsync(guid);
 
                 if (client != null)
+                {
+                    _memCache.AddOrUpdateCache(key, new Tuple<bool, string> (true, client.ClientCode.ToLower()), 24);
                     return new Tuple<bool, string>(true, client.ClientCode.ToLower());
+                }
             }
 
+            _memCache.AddOrUpdateCache(key, new Tuple<bool, string>(false, string.Empty), DateTimeOffset.UtcNow.AddMinutes(1));
             return new Tuple<bool, string>(false, string.Empty);
         }
     }

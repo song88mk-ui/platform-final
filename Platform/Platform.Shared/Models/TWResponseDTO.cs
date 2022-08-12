@@ -255,6 +255,7 @@ namespace Platform.Shared.Models
         public bool IsBetStop { get; set; }
         public bool IsBetStopGlobal { get; set; }
         public int SortOrder { get; set; }
+        public bool IsBetBuilder { get; set; }
         public SportMarketTemplateGroup MarketTemplateGroups { get; set; }
         public List<MarketDTO> Markets { get; set; }
     }
@@ -317,6 +318,7 @@ namespace Platform.Shared.Models
         public List<int> BetStop { get; set; }
         public bool IsBetStop { get; set; }
         public bool IsBetStopGlobal { get; set; }
+        public bool IsBetBuilder { get; set; }
         public int SortOrder { get; set; }
     }
 

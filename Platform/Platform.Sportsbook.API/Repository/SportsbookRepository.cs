@@ -39,12 +39,14 @@ namespace Platform.Sportsbook.API.Repository
         private readonly HttpClient _httpClient;
         private readonly IRabbitMQRepository _rabbitMQRepository;
         private readonly List<string> _africaClientCodes = new List<string>();
+        private readonly List<string> _countryWhiteList = new List<string>();
 
         public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMemCache memCache, IConfiguration configuration, IRabbitMQRepository rabbitMQRepository)
         {
             _configuration = configuration;
 
             _africaClientCodes = _configuration["ConnectionStrings:MongoDB-Sportsbook"].Split(',').ToList();
+            _countryWhiteList = _configuration["Custom:CountryWhiteList"].Split(',').ToList();
 
             if (_db == null)
             {
@@ -2044,10 +2046,10 @@ namespace Platform.Sportsbook.API.Repository
             if (request.SportGroupId != 0)
             {
                 var sportsId = (await GetSportGroups()).Result.SportGroups.FirstOrDefault(c => c.SportGroupId == request.SportGroupId).Sports.Split(",").Select(s => Convert.ToInt32(s)).ToList();
-                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId < 2 && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2 && sportsId.Contains(c.SpId));
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2 && sportsId.Contains(c.SpId));
             }
             else
-                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId < 2 && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             if (IsOEEnable(request.ClientCode))
@@ -7559,6 +7561,9 @@ namespace Platform.Sportsbook.API.Repository
 
             if (!string.IsNullOrEmpty(geoAllowed) && !string.IsNullOrEmpty(ipCountryCode))
             {
+                if (_countryWhiteList.Contains(ipCountryCode.ToUpper()))
+                    return true;
+
                 if (!geoAllowed.Split(",").Any(g => g.ToUpper() == ipCountryCode.ToUpper()))
                     return false;
             }

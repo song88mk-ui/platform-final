@@ -28,11 +28,5 @@ namespace Platform.API.ActionFilters
                 return;
             }
         }
-
-        public override void OnResultExecuting(ResultExecutingContext context)
-        {
-            context.HttpContext.Response.Headers.Add("Access-Control-Max-Age", "86400");
-            base.OnResultExecuting(context);
-        }
     }
 }

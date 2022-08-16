@@ -7559,7 +7559,7 @@ namespace Platform.Sportsbook.API.Repository
             if (string.IsNullOrEmpty(livestreamId))
                 return false;
 
-            if (!string.IsNullOrEmpty(livestreamId) && _countryWhiteList.Contains(ipCountryCode.ToUpper()))
+            if (!string.IsNullOrEmpty(livestreamId) && !string.IsNullOrEmpty(ipCountryCode) && _countryWhiteList.Contains(ipCountryCode.ToUpper()))
                 return true;
 
             if (!string.IsNullOrEmpty(geoAllowed) && !string.IsNullOrEmpty(ipCountryCode))

@@ -116,12 +116,19 @@ namespace Platform.Sportsbook.API.Repository
 
             if (!string.IsNullOrEmpty(fixture.GeAl) && !string.IsNullOrEmpty(request.IPCountryCode))
             {
-                if (!fixture.GeAl.Split(",").Any(g => g.ToUpper() == request.IPCountryCode.ToUpper()))
-                    return new BaseResponseDTO<LivestreamResponseDTO>
-                    {
-                        StatusCode = StatusCode.Livestream_Is_Not_Available_In_Your_Region,
-                        Message = StatusCode.Livestream_Is_Not_Available_In_Your_Region.ToString().Replace('_', ' ')
-                    };
+                if (_countryWhiteList.Contains(request.IPCountryCode.ToUpper()))
+                {
+
+                }
+                else
+                {
+                    if (!fixture.GeAl.Split(",").Any(g => g.ToUpper() == request.IPCountryCode.ToUpper()))
+                        return new BaseResponseDTO<LivestreamResponseDTO>
+                        {
+                            StatusCode = StatusCode.Livestream_Is_Not_Available_In_Your_Region,
+                            Message = StatusCode.Livestream_Is_Not_Available_In_Your_Region.ToString().Replace('_', ' ')
+                        };
+                }
             }
 
             _httpClient.DefaultRequestHeaders.Remove("X-Real-IP");

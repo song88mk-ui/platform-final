@@ -613,6 +613,16 @@ namespace Platform.API.Repository
                             CashOutStatusName = s.CashOutStatusName,
                             StakeTax = s.StakeTax,
                             WinningsTax = s.WinningsTax,
+                            ParlayBonus = s.ParlayBonus,
+                            ParlayBonusWinnings = s.ParlayBonusWinnings,
+                            IsBoosted = s.IsBoosted,
+                            IsFreeBet = s.IsFreeBet,
+                            StakeBonus = s.StakeBonus,
+                            StakeBonusPayout = s.StakeBonus,
+                            StakeReal = s.StakeReal,
+                            StakeRealPayout = s.StakeRealPayout,
+                            TaxedStake = s.TaxedStake,
+                            TaxedWinnings = s.TaxedWinnings,
                             Selections = GetTranslatedBetSelectionHistory(s.Selections, translations.Result.Selections)
                         }).ToList()
                     }

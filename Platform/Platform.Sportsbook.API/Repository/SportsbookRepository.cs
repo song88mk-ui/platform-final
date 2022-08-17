@@ -6762,7 +6762,7 @@ namespace Platform.Sportsbook.API.Repository
 
                     marketTemplateGroups.Add(new ClientMarketTemplateGroupModel
                     {
-                        MarketTemplateGroupId = marketGroup.MarketTemplateGroupId,
+                        MarketTemplateGroupId = marketTemplateGroups.Max(c => c.MarketTemplateGroupId) + 1,
                         Name = marketGroup.Name,
                         MarketTemplateIds = marketGroup.MarketTemplateIds,
                         SortOrder = sortOrder,

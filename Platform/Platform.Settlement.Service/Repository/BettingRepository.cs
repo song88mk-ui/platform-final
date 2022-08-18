@@ -431,13 +431,12 @@ namespace Platform.Settlement.Service.Repository
         private decimal GetStake(List<BetSelection> selections, decimal taxedStake, decimal trueStake)
         {
             var totalSelections = selections.Count();
-            var voidSelections = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Void).ToList();
             var cancelledSelections = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Cancelled).ToList();
 
-            if (voidSelections.Count == totalSelections || cancelledSelections.Count == totalSelections || selections.Any(c => c.BetSelectionStatusId == (int)BetStatus.Lost))
+            if (cancelledSelections.Count == totalSelections || selections.Any(c => c.BetSelectionStatusId == (int)BetStatus.Lost))
                 return trueStake;
 
-            //apply for Won, HalfWon, HalfLost
+            //apply for Won, HalfWon, HalfLost, Void
             return trueStake - taxedStake;
         }
 
@@ -671,7 +670,7 @@ namespace Platform.Settlement.Service.Repository
                             bet.Payout = totalPayout;
                             bet.SettlementDate = settledDate;
                             bet.SettlementDateOffset = settledDate.AddHours(-4);
-                            bet.TaxedStake = betStatus == BetStatus.Cancelled || betStatus == BetStatus.Void ? 0 : taxedStake;
+                            bet.TaxedStake = betStatus == BetStatus.Cancelled ? 0 : taxedStake;
                             bet.TaxedWinnings = taxedWinnings;
 
                             // get percentage of real and bonus payout.
@@ -1003,7 +1002,7 @@ namespace Platform.Settlement.Service.Repository
                         bet.Payout = totalPayout;
                         bet.SettlementDate = settledDate;
                         bet.SettlementDateOffset = settledDate.AddHours(-4);
-                        bet.TaxedStake = betStatus == BetStatus.Cancelled || betStatus == BetStatus.Void ? 0 : taxedStake;
+                        bet.TaxedStake = betStatus == BetStatus.Cancelled ? 0 : taxedStake;
                         bet.TaxedWinnings = taxedWinnings;
 
                         // get percentage of real and bonus payout.

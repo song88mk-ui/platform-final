@@ -1406,7 +1406,8 @@ namespace Platform.Betting.API.Repository
                         LostProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.LostProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.LostProbability).FirstOrDefault(),
                         VoidProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.VoidProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.VoidProbability).FirstOrDefault(),
                         HalfWonProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfWonProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfWonProbability).FirstOrDefault(),
-                        HalfLostProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault()
+                        HalfLostProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault(),
+                        DeadHeatFactor = s.DeadHeatFactor
                     }).ToList()
                 });
             }
@@ -1533,7 +1534,8 @@ namespace Platform.Betting.API.Repository
                         LostProbability = filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.LostProbability).FirstOrDefault(),
                         VoidProbability = filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.VoidProbability).FirstOrDefault(),
                         HalfWonProbability = filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfWonProbability).FirstOrDefault(),
-                        HalfLostProbability = filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault()
+                        HalfLostProbability = filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault(),
+                        DeadHeatFactor = s.DeadHeatFactor
                     }).ToList()
                 });
             }

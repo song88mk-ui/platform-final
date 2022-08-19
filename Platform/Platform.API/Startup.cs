@@ -53,7 +53,9 @@ namespace Platform.API
                 options.AddPolicy("AllowAllOrigins",
                     builder =>
                     {
-                        builder.AllowAnyOrigin()
+                        builder
+                       .SetPreflightMaxAge(System.TimeSpan.MaxValue)
+                       .AllowAnyOrigin()
                        .AllowAnyMethod()
                        .AllowAnyHeader();
                     });

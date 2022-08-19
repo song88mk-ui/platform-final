@@ -26,12 +26,6 @@ namespace Platform.API.Controllers
             _telemetryClient = telemetryClient;
         }
 
-        [HttpOptions("v1/wallet/balance")]
-        public async Task<IActionResult> GetWalletBalancePreflight()
-        {
-            return NoContent();
-        }
-
         [HttpGet("v1/wallet/balance")]
         public async Task<IActionResult> GetWalletBalance()
         {
@@ -760,12 +754,6 @@ namespace Platform.API.Controllers
                 default:
                     return BadRequest(result);
             }
-        }
-
-        [HttpOptions("v1/sportsbook/sports/livefixtures")]
-        public IActionResult GetLiveFixturesPreflight([FromQuery] int sportId)
-        {
-            return NoContent();
         }
 
         [HttpGet("v1/sportsbook/sports/livefixtures")]

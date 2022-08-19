@@ -26,6 +26,12 @@ namespace Platform.API.Controllers
             _telemetryClient = telemetryClient;
         }
 
+        [HttpOptions("v1/wallet/balance")]
+        public async Task<IActionResult> GetWalletBalancePreflight()
+        {
+            return NoContent();
+        }
+
         [HttpGet("v1/wallet/balance")]
         public async Task<IActionResult> GetWalletBalance()
         {

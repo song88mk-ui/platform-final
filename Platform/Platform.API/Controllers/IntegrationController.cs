@@ -762,6 +762,12 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpOptions("v1/sportsbook/sports/livefixtures")]
+        public IActionResult GetLiveFixturesPreflight([FromQuery] int sportId)
+        {
+            return NoContent();
+        }
+
         [HttpGet("v1/sportsbook/sports/livefixtures")]
         public async Task<IActionResult> GetLiveFixtures([FromQuery] int sportId)
         {

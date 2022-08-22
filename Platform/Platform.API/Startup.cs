@@ -54,7 +54,7 @@ namespace Platform.API
                     builder =>
                     {
                         builder
-                       .SetPreflightMaxAge(System.TimeSpan.MaxValue)
+                       .SetPreflightMaxAge(System.TimeSpan.FromMinutes(10))
                        .AllowAnyOrigin()
                        .AllowAnyMethod()
                        .AllowAnyHeader();

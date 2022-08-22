@@ -841,7 +841,7 @@ namespace Platform.Sportsbook.API.Repository
             };
 
             if (final.Count > 0)
-                _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddSeconds(30));
+                _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddSeconds(120));
 
             return returnResult;
         }

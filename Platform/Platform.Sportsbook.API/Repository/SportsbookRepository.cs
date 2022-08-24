@@ -692,11 +692,12 @@ namespace Platform.Sportsbook.API.Repository
             var sportIds = fixtures.Select(s => s.SpId).Distinct().ToList();
 
             var leagueSortOrder = GetTierLeagueOrder().Where(c => sportIds.Contains(c.SportId)).ToList();
-            var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
+            var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId && c.IsActive == true).ToList();
             var segmentOrder = GetSegmentOrder().Where(c => c.ClientId == request.ClientId).ToList();
             var leagueOrder = GetLeagueOrder().Where(c => c.ClientId == request.ClientId).ToList();
+            var activeSportIds = sportSortOrder.Select(s => s.SportId).ToList();
 
-            var result = fixtures.Where(c => c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
+            var result = fixtures.Where(c => activeSportIds.Contains(c.SpId) && c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
             {
                 SportId = s.SpId,
                 SportName = GetSportName(s.SpNa, s.SpNaTr, request.LanguageCode),
@@ -708,7 +709,7 @@ namespace Platform.Sportsbook.API.Repository
                     leagueSortOrder.FirstOrDefault(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId)?.SortOrder + 1000 ?? 2000
             }).ToList();
 
-            var sportResult = fixtures.Select(s => new TempOrderedSport
+            var sportResult = fixtures.Where(c => activeSportIds.Contains(c.SpId)).Select(s => new TempOrderedSport
             {
                 SportId = s.SpId,
                 SportName = GetSportName(s.SpNa, s.SpNaTr, request.LanguageCode),
@@ -2003,8 +2004,8 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
-
+            var sortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId && c.IsActive == true).ToList();
+            
             var result = new List<FixtureCount>();
 
             foreach (var item in sortOrder.OrderBy(o => o.SortOrder).ToList())
@@ -2072,7 +2073,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
+            var sortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId && c.IsActive == true).ToList();
 
             var result = new List<FixtureCount>();
 
@@ -5700,6 +5701,7 @@ namespace Platform.Sportsbook.API.Repository
             });
 
             var sportOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
+            var activeSportIds = sportOrder.Select(s => s.SportId).ToList();
 
             return new BaseResponseDTO<BoostedResponseDTO>
             {
@@ -5707,7 +5709,7 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new BoostedResponseDTO
                 {
-                    Fixtures = result.Where(m => m.Markets.Any()).OrderBy(o => sportOrder.Where(so => so.SportId == o.SportId).FirstOrDefault().SortOrder).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList()
+                    Fixtures = result.Where(m => activeSportIds.Contains(m.SportId) && m.Markets.Any()).OrderBy(o => sportOrder.Where(so => so.SportId == o.SportId).FirstOrDefault().SortOrder).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList()
                 }
             };
         }

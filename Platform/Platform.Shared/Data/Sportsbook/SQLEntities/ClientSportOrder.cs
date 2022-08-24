@@ -8,5 +8,6 @@ namespace Platform.Shared.Data.Sportsbook.SQLEntities
         public int SportId { get; set; }
         public string SportName { get; set; }
         public int SortOrder { get; set; }
+        public bool IsActive { get; set; }
     }
 }

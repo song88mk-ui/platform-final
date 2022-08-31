@@ -656,7 +656,7 @@ namespace Platform.Settlement.Service.Repository
 
                         var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, stake);
 
-                        stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon ? bet.TrueStake : stake;
+                        stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon || betStatus == BetStatus.Void ? bet.TrueStake : stake;
 
                         var totalPayout = payout + parlayBonusWinnings;
 
@@ -988,7 +988,7 @@ namespace Platform.Settlement.Service.Repository
 
                     var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, stake);
 
-                    stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon ? bet.TrueStake : stake;
+                    stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon || betStatus == BetStatus.Void ? bet.TrueStake : stake;
 
                     var totalPayout = payout + parlayBonusWinnings;
 

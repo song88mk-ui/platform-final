@@ -18,9 +18,9 @@
         CurrencyCode_Mismatch = 111,
         Odds_Must_Be_Greater_Or_Higher_To_1 = 112,
         Stake_Must_Be_Greater_Than_Zero = 113,
-        Stake_Must_Be_Equal_Or_Higher_To_Min_Stake = 114,
-        Stake_Must_Be_Equal_Or_Lower_To_Max_Stake = 115,
-        Maximum_Bet_Limit_On_Fixture_Reached = 116,
+        Stake_Must_Be_Higher_Or_Equal_To_Min_Stake = 114, //Stake_Must_Be_Equal_Or_Higher_To_Min_Stake 
+        Stake_Must_Be_Lower_Or_Equal_To_Max_Stake = 115, //Stake_Must_Be_Equal_Or_Lower_To_Max_Stake
+        Maximum_Bet_Amount_For_The_Game_Has_Been_Reached = 116, //Maximum_Bet_Limit_On_Fixture_Reached 
         Maximum_Payout_Must_Be_Equal_Or_Lower = 117,
         Betting_Restricted = 118,
         Sport_Betting_Restricted = 119,
@@ -31,11 +31,11 @@
         Fixture_Has_No_Livestream = 123,
 
         Market_Is_Suspended = 124,
-        Market_Is_Inactive = 125,
-        Odds_Is_Stale = 126,
+        Market_Is_Not_Offered = 125, //Market_Is_Inactive
+        Odds_Or_Lines_Have_Changed = 126, //Odds_Is_Stale
 
         Odds_Is_Inactive = 128,
-        Betstop_On_Fixture = 129,
+        Market_Has_Been_Suspended = 129, //Betstop_On_Fixture
         Betstop_On_Global = 130,
 
         Max_Liability_By_Tier_Not_Found = 131,

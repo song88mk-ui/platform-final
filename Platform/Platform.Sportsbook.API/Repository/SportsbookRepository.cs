@@ -5243,8 +5243,8 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     SelectionId = current.SelectionId.ToString(),
                     Odds = current.Odds,
-                    StatusCode = StatusCode.Market_Is_Inactive,
-                    Message = StatusCode.Market_Is_Inactive.ToString().Replace('_', ' ')
+                    StatusCode = StatusCode.Market_Is_Not_Offered,
+                    Message = StatusCode.Market_Is_Not_Offered.ToString().Replace('_', ' ')
                 };
             }
 
@@ -5265,8 +5265,8 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     SelectionId = current.SelectionId.ToString(),
                     Odds = current.Odds,
-                    StatusCode = StatusCode.Market_Is_Inactive,
-                    Message = StatusCode.Market_Is_Inactive.ToString().Replace('_', ' ')
+                    StatusCode = StatusCode.Market_Is_Not_Offered,
+                    Message = StatusCode.Market_Is_Not_Offered.ToString().Replace('_', ' ')
                 };
             }
 
@@ -5289,8 +5289,8 @@ namespace Platform.Sportsbook.API.Repository
                     SelectionId = selection.SeId.ToString(),
                     Odds = selection.Od,
                     CorrelationId = selection.CoId,
-                    StatusCode = StatusCode.Market_Is_Inactive,
-                    Message = StatusCode.Market_Is_Inactive.ToString().Replace('_', ' '),
+                    StatusCode = StatusCode.Market_Is_Not_Offered,
+                    Message = StatusCode.Market_Is_Not_Offered.ToString().Replace('_', ' '),
                 };
             }
 
@@ -5301,8 +5301,8 @@ namespace Platform.Sportsbook.API.Repository
                     SelectionId = selection.SeId.ToString(),
                     Odds = selection.Od,
                     CorrelationId = selection.CoId,
-                    StatusCode = StatusCode.Market_Is_Inactive,
-                    Message = StatusCode.Market_Is_Inactive.ToString().Replace('_', ' '),
+                    StatusCode = StatusCode.Market_Is_Not_Offered,
+                    Message = StatusCode.Market_Is_Not_Offered.ToString().Replace('_', ' '),
                 };
             }
 
@@ -5313,8 +5313,8 @@ namespace Platform.Sportsbook.API.Repository
                     SelectionId = selection.SeId.ToString(),
                     Odds = selection.Od,
                     CorrelationId = selection.CoId,
-                    StatusCode = StatusCode.Betstop_On_Fixture,
-                    Message = StatusCode.Betstop_On_Fixture.ToString().Replace('_', ' '),
+                    StatusCode = StatusCode.Market_Has_Been_Suspended,
+                    Message = StatusCode.Market_Has_Been_Suspended.ToString().Replace('_', ' '),
                 };
             }
 
@@ -5337,8 +5337,8 @@ namespace Platform.Sportsbook.API.Repository
                     SelectionId = selection.SeId.ToString(),
                     Odds = selection.Od,
                     CorrelationId = selection.CoId,
-                    StatusCode = StatusCode.Market_Is_Inactive,
-                    Message = StatusCode.Market_Is_Inactive.ToString().Replace('_', ' ')
+                    StatusCode = StatusCode.Market_Is_Not_Offered,
+                    Message = StatusCode.Market_Is_Not_Offered.ToString().Replace('_', ' ')
                 };
             }
 
@@ -5376,8 +5376,8 @@ namespace Platform.Sportsbook.API.Repository
                             SelectionId = selection.SeId.ToString(),
                             Odds = selection.Od,
                             CorrelationId = selection.CoId,
-                            StatusCode = StatusCode.Odds_Is_Stale,
-                            Message = StatusCode.Odds_Is_Stale.ToString().Replace('_', ' ')
+                            StatusCode = StatusCode.Odds_Or_Lines_Have_Changed,
+                            Message = StatusCode.Odds_Or_Lines_Have_Changed.ToString().Replace('_', ' ')
                         };
                     }
                     break;
@@ -5391,8 +5391,8 @@ namespace Platform.Sportsbook.API.Repository
                             SelectionId = selection.SeId.ToString(),
                             Odds = selection.Od,
                             CorrelationId = selection.CoId,
-                            StatusCode = StatusCode.Odds_Is_Stale,
-                            Message = StatusCode.Odds_Is_Stale.ToString().Replace('_', ' ')
+                            StatusCode = StatusCode.Odds_Or_Lines_Have_Changed,
+                            Message = StatusCode.Odds_Or_Lines_Have_Changed.ToString().Replace('_', ' ')
                         };
                     }
                     break;

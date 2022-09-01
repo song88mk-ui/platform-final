@@ -148,8 +148,8 @@ namespace Platform.Betting.API.Repository
                 {
                     return new BaseResponseDTO<BetResponseDTO>
                     {
-                        StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake,
-                        Message = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake.ToString().Replace('_', ' ')
+                        StatusCode = StatusCode.Stake_Must_Be_Higher_Or_Equal_To_Min_Stake,
+                        Message = StatusCode.Stake_Must_Be_Higher_Or_Equal_To_Min_Stake.ToString().Replace('_', ' ')
                     };
                 }
 
@@ -157,8 +157,8 @@ namespace Platform.Betting.API.Repository
                 {
                     return new BaseResponseDTO<BetResponseDTO>
                     {
-                        StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake,
-                        Message = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake.ToString().Replace('_', ' ') + " " + Convert.ToDecimal(maxStake).ToString("#,##0.00"),
+                        StatusCode = StatusCode.Stake_Must_Be_Lower_Or_Equal_To_Max_Stake,
+                        Message = StatusCode.Stake_Must_Be_Lower_Or_Equal_To_Max_Stake.ToString().Replace('_', ' ') + " " + Convert.ToDecimal(maxStake).ToString("#,##0.00"),
                         Result = new BetResponseDTO
                         {
                             Stake = Convert.ToDecimal(maxStake)
@@ -176,8 +176,8 @@ namespace Platform.Betting.API.Repository
                     {
                         return new BaseResponseDTO<BetResponseDTO>
                         {
-                            StatusCode = StatusCode.Maximum_Bet_Limit_On_Fixture_Reached,
-                            Message = StatusCode.Maximum_Bet_Limit_On_Fixture_Reached.ToString().Replace('_', ' ')
+                            StatusCode = StatusCode.Maximum_Bet_Amount_For_The_Game_Has_Been_Reached,
+                            Message = StatusCode.Maximum_Bet_Amount_For_The_Game_Has_Been_Reached.ToString().Replace('_', ' ')
                         };
                     }
                 }
@@ -192,8 +192,8 @@ namespace Platform.Betting.API.Repository
                 {
                     return new BaseResponseDTO<BetResponseDTO>
                     {
-                        StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake,
-                        Message = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake.ToString().Replace('_', ' ')
+                        StatusCode = StatusCode.Stake_Must_Be_Higher_Or_Equal_To_Min_Stake,
+                        Message = StatusCode.Stake_Must_Be_Higher_Or_Equal_To_Min_Stake.ToString().Replace('_', ' ')
 
                     };
                 }
@@ -202,8 +202,8 @@ namespace Platform.Betting.API.Repository
                 {
                     return new BaseResponseDTO<BetResponseDTO>
                     {
-                        StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake,
-                        Message = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake.ToString().Replace('_', ' ') + " " + Convert.ToDecimal(maxStake).ToString("#,##0.00"),
+                        StatusCode = StatusCode.Stake_Must_Be_Lower_Or_Equal_To_Max_Stake,
+                        Message = StatusCode.Stake_Must_Be_Lower_Or_Equal_To_Max_Stake.ToString().Replace('_', ' ') + " " + Convert.ToDecimal(maxStake).ToString("#,##0.00"),
                         Result = new BetResponseDTO
                         {
                             Stake = Convert.ToDecimal(maxStake)
@@ -683,8 +683,8 @@ namespace Platform.Betting.API.Repository
                 {
                     return new BaseResponseDTO<BetResponseDTO>
                     {
-                        StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake,
-                        Message = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake.ToString().Replace('_', ' ')
+                        StatusCode = StatusCode.Stake_Must_Be_Higher_Or_Equal_To_Min_Stake,
+                        Message = StatusCode.Stake_Must_Be_Higher_Or_Equal_To_Min_Stake.ToString().Replace('_', ' ')
 
                     };
                 }
@@ -693,8 +693,8 @@ namespace Platform.Betting.API.Repository
                 {
                     return new BaseResponseDTO<BetResponseDTO>
                     {
-                        StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake,
-                        Message = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake.ToString().Replace('_', ' ') + " " + Convert.ToDecimal(maxStake).ToString("#,##0.00"),
+                        StatusCode = StatusCode.Stake_Must_Be_Lower_Or_Equal_To_Max_Stake,
+                        Message = StatusCode.Stake_Must_Be_Lower_Or_Equal_To_Max_Stake.ToString().Replace('_', ' ') + " " + Convert.ToDecimal(maxStake).ToString("#,##0.00"),
                         Result = new BetResponseDTO
                         {
                             Stake = Convert.ToDecimal(maxStake)
@@ -721,8 +721,8 @@ namespace Platform.Betting.API.Repository
                 {
                     return new BaseResponseDTO<BetResponseDTO>
                     {
-                        StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake,
-                        Message = StatusCode.Stake_Must_Be_Equal_Or_Higher_To_Min_Stake.ToString().Replace('_', ' ')
+                        StatusCode = StatusCode.Stake_Must_Be_Higher_Or_Equal_To_Min_Stake,
+                        Message = StatusCode.Stake_Must_Be_Higher_Or_Equal_To_Min_Stake.ToString().Replace('_', ' ')
 
                     };
                 }
@@ -731,8 +731,8 @@ namespace Platform.Betting.API.Repository
                 {
                     return new BaseResponseDTO<BetResponseDTO>
                     {
-                        StatusCode = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake,
-                        Message = StatusCode.Stake_Must_Be_Equal_Or_Lower_To_Max_Stake.ToString().Replace('_', ' ') + " " + Convert.ToDecimal(maxStake).ToString("#,##0.00"),
+                        StatusCode = StatusCode.Stake_Must_Be_Lower_Or_Equal_To_Max_Stake,
+                        Message = StatusCode.Stake_Must_Be_Lower_Or_Equal_To_Max_Stake.ToString().Replace('_', ' ') + " " + Convert.ToDecimal(maxStake).ToString("#,##0.00"),
                         Result = new BetResponseDTO
                         {
                             Stake = Convert.ToDecimal(maxStake)

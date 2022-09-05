@@ -48,5 +48,7 @@ namespace Platform.Shared.Data.Betting.Entities
         public string CorrelationId { get; set; }
         [Column(TypeName = "decimal(26,12)")]
         public decimal DeadHeatFactor { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal OddsRef { get; set; }
     }
 }

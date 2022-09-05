@@ -274,6 +274,7 @@ namespace Platform.CashOut.Service.Repository
                     FixtureStatusName = betSelectionEntity.FixtureStatusName,
                     Line = betSelectionEntity.Line,
                     Odds = betSelectionEntity.Odds,
+                    OddsRef = betSelectionEntity.OddsRef,
                     BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
                     BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
                     IsSettled = betSelectionEntity.IsSettled,
@@ -366,7 +367,9 @@ namespace Platform.CashOut.Service.Repository
                 StakeBonus = betEntity.StakeBonus,
                 StakeRealPayout = betEntity.StakeRealPayout,
                 StakeBonusPayout = betEntity.StakeBonusPayout,
-                IsFreeBet = betEntity.IsFreeBet
+                IsFreeBet = betEntity.IsFreeBet,
+                BetType = betEntity.BetType,
+                OddsRef = betEntity.OddsRef
             });
 
             isPublish = true;

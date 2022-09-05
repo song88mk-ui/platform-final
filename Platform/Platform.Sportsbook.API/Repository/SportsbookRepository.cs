@@ -1072,7 +1072,6 @@ namespace Platform.Sportsbook.API.Repository
 
                         finalMarkets.Add(market);
 
-
                         var clientOdds = new List<ClientOdds>();
 
                         var marketSelections = newAllSelections.Where(c => c.MaId == market.MaId).ToList();
@@ -1087,18 +1086,14 @@ namespace Platform.Sportsbook.API.Repository
 
                         foreach (var selection in marketSelections)
                         {
+                            selection.OdRef = selection.Od;
                             if (fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright)
-                            {
                                 selection.Od = Convert.ToDecimal(GetClientBoostedOdds(selection.ClBoOd, request.ClientCode, request.IsBoosted, selection.Od.ToString("0.00")));
-
-                                finalSelections.Add(selection);
-                            }
                             else
-                            {
                                 selection.Od = Convert.ToDecimal(GetClientBoostedOdds(selection.ClBoOd, request.ClientCode, request.IsBoosted, clientOdds.Where(c => c.SelectionId == selection.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString("0.00")));
 
-                                finalSelections.Add(selection);
-                            }
+                            finalSelections.Add(selection);
+
                         }
                     }
                 }
@@ -1255,6 +1250,7 @@ namespace Platform.Sportsbook.API.Repository
                     SelectionId = initialSelection.SeId,
                     SelectionName = initialSelection.SeNa,
                     Odds = initialSelection.Od,
+                    OddsRef = initialSelection.OdRef,
                     FixtureStatus = (FixtureStatus)initialSelection.FiStId,
                     FixtureStartDate = initialSelection.FiStDa,
                     Score = initialFixture.Sc,

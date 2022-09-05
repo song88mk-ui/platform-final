@@ -136,7 +136,9 @@ namespace Platform.Operator.Servicev2.Repository
                             StakeTax = betEntity.StakeTax,
                             WinningsTax = betEntity.WinningsTax,
                             TaxedStake = betEntity.TaxedStake,
-                            TaxedWinnings = betEntity.TaxedWinnings
+                            TaxedWinnings = betEntity.TaxedWinnings,
+                            BetType = betEntity.BetType,
+                            OddsRef = betEntity.OddsRef
                         });
 
                         var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
@@ -191,7 +193,8 @@ namespace Platform.Operator.Servicev2.Repository
                                 HalfWonProbability = betSelectionEntity.HalfWonProbability,
                                 HalfLostProbability = betSelectionEntity.HalfLostProbability,
                                 CorrelationId = betSelectionEntity.CorrelationId,
-                                DeadHeatFactor = betSelectionEntity.DeadHeatFactor
+                                DeadHeatFactor = betSelectionEntity.DeadHeatFactor,
+                                OddsRef = betSelectionEntity.OddsRef
                             });
                         }
 
@@ -294,7 +297,9 @@ namespace Platform.Operator.Servicev2.Repository
                             StakeBonus = betEntity.StakeBonus,
                             StakeRealPayout = betEntity.StakeRealPayout,
                             StakeBonusPayout = betEntity.StakeBonusPayout,
-                            IsFreeBet = betEntity.IsFreeBet
+                            IsFreeBet = betEntity.IsFreeBet,
+                            BetType = betEntity.BetType,
+                            OddsRef = betEntity.OddsRef
                         });
 
                         var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
@@ -332,6 +337,7 @@ namespace Platform.Operator.Servicev2.Repository
                                 FixtureStatusName = betSelectionEntity.FixtureStatusName,
                                 Line = betSelectionEntity.Line,
                                 Odds = betSelectionEntity.Odds,
+                                OddsRef = betSelectionEntity.OddsRef,
                                 BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
                                 BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
                                 IsSettled = betSelectionEntity.IsSettled,

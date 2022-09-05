@@ -58,6 +58,7 @@ namespace Platform.Shared.Models
         public long SelectionId { get; set; }
         public string SelectionName { get; set; }
         public decimal Odds { get; set; }
+        public decimal OddsRef { get; set; }
         public FixtureStatus FixtureStatus { get; set; }
         public DateTime FixtureStartDate { get; set; }
         public string Score { get; set; }

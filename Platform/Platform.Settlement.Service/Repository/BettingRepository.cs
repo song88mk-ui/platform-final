@@ -479,6 +479,7 @@ namespace Platform.Settlement.Service.Repository
                 FixtureStatusName = betSelectionEntity.FixtureStatusName,
                 Line = betSelectionEntity.Line,
                 Odds = betSelectionEntity.Odds,
+                OddsRef = betSelectionEntity.OddsRef,
                 BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
                 BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
                 IsSettled = betSelectionEntity.IsSettled,
@@ -586,7 +587,9 @@ namespace Platform.Settlement.Service.Repository
                         StakeBonus = betEntity.StakeBonus,
                         StakeRealPayout = betEntity.StakeRealPayout,
                         StakeBonusPayout = betEntity.StakeBonusPayout,
-                        IsFreeBet = betEntity.IsFreeBet
+                        IsFreeBet = betEntity.IsFreeBet,
+                        BetType = betEntity.BetType,
+                        OddsRef = betEntity.OddsRef
                     });
 
                     isPublish = true;
@@ -724,7 +727,9 @@ namespace Platform.Settlement.Service.Repository
                             StakeBonus = betEntity.StakeBonus,
                             StakeRealPayout = betEntity.StakeRealPayout,
                             StakeBonusPayout = betEntity.StakeBonusPayout,
-                            IsFreeBet = betEntity.IsFreeBet
+                            IsFreeBet = betEntity.IsFreeBet,
+                            BetType = betEntity.BetType,
+                            OddsRef = betEntity.OddsRef
                         });
 
                         ProcessStakeFixtureLimit(message, betSelection, context, selections, betEntity);
@@ -801,6 +806,7 @@ namespace Platform.Settlement.Service.Repository
                 FixtureStatusName = betSelectionEntity.FixtureStatusName,
                 Line = betSelectionEntity.Line,
                 Odds = betSelectionEntity.Odds,
+                OddsRef = betSelectionEntity.OddsRef,
                 BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
                 BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
                 IsSettled = betSelectionEntity.IsSettled,
@@ -907,7 +913,9 @@ namespace Platform.Settlement.Service.Repository
                         StakeBonus = betEntity.StakeBonus,
                         StakeRealPayout = betEntity.StakeRealPayout,
                         StakeBonusPayout = betEntity.StakeBonusPayout,
-                        IsFreeBet = betEntity.IsFreeBet
+                        IsFreeBet = betEntity.IsFreeBet,
+                        BetType = betEntity.BetType,
+                        OddsRef = betEntity.OddsRef
                     });
 
                     isPublish = true;
@@ -1043,7 +1051,9 @@ namespace Platform.Settlement.Service.Repository
                             StakeBonus = betEntity.StakeBonus,
                             StakeRealPayout = betEntity.StakeRealPayout,
                             StakeBonusPayout = betEntity.StakeBonusPayout,
-                            IsFreeBet = betEntity.IsFreeBet
+                            IsFreeBet = betEntity.IsFreeBet,
+                            BetType = betEntity.BetType,
+                            OddsRef = betEntity.OddsRef
                         });
 
                         isPublish = true;
@@ -1181,7 +1191,9 @@ namespace Platform.Settlement.Service.Repository
                                 StakeBonus = betEntity.StakeBonus,
                                 StakeRealPayout = betEntity.StakeRealPayout,
                                 StakeBonusPayout = betEntity.StakeBonusPayout,
-                                IsFreeBet = betEntity.IsFreeBet
+                                IsFreeBet = betEntity.IsFreeBet,
+                                BetType = betEntity.BetType,
+                                OddsRef = betEntity.OddsRef
                             });
 
                             foreach (var betSelection in betSelections)
@@ -1218,6 +1230,7 @@ namespace Platform.Settlement.Service.Repository
                                     FixtureStatusName = betSelectionEntity.FixtureStatusName,
                                     Line = betSelectionEntity.Line,
                                     Odds = betSelectionEntity.Odds,
+                                    OddsRef = betSelectionEntity.OddsRef,
                                     BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
                                     BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
                                     IsSettled = betSelectionEntity.IsSettled,

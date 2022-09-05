@@ -272,6 +272,8 @@ namespace Platform.Betting.API.Repository
                             winningsTax = 0m;
                     }
 
+                    var betType = GetBetType(request.Selections, request.IsBoosted, false);
+
                     var betEntity = _bettingContext.Bet.Update(new Bet
                     {
                         UserId = request.UserId,
@@ -314,7 +316,9 @@ namespace Platform.Betting.API.Repository
                         StakeBonus = 0,
                         StakeRealPayout = 0,
                         StakeBonusPayout = 0,
-                        IsFreeBet = false
+                        IsFreeBet = false,
+                        BetType = betType.ToString(),
+                        OddsRef = totalOdds
                     }).Entity;
 
                     betData = betEntity;
@@ -364,7 +368,9 @@ namespace Platform.Betting.API.Repository
                         StakeBonus = betEntity.StakeBonus,
                         StakeRealPayout = betEntity.StakeRealPayout,
                         StakeBonusPayout = betEntity.StakeBonusPayout,
-                        IsFreeBet = betEntity.IsFreeBet
+                        IsFreeBet = betEntity.IsFreeBet,
+                        BetType = betType.ToString(),
+                        OddsRef = totalOdds
                     });
 
                     foreach (var selection in request.Selections)
@@ -790,6 +796,8 @@ namespace Platform.Betting.API.Repository
                             winningsTax = 0m;
                     }
 
+                    var betType = GetBetType(request.Selections, request.IsBoosted, false);
+
                     var betEntity = _bettingContext.Bet.Update(new Bet
                     {
                         UserId = request.UserId,
@@ -832,7 +840,9 @@ namespace Platform.Betting.API.Repository
                         StakeBonus = 0,
                         StakeRealPayout = 0,
                         StakeBonusPayout = 0,
-                        IsFreeBet = false
+                        IsFreeBet = false,
+                        BetType = betType.ToString(),
+                        OddsRef = totalOdds
                     }).Entity;
 
                     betData = betEntity;
@@ -882,7 +892,9 @@ namespace Platform.Betting.API.Repository
                         StakeBonus = betEntity.StakeBonus,
                         StakeRealPayout = betEntity.StakeRealPayout,
                         StakeBonusPayout = betEntity.StakeBonusPayout,
-                        IsFreeBet = betEntity.IsFreeBet
+                        IsFreeBet = betEntity.IsFreeBet,
+                        BetType = betType.ToString(),
+                        OddsRef = totalOdds
                     });
 
                     foreach (var selection in request.Selections)
@@ -911,6 +923,7 @@ namespace Platform.Betting.API.Repository
                             Line = selection.Line,
                             SelectionTemplateId = selection.SelectionTemplateId,
                             Odds = selection.Odds,
+                            OddsRef = selection.OddsRef,
                             BetSelectionStatusId = betEntity.BetStatusId,
                             BetSelectionStatusName = betEntity.BetStatusName,
                             IsSettled = false,
@@ -960,6 +973,7 @@ namespace Platform.Betting.API.Repository
                             FixtureStatusName = betSelectionEntity.FixtureStatusName,
                             Line = betSelectionEntity.Line,
                             Odds = betSelectionEntity.Odds,
+                            OddsRef = betSelectionEntity.OddsRef,
                             BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
                             BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
                             IsSettled = betSelectionEntity.IsSettled,
@@ -2560,5 +2574,15 @@ namespace Platform.Betting.API.Repository
             return result;
         }
 
+        private BetType GetBetType(List<BetSelectionRequestDTO> selections, bool isBoosted, bool isBetBuilder)
+        {
+            if (isBoosted)
+                return BetType.PriceBoost;
+            if (isBetBuilder)
+                return BetType.PriceBoost;
+
+            return selections.Count > 1 ? BetType.Parlay : BetType.Single;
+
+        }
     }
 }

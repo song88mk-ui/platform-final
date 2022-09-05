@@ -258,6 +258,7 @@ namespace Platform.API.Repository
                     SelectionId = initialSelection.SelectionId,
                     SelectionName = initialSelection.SelectionName,
                     Odds = initialSelection.Odds,
+                    OddsRef = initialSelection.OddsRef,
                     FixtureStatus = initialSelection.FixtureStatus,
                     FixtureStartDate = initialSelection.FixtureStartDate,
                     BetScore = initialSelection.Score,

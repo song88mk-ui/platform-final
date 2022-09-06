@@ -112,7 +112,7 @@ namespace Platform.Settlement.Service.Repository
             if (minimumOdds == null)
                 return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
 
-            int wonSelectionCount = selections.Where(c => (c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running) && c.Odds >= minimumOdds.ParlayBonusMinOdds).Count();
+            int wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won && c.Odds >= minimumOdds.ParlayBonusMinOdds).Count();
 
             if (wonSelectionCount >= 3)
             {
@@ -123,8 +123,7 @@ namespace Platform.Settlement.Service.Repository
                     return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
                 else
                 {
-                    if(!selections.Any(c => c.BetSelectionStatusId == (int)BetStatus.Running))
-                        parlayBonusWinnings = payout * result.ParlayBonus;
+                    parlayBonusWinnings = payout * result.ParlayBonus;
 
                     if (parlayBonusWinnings > result.ParlayBonusMaxWinnings && result.ParlayBonusMaxWinnings > 0)
                     {
@@ -619,20 +618,14 @@ namespace Platform.Settlement.Service.Repository
                         var nonTaxedPayout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), nonTaxedStake);
                         var nonTaxedParlayBonusWinnings = 0m;
 
-                        var wonSelectionCount = selections.Where(c => c.SelectionId != message.SelectionId && (c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running)).Count();
-                        if (message.SelectionStatus == BetStatus.Won) //current selection
-                            wonSelectionCount++;
-
-                        var lostSelectionCount = selections.Where(c => c.SelectionId != message.SelectionId && c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
+                        var wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running).Count();
+                        var lostSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
 
                         var hasVirtualSport = selections.Any(s => s.SportId > 1000) ? true : false;
 
                         if (hasVirtualSport == false && wonSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
                         {
-                            var newSelections = selections.Where(c => c.SelectionId != betSelection.SelectionId).ToList();
-                            newSelections.Add(filteredSelection);
-
-                            var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, newSelections, payout, ref parlayBonusWinnings);
+                            var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, selections, payout, ref parlayBonusWinnings);
 
                             if (parlayConfig.Item1 == true)
                             {
@@ -951,20 +944,14 @@ namespace Platform.Settlement.Service.Repository
                     var nonTaxedPayout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), nonTaxedStake);
                     var nonTaxedParlayBonusWinnings = 0m;
 
-                    var wonSelectionCount = selections.Where(c => c.SelectionId != message.SelectionId && (c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running)).Count();
-                    if (message.SelectionStatus == BetStatus.Won) //current selection
-                        wonSelectionCount++;
-
-                    var lostSelectionCount = selections.Where(c => c.SelectionId != message.SelectionId && c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
+                    var wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running).Count();
+                    var lostSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
 
                     var hasVirtualSport = selections.Any(s => s.SportId > 1000) ? true : false;
 
                     if (hasVirtualSport == false && wonSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
                     {
-                        var newSelections = selections.Where(c => c.SelectionId != betSelection.SelectionId).ToList();
-                        newSelections.Add(filteredSelection);
-
-                        var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, newSelections, payout, ref parlayBonusWinnings);
+                        var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, selections, payout, ref parlayBonusWinnings);
 
                         if (parlayConfig.Item1 == true)
                         {

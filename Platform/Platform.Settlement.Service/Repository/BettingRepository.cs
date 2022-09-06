@@ -190,6 +190,9 @@ namespace Platform.Settlement.Service.Repository
             if (betSelections.Contains(BetStatus.Lost))
                 return BetStatus.Lost;
 
+            if (running > 0 && lost == 0 && cancelled == 0)
+                return BetStatus.Running;
+
             if (winLoss == 0 && voidd >= 1)
                 return BetStatus.Void;
 
@@ -213,9 +216,6 @@ namespace Platform.Settlement.Service.Repository
 
             if (payout > 0) //use payout instead of winloss for V3
                 return BetStatus.Won;
-
-            if (running > 0 && lost == 0 && cancelled == 0)
-                return BetStatus.Running;
 
             return result;
         }

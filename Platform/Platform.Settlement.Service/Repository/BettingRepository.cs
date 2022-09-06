@@ -655,7 +655,7 @@ namespace Platform.Settlement.Service.Repository
 
                         nonTaxedPayout = nonTaxedPayout + nonTaxedParlayBonusWinnings;
 
-                        if (totalSettled == totalSelections)
+                        if(totalSettled == totalSelections)
                         {
                             bet.WinLoss = totalPayout == 0 ? -bet.TrueStake : totalPayout - stake;
                             bet.BetStatusId = (int)betStatus;
@@ -929,142 +929,145 @@ namespace Platform.Settlement.Service.Repository
                 var totalSettled = selections.Where(c => c.SelectionId != message.SelectionId && c.IsSettled == true).Count();
                 var totalSelections = selections.Where(c => c.SelectionId != message.SelectionId).Count();
 
-                if (bet != null)
+                if (totalSettled == totalSelections || message.SelectionStatus != BetStatus.Won)
                 {
-                    var finalStake = bet.TrueStake - bet.StakeBonus;
-
-                    var taxedStake = bet.IsFreeBet == false ? finalStake - (finalStake / (1 + bet.StakeTax)) : 0;
-
-                    var stake = GetStake(selections, taxedStake, bet.TrueStake);
-                    var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), stake);
-                    var parlayBonusWinnings = 0m;
-                    var parlayBonus = 0m;
-
-                    var nonTaxedStake = bet.TrueStake;
-                    var nonTaxedPayout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), nonTaxedStake);
-                    var nonTaxedParlayBonusWinnings = 0m;
-
-                    var wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running).Count();
-                    var lostSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
-
-                    var hasVirtualSport = selections.Any(s => s.SportId > 1000) ? true : false;
-
-                    if (hasVirtualSport == false && wonSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
+                    if (bet != null)
                     {
-                        var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, selections, payout, ref parlayBonusWinnings);
+                        var finalStake = bet.TrueStake - bet.StakeBonus;
 
-                        if (parlayConfig.Item1 == true)
+                        var taxedStake = bet.IsFreeBet == false ? finalStake - (finalStake / (1 + bet.StakeTax)) : 0;
+
+                        var stake = GetStake(selections, taxedStake, bet.TrueStake);
+                        var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), stake);
+                        var parlayBonusWinnings = 0m;
+                        var parlayBonus = 0m;
+
+                        var nonTaxedStake = bet.TrueStake;
+                        var nonTaxedPayout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), nonTaxedStake);
+                        var nonTaxedParlayBonusWinnings = 0m;
+
+                        var wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running).Count();
+                        var lostSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
+
+                        var hasVirtualSport = selections.Any(s => s.SportId > 1000) ? true : false;
+
+                        if (hasVirtualSport == false && wonSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
                         {
-                            parlayBonus = parlayConfig.Item2.ParlayBonus;
+                            var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, selections, payout, ref parlayBonusWinnings);
 
-                            nonTaxedParlayBonusWinnings = nonTaxedPayout * parlayConfig.Item2.ParlayBonus;
+                            if (parlayConfig.Item1 == true)
+                            {
+                                parlayBonus = parlayConfig.Item2.ParlayBonus;
+
+                                nonTaxedParlayBonusWinnings = nonTaxedPayout * parlayConfig.Item2.ParlayBonus;
+                            }
                         }
-                    }
 
-                    var taxedWinnings = payout + parlayBonusWinnings;
+                        var taxedWinnings = payout + parlayBonusWinnings;
 
-                    if (bet.IsFreeBet)
-                        finalStake = bet.TrueStake;
+                        if (bet.IsFreeBet)
+                            finalStake = bet.TrueStake;
 
-                    taxedWinnings = bet.IsFreeBet == false && bet.StakeBonus == bet.TrueStake ? 0 : (taxedWinnings - finalStake) * bet.WinningsTax;
+                        taxedWinnings = bet.IsFreeBet == false && bet.StakeBonus == bet.TrueStake ? 0 : (taxedWinnings - finalStake) * bet.WinningsTax;
 
-                    if (payout > bet.TrueStake)
-                        payout = payout - taxedWinnings;
-                    else
-                        taxedWinnings = 0;
+                        if (payout > bet.TrueStake)
+                            payout = payout - taxedWinnings;
+                        else
+                            taxedWinnings = 0;
 
-                    var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, stake);
+                        var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, stake);
 
-                    stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon || betStatus == BetStatus.Void ? bet.TrueStake : stake;
+                        stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon || betStatus == BetStatus.Void ? bet.TrueStake : stake;
 
-                    var totalPayout = payout + parlayBonusWinnings;
+                        var totalPayout = payout + parlayBonusWinnings;
 
-                    nonTaxedPayout = nonTaxedPayout + nonTaxedParlayBonusWinnings;
+                        nonTaxedPayout = nonTaxedPayout + nonTaxedParlayBonusWinnings;
 
-                    if (totalSettled == totalSelections)
-                    {
-                        bet.WinLoss = totalPayout == 0 ? -bet.TrueStake : totalPayout - stake;
-                        bet.BetStatusId = (int)betStatus;
-                        bet.BetStatusName = betStatus.ToString();
-                        bet.Payout = totalPayout;
-                        bet.SettlementDate = settledDate;
-                        bet.SettlementDateOffset = settledDate.AddHours(-4);
-                        bet.TaxedStake = betStatus == BetStatus.Cancelled ? 0 : taxedStake;
-                        bet.TaxedWinnings = taxedWinnings;
-
-                        // get percentage of real and bonus payout.
-                        var stakeRealPayoutPercentage = bet.StakeReal / bet.TrueStake;
-                        var stakeBonusPayoutPercentage = bet.StakeBonus / bet.TrueStake;
-
-                        bet.StakeRealPayout = payout * stakeRealPayoutPercentage;
-                        bet.StakeBonusPayout = payout * stakeBonusPayoutPercentage;
-
-                        if (isManualSettle)
+                        if (totalSettled == totalSelections)
                         {
-                            bet.IsResettled = true;
-                            bet.Reason = reason;
+                            bet.WinLoss = totalPayout == 0 ? -bet.TrueStake : totalPayout - stake;
+                            bet.BetStatusId = (int)betStatus;
+                            bet.BetStatusName = betStatus.ToString();
+                            bet.Payout = totalPayout;
+                            bet.SettlementDate = settledDate;
+                            bet.SettlementDateOffset = settledDate.AddHours(-4);
+                            bet.TaxedStake = betStatus == BetStatus.Cancelled ? 0 : taxedStake;
+                            bet.TaxedWinnings = taxedWinnings;
+                            
+                            // get percentage of real and bonus payout.
+                            var stakeRealPayoutPercentage = bet.StakeReal / bet.TrueStake;
+                            var stakeBonusPayoutPercentage = bet.StakeBonus / bet.TrueStake;
+
+                            bet.StakeRealPayout = payout * stakeRealPayoutPercentage;
+                            bet.StakeBonusPayout = payout * stakeBonusPayoutPercentage;
+
+                            if (isManualSettle)
+                            {
+                                bet.IsResettled = true;
+                                bet.Reason = reason;
+                            }
                         }
-                    }
 
-                    //to update parlay bonus = 0 if one of the selection is already settled to status other than Won and is no longer eligible for parlay bonus
-                    bet.ParlayBonus = parlayBonus;
-                    bet.ParlayBonusWinnings = parlayBonusWinnings;
+                        //to update parlay bonus = 0 if one of the selection is already settled to status other than Won and is no longer eligible for parlay bonus
+                        bet.ParlayBonus = parlayBonus;
+                        bet.ParlayBonusWinnings = parlayBonusWinnings;
 
-                    var betEntity = context.Bet.Update(bet).Entity;
+                        var betEntity = context.Bet.Update(bet).Entity;
 
-                    context.BetAudit.Add(new BetAudit
-                    {
-                        BetId = betEntity.BetId,
-                        UserId = betEntity.UserId,
-                        Stake = betEntity.Stake,
-                        TrueStake = betEntity.TrueStake,
-                        Odds = betEntity.Odds,
-                        OddsTypeId = betEntity.OddsTypeId,
-                        OddsTypeName = betEntity.OddsTypeName,
-                        Payout = betEntity.Payout,
-                        WinLoss = betEntity.WinLoss,
-                        BetStatusId = betEntity.BetStatusId,
-                        BetStatusName = betEntity.BetStatusName,
-                        Reason = betEntity.Reason,
-                        CurrencyCode = betEntity.CurrencyCode,
-                        LanguageCode = betEntity.LanguageCode,
-                        ExchangeRate = betEntity.ExchangeRate,
-                        IPAddress = betEntity.IPAddress,
-                        Channel = betEntity.Channel,
-                        ClientId = betEntity.ClientId,
-                        ClientIdRef = betEntity.ClientIdRef,
-                        ClientCode = betEntity.ClientCode,
-                        ClientName = betEntity.ClientName,
-                        LimitId = betEntity.LimitId,
-                        Endpoint = betEntity.Endpoint,
-                        OperatorToken = betEntity.OperatorToken,
-                        CompanyShare = betEntity.CompanyShare,
-                        IsResettled = betEntity.IsResettled,
-                        IsCashout = betEntity.IsCashout,
-                        BetDate = betEntity.BetDate,
-                        BetDateOffset = betEntity.BetDateOffset,
-                        SettlementDate = betEntity.SettlementDate,
-                        SettlementDateOffset = betEntity.SettlementDateOffset,
-                        StakeTax = betEntity.StakeTax,
-                        WinningsTax = betEntity.WinningsTax,
-                        TaxedStake = betEntity.TaxedStake,
-                        TaxedWinnings = betEntity.TaxedWinnings,
-                        ParlayBonus = betEntity.ParlayBonus,
-                        ParlayBonusWinnings = betEntity.ParlayBonusWinnings,
-                        StakeReal = betEntity.StakeReal,
-                        StakeBonus = betEntity.StakeBonus,
-                        StakeRealPayout = betEntity.StakeRealPayout,
-                        StakeBonusPayout = betEntity.StakeBonusPayout,
-                        IsFreeBet = betEntity.IsFreeBet
-                    });
+                        context.BetAudit.Add(new BetAudit
+                        {
+                            BetId = betEntity.BetId,
+                            UserId = betEntity.UserId,
+                            Stake = betEntity.Stake,
+                            TrueStake = betEntity.TrueStake,
+                            Odds = betEntity.Odds,
+                            OddsTypeId = betEntity.OddsTypeId,
+                            OddsTypeName = betEntity.OddsTypeName,
+                            Payout = betEntity.Payout,
+                            WinLoss = betEntity.WinLoss,
+                            BetStatusId = betEntity.BetStatusId,
+                            BetStatusName = betEntity.BetStatusName,
+                            Reason = betEntity.Reason,
+                            CurrencyCode = betEntity.CurrencyCode,
+                            LanguageCode = betEntity.LanguageCode,
+                            ExchangeRate = betEntity.ExchangeRate,
+                            IPAddress = betEntity.IPAddress,
+                            Channel = betEntity.Channel,
+                            ClientId = betEntity.ClientId,
+                            ClientIdRef = betEntity.ClientIdRef,
+                            ClientCode = betEntity.ClientCode,
+                            ClientName = betEntity.ClientName,
+                            LimitId = betEntity.LimitId,
+                            Endpoint = betEntity.Endpoint,
+                            OperatorToken = betEntity.OperatorToken,
+                            CompanyShare = betEntity.CompanyShare,
+                            IsResettled = betEntity.IsResettled,
+                            IsCashout = betEntity.IsCashout,
+                            BetDate = betEntity.BetDate,
+                            BetDateOffset = betEntity.BetDateOffset,
+                            SettlementDate = betEntity.SettlementDate,
+                            SettlementDateOffset = betEntity.SettlementDateOffset,
+                            StakeTax = betEntity.StakeTax,
+                            WinningsTax = betEntity.WinningsTax,
+                            TaxedStake = betEntity.TaxedStake,
+                            TaxedWinnings = betEntity.TaxedWinnings,
+                            ParlayBonus = betEntity.ParlayBonus,
+                            ParlayBonusWinnings = betEntity.ParlayBonusWinnings,
+                            StakeReal = betEntity.StakeReal,
+                            StakeBonus = betEntity.StakeBonus,
+                            StakeRealPayout = betEntity.StakeRealPayout,
+                            StakeBonusPayout = betEntity.StakeBonusPayout,
+                            IsFreeBet = betEntity.IsFreeBet
+                        });
 
 
-                    if (totalSettled == totalSelections)
-                    {
-                        isPublish = true;
-                        payload.Bet = betEntity;
-                        payload.BetSelections = selections;
-                        payload.NonTaxedPayout = nonTaxedPayout;
+                        if (totalSettled == totalSelections)
+                        {
+                            isPublish = true;
+                            payload.Bet = betEntity;
+                            payload.BetSelections = selections;
+                            payload.NonTaxedPayout = nonTaxedPayout;
+                        }
                     }
                 }
             }

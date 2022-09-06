@@ -1009,7 +1009,7 @@ namespace Platform.Sportsbook.API.Repository
 
             return new Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>(newFixtures, newMarkets, newSelections, bettingStatus.Result);
         }
-        private async Task<Tuple<List<Fixture>, List<Market>, List<Selection>, List<SelectionExtension>, BettingStatus, List<Selection>>> GetBetFixtures2(BetFixtureRequestDTO request)
+        private async Task<Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>>> GetBetFixtures2(BetFixtureRequestDTO request)
         {
             var selectionIds = request.Selections.Select(s => s.SelectionId).ToList();
             var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
@@ -1017,7 +1017,6 @@ namespace Platform.Sportsbook.API.Repository
 
             var newFixtures = new List<Fixture>();
             var newMarkets = new List<Market>();
-            var newSelections = new List<Selection>();
             var newSelectionExtension = new List<SelectionExtension>();
             var newAllSelections = new List<Selection>();
             var newBettingStatus = new BettingStatus();
@@ -1042,7 +1041,41 @@ namespace Platform.Sportsbook.API.Repository
 
                 newFixtures = fixtures.Result;
                 newMarkets = markets.Result;
-                newSelections = selections;
+                newSelectionExtension = selections.Select(s => new SelectionExtension()
+                {
+                    SeId = s.SeId,
+                    SpId = s.SpId,
+                    SegId = s.SegId,
+                    LeId = s.LeId,
+                    FiId = s.FiId,
+                    MaId = s.MaId,
+                    MaTeId = s.MaTeId,
+                    SeTeId = s.SeTeId,
+                    SeNa = s.SeNa,
+                    Od = s.Od,
+                    OddsRef = s.Od,
+                    IsAc = s.IsAc,
+                    SeSoOr = s.SeSoOr,
+                    SeStId = s.SeStId,
+                    SeStNa = s.SeStNa,
+                    SeSp = s.SeSp,
+                    FiStDa = s.FiStDa,
+                    FiStId = s.FiStId,
+                    MaStId = s.MaStId,
+                    CoId = s.CoId,
+                    Pr = s.Pr,
+                    WoPr = s.WoPr,
+                    LoPr = s.LoPr,
+                    VoPr = s.VoPr,
+                    HaWoPr = s.HaWoPr,
+                    HaLoPr = s.HaLoPr,
+                    DeHeFa = s.DeHeFa,
+                    ClBoOd = s.ClBoOd,
+                    SeNaTr = s.SeNaTr,
+                    ClBoSeNa = s.ClBoSeNa,
+                    ClBoSeNaTr = s.ClBoSeNaTr,
+                }).ToList();
+
                 newAllSelections = allSelections.Result;
                 newBettingStatus = bettingStatus.Result;
             }
@@ -1052,7 +1085,7 @@ namespace Platform.Sportsbook.API.Repository
                 newFixtures = newFixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
 
                 var finalMarkets = new List<Market>();
-                var finalSelections = new List<Selection>();
+                var finalSelections = new List<SelectionExtension>();
 
                 foreach (var fixture in newFixtures)
                 {
@@ -1122,13 +1155,11 @@ namespace Platform.Sportsbook.API.Repository
                                 ClBoSeNaTr = selection.ClBoSeNaTr,
                             };
                             if (fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright)
-                                selection.Od = Convert.ToDecimal(GetClientBoostedOdds(selection.ClBoOd, request.ClientCode, request.IsBoosted, selection.Od.ToString("0.00")));
+                                tempSelectionExtension.Od = Convert.ToDecimal(GetClientBoostedOdds(selection.ClBoOd, request.ClientCode, request.IsBoosted, selection.Od.ToString("0.00")));
                             else
-                                selection.Od = Convert.ToDecimal(GetClientBoostedOdds(selection.ClBoOd, request.ClientCode, request.IsBoosted, clientOdds.Where(c => c.SelectionId == selection.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString("0.00")));
+                                tempSelectionExtension.Od = Convert.ToDecimal(GetClientBoostedOdds(selection.ClBoOd, request.ClientCode, request.IsBoosted, clientOdds.Where(c => c.SelectionId == selection.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString("0.00")));
 
-                            tempSelectionExtension.Od = selection.Od;
-                            newSelectionExtension.Add(tempSelectionExtension);
-                            finalSelections.Add(selection);
+                            finalSelections.Add(tempSelectionExtension);
 
                         }
                     }
@@ -1138,10 +1169,10 @@ namespace Platform.Sportsbook.API.Repository
                     newMarkets = finalMarkets;
 
                 if (finalSelections.Count > 0)
-                    newSelections = finalSelections;
+                    newSelectionExtension = finalSelections;
             }
 
-            return new Tuple<List<Fixture>, List<Market>, List<Selection>, List<SelectionExtension>, BettingStatus, List<Selection>>(newFixtures, newMarkets, newSelections, newSelectionExtension, newBettingStatus, newAllSelections);
+            return new Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>>(newFixtures, newMarkets, newSelectionExtension, newBettingStatus, newAllSelections);
         }
 
         public async Task<BaseResponseDTO<BetSelectionProbabilityResponseDTO>> GetBetSelectionProbabilities(BetSelectionProbabilityRequestDTO request)
@@ -1262,11 +1293,10 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var selection in request.Selections)
             {
-                var initialSelection = result.Item3.Where(c => c.SeId == selection.SelectionId).FirstOrDefault();
-                var initialSelectionExtension = result.Item4.Where(c => c.SeId == selection.SelectionId).FirstOrDefault();
-                var initialFixture = result.Item1.Where(c => c.FiId == initialSelection.FiId).FirstOrDefault();
-                var initialMarket = result.Item2.Where(c => c.MaId == initialSelection.MaId).FirstOrDefault();
-                var selectionCount = result.Item6.Where(c => c.MaId == initialMarket.MaId).Count();
+                var initialSelectionExtension = result.Item3.Where(c => c.SeId == selection.SelectionId).FirstOrDefault();
+                var initialFixture = result.Item1.Where(c => c.FiId == initialSelectionExtension.FiId).FirstOrDefault();
+                var initialMarket = result.Item2.Where(c => c.MaId == initialSelectionExtension.MaId).FirstOrDefault();
+                var selectionCount = result.Item5.Where(c => c.MaId == initialMarket.MaId).Count();
 
                 raw.Add(new BetFixtureSelectionResponseDTO
                 {
@@ -1283,23 +1313,23 @@ namespace Platform.Sportsbook.API.Repository
                     MarketId = initialMarket.MaId,
                     MarketName = initialMarket.MaNa,
                     Line = initialMarket.Li,
-                    SelectionTemplateId = initialSelection.SeTeId,
-                    SelectionId = initialSelection.SeId,
-                    SelectionName = initialSelection.SeNa,
-                    Odds = initialSelection.Od,
+                    SelectionTemplateId = initialSelectionExtension.SeTeId,
+                    SelectionId = initialSelectionExtension.SeId,
+                    SelectionName = initialSelectionExtension.SeNa,
+                    Odds = initialSelectionExtension.Od,
                     OddsRef = initialSelectionExtension.OddsRef,
-                    FixtureStatus = (FixtureStatus)initialSelection.FiStId,
-                    FixtureStartDate = initialSelection.FiStDa,
+                    FixtureStatus = (FixtureStatus)initialSelectionExtension.FiStId,
+                    FixtureStartDate = initialSelectionExtension.FiStDa,
                     Score = initialFixture.Sc,
                     FixtureSpecifier = initialFixture.FiSp,
-                    SelectionSpecifier = initialSelection.SeSp,
-                    CorrelationId = initialSelection.CoId,
-                    Probability = initialSelection.Pr,
-                    WonProbability = initialSelection.WoPr,
-                    LostProbability = initialSelection.LoPr,
-                    VoidProbability = initialSelection.VoPr,
-                    HalfWonProbability = initialSelection.HaWoPr,
-                    HalfLostProbability = initialSelection.HaLoPr,
+                    SelectionSpecifier = initialSelectionExtension.SeSp,
+                    CorrelationId = initialSelectionExtension.CoId,
+                    Probability = initialSelectionExtension.Pr,
+                    WonProbability = initialSelectionExtension.WoPr,
+                    LostProbability = initialSelectionExtension.LoPr,
+                    VoidProbability = initialSelectionExtension.VoPr,
+                    HalfWonProbability = initialSelectionExtension.HaWoPr,
+                    HalfLostProbability = initialSelectionExtension.HaLoPr,
                     SelectionCount = selectionCount,
                     BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, selection, result, request.ClientCode, request.IsBoosted)
                 });
@@ -1315,6 +1345,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+
         public async Task<BaseResponseDTO<TWResponseDTO>> GetUserFavoritesAll(UserFavoriteRequestDTO request)
         {
             var result = new List<FixtureDTO>();
@@ -5255,13 +5286,13 @@ namespace Platform.Sportsbook.API.Repository
             return result.OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
         }
 
-        private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<Selection>, List<SelectionExtension>, BettingStatus, List<Selection>> result, string clientCode, bool isBoosted)
+        private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>> result, string clientCode, bool isBoosted)
         {
             var selection = result.Item3.Where(c => c.SeId == current.SelectionId).FirstOrDefault();
             var fixture = result.Item1.Where(c => c.FiId == selection.FiId).FirstOrDefault();
             var market = result.Item2.Where(c => c.MaId == selection.MaId).FirstOrDefault();
 
-            var bettingStatus = result.Item5;
+            var bettingStatus = result.Item4;
 
             //if (isBoosted)
             //{

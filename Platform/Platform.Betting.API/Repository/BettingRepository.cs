@@ -2579,7 +2579,7 @@ namespace Platform.Betting.API.Repository
             if (isBoosted)
                 return BetType.PriceBoost;
             if (isBetBuilder)
-                return BetType.PriceBoost;
+                return BetType.BetBuilder;
 
             return selections.Count > 1 ? BetType.Parlay : BetType.Single;
 

@@ -37,9 +37,13 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public List<SelectionTranslationMDB> SeNaTr { get; set; }
         public List<ClientBoostedSelectionNameMDB> ClBoSeNa { get; set; }
         public List<ClientBoostedSelectionNameTranslationMDB> ClBoSeNaTr { get; set; }
-        [BsonIgnore]
+    }
+
+    public class SelectionExtension : Selection
+    {
         public decimal OdRef { get; set; }
     }
+
     public class SelectionFilter
     {
         [BsonId]

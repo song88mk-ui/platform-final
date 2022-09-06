@@ -5661,11 +5661,11 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
-        private async Task<Tuple<decimal,StatusCode>> GetBetBuilderOddsStatus(OddsChangeType oddsChangeType, List<BetFixtureSelectionRequestDTO> selections, Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus, List<Selection>> result, decimal currentTotalOdds)
+        private async Task<Tuple<decimal,StatusCode>> GetBetBuilderOddsStatus(OddsChangeType oddsChangeType, List<BetFixtureSelectionRequestDTO> selections, Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>> result, decimal currentTotalOdds)
         {
 
             if (result.Item1.Select(f => f.FiId).Distinct().Count() > 1)
-                return new Tuple<decimal, StatusCode>(currentTotalOdds, StatusCode.Market_Is_Inactive);
+                return new Tuple<decimal, StatusCode>(currentTotalOdds, StatusCode.Market_Is_Not_Offered);
 
             var oddsResult = await GetBetBuilderSelectionsOdds(new BetBuilderSelectionsOddsRequestDTO
             {
@@ -5681,19 +5681,19 @@ namespace Platform.Sportsbook.API.Repository
             });
 
             if (oddsResult.StatusCode != StatusCode.Success)
-                return new Tuple<decimal, StatusCode>(oddsResult.Result.TotalOdds,  StatusCode.Market_Is_Inactive);
+                return new Tuple<decimal, StatusCode>(oddsResult.Result.TotalOdds,  StatusCode.Market_Is_Not_Offered);
 
             switch (oddsChangeType)
             {
                 case OddsChangeType.None:
                     if (oddsResult.Result.TotalOdds != currentTotalOdds)
-                        return new Tuple<decimal, StatusCode>(oddsResult.Result.TotalOdds, StatusCode.Odds_Is_Stale);
+                        return new Tuple<decimal, StatusCode>(oddsResult.Result.TotalOdds, StatusCode.Odds_Or_Lines_Have_Changed);
                     break;
                 case OddsChangeType.Any:
                     break;
                 case OddsChangeType.Higher:
                     if (oddsResult.Result.TotalOdds > currentTotalOdds)
-                        return new Tuple<decimal, StatusCode>(oddsResult.Result.TotalOdds, StatusCode.Odds_Is_Stale);
+                        return new Tuple<decimal, StatusCode>(oddsResult.Result.TotalOdds, StatusCode.Odds_Or_Lines_Have_Changed);
                     break;
                 default:
                     break;

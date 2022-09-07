@@ -1382,7 +1382,7 @@ namespace Platform.Betting.API.Repository
                 var cashOut = cashOutList.Result.Where(c => c.BetId == bet.BetId).FirstOrDefault();
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
                 var isBoosted = betBoosted.Any(b => b == bet.BetId);
-                var isBetBuilder = false; //TODO: fetch isbetBuilder flag
+                var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
                 var hasVirtualSport = filteredSelections.Any(s => s.SportId > 1000) ? true : false;
                 var wonOrRunningSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running).Count();

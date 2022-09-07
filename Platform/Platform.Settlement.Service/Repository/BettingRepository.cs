@@ -109,12 +109,12 @@ namespace Platform.Settlement.Service.Repository
             var minimumOdds = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate
                 && c.CurrencyCode == currencyCode).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
 
-            if(minimumOdds == null)
+            if (minimumOdds == null)
                 return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
 
             int wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won && c.Odds >= minimumOdds.ParlayBonusMinOdds).Count();
-            
-            if(wonSelectionCount >= 3)
+
+            if (wonSelectionCount >= 3)
             {
                 var result = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate
                 && c.CurrencyCode == currencyCode && wonSelectionCount == c.SelectionCount).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
@@ -125,7 +125,7 @@ namespace Platform.Settlement.Service.Repository
                 {
                     parlayBonusWinnings = payout * result.ParlayBonus;
 
-                    if(parlayBonusWinnings > result.ParlayBonusMaxWinnings && result.ParlayBonusMaxWinnings > 0)
+                    if (parlayBonusWinnings > result.ParlayBonusMaxWinnings && result.ParlayBonusMaxWinnings > 0)
                     {
                         parlayBonusWinnings = 0;
                         return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
@@ -183,20 +183,21 @@ namespace Platform.Settlement.Service.Repository
             var halfLost = betSelections.Where(c => c == BetStatus.HalfLost).Count();
             var voidd = betSelections.Where(c => c == BetStatus.Void).Count();
             var cancelled = betSelections.Where(c => c == BetStatus.Cancelled).Count();
+            var running = betSelections.Where(c => c == BetStatus.Running).Count();
 
             decimal winLoss = payout - stake;
 
             if (betSelections.Contains(BetStatus.Lost))
                 return BetStatus.Lost;
 
+            if (winLoss == 0 && cancelled >= 1)
+                return BetStatus.Cancelled;
+
             if (running > 0 && lost == 0 && cancelled == 0)
                 return BetStatus.Running;
 
             if (winLoss == 0 && voidd >= 1)
                 return BetStatus.Void;
-
-            if (winLoss == 0 && cancelled >= 1)
-                return BetStatus.Cancelled;
 
             if (halfWon == 1 && betSelections.Count == 1)
                 return BetStatus.HalfWon;
@@ -218,6 +219,28 @@ namespace Platform.Settlement.Service.Repository
 
             return result;
         }
+
+        private BetStatus GetInitialBetStatus(List<BetStatus> statuses, BetStatus status)
+        {
+            var betSelections = statuses;
+            betSelections.Add(status);
+
+            var lost = betSelections.Where(c => c == BetStatus.Lost).Count();
+            var cancelled = betSelections.Where(c => c == BetStatus.Cancelled).Count();
+            var running = betSelections.Where(c => c == BetStatus.Running).Count();
+
+            if (lost >= 1)
+                return BetStatus.Lost;
+
+            if (cancelled >= 1)
+                return BetStatus.Cancelled;
+
+            if (running > 0 && lost == 0 && cancelled == 0)
+                return BetStatus.Running;
+
+            return BetStatus.Lost;
+        }
+
         public void ProcesssBetSettlement(OnUOFBetSettlement message, IMessageBroker messageBroker, string correlationId)
         {
             var betSelections = GetBetSelections(message.SelectionId);
@@ -538,7 +561,7 @@ namespace Platform.Settlement.Service.Repository
                     bet.ParlayBonusWinnings = 0;
                     bet.StakeRealPayout = 0;
                     bet.StakeBonusPayout = 0;
-                    
+
                     if (isManualSettle)
                     {
                         bet.IsResettled = true;
@@ -778,7 +801,7 @@ namespace Platform.Settlement.Service.Repository
 
             filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;
             filteredSelection.BetSelectionStatusName = message.SelectionStatus.ToString();
-            if(!string.IsNullOrEmpty(message.SettlementScore))
+            if (!string.IsNullOrEmpty(message.SettlementScore))
                 filteredSelection.SettlementScore = message.SettlementScore;
             filteredSelection.IsSettled = true;
             filteredSelection.IsResettled = true;
@@ -846,7 +869,7 @@ namespace Platform.Settlement.Service.Repository
                     var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), bet.TrueStake);
 
                     var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
-                    
+
                     payload.NonTaxedPayout = payout;
 
                     bet.WinLoss = payout == 0 ? -bet.Stake : payout - bet.Stake;
@@ -934,10 +957,13 @@ namespace Platform.Settlement.Service.Repository
                 var totalSettled = selections.Where(c => c.SelectionId != message.SelectionId && c.IsSettled == true).Count();
                 var totalSelections = selections.Where(c => c.SelectionId != message.SelectionId).Count();
 
-                if (totalSettled == totalSelections)
+                var initialBetStatus = GetInitialBetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus);
+
+                if (bet != null)
                 {
-                    if (bet != null)
+                    if (totalSettled == totalSelections)
                     {
+
                         var finalStake = bet.TrueStake - bet.StakeBonus;
 
                         var taxedStake = bet.IsFreeBet == false ? finalStake - (finalStake / (1 + bet.StakeTax)) : 0;
@@ -1067,6 +1093,92 @@ namespace Platform.Settlement.Service.Repository
                         payload.Bet = betEntity;
                         payload.BetSelections = selections;
                         payload.NonTaxedPayout = nonTaxedPayout;
+                    }
+                    else if ((int)initialBetStatus != bet.BetStatusId && initialBetStatus == BetStatus.Running) //Resettled to Running
+                    {
+                        var taxedStake = 0m;
+                        var stake = bet.TrueStake - taxedStake;
+
+                        var payout = stake * bet.Odds;
+
+                        var parlayBonusWinnings = 0m;
+                        var parlayBonus = 0m;
+
+                        var hasVirtualSport = selections.Any(s => s.SportId > 1000) ? true : false;
+                        var wonSelectionCount = selections.Where(c => c.SelectionId != betSelection.SelectionId && (c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running)).Count() + 1; // +1 for Running status
+                        var lostSelectionCount = selections.Where(c => c.SelectionId != betSelection.SelectionId && c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
+
+                        if (hasVirtualSport == false && wonSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
+                        {
+                            var parlayConfig = GetParlayBetConfig(context, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, selections, payout, ref parlayBonusWinnings);
+
+                            if (parlayConfig.Item1 == true)
+                                parlayBonus = parlayConfig.Item2.ParlayBonus;
+                        }
+
+                        bet.WinLoss = 0m;
+                        bet.BetStatusId = (int)initialBetStatus;
+                        bet.BetStatusName = initialBetStatus.ToString();
+                        bet.Payout = payout;
+                        bet.SettlementDate = settledDate;
+                        bet.SettlementDateOffset = settledDate.AddHours(-4);
+                        bet.TaxedStake = 0m;
+                        bet.TaxedWinnings = 0m;
+                        bet.ParlayBonus = parlayBonus;
+                        bet.ParlayBonusWinnings = 0m;
+                        bet.StakeRealPayout = 0m;
+                        bet.StakeBonusPayout = 0m;
+
+                        var betEntity = context.Bet.Update(bet).Entity;
+
+                        context.BetAudit.Add(new BetAudit
+                        {
+                            BetId = betEntity.BetId,
+                            UserId = betEntity.UserId,
+                            Stake = betEntity.Stake,
+                            TrueStake = betEntity.TrueStake,
+                            Odds = betEntity.Odds,
+                            OddsTypeId = betEntity.OddsTypeId,
+                            OddsTypeName = betEntity.OddsTypeName,
+                            Payout = betEntity.Payout,
+                            WinLoss = betEntity.WinLoss,
+                            BetStatusId = betEntity.BetStatusId,
+                            BetStatusName = betEntity.BetStatusName,
+                            Reason = betEntity.Reason,
+                            CurrencyCode = betEntity.CurrencyCode,
+                            LanguageCode = betEntity.LanguageCode,
+                            ExchangeRate = betEntity.ExchangeRate,
+                            IPAddress = betEntity.IPAddress,
+                            Channel = betEntity.Channel,
+                            ClientId = betEntity.ClientId,
+                            ClientIdRef = betEntity.ClientIdRef,
+                            ClientCode = betEntity.ClientCode,
+                            ClientName = betEntity.ClientName,
+                            LimitId = betEntity.LimitId,
+                            Endpoint = betEntity.Endpoint,
+                            OperatorToken = betEntity.OperatorToken,
+                            CompanyShare = betEntity.CompanyShare,
+                            IsResettled = betEntity.IsResettled,
+                            IsCashout = betEntity.IsCashout,
+                            BetDate = betEntity.BetDate,
+                            BetDateOffset = betEntity.BetDateOffset,
+                            SettlementDate = betEntity.SettlementDate,
+                            SettlementDateOffset = betEntity.SettlementDateOffset,
+                            StakeTax = betEntity.StakeTax,
+                            WinningsTax = betEntity.WinningsTax,
+                            TaxedStake = betEntity.TaxedStake,
+                            TaxedWinnings = betEntity.TaxedWinnings,
+                            ParlayBonus = betEntity.ParlayBonus,
+                            ParlayBonusWinnings = betEntity.ParlayBonusWinnings,
+                            StakeReal = betEntity.StakeReal,
+                            StakeBonus = betEntity.StakeBonus,
+                            StakeRealPayout = betEntity.StakeRealPayout,
+                            StakeBonusPayout = betEntity.StakeBonusPayout,
+                            IsFreeBet = betEntity.IsFreeBet,
+                            BetTypeId = betEntity.BetTypeId,
+                            BetTypeName = betEntity.BetTypeName,
+                            OddsRef = betEntity.OddsRef
+                        });
                     }
                 }
             }

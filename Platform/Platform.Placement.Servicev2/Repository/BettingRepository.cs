@@ -105,7 +105,8 @@ namespace Platform.Placement.Servicev2.Repository
                                     StakeRealPayout = betEntity.StakeRealPayout,
                                     StakeBonusPayout = betEntity.StakeBonusPayout,
                                     IsFreeBet = betEntity.IsFreeBet,
-                                    BetType = betEntity.BetType,
+                                    BetTypeId = betEntity.BetTypeId,
+                                    BetTypeName = betEntity.BetTypeName,
                                     OddsRef = betEntity.OddsRef
                                 });
 
@@ -285,7 +286,8 @@ namespace Platform.Placement.Servicev2.Repository
                                     StakeRealPayout = betEntity.StakeRealPayout,
                                     StakeBonusPayout = betEntity.StakeBonusPayout,
                                     IsFreeBet = betEntity.IsFreeBet,
-                                    BetType = betEntity.BetType,
+                                    BetTypeId = betEntity.BetTypeId,
+                                    BetTypeName = betEntity.BetTypeName,
                                     OddsRef = betEntity.OddsRef
                                 });
 
@@ -481,7 +483,8 @@ namespace Platform.Placement.Servicev2.Repository
                                 WinningsTax = betEntity.WinningsTax,
                                 TaxedStake = betEntity.TaxedStake,
                                 TaxedWinnings = betEntity.TaxedWinnings,
-                                BetType = betEntity.BetType,
+                                BetTypeId = betEntity.BetTypeId,
+                                BetTypeName = betEntity.BetTypeName,
                                 OddsRef = betEntity.OddsRef
                             });
 

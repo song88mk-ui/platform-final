@@ -592,7 +592,8 @@ namespace Platform.Settlement.Service.Repository
                         StakeRealPayout = betEntity.StakeRealPayout,
                         StakeBonusPayout = betEntity.StakeBonusPayout,
                         IsFreeBet = betEntity.IsFreeBet,
-                        BetType = betEntity.BetType,
+                        BetTypeId = betEntity.BetTypeId,
+                        BetTypeName = betEntity.BetTypeName,
                         OddsRef = betEntity.OddsRef
                     });
 
@@ -732,7 +733,8 @@ namespace Platform.Settlement.Service.Repository
                             StakeRealPayout = betEntity.StakeRealPayout,
                             StakeBonusPayout = betEntity.StakeBonusPayout,
                             IsFreeBet = betEntity.IsFreeBet,
-                            BetType = betEntity.BetType,
+                            BetTypeId = betEntity.BetTypeId,
+                            BetTypeName = betEntity.BetTypeName,
                             OddsRef = betEntity.OddsRef
                         });
 
@@ -918,7 +920,8 @@ namespace Platform.Settlement.Service.Repository
                         StakeRealPayout = betEntity.StakeRealPayout,
                         StakeBonusPayout = betEntity.StakeBonusPayout,
                         IsFreeBet = betEntity.IsFreeBet,
-                        BetType = betEntity.BetType,
+                        BetTypeId = betEntity.BetTypeId,
+                        BetTypeName = betEntity.BetTypeName,
                         OddsRef = betEntity.OddsRef
                     });
 
@@ -1056,7 +1059,8 @@ namespace Platform.Settlement.Service.Repository
                             StakeRealPayout = betEntity.StakeRealPayout,
                             StakeBonusPayout = betEntity.StakeBonusPayout,
                             IsFreeBet = betEntity.IsFreeBet,
-                            BetType = betEntity.BetType,
+                            BetTypeId = betEntity.BetTypeId,
+                            BetTypeName = betEntity.BetTypeName,
                             OddsRef = betEntity.OddsRef
                         });
 
@@ -1196,7 +1200,8 @@ namespace Platform.Settlement.Service.Repository
                                 StakeRealPayout = betEntity.StakeRealPayout,
                                 StakeBonusPayout = betEntity.StakeBonusPayout,
                                 IsFreeBet = betEntity.IsFreeBet,
-                                BetType = betEntity.BetType,
+                                BetTypeId = betEntity.BetTypeId,
+                                BetTypeName = betEntity.BetTypeName,
                                 OddsRef = betEntity.OddsRef
                             });
 

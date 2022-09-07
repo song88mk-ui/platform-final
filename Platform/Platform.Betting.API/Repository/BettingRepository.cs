@@ -319,7 +319,8 @@ namespace Platform.Betting.API.Repository
                         StakeRealPayout = 0,
                         StakeBonusPayout = 0,
                         IsFreeBet = false,
-                        BetType = betType.ToString(),
+                        BetTypeId = (int)betType,
+                        BetTypeName = betType.ToString(),
                         OddsRef = totalOdds
                     }).Entity;
 
@@ -371,7 +372,8 @@ namespace Platform.Betting.API.Repository
                         StakeRealPayout = betEntity.StakeRealPayout,
                         StakeBonusPayout = betEntity.StakeBonusPayout,
                         IsFreeBet = betEntity.IsFreeBet,
-                        BetType = betType.ToString(),
+                        BetTypeId = betEntity.BetTypeId,
+                        BetTypeName = betEntity.BetTypeName,
                         OddsRef = totalOdds
                     });
 
@@ -843,7 +845,8 @@ namespace Platform.Betting.API.Repository
                         StakeRealPayout = 0,
                         StakeBonusPayout = 0,
                         IsFreeBet = false,
-                        BetType = betType.ToString(),
+                        BetTypeId = 0,
+                        BetTypeName = betType.ToString(),
                         OddsRef = totalOdds
                     }).Entity;
 
@@ -895,7 +898,8 @@ namespace Platform.Betting.API.Repository
                         StakeRealPayout = betEntity.StakeRealPayout,
                         StakeBonusPayout = betEntity.StakeBonusPayout,
                         IsFreeBet = betEntity.IsFreeBet,
-                        BetType = betType.ToString(),
+                        BetTypeId = betEntity.BetTypeId,
+                        BetTypeName = betEntity.BetTypeName,
                         OddsRef = totalOdds
                     });
 

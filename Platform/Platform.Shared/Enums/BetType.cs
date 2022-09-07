@@ -2,9 +2,9 @@
 {
     public enum BetType
     {
-        Single,
-        Parlay,
-        PriceBoost,
-        BetBuilder
+        Single = 0,
+        Parlay = 1,
+        PriceBoost = 2,
+        BetBuilder = 3
     }
 }

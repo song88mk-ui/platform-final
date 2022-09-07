@@ -38,6 +38,12 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public List<ClientBoostedSelectionNameMDB> ClBoSeNa { get; set; }
         public List<ClientBoostedSelectionNameTranslationMDB> ClBoSeNaTr { get; set; }
     }
+
+    public class SelectionExtension : Selection
+    {
+        public decimal OddsRef { get; set; }
+    }
+
     public class SelectionFilter
     {
         [BsonId]

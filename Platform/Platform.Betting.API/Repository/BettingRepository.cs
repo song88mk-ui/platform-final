@@ -2566,25 +2566,17 @@ namespace Platform.Betting.API.Repository
 
         private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(BettingContext context, Guid clientId, string currencyCode, DateTime betDate, List<BetSelection> selections)
         {
-            var mKey = $"pbc:{clientId.ToString().ToUpper()}:{currencyCode}:{betDate.ToString("yyyy-MM-dd HH:mm:ss")}";
-
-            var parlayBonusListCache = _memCache.GetCache<List<ParlayBonusAudit>>(mKey);
-
-            if (parlayBonusListCache == null)
-            {
-                parlayBonusListCache = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate
+            var parlayBonusList = GetParlayBonusAudit(context).Where(c => c.ClientId == clientId && c.TimeStamp < betDate
                     && c.CurrencyCode == currencyCode).OrderByDescending(o => o.TimeStamp).ToList();
-                _memCache.AddOrUpdateCache(mKey, parlayBonusListCache, DateTimeOffset.UtcNow.AddHours(24));
-            }
-
-            if (parlayBonusListCache == null || !parlayBonusListCache.Any())
+            
+            if (parlayBonusList == null || !parlayBonusList.Any())
                 return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
 
-            int wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won && c.Odds >= parlayBonusListCache.FirstOrDefault().ParlayBonusMinOdds).Count();
+            int wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won && c.Odds >= parlayBonusList.FirstOrDefault().ParlayBonusMinOdds).Count();
 
             if (wonSelectionCount >= 3)
             {
-                var result = parlayBonusListCache.Where(c => wonSelectionCount == c.SelectionCount).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
+                var result = parlayBonusList.Where(c => wonSelectionCount == c.SelectionCount).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
 
                 if (result == null)
                     return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
@@ -2594,6 +2586,11 @@ namespace Platform.Betting.API.Repository
             else
                 return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
 
+        }
+
+        private List<ParlayBonusAudit> GetParlayBonusAudit(BettingContext context)
+        {
+            return _memCache.GetCache($"pba", () => context.ParlayBonusAudit.ToList(), 1);
         }
 
         private decimal RoundUpDecimalValue(decimal value)

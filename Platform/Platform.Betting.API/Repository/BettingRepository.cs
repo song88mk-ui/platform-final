@@ -275,7 +275,7 @@ namespace Platform.Betting.API.Repository
                             winningsTax = 0m;
                     }
 
-                    var betType = GetBetType(request.Selections, request.IsBoosted, false);
+                    var betType = GetBetType(request.Selections, request.IsBoosted, request.IsBetBuilder);
 
                     var betEntity = _bettingContext.Bet.Update(new Bet
                     {
@@ -814,7 +814,7 @@ namespace Platform.Betting.API.Repository
                             winningsTax = 0m;
                     }
 
-                    var betType = GetBetType(request.Selections, request.IsBoosted, false);
+                    var betType = GetBetType(request.Selections, request.IsBoosted, request.IsBetBuilder);
 
                     var betEntity = _bettingContext.Bet.Update(new Bet
                     {

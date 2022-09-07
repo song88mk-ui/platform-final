@@ -553,7 +553,7 @@ namespace Platform.Settlement.Service.Repository
 
                 if (bet != null)
                 {
-                    var isBetBuilder = bet.BetType == BetType.BetBuilder.ToString() ? true : false;
+                    var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
                     var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), bet.TrueStake, isBetBuilder, bet.Odds);
                     var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
@@ -651,7 +651,7 @@ namespace Platform.Settlement.Service.Repository
 
                     if (bet != null)
                     {
-                    	var isBetBuilder = bet.BetType == BetType.BetBuilder.ToString() ? true : false;
+                        var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
                         var finalStake = bet.TrueStake - bet.StakeBonus;
 
@@ -884,7 +884,7 @@ namespace Platform.Settlement.Service.Repository
             {
                 if (bet != null)
                 {
-                    var isBetBuilder = bet.BetType == BetType.BetBuilder.ToString() ? true : false;
+                    var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
                     var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), bet.TrueStake, isBetBuilder, bet.Odds);
 
@@ -983,8 +983,7 @@ namespace Platform.Settlement.Service.Repository
                 {
                     if (totalSettled == totalSelections)
                     {
-                    	var isBetBuilder = bet.BetType == BetType.BetBuilder.ToString() ? true : false;
-
+                    	var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
                         var finalStake = bet.TrueStake - bet.StakeBonus;
 
@@ -1268,7 +1267,7 @@ namespace Platform.Settlement.Service.Repository
                                 continue;
                             }
 
-                            var isBetBuilder = bet.BetType == BetType.BetBuilder.ToString() ? true : false;
+                            var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
                             var reason = string.IsNullOrEmpty(betItem.Reason) ? "Cancelled by Backoffice" : betItem.Reason;
 

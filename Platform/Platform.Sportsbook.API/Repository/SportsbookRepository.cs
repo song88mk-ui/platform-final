@@ -1155,9 +1155,15 @@ namespace Platform.Sportsbook.API.Repository
                                 ClBoSeNaTr = selection.ClBoSeNaTr,
                             };
                             if (fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright)
+                            {
                                 tempSelectionExtension.Od = Convert.ToDecimal(GetClientBoostedOdds(selection.ClBoOd, request.ClientCode, request.IsBoosted, selection.Od.ToString("0.00")));
+                                tempSelectionExtension.OddsRef = Convert.ToDecimal(selection.Od.ToString("0.00"));
+                            }
                             else
+                            {
                                 tempSelectionExtension.Od = Convert.ToDecimal(GetClientBoostedOdds(selection.ClBoOd, request.ClientCode, request.IsBoosted, clientOdds.Where(c => c.SelectionId == selection.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString("0.00")));
+                                tempSelectionExtension.OddsRef = Convert.ToDecimal(clientOdds.Where(c => c.SelectionId == selection.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString("0.00"));
+                            }
 
                             finalSelections.Add(tempSelectionExtension);
 

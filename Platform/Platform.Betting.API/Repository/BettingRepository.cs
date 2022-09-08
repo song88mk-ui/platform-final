@@ -249,6 +249,7 @@ namespace Platform.Betting.API.Repository
                     Guid betId;
 
                     var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+                    var totalOddsRef = request.Selections.Select(s => s.OddsRef).Aggregate((a, b) => a * b); 
                     var selectionSports = request.Selections.Select(s => s.SportId).Distinct().ToList();
 
                     var stakeTax = taxConfig.StakeTax;
@@ -321,7 +322,7 @@ namespace Platform.Betting.API.Repository
                         IsFreeBet = false,
                         BetTypeId = (int)betType,
                         BetTypeName = betType.ToString(),
-                        OddsRef = totalOdds
+                        OddsRef = totalOddsRef
                     }).Entity;
 
                     betData = betEntity;
@@ -374,7 +375,7 @@ namespace Platform.Betting.API.Repository
                         IsFreeBet = betEntity.IsFreeBet,
                         BetTypeId = betEntity.BetTypeId,
                         BetTypeName = betEntity.BetTypeName,
-                        OddsRef = totalOdds
+                        OddsRef = betEntity.OddsRef,
                     });
 
                     foreach (var selection in request.Selections)
@@ -775,6 +776,7 @@ namespace Platform.Betting.API.Repository
                     Guid betId;
 
                     var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+                    var totalOddsRef = request.Selections.Select(s => s.OddsRef).Aggregate((a, b) => a * b);
                     var selectionSports = request.Selections.Select(s => s.SportId).Distinct().ToList();
 
                     var stakeTax = taxConfig.StakeTax;
@@ -847,7 +849,7 @@ namespace Platform.Betting.API.Repository
                         IsFreeBet = false,
                         BetTypeId = (int)betType,
                         BetTypeName = betType.ToString(),
-                        OddsRef = totalOdds
+                        OddsRef = totalOddsRef
                     }).Entity;
 
                     betData = betEntity;
@@ -900,7 +902,7 @@ namespace Platform.Betting.API.Repository
                         IsFreeBet = betEntity.IsFreeBet,
                         BetTypeId = betEntity.BetTypeId,
                         BetTypeName = betEntity.BetTypeName,
-                        OddsRef = totalOdds
+                        OddsRef = betEntity.OddsRef
                     });
 
                     foreach (var selection in request.Selections)

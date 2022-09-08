@@ -12,7 +12,7 @@ namespace Platform.Betting.API.Controllers
         private readonly IBettingRepository _bettingRepository;
 
         public BetController(IBettingRepository bettingRepository)
-        {//
+        {
             _bettingRepository = bettingRepository;
         }
 

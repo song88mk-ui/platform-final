@@ -845,7 +845,7 @@ namespace Platform.Betting.API.Repository
                         StakeRealPayout = 0,
                         StakeBonusPayout = 0,
                         IsFreeBet = false,
-                        BetTypeId = 0,
+                        BetTypeId = (int)betType,
                         BetTypeName = betType.ToString(),
                         OddsRef = totalOdds
                     }).Entity;

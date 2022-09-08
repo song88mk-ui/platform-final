@@ -1368,11 +1368,11 @@ namespace Platform.Betting.API.Repository
                 var isBoosted = betBoosted.Any(b => b == bet.BetId);
 
                 var hasVirtualSport = filteredSelections.Any(s => s.SportId > 1000) ? true : false;
-                var wonSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won).Count();
+                var wonOrRunningSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running).Count();
                 var lostSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
 
                 var parlayBonus = 0m;
-                if (hasVirtualSport == false && wonSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
+                if (hasVirtualSport == false && wonOrRunningSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
                 {
                     var parlayConfig = GetParlayBetConfig(_bettingContext, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, filteredSelections);
 
@@ -2572,11 +2572,11 @@ namespace Platform.Betting.API.Repository
             if (parlayBonusList == null || !parlayBonusList.Any())
                 return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
 
-            int wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won && c.Odds >= parlayBonusList.FirstOrDefault().ParlayBonusMinOdds).Count();
+            int wonOrRunningSelectionCount = selections.Where(c => (c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running) && c.Odds >= parlayBonusList.FirstOrDefault().ParlayBonusMinOdds).Count();
 
-            if (wonSelectionCount >= 3)
+            if (wonOrRunningSelectionCount >= 3)
             {
-                var result = parlayBonusList.Where(c => wonSelectionCount == c.SelectionCount).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
+                var result = parlayBonusList.Where(c => wonOrRunningSelectionCount == c.SelectionCount).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
 
                 if (result == null)
                     return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());

@@ -1526,7 +1526,7 @@ namespace Platform.Betting.API.Repository
             {
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
                 var isBoosted = betBoosted.Any(b => b == bet.BetId);
-                var isBetBuilder = false; //TODO: fetch isbetBuilder flag
+                var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
                 result.Add(new SettlementHistoryDTO
                 {

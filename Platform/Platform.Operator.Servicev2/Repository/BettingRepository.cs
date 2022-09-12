@@ -1073,7 +1073,7 @@ namespace Platform.Operator.Servicev2.Repository
                 Odds = message.Bet.Odds,
                 BetStatus = message.Bet.BetStatusName,
                 TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
-                IsBetBuilder = message.Bet.BetType == BetType.BetBuilder.ToString() ? true : false,
+                IsBetBuilder = message.Bet.BetTypeId == (int)BetType.BetBuilder ? true : false,
                 BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
                 {
                     BetSelectionId = s.BetSelectionId.ToString().ToUpper(),

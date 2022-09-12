@@ -55,7 +55,10 @@ namespace Platform.Shared.Models
         public string SelectionTemplateId { get; set; }
         public long SelectionId { get; set; }
         public string SelectionName { get; set; }
-        public decimal Odds { get; set; }
+        public decimal DecimalOdds { get; set; }
+        public decimal MalaysianOdds { get; set; }
+        public decimal HongkongOdds { get; set; }
+        public decimal IndonesianOdds { get; set; }
         public decimal OddsRef { get; set; }
         public FixtureStatus FixtureStatus { get; set; }
         public DateTime FixtureStartDate { get; set; }

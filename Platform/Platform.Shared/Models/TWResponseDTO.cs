@@ -286,6 +286,9 @@ namespace Platform.Shared.Models
         public string SelectionId { get; set; }
         public string SelectionName { get; set; }
         public string DecimalOdds { get; set; }
+        public string MalaysianOdds { get; set; }
+        public string HongkongOdds { get; set; }
+        public string IndonesianOdds { get; set; }
         public int SortOrder { get; set; }
         public bool IsActive { get; set; }
         public string CorrelationId { get; set; }
@@ -376,6 +379,9 @@ namespace Platform.Shared.Models
     {
         public string SelectionId { get; set; }
         public string SelectionName { get; set; }
-        public string Odds { get; set; }
+        public string DecimalOdds { get; set; }
+        public string MalaysianOdds { get; set; }
+        public string HongkongOdds { get; set; }
+        public string IndonesianOdds { get; set; }
     }
 }

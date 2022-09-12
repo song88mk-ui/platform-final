@@ -918,97 +918,97 @@ namespace Platform.Sportsbook.API.Repository
                 Result = finalResult
             };
         }
-        private async Task<Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>> GetBetFixtures(BetFixtureRequestDTO request)
-        {
-            var fixtureIds = request.Selections.Select(s => s.FixtureId).ToList();
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
-            var fixtures = primaryFixtureCollection.Find(fixtureFilter).ToListAsync();
+        //private async Task<Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>> GetBetFixtures(BetFixtureRequestDTO request)
+        //{
+        //    var fixtureIds = request.Selections.Select(s => s.FixtureId).ToList();
+        //    var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
+        //    var fixtures = primaryFixtureCollection.Find(fixtureFilter).ToListAsync();
 
-            var marketIds = request.Selections.Select(s => s.MarketId).ToList();
-            var marketFilter = Builders<Market>.Filter.Where(c => marketIds.Contains(c.MaId));
-            var markets = primaryMarketCollection.Find(marketFilter).ToListAsync();
+        //    var marketIds = request.Selections.Select(s => s.MarketId).ToList();
+        //    var marketFilter = Builders<Market>.Filter.Where(c => marketIds.Contains(c.MaId));
+        //    var markets = primaryMarketCollection.Find(marketFilter).ToListAsync();
 
-            var selectionIds = request.Selections.Select(s => s.SelectionId).ToList();
-            var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
-            var selections = primarySelectionCollection.Find(selectionFilter).ToListAsync();
+        //    var selectionIds = request.Selections.Select(s => s.SelectionId).ToList();
+        //    var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
+        //    var selections = primarySelectionCollection.Find(selectionFilter).ToListAsync();
 
-            var allSelectionFilter = Builders<Selection>.Filter.Where(c => marketIds.Contains(c.MaId));
-            var allSelections = primarySelectionCollection.Find(allSelectionFilter).ToListAsync();
+        //    var allSelectionFilter = Builders<Selection>.Filter.Where(c => marketIds.Contains(c.MaId));
+        //    var allSelections = primarySelectionCollection.Find(allSelectionFilter).ToListAsync();
 
-            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
-            var bettingStatus = primaryBettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+        //    var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
+        //    var bettingStatus = primaryBettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
 
-            await Task.WhenAll(fixtures, markets, selections, allSelections, bettingStatus);
+        //    await Task.WhenAll(fixtures, markets, selections, allSelections, bettingStatus);
 
-            var newFixtures = fixtures.Result;
-            var newMarkets = markets.Result;
-            var newSelections = selections.Result;
-            var newAllSelections = allSelections.Result;
+        //    var newFixtures = fixtures.Result;
+        //    var newMarkets = markets.Result;
+        //    var newSelections = selections.Result;
+        //    var newAllSelections = allSelections.Result;
 
-            if (IsOEEnable(request.ClientCode))
-            {
-                newFixtures = newFixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
+        //    if (IsOEEnable(request.ClientCode))
+        //    {
+        //        newFixtures = newFixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
 
-                var finalMarkets = new List<Market>();
-                var finalSelections = new List<Selection>();
+        //        var finalMarkets = new List<Market>();
+        //        var finalSelections = new List<Selection>();
 
-                foreach (var fixture in newFixtures)
-                {
-                    var initialMarkets = newMarkets.Where(c => c.FiId == fixture.FiId).ToList();
+        //        foreach (var fixture in newFixtures)
+        //        {
+        //            var initialMarkets = newMarkets.Where(c => c.FiId == fixture.FiId).ToList();
 
-                    foreach (var market in initialMarkets)
-                    {
-                        if (fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright)
-                        {
-                            market.MaStId = market.MaStId;
-                            market.MaStNa = market.MaStNa;
-                        }
-                        else
-                        {
-                            market.MaStId = market.ClCo.Contains(request.ClientCode) ? market.MaStId : (int)MarketStatus.Inactive;
-                            market.MaStNa = market.ClCo.Contains(request.ClientCode) ? market.MaStNa : MarketStatus.Inactive.ToString();
-                        }
+        //            foreach (var market in initialMarkets)
+        //            {
+        //                if (fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright)
+        //                {
+        //                    market.MaStId = market.MaStId;
+        //                    market.MaStNa = market.MaStNa;
+        //                }
+        //                else
+        //                {
+        //                    market.MaStId = market.ClCo.Contains(request.ClientCode) ? market.MaStId : (int)MarketStatus.Inactive;
+        //                    market.MaStNa = market.ClCo.Contains(request.ClientCode) ? market.MaStNa : MarketStatus.Inactive.ToString();
+        //                }
 
-                        finalMarkets.Add(market);
+        //                finalMarkets.Add(market);
 
 
-                        var clientOdds = new List<ClientOdds>();
+        //                var clientOdds = new List<ClientOdds>();
 
-                        var marketSelections = newAllSelections.Where(c => c.MaId == market.MaId).ToList();
+        //                var marketSelections = newAllSelections.Where(c => c.MaId == market.MaId).ToList();
 
-                        if (marketSelections.Count > 0)
-                        {
-                            var activeSelections = marketSelections.Where(c => c.MaId == market.MaId && c.IsAc == true && c.Od > 0m).ToList();
-                            var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+        //                if (marketSelections.Count > 0)
+        //                {
+        //                    var activeSelections = marketSelections.Where(c => c.MaId == market.MaId && c.IsAc == true && c.Od > 0m).ToList();
+        //                    var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-                            clientOdds = GetClientOdds(activeSelections.Count, margin, marketSelections, market.ClCoMa, request.ClientCode);
-                        }
+        //                    clientOdds = GetClientOdds(activeSelections.Count, margin, marketSelections, market.ClCoMa, request.ClientCode);
+        //                }
 
-                        foreach (var selection in marketSelections)
-                        {
-                            if (fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright)
-                            {
-                                finalSelections.Add(selection);
-                            }
-                            else
-                            {
-                                selection.Od = clientOdds.Where(c => c.SelectionId == selection.SeId).Select(ss => ss.Odds).FirstOrDefault();
+        //                foreach (var selection in marketSelections)
+        //                {
+        //                    if (fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright)
+        //                    {
+        //                        finalSelections.Add(selection);
+        //                    }
+        //                    else
+        //                    {
+        //                        selection.Od = clientOdds.Where(c => c.SelectionId == selection.SeId).Select(ss => ss.Odds).FirstOrDefault();
 
-                                finalSelections.Add(selection);
-                            }
-                        }
-                    }
-                }
+        //                        finalSelections.Add(selection);
+        //                    }
+        //                }
+        //            }
+        //        }
 
-                if (finalMarkets.Count > 0)
-                    newMarkets = finalMarkets;
+        //        if (finalMarkets.Count > 0)
+        //            newMarkets = finalMarkets;
 
-                if (finalSelections.Count > 0)
-                    newSelections = finalSelections;
-            }
+        //        if (finalSelections.Count > 0)
+        //            newSelections = finalSelections;
+        //    }
 
-            return new Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>(newFixtures, newMarkets, newSelections, bettingStatus.Result);
-        }
+        //    return new Tuple<List<Fixture>, List<Market>, List<Selection>, BettingStatus>(newFixtures, newMarkets, newSelections, bettingStatus.Result);
+        //}
         private async Task<Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>>> GetBetFixtures2(BetFixtureRequestDTO request)
         {
             var selectionIds = request.Selections.Select(s => s.SelectionId).ToList();
@@ -1041,6 +1041,8 @@ namespace Platform.Sportsbook.API.Repository
 
                 newFixtures = fixtures.Result;
                 newMarkets = markets.Result;
+                var isBinary = selections.Count > 2 ? false : true;
+
                 newSelectionExtension = selections.Select(s => new SelectionExtension()
                 {
                     SeId = s.SeId,
@@ -1054,6 +1056,9 @@ namespace Platform.Sportsbook.API.Repository
                     SeNa = s.SeNa,
                     Od = s.Od,
                     OddsRef = s.Od,
+                    HoOd = GetHongkongOdds(s.Od, isBinary),
+                    MaOd = GetMalayOdds(s.Od, isBinary),
+                    InOd = GetIndoOdds(s.Od, isBinary),
                     IsAc = s.IsAc,
                     SeSoOr = s.SeSoOr,
                     SeStId = s.SeStId,
@@ -1109,6 +1114,7 @@ namespace Platform.Sportsbook.API.Repository
                         var clientOdds = new List<ClientOdds>();
 
                         var marketSelections = newAllSelections.Where(c => c.MaId == market.MaId).ToList();
+                        var isBinary = marketSelections.Count > 2 ? false : true;
 
                         if (marketSelections.Count > 0)
                         {
@@ -1154,15 +1160,24 @@ namespace Platform.Sportsbook.API.Repository
                                 ClBoSeNa = selection.ClBoSeNa,
                                 ClBoSeNaTr = selection.ClBoSeNaTr,
                             };
+
                             if (fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright)
                             {
                                 tempSelectionExtension.Od = Convert.ToDecimal(GetClientBoostedOdds(selection.ClBoOd, request.ClientCode, request.IsBoosted, selection.Od.ToString("0.00")));
                                 tempSelectionExtension.OddsRef = Convert.ToDecimal(selection.Od.ToString("0.00"));
+                                tempSelectionExtension.MaOd = GetMalayOdds(selection.Od, isBinary);
+                                tempSelectionExtension.HoOd = GetHongkongOdds(selection.Od, isBinary);
+                                tempSelectionExtension.InOd = GetIndoOdds(selection.Od, isBinary);
                             }
                             else
                             {
-                                tempSelectionExtension.Od = Convert.ToDecimal(GetClientBoostedOdds(selection.ClBoOd, request.ClientCode, request.IsBoosted, clientOdds.Where(c => c.SelectionId == selection.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString("0.00")));
-                                tempSelectionExtension.OddsRef = Convert.ToDecimal(clientOdds.Where(c => c.SelectionId == selection.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString("0.00"));
+                                var clientOdd = clientOdds.FirstOrDefault(c => c.SelectionId == selection.SeId);
+
+                                tempSelectionExtension.Od = Convert.ToDecimal(GetClientBoostedOdds(selection.ClBoOd, request.ClientCode, request.IsBoosted, clientOdd.DecimalOdds.ToString("0,00")));
+                                tempSelectionExtension.OddsRef = Convert.ToDecimal(clientOdd.DecimalOdds.ToString("0.00"));
+                                tempSelectionExtension.MaOd = clientOdd.MalaysianOdds;
+                                tempSelectionExtension.HoOd = clientOdd.HongkongOdds;
+                                tempSelectionExtension.InOd = clientOdd.IndonesianOdds;
                             }
 
                             finalSelections.Add(tempSelectionExtension);
@@ -1326,7 +1341,10 @@ namespace Platform.Sportsbook.API.Repository
                     SelectionTemplateId = initialSelectionExtension.SeTeId,
                     SelectionId = initialSelectionExtension.SeId,
                     SelectionName = initialSelectionExtension.SeNa,
-                    Odds = initialSelectionExtension.Od,
+                    DecimalOdds = initialSelectionExtension.Od,
+                    MalaysianOdds = initialSelectionExtension.MaOd,
+                    HongkongOdds = initialSelectionExtension.HoOd,
+                    IndonesianOdds = initialSelectionExtension.InOd,
                     OddsRef = initialSelectionExtension.OddsRef,
                     FixtureStatus = (FixtureStatus)initialSelectionExtension.FiStId,
                     FixtureStartDate = initialSelectionExtension.FiStDa,
@@ -1341,7 +1359,7 @@ namespace Platform.Sportsbook.API.Repository
                     HalfWonProbability = initialSelectionExtension.HaWoPr,
                     HalfLostProbability = initialSelectionExtension.HaLoPr,
                     SelectionCount = selectionCount,
-                    BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, selection, result, request.ClientCode, request.IsBetBuilder)
+                    BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, selection, result, request.ClientCode, request.IsBetBuilder, selectionCount)
                 });
             }
 
@@ -4808,6 +4826,9 @@ namespace Platform.Sportsbook.API.Repository
 
                     foreach (var market in markets)
                     {
+                        var filteredSelections = selections.Where(c => c.MaId == market.MaId).ToList();
+                        var isBinary = filteredSelections.Count > 2 ? false : true;
+
                         result.Add(new MarketLimitedDTO
                         {
                             MarketTemplateId = market.MaTeId,
@@ -4815,11 +4836,14 @@ namespace Platform.Sportsbook.API.Repository
                             MarketName = market.MaNa,
                             Line = market.Li,
                             MarketStatus = market.MaStNa,
-                            Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionLimitedDTO
+                            Selections = filteredSelections.Select(s => new SelectionLimitedDTO
                             {
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = s.SeNa,
-                                Odds = s.Od.ToString("0.00"),
+                                DecimalOdds = s.Od.ToString("0.00"),
+                                MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                                HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                                IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
                             }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
                         });
                     }
@@ -4856,7 +4880,11 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = s.SeNa,
-                                Odds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
+                                //Odds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
+                                DecimalOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).DecimalOdds.ToString(),
+                                MalaysianOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).MalaysianOdds.ToString(),
+                                HongkongOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).HongkongOdds.ToString(),
+                                IndonesianOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).IndonesianOdds.ToString(),
                             }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
                         });
                     }
@@ -4870,6 +4898,9 @@ namespace Platform.Sportsbook.API.Repository
 
                 foreach (var market in markets)
                 {
+                    var filteredSelections = selections.Where(c => c.MaId == market.MaId).ToList();
+                    var isBinary = filteredSelections.Count > 2 ? false : true;
+
                     result.Add(new MarketLimitedDTO
                     {
                         MarketTemplateId = market.MaTeId,
@@ -4877,11 +4908,14 @@ namespace Platform.Sportsbook.API.Repository
                         MarketName = market.MaNa,
                         Line = market.Li,
                         MarketStatus = market.MaStNa,
-                        Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionLimitedDTO
+                        Selections = filteredSelections.Select(s => new SelectionLimitedDTO
                         {
                             SelectionId = s.SeId.ToString(),
                             SelectionName = s.SeNa,
-                            Odds = s.Od.ToString("0.00"),
+                            DecimalOdds = s.Od.ToString("0.00"),
+                            MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                            HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                            IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
                         }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
                     });
                 }
@@ -4903,6 +4937,9 @@ namespace Platform.Sportsbook.API.Repository
 
                     foreach (var market in filteredMarkets)
                     {
+                        var filteredSelections = selections.Where(c => c.MaId == market.MaId).ToList();
+                        var isBinary = filteredSelections.Count > 2 ? false : true;
+
                         result.Add(new MarketDTO
                         {
                             MarketTemplateId = market.MaTeId,
@@ -4914,12 +4951,15 @@ namespace Platform.Sportsbook.API.Repository
                             MarketStatusName = market.MaStNa,
                             SortOrder = Convert.ToInt32(market.MaTeId),
                             IsBetBuilder = false,
-                            Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
+                            Selections = filteredSelections.Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
                                 DecimalOdds = s.Od.ToString("0.00"),
+                                MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                                HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                                IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                                 SortOrder = s.SeSoOr
@@ -4952,15 +4992,18 @@ namespace Platform.Sportsbook.API.Repository
 
                         foreach (var item in selections.Where(c => c.MaId == market.MaId).ToList())
                         {
-                            var odds = clientOdds.Where(c => c.SelectionId == item.SeId).Select(ss => ss.Odds).FirstOrDefault();
+                            var odds = clientOdds.FirstOrDefault(c => c.SelectionId == item.SeId);
 
                             selectionsToAdd.Add(new SelectionDTO
                             {
                                 SelectionTemplateId = item.SeTeId,
                                 SelectionId = item.SeId.ToString(),
                                 SelectionName = GetSelectionName(item.SeNa, item.SeNaTr, languageCode),
-                                DecimalOdds = odds.ToString("0.00"),
-                                IsActive = odds > 1m && item.IsAc,
+                                DecimalOdds = odds.DecimalOdds.ToString("0.00"),
+                                MalaysianOdds = odds.MalaysianOdds.ToString("0.00"),
+                                HongkongOdds = odds.HongkongOdds.ToString("0.00"),
+                                IndonesianOdds = odds.IndonesianOdds.ToString("0.00"),
+                                IsActive = odds.DecimalOdds > 1m && item.IsAc,
                                 CorrelationId = item.CoId,
                                 SortOrder = item.SeSoOr
                             });
@@ -5023,6 +5066,9 @@ namespace Platform.Sportsbook.API.Repository
                         }
                     }
 
+                    var filteredSelections = selections.Where(c => c.MaId == market.MaId).ToList();
+                    var isBinary = filteredSelections.Count > 2 ? false : true;
+
                     result.Add(new MarketDTO
                     {
                         MarketTemplateId = market.MaTeId,
@@ -5034,12 +5080,15 @@ namespace Platform.Sportsbook.API.Repository
                         MarketStatusName = market.MaStNa,
                         SortOrder = Convert.ToInt32(market.MaTeId),
                         IsBetBuilder = isBetBuilder,
-                        Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
+                        Selections = filteredSelections.Select(s => new SelectionDTO
                         {
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
                             SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
                             DecimalOdds = s.Od.ToString("0.00"),
+                            MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                            HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                            IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
                             IsActive = s.IsAc,
                             CorrelationId = s.CoId,
                             SortOrder = s.SeSoOr
@@ -5062,6 +5111,9 @@ namespace Platform.Sportsbook.API.Repository
 
                     foreach (var market in filteredMarkets)
                     {
+                        var filteredSelections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)).ToList();
+                        var isBinary = filteredSelections.Count > 2 ? false : true;
+
                         result.Add(new BoostedMarketDTO
                         {
                             MarketTemplateId = market.MaTeId,
@@ -5073,12 +5125,15 @@ namespace Platform.Sportsbook.API.Repository
                             MarketStatusName = market.MaStNa,
                             IsBoosted = market.IsBo,
                             SortOrder = Convert.ToInt32(market.MaTeId),
-                            Selections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)).Select(s => new BoostedSelectionDTO
+                            Selections = filteredSelections.Select(s => new BoostedSelectionDTO
                             {
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetBoostedSelectionName(clientCode, s.SeNa, s.ClBoSeNa, s.ClBoSeNaTr, languageCode),
                                 DecimalOdds = s.Od.ToString("0.00"),
+                                MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                                HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                                IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
                                 BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode, isBoosted, s.Od.ToString("0.00")),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
@@ -5132,8 +5187,13 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetBoostedSelectionName(clientCode, s.SeNa, s.ClBoSeNa, s.ClBoSeNaTr, languageCode),
-                                DecimalOdds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString("0.00"),
-                                BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode, isBoosted, clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString("0.00")),
+                                //DecimalOdds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString("0.00"),
+                                //BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode, isBoosted, clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString("0.00")),
+                                DecimalOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).DecimalOdds.ToString("0.00"),
+                                MalaysianOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).MalaysianOdds.ToString("0.00"),
+                                HongkongOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).HongkongOdds.ToString("0.00"),
+                                IndonesianOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).IndonesianOdds.ToString("0.00"),
+                                BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode, isBoosted, clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).DecimalOdds.ToString("0.00")),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                                 SortOrder = s.SeSoOr
@@ -5159,6 +5219,9 @@ namespace Platform.Sportsbook.API.Repository
 
                 foreach (var market in filteredMarkets)
                 {
+                    var filteredSelections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)).ToList();
+                    var isBinary = filteredSelections.Count > 2 ? false : true;
+
                     result.Add(new BoostedMarketDTO
                     {
                         MarketTemplateId = market.MaTeId,
@@ -5170,12 +5233,15 @@ namespace Platform.Sportsbook.API.Repository
                         MarketStatusName = market.MaStNa,
                         IsBoosted = market.IsBo,
                         SortOrder = marketTemplateIds.Any(c => c == market.MaTeId) ? marketTemplateIds.FindIndex(c => c == market.MaTeId) + 1 : 1000 + Convert.ToInt32(market.MaTeId),
-                        Selections = selections.Where(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)).Select(s => new BoostedSelectionDTO
+                        Selections = filteredSelections.Select(s => new BoostedSelectionDTO
                         {
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
                             SelectionName = GetBoostedSelectionName(clientCode, s.SeNa, s.ClBoSeNa, s.ClBoSeNaTr, languageCode),
                             DecimalOdds = s.Od.ToString("0.00"),
+                            MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                            HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                            IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
                             BoostedOdds = GetClientBoostedOdds(s.ClBoOd, clientCode, isBoosted, s.Od.ToString("0.00")),
                             IsActive = s.IsAc,
                             CorrelationId = s.CoId,
@@ -5198,6 +5264,9 @@ namespace Platform.Sportsbook.API.Repository
 
                     foreach (var market in markets)
                     {
+                        var filteredSelections = selections.Where(c => c.MaId == market.MaId).ToList();
+                        var isBinary = filteredSelections.Count > 2 ? false : true;
+
                         result.Add(new MarketDTO
                         {
                             MarketTemplateId = market.MaTeId,
@@ -5209,12 +5278,15 @@ namespace Platform.Sportsbook.API.Repository
                             MarketStatusName = market.MaStNa,
                             SortOrder = Convert.ToInt32(market.MaTeId),
                             IsBetBuilder = false,
-                            Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
+                            Selections = filteredSelections.Select(s => new SelectionDTO
                             {
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
                                 DecimalOdds = s.Od.ToString("0.00"),
+                                MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                                HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                                IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                                 SortOrder = s.SeSoOr
@@ -5255,15 +5327,18 @@ namespace Platform.Sportsbook.API.Repository
 
                         foreach (var item in selections.Where(c => c.MaId == market.MaId).ToList())
                         {
-                            var odds = clientOdds.Where(c => c.SelectionId == item.SeId).Select(ss => ss.Odds).FirstOrDefault();
+                            var odds = clientOdds.FirstOrDefault(c => c.SelectionId == item.SeId);
 
                             selectionsToAdd.Add(new SelectionDTO
                             {
                                 SelectionTemplateId = item.SeTeId,
                                 SelectionId = item.SeId.ToString(),
                                 SelectionName = GetSelectionName(item.SeNa, item.SeNaTr, languageCode),
-                                DecimalOdds = odds.ToString("0.00"),
-                                IsActive = odds > 1m && item.IsAc,
+                                DecimalOdds = odds.DecimalOdds.ToString("0.00"),
+                                MalaysianOdds = odds.MalaysianOdds.ToString("0.00"),
+                                HongkongOdds = odds.HongkongOdds.ToString("0.00"),
+                                IndonesianOdds = odds.IndonesianOdds.ToString("0.00"),
+                                IsActive = odds.DecimalOdds > 1m && item.IsAc,
                                 CorrelationId = item.CoId,
                                 SortOrder = item.SeSoOr
                             });
@@ -5333,6 +5408,9 @@ namespace Platform.Sportsbook.API.Repository
                         }
                     }
 
+                    var filteredSelections = selections.Where(c => c.MaId == market.MaId).ToList();
+                    var isBinary = filteredSelections.Count > 2 ? false : true;
+
                     result.Add(new MarketDTO
                     {
                         MarketTemplateId = market.MaTeId,
@@ -5344,12 +5422,15 @@ namespace Platform.Sportsbook.API.Repository
                         MarketStatusName = market.MaStNa,
                         SortOrder = marketTemplateIds.Any(c => c == market.MaTeId) ? marketTemplateIds.FindIndex(c => c == market.MaTeId) + 1 : 1000 + Convert.ToInt32(market.MaTeId),
                         IsBetBuilder = isBetBuilder,
-                        Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionDTO
+                        Selections = filteredSelections.Select(s => new SelectionDTO
                         {
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
                             SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
                             DecimalOdds = s.Od.ToString("0.00"),
+                            MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                            HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                            IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
                             IsActive = s.IsAc,
                             CorrelationId = s.CoId,
                             SortOrder = s.SeSoOr
@@ -5369,6 +5450,7 @@ namespace Platform.Sportsbook.API.Repository
                 foreach (var market in markets)
                 {
                     var selectionsToAdd = selections.Where(c => c.MaId == market.MaId).ToList();
+                    var isBinary = selectionsToAdd.Count > 2 ? false : true;
 
                     if (selectionsToAdd.Count > 3)
                     {
@@ -5388,6 +5470,9 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
                                 DecimalOdds = s.Od.ToString("0.00"),
+                                MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                                HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                                IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                             }).OrderBy(o => Convert.ToDecimal(o.DecimalOdds)).ToList()
@@ -5411,6 +5496,9 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
                                 DecimalOdds = s.Od.ToString("0.00"),
+                                MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                                HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                                IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                                 SortOrder = s.SeSoOr
@@ -5424,6 +5512,7 @@ namespace Platform.Sportsbook.API.Repository
                 foreach (var market in markets)
                 {
                     var selectionsToAdd = selections.Where(c => c.MaId == market.MaId).ToList();
+                    var isBinary = selectionsToAdd.Count > 2 ? false : true;
 
                     if (selectionsToAdd.Count > 3)
                     {
@@ -5443,6 +5532,9 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
                                 DecimalOdds = s.Od.ToString("0.00"),
+                                MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                                HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                                IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                             }).OrderBy(o => Convert.ToDecimal(o.DecimalOdds)).ToList()
@@ -5466,6 +5558,9 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
                                 DecimalOdds = s.Od.ToString("0.00"),
+                                MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                                HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                                IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
                                 IsActive = s.IsAc,
                                 CorrelationId = s.CoId,
                                 SortOrder = s.SeSoOr
@@ -5478,12 +5573,13 @@ namespace Platform.Sportsbook.API.Repository
             return result.OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
         }
 
-        private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>> result, string clientCode, bool isBetBuilder)
+        private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>> result, string clientCode, bool isBetBuilder, int selectionCount)
         {
 
             var selection = result.Item3.Where(c => c.SeId == current.SelectionId).FirstOrDefault();
             var fixture = result.Item1.Where(c => c.FiId == selection.FiId).FirstOrDefault();
             var market = result.Item2.Where(c => c.MaId == selection.MaId).FirstOrDefault();
+            var isBinary = selectionCount > 2 ? false : true;
 
             var bettingStatus = result.Item4;
 
@@ -5500,7 +5596,10 @@ namespace Platform.Sportsbook.API.Repository
                 return new BetSelectionState
                 {
                     SelectionId = current.SelectionId.ToString(),
-                    Odds = current.Odds,
+                    DecimalOdds = current.Odds,
+                    MalaysianOdds = GetMalayOdds(current.Odds, isBinary),
+                    HongkongOdds = GetHongkongOdds(current.Odds, isBinary),
+                    IndonesianOdds = GetIndoOdds(current.Odds, isBinary),
                     StatusCode = StatusCode.Market_Is_Not_Offered,
                     Message = StatusCode.Market_Is_Not_Offered.ToString().Replace('_', ' ')
                 };
@@ -5511,7 +5610,10 @@ namespace Platform.Sportsbook.API.Repository
                 return new BetSelectionState
                 {
                     SelectionId = current.SelectionId.ToString(),
-                    Odds = current.Odds,
+                    DecimalOdds = current.Odds,
+                    MalaysianOdds = GetMalayOdds(current.Odds, isBinary),
+                    HongkongOdds = GetHongkongOdds(current.Odds, isBinary),
+                    IndonesianOdds = GetIndoOdds(current.Odds, isBinary),
                     StatusCode = StatusCode.Betstop_On_Global,
                     Message = StatusCode.Betstop_On_Global.ToString().Replace('_', ' ')
                 };
@@ -5522,7 +5624,10 @@ namespace Platform.Sportsbook.API.Repository
                 return new BetSelectionState
                 {
                     SelectionId = current.SelectionId.ToString(),
-                    Odds = current.Odds,
+                    DecimalOdds = current.Odds,
+                    MalaysianOdds = GetMalayOdds(current.Odds, isBinary),
+                    HongkongOdds = GetHongkongOdds(current.Odds, isBinary),
+                    IndonesianOdds = GetIndoOdds(current.Odds, isBinary),
                     StatusCode = StatusCode.Market_Is_Not_Offered,
                     Message = StatusCode.Market_Is_Not_Offered.ToString().Replace('_', ' ')
                 };
@@ -5545,7 +5650,10 @@ namespace Platform.Sportsbook.API.Repository
                 return new BetSelectionState
                 {
                     SelectionId = selection.SeId.ToString(),
-                    Odds = selection.Od,
+                    DecimalOdds = current.Odds,
+                    MalaysianOdds = GetMalayOdds(current.Odds, isBinary),
+                    HongkongOdds = GetHongkongOdds(current.Odds, isBinary),
+                    IndonesianOdds = GetIndoOdds(current.Odds, isBinary),
                     CorrelationId = selection.CoId,
                     StatusCode = StatusCode.Market_Is_Not_Offered,
                     Message = StatusCode.Market_Is_Not_Offered.ToString().Replace('_', ' '),
@@ -5557,7 +5665,10 @@ namespace Platform.Sportsbook.API.Repository
                 return new BetSelectionState
                 {
                     SelectionId = selection.SeId.ToString(),
-                    Odds = selection.Od,
+                    DecimalOdds = current.Odds,
+                    MalaysianOdds = GetMalayOdds(current.Odds, isBinary),
+                    HongkongOdds = GetHongkongOdds(current.Odds, isBinary),
+                    IndonesianOdds = GetIndoOdds(current.Odds, isBinary),
                     CorrelationId = selection.CoId,
                     StatusCode = StatusCode.Market_Is_Not_Offered,
                     Message = StatusCode.Market_Is_Not_Offered.ToString().Replace('_', ' '),
@@ -5569,7 +5680,10 @@ namespace Platform.Sportsbook.API.Repository
                 return new BetSelectionState
                 {
                     SelectionId = selection.SeId.ToString(),
-                    Odds = selection.Od,
+                    DecimalOdds = current.Odds,
+                    MalaysianOdds = GetMalayOdds(current.Odds, isBinary),
+                    HongkongOdds = GetHongkongOdds(current.Odds, isBinary),
+                    IndonesianOdds = GetIndoOdds(current.Odds, isBinary),
                     CorrelationId = selection.CoId,
                     StatusCode = StatusCode.Market_Has_Been_Suspended,
                     Message = StatusCode.Market_Has_Been_Suspended.ToString().Replace('_', ' '),
@@ -5581,7 +5695,10 @@ namespace Platform.Sportsbook.API.Repository
                 return new BetSelectionState
                 {
                     SelectionId = selection.SeId.ToString(),
-                    Odds = selection.Od,
+                    DecimalOdds = current.Odds,
+                    MalaysianOdds = GetMalayOdds(current.Odds, isBinary),
+                    HongkongOdds = GetHongkongOdds(current.Odds, isBinary),
+                    IndonesianOdds = GetIndoOdds(current.Odds, isBinary),
                     CorrelationId = selection.CoId,
                     StatusCode = StatusCode.Market_Is_Suspended,
                     Message = StatusCode.Market_Is_Suspended.ToString().Replace('_', ' ')
@@ -5593,7 +5710,10 @@ namespace Platform.Sportsbook.API.Repository
                 return new BetSelectionState
                 {
                     SelectionId = selection.SeId.ToString(),
-                    Odds = selection.Od,
+                    DecimalOdds = current.Odds,
+                    MalaysianOdds = GetMalayOdds(current.Odds, isBinary),
+                    HongkongOdds = GetHongkongOdds(current.Odds, isBinary),
+                    IndonesianOdds = GetIndoOdds(current.Odds, isBinary),
                     CorrelationId = selection.CoId,
                     StatusCode = StatusCode.Market_Is_Not_Offered,
                     Message = StatusCode.Market_Is_Not_Offered.ToString().Replace('_', ' ')
@@ -5605,7 +5725,10 @@ namespace Platform.Sportsbook.API.Repository
                 return new BetSelectionState
                 {
                     SelectionId = selection.SeId.ToString(),
-                    Odds = selection.Od,
+                    DecimalOdds = selection.Od,
+                    MalaysianOdds = selection.MaOd,
+                    HongkongOdds = selection.HoOd,
+                    IndonesianOdds = selection.InOd,
                     CorrelationId = selection.CoId,
                     StatusCode = StatusCode.Odds_Is_Inactive,
                     Message = StatusCode.Odds_Is_Inactive.ToString().Replace('_', ' ')
@@ -5617,7 +5740,10 @@ namespace Platform.Sportsbook.API.Repository
                 return new BetSelectionState
                 {
                     SelectionId = selection.SeId.ToString(),
-                    Odds = selection.Od,
+                    DecimalOdds = selection.Od,
+                    MalaysianOdds = selection.MaOd,
+                    HongkongOdds = selection.HoOd,
+                    IndonesianOdds = selection.InOd,
                     CorrelationId = selection.CoId,
                     StatusCode = StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1,
                     Message = StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1.ToString().Replace('_', ' ')
@@ -5632,7 +5758,10 @@ namespace Platform.Sportsbook.API.Repository
                         return new BetSelectionState
                         {
                             SelectionId = selection.SeId.ToString(),
-                            Odds = selection.Od,
+                            DecimalOdds = selection.Od,
+                            MalaysianOdds = selection.MaOd,
+                            HongkongOdds = selection.HoOd,
+                            IndonesianOdds = selection.InOd,
                             CorrelationId = selection.CoId,
                             StatusCode = StatusCode.Odds_Or_Lines_Have_Changed,
                             Message = StatusCode.Odds_Or_Lines_Have_Changed.ToString().Replace('_', ' ')
@@ -5647,7 +5776,10 @@ namespace Platform.Sportsbook.API.Repository
                         return new BetSelectionState
                         {
                             SelectionId = selection.SeId.ToString(),
-                            Odds = selection.Od,
+                            DecimalOdds = selection.Od,
+                            MalaysianOdds = selection.MaOd,
+                            HongkongOdds = selection.HoOd,
+                            IndonesianOdds = selection.InOd,
                             CorrelationId = selection.CoId,
                             StatusCode = StatusCode.Odds_Or_Lines_Have_Changed,
                             Message = StatusCode.Odds_Or_Lines_Have_Changed.ToString().Replace('_', ' ')
@@ -5661,7 +5793,10 @@ namespace Platform.Sportsbook.API.Repository
             return new BetSelectionState
             {
                 SelectionId = selection.SeId.ToString(),
-                Odds = selection.Od,
+                DecimalOdds = selection.Od,
+                MalaysianOdds = selection.MaOd,
+                HongkongOdds = selection.HoOd,
+                IndonesianOdds = selection.InOd,
                 CorrelationId = selection.CoId,
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString()
@@ -8176,9 +8311,9 @@ namespace Platform.Sportsbook.API.Repository
                 if (string.IsNullOrEmpty(clientBoostedOdds))
                     return odds;
 
-
                 var split = clientBoostedOdds.Split("|").ToList();
                 boostedOdds = split.Where(s => s.Contains(clientCode)).FirstOrDefault();
+
                 if (string.IsNullOrEmpty(boostedOdds))
                     return string.Empty;
 
@@ -8204,11 +8339,13 @@ namespace Platform.Sportsbook.API.Repository
             var clients = clientMarketConfig.Split('|').Select(s => new Tuple<string, decimal>(s.Split(':').First(), Convert.ToDecimal(s.Split(':').Last()))).Where(c => c.Item1 == clientCode).ToList();
 
             var result = new List<ClientOdds>();
+            var isBinary = selections.Count > 2 ? false : true;
 
             foreach (var client in clients)
             {
                 foreach (var selection in selections)
                 {
+
                     if (selection.IsAc == true && selection.Od > 0m)
                     {
                         var targetMargin = client.Item2;
@@ -8217,10 +8354,15 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (fairOddsInitialDivideBy <= 0)
                         {
+                            var tempOdds = GetMasterOddsWithAddedMargin(selection.Od);
+
                             result.Add(new ClientOdds
                             {
                                 ClientCode = client.Item1,
-                                Odds = GetMasterOddsWithAddedMargin(selection.Od),
+                                DecimalOdds = tempOdds,
+                                MalaysianOdds = GetMalayOdds(tempOdds, isBinary),
+                                HongkongOdds = GetHongkongOdds(tempOdds, isBinary),
+                                IndonesianOdds = GetIndoOdds(tempOdds, isBinary),
                                 SelectionTemplateId = selection.SeTeId,
                                 SelectionId = selection.SeId
                             });
@@ -8232,10 +8374,15 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (fairOdds <= 0)
                         {
+                            var tempOdds = GetMasterOddsWithAddedMargin(selection.Od);
+
                             result.Add(new ClientOdds
                             {
                                 ClientCode = client.Item1,
-                                Odds = GetMasterOddsWithAddedMargin(selection.Od),
+                                DecimalOdds = tempOdds,
+                                MalaysianOdds = GetMalayOdds(tempOdds, isBinary),
+                                HongkongOdds = GetHongkongOdds(tempOdds, isBinary),
+                                IndonesianOdds = GetIndoOdds(tempOdds, isBinary),
                                 SelectionTemplateId = selection.SeTeId,
                                 SelectionId = selection.SeId
                             });
@@ -8247,10 +8394,15 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (finalOddsInitialDivideBy <= 0)
                         {
+                            var tempOdds = GetMasterOddsWithAddedMargin(selection.Od);
+
                             result.Add(new ClientOdds
                             {
                                 ClientCode = client.Item1,
-                                Odds = GetMasterOddsWithAddedMargin(selection.Od),
+                                DecimalOdds = tempOdds,
+                                MalaysianOdds = GetMalayOdds(tempOdds, isBinary),
+                                HongkongOdds = GetHongkongOdds(tempOdds, isBinary),
+                                IndonesianOdds = GetIndoOdds(tempOdds, isBinary),
                                 SelectionTemplateId = selection.SeTeId,
                                 SelectionId = selection.SeId
                             });
@@ -8262,10 +8414,15 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (odds < 1.00m)
                         {
+                            var tempOdds = GetMasterOddsWithAddedMargin(selection.Od);
+
                             result.Add(new ClientOdds
                             {
                                 ClientCode = client.Item1,
-                                Odds = GetMasterOddsWithAddedMargin(selection.Od),
+                                DecimalOdds = tempOdds,
+                                MalaysianOdds = GetMalayOdds(tempOdds, isBinary),
+                                HongkongOdds = GetHongkongOdds(tempOdds, isBinary),
+                                IndonesianOdds = GetIndoOdds(tempOdds, isBinary),
                                 SelectionTemplateId = selection.SeTeId,
                                 SelectionId = selection.SeId
                             });
@@ -8279,7 +8436,10 @@ namespace Platform.Sportsbook.API.Repository
                         result.Add(new ClientOdds
                         {
                             ClientCode = client.Item1,
-                            Odds = odds,
+                            DecimalOdds = odds,
+                            MalaysianOdds = GetMalayOdds(odds, isBinary),
+                            HongkongOdds = GetHongkongOdds(odds, isBinary),
+                            IndonesianOdds = GetIndoOdds(odds, isBinary),
                             SelectionTemplateId = selection.SeTeId,
                             SelectionId = selection.SeId
                         });
@@ -8289,7 +8449,10 @@ namespace Platform.Sportsbook.API.Repository
                         result.Add(new ClientOdds
                         {
                             ClientCode = client.Item1,
-                            Odds = selection.Od,
+                            DecimalOdds = selection.Od,
+                            MalaysianOdds = GetMalayOdds(selection.Od, isBinary),
+                            HongkongOdds = GetHongkongOdds(selection.Od, isBinary),
+                            IndonesianOdds = GetIndoOdds(selection.Od, isBinary),
                             SelectionTemplateId = selection.SeTeId,
                             SelectionId = selection.SeId
                         });
@@ -8310,6 +8473,7 @@ namespace Platform.Sportsbook.API.Repository
             var clients = clientMarketConfig.Split('|').Select(s => new Tuple<string, decimal>(s.Split(':').First(), Convert.ToDecimal(s.Split(':').Last()))).Where(c => c.Item1 == clientCode).ToList();
 
             var result = new List<ClientOdds>();
+            var isBinary = selections.Count > 2 ? false : true;
 
             foreach (var client in clients)
             {
@@ -8323,10 +8487,15 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (fairOddsInitialDivideBy <= 0)
                         {
+                            var tempOdds = GetMasterOddsWithAddedMargin(selection.Od);
+
                             result.Add(new ClientOdds
                             {
                                 ClientCode = client.Item1,
-                                Odds = GetMasterOddsWithAddedMargin(selection.Od),
+                                DecimalOdds = tempOdds,
+                                MalaysianOdds = GetMalayOdds(tempOdds, isBinary),
+                                HongkongOdds = GetHongkongOdds(tempOdds, isBinary),
+                                IndonesianOdds = GetIndoOdds(tempOdds, isBinary),
                                 SelectionTemplateId = selection.SeTeId,
                                 SelectionId = selection.SeId
                             });
@@ -8338,10 +8507,15 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (fairOdds <= 0)
                         {
+                            var tempOdds = GetMasterOddsWithAddedMargin(selection.Od);
+
                             result.Add(new ClientOdds
                             {
                                 ClientCode = client.Item1,
-                                Odds = GetMasterOddsWithAddedMargin(selection.Od),
+                                DecimalOdds = tempOdds,
+                                MalaysianOdds = GetMalayOdds(tempOdds, isBinary),
+                                HongkongOdds = GetHongkongOdds(tempOdds, isBinary),
+                                IndonesianOdds = GetIndoOdds(tempOdds, isBinary),
                                 SelectionTemplateId = selection.SeTeId,
                                 SelectionId = selection.SeId
                             });
@@ -8353,10 +8527,15 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (finalOddsInitialDivideBy <= 0)
                         {
+                            var tempOdds = GetMasterOddsWithAddedMargin(selection.Od);
+
                             result.Add(new ClientOdds
                             {
                                 ClientCode = client.Item1,
-                                Odds = GetMasterOddsWithAddedMargin(selection.Od),
+                                DecimalOdds = tempOdds,
+                                MalaysianOdds = GetMalayOdds(tempOdds, isBinary),
+                                HongkongOdds = GetHongkongOdds(tempOdds, isBinary),
+                                IndonesianOdds = GetIndoOdds(tempOdds, isBinary),
                                 SelectionTemplateId = selection.SeTeId,
                                 SelectionId = selection.SeId
                             });
@@ -8368,10 +8547,15 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (odds < 1.00m)
                         {
+                            var tempOdds = GetMasterOddsWithAddedMargin(selection.Od);
+
                             result.Add(new ClientOdds
                             {
                                 ClientCode = client.Item1,
-                                Odds = GetMasterOddsWithAddedMargin(selection.Od),
+                                DecimalOdds = tempOdds,
+                                MalaysianOdds = GetMalayOdds(tempOdds, isBinary),
+                                HongkongOdds = GetHongkongOdds(tempOdds, isBinary),
+                                IndonesianOdds = GetIndoOdds(tempOdds, isBinary),
                                 SelectionTemplateId = selection.SeTeId,
                                 SelectionId = selection.SeId
                             });
@@ -8385,7 +8569,10 @@ namespace Platform.Sportsbook.API.Repository
                         result.Add(new ClientOdds
                         {
                             ClientCode = client.Item1,
-                            Odds = odds,
+                            DecimalOdds = odds,
+                            MalaysianOdds = GetMalayOdds(odds, isBinary),
+                            HongkongOdds = GetHongkongOdds(odds, isBinary),
+                            IndonesianOdds = GetIndoOdds(odds, isBinary),
                             SelectionTemplateId = selection.SeTeId,
                             SelectionId = selection.SeId
                         });
@@ -8395,7 +8582,10 @@ namespace Platform.Sportsbook.API.Repository
                         result.Add(new ClientOdds
                         {
                             ClientCode = client.Item1,
-                            Odds = selection.Od,
+                            DecimalOdds = selection.Od,
+                            MalaysianOdds = GetMalayOdds(selection.Od, isBinary),
+                            HongkongOdds = GetHongkongOdds(selection.Od, isBinary),
+                            IndonesianOdds = GetIndoOdds(selection.Od, isBinary),
                             SelectionTemplateId = selection.SeTeId,
                             SelectionId = selection.SeId
                         });
@@ -8412,6 +8602,53 @@ namespace Platform.Sportsbook.API.Repository
 
             return Math.Round(100 / ((100 / odds) + 2m), 2);
         }
+
+        private static decimal GetMalayOdds(decimal odds, bool isBinary)
+        {
+            // add binary condition if more than 2 value is decimal
+            if (isBinary == false)
+                return odds;
+
+            if (odds == 1m)
+                return 0;
+
+            if (odds <= 2.00m)
+                return odds - 1m;
+
+            var retval = -1m / (odds - 1m);
+
+            return Math.Truncate(retval * 100) / 100;
+        }
+
+        private static decimal GetHongkongOdds(decimal odds, bool isBinary)
+        {
+            // add binary condition if more than 2 value is decimal
+            if (isBinary == false)
+                return odds;
+
+            if (odds == 1m)
+                return 0;
+
+            return odds - 1m;
+        }
+
+        private static decimal GetIndoOdds(decimal odds, bool isBinary)
+        {
+            // add binary condition if more than 2 value is decimal
+            if (isBinary == false)
+                return odds;
+
+            if (odds == 1m)
+                return 0;
+
+            if (odds >= 2.00m)
+                return odds - 1m;
+
+            var retval = -1m / (odds - 1m);
+
+            return Math.Truncate(retval * 100) / 100;
+        }
+        
         private List<BetBuilderMarket> GetBetBuilderMarketsXmlFiltered(XmlNodeList list, List<MarketMappingFilter> marketMappings, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode)
         {
             var response = new List<BetBuilderMarket>();

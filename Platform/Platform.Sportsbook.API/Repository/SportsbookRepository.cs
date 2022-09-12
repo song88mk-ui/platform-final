@@ -5058,7 +5058,7 @@ namespace Platform.Sportsbook.API.Repository
                             isBetBuilder = true;
                         }
                     }
-
+                    
                     var filteredSelections = selections.Where(c => c.MaId == market.MaId).ToList();
                     var isBinary = filteredSelections.Count > 2 ? false : true;
 

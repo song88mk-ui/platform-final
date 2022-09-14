@@ -351,7 +351,7 @@ namespace Platform.API.Repository
                 IsBoosted = request.IsBoosted,
                 Selections = selections,
                 IsBetBuilder = request.IsBetBuilder,
-                Odds = request.TotalOdds,
+                Odds = result.Result.TotalOdds,
             };
 
             return await _bettingRepository.PlaceBet(payload);

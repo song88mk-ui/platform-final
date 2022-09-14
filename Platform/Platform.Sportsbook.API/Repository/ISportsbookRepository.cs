@@ -69,8 +69,6 @@ namespace Platform.Sportsbook.API.Repository
         Task<BaseResponseDTO<SportGroupResponseDTO>> GetSportGroups();
         Task<BaseResponseDTO<BoostedResponseDTO>> GetBoostedFixtures(BoostedFixturesRequestDTO request);
 
-        Task<BaseResponseDTO<BetBuilderFixtureResponseDTO>> GetBetBuilderFixtures(BetBuilderFixtureRequestDTO request);
-        Task<BaseResponseDTO<BetBuilderSelectionResponseDTO>> GetBetBuilderSelections(BetBuilderSelectionRequestDTO request);
         Task<BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>> GetBetBuilderSelectionsOdds(BetBuilderSelectionsOddsRequestDTO request);
         Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO>> GetClientMarketTemplateGroups(ClientMarketTemplateGroupRequestDTO request);
         Task<BaseResponseDTO<ClientMarketTemplateResponseDTO>> GetClientMarketTemplates(ClientMarketTemplateRequestDTO request);

@@ -909,36 +909,7 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
-
-        [HttpPost("v1/sportsbook/betbuilder/fixtures")]
-        public async Task<IActionResult> GetBetBuilderFixtures([FromBody] BetBuilderFixtureRequestDTO request)
-        {
-            var result = await _sportsbookRepository.GetBetBuilderFixtures(request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
-        [HttpPost("v1/sportsbook/betbuilder/fixtures/details")]
-        public async Task<IActionResult> GetBetBuilderSelections([FromBody] BetBuilderSelectionRequestDTO request)
-        {
-            var result = await _sportsbookRepository.GetBetBuilderSelections(request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-        
-        
+                
         [HttpPost("v1/sportsbook/betbuilder/fixtures/totalodds")]
         public async Task<IActionResult> GetBetBuilderSelectionsOdds([FromBody] BetBuilderSelectionsOddsRequestDTO request)
         {

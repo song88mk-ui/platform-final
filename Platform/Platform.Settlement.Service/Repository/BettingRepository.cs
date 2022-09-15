@@ -184,7 +184,7 @@ namespace Platform.Settlement.Service.Repository
 
             return values.Aggregate((a, b) => a * b) * stake;
         }
-        private BetStatus GetStatus(List<BetStatus> statuses, BetStatus status, decimal payout, decimal stake)
+        private BetStatus GetStatus(List<BetStatus> statuses, BetStatus status, decimal payout, decimal stake, bool isBetBuilder)
         {
             var result = BetStatus.Lost;
 
@@ -198,6 +198,26 @@ namespace Platform.Settlement.Service.Repository
             var voidd = betSelections.Where(c => c == BetStatus.Void).Count();
             var cancelled = betSelections.Where(c => c == BetStatus.Cancelled).Count();
             var running = betSelections.Where(c => c == BetStatus.Running).Count();
+
+            if(isBetBuilder == true)
+            {
+                if (lost >= 1)
+                    return BetStatus.Lost;
+
+                if (cancelled >= 1)
+                    return BetStatus.Cancelled;
+
+                if (voidd >= 1)
+                    return BetStatus.Void;
+
+                if (running >= 1)
+                    return BetStatus.Running;
+
+                if(won == betSelections.Count)
+                    return BetStatus.Won;
+
+                return BetStatus.Lost;
+            }    
 
             decimal winLoss = payout - stake;
 
@@ -234,13 +254,14 @@ namespace Platform.Settlement.Service.Repository
             return result;
         }
 
-        private BetStatus GetInitialBetStatus(List<BetStatus> statuses, BetStatus status)
+        private BetStatus GetInitialBetStatus(List<BetStatus> statuses, BetStatus status, bool isBetBuilder)
         {
             var betSelections = statuses;
             betSelections.Add(status);
 
             var lost = betSelections.Where(c => c == BetStatus.Lost).Count();
             var cancelled = betSelections.Where(c => c == BetStatus.Cancelled).Count();
+            var voidd = betSelections.Where(c => c == BetStatus.Void).Count();
             var running = betSelections.Where(c => c == BetStatus.Running).Count();
 
             if (lost >= 1)
@@ -248,6 +269,9 @@ namespace Platform.Settlement.Service.Repository
 
             if (cancelled >= 1)
                 return BetStatus.Cancelled;
+
+            if(isBetBuilder && voidd >= 1)
+                return BetStatus.Void;
 
             if (running > 0 && lost == 0 && cancelled == 0)
                 return BetStatus.Running;
@@ -556,7 +580,7 @@ namespace Platform.Settlement.Service.Repository
                     var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
                     var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), bet.TrueStake, isBetBuilder, bet.Odds);
-                    var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
+                    var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake, isBetBuilder);
 
                     payload.NonTaxedPayout = payout;
 
@@ -695,7 +719,7 @@ namespace Platform.Settlement.Service.Repository
                         else
                             taxedWinnings = 0;
 
-                        var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, stake);
+                        var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, stake, isBetBuilder);
 
                         stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon || betStatus == BetStatus.Void ? bet.TrueStake : stake;
 
@@ -888,7 +912,7 @@ namespace Platform.Settlement.Service.Repository
 
                     var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), bet.TrueStake, isBetBuilder, bet.Odds);
 
-                    var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake);
+                    var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake, isBetBuilder);
 
                     payload.NonTaxedPayout = payout;
 
@@ -977,14 +1001,16 @@ namespace Platform.Settlement.Service.Repository
                 var totalSettled = selections.Where(c => c.SelectionId != message.SelectionId && c.IsSettled == true).Count();
                 var totalSelections = selections.Where(c => c.SelectionId != message.SelectionId).Count();
 
-                var initialBetStatus = GetInitialBetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus);
 
                 if (bet != null)
                 {
+
+                    var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
+
+                    var initialBetStatus = GetInitialBetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, isBetBuilder);
+
                     if (totalSettled == totalSelections)
                     {
-                    	var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
-
                         var finalStake = bet.TrueStake - bet.StakeBonus;
 
                         var taxedStake = bet.IsFreeBet == false ? finalStake - (finalStake / (1 + bet.StakeTax)) : 0;
@@ -1027,7 +1053,7 @@ namespace Platform.Settlement.Service.Repository
                         else
                             taxedWinnings = 0;
 
-                        var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, stake);
+                        var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, stake, isBetBuilder);
 
                         stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon || betStatus == BetStatus.Void ? bet.TrueStake : stake;
 

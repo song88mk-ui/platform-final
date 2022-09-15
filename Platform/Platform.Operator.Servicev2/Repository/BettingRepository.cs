@@ -608,20 +608,41 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                    AddOperatorLog(new OperatorLog
+                    if(result.IsFreeBet == true && message.IsBetBuilder)
                     {
-                        Direction = "RESPONSE",
-                        ClientId = betData.ClientId,
-                        ClientCode = betData.ClientCode,
-                        URL = $"{betData.Endpoint}{path}",
-                        BetId = betData.BetId.ToString().ToUpper(),
-                        Info = JsonSerializer.Serialize(result),
-                        OperatorToken = betData.OperatorToken,
-                        CorrelationId = correlationId,
-                        Timestamp = DateTime.UtcNow
-                    });
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = betData.ClientId,
+                            ClientCode = betData.ClientCode,
+                            URL = $"{betData.Endpoint}{path}",
+                            BetId = betData.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(response.ReasonPhrase),
+                            OperatorToken = betData.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
 
-                    AcceptBet(message.Bet.BetId, correlationId, messageBroker, result, message.IsBoosted, message.IsBetBuilder);
+                        CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, result.IsFreeBet, message.IsBoosted, threadId);
+                    }
+                    else
+                    {
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = betData.ClientId,
+                            ClientCode = betData.ClientCode,
+                            URL = $"{betData.Endpoint}{path}",
+                            BetId = betData.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(result),
+                            OperatorToken = betData.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
+
+                        AcceptBet(message.Bet.BetId, correlationId, messageBroker, result, message.IsBoosted, message.IsBetBuilder);
+                    }
+                    
                 }
                 else
                 {

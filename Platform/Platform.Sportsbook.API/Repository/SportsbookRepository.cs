@@ -7771,8 +7771,9 @@ namespace Platform.Sportsbook.API.Repository
                     return string.Empty;
 
                 boostedOdds = boostedOdds.Split(":")[1];
+                var cBoostedOdds = Convert.ToDecimal(boostedOdds);
 
-                return boostedOdds;
+                return cBoostedOdds.ToString("0.00");
             }
             else
             {

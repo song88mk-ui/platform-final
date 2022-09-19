@@ -191,6 +191,8 @@ namespace Platform.Job.BetAudit.Tableau.Repository
 
         public void ProcessBetsHK()
         {
+            var date = DateTime.Parse("2022-06-22 00:00:00.0000000");
+
             try
             {
                 using var scope = _serviceProvider.CreateScope();
@@ -212,6 +214,9 @@ namespace Platform.Job.BetAudit.Tableau.Repository
 
                     foreach (var bet in bets)
                     {
+                        if (bet.BetDate < date)
+                            continue;
+
                         using var transaction = tableauContext.Database.BeginTransaction();
 
                         var betSelectionCount = bettingContext.BetSelection.Where(c => c.BetId == bet.BetId).Count();
@@ -280,6 +285,8 @@ namespace Platform.Job.BetAudit.Tableau.Repository
         }
         public void ProcessBetSelectionsHK()
         {
+            var date = DateTime.Parse("2022-06-22 00:00:00.0000000");
+
             try
             {
                 using var scope = _serviceProvider.CreateScope();
@@ -301,56 +308,64 @@ namespace Platform.Job.BetAudit.Tableau.Repository
 
                     foreach (var betSelection in betSelections)
                     {
-                        using var transaction = tableauContext.Database.BeginTransaction();
+                        var bet = bettingContext.Bet.Find(betSelection.BetId);
 
-                        var count = tableauContext.BetSelectionAuditHK.Where(c => c.BetSelectionId == betSelection.BetSelectionId).Count();
-
-                        var previousBetSelection = tableauContext.BetSelectionAuditHK.Where(c => c.BetSelectionId == betSelection.BetSelectionId).OrderByDescending(o => o.Id).Take(1).FirstOrDefault();
-
-                        BetSelectionAuditHK betSelectionAudit;
-
-                        if (previousBetSelection != null)
+                        if (bet != null)
                         {
-                            previousBetSelection.IsLastBetSelection = false;
+                            if (bet.BetDate < date)
+                                continue;
+                        
+                            using var transaction = tableauContext.Database.BeginTransaction();
 
-                            tableauContext.BetSelectionAuditHK.Update(previousBetSelection);
+                            var count = tableauContext.BetSelectionAuditHK.Where(c => c.BetSelectionId == betSelection.BetSelectionId).Count();
 
-                            betSelectionAudit = new BetSelectionAuditHK
+                            var previousBetSelection = tableauContext.BetSelectionAuditHK.Where(c => c.BetSelectionId == betSelection.BetSelectionId).OrderByDescending(o => o.Id).Take(1).FirstOrDefault();
+
+                            BetSelectionAuditHK betSelectionAudit;
+
+                            if (previousBetSelection != null)
                             {
-                                RefId = betSelection.Id,
-                                BetId = betSelection.BetId,
-                                BetSelectionId = betSelection.BetSelectionId,
-                                BetSelectionSequence = count + 1,
-                                IsLastBetSelection = true,
-                                BetSelectionStatusId = betSelection.BetSelectionStatusId,
-                                Timestamp = betSelection.Timestamp,
-                                PreviousBetSelectionStatusId = previousBetSelection.BetSelectionStatusId,
-                                PreviousTimestamp = previousBetSelection.Timestamp
-                            };
-                        }
-                        else
-                        {
-                            betSelectionAudit = new BetSelectionAuditHK
+                                previousBetSelection.IsLastBetSelection = false;
+
+                                tableauContext.BetSelectionAuditHK.Update(previousBetSelection);
+
+                                betSelectionAudit = new BetSelectionAuditHK
+                                {
+                                    RefId = betSelection.Id,
+                                    BetId = betSelection.BetId,
+                                    BetSelectionId = betSelection.BetSelectionId,
+                                    BetSelectionSequence = count + 1,
+                                    IsLastBetSelection = true,
+                                    BetSelectionStatusId = betSelection.BetSelectionStatusId,
+                                    Timestamp = betSelection.Timestamp,
+                                    PreviousBetSelectionStatusId = previousBetSelection.BetSelectionStatusId,
+                                    PreviousTimestamp = previousBetSelection.Timestamp
+                                };
+                            }
+                            else
                             {
-                                RefId = betSelection.Id,
-                                BetId = betSelection.BetId,
-                                BetSelectionId = betSelection.BetSelectionId,
-                                BetSelectionSequence = count + 1,
-                                IsLastBetSelection = true,
-                                BetSelectionStatusId = betSelection.BetSelectionStatusId,
-                                Timestamp = betSelection.Timestamp,
-                                PreviousBetSelectionStatusId = null,
-                                PreviousTimestamp = null
-                            };
+                                betSelectionAudit = new BetSelectionAuditHK
+                                {
+                                    RefId = betSelection.Id,
+                                    BetId = betSelection.BetId,
+                                    BetSelectionId = betSelection.BetSelectionId,
+                                    BetSelectionSequence = count + 1,
+                                    IsLastBetSelection = true,
+                                    BetSelectionStatusId = betSelection.BetSelectionStatusId,
+                                    Timestamp = betSelection.Timestamp,
+                                    PreviousBetSelectionStatusId = null,
+                                    PreviousTimestamp = null
+                                };
+                            }
+
+                            lastRun.LastId = betSelection.Id;
+
+                            tableauContext.BetSelectionAuditHK.Add(betSelectionAudit);
+                            tableauContext.LastRunBetSelectionHK.Update(lastRun);
+                            tableauContext.SaveChanges();
+
+                            transaction.Commit();
                         }
-
-                        lastRun.LastId = betSelection.Id;
-
-                        tableauContext.BetSelectionAuditHK.Add(betSelectionAudit);
-                        tableauContext.LastRunBetSelectionHK.Update(lastRun);
-                        tableauContext.SaveChanges();
-
-                        transaction.Commit();
                     }
                 }
             }
@@ -364,6 +379,8 @@ namespace Platform.Job.BetAudit.Tableau.Repository
 
         public void ProcessBetsSA()
         {
+            var date = DateTime.Parse("2022-06-22 00:00:00.0000000");
+
             try
             {
                 using var scope = _serviceProvider.CreateScope();
@@ -385,6 +402,9 @@ namespace Platform.Job.BetAudit.Tableau.Repository
 
                     foreach (var bet in bets)
                     {
+                        if (bet.BetDate < date)
+                            continue;
+
                         using var transaction = tableauContext.Database.BeginTransaction();
 
                         var betSelectionCount = bettingContext.BetSelection.Where(c => c.BetId == bet.BetId).Count();
@@ -453,6 +473,8 @@ namespace Platform.Job.BetAudit.Tableau.Repository
         }
         public void ProcessBetSelectionsSA()
         {
+            var date = DateTime.Parse("2022-06-22 00:00:00.0000000");
+
             try
             {
                 using var scope = _serviceProvider.CreateScope();
@@ -474,56 +496,64 @@ namespace Platform.Job.BetAudit.Tableau.Repository
 
                     foreach (var betSelection in betSelections)
                     {
-                        using var transaction = tableauContext.Database.BeginTransaction();
+                        var bet = bettingContext.Bet.Find(betSelection.BetId);
 
-                        var count = tableauContext.BetSelectionAuditSA.Where(c => c.BetSelectionId == betSelection.BetSelectionId).Count();
-
-                        var previousBetSelection = tableauContext.BetSelectionAuditSA.Where(c => c.BetSelectionId == betSelection.BetSelectionId).OrderByDescending(o => o.Id).Take(1).FirstOrDefault();
-
-                        BetSelectionAuditSA betSelectionAudit;
-
-                        if (previousBetSelection != null)
+                        if (bet != null)
                         {
-                            previousBetSelection.IsLastBetSelection = false;
+                            if (bet.BetDate < date)
+                                continue;
 
-                            tableauContext.BetSelectionAuditSA.Update(previousBetSelection);
+                            using var transaction = tableauContext.Database.BeginTransaction();
 
-                            betSelectionAudit = new BetSelectionAuditSA
+                            var count = tableauContext.BetSelectionAuditSA.Where(c => c.BetSelectionId == betSelection.BetSelectionId).Count();
+
+                            var previousBetSelection = tableauContext.BetSelectionAuditSA.Where(c => c.BetSelectionId == betSelection.BetSelectionId).OrderByDescending(o => o.Id).Take(1).FirstOrDefault();
+
+                            BetSelectionAuditSA betSelectionAudit;
+
+                            if (previousBetSelection != null)
                             {
-                                RefId = betSelection.Id,
-                                BetId = betSelection.BetId,
-                                BetSelectionId = betSelection.BetSelectionId,
-                                BetSelectionSequence = count + 1,
-                                IsLastBetSelection = true,
-                                BetSelectionStatusId = betSelection.BetSelectionStatusId,
-                                Timestamp = betSelection.Timestamp,
-                                PreviousBetSelectionStatusId = previousBetSelection.BetSelectionStatusId,
-                                PreviousTimestamp = previousBetSelection.Timestamp
-                            };
-                        }
-                        else
-                        {
-                            betSelectionAudit = new BetSelectionAuditSA
+                                previousBetSelection.IsLastBetSelection = false;
+
+                                tableauContext.BetSelectionAuditSA.Update(previousBetSelection);
+
+                                betSelectionAudit = new BetSelectionAuditSA
+                                {
+                                    RefId = betSelection.Id,
+                                    BetId = betSelection.BetId,
+                                    BetSelectionId = betSelection.BetSelectionId,
+                                    BetSelectionSequence = count + 1,
+                                    IsLastBetSelection = true,
+                                    BetSelectionStatusId = betSelection.BetSelectionStatusId,
+                                    Timestamp = betSelection.Timestamp,
+                                    PreviousBetSelectionStatusId = previousBetSelection.BetSelectionStatusId,
+                                    PreviousTimestamp = previousBetSelection.Timestamp
+                                };
+                            }
+                            else
                             {
-                                RefId = betSelection.Id,
-                                BetId = betSelection.BetId,
-                                BetSelectionId = betSelection.BetSelectionId,
-                                BetSelectionSequence = count + 1,
-                                IsLastBetSelection = true,
-                                BetSelectionStatusId = betSelection.BetSelectionStatusId,
-                                Timestamp = betSelection.Timestamp,
-                                PreviousBetSelectionStatusId = null,
-                                PreviousTimestamp = null
-                            };
+                                betSelectionAudit = new BetSelectionAuditSA
+                                {
+                                    RefId = betSelection.Id,
+                                    BetId = betSelection.BetId,
+                                    BetSelectionId = betSelection.BetSelectionId,
+                                    BetSelectionSequence = count + 1,
+                                    IsLastBetSelection = true,
+                                    BetSelectionStatusId = betSelection.BetSelectionStatusId,
+                                    Timestamp = betSelection.Timestamp,
+                                    PreviousBetSelectionStatusId = null,
+                                    PreviousTimestamp = null
+                                };
+                            }
+
+                            lastRun.LastId = betSelection.Id;
+
+                            tableauContext.BetSelectionAuditSA.Add(betSelectionAudit);
+                            tableauContext.LastRunBetSelectionSA.Update(lastRun);
+                            tableauContext.SaveChanges();
+
+                            transaction.Commit();
                         }
-
-                        lastRun.LastId = betSelection.Id;
-
-                        tableauContext.BetSelectionAuditSA.Add(betSelectionAudit);
-                        tableauContext.LastRunBetSelectionSA.Update(lastRun);
-                        tableauContext.SaveChanges();
-
-                        transaction.Commit();
                     }
                 }
             }

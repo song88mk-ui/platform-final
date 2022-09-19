@@ -23,6 +23,7 @@ namespace Platform.Shared.Data.Sportsbook
             modelBuilder.Entity<ClientLeagueOrder>().HasKey(k => new { k.ClientId, k.SportId, k.SegmentId, k.LeagueId });
             modelBuilder.Entity<ClientMarketTemplateOrder>().HasKey(k => new { k.ClientId, k.SportId, k.MarketTemplateId });
             modelBuilder.Entity<ClientMarketTemplateGroup>().HasKey(k => new { k.ClientId, k.SportId, k.FixtureStatusId, k.Id });
+            modelBuilder.Entity<BetBuilderMarketTemplates>().HasKey(k => new { k.SportId, k.MarketTemplateId });
         }
 
         public DbSet<ClientSportOrder> ClientSportOrder { get; set; }
@@ -37,5 +38,6 @@ namespace Platform.Shared.Data.Sportsbook
         public DbSet<ClientLeagueOrder> ClientLeagueOrder { get; set; }
         public DbSet<ClientMarketTemplateOrder> ClientMarketTemplateOrder { get; set; }
         public DbSet<ClientMarketTemplateGroup> ClientMarketTemplateGroup { get; set; }
+        public DbSet<BetBuilderMarketTemplates> BetBuilderMarketTemplates { get; set; }
     }
 }

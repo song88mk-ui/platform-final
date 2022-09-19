@@ -1250,7 +1250,7 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetSearchResults(apiKey, clientId, languageCode, new SearchResultRequest { SearchText = searchText}, sportGroupId);
+            var result = await _platformRepository.GetSearchResults(apiKey, clientId, languageCode, new SearchResultRequest { SearchText = searchText }, sportGroupId);
 
             var parameters = new
             {
@@ -1289,7 +1289,7 @@ namespace Platform.API.Controllers
 
             var result = await _platformRepository.GetSports(apiKey, clientId, languageCode, sportGroup);
 
-            var parameters = new 
+            var parameters = new
             {
                 sportGroup
             };
@@ -1317,7 +1317,7 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/fixturedetails")]
-        public async Task<IActionResult> GetFixtureDetails([FromQuery] string fixtureId)
+        public async Task<IActionResult> GetFixtureDetails([FromQuery] string fixtureId, bool isBetBuilder = false)
         {
             //
             var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
@@ -1326,7 +1326,7 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetFixtureDetails(apiKey, clientId, languageCode, new FixtureDetailsRequest { FixtureId = fixtureId }, ipCountryCode);
+            var result = await _platformRepository.GetFixtureDetails(apiKey, clientId, languageCode, new FixtureDetailsRequest { FixtureId = fixtureId, IsBetBuilder = isBetBuilder }, ipCountryCode);
 
             var parameters = new
             {
@@ -1505,6 +1505,40 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/sportsbook/betbuilder/markettemplates")]
+        public async Task<IActionResult> GetBetBuilderMarketTemplates()
+        {
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.GetBetBuilderMarketTemplates(apiKey, clientId);
+
+            var parameters = new { };
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "x-operator-token", string.Empty },
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/sportsbook/betbuilder/markettemplates", properties);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
 
         [HttpPost("v1/sportsbook/betbuilder/selections/odds")]
         public async Task<IActionResult> GetBetBuilderSelectionsOdds([FromBody] BetBuilderSelectionsOddsRequest request)

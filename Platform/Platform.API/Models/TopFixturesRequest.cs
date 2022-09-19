@@ -69,6 +69,7 @@ namespace Platform.API.Models
     public class FixtureDetailsRequest
     {
         public string FixtureId { get; set; }
+        public bool IsBetBuilder { get; set; } = false;
     }
 
     public class FixtureMarketSelectionDetailsRequest

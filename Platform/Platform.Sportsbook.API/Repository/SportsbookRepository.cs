@@ -6007,6 +6007,30 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<BetBuilderMarketTemplatesDTO>> GetBetBuilderMarketTemplatesDTO()
+        {
+            var result = GetBetBuilderMarketTemplates();
+            var finalResult = new BetBuilderMarketTemplatesDTO();
+
+            foreach (var betBuilder in result)
+            {
+                finalResult.BetBuilderMarketTemplates.Add(new BetBuilderMarketTemplateDTO
+                {
+                    SportId = betBuilder.SportId,
+                    MarketTemplateId = betBuilder.MarketTemplateId,
+                    Live = betBuilder.Live,
+                    Prematch = betBuilder.Prematch
+                });
+            }
+
+            return new BaseResponseDTO<BetBuilderMarketTemplatesDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = finalResult
+            };
+        }
+
         public async Task<BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>> GetBetBuilderSelectionsOdds(BetBuilderSelectionsOddsRequestDTO request)
         {
             var fixtureIds = request.Selections.Select(s => Convert.ToInt64(s.FixtureId)).Distinct().ToList();

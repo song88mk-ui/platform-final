@@ -159,7 +159,7 @@ namespace Platform.API.Repository
                     Message = StatusCode.Boosted_Odds_Cannot_Be_Parlayed.ToString().Replace('_', ' '),
                 };
             }
-            
+
             if (request.IsBoosted && request.IsBetBuilder)
             {
                 return new BaseResponseDTO<BetResponseDTO>
@@ -240,7 +240,7 @@ namespace Platform.API.Repository
 
             if (result.StatusCode != StatusCode.Success)
             {
-                if(request.IsBetBuilder)
+                if (request.IsBetBuilder)
                 {
                     return new BaseResponseDTO<BetResponseDTO>
                     {
@@ -1972,6 +1972,7 @@ namespace Platform.API.Repository
                 FixtureId = request.FixtureId,
                 ClientCode = clientResponse.Result.ClientCode,
                 IpCountryCode = ipCountryCode,
+                IsBetBuilder = request.IsBetBuilder
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetSelectionDetails(string apiKey, string clientId, string langCode, FixtureMarketSelectionDetailsRequest request, string ipCountryCode)
@@ -3402,13 +3403,29 @@ namespace Platform.API.Repository
                 };
             }
 
-            return await _sportsbookRepository.GetBoostedFixtures(new BoostedFixturesRequestDTO 
+            return await _sportsbookRepository.GetBoostedFixtures(new BoostedFixturesRequestDTO
             {
                 ClientId = clientResponse.Result.ClientId,
                 ClientCode = clientResponse.Result.ClientCode,
                 LanguageCode = languageCode,
                 IPCountryCode = ipCountryCode
             });
+        }
+
+        public async Task<BaseResponseDTO<BetBuilderMarketTemplatesDTO>> GetBetBuilderMarketTemplates(string apiKey, string clientId)
+        {
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<BetBuilderMarketTemplatesDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetBetBuilderMarketTemplates();
         }
 
         public async Task<BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>> GetBetBuilderSelectionsOdds(string clientId, string langCode, BetBuilderSelectionsOddsRequest request)

@@ -11,6 +11,7 @@ namespace Platform.Shared.Models
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
         public string IpCountryCode { get; set; }
+        public bool IsBetBuilder { get; set; }
     }
     public class TWFixtureMarketSelectionDetailsRequestDTO
     {

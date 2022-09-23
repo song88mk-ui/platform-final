@@ -1384,6 +1384,8 @@ namespace Platform.Betting.API.Repository
                     }
                 }
 
+                var runningTaxedStake = bet.Stake - (bet.Stake / (1 + bet.StakeTax));
+
                 result.Add(new BetHistoryDTO
                 {
                     BetId = bet.BetId.ToString(),
@@ -1402,8 +1404,8 @@ namespace Platform.Betting.API.Repository
                     CashOutStatusName = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStatus.ToString() : CashOutStatus.Unavailable.ToString(),
                     StakeTax = bet.StakeTax,
                     WinningsTax = bet.WinningsTax,
-                    TaxedStake = bet.TaxedStake,
-                    TaxedWinnings = bet.TaxedWinnings,
+                    TaxedStake = bet.BetStatusId == (int)BetStatus.Running ? runningTaxedStake : bet.TaxedStake,
+                    TaxedWinnings = bet.BetStatusId == (int)BetStatus.Running ? GetTaxedWinnings(bet, parlayBonus) : bet.TaxedWinnings,
                     ParlayBonus = parlayBonus,
                     ParlayBonusWinnings = bet.BetStatusId == (int)BetStatus.Running ? 0.00m : bet.ParlayBonusWinnings,
                     StakeReal = bet.StakeReal,
@@ -1530,7 +1532,7 @@ namespace Platform.Betting.API.Repository
                     CashOutStatusName = CashOutStatus.Unavailable.ToString(),
                     StakeTax = bet.StakeTax,
                     WinningsTax = bet.WinningsTax,
-                    TaxedStake = bet.TaxedStake,
+                    TaxedStake = bet.BetStatusId == (int)BetStatus.Running ? 0.00m : bet.TaxedStake,
                     TaxedWinnings = bet.TaxedWinnings,
                     ParlayBonus = bet.ParlayBonus,
                     ParlayBonusWinnings = bet.ParlayBonusWinnings,
@@ -2636,6 +2638,13 @@ namespace Platform.Betting.API.Repository
 
             return selections.Count > 1 ? BetType.Parlay : BetType.Single;
 
+        }
+
+        private decimal GetTaxedWinnings(Bet bet, decimal parlayBonus)
+        {
+            var payout = bet.Stake * bet.Odds;
+            var parlayBonusWinnings = payout * parlayBonus;
+            return ((payout + parlayBonusWinnings) - bet.Stake) * bet.WinningsTax;
         }
     }
 }

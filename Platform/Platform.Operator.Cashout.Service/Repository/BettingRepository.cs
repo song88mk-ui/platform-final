@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Data.Platform;
@@ -20,11 +21,11 @@ namespace Platform.Operator.Cashout.Service.Repository
 {
     public class BettingRepository : IBettingRepository
     {
-        private readonly IConfiguration _configuration;
+        private readonly ILogger<BettingRepository> _logger;
         private List<HttpClient> _httpClients = new List<HttpClient>();
-        public BettingRepository(IConfiguration configuration)
+        public BettingRepository(ILogger<BettingRepository> logger)
         {
-            _configuration = configuration;
+            _logger = logger;
         }
 
         private HttpClient GetHttpClient(string endpoint, string clientId)
@@ -58,23 +59,23 @@ namespace Platform.Operator.Cashout.Service.Repository
                     UserId = message.UserId
                 };
 
+                _logger.LogInformation($"ProcessCashOut - Request: {JsonSerializer.Serialize(cashout)}");
+
                 var response = GetHttpClient(endpoint, message.ClientId).PostAsync($"{endpoint}{path}", new StringContent(JsonSerializer.Serialize(cashout), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
                     var result = JsonSerializer.Deserialize<CashoutResultResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-                    Console.WriteLine($"{DateTime.UtcNow} : Success {response}");
-                    
+                    _logger.LogInformation($"ProcessCashOut - Response: {response.Content.ReadAsStringAsync().Result}");
                 }
                 else
                 {
-                    Console.WriteLine($"{DateTime.UtcNow} : Failed {response}");
+                    _logger.LogInformation($"ProcessCashOut - Response: {JsonSerializer.Serialize(response)}");
                 }
             }
             catch (Exception ex)
             {
-                //TODO : Log To file
-                Console.WriteLine($"{DateTime.UtcNow} : Error: {ex.Message} -> CashOutResult: {JsonSerializer.Serialize(message)}");
+                _logger.LogError($"Error: {ex.Message} -> CashOutResult: {JsonSerializer.Serialize(message)}");
             }
         }
     }

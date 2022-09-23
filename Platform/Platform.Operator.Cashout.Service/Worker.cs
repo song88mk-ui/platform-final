@@ -361,7 +361,7 @@ namespace Platform.Operator.Cashout.Service
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{DateTime.UtcNow} {ex.Message}");
+                _logger.LogError($"Error: {ex.Message}");
                 _messageBroker.Acknowledge(e);
             }
         }

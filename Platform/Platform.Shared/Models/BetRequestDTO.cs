@@ -32,6 +32,7 @@ namespace Platform.Shared.Models
         public Channel Channel { get; set; }
         public string IPAddress { get; set; }
         public bool IsBoosted { get; set; }
+        public bool IsBetBuilder { get; set; }
         public List<BetSelectionRequestDTO> Selections { get; set; }
     }
 

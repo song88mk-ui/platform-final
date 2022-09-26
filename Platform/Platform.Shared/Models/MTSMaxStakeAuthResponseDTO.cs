@@ -54,6 +54,10 @@ namespace Platform.Shared.Models
 
     public class MTSBetDTO
     {
+        [JsonProperty("customBet")]
+        public bool CustomBet { get; set; }
+        [JsonProperty("calculationOdds")]
+        public long CalculationOdds { get; set; }
         [JsonProperty("stake")]
         public MTSStakeDTO Stake { get; set; }
 

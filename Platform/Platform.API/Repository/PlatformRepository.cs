@@ -133,12 +133,21 @@ namespace Platform.API.Repository
                 };
             }
 
-            if (!IsValidOdds(request.Selections.Select(s => s.Odds).ToList()))
+            if (request.IsBetBuilder == false && !IsValidOdds(request.Selections.Select(s => s.Odds).ToList()))
             {
                 return new BaseResponseDTO<BetResponseDTO>
                 {
                     StatusCode = StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1,
                     Message = StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (request.IsBetBuilder == true && request.TotalOdds <= 1m)
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Total_Odds_Must_Be_Greater_Or_Higher_To_1,
+                    Message = StatusCode.Total_Odds_Must_Be_Greater_Or_Higher_To_1.ToString().Replace('_', ' '),
                 };
             }
 
@@ -148,6 +157,33 @@ namespace Platform.API.Repository
                 {
                     StatusCode = StatusCode.Boosted_Odds_Cannot_Be_Parlayed,
                     Message = StatusCode.Boosted_Odds_Cannot_Be_Parlayed.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (request.IsBoosted && request.IsBetBuilder)
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Boosted_Odds_Cannot_Be_Combined_With_Bet_Builder,
+                    Message = StatusCode.Boosted_Odds_Cannot_Be_Combined_With_Bet_Builder.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (request.IsBetBuilder && request.Selections.Count < 2)
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Bet_Builder_Must_Have_2_Or_More_Selections,
+                    Message = StatusCode.Bet_Builder_Must_Have_2_Or_More_Selections.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (request.IsBetBuilder && request.Selections.Count > 10)
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Bet_Builder_Cannot_Be_More_Than_10_Selections,
+                    Message = StatusCode.Bet_Builder_Cannot_Be_More_Than_10_Selections.ToString().Replace('_', ' '),
                 };
             }
 
@@ -189,6 +225,8 @@ namespace Platform.API.Repository
                 ClientCode = clientResponse.Result.ClientCode,
                 OddsChangeType = request.IsBoosted == true ? OddsChangeType.None : request.OddsChangeType,
                 IsBoosted = request.IsBoosted,
+                IsBetBuilder = request.IsBetBuilder,
+                TotalOdds = request.TotalOdds,
                 Selections = request.Selections.Select(s => new BetFixtureSelectionRequestDTO
                 {
                     SportId = s.SportId,
@@ -202,11 +240,26 @@ namespace Platform.API.Repository
 
             if (result.StatusCode != StatusCode.Success)
             {
-                return new BaseResponseDTO<BetResponseDTO>
+                if (request.IsBetBuilder)
                 {
-                    StatusCode = StatusCode.Error,
-                    Message = StatusCode.Error.ToString().Replace('_', ' '),
-                };
+                    return new BaseResponseDTO<BetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = StatusCode.Error.ToString().Replace('_', ' '),
+                        Result = new BetResponseDTO
+                        {
+                            TotalOdds = result.Result.TotalOdds
+                        }
+                    };
+                }
+                else
+                {
+                    return new BaseResponseDTO<BetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = StatusCode.Error.ToString().Replace('_', ' '),
+                    };
+                }
             }
 
             if (result.Result.Selections.Any(s => s.BetSelectionState.StatusCode != StatusCode.Success))
@@ -296,7 +349,9 @@ namespace Platform.API.Repository
                 Channel = request.Channel,
                 IPAddress = request.IPAddress,
                 IsBoosted = request.IsBoosted,
-                Selections = selections
+                Selections = selections,
+                IsBetBuilder = request.IsBetBuilder,
+                Odds = result.Result.TotalOdds,
             };
 
             return await _bettingRepository.PlaceBet(payload);
@@ -1917,6 +1972,7 @@ namespace Platform.API.Repository
                 FixtureId = request.FixtureId,
                 ClientCode = clientResponse.Result.ClientCode,
                 IpCountryCode = ipCountryCode,
+                IsBetBuilder = request.IsBetBuilder
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetSelectionDetails(string apiKey, string clientId, string langCode, FixtureMarketSelectionDetailsRequest request, string ipCountryCode)
@@ -3347,12 +3403,71 @@ namespace Platform.API.Repository
                 };
             }
 
-            return await _sportsbookRepository.GetBoostedFixtures(new BoostedFixturesRequestDTO 
+            return await _sportsbookRepository.GetBoostedFixtures(new BoostedFixturesRequestDTO
             {
                 ClientId = clientResponse.Result.ClientId,
                 ClientCode = clientResponse.Result.ClientCode,
                 LanguageCode = languageCode,
                 IPCountryCode = ipCountryCode
+            });
+        }
+
+        public async Task<BaseResponseDTO<BetBuilderMarketTemplatesDTO>> GetBetBuilderMarketTemplates(string apiKey, string clientId)
+        {
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<BetBuilderMarketTemplatesDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetBetBuilderMarketTemplates();
+        }
+
+        public async Task<BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>> GetBetBuilderSelectionsOdds(string clientId, string langCode, BetBuilderSelectionsOddsRequest request)
+        {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message,
+                    Result = new BetBuilderSelectionsOddsResponseDTO()
+                };
+            }
+
+            return await _sportsbookRepository.GetBetBuilderSelectionsOdds(new BetBuilderSelectionsOddsRequestDTO
+            {
+                LanguageCode = languageCode,
+                Selections = request.Selections
             });
         }
 

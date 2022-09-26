@@ -11,6 +11,7 @@ namespace Platform.Shared.Models
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
         public string IpCountryCode { get; set; }
+        public bool IsBetBuilder { get; set; }
     }
     public class TWFixtureMarketSelectionDetailsRequestDTO
     {
@@ -228,6 +229,7 @@ namespace Platform.Shared.Models
         {
             Markets = new List<MarketDTO>();
         }
+
         public int SportId { get; set; }
         public string SportName { get; set; }
         public int SegmentId { get; set; }
@@ -255,6 +257,7 @@ namespace Platform.Shared.Models
         public bool IsBetStop { get; set; }
         public bool IsBetStopGlobal { get; set; }
         public int SortOrder { get; set; }
+        public bool IsBetBuilder { get; set; }
         public SportMarketTemplateGroup MarketTemplateGroups { get; set; }
         public List<MarketDTO> Markets { get; set; }
     }
@@ -265,6 +268,7 @@ namespace Platform.Shared.Models
         {
             Selections = new List<SelectionDTO>();
         }
+
         public string MarketTemplateId { get; set; }
         public string MarketId { get; set; }
         public string MarketName { get; set; }
@@ -273,6 +277,7 @@ namespace Platform.Shared.Models
         public int MarketStatusId { get; set; }
         public string MarketStatusName { get; set; }
         public int SortOrder { get; set; }
+        public bool IsBetBuilder { get; set; }
         public List<SelectionDTO> Selections { get; set; }
     }
 
@@ -317,6 +322,7 @@ namespace Platform.Shared.Models
         public List<int> BetStop { get; set; }
         public bool IsBetStop { get; set; }
         public bool IsBetStopGlobal { get; set; }
+        public bool IsBetBuilder { get; set; }
         public int SortOrder { get; set; }
     }
 

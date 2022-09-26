@@ -73,6 +73,9 @@ namespace Platform.Shared.Models
 
         [JsonPropertyName("betSelections")]
         public List<OperatorBetSelectionSettlementRequestDTO> BetSelections { get; set; }
+
+        [JsonPropertyName("isBetBuilder")]
+        public bool IsBetBuilder { get; set; }
     }
 
     public class OperatorBetSelectionSettlementRequestDTO

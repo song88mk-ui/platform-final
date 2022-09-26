@@ -47,6 +47,9 @@ namespace Platform.Shared.Models
         [JsonPropertyName("isBoosted")]
         public bool IsBoosted { get; set; }
 
+        [JsonPropertyName("isBetBuilder")]
+        public bool IsBetBuilder { get; set; }
+
         [JsonPropertyName("betSelections")]
         public List<OperatorBetSelectionRequestDTO> BetSelections { get; set; }
     }

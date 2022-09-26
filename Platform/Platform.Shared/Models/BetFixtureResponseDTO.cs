@@ -11,6 +11,7 @@ namespace Platform.Shared.Models
             Selections = new List<BetFixtureSelectionResponseDTO>();
         }
         public List<BetFixtureSelectionResponseDTO> Selections { get; set; }
+        public decimal TotalOdds { get; set; }
     }
 
     public class BetSelectionProbabilityResponseDTO

@@ -137,6 +137,7 @@ namespace Platform.Operator.Servicev2.Repository
                             WinningsTax = betEntity.WinningsTax,
                             TaxedStake = betEntity.TaxedStake,
                             TaxedWinnings = betEntity.TaxedWinnings,
+                            IsFreeBet = betEntity.IsFreeBet,
                             BetTypeId = betEntity.BetTypeId,
                             BetTypeName = betEntity.BetTypeName,
                             OddsRef = betEntity.OddsRef
@@ -226,10 +227,11 @@ namespace Platform.Operator.Servicev2.Repository
                 Message = reason
             }, messageBroker, correlationId, threadId);
         }
-        private void AcceptBet(Guid betId, string correlationId, IMessageBroker messageBroker, OperatorBetResponseDTO operatorResponse, bool isBoosted = false)
+        private void AcceptBet(Guid betId, string correlationId, IMessageBroker messageBroker, OperatorBetResponseDTO operatorResponse, bool isBoosted = false, bool isBetBuilder = false)
         {
             var payload = new OnBetPlacement();
             payload.IsBoosted = isBoosted;
+            payload.IsBetBuilder = isBetBuilder;
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
@@ -560,6 +562,7 @@ namespace Platform.Operator.Servicev2.Repository
                     ParlayBonus = betData.ParlayBonus,
                     TransactionDate = betData.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                     IsBoosted = message.IsBoosted,
+                    IsBetBuilder = message.IsBetBuilder,
                     BetSelections = betSelectionData.Select(s => new OperatorBetSelectionRequestDTO
                     {
                         BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
@@ -605,20 +608,41 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                    AddOperatorLog(new OperatorLog
+                    if(result.IsFreeBet == true && message.IsBetBuilder)
                     {
-                        Direction = "RESPONSE",
-                        ClientId = betData.ClientId,
-                        ClientCode = betData.ClientCode,
-                        URL = $"{betData.Endpoint}{path}",
-                        BetId = betData.BetId.ToString().ToUpper(),
-                        Info = JsonSerializer.Serialize(result),
-                        OperatorToken = betData.OperatorToken,
-                        CorrelationId = correlationId,
-                        Timestamp = DateTime.UtcNow
-                    });
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = betData.ClientId,
+                            ClientCode = betData.ClientCode,
+                            URL = $"{betData.Endpoint}{path}",
+                            BetId = betData.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(response.ReasonPhrase),
+                            OperatorToken = betData.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
 
-                    AcceptBet(message.Bet.BetId, correlationId, messageBroker, result, message.IsBoosted);
+                        CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, result.IsFreeBet, message.IsBoosted, threadId);
+                    }
+                    else
+                    {
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = betData.ClientId,
+                            ClientCode = betData.ClientCode,
+                            URL = $"{betData.Endpoint}{path}",
+                            BetId = betData.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(result),
+                            OperatorToken = betData.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
+
+                        AcceptBet(message.Bet.BetId, correlationId, messageBroker, result, message.IsBoosted, message.IsBetBuilder);
+                    }
+                    
                 }
                 else
                 {
@@ -1070,6 +1094,7 @@ namespace Platform.Operator.Servicev2.Repository
                 Odds = message.Bet.Odds,
                 BetStatus = message.Bet.BetStatusName,
                 TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                IsBetBuilder = message.Bet.BetTypeId == (int)BetType.BetBuilder ? true : false,
                 BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
                 {
                     BetSelectionId = s.BetSelectionId.ToString().ToUpper(),

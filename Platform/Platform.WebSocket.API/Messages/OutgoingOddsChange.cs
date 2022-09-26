@@ -45,6 +45,7 @@ namespace Platform.WebSocket.API.Messages
         public int CuMi { get; set; }
         public int SoOr { get; set; }
         public int MaCo { get; set; }
+        public bool IsBeBu { get; set; }
         public List<OutgoingSportTranslation> SpNaTr { get; set; }
         public List<OutgoingSegmentTranslation> SegNaTr { get; set; }
         public List<OutgoingLeagueTranslation> LeNaTr { get; set; }
@@ -65,6 +66,7 @@ namespace Platform.WebSocket.API.Messages
         public string MaStNa { get; set; }
         public string MaNa { get; set; }
         public int SoOr { get; set; }
+        public bool IsBeBu { get; set; }
         public List<OutgoingMarketTranslation> MaNaTr { get; set; }
         public List<OutgoingSelection> Se { get; set; }
     }

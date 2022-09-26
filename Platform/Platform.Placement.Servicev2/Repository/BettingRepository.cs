@@ -34,6 +34,8 @@ namespace Platform.Placement.Servicev2.Repository
 
             var payload = new OnBetPlacement();
             payload.IsBoosted = message.IsBoosted;
+            payload.IsBetBuilder = message.IsBetBuilder;
+            payload.Odds = message.Odds;
 
             var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
                 message.BetSelections.Any(c => c.SportId > 1000) ? new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled for VS)") :
@@ -483,6 +485,7 @@ namespace Platform.Placement.Servicev2.Repository
                                 WinningsTax = betEntity.WinningsTax,
                                 TaxedStake = betEntity.TaxedStake,
                                 TaxedWinnings = betEntity.TaxedWinnings,
+                                IsFreeBet = betEntity.IsFreeBet,
                                 BetTypeId = betEntity.BetTypeId,
                                 BetTypeName = betEntity.BetTypeName,
                                 OddsRef = betEntity.OddsRef
@@ -615,7 +618,7 @@ namespace Platform.Placement.Servicev2.Repository
                     .SetDeviceId($"{message.Bet.ClientCode}{message.Bet.UserId.Replace("-", "")}")
                     .Build())
                     .Build())
-                    .AddBet(BuildBet(message.Bet, message.BetSelections))
+                    .AddBet(BuildBet(message.Bet, message.BetSelections, message.IsBetBuilder, message.Odds))
                     .BuildTicket();
 
                 var response = mts.SendTicketBlocking(bet);
@@ -630,7 +633,7 @@ namespace Platform.Placement.Servicev2.Repository
                 return new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10000 - {ex.Message}");
             }
         }
-        private IBet BuildBet(Bet betData, List<BetSelection> betSelectionData)
+        private IBet BuildBet(Bet betData, List<BetSelection> betSelectionData, bool isBetBuilder, decimal calculatedOdds)
         {
             //var companyStake = (0.0001m * betData.ExchangeRate) * 10000;
 
@@ -653,7 +656,7 @@ namespace Platform.Placement.Servicev2.Repository
 
             var hasVirtualSport = betSelectionData.Any(s => s.SportId > 1000) ? true : false;
 
-            if (hasVirtualSport == false && betSelectionData.Count >= 3 && betData.IsFreeBet == false)
+            if (isBetBuilder == false && hasVirtualSport == false && betSelectionData.Count >= 3 && betData.IsFreeBet == false)
             {
                 var parlayConfig = GetParlayBetConfig(Guid.Parse(betData.ClientId), betData.CurrencyCode, betData.BetDate, betSelectionData, betData.Payout);
 
@@ -677,11 +680,19 @@ namespace Platform.Placement.Servicev2.Repository
                                     .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
                                     .AddSelectedSystem(betSelectionData.Count)
                                     :
-                                    _factory.CreateBetBuilder()
-                                    .SetBetId(betData.BetId.ToString().ToUpper())
-                                    .SetStake(Convert.ToInt64(stake), StakeType.Total)
-                                    .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
-                                    .AddSelectedSystem(betSelectionData.Count);
+                                        isBetBuilder ? _factory.CreateBetBuilder()
+                                            .SetCustomBet(true)
+                                            .SetCalculationOdds(Convert.ToInt32(calculatedOdds * 10000))
+                                            .SetBetId(betData.BetId.ToString().ToUpper())
+                                            .SetStake(Convert.ToInt64(stake), StakeType.Total)
+                                            .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
+                                            .AddSelectedSystem(betSelectionData.Count)
+                                            :
+                                                _factory.CreateBetBuilder()
+                                                .SetBetId(betData.BetId.ToString().ToUpper())
+                                                .SetStake(Convert.ToInt64(stake), StakeType.Total)
+                                                .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
+                                                .AddSelectedSystem(betSelectionData.Count);
 
             foreach (var betSelection in betSelectionData)
             {

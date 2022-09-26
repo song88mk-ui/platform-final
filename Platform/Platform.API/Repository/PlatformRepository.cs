@@ -244,8 +244,8 @@ namespace Platform.API.Repository
                 {
                     return new BaseResponseDTO<BetResponseDTO>
                     {
-                        StatusCode = StatusCode.Error,
-                        Message = StatusCode.Error.ToString().Replace('_', ' '),
+                        StatusCode = result.StatusCode,
+                        Message = result.StatusCode.ToString().Replace('_', ' '),
                         Result = new BetResponseDTO
                         {
                             TotalOdds = result.Result.TotalOdds

@@ -6117,7 +6117,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
 
 
-                var response = await client.PostAsync($"/v1/custombet/calculate", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/xml"));
+                var response = await client.PostAsync($"/v1/custombet/calculate", new StringContent(payload, System.Text.Encoding.UTF8, "application/xml"));
 
                 if (response.IsSuccessStatusCode)
                 {

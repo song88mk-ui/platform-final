@@ -1505,7 +1505,7 @@ namespace Platform.API.Repository
         {
             try
             {
-                var response = await _httpClient.PostAsync($"v1/sportsbook/betbuilder/selections/odds", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.PostAsync($"v1/sportsbook/betbuilder/fixtures/totalodds", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
                     return JsonSerializer.Deserialize<BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });

@@ -387,6 +387,17 @@ namespace Platform.Placement.Servicev2.Repository
                                     BetStatus = (BetStatus)payload.Bet.BetStatusId
                                 }, "OnBetStatus", $"r.bet.betstatus.{payload.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
                             }
+                            else
+                            {
+                                messageBroker.Publish(new OnBetPlacementError
+                                {
+                                    BetId = $"{message.Bet.BetId.ToString().ToUpper()} - Bet id is not found",
+                                    Error = $"Bet might be stucked in waiting - {JsonSerializer.Serialize(result)}",
+                                    StackTrace = string.Empty,
+                                    InnerException = string.Empty
+                                }, "OnBetPlacementError", "r.bet.placement.error", Guid.NewGuid().ToString().ToUpper());
+
+                            }
                         }
                     }
 

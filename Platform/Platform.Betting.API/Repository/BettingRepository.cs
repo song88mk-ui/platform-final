@@ -1400,6 +1400,8 @@ namespace Platform.Betting.API.Repository
                 }
 
                 var runningTaxedStake = bet.Stake - (bet.Stake / (1 + bet.StakeTax));
+                var parlayBonusWinnings = bet.Payout * parlayBonus;
+                var runningTaxedWinnings = ((bet.Payout + parlayBonusWinnings) - bet.Stake) * bet.WinningsTax;
 
                 result.Add(new BetHistoryDTO
                 {
@@ -1420,9 +1422,9 @@ namespace Platform.Betting.API.Repository
                     StakeTax = bet.StakeTax,
                     WinningsTax = bet.WinningsTax,
                     TaxedStake = bet.BetStatusId == (int)BetStatus.Running ? runningTaxedStake : bet.TaxedStake,
-                    TaxedWinnings = bet.BetStatusId == (int)BetStatus.Running ? GetTaxedWinnings(bet, parlayBonus) : bet.TaxedWinnings,
+                    TaxedWinnings = bet.BetStatusId == (int)BetStatus.Running ? runningTaxedWinnings : bet.TaxedWinnings,
                     ParlayBonus = parlayBonus,
-                    ParlayBonusWinnings = bet.BetStatusId == (int)BetStatus.Running ? 0.00m : bet.ParlayBonusWinnings,
+                    ParlayBonusWinnings = bet.BetStatusId == (int)BetStatus.Running ? parlayBonusWinnings : bet.ParlayBonusWinnings,
                     StakeReal = bet.StakeReal,
                     StakeRealPayout = bet.StakeRealPayout,
                     StakeBonus = bet.StakeBonus,
@@ -2669,13 +2671,6 @@ namespace Platform.Betting.API.Repository
 
             return selections.Count > 1 ? BetType.Parlay : BetType.Single;
 
-        }
-
-        private decimal GetTaxedWinnings(Bet bet, decimal parlayBonus)
-        {
-            var payout = bet.Stake * bet.Odds;
-            var parlayBonusWinnings = payout * parlayBonus;
-            return ((payout + parlayBonusWinnings) - bet.Stake) * bet.WinningsTax;
         }
     }
 }

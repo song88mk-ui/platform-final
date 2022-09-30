@@ -6,4 +6,13 @@ namespace Platform.Shared.Models
     {
         public decimal TotalOdds { get; set; }
     }
+
+    public class BetBuilderMarketSelectionResponseDTO : BetBuilderSelectionsOddsResponseDTO
+    {
+        public BetBuilderMarketSelectionResponseDTO()
+        {
+            Markets = new List<BetBuilderMarketDTO>();
+        }
+        public List<BetBuilderMarketDTO> Markets { get; set; }
+    }
 }

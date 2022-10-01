@@ -30,11 +30,10 @@ namespace Platform.BetBuilder.Service
             return base.StopAsync(cancellationToken);
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _repository.GetBetBuilderSelectionsOdds();
-
-            return Task.CompletedTask;
+            await _repository.GetBetBuilderSelectionsOdds(1); //soccer
+            await _repository.GetBetBuilderSelectionsOdds(2); //basketball
         }
     }
 }

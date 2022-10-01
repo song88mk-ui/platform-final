@@ -17,6 +17,6 @@ namespace Platform.BetBuilder.Service.Repository
     public interface ISportsbookRepository
     {
 
-        Task<BaseResponseDTO<BetBuilderMarketSelectionResponseDTO>> GetBetBuilderSelectionsOdds();
+        Task<BaseResponseDTO<BetBuilderMarketSelectionResponseDTO>> GetBetBuilderSelectionsOdds(int sportId);
     }
 }

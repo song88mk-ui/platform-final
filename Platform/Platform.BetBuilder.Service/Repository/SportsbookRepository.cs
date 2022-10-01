@@ -1,7 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using Platform.Shared.Data.Sportsbook;
 using Platform.Shared.Data.Sportsbook.Entities;
+using Platform.Shared.Data.Sportsbook.SQLEntities;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
@@ -10,6 +12,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Transactions;
 using System.Xml;
 
 namespace Platform.BetBuilder.Service.Repository
@@ -17,16 +20,14 @@ namespace Platform.BetBuilder.Service.Repository
     public class SportsbookRepository : ISportsbookRepository
     {
         private static IMongoDatabase _db;
-        private readonly SportsbookContext _sportsbookContext;
         private readonly IConfiguration _configuration;
         private static IMongoCollection<Fixture> fixtureCollection;
         private static IMongoCollection<Market> marketCollection;
         private static IMongoCollection<MarketMapping> marketMappingCollection;
         private static IMongoCollection<Selection> selectionCollection;
         private static IMongoCollection<BettingStatus> bettingStatusCollection;
-        private readonly HttpClient _httpClient;
 
-        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IConfiguration configuration)
+        public SportsbookRepository(IConfiguration configuration)
         {
             _configuration = configuration;
             if (_db == null)
@@ -42,59 +43,49 @@ namespace Platform.BetBuilder.Service.Repository
 
             }
 
-            _sportsbookContext = sportsbookContext;
-            _httpClient = httpClient;
-
-            _httpClient.BaseAddress = new Uri("https://av-api.betradar.com");
-            _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer D6ewpdvADa8k5U7Xcx");
         }
 
-        public async Task<BaseResponseDTO<BetBuilderMarketSelectionResponseDTO>> GetBetBuilderSelectionsOdds()
+        public async Task<BaseResponseDTO<BetBuilderMarketSelectionResponseDTO>> GetBetBuilderSelectionsOdds(int sportId)
         {
-            Console.WriteLine($"{DateTime.UtcNow} - Starting to fetch Soccer matches");
+            var SportId = sportId;
+            Console.WriteLine($"{DateTime.UtcNow} - Starting to fetch SportId = {sportId} matches");
 
-            FilterDefinition<Fixture> soccerfixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.SpId == 1 );
-            var soccerfixtures = await fixtureCollection.Find(soccerfixtureFilter).ToListAsync();
-            
+            FilterDefinition<Fixture> fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.SpId == SportId);
+            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
 
-            var fixtureIds = soccerfixtures.Select(s => Convert.ToInt64(s.FiId)).Distinct().ToList();
+
+            var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
+            var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
+
+            var betBuilderMarketTemplateIds = betBuilderMarketTemplates.Where(b => b.SportId == SportId).Select(m => m.MarketTemplateId).Distinct().ToList();
+
+            var fixtureIds = fixtures.Select(s => Convert.ToInt64(s.FiId)).Distinct().ToList();
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
-            var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && betBuilderMarketTemplateIds.Contains(c.MaTeId) && marketStatusIds.Contains(c.MaStId));
+            var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr);
+            var markets = await marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
-            var marketIds = request.Selections.Select(s => Convert.ToInt64(s.MarketId)).Distinct().ToList();
-            var selectionIds = request.Selections.Select(s => Convert.ToInt64(s.SelectionId)).Distinct().ToList();
+            var marketIds = markets.Select(s => Convert.ToInt64(s.MaId)).Distinct().ToList();
 
-
-            var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
-
-            var marketFilter = Builders<Market>.Filter.Where(c => marketIds.Contains(c.MaId) && marketStatusIds.Contains(c.MaStId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
-            var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c => marketIds.Contains(c.MaId));
             var marketMappingProjection = Builders<MarketMapping>.Projection.Include(c => c.PrFiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaSp);
             var marketMappings = marketMappingCollection.Find(marketMappingFilter).Project<MarketMappingFilter>(marketMappingProjection).ToListAsync();
 
-            var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketIds.Contains(c.MaId) && marketStatusIds.Contains(c.MaStId));
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr);
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
             var bettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
 
-            await Task.WhenAll(fixtures, markets, marketMappings, selections, bettingStatus);
+            await Task.WhenAll(marketMappings, selections, bettingStatus);
 
-            var newFixtures = fixtures.Result;
-            var newMarkets = markets.Result;
-            var newMarketMappings = marketMappings.Result;
-            var newSelections = selections.Result;
-            var newBettingStatus = bettingStatus.Result;
+            Console.WriteLine($"{DateTime.UtcNow} - Done fetch Soccer matches");
 
-            if (newSelections.Count == 0)
+            if (selections.Result.Count == 0)
             {
                 return new BaseResponseDTO<BetBuilderMarketSelectionResponseDTO>
                 {
@@ -103,7 +94,91 @@ namespace Platform.BetBuilder.Service.Repository
                     Result = new BetBuilderMarketSelectionResponseDTO()
                 };
             }
+            
+            var selectionOddsResponse = new BetBuilderMarketSelectionResponseDTO();
 
+            var newFixtureIds = markets.Select(m => m.FiId).Distinct().ToList();
+            var newFixtures = fixtures.Where(f => newFixtureIds.Contains(f.FiId)).ToList();
+
+            foreach (var fixture in newFixtures)
+            {
+                foreach(var market in markets.Where(m => m.FiId == fixture.FiId))
+                {
+
+                    var isBetBuilder = false;
+                    var betBuilderMarketTemplate = betBuilderMarketTemplates.FirstOrDefault(c => c.SportId == sportId && c.MarketTemplateId == market.MaTeId);
+
+                    if (betBuilderMarketTemplate != null)
+                    {
+                        if (fixture.FiStId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == true)
+                        {
+                            isBetBuilder = true;
+                        }
+                        else if (fixture.FiStId == (int)FixtureStatus.Live && betBuilderMarketTemplate.Live == true)
+                        {
+                            isBetBuilder = true;
+                        }
+                    }
+
+                    if (isBetBuilder == false)
+                        continue;
+
+                    foreach (var selection in selections.Result.Where(s => s.MaId == market.MaId))
+                    {
+                        var marketResponse = await SRCalculateOddsFiltered(selection, fixture, marketMappings.Result.FirstOrDefault(m => m.MaId == market.MaId), marketMappings.Result, markets, selections.Result);
+
+                        //log here
+                        if(marketResponse != null && marketResponse.Markets.Any()) 
+                            foreach(var response in marketResponse.Markets)
+                            {
+                                foreach(var sresponse in response.Selections)
+                                {
+                                    Console.WriteLine($"{selection.SeId}|{selection.SeNa}|{selection.SeTeId}|{response.MarketId}|{response.MarketName}|{sresponse.SelectionId}|{sresponse.SelectionName}|{sresponse.SelectionTemplateId}");
+                                }
+                            }
+                    }
+
+                }
+            }
+
+            return new BaseResponseDTO<BetBuilderMarketSelectionResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BetBuilderMarketSelectionResponseDTO()
+            };
+        }
+        private List<BetBuilderMarketTemplates> GetBetBuilderMarketTemplates()
+        {
+            var result = new List<BetBuilderMarketTemplates>();
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new System.Transactions.TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<SportsbookContext>().UseSqlServer(_configuration["ConnectionStrings:Sportsbook"]);
+
+                using (var context = new SportsbookContext(optionsBuilder.Options))
+                {
+                    try
+                    {
+                        var betBuilder = context.BetBuilderMarketTemplates.AsNoTracking().ToList();
+                        if (betBuilder.Count > 0)
+                            result.AddRange(betBuilder);
+
+                        scope.Complete();
+                    }
+                    catch (Exception)
+                    {
+                        return result;
+                    }
+                }
+            }
+
+            return result;
+
+        }
+
+        private async Task<BetBuilderMarketSelectionResponseDTO> SRCalculateOddsFiltered(SelectionFilter selection, Fixture fixture, MarketMappingFilter marketMapping, List<MarketMappingFilter> marketMappings, List<MarketFilter> markets, List<SelectionFilter> selections)
+        {
             var selectionOddsResponse = new BetBuilderMarketSelectionResponseDTO();
 
             #region SR API to calculate odds
@@ -113,29 +188,21 @@ namespace Platform.BetBuilder.Service.Repository
                 client.DefaultRequestHeaders.Add("x-access-token", "wLCaM7vc80CADU33rz");
 
                 var payload = $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
-                if (request.Selections.Any())
+                if (selection != null)
                 {
                     payload = payload + $"<selections xmlns=\"http://schemas.sportradar.com/custombet/v1/endpoints\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://schemas.sportradar.com/custombet/v1/endpoints http://schemas.sportradar.com/custombet/v1/endpoints/Selections.xsd\">";
 
-                    foreach (var sel in request.Selections)
-                    {
-                        var fixture = fixtures.Result.FirstOrDefault(f => f.FiId == Convert.ToInt64(sel.FixtureId));
-                        var marketMapping = marketMappings.Result.FirstOrDefault(f => f.MaId == Convert.ToInt64(sel.MarketId));
-                        var selection = selections.Result.FirstOrDefault(s => s.SeId == Convert.ToInt64(sel.SelectionId));
+                    var marketSpecifier = marketMapping.MaSp;
 
-                        var marketSpecifier = marketMapping.MaSp;
-
-                        if (string.IsNullOrEmpty(marketSpecifier))
-                            payload = payload + $"<selection id=\"{fixture.FiSp}\" market_id=\"{marketMapping.MaTeId}\" outcome_id=\"{selection.SeTeId}\"/>";
-                        else
-                            payload = payload + $"<selection id=\"{fixture.FiSp}\" market_id=\"{marketMapping.MaTeId}\" specifiers=\"{marketSpecifier}\" outcome_id=\"{selection.SeTeId}\"/>";
-                    }
+                    if (string.IsNullOrEmpty(marketSpecifier))
+                        payload = payload + $"<selection id=\"{fixture.FiSp}\" market_id=\"{marketMapping.MaTeId}\" outcome_id=\"{selection.SeTeId}\"/>";
+                    else
+                        payload = payload + $"<selection id=\"{fixture.FiSp}\" market_id=\"{marketMapping.MaTeId}\" specifiers=\"{marketSpecifier}\" outcome_id=\"{selection.SeTeId}\"/>";
 
                     payload = payload + $"</selections>";
                 }
 
-
-                var response = await client.PostAsync($"/v1/custombet/calculate", new StringContent(payload, System.Text.Encoding.UTF8, "application/xml"));
+                var response = await client.PostAsync($"/v1/custombet/calculate-filter", new StringContent(payload, System.Text.Encoding.UTF8, "application/xml"));
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -151,15 +218,9 @@ namespace Platform.BetBuilder.Service.Repository
 
                     if (root.Name != "calculation_response")
                     {
-                        return new BaseResponseDTO<BetBuilderMarketSelectionResponseDTO>
-                        {
-                            StatusCode = StatusCode.No_Record_Found,
-                            Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
-                        };
+                        return selectionOddsResponse;
                     }
 
-                    selectionOddsResponse.TotalOdds = 0.0m;
-                    //selectionOddsResponse.Probability = 0.0m;
 
                     foreach (XmlElement node in root.ChildNodes)
                     {
@@ -177,37 +238,21 @@ namespace Platform.BetBuilder.Service.Repository
 
                             var marketNodes = eventNode.ChildNodes[0];
 
-                            var marketResponse = GetBetBuilderMarketsXml(marketNodes.ChildNodes, newMarketMappings, newMarkets, newSelections, request.LanguageCode);
+                            var marketResponse = GetBetBuilderMarketsXmlFiltered(marketNodes.ChildNodes, marketMappings, markets, selections);
                             if (marketResponse.Any())
                                 selectionOddsResponse.Markets.AddRange(marketResponse);
                         }
                     }
 
-
                     #endregion
-
-                    return new BaseResponseDTO<BetBuilderMarketSelectionResponseDTO>
-                    {
-                        StatusCode = StatusCode.Success,
-                        Message = StatusCode.Success.ToString(),
-                        Result = selectionOddsResponse
-                    };
                 }
-                else
-                {
-                    return new BaseResponseDTO<BetBuilderMarketSelectionResponseDTO>
-                    {
-                        StatusCode = StatusCode.No_Record_Found,
-                        Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
-                    };
-                }
+                return selectionOddsResponse;
             }
 
             #endregion
-
         }
 
-        private List<BetBuilderMarketDTO> GetBetBuilderMarketsXml(XmlNodeList list, List<MarketMappingFilter> marketMappings, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode)
+        private List<BetBuilderMarketDTO> GetBetBuilderMarketsXmlFiltered(XmlNodeList list, List<MarketMappingFilter> marketMappings, List<MarketFilter> markets, List<SelectionFilter> selections)
         {
             var response = new List<BetBuilderMarketDTO>();
 
@@ -215,6 +260,9 @@ namespace Platform.BetBuilder.Service.Repository
             {
                 var marketTemplateId = marketNode.Attributes["id"].Value;
                 var specifiers = marketNode.HasAttribute("specifiers") ? marketNode.Attributes["specifiers"].Value : string.Empty;
+                var conflict = marketNode.HasAttribute("conflict") ? Convert.ToBoolean(marketNode.Attributes["conflict"].Value) : false;
+                if (conflict == false)
+                    continue;
 
                 var marketMapped = marketMappings.FirstOrDefault(m => m.MaTeId == marketTemplateId && m.MaSp == specifiers);
                 if (marketMapped == null)
@@ -228,6 +276,9 @@ namespace Platform.BetBuilder.Service.Repository
                 foreach (XmlElement selectionNode in marketNode.ChildNodes)
                 {
                     var selectionTemplateId = selectionNode.Attributes["id"].Value;
+                    var sconflict = selectionNode.HasAttribute("conflict") ? Convert.ToBoolean(selectionNode.Attributes["conflict"].Value) : false;
+                    if (sconflict == false)
+                        continue;
 
                     var selection = selections.FirstOrDefault(m => marketMapped.MaId == m.MaId);
                     if (selection == null)
@@ -243,6 +294,9 @@ namespace Platform.BetBuilder.Service.Repository
                         SortOrder = selection.SeSoOr
                     });
                 }
+
+                if (!selectionResponse.Any())
+                    continue;
 
                 response.Add(new BetBuilderMarketDTO
                 {

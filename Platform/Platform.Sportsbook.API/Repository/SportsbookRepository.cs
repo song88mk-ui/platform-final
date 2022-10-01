@@ -2190,6 +2190,9 @@ namespace Platform.Sportsbook.API.Repository
 
                 if (count == 0) continue;
 
+                if (initialList.Count > 300)
+                    count = 300;
+
                 result.Add(new FixtureCount
                 {
                     SportId = item.SportId,

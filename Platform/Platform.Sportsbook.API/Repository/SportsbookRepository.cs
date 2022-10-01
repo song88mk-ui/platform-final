@@ -2535,9 +2535,13 @@ namespace Platform.Sportsbook.API.Repository
             {
                 if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
 
+
                 initialResult.Add(item);
 
                 if (initialResult.Count == 100 && _africaClientCodes.Contains(request.ClientCode.ToUpper()))
+                    break;
+
+                if (initialResult.Count == 300) //HK Brands
                     break;
             }
 
@@ -2608,7 +2612,7 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new TWResponseDTO
                 {
-                    Fixtures = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).Take(300).ToList()
+                    Fixtures = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList()
                 }
             };
 

@@ -2658,9 +2658,13 @@ namespace Platform.Sportsbook.API.Repository
             {
                 if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
 
+
                 initialResult.Add(item);
 
                 if (initialResult.Count == 100 && _africaClientCodes.Contains(request.ClientCode.ToUpper()))
+                    break;
+
+                if (initialResult.Count == 300) //HK Brands
                     break;
             }
 

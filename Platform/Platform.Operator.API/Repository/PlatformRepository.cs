@@ -158,13 +158,25 @@ namespace Platform.Operator.API.Repository
                     _platformContext.Operator.Update(result);
 
                     _platformContext.SaveChanges();
-                    
+
                     var testConfig = _platformContext.TestConfig.Find(id);
-                    if (request.IsBetBuilder == false && testConfig != null && testConfig.ClientId == id)
+                    if (testConfig != null && testConfig.ClientId == id)
                     {
                         scope.Complete();
 
-                        if(request.IsBoosted == true && (testConfig.StakeBonusPercent > 0 || testConfig.IsFreeBet))
+                        if (request.IsBetBuilder == true && (testConfig.StakeBonusPercent > 0 || testConfig.IsFreeBet))
+                        {
+                            return new OperatorBetResponseDTO
+                            {
+                                StatusId = 1003,
+                                Balance = result.Balance,
+                                IsFreeBet = testConfig.IsFreeBet,
+                                StakeReal = (request.Stake * (testConfig.StakeRealPercent / 100)),
+                                StakeBonus = (request.Stake * (testConfig.StakeBonusPercent / 100))
+                            };
+                        }
+
+                        if (request.IsBoosted == true && (testConfig.StakeBonusPercent > 0 || testConfig.IsFreeBet))
                         {
                             return new OperatorBetResponseDTO
                             {
@@ -234,7 +246,7 @@ namespace Platform.Operator.API.Repository
                 };
             }
 
-            if(request.IsBetBuilder)
+            if (request.IsBetBuilder)
             {
                 return new OperatorBetResponseDTO
                 {
@@ -424,7 +436,7 @@ namespace Platform.Operator.API.Repository
 
         public async Task<BaseResponseDTO<GenerateUserResponseDTO>> AddUser(GenerateUserRequestDTO request)
         {
-            if(string.IsNullOrEmpty(request.CurrencyCode) || !Enum.IsDefined(typeof(CurrencyCode), request.CurrencyCode))
+            if (string.IsNullOrEmpty(request.CurrencyCode) || !Enum.IsDefined(typeof(CurrencyCode), request.CurrencyCode))
                 return new BaseResponseDTO<GenerateUserResponseDTO>
                 {
                     StatusCode = StatusCode.Unsupported_CurrencyCode,
@@ -507,14 +519,14 @@ namespace Platform.Operator.API.Repository
                         {
                             postBalance += (prevOperatorAudit.Amount * -1);
 
-                            if(hasVoid)
+                            if (hasVoid)
                                 amount = payout - stake;
 
                         }
-                        else if((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Void)
+                        else if ((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Void)
                         {
-                            if(hasVoid)
-                                amount = (payout-stake) + (prevOperatorAudit.Amount * -1);
+                            if (hasVoid)
+                                amount = (payout - stake) + (prevOperatorAudit.Amount * -1);
                             else
                                 amount = payout + (prevOperatorAudit.Amount * -1);
                         }
@@ -527,7 +539,7 @@ namespace Platform.Operator.API.Repository
                         break;
                 }
             }
-            
+
             var operatorAuditEntity = _platformContext.OperatorAudit.Update(new OperatorAudit()
             {
                 BetId = Guid.Parse(betId),
@@ -611,9 +623,10 @@ namespace Platform.Operator.API.Repository
 
                 if (result == null)
                 {
-                    _platformContext.TestConfig.Add(new TestConfig { 
-                        ClientId = id, 
-                        IsFreeBet = isFreeBet, 
+                    _platformContext.TestConfig.Add(new TestConfig
+                    {
+                        ClientId = id,
+                        IsFreeBet = isFreeBet,
                         StakeRealPercent = stakeRealPercent,
                         StakeBonusPercent = stakeBonusPercent
                     });

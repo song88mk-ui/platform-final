@@ -1971,8 +1971,7 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode,
                 FixtureId = request.FixtureId,
                 ClientCode = clientResponse.Result.ClientCode,
-                IpCountryCode = ipCountryCode,
-                IsBetBuilder = request.IsBetBuilder
+                IpCountryCode = ipCountryCode
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetSelectionDetails(string apiKey, string clientId, string langCode, FixtureMarketSelectionDetailsRequest request, string ipCountryCode)

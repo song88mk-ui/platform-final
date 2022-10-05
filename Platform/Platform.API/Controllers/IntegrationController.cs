@@ -1317,7 +1317,7 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/fixturedetails")]
-        public async Task<IActionResult> GetFixtureDetails([FromQuery] string fixtureId, bool isBetBuilder = false)
+        public async Task<IActionResult> GetFixtureDetails([FromQuery] string fixtureId)
         {
             //
             var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
@@ -1326,7 +1326,7 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetFixtureDetails(apiKey, clientId, languageCode, new FixtureDetailsRequest { FixtureId = fixtureId, IsBetBuilder = isBetBuilder }, ipCountryCode);
+            var result = await _platformRepository.GetFixtureDetails(apiKey, clientId, languageCode, new FixtureDetailsRequest { FixtureId = fixtureId }, ipCountryCode);
 
             var parameters = new
             {

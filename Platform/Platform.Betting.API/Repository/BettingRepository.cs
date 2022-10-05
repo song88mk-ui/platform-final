@@ -2333,6 +2333,15 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
+            if(bet.BetTypeId == (int)BetType.BetBuilder)
+            {
+                return new BaseResponseDTO<BetCashOutResponseDTO>
+                {
+                    StatusCode = StatusCode.CashOut_Is_Unavailable,
+                    Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' ')
+                };
+            }
+
             var hasExistingBetPriceBoost = _bettingContext.BetPriceBoost.AsNoTracking().Any(b => b.BetId == request.BetId && b.BetStatusId != (int)BetStatus.Rejected
                                                 && b.BetStatusId != (int)BetStatus.Cancelled);
 

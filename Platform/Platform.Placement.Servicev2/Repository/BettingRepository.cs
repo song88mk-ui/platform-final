@@ -660,7 +660,7 @@ namespace Platform.Placement.Servicev2.Repository
             var stake = betData.TrueStake * 10000;
 
             #region Get Parlay Bonus
-            var parlayBonusWinnings = 0m;
+            var bonus = 0m;
             var parlayBonus = 0m;
             var hasBonus = false;
             // parlay bonus: bet should be Won by default
@@ -674,11 +674,21 @@ namespace Platform.Placement.Servicev2.Repository
                 if (parlayConfig.Item1 == true)
                 {
                     parlayBonus = parlayConfig.Item2.ParlayBonus;
-                    parlayBonusWinnings = betData.Payout * parlayConfig.Item2.ParlayBonus;
-                    parlayBonusWinnings = parlayBonusWinnings * 10000;
+                    bonus = betData.Payout * parlayConfig.Item2.ParlayBonus;
+                    bonus = bonus * 10000;
 
-                    hasBonus = parlayBonusWinnings == 0 ? false : true;
+                    hasBonus = bonus == 0 ? false : true;
                 }
+            }
+            
+            if(betData.BetTypeId == (int)BetType.PriceBoost) //boosted bonus
+            {
+                var totalBoostedPayout = betData.Odds * stake;
+                var totalOriginalPayout = betData.OddsRef * stake;
+
+                bonus = bonus + (totalBoostedPayout - totalOriginalPayout);
+
+                hasBonus = bonus == 0 ? false : true;
             }
 
 
@@ -686,7 +696,7 @@ namespace Platform.Placement.Servicev2.Repository
 
             var selection = hasBonus ? _factory.CreateBetBuilder()
                                     .SetBetId(betData.BetId.ToString().ToUpper())
-                                    .SetBetBonus(Convert.ToInt64(parlayBonusWinnings))
+                                    .SetBetBonus(Convert.ToInt64(bonus))
                                     .SetStake(Convert.ToInt64(stake), StakeType.Total)
                                     .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
                                     .AddSelectedSystem(betSelectionData.Count)
@@ -707,11 +717,24 @@ namespace Platform.Placement.Servicev2.Repository
 
             foreach (var betSelection in betSelectionData)
             {
-                selection.AddSelection(_factory.CreateSelectionBuilder()
+                if (betData.BetTypeId == (int)BetType.PriceBoost)
+                {
+                    selection.AddSelection(_factory.CreateSelectionBuilder()
+                                               .SetEventId(betSelection.FixtureSpecifier)
+                                               .SetId(betSelection.SelectionSpecifier)
+                                               .SetOdds(Convert.ToInt32(betSelection.OddsRef * 10000))
+                                               .SetBoostedOdds(Convert.ToInt32(betSelection.Odds * 10000))
+                                               .Build());
+                }
+                else
+                {
+                    selection.AddSelection(_factory.CreateSelectionBuilder()
                                                .SetEventId(betSelection.FixtureSpecifier)
                                                .SetId(betSelection.SelectionSpecifier)
                                                .SetOdds(Convert.ToInt32(betSelection.Odds * 10000))
                                                .Build());
+                }
+                    
             }
 
             return selection.Build();

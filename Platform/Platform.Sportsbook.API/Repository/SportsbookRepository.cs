@@ -4518,16 +4518,6 @@ namespace Platform.Sportsbook.API.Repository
                 isBetBuilder = true;
             }
 
-            if(request.IsBetBuilder && isBetBuilder == false)
-            {
-                return new BaseResponseDTO<TWResponseDTO>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new TWResponseDTO()
-                };
-            }
-
             var finalMarkets = GetMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), request.LanguageCode, request.ClientCode, fixture.SpId, fixture.FiTyId, fixture.FiStId, clientInitial, filteredBetBuilderMarketTemplates);
 
             var result = new List<FixtureDTO>
@@ -4562,7 +4552,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStopGlobal = bettingStatus.IsBeSo,
                     IsBetBuilder = isBetBuilder,
                     MarketTemplateGroups = marketTemplateGroups,
-                    Markets = request.IsBetBuilder ? finalMarkets.Where(m => m.IsBetBuilder == true).ToList() : finalMarkets
+                    Markets = finalMarkets
                 }
             };
 

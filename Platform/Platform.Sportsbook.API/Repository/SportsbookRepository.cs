@@ -5668,7 +5668,7 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
-        private async Task<Tuple<decimal,StatusCode>> GetBetBuilderOddsStatus(OddsChangeType oddsChangeType, List<BetFixtureSelectionRequestDTO> selections, Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>> result, decimal currentTotalOdds)
+        private async Task<Tuple<decimal, StatusCode>> GetBetBuilderOddsStatus(OddsChangeType oddsChangeType, List<BetFixtureSelectionRequestDTO> selections, Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>> result, decimal currentTotalOdds)
         {
 
             if (result.Item1.Select(f => f.FiId).Distinct().Count() > 1)
@@ -5688,7 +5688,7 @@ namespace Platform.Sportsbook.API.Repository
             });
 
             if (oddsResult.StatusCode != StatusCode.Success)
-                return new Tuple<decimal, StatusCode>(oddsResult.Result.TotalOdds,  StatusCode.Market_Is_Not_Offered);
+                return new Tuple<decimal, StatusCode>(oddsResult.Result.TotalOdds, StatusCode.Market_Is_Not_Offered);
 
             switch (oddsChangeType)
             {
@@ -5705,7 +5705,7 @@ namespace Platform.Sportsbook.API.Repository
                 default:
                     break;
             }
-            
+
             return new Tuple<decimal, StatusCode>(oddsResult.Result.TotalOdds, StatusCode.Success);
         }
 
@@ -6042,7 +6042,7 @@ namespace Platform.Sportsbook.API.Repository
         {
             var fixtureIds = request.Selections.Select(s => Convert.ToInt64(s.FixtureId)).Distinct().ToList();
 
-            if(fixtureIds.Count > 1)
+            if (fixtureIds.Count > 1)
             {
                 return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
                 {
@@ -6051,7 +6051,6 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var marketIds = request.Selections.Select(s => Convert.ToInt64(s.MarketId)).Distinct().ToList();
             var selectionIds = request.Selections.Select(s => Convert.ToInt64(s.SelectionId)).Distinct().ToList();
 
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
@@ -6060,26 +6059,27 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketFilter = Builders<Market>.Filter.Where(c => marketIds.Contains(c.MaId) && marketStatusIds.Contains(c.MaStId));
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
-            var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c => marketIds.Contains(c.MaId));
-            var marketMappingProjection = Builders<MarketMapping>.Projection.Include(c => c.PrFiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaSp);
-            var marketMappings = marketMappingCollection.Find(marketMappingFilter).Project<MarketMappingFilter>(marketMappingProjection).ToListAsync();
-
-            var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId) && marketStatusIds.Contains(c.MaStId));
+            var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = primarySelectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
             var bettingStatus = primaryBettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
 
-            await Task.WhenAll(fixture, markets, marketMappings, selections, bettingStatus);
+            await Task.WhenAll(fixture, markets, selections, bettingStatus);
+
+            var marketIds = markets.Result.Select(s => Convert.ToInt64(s.MaId)).Distinct().ToList();
+            var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c => marketIds.Contains(c.MaId));
+            var marketMappingProjection = Builders<MarketMapping>.Projection.Include(c => c.PrFiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaSp);
+            var marketMappings = await marketMappingCollection.Find(marketMappingFilter).Project<MarketMappingFilter>(marketMappingProjection).ToListAsync();
 
             var newFixture = fixture.Result;
             var newMarkets = markets.Result;
-            var newMarketMappings = marketMappings.Result;
+            var newMarketMappings = marketMappings;
             var newSelections = selections.Result;
             var newBettingStatus = bettingStatus.Result;
 
@@ -6106,13 +6106,13 @@ namespace Platform.Sportsbook.API.Repository
                 var payload = $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
                 if (request.Selections.Any())
                 {
-                    
+
                     payload = payload + $"<filterSelections xmlns=\"http://schemas.sportradar.com/custombet/v1/endpoints\">";
                     payload = payload + $"<selection id=\"{newFixture.FiSp}\">";
 
                     foreach (var sel in request.Selections)
                     {
-                        var marketMapping = marketMappings.Result.FirstOrDefault(f => f.MaId == Convert.ToInt64(sel.MarketId));
+                        var marketMapping = marketMappings.FirstOrDefault(f => f.MaId == Convert.ToInt64(sel.MarketId));
                         var selection = selections.Result.FirstOrDefault(s => s.SeId == Convert.ToInt64(sel.SelectionId));
 
                         var marketSpecifier = marketMapping.MaSp;
@@ -6156,7 +6156,6 @@ namespace Platform.Sportsbook.API.Repository
                         if (node.Name == "calculation")
                         {
                             selectionOddsResponse.TotalOdds = Convert.ToDecimal(node.Attributes["odds"].Value);
-                            //selectionOddsResponse.Probability = Convert.ToDecimal(node.Attributes["probability"].Value);
                         }
                         else if (node.Name == "available_selections")
                         {
@@ -8421,7 +8420,7 @@ namespace Platform.Sportsbook.API.Repository
             {
                 var marketTemplateId = marketNode.Attributes["id"].Value;
                 var specifiers = marketNode.HasAttribute("specifiers") ? marketNode.Attributes["specifiers"].Value : string.Empty;
-                
+
                 var conflict = marketNode.HasAttribute("conflict") ? Convert.ToBoolean(marketNode.Attributes["conflict"].Value) : false;
                 if (conflict == false)
                     continue;
@@ -8439,7 +8438,7 @@ namespace Platform.Sportsbook.API.Repository
                 foreach (XmlElement selectionNode in marketNode.ChildNodes)
                 {
                     var selectionTemplateId = selectionNode.Attributes["id"].Value;
-                    
+
                     var sconflict = selectionNode.HasAttribute("conflict") ? Convert.ToBoolean(selectionNode.Attributes["conflict"].Value) : false;
                     if (sconflict == false)
                         continue;
@@ -8468,7 +8467,7 @@ namespace Platform.Sportsbook.API.Repository
 
             return response;
         }
-        
+
         private List<BetBuilderMarketTemplates> GetBetBuilderMarketTemplates()
         {
             var result = _memCache.GetCache("bbmt", () =>

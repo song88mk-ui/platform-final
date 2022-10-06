@@ -2,17 +2,35 @@
 
 namespace Platform.Shared.Models
 {
-    public class BetBuilderSelectionsOddsResponseDTO
+    public class BetBuilderSelectionsOddsResponseDTO : BetBuilderFixture
     {
-        public decimal TotalOdds { get; set; }
+
     }
 
-    public class BetBuilderMarketSelectionResponseDTO : BetBuilderSelectionsOddsResponseDTO
+    public class BetBuilderFixture
     {
-        public BetBuilderMarketSelectionResponseDTO()
+        public BetBuilderFixture()
         {
-            Markets = new List<BetBuilderMarketDTO>();
+            Markets = new List<BetBuilderMarket>();
         }
-        public List<BetBuilderMarketDTO> Markets { get; set; }
+        public string FixtureId { get; set; }
+        public decimal TotalOdds { get; set; }
+        public List<BetBuilderMarket> Markets { get; set; }
+    }
+
+    public class BetBuilderMarket
+    {
+        public BetBuilderMarket()
+        {
+            Selections = new List<BetBuilderSelection>();
+        }
+        public string MarketId { get; set; }
+        public List<BetBuilderSelection> Selections { get; set; }
+    }
+
+    public class BetBuilderSelection
+    {
+        public string SelectionId { get; set; }
+        public bool IsActive { get; set; }
     }
 }

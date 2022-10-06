@@ -6041,12 +6041,22 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>> GetBetBuilderSelectionsOdds(BetBuilderSelectionsOddsRequestDTO request)
         {
             var fixtureIds = request.Selections.Select(s => Convert.ToInt64(s.FixtureId)).Distinct().ToList();
+
+            if(fixtureIds.Count > 1)
+            {
+                return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                {
+                    StatusCode = StatusCode.No_Record_Found,
+                    Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                };
+            }
+
             var marketIds = request.Selections.Select(s => Convert.ToInt64(s.MarketId)).Distinct().ToList();
             var selectionIds = request.Selections.Select(s => Convert.ToInt64(s.SelectionId)).Distinct().ToList();
 
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
             var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.IsSu).Include(c => c.FiStId).Include(c => c.FiSp).Include(c => c.SpId);
-            var fixtures = primaryFixtureCollection.Find(fixtureFilter).Project<FixtureBetBuilderFilter>(fixtureProjection).ToListAsync();
+            var fixture = primaryFixtureCollection.Find(fixtureFilter).Project<FixtureBetBuilderFilter>(fixtureProjection).FirstOrDefaultAsync();
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
@@ -6065,9 +6075,9 @@ namespace Platform.Sportsbook.API.Repository
             var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
             var bettingStatus = primaryBettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
 
-            await Task.WhenAll(fixtures, markets, marketMappings, selections, bettingStatus);
+            await Task.WhenAll(fixture, markets, marketMappings, selections, bettingStatus);
 
-            var newFixtures = fixtures.Result;
+            var newFixture = fixture.Result;
             var newMarkets = markets.Result;
             var newMarketMappings = marketMappings.Result;
             var newSelections = selections.Result;
@@ -6084,8 +6094,10 @@ namespace Platform.Sportsbook.API.Repository
             }
 
             var selectionOddsResponse = new BetBuilderSelectionsOddsResponseDTO();
+            selectionOddsResponse.FixtureId = newFixture.FiId.ToString();
+            selectionOddsResponse.TotalOdds = 0.0m;
 
-            #region SR API to calculate odds
+            #region SR API to calculate odds - Filtered
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri("https://api.betradar.com");
@@ -6094,27 +6106,29 @@ namespace Platform.Sportsbook.API.Repository
                 var payload = $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
                 if (request.Selections.Any())
                 {
-                    payload = payload + $"<selections xmlns=\"http://schemas.sportradar.com/custombet/v1/endpoints\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://schemas.sportradar.com/custombet/v1/endpoints http://schemas.sportradar.com/custombet/v1/endpoints/Selections.xsd\">";
+                    
+                    payload = payload + $"<filterSelections xmlns=\"http://schemas.sportradar.com/custombet/v1/endpoints\">";
+                    payload = payload + $"<selection id=\"{newFixture.FiSp}\">";
 
                     foreach (var sel in request.Selections)
                     {
-                        var fixture = fixtures.Result.FirstOrDefault(f => f.FiId == Convert.ToInt64(sel.FixtureId));
                         var marketMapping = marketMappings.Result.FirstOrDefault(f => f.MaId == Convert.ToInt64(sel.MarketId));
                         var selection = selections.Result.FirstOrDefault(s => s.SeId == Convert.ToInt64(sel.SelectionId));
 
                         var marketSpecifier = marketMapping.MaSp;
 
                         if (string.IsNullOrEmpty(marketSpecifier))
-                            payload = payload + $"<selection id=\"{fixture.FiSp}\" market_id=\"{marketMapping.MaTeId}\" outcome_id=\"{selection.SeTeId}\"/>";
+                            payload = payload + $"<market market_id=\"{marketMapping.MaTeId}\" outcome_id=\"{selection.SeTeId}\"/>";
                         else
-                            payload = payload + $"<selection id=\"{fixture.FiSp}\" market_id=\"{marketMapping.MaTeId}\" specifiers=\"{marketSpecifier}\" outcome_id=\"{selection.SeTeId}\"/>";
+                            payload = payload + $"<market market_id=\"{marketMapping.MaTeId}\" specifiers=\"{marketSpecifier}\" outcome_id=\"{selection.SeTeId}\"/>";
                     }
 
-                    payload = payload + $"</selections>";
+                    payload = payload + $"</selection>";
+                    payload = payload + $"</filterSelections>";
                 }
 
 
-                var response = await client.PostAsync($"/v1/custombet/calculate", new StringContent(payload, System.Text.Encoding.UTF8, "application/xml"));
+                var response = await client.PostAsync($"/v1/custombet/calculate-filter", new StringContent(payload, System.Text.Encoding.UTF8, "application/xml"));
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -6128,7 +6142,7 @@ namespace Platform.Sportsbook.API.Repository
 
                     XmlElement root = doc.DocumentElement;
 
-                    if (root.Name != "calculation_response")
+                    if (root.Name != "filtered_calculation_response")
                     {
                         return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
                         {
@@ -6137,9 +6151,6 @@ namespace Platform.Sportsbook.API.Repository
                         };
                     }
 
-                    selectionOddsResponse.TotalOdds = 0.0m;
-                    //selectionOddsResponse.Probability = 0.0m;
-
                     foreach (XmlElement node in root.ChildNodes)
                     {
                         if (node.Name == "calculation")
@@ -6147,19 +6158,19 @@ namespace Platform.Sportsbook.API.Repository
                             selectionOddsResponse.TotalOdds = Convert.ToDecimal(node.Attributes["odds"].Value);
                             //selectionOddsResponse.Probability = Convert.ToDecimal(node.Attributes["probability"].Value);
                         }
-                        //else if (node.Name == "available_selections")
-                        //{
-                        //    var eventNode = node.ChildNodes[0];
+                        else if (node.Name == "available_selections")
+                        {
+                            var eventNode = node.ChildNodes[0];
 
-                        //    if (eventNode.ChildNodes.Count == 0)
-                        //        continue;
+                            if (eventNode.ChildNodes.Count == 0)
+                                continue;
 
-                        //    var marketNodes = eventNode.ChildNodes[0];
+                            var marketNodes = eventNode.ChildNodes[0];
 
-                        //    var marketResponse = GetBetBuilderMarketsXml(marketNodes.ChildNodes, newMarketMappings, newMarkets, newSelections, request.LanguageCode);
-                        //    if (marketResponse.Any())
-                        //        selectionOddsResponse.Markets.AddRange(marketResponse);
-                        //}
+                            var marketResponse = GetBetBuilderMarketsXmlFiltered(marketNodes.ChildNodes, newMarketMappings, newMarkets, newSelections, request.LanguageCode);
+                            if (marketResponse.Any())
+                                selectionOddsResponse.Markets.AddRange(marketResponse);
+                        }
                     }
 
 
@@ -6183,7 +6194,6 @@ namespace Platform.Sportsbook.API.Repository
             }
 
             #endregion
-
         }
 
 
@@ -8403,52 +8413,54 @@ namespace Platform.Sportsbook.API.Repository
 
             return Math.Round(100 / ((100 / odds) + 2m), 2);
         }
-        private List<BetBuilderMarketDTO> GetBetBuilderMarketsXml(XmlNodeList list, List<MarketMappingFilter> marketMappings, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode)
+        private List<BetBuilderMarket> GetBetBuilderMarketsXmlFiltered(XmlNodeList list, List<MarketMappingFilter> marketMappings, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode)
         {
-            var response = new List<BetBuilderMarketDTO>();
+            var response = new List<BetBuilderMarket>();
 
             foreach (XmlElement marketNode in list)
             {
                 var marketTemplateId = marketNode.Attributes["id"].Value;
                 var specifiers = marketNode.HasAttribute("specifiers") ? marketNode.Attributes["specifiers"].Value : string.Empty;
+                
+                var conflict = marketNode.HasAttribute("conflict") ? Convert.ToBoolean(marketNode.Attributes["conflict"].Value) : false;
+                if (conflict == false)
+                    continue;
 
                 var marketMapped = marketMappings.FirstOrDefault(m => m.MaTeId == marketTemplateId && m.MaSp == specifiers);
                 if (marketMapped == null)
                     continue;
+
                 var market = markets.FirstOrDefault(m => marketMapped.MaId == m.MaId);
                 if (market == null)
                     continue;
 
-                var selectionResponse = new List<BetBuilderSelectionDTO>();
+                var selectionResponse = new List<BetBuilderSelection>();
 
                 foreach (XmlElement selectionNode in marketNode.ChildNodes)
                 {
                     var selectionTemplateId = selectionNode.Attributes["id"].Value;
+                    
+                    var sconflict = selectionNode.HasAttribute("conflict") ? Convert.ToBoolean(selectionNode.Attributes["conflict"].Value) : false;
+                    if (sconflict == false)
+                        continue;
 
                     var selection = selections.FirstOrDefault(m => marketMapped.MaId == m.MaId);
                     if (selection == null)
                         continue;
 
-                    selectionResponse.Add(new BetBuilderSelectionDTO
+                    selectionResponse.Add(new BetBuilderSelection
                     {
                         SelectionId = selection.SeId.ToString(),
-                        SelectionName = GetSelectionName(selection.SeNa, selection.SeNaTr, languageCode),
-                        SelectionTemplateId = selectionTemplateId,
-                        IsActive = selection.IsAc,
-                        CorrelationId = selection.CoId,
-                        SortOrder = selection.SeSoOr
+                        IsActive = false
                     });
                 }
 
-                response.Add(new BetBuilderMarketDTO
+                if (!selectionResponse.Any())
+                    continue;
+
+                response.Add(new BetBuilderMarket
                 {
-                    MarketTemplateId = marketTemplateId,
                     MarketId = market.MaId.ToString(),
-                    MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
-                    Line = market.Li,
-                    IsCashout = market.CaStId == 1 ? true : false,
-                    MarketStatusId = market.MaStId,
-                    MarketStatusName = market.MaStNa,
                     Selections = selectionResponse
                 });
 

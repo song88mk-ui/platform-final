@@ -240,12 +240,13 @@ namespace Platform.Betting.API.Repository
                                 }
                             }
 
-                            if (selectionProbability == null 
-                                || selectionProbability.SelectionStatusId == (int)BetStatus.Lost 
-                                || selectionProbability.SelectionStatusId == (int)BetStatus.Cancelled 
+                            if (selectionProbability == null
+                                || selectionProbability.SelectionStatusId == (int)BetStatus.Lost
+                                || selectionProbability.SelectionStatusId == (int)BetStatus.Cancelled
                                 || (selectionProbability.IsActive == false && selectionProbability.MarketStatusId == (int)MarketStatus.Active)
                                 || selectionProbability.IsGlobalBetStop == true
-                                || (selectionProbability.IsSuspended == true && selectionProbability.FixtureStatusId < 2))
+                                || (selectionProbability.IsSuspended == true && selectionProbability.FixtureStatusId < 2
+                                || (selectionProbability.IsSuspended == true && (selectionProbability.FixtureStatusId < 2 || selectionProbability.FixtureStatusId == 4) && selectionProbability.MarketStatusId == (int)MarketStatus.Active)))
                             {
                                 isBreak = true;
                                 break;

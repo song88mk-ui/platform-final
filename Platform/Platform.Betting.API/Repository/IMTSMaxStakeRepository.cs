@@ -5,6 +5,6 @@ namespace Platform.Betting.API.Repository
 {
     public interface IMTSMaxStakeRepository
     {
-        Task<BaseResponseDTO<MTSStakeResponseDTO>> GetMTSMaxStake(string authToken, MTSConfigRequestDTO request, decimal companyShare, bool isBetBuilder, decimal calculatedOdds);
+        Task<BaseResponseDTO<MTSStakeResponseDTO>> GetMTSMaxStake(string authToken, MTSConfigRequestDTO request, decimal companyShare);
     }
 }

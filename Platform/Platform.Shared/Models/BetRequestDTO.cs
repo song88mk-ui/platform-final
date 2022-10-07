@@ -23,7 +23,6 @@ namespace Platform.Shared.Models
         public Guid BetId { get; set; }
         public string UserId { get; set; }
         public decimal Stake { get; set; }
-        public decimal Odds { get; set; }
         public string BetStatus { get; set; }
         public DateTime BetDate { get; set; }
         public OddsType OddsType { get; set; }
@@ -32,7 +31,6 @@ namespace Platform.Shared.Models
         public Channel Channel { get; set; }
         public string IPAddress { get; set; }
         public bool IsBoosted { get; set; }
-        public bool IsBetBuilder { get; set; }
         public List<BetSelectionRequestDTO> Selections { get; set; }
     }
 
@@ -70,5 +68,7 @@ namespace Platform.Shared.Models
         public double HalfWonProbability { get; set; }
         public double HalfLostProbability { get; set; }
         public bool IsBinary { get; set; }
+        public int BetSelectionStatusId { get; set; }
+        public string BetSelectionStatusName { get; set; }
     }
 }

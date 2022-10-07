@@ -28,17 +28,15 @@ namespace Platform.Placement.Servicev2.Repository
         {
             _configuration = configuration;
         }
-        public void ProcesssBetPlacement(OnBetPlacement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
+        public void ProcesssBetPlacement(OnBetPlacementDTO message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
         {
             //Console.WriteLine($"{DateTime.UtcNow} - BEG - {message.Bet.BetId.ToString().ToUpper()}");
 
             var payload = new OnBetPlacement();
             payload.IsBoosted = message.IsBoosted;
-            payload.IsBetBuilder = message.IsBetBuilder;
-            payload.Odds = message.Odds;
-
+            
             var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
-                message.BetSelections.Any(c => c.SportId > 1000) ? new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled for VS)") :
+                message.Selections.Any(c => c.SportId > 1000) ? new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled for VS)") :
                 ValidateToMTS(message, mts) : new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled)");
 
             if (result.Item1 == TicketAcceptance.Accepted)
@@ -107,9 +105,9 @@ namespace Platform.Placement.Servicev2.Repository
                                     StakeRealPayout = betEntity.StakeRealPayout,
                                     StakeBonusPayout = betEntity.StakeBonusPayout,
                                     IsFreeBet = betEntity.IsFreeBet,
-                                    BetTypeId = betEntity.BetTypeId,
-                                    BetTypeName = betEntity.BetTypeName,
-                                    OddsRef = betEntity.OddsRef
+                                    //BetTypeId = betEntity.BetTypeId,
+                                    //BetTypeName = betEntity.BetTypeName,
+                                    //OddsRef = betEntity.OddsRef
                                 });
 
                                 var betSelections = context.BetSelection.Where(c => c.BetId == betEntity.BetId).ToList();
@@ -147,7 +145,7 @@ namespace Platform.Placement.Servicev2.Repository
                                         FixtureStatusName = betSelectionEntity.FixtureStatusName,
                                         Line = betSelectionEntity.Line,
                                         Odds = betSelectionEntity.Odds,
-                                        OddsRef = betSelectionEntity.OddsRef,
+                                        //OddsRef = betSelectionEntity.OddsRef,
                                         BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
                                         BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
                                         IsSettled = betSelectionEntity.IsSettled,
@@ -288,9 +286,9 @@ namespace Platform.Placement.Servicev2.Repository
                                     StakeRealPayout = betEntity.StakeRealPayout,
                                     StakeBonusPayout = betEntity.StakeBonusPayout,
                                     IsFreeBet = betEntity.IsFreeBet,
-                                    BetTypeId = betEntity.BetTypeId,
-                                    BetTypeName = betEntity.BetTypeName,
-                                    OddsRef = betEntity.OddsRef
+                                    //BetTypeId = betEntity.BetTypeId,
+                                    //BetTypeName = betEntity.BetTypeName,
+                                    //OddsRef = betEntity.OddsRef
                                 });
 
                                 var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
@@ -329,7 +327,7 @@ namespace Platform.Placement.Servicev2.Repository
                                         FixtureStatusName = betSelectionEntity.FixtureStatusName,
                                         Line = betSelectionEntity.Line,
                                         Odds = betSelectionEntity.Odds,
-                                        OddsRef = betSelectionEntity.OddsRef,
+                                        //OddsRef = betSelectionEntity.OddsRef,
                                         BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
                                         BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
                                         IsSettled = betSelectionEntity.IsSettled,
@@ -428,7 +426,7 @@ namespace Platform.Placement.Servicev2.Repository
             }
         }
 
-        private void RejectBetOnError(OnBetPlacement message, IMessageBroker messageBroker, string correlationId, Tuple<TicketAcceptance, string> result, int remainingRetries)
+        private void RejectBetOnError(OnBetPlacementDTO message, IMessageBroker messageBroker, string correlationId, Tuple<TicketAcceptance, string> result, int remainingRetries)
         {
             if (remainingRetries == 0) return;
             remainingRetries -= 1;
@@ -497,9 +495,9 @@ namespace Platform.Placement.Servicev2.Repository
                                 TaxedStake = betEntity.TaxedStake,
                                 TaxedWinnings = betEntity.TaxedWinnings,
                                 IsFreeBet = betEntity.IsFreeBet,
-                                BetTypeId = betEntity.BetTypeId,
-                                BetTypeName = betEntity.BetTypeName,
-                                OddsRef = betEntity.OddsRef
+                                //BetTypeId = betEntity.BetTypeId,
+                                //BetTypeName = betEntity.BetTypeName,
+                                //OddsRef = betEntity.OddsRef
                             });
 
                             var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
@@ -538,7 +536,7 @@ namespace Platform.Placement.Servicev2.Repository
                                     FixtureStatusName = betSelectionEntity.FixtureStatusName,
                                     Line = betSelectionEntity.Line,
                                     Odds = betSelectionEntity.Odds,
-                                    OddsRef = betSelectionEntity.OddsRef,
+                                    //OddsRef = betSelectionEntity.OddsRef,
                                     BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
                                     BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
                                     IsSettled = betSelectionEntity.IsSettled,
@@ -600,7 +598,7 @@ namespace Platform.Placement.Servicev2.Repository
                 }
             }
         }
-        private Tuple<TicketAcceptance, string> ValidateToMTS(OnBetPlacement message, IMtsSdk mts)
+        private Tuple<TicketAcceptance, string> ValidateToMTS(OnBetPlacementDTO message, IMtsSdk mts)
         {
             try
             {
@@ -629,7 +627,7 @@ namespace Platform.Placement.Servicev2.Repository
                     .SetDeviceId($"{message.Bet.ClientCode}{message.Bet.UserId.Replace("-", "")}")
                     .Build())
                     .Build())
-                    .AddBet(BuildBet(message.Bet, message.BetSelections, message.IsBetBuilder, message.Odds))
+                    .AddBet(BuildBet(message.Bet, message.Selections, message.IsBoosted))
                     .BuildTicket();
 
                 var response = mts.SendTicketBlocking(bet);
@@ -644,7 +642,7 @@ namespace Platform.Placement.Servicev2.Repository
                 return new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10000 - {ex.Message}");
             }
         }
-        private IBet BuildBet(Bet betData, List<BetSelection> betSelectionData, bool isBetBuilder, decimal calculatedOdds)
+        private IBet BuildBet(Bet betData, List<BetSelectionRequestDTO> betSelectionData, bool isBoosted)
         {
             //var companyStake = (0.0001m * betData.ExchangeRate) * 10000;
 
@@ -667,7 +665,7 @@ namespace Platform.Placement.Servicev2.Repository
 
             var hasVirtualSport = betSelectionData.Any(s => s.SportId > 1000) ? true : false;
 
-            if (isBetBuilder == false && hasVirtualSport == false && betSelectionData.Count >= 3 && betData.IsFreeBet == false)
+            if (hasVirtualSport == false && betSelectionData.Count >= 3 && betData.IsFreeBet == false)
             {
                 var parlayConfig = GetParlayBetConfig(Guid.Parse(betData.ClientId), betData.CurrencyCode, betData.BetDate, betSelectionData, betData.Payout);
 
@@ -681,10 +679,10 @@ namespace Platform.Placement.Servicev2.Repository
                 }
             }
             
-            if(betData.BetTypeId == (int)BetType.PriceBoost) //boosted bonus
+            if(isBoosted == true) //boosted bonus
             {
                 var totalBoostedPayout = betData.Odds * stake;
-                var totalOriginalPayout = betData.OddsRef * stake;
+                var totalOriginalPayout = betSelectionData.Select(s => s.OddsRef).Aggregate((a, b) => a * b) * stake;
 
                 bonus = bonus + (totalBoostedPayout - totalOriginalPayout);
 
@@ -701,23 +699,15 @@ namespace Platform.Placement.Servicev2.Repository
                                     .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
                                     .AddSelectedSystem(betSelectionData.Count)
                                     :
-                                        isBetBuilder ? _factory.CreateBetBuilder()
-                                            .SetCustomBet(true)
-                                            .SetCalculationOdds(Convert.ToInt32(calculatedOdds * 10000))
-                                            .SetBetId(betData.BetId.ToString().ToUpper())
-                                            .SetStake(Convert.ToInt64(stake), StakeType.Total)
-                                            .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
-                                            .AddSelectedSystem(betSelectionData.Count)
-                                            :
-                                                _factory.CreateBetBuilder()
-                                                .SetBetId(betData.BetId.ToString().ToUpper())
-                                                .SetStake(Convert.ToInt64(stake), StakeType.Total)
-                                                .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
-                                                .AddSelectedSystem(betSelectionData.Count);
+                                        _factory.CreateBetBuilder()
+                                        .SetBetId(betData.BetId.ToString().ToUpper())
+                                        .SetStake(Convert.ToInt64(stake), StakeType.Total)
+                                        .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
+                                        .AddSelectedSystem(betSelectionData.Count);
 
             foreach (var betSelection in betSelectionData)
             {
-                if (betData.BetTypeId == (int)BetType.PriceBoost)
+                if (isBoosted == true)
                 {
                     selection.AddSelection(_factory.CreateSelectionBuilder()
                                                .SetEventId(betSelection.FixtureSpecifier)
@@ -740,7 +730,7 @@ namespace Platform.Placement.Servicev2.Repository
             return selection.Build();
         }
 
-        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(Guid clientId, string currencyCode, DateTime betDate, List<BetSelection> selections, decimal payout)
+        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(Guid clientId, string currencyCode, DateTime betDate, List<BetSelectionRequestDTO> selections, decimal payout)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {

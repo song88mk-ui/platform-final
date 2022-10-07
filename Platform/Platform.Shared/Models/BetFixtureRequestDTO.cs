@@ -13,8 +13,6 @@ namespace Platform.Shared.Models
         public string ClientCode { get; set; }
         public OddsChangeType OddsChangeType { get; set; }
         public bool IsBoosted { get; set; }
-        public bool IsBetBuilder { get; set; }
-        public decimal TotalOdds { get; set; }
         public List<BetFixtureSelectionRequestDTO> Selections { get; set; }
     }
 

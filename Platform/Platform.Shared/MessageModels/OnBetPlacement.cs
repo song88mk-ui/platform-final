@@ -1,4 +1,5 @@
 ﻿using Platform.Shared.Data.Betting.Entities;
+using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
 
@@ -12,9 +13,19 @@ namespace Platform.Shared.MessageModels
         }
         public Bet Bet { get; set; }
         public bool IsBoosted { get; set; }
-        public bool IsBetBuilder { get; set; }
         public decimal Odds { get; set; }
         public List<BetSelection> BetSelections { get; set; }
+    }
+
+    public class OnBetPlacementDTO
+    {
+        public OnBetPlacementDTO()
+        {
+            Selections = new List<BetSelectionRequestDTO>();
+        }
+        public Bet Bet { get; set; }
+        public bool IsBoosted { get; set; }
+        public List<BetSelectionRequestDTO> Selections { get; set; }
     }
 
     public class OnBetPlacementError

@@ -831,7 +831,7 @@ namespace Platform.Placement.Servicev2
                 switch (messageType)
                 {
                     case "OnBetPlacement":
-                        var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
+                        var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacementDTO>(payload);
 
                         _bettingRepository.ProcesssBetPlacement(onBetPlacement, _mts, _messageBroker, correlationId);
 

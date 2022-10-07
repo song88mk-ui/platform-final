@@ -1297,10 +1297,6 @@ namespace Platform.Sportsbook.API.Repository
 
             var raw = new List<BetFixtureSelectionResponseDTO>();
 
-            var betBuilderOddsStatus = new Tuple<decimal, StatusCode>(0m, StatusCode.Success);
-            if (request.IsBetBuilder)
-                betBuilderOddsStatus = await GetBetBuilderOddsStatus(request.OddsChangeType, request.Selections, result, request.TotalOdds);
-
             foreach (var selection in request.Selections)
             {
                 var initialSelectionExtension = result.Item3.Where(c => c.SeId == selection.SelectionId).FirstOrDefault();
@@ -1341,17 +1337,16 @@ namespace Platform.Sportsbook.API.Repository
                     HalfWonProbability = initialSelectionExtension.HaWoPr,
                     HalfLostProbability = initialSelectionExtension.HaLoPr,
                     SelectionCount = selectionCount,
-                    BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, selection, result, request.ClientCode, request.IsBetBuilder)
+                    BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, selection, result, request.ClientCode)
                 });
             }
 
             return new BaseResponseDTO<BetFixtureResponseDTO>
             {
-                StatusCode = request.IsBetBuilder ? betBuilderOddsStatus.Item2 : StatusCode.Success,
-                Message = request.IsBetBuilder ? betBuilderOddsStatus.Item2.ToString() : StatusCode.Success.ToString(),
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
                 Result = new BetFixtureResponseDTO
                 {
-                    TotalOdds = betBuilderOddsStatus.Item1,
                     Selections = raw
                 }
             };
@@ -5478,7 +5473,7 @@ namespace Platform.Sportsbook.API.Repository
             return result.OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
         }
 
-        private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>> result, string clientCode, bool isBetBuilder)
+        private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>> result, string clientCode)
         {
 
             var selection = result.Item3.Where(c => c.SeId == current.SelectionId).FirstOrDefault();
@@ -5612,7 +5607,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            if (isBetBuilder == false && selection.Od <= 1m)
+            if (selection.Od <= 1m)
             {
                 return new BetSelectionState
                 {
@@ -5627,7 +5622,7 @@ namespace Platform.Sportsbook.API.Repository
             switch (oddsChangeType)
             {
                 case OddsChangeType.None:
-                    if (isBetBuilder == false && current.Odds != selection.Od)
+                    if (current.Odds != selection.Od)
                     {
                         return new BetSelectionState
                         {
@@ -5642,7 +5637,7 @@ namespace Platform.Sportsbook.API.Repository
                 case OddsChangeType.Any:
                     break;
                 case OddsChangeType.Higher:
-                    if (isBetBuilder == false && current.Odds > selection.Od)
+                    if (current.Odds > selection.Od)
                     {
                         return new BetSelectionState
                         {

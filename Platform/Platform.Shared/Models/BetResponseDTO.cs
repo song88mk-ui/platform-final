@@ -11,7 +11,6 @@ namespace Platform.Shared.Models
         public string BetId { get; set; }
         public BetStatus BetStatus { get; set; }
         public decimal Stake { get; set; }
-        public decimal TotalOdds { get; set; }
         public List<BetSelectionState> BetSelections { get; set; }
     }
 

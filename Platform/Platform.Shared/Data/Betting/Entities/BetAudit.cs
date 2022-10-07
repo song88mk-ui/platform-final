@@ -64,10 +64,5 @@ namespace Platform.Shared.Data.Betting.Entities
         [Column(TypeName = "decimal(26,12)")]
         public decimal StakeBonusPayout { get; set; }
         public bool IsFreeBet { get; set; }
-        public int BetTypeId { get; set; }
-        public string BetTypeName { get; set; }
-
-        [Column(TypeName = "decimal(26,12)")]
-        public decimal OddsRef { get; set; }
     }
 }

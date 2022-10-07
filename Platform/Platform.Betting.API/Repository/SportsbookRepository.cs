@@ -121,18 +121,6 @@ namespace Platform.Betting.API.Repository
                     continue;
                 }
 
-                if (bet.BetTypeId == (int)BetType.BetBuilder)
-                {
-                    result.Add(new CashOutDetailsReponse
-                    {
-                        BetId = bet.BetId,
-                        CashOutStatus = CashOutStatus.Unavailable,
-                        CashOutStake = 0m
-                    });
-
-                    continue;
-                }
-
                 if (boostedList != null && boostedList.Any(b => b == bet.BetId))
                 {
                     result.Add(new CashOutDetailsReponse

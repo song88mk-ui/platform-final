@@ -66,7 +66,7 @@ namespace Platform.Operator.Cashout.Service.Repository
                 if (response.IsSuccessStatusCode)
                 {
                     var result = JsonSerializer.Deserialize<CashoutResultResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-                    _logger.LogInformation($"ProcessCashOut - Response: {response.Content.ReadAsStringAsync().Result}");
+                    _logger.LogInformation($"ProcessCashOut - Response: {message.BetId} - {response.Content.ReadAsStringAsync().Result}");
                 }
                 else
                 {

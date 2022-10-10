@@ -491,7 +491,8 @@ namespace Platform.CashOut.Service.Repository
                             TaxedWinnings = result.Result.TaxedWinnings,
                             NonTaxedPayout = result.Result.NonTaxedPayout,
                             HasLive = message.HasLive,
-                            Probabilities = result.Result.Probabilities
+                            Probabilities = result.Result.Probabilities,
+                            Endpoint = message.Endpoint,
                         };
 
                         var isSuccess = true;

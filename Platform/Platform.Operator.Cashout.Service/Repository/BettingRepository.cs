@@ -22,9 +22,11 @@ namespace Platform.Operator.Cashout.Service.Repository
     public class BettingRepository : IBettingRepository
     {
         private readonly ILogger<BettingRepository> _logger;
+        private readonly IConfiguration _configuration;
         private List<HttpClient> _httpClients = new List<HttpClient>();
-        public BettingRepository(ILogger<BettingRepository> logger)
+        public BettingRepository(ILogger<BettingRepository> logger, IConfiguration configuration)
         {
+            _configuration = configuration;
             _logger = logger;
         }
 
@@ -48,6 +50,27 @@ namespace Platform.Operator.Cashout.Service.Repository
 
             try
             {
+                if(string.IsNullOrEmpty(endpoint)) //temporary fix for null endpoint
+                {
+                    using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+                    {
+                        var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+
+                        using (var context = new BettingContext(optionsBuilder.Options))
+                        {
+                            var bet = context.Bet.Find(Guid.Parse(message.BetId));
+                            if (bet == null)
+                            {
+                                _logger.LogInformation($"Error - Bet Id not found: {message.BetId} - {JsonSerializer.Serialize(message)}");
+                                return;
+                            }
+
+                            endpoint = bet.Endpoint;
+                        }
+                    }
+
+                }
+
                 var cashout = new CashoutResultRequestDTO
                 {
                     BetId = message.BetId,
@@ -70,12 +93,12 @@ namespace Platform.Operator.Cashout.Service.Repository
                 }
                 else
                 {
-                    _logger.LogInformation($"ProcessCashOut - Response: {JsonSerializer.Serialize(response)}");
+                    _logger.LogInformation($"ProcessCashOut - Response: {message.BetId} - {JsonSerializer.Serialize(response)}");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error: {ex.Message} -> CashOutResult: {JsonSerializer.Serialize(message)}");
+                _logger.LogError($"Error: {ex.Message} -> CashOutResult: {message.BetId} - {JsonSerializer.Serialize(message)}");
             }
         }
     }

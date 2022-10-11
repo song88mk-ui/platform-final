@@ -1,4 +1,4 @@
-name: $(System.TeamProject)-Platform-Cashout-Service-$(Build.BuildId).$(Rev:r)
+name: $(System.TeamProject)-Platform-CashOut-Service-$(Build.BuildId).$(Rev:r)
 
 pr: none
 

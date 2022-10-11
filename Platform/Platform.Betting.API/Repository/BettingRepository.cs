@@ -108,7 +108,7 @@ namespace Platform.Betting.API.Repository
             decimal maxPerGame = 0;
             decimal stakeFixtureLimit = 0;
             decimal parlayBonus = 0;
-            var odds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+            var odds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
             var taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
             var priceboostConfig = !string.IsNullOrEmpty(betConfig.PriceboostConfig) ? JsonSerializer.Deserialize<PriceboostConfig>(betConfig.PriceboostConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new PriceboostConfig();
 
@@ -226,7 +226,7 @@ namespace Platform.Betting.API.Repository
 
                 var hasVirtualSport = request.Selections.Any(s => s.SportId > 1000) ? true : false;
 
-                if (hasVirtualSport == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
+                if (request.IsBetBuilder == false && hasVirtualSport == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
                 {
                     var selectionCount = request.Selections.Where(c => c.Odds >= parlayConfig.ParlayBonusMinOdds).Count();
                     if (selectionCount >= 3)
@@ -240,7 +240,7 @@ namespace Platform.Betting.API.Repository
             }
 
             var betData = new Bet();
-            var betSelectionData = new List<BetSelectionRequestDTO>();
+            var betSelectionData = new List<BetSelection>();
 
             try
             {
@@ -248,7 +248,8 @@ namespace Platform.Betting.API.Repository
                 {
                     Guid betId;
 
-                    var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+                    var totalOdds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+                    var totalOddsRef = request.Selections.Select(s => s.OddsRef).Aggregate((a, b) => a * b); 
                     var selectionSports = request.Selections.Select(s => s.SportId).Distinct().ToList();
 
                     var stakeTax = taxConfig.StakeTax;
@@ -274,7 +275,8 @@ namespace Platform.Betting.API.Repository
                             winningsTax = 0m;
                     }
 
-                    
+                    var betType = GetBetType(request.Selections, request.IsBoosted, request.IsBetBuilder);
+
                     var betEntity = _bettingContext.Bet.Update(new Bet
                     {
                         UserId = request.UserId,
@@ -318,6 +320,9 @@ namespace Platform.Betting.API.Repository
                         StakeRealPayout = 0,
                         StakeBonusPayout = 0,
                         IsFreeBet = false,
+                        BetTypeId = (int)betType,
+                        BetTypeName = betType.ToString(),
+                        OddsRef = totalOddsRef
                     }).Entity;
 
                     betData = betEntity;
@@ -368,9 +373,9 @@ namespace Platform.Betting.API.Repository
                         StakeRealPayout = betEntity.StakeRealPayout,
                         StakeBonusPayout = betEntity.StakeBonusPayout,
                         IsFreeBet = betEntity.IsFreeBet,
-                        //BetTypeId = betEntity.BetTypeId,
-                        //BetTypeName = betEntity.BetTypeName,
-                        //OddsRef = betEntity.OddsRef,
+                        BetTypeId = betEntity.BetTypeId,
+                        BetTypeName = betEntity.BetTypeName,
+                        OddsRef = betEntity.OddsRef,
                     });
 
                     foreach (var selection in request.Selections)
@@ -418,43 +423,7 @@ namespace Platform.Betting.API.Repository
                             DeadHeatFactor = 1m
                         }).Entity;
 
-                        betSelectionData.Add(new BetSelectionRequestDTO
-                        {
-                            SportId = betSelectionEntity.SportId,
-                            SportName = betSelectionEntity.SportName,
-                            SegmentId = betSelectionEntity.SegmentId,
-                            SegmentName = betSelectionEntity.SegmentName,
-                            LeagueId = betSelectionEntity.LeagueId,
-                            LeagueName = betSelectionEntity.LeagueName,
-                            FixtureId = betSelectionEntity.FixtureId,
-                            FixtureName = betSelectionEntity.FixtureName,
-                            FixtureType = selection.FixtureType,
-                            MarketTemplateId = betSelectionEntity.MarketTemplateId,
-                            MarketId = betSelectionEntity.MarketId,
-                            MarketName = betSelectionEntity.MarketName,
-                            Line = betSelectionEntity.Line,
-                            SelectionTemplateId = betSelectionEntity.SelectionTemplateId,
-                            SelectionId = betSelectionEntity.SelectionId,
-                            SelectionName = betSelectionEntity.SelectionName,
-                            Odds = betSelectionEntity.Odds,
-                            OddsRef = selection.OddsRef,
-                            FixtureStatus = selection.FixtureStatus,
-                            FixtureStartDate = betSelectionEntity.FixtureStartDate,
-                            BetScore = selection.BetScore,
-                            FixtureSpecifier = betSelectionEntity.FixtureSpecifier,
-                            SelectionSpecifier = betSelectionEntity.SelectionSpecifier,
-                            CorrelationId = betSelectionEntity.CorrelationId,
-                            Probability = betSelectionEntity.Probability,
-                            WonProbability = betSelectionEntity.WonProbability,
-                            LostProbability = betSelectionEntity.LostProbability,
-                            VoidProbability = betSelectionEntity.VoidProbability,
-                            HalfWonProbability = betSelectionEntity.HalfWonProbability,
-                            HalfLostProbability = betSelectionEntity.HalfLostProbability,
-                            IsBinary = selection.IsBinary,
-                            BetSelectionId = betSelectionEntity.BetSelectionId,
-                            BetSelectionStatusId = betEntity.BetStatusId,
-                            BetSelectionStatusName = betEntity.BetStatusName,
-                        });
+                        betSelectionData.Add(betSelectionEntity);
 
                         var betSelectionId = betSelectionEntity.BetSelectionId;
                         selection.BetSelectionId = betSelectionId;
@@ -546,11 +515,13 @@ namespace Platform.Betting.API.Repository
                     //    BetSelections = betSelectionData
                     //}, "OnBetPlacement", "r.bet.placement", Guid.NewGuid().ToString().ToUpper());
 
-                    var payload = new OnBetPlacementDTO
+                    var payload = new OnBetPlacement
                     {
                         Bet = betData,
-                        Selections = betSelectionData,
-                        IsBoosted = request.IsBoosted
+                        BetSelections = betSelectionData,
+                        IsBoosted = request.IsBoosted,
+                        IsBetBuilder = request.IsBetBuilder,
+                        Odds = request.Odds
                     };
 
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
@@ -671,7 +642,7 @@ namespace Platform.Betting.API.Repository
             if (mtsAuthToken.StatusCode != StatusCode.Success)
                 return await PlaceBetWithoutMTS(request);
 
-            var mtsMaxStake = await _mtsMaxStakeRepository.GetMTSMaxStake(mtsAuthToken.Result.Token, mtsConfigRequest, request.CompanyShare);
+            var mtsMaxStake = await _mtsMaxStakeRepository.GetMTSMaxStake(mtsAuthToken.Result.Token, mtsConfigRequest, request.CompanyShare, request.IsBetBuilder, request.Odds);
 
             if (mtsMaxStake.StatusCode != StatusCode.Success)
                 return await PlaceBetWithoutMTS(request);
@@ -683,7 +654,7 @@ namespace Platform.Betting.API.Repository
             decimal maxPerGame = 0;
             decimal stakeFixtureLimit = 0;
             decimal parlayBonus = 0;
-            var odds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+            var odds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
             var taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
             var priceboostConfig = !string.IsNullOrEmpty(betConfig.PriceboostConfig) ? JsonSerializer.Deserialize<PriceboostConfig>(betConfig.PriceboostConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new PriceboostConfig();
             var betBuilderConfig = !string.IsNullOrEmpty(betConfig.BetBuilderConfig) ? JsonSerializer.Deserialize<BetBuilderConfig>(betConfig.BetBuilderConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new BetBuilderConfig();
@@ -757,9 +728,18 @@ namespace Platform.Betting.API.Repository
             {
 
                 ParlayConfig parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                
+                if(request.IsBetBuilder)
+                {
+                    minStake = GetMinStake(betBuilderConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
+                    maxStake = GetMaxStakeForBetBuilderWithMTS(parlayConfig.MaxStake, mtsMaxStake.Result.Stake, request.CompanyShare);
+                }
+                else
+                {
+                    minStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
+                    maxStake = GetMaxStakeForParlayBetWithMTS(parlayConfig.MaxStake, mtsMaxStake.Result.Stake, parlayConfig.MaxPayout, odds, request.CompanyShare);
+                }
 
-                minStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
-                maxStake = GetMaxStakeForParlayBetWithMTS(parlayConfig.MaxStake, mtsMaxStake.Result.Stake, parlayConfig.MaxPayout, odds, request.CompanyShare);
                 if (minStake > request.Stake)
                 {
                     return new BaseResponseDTO<BetResponseDTO>
@@ -785,7 +765,7 @@ namespace Platform.Betting.API.Repository
 
                 var hasVirtualSport = request.Selections.Any(s => s.SportId > 1000) ? true : false;
 
-                if (hasVirtualSport == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
+                if (request.IsBetBuilder == false && hasVirtualSport == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
                 {
                     var selectionCount = request.Selections.Where(c => c.Odds >= parlayConfig.ParlayBonusMinOdds).Count();
                     if (selectionCount >= 3)
@@ -799,7 +779,7 @@ namespace Platform.Betting.API.Repository
             }
 
             var betData = new Bet();
-            var betSelectionData = new List<BetSelectionRequestDTO>();
+            var betSelectionData = new List<BetSelection>();
 
             try
             {
@@ -807,7 +787,8 @@ namespace Platform.Betting.API.Repository
                 {
                     Guid betId;
 
-                    var totalOdds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+                    var totalOdds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+                    var totalOddsRef = request.Selections.Select(s => s.OddsRef).Aggregate((a, b) => a * b);
                     var selectionSports = request.Selections.Select(s => s.SportId).Distinct().ToList();
 
                     var stakeTax = taxConfig.StakeTax;
@@ -832,6 +813,8 @@ namespace Platform.Betting.API.Repository
                         if (excludedWinningSport.Count == selectionSports.Count)
                             winningsTax = 0m;
                     }
+
+                    var betType = GetBetType(request.Selections, request.IsBoosted, request.IsBetBuilder);
 
                     var betEntity = _bettingContext.Bet.Update(new Bet
                     {
@@ -876,9 +859,9 @@ namespace Platform.Betting.API.Repository
                         StakeRealPayout = 0,
                         StakeBonusPayout = 0,
                         IsFreeBet = false,
-                        //BetTypeId = (int)betType,
-                        //BetTypeName = betType.ToString(),
-                        //OddsRef = totalOddsRef
+                        BetTypeId = (int)betType,
+                        BetTypeName = betType.ToString(),
+                        OddsRef = totalOddsRef
                     }).Entity;
 
                     betData = betEntity;
@@ -929,9 +912,9 @@ namespace Platform.Betting.API.Repository
                         StakeRealPayout = betEntity.StakeRealPayout,
                         StakeBonusPayout = betEntity.StakeBonusPayout,
                         IsFreeBet = betEntity.IsFreeBet,
-                        //BetTypeId = betEntity.BetTypeId,
-                        //BetTypeName = betEntity.BetTypeName,
-                        //OddsRef = betEntity.OddsRef
+                        BetTypeId = betEntity.BetTypeId,
+                        BetTypeName = betEntity.BetTypeName,
+                        OddsRef = betEntity.OddsRef
                     });
 
                     foreach (var selection in request.Selections)
@@ -960,7 +943,7 @@ namespace Platform.Betting.API.Repository
                             Line = selection.Line,
                             SelectionTemplateId = selection.SelectionTemplateId,
                             Odds = selection.Odds,
-                            //OddsRef = selection.OddsRef,
+                            OddsRef = selection.OddsRef,
                             BetSelectionStatusId = betEntity.BetStatusId,
                             BetSelectionStatusName = betEntity.BetStatusName,
                             IsSettled = false,
@@ -980,43 +963,8 @@ namespace Platform.Betting.API.Repository
                             DeadHeatFactor = 1m
                         }).Entity;
 
-                        betSelectionData.Add(new BetSelectionRequestDTO
-                        {
-                            SportId = betSelectionEntity.SportId,
-                            SportName = betSelectionEntity.SportName,
-                            SegmentId = betSelectionEntity.SegmentId,
-                            SegmentName = betSelectionEntity.SegmentName,
-                            LeagueId = betSelectionEntity.LeagueId,
-                            LeagueName = betSelectionEntity.LeagueName,
-                            FixtureId = betSelectionEntity.FixtureId,
-                            FixtureName = betSelectionEntity.FixtureName,
-                            FixtureType = selection.FixtureType,
-                            MarketTemplateId = betSelectionEntity.MarketTemplateId,
-                            MarketId = betSelectionEntity.MarketId,
-                            MarketName = betSelectionEntity.MarketName,
-                            Line = betSelectionEntity.Line,
-                            SelectionTemplateId = betSelectionEntity.SelectionTemplateId,
-                            SelectionId = betSelectionEntity.SelectionId,
-                            SelectionName = betSelectionEntity.SelectionName,
-                            Odds = betSelectionEntity.Odds,
-                            OddsRef = selection.OddsRef,
-                            FixtureStatus = selection.FixtureStatus,
-                            FixtureStartDate = betSelectionEntity.FixtureStartDate,
-                            BetScore = selection.BetScore,
-                            FixtureSpecifier = betSelectionEntity.FixtureSpecifier,
-                            SelectionSpecifier = betSelectionEntity.SelectionSpecifier,
-                            CorrelationId = betSelectionEntity.CorrelationId,
-                            Probability = betSelectionEntity.Probability,
-                            WonProbability = betSelectionEntity.WonProbability,
-                            LostProbability = betSelectionEntity.LostProbability,
-                            VoidProbability = betSelectionEntity.VoidProbability,
-                            HalfWonProbability = betSelectionEntity.HalfWonProbability,
-                            HalfLostProbability = betSelectionEntity.HalfLostProbability,
-                            IsBinary = selection.IsBinary,
-                            BetSelectionId = betSelectionEntity.BetSelectionId,
-                            BetSelectionStatusId = betEntity.BetStatusId,
-                            BetSelectionStatusName = betEntity.BetStatusName,
-                        });
+                        betSelectionData.Add(betSelectionEntity);
+
                         var betSelectionId = betSelectionEntity.BetSelectionId;
                         selection.BetSelectionId = betSelectionId;
 
@@ -1045,7 +993,7 @@ namespace Platform.Betting.API.Repository
                             FixtureStatusName = betSelectionEntity.FixtureStatusName,
                             Line = betSelectionEntity.Line,
                             Odds = betSelectionEntity.Odds,
-                            //OddsRef = betSelectionEntity.OddsRef,
+                            OddsRef = betSelectionEntity.OddsRef,
                             BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
                             BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
                             IsSettled = betSelectionEntity.IsSettled,
@@ -1109,11 +1057,13 @@ namespace Platform.Betting.API.Repository
                     //    BetSelections = betSelectionData
                     //}, "OnBetPlacement", "r.bet.placement", Guid.NewGuid().ToString().ToUpper());
 
-                    var payload = new OnBetPlacementDTO
+                    var payload = new OnBetPlacement
                     {
                         Bet = betData,
-                        Selections = betSelectionData,
+                        BetSelections = betSelectionData,
                         IsBoosted = request.IsBoosted,
+                        IsBetBuilder = request.IsBetBuilder,
+                        Odds = request.Odds
                     };
 
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
@@ -1206,7 +1156,7 @@ namespace Platform.Betting.API.Repository
             if (mtsAuthToken.StatusCode != StatusCode.Success)
                 return await GetMaxStakeWithoutMTS(request);
 
-            var mtsMaxStake = await _mtsMaxStakeRepository.GetMTSMaxStake(mtsAuthToken.Result.Token, mtsConfigRequest, request.CompanyShare);
+            var mtsMaxStake = await _mtsMaxStakeRepository.GetMTSMaxStake(mtsAuthToken.Result.Token, mtsConfigRequest, request.CompanyShare, request.IsBetBuilder, request.Odds);
 
             if (mtsMaxStake.StatusCode != StatusCode.Success)
                 return await GetMaxStakeWithoutMTS(request);
@@ -1432,7 +1382,8 @@ namespace Platform.Betting.API.Repository
                 var cashOut = cashOutList.Result.Where(c => c.BetId == bet.BetId).FirstOrDefault();
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
                 var isBoosted = betBoosted.Any(b => b == bet.BetId);
-                
+                var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
+
                 var hasVirtualSport = filteredSelections.Any(s => s.SportId > 1000) ? true : false;
                 var wonOrRunningSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running).Count();
                 var lostSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
@@ -1480,6 +1431,7 @@ namespace Platform.Betting.API.Repository
                     StakeBonusPayout = bet.StakeBonusPayout,
                     IsFreeBet = bet.IsFreeBet,
                     IsBoosted = isBoosted,
+                    IsBetBuilder = isBetBuilder,
                     Selections = filteredSelections.Select(s => new BetSelectionHistoryDTO
                     {
                         SportId = s.SportId,
@@ -1578,7 +1530,8 @@ namespace Platform.Betting.API.Repository
             {
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
                 var isBoosted = betBoosted.Any(b => b == bet.BetId);
-                
+                var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
+
                 result.Add(new SettlementHistoryDTO
                 {
                     BetId = bet.BetId.ToString(),
@@ -1608,6 +1561,7 @@ namespace Platform.Betting.API.Repository
                     StakeBonusPayout = bet.StakeBonusPayout,
                     IsFreeBet = bet.IsFreeBet,
                     IsBoosted = isBoosted,
+                    IsBetBuilder = isBetBuilder,
                     Selections = filteredSelections.Select(s => new BetSelectionHistoryDTO
                     {
                         SportId = s.SportId,
@@ -2371,6 +2325,15 @@ namespace Platform.Betting.API.Repository
             var bet = _bettingContext.Bet.AsNoTracking().Where(c => c.BetId == request.BetId).FirstOrDefault();
 
             if (bet == null || bet.BetStatusId != (int)BetStatus.Running)
+            {
+                return new BaseResponseDTO<BetCashOutResponseDTO>
+                {
+                    StatusCode = StatusCode.CashOut_Is_Unavailable,
+                    Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' ')
+                };
+            }
+
+            if(bet.BetTypeId == (int)BetType.BetBuilder)
             {
                 return new BaseResponseDTO<BetCashOutResponseDTO>
                 {

@@ -15,6 +15,8 @@ namespace Platform.API.Models
         public Channel Channel { get; set; }
         public string IPAddress { get; set; }
         public bool IsBoosted { get; set; } = false;
+        public bool IsBetBuilder { get; set; } = false;
+        public decimal TotalOdds { get; set; }
         public List<BetSelectionRequest> Selections { get; set; }
     }
 

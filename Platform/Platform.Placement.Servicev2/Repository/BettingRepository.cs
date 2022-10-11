@@ -661,6 +661,7 @@ namespace Platform.Placement.Servicev2.Repository
             var bonus = 0m;
             var parlayBonus = 0m;
             var hasBonus = false;
+            BetBonusDescription bonusDescription = BetBonusDescription.Other;
             // parlay bonus: bet should be Won by default
 
             var hasVirtualSport = betSelectionData.Any(s => s.SportId > 1000) ? true : false;
@@ -676,6 +677,7 @@ namespace Platform.Placement.Servicev2.Repository
                     bonus = bonus * 10000;
 
                     hasBonus = bonus == 0 ? false : true;
+                    bonusDescription = BetBonusDescription.AccaBonus;
                 }
             }
             
@@ -687,14 +689,14 @@ namespace Platform.Placement.Servicev2.Repository
                 bonus = bonus + (totalBoostedPayout - totalOriginalPayout);
 
                 hasBonus = bonus == 0 ? false : true;
+                bonusDescription = BetBonusDescription.OddsBooster;
             }
-
 
             #endregion
 
             var selection = hasBonus ? _factory.CreateBetBuilder()
                                     .SetBetId(betData.BetId.ToString().ToUpper())
-                                    .SetBetBonus(Convert.ToInt64(bonus))
+                                    .SetBetBonus(Convert.ToInt64(bonus), BetBonusMode.All, BetBonusType.Total, bonusDescription, BetBonusPaidAs.Cash)
                                     .SetStake(Convert.ToInt64(stake), StakeType.Total)
                                     .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
                                     .AddSelectedSystem(betSelectionData.Count)

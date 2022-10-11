@@ -29,4 +29,4 @@ extends:
   template: dotnetservice.yml@bt
   parameters:
     projects:
-      - Platform\Platform.Settlement.Service
+      - Platform/Platform.Settlement.Service

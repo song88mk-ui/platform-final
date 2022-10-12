@@ -4850,7 +4850,7 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionTemplateId = item.SeTeId,
                                 SelectionId = item.SeId.ToString(),
                                 SelectionName = GetSelectionName(item.SeNa, item.SeNaTr, languageCode),
-                                DecimalOdds = odds.ToString(),
+                                DecimalOdds = odds.ToString("0.00"),
                                 IsActive = odds > 1m && item.IsAc,
                                 CorrelationId = item.CoId,
                                 SortOrder = item.SeSoOr
@@ -5124,7 +5124,7 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionTemplateId = item.SeTeId,
                                 SelectionId = item.SeId.ToString(),
                                 SelectionName = GetSelectionName(item.SeNa, item.SeNaTr, languageCode),
-                                DecimalOdds = odds.ToString(),
+                                DecimalOdds = odds.ToString("0.00"),
                                 IsActive = odds > 1m && item.IsAc,
                                 CorrelationId = item.CoId,
                                 SortOrder = item.SeSoOr

@@ -1,0 +1,32 @@
+name: $(System.TeamProject)-Platform-Job-ForexEUR-$(Build.BuildId).$(Rev:r)
+
+pr: none
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - Platform/Platform.Job.ForexEUR
+
+
+resources:
+  repositories:
+    - repository: bt
+      type: github
+      name: FlyingCockatoo/BuildTemplates
+      endpoint: FlyingCockatoo
+      ref: refs/tags/v0.1.1
+    - repository: nuget-helper
+      type: github
+      name: FlyingCockatoo/infra-build-nuget-helper
+      endpoint: FlyingCockatoo
+      ref: refs/heads/main
+
+extends:
+  template: dotnetservice.yml@bt
+  parameters:
+    projects:
+      - Platform/Platform.Job.ForexEUR

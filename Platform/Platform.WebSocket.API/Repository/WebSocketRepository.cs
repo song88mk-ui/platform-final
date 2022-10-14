@@ -1,12 +1,16 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
-using Platform.Shared.Enums;
+using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Utility;
 using Platform.WebSocket.API.Data;
 using Platform.WebSocket.API.Messages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -17,11 +21,13 @@ namespace Platform.WebSocket.API.Repository
         private readonly IServiceProvider _provider;
         private PlatformContext _platformContext;
         private readonly IMemCache _memCache;
+        private readonly TelemetryClient _telemetryClient;
 
-        public WebSocketRepository(IServiceProvider provider, IMemCache memCache)
+        public WebSocketRepository(IServiceProvider provider, IMemCache memCache, TelemetryClient telemetryClient)
         {
             _provider = provider;
             _memCache = memCache;
+            _telemetryClient = telemetryClient;
         }
         public override async Task OnConnectedAsync()
         {
@@ -50,6 +56,18 @@ namespace Platform.WebSocket.API.Repository
 
             //await _platformContext.SaveChangesAsync();
 
+            var properties = new Dictionary<string, string>
+                            {
+                                { "ConnectionId", connectionId },
+                                { "IPAddress", ipAddress },
+                                { "IPCountry", ipCountry },
+                                { "Server", server },
+                                { "UserAgent", userAgent },
+                                { "ConnectedTimestamp", DateTime.UtcNow.ToString() }
+                            };
+
+            _telemetryClient.TrackEvent("e:OnConnectedAsync", properties);
+
             await base.OnConnectedAsync();
         }
         public override async Task OnDisconnectedAsync(Exception exception)
@@ -72,10 +90,30 @@ namespace Platform.WebSocket.API.Repository
             //    await _platformContext.SaveChangesAsync();
             //}
 
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "ConnectionId", connectionId },
+                                { "DisconnectedTimestamp", DateTime.UtcNow.ToString() }
+                            };
+
+            _telemetryClient.TrackEvent("e:OnDisconnectedAsync", properties);
+
             await base.OnDisconnectedAsync(exception);
         }
         public async Task SubscribeToEndpoint(EndpointRequest request)
         {
+            var connectionId = Context.ConnectionId;
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "ConnectionId", connectionId },
+                                { "requestParameters", JsonSerializer.Serialize(request ?? new EndpointRequest()) },
+                                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+                            };
+
+            _telemetryClient.TrackEvent("e:SubscribeToEndpoint", properties);
+
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
@@ -87,6 +125,17 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task UnsubscribeToEndpoint(EndpointRequest request)
         {
+            var connectionId = Context.ConnectionId;
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "ConnectionId", connectionId },
+                                { "requestParameters", JsonSerializer.Serialize(request ?? new EndpointRequest()) },
+                                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+                            };
+
+            _telemetryClient.TrackEvent("e:UnsubscribeToEndpoint", properties);
+
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)

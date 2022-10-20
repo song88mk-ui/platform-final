@@ -28,7 +28,7 @@ namespace Platform.Shared.Models
         }
         public string BetId { get; set; }
         public decimal Stake { get; set; }
-        public decimal Odds { get; set; }
+        public string Odds { get; set; }
         public decimal Payout { get; set; }
         public decimal WinLoss { get; set; }
         public decimal Commission { get; set; }

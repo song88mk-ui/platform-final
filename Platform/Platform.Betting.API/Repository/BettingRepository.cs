@@ -1456,7 +1456,7 @@ namespace Platform.Betting.API.Repository
                 {
                     BetId = bet.BetId.ToString(),
                     Stake = bet.Stake,
-                    Odds = bet.Odds,
+                    Odds = bet.Odds.ToString("0.00"),
                     Payout = bet.Payout,
                     WinLoss = bet.WinLoss,
                     BetStatusId = bet.BetStatusId,
@@ -1583,7 +1583,7 @@ namespace Platform.Betting.API.Repository
                 {
                     BetId = bet.BetId.ToString(),
                     Stake = bet.Stake,
-                    Odds = bet.Odds,
+                    Odds = bet.Odds.ToString("0.00"),
                     Payout = bet.Payout,
                     WinLoss = bet.WinLoss,
                     BetStatusId = bet.BetStatusId,

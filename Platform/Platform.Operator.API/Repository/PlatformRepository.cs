@@ -160,7 +160,7 @@ namespace Platform.Operator.API.Repository
                     _platformContext.SaveChanges();
 
                     var testConfig = _platformContext.TestConfig.Find(id);
-                    if (testConfig != null && testConfig.ClientId == id)
+                    if (request.IsBetBuilder == false && testConfig != null && testConfig.ClientId == id)
                     {
                         scope.Complete();
 

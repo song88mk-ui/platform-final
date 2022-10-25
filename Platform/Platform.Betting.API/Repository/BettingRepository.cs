@@ -108,7 +108,7 @@ namespace Platform.Betting.API.Repository
             decimal maxPerGame = 0;
             decimal stakeFixtureLimit = 0;
             decimal parlayBonus = 0;
-            var odds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+            var odds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.DecimalOdds).Aggregate((a, b) => a * b);
             var taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
             var priceboostConfig = !string.IsNullOrEmpty(betConfig.PriceboostConfig) ? JsonSerializer.Deserialize<PriceboostConfig>(betConfig.PriceboostConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new PriceboostConfig();
 
@@ -228,7 +228,7 @@ namespace Platform.Betting.API.Repository
 
                 if (request.IsBetBuilder == false && hasVirtualSport == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
                 {
-                    var selectionCount = request.Selections.Where(c => c.Odds >= parlayConfig.ParlayBonusMinOdds).Count();
+                    var selectionCount = request.Selections.Where(c => c.DecimalOdds >= parlayConfig.ParlayBonusMinOdds).Count();
                     if (selectionCount >= 3)
                     {
                         var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == selectionCount);
@@ -248,7 +248,7 @@ namespace Platform.Betting.API.Repository
                 {
                     Guid betId;
 
-                    var totalOdds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+                    var totalOdds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.DecimalOdds).Aggregate((a, b) => a * b);
                     var totalOddsRef = request.Selections.Select(s => s.OddsRef).Aggregate((a, b) => a * b); 
                     var selectionSports = request.Selections.Select(s => s.SportId).Distinct().ToList();
 
@@ -264,6 +264,26 @@ namespace Platform.Betting.API.Repository
 
                     var taxedStake = 0m; // request.Stake - (request.Stake / (1 + stakeTax));
                     var stake = request.Stake - taxedStake;
+
+                    // Malay and Indo
+                    if (request.Selections.Count == 1)
+                    {
+                        var selection = request.Selections.FirstOrDefault();
+
+                        // malay code here
+                        if ((int)request.OddsType == 1 && selection.MalaysianOdds < 0 && selection.IsBinary == true)
+                        {
+                            stake = Math.Abs(stake * Math.Round(selection.MalaysianOdds, 2));
+                        }
+
+                        // indo code here
+                        if ((int)request.OddsType == 3 && selection.IndonesianOdds < 0 && selection.IsBinary == true)
+                        {
+                            stake = Math.Abs(stake * Math.Round(selection.IndonesianOdds, 2));
+                        }
+
+                        // hk code here
+                    }
 
                     var winningsTax = taxConfig.WinningsTax;
 
@@ -281,7 +301,7 @@ namespace Platform.Betting.API.Repository
                     {
                         UserId = request.UserId,
                         Stake = request.Stake,
-                        TrueStake = request.Stake,
+                        TrueStake = stake,
                         Odds = totalOdds,
                         OddsTypeId = (int)request.OddsType,
                         OddsTypeName = request.OddsType.ToString(),
@@ -403,7 +423,7 @@ namespace Platform.Betting.API.Repository
                             FixtureStatusName = selection.FixtureStatus.ToString(),
                             Line = selection.Line,
                             SelectionTemplateId = selection.SelectionTemplateId,
-                            Odds = selection.Odds,
+                            Odds = selection.DecimalOdds,
                             BetSelectionStatusId = betEntity.BetStatusId,
                             BetSelectionStatusName = betEntity.BetStatusName,
                             IsSettled = false,
@@ -623,7 +643,7 @@ namespace Platform.Betting.API.Repository
                 {
                     FixtureSpecifier = betSelection.FixtureSpecifier,
                     SelectionSpecifier = betSelection.SelectionSpecifier,
-                    Odds = betSelection.Odds
+                    Odds = betSelection.DecimalOdds
                 });
             }
 
@@ -654,7 +674,7 @@ namespace Platform.Betting.API.Repository
             decimal maxPerGame = 0;
             decimal stakeFixtureLimit = 0;
             decimal parlayBonus = 0;
-            var odds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+            var odds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.DecimalOdds).Aggregate((a, b) => a * b);
             var taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
             var priceboostConfig = !string.IsNullOrEmpty(betConfig.PriceboostConfig) ? JsonSerializer.Deserialize<PriceboostConfig>(betConfig.PriceboostConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new PriceboostConfig();
             var betBuilderConfig = !string.IsNullOrEmpty(betConfig.BetBuilderConfig) ? JsonSerializer.Deserialize<BetBuilderConfig>(betConfig.BetBuilderConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new BetBuilderConfig();
@@ -767,7 +787,7 @@ namespace Platform.Betting.API.Repository
 
                 if (request.IsBetBuilder == false && hasVirtualSport == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
                 {
-                    var selectionCount = request.Selections.Where(c => c.Odds >= parlayConfig.ParlayBonusMinOdds).Count();
+                    var selectionCount = request.Selections.Where(c => c.DecimalOdds >= parlayConfig.ParlayBonusMinOdds).Count();
                     if (selectionCount >= 3)
                     {
                         var parlayBonusConfig = parlayConfig.ParlayBonusConfig.FirstOrDefault(c => c.SelectionCount == selectionCount);
@@ -787,7 +807,7 @@ namespace Platform.Betting.API.Repository
                 {
                     Guid betId;
 
-                    var totalOdds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+                    var totalOdds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.DecimalOdds).Aggregate((a, b) => a * b);
                     var totalOddsRef = request.Selections.Select(s => s.OddsRef).Aggregate((a, b) => a * b);
                     var selectionSports = request.Selections.Select(s => s.SportId).Distinct().ToList();
 
@@ -803,6 +823,26 @@ namespace Platform.Betting.API.Repository
 
                     var taxedStake = 0m; // request.Stake - (request.Stake / (1 + stakeTax));
                     var stake = request.Stake - taxedStake;
+
+                    // Malay and Indo
+                    if (request.Selections.Count == 1)
+                    {
+                        var selection = request.Selections.FirstOrDefault();
+
+                        // malay code here
+                        if ((int)request.OddsType == 1 && selection.MalaysianOdds < 0 && selection.IsBinary == true)
+                        {
+                            stake = Math.Abs(stake * Math.Round(selection.MalaysianOdds, 2));
+                        }
+
+                        // indo code here
+                        if ((int)request.OddsType == 3 && selection.IndonesianOdds < 0 && selection.IsBinary == true)
+                        {
+                            stake = Math.Abs(stake * Math.Round(selection.IndonesianOdds, 2));
+                        }
+
+                        // hk code here
+                    }
 
                     var winningsTax = taxConfig.WinningsTax;
 
@@ -820,7 +860,7 @@ namespace Platform.Betting.API.Repository
                     {
                         UserId = request.UserId,
                         Stake = request.Stake,
-                        TrueStake = request.Stake,
+                        TrueStake = stake,
                         Odds = totalOdds,
                         OddsTypeId = (int)request.OddsType,
                         OddsTypeName = request.OddsType.ToString(),
@@ -942,7 +982,7 @@ namespace Platform.Betting.API.Repository
                             FixtureStatusName = selection.FixtureStatus.ToString(),
                             Line = selection.Line,
                             SelectionTemplateId = selection.SelectionTemplateId,
-                            Odds = selection.Odds,
+                            Odds = selection.DecimalOdds,
                             OddsRef = selection.OddsRef,
                             BetSelectionStatusId = betEntity.BetStatusId,
                             BetSelectionStatusName = betEntity.BetStatusName,
@@ -1137,7 +1177,7 @@ namespace Platform.Betting.API.Repository
                 {
                     FixtureSpecifier = betSelection.FixtureSpecifier,
                     SelectionSpecifier = betSelection.SelectionSpecifier,
-                    Odds = betSelection.Odds
+                    Odds = betSelection.DecimalOdds
                 });
             }
 
@@ -1191,7 +1231,7 @@ namespace Platform.Betting.API.Repository
             decimal maxStake = 0;
             decimal maxPerGame = 0;
             decimal stakeFixtureLimit = 0;
-            var odds = request.Selections.Select(s => s.Odds).Aggregate((a, b) => a * b);
+            var odds = request.Selections.Select(s => s.DecimalOdds).Aggregate((a, b) => a * b);
             var priceboostConfig = !string.IsNullOrEmpty(betConfig.PriceboostConfig) ? JsonSerializer.Deserialize<PriceboostConfig>(betConfig.PriceboostConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new PriceboostConfig();
 
             if (request.Selections.Count == 1)

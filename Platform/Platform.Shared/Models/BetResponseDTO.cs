@@ -20,7 +20,10 @@ namespace Platform.Shared.Models
         public StatusCode StatusCode { get; set; }
         public string Message { get; set; }
         public string SelectionId { get; set; }
-        public decimal Odds { get; set; }
+        public decimal DecimalOdds { get; set; }
+        public decimal MalaysianOdds { get; set; }
+        public decimal HongkongOdds { get; set; }
+        public decimal IndonesianOdds { get; set; }
         public string CorrelationId { get; set; }
     }
 

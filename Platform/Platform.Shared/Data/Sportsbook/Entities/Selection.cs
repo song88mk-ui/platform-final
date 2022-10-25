@@ -42,6 +42,9 @@ namespace Platform.Shared.Data.Sportsbook.Entities
     public class SelectionExtension : Selection
     {
         public decimal OddsRef { get; set; }
+        public decimal MaOd { get; set; }
+        public decimal HoOd { get; set; }
+        public decimal InOd { get; set; }
     }
 
     public class SelectionFilter

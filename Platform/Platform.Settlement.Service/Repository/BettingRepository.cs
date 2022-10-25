@@ -543,7 +543,7 @@ namespace Platform.Settlement.Service.Repository
                 FixtureStatusName = betSelectionEntity.FixtureStatusName,
                 Line = betSelectionEntity.Line,
                 Odds = betSelectionEntity.Odds,
-                //OddsRef = betSelectionEntity.OddsRef,
+                OddsRef = betSelectionEntity.OddsRef,
                 BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
                 BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
                 IsSettled = betSelectionEntity.IsSettled,
@@ -578,10 +578,10 @@ namespace Platform.Settlement.Service.Repository
                 {
                     isPublish = ApplyLost(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason);
                 }
-                //else if (bet.BetTypeId == (int)BetType.BetBuilder && message.SelectionStatus == BetStatus.Void)
-                //{
-                //    isPublish = ApplyAllSettled(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason, false);
-                //}
+                else if (bet.BetTypeId == (int)BetType.BetBuilder && message.SelectionStatus == BetStatus.Void)
+                {
+                    isPublish = ApplyAllSettled(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason, false);
+                }
                 else
                 {
                     var totalSettled = selections.Where(c => c.SelectionId != message.SelectionId && c.IsSettled == true).Count();
@@ -658,7 +658,7 @@ namespace Platform.Settlement.Service.Repository
                 FixtureStatusName = betSelectionEntity.FixtureStatusName,
                 Line = betSelectionEntity.Line,
                 Odds = betSelectionEntity.Odds,
-                //OddsRef = betSelectionEntity.OddsRef,
+                OddsRef = betSelectionEntity.OddsRef,
                 BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
                 BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
                 IsSettled = betSelectionEntity.IsSettled,
@@ -692,16 +692,16 @@ namespace Platform.Settlement.Service.Repository
                 {
                     isPublish = ApplyLost(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason);
                 }
-                //else if (bet.BetTypeId == (int)BetType.BetBuilder && message.SelectionStatus == BetStatus.Void)
-                //{
-                //    isPublish = ApplyAllSettled(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason, true);
-                //}
+                else if (bet.BetTypeId == (int)BetType.BetBuilder && message.SelectionStatus == BetStatus.Void)
+                {
+                    isPublish = ApplyAllSettled(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason, true);
+                }
                 else
                 {
                     var totalSettled = selections.Where(c => c.SelectionId != message.SelectionId && c.IsSettled == true).Count();
                     var totalSelections = selections.Where(c => c.SelectionId != message.SelectionId).Count();
 
-                    var isBetBuilder = false;
+                    var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
                     var initialBetStatus = GetInitialBetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, isBetBuilder);
 
@@ -722,7 +722,7 @@ namespace Platform.Settlement.Service.Repository
 
         private bool ApplyLost(BettingContext context, OnUOFBetSettlement message, OnBetSettlement payload, Bet bet, List<BetSelection> selections, BetSelection betSelection, DateTime settledDate, bool isPublish, bool isManualSettle, string reason)
         {
-            var isBetBuilder = false;
+            var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
             var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), bet.TrueStake, isBetBuilder, bet.Odds);
             var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake, isBetBuilder);
@@ -799,9 +799,9 @@ namespace Platform.Settlement.Service.Repository
                 StakeRealPayout = betEntity.StakeRealPayout,
                 StakeBonusPayout = betEntity.StakeBonusPayout,
                 IsFreeBet = betEntity.IsFreeBet,
-                //BetTypeId = betEntity.BetTypeId,
-                //BetTypeName = betEntity.BetTypeName,
-                //OddsRef = betEntity.OddsRef
+                BetTypeId = betEntity.BetTypeId,
+                BetTypeName = betEntity.BetTypeName,
+                OddsRef = betEntity.OddsRef
             });
 
             payload.Bet = betEntity;
@@ -812,7 +812,7 @@ namespace Platform.Settlement.Service.Repository
         }
         private bool ApplyAllSettled(BettingContext context, OnUOFBetSettlement message, OnBetSettlement payload, Bet bet, List<BetSelection> selections, BetSelection betSelection, DateTime settledDate, bool isPublish, bool isManualSettle, string reason, bool isResettle)
         {
-            var isBetBuilder = false;
+            var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
             var finalStake = bet.TrueStake - bet.StakeBonus;
 
@@ -934,9 +934,9 @@ namespace Platform.Settlement.Service.Repository
                 StakeRealPayout = betEntity.StakeRealPayout,
                 StakeBonusPayout = betEntity.StakeBonusPayout,
                 IsFreeBet = betEntity.IsFreeBet,
-                //BetTypeId = betEntity.BetTypeId,
-                //BetTypeName = betEntity.BetTypeName,
-                //OddsRef = betEntity.OddsRef
+                BetTypeId = betEntity.BetTypeId,
+                BetTypeName = betEntity.BetTypeName,
+                OddsRef = betEntity.OddsRef
             });
 
             if (isResettle == false)
@@ -1033,9 +1033,9 @@ namespace Platform.Settlement.Service.Repository
                 StakeRealPayout = betEntity.StakeRealPayout,
                 StakeBonusPayout = betEntity.StakeBonusPayout,
                 IsFreeBet = betEntity.IsFreeBet,
-                //BetTypeId = betEntity.BetTypeId,
-                //BetTypeName = betEntity.BetTypeName,
-                //OddsRef = betEntity.OddsRef
+                BetTypeId = betEntity.BetTypeId,
+                BetTypeName = betEntity.BetTypeName,
+                OddsRef = betEntity.OddsRef
             });
 
         }
@@ -1099,7 +1099,7 @@ namespace Platform.Settlement.Service.Repository
                                 continue;
                             }
 
-                            var isBetBuilder = false;
+                            var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
                             var reason = string.IsNullOrEmpty(betItem.Reason) ? "Cancelled by Backoffice" : betItem.Reason;
 
@@ -1166,9 +1166,9 @@ namespace Platform.Settlement.Service.Repository
                                 StakeRealPayout = betEntity.StakeRealPayout,
                                 StakeBonusPayout = betEntity.StakeBonusPayout,
                                 IsFreeBet = betEntity.IsFreeBet,
-                                //BetTypeId = betEntity.BetTypeId,
-                                //BetTypeName = betEntity.BetTypeName,
-                                //OddsRef = betEntity.OddsRef
+                                BetTypeId = betEntity.BetTypeId,
+                                BetTypeName = betEntity.BetTypeName,
+                                OddsRef = betEntity.OddsRef
                             });
 
                             foreach (var betSelection in betSelections)
@@ -1205,7 +1205,7 @@ namespace Platform.Settlement.Service.Repository
                                     FixtureStatusName = betSelectionEntity.FixtureStatusName,
                                     Line = betSelectionEntity.Line,
                                     Odds = betSelectionEntity.Odds,
-                                    //OddsRef = betSelectionEntity.OddsRef,
+                                    OddsRef = betSelectionEntity.OddsRef,
                                     BetSelectionStatusId = betSelectionEntity.BetSelectionStatusId,
                                     BetSelectionStatusName = betSelectionEntity.BetSelectionStatusName,
                                     IsSettled = betSelectionEntity.IsSettled,

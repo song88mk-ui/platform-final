@@ -1173,7 +1173,7 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 var clientOdd = clientOdds.FirstOrDefault(c => c.SelectionId == selection.SeId);
 
-                                tempSelectionExtension.Od = Convert.ToDecimal(GetClientBoostedOdds(selection.ClBoOd, request.ClientCode, request.IsBoosted, clientOdd.DecimalOdds.ToString("0,00")));
+                                tempSelectionExtension.Od = Convert.ToDecimal(GetClientBoostedOdds(selection.ClBoOd, request.ClientCode, request.IsBoosted, clientOdd.DecimalOdds.ToString("0.00")));
                                 tempSelectionExtension.OddsRef = Convert.ToDecimal(clientOdd.DecimalOdds.ToString("0.00"));
                                 tempSelectionExtension.MaOd = clientOdd.MalaysianOdds;
                                 tempSelectionExtension.HoOd = clientOdd.HongkongOdds;

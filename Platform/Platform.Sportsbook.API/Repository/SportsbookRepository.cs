@@ -5065,7 +5065,7 @@ namespace Platform.Sportsbook.API.Repository
                             isBetBuilder = true;
                         }
                     }
-                    
+
                     var filteredSelections = selections.Where(c => c.MaId == market.MaId).ToList();
                     var isBinary = filteredSelections.Count > 2 ? false : true;
 
@@ -6262,9 +6262,7 @@ namespace Platform.Sportsbook.API.Repository
                     payload = payload + $"</filterSelections>";
                 }
 
-
                 var response = await client.PostAsync($"/v1/custombet/calculate-filter", new StringContent(payload, System.Text.Encoding.UTF8, "application/xml"));
-
                 if (response.IsSuccessStatusCode)
                 {
                     var result = await response.Content.ReadAsStringAsync();
@@ -8648,7 +8646,7 @@ namespace Platform.Sportsbook.API.Repository
 
             return Math.Truncate(retval * 100) / 100;
         }
-        
+
         private List<BetBuilderMarket> GetBetBuilderMarketsXmlFiltered(XmlNodeList list, List<MarketMappingFilter> marketMappings, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode)
         {
             var response = new List<BetBuilderMarket>();
@@ -8657,10 +8655,6 @@ namespace Platform.Sportsbook.API.Repository
             {
                 var marketTemplateId = marketNode.Attributes["id"].Value;
                 var specifiers = marketNode.HasAttribute("specifiers") ? marketNode.Attributes["specifiers"].Value : string.Empty;
-
-                var conflict = marketNode.HasAttribute("conflict") ? Convert.ToBoolean(marketNode.Attributes["conflict"].Value) : false;
-                if (conflict == false)
-                    continue;
 
                 var marketMapped = marketMappings.FirstOrDefault(m => m.MaTeId == marketTemplateId && m.MaSp == specifiers);
                 if (marketMapped == null)
@@ -8671,6 +8665,7 @@ namespace Platform.Sportsbook.API.Repository
                     continue;
 
                 var selectionResponse = new List<BetBuilderSelection>();
+                var selectionIds = new List<long>();
 
                 foreach (XmlElement selectionNode in marketNode.ChildNodes)
                 {
@@ -8680,8 +8675,11 @@ namespace Platform.Sportsbook.API.Repository
                     if (sconflict == false)
                         continue;
 
-                    var selection = selections.FirstOrDefault(m => marketMapped.MaId == m.MaId);
+                    var selection = selections.FirstOrDefault(m => marketMapped.MaId == m.MaId && !selectionIds.Contains(m.SeId));
                     if (selection == null)
+                        continue;
+
+                    if (selectionResponse.Any(s => s.SelectionId == selection.SeId.ToString()))
                         continue;
 
                     selectionResponse.Add(new BetBuilderSelection
@@ -8689,6 +8687,7 @@ namespace Platform.Sportsbook.API.Repository
                         SelectionId = selection.SeId.ToString(),
                         IsActive = false
                     });
+                    selectionIds.Add(selection.SeId);
                 }
 
                 if (!selectionResponse.Any())

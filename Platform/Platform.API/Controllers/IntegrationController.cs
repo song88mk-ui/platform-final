@@ -1319,7 +1319,6 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/fixturedetails")]
         public async Task<IActionResult> GetFixtureDetails([FromQuery] string fixtureId)
         {
-            //
             var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();

@@ -1443,7 +1443,7 @@ namespace Platform.Betting.API.Repository
                 var runningPayout = GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), bet.TrueStake, isBetBuilder, bet.Odds);
 
                 var runningfinalStake = bet.TrueStake - bet.StakeBonus;
-                var runningTaxedStake = bet.IsFreeBet ? runningfinalStake - (runningfinalStake / (1 + bet.StakeTax)) : 0;
+                var runningTaxedStake = bet.IsFreeBet == false ? runningfinalStake - (runningfinalStake / (1 + bet.StakeTax)) : 0;
                 var runningTaxedWinnings = runningPayout + parlayBonusWinnings;
 
                 if (bet.IsFreeBet)
@@ -1724,6 +1724,7 @@ namespace Platform.Betting.API.Repository
 
                 var runningPayout = GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), bet.TrueStake, isBetBuilder, bet.Odds);
                 var runningfinalStake = bet.TrueStake - bet.StakeBonus;
+                var runningTaxedStake = bet.IsFreeBet == false ? runningfinalStake - (runningfinalStake / (1 + bet.StakeTax)) : 0;
                 var runningTaxedWinnings = runningPayout + parlayBonusWinnings;
                 
                 if (bet.IsFreeBet)
@@ -1740,7 +1741,8 @@ namespace Platform.Betting.API.Repository
                     CashOutStake = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStake : 0,
                     CashOutStatusId = bet.BetStatusId == (int)BetStatus.Running ? (int)cashOut.CashOutStatus : (int)CashOutStatus.Unavailable,
                     CashOutStatusName = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStatus.ToString() : CashOutStatus.Unavailable.ToString(),
-                    TaxedWinnings = runningTaxedWinnings
+                    TaxedWinnings = runningTaxedWinnings,
+                    TaxedStake = runningTaxedStake
                 });
             }
 

@@ -17,6 +17,7 @@ namespace Platform.Shared.Models
         public int CashOutStatusId { get; set; }
         public string CashOutStatusName { get; set; }
         public decimal CashOutStake { get; set; }
+        public decimal TaxedStake { get; set; }
         public decimal TaxedWinnings { get; set; }
     }
 }

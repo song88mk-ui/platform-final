@@ -1428,10 +1428,11 @@ namespace Platform.Betting.API.Repository
                 var wonOrRunningSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running).Count();
                 var lostSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
 
+                var parlayBonusWinnings = 0m;
                 var parlayBonus = 0m;
                 if (hasVirtualSport == false && wonOrRunningSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
                 {
-                    var parlayConfig = GetParlayBetConfig(_bettingContext, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, filteredSelections);
+                    var parlayConfig = GetParlayBetConfig(_bettingContext, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, filteredSelections, bet.Payout, ref parlayBonusWinnings);
 
                     if (parlayConfig.Item1 == true)
                     {
@@ -1439,16 +1440,26 @@ namespace Platform.Betting.API.Repository
                     }
                 }
 
-                var runningTaxedStake = bet.Stake - (bet.Stake / (1 + bet.StakeTax));
-                var parlayBonusWinnings = bet.Payout * parlayBonus;
-                var runningTaxedWinnings = ((bet.Payout + parlayBonusWinnings) - bet.Stake) * bet.WinningsTax;
+                var runningPayout = GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), bet.TrueStake, isBetBuilder, bet.Odds);
+
+                var runningfinalStake = bet.TrueStake - bet.StakeBonus;
+                var runningTaxedStake = bet.IsFreeBet ? runningfinalStake - (runningfinalStake / (1 + bet.StakeTax)) : 0;
+                var runningTaxedWinnings = runningPayout + parlayBonusWinnings;
+
+                if (bet.IsFreeBet)
+                    runningfinalStake = bet.TrueStake;
+
+                runningTaxedWinnings = bet.IsFreeBet == false && bet.StakeBonus == bet.TrueStake ? 0 : (runningTaxedWinnings - runningfinalStake) * bet.WinningsTax;
+
+                if (runningPayout < bet.TrueStake)
+                    runningTaxedWinnings = 0;
 
                 result.Add(new BetHistoryDTO
                 {
                     BetId = bet.BetId.ToString(),
                     Stake = bet.Stake,
                     Odds = bet.Odds.ToString(),
-                    Payout = bet.Payout,
+                    Payout = bet.BetStatusId == (int)BetStatus.Running ? runningPayout : bet.Payout,
                     WinLoss = bet.WinLoss,
                     BetStatusId = bet.BetStatusId,
                     BetStatusName = bet.BetStatusName,
@@ -1693,13 +1704,43 @@ namespace Platform.Betting.API.Repository
                 var cashOut = cashOutList.Result.Where(c => c.BetId == bet.BetId).FirstOrDefault();
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
                 var isBoosted = betBoosted.Any(b => b == bet.BetId);
+                var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
+
+                var hasVirtualSport = filteredSelections.Any(s => s.SportId > 1000) ? true : false;
+                var wonOrRunningSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running).Count();
+                var lostSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
+                
+                var parlayBonusWinnings = 0m;
+                var parlayBonus = 0m;
+                if (hasVirtualSport == false && wonOrRunningSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
+                {
+                    var parlayConfig = GetParlayBetConfig(_bettingContext, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, filteredSelections, bet.Payout, ref parlayBonusWinnings);
+
+                    if (parlayConfig.Item1 == true)
+                    {
+                        parlayBonus = parlayConfig.Item2.ParlayBonus;
+                    }
+                }
+
+                var runningPayout = GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), bet.TrueStake, isBetBuilder, bet.Odds);
+                var runningfinalStake = bet.TrueStake - bet.StakeBonus;
+                var runningTaxedWinnings = runningPayout + parlayBonusWinnings;
+                
+                if (bet.IsFreeBet)
+                    runningfinalStake = bet.TrueStake;
+
+                runningTaxedWinnings = bet.IsFreeBet == false && bet.StakeBonus == bet.TrueStake ? 0 : (runningTaxedWinnings - runningfinalStake) * bet.WinningsTax;
+
+                if (runningPayout < bet.TrueStake)
+                    runningTaxedWinnings = 0;
 
                 result.Add(new BetHistoryRunning
                 {
                     BetId = bet.BetId.ToString(),
                     CashOutStake = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStake : 0,
                     CashOutStatusId = bet.BetStatusId == (int)BetStatus.Running ? (int)cashOut.CashOutStatus : (int)CashOutStatus.Unavailable,
-                    CashOutStatusName = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStatus.ToString() : CashOutStatus.Unavailable.ToString()
+                    CashOutStatusName = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStatus.ToString() : CashOutStatus.Unavailable.ToString(),
+                    TaxedWinnings = runningTaxedWinnings
                 });
             }
 
@@ -2650,7 +2691,7 @@ namespace Platform.Betting.API.Repository
             return maximumStake.Min();
         }
 
-        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(BettingContext context, Guid clientId, string currencyCode, DateTime betDate, List<BetSelection> selections)
+        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(BettingContext context, Guid clientId, string currencyCode, DateTime betDate, List<BetSelection> selections, decimal payout, ref decimal parlayBonusWinnings)
         {
             var parlayBonusList = GetParlayBonusAudit(context).Where(c => c.ClientId == clientId && c.TimeStamp < betDate
                     && c.CurrencyCode == currencyCode).OrderByDescending(o => o.TimeStamp).ToList();
@@ -2667,7 +2708,17 @@ namespace Platform.Betting.API.Repository
                 if (result == null)
                     return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
                 else
-                    return new Tuple<bool, ParlayBonusAudit>(true, result);
+                {
+                    parlayBonusWinnings = payout * result.ParlayBonus;
+
+                    if (parlayBonusWinnings > result.ParlayBonusMaxWinnings && result.ParlayBonusMaxWinnings > 0)
+                    {
+                        parlayBonusWinnings = 0;
+                        return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
+                    }
+                    else
+                        return new Tuple<bool, ParlayBonusAudit>(true, result);
+                }
             }
             else
                 return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
@@ -2720,6 +2771,52 @@ namespace Platform.Betting.API.Repository
 
             return selections.Count > 1 ? BetType.Parlay : BetType.Single;
 
+        }
+
+        private decimal GetPayout(List<Tuple<BetStatus, decimal, decimal>> selections, decimal stake, bool isBetBuilder, decimal odds)
+        {
+            var values = new List<decimal>();
+
+            if (isBetBuilder == true)
+            {
+                if (selections.Count() == selections.Where(s => s.Item1 == BetStatus.Won).Count())
+                    return (odds * stake);
+                else if (selections.Any(s => s.Item1 == BetStatus.Lost))
+                    return 0m;
+                else if (selections.Any(s => s.Item1 == BetStatus.Void))
+                    return stake;
+                else if (selections.Any(s => s.Item1 == BetStatus.Cancelled))
+                    return stake;
+                else
+                    return stake;
+            }
+
+            foreach (var selection in selections)
+            {
+                switch (selection.Item1)
+                {
+                    case BetStatus.Lost:
+                        values.Add(0m);
+                        break;
+                    case BetStatus.HalfWon:
+                        values.Add((selection.Item2 + 1) / 2);
+                        break;
+                    case BetStatus.HalfLost:
+                        values.Add(0.5m);
+                        break;
+                    case BetStatus.Won:
+                        values.Add(selection.Item2 * selection.Item3);
+                        break;
+                    case BetStatus.Void:
+                        values.Add(1m);
+                        break;
+                    case BetStatus.Cancelled:
+                        values.Add(1m);
+                        break;
+                }
+            }
+
+            return values.Aggregate((a, b) => a * b) * stake;
         }
     }
 }

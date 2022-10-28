@@ -2806,6 +2806,7 @@ namespace Platform.Betting.API.Repository
                     case BetStatus.HalfLost:
                         values.Add(0.5m);
                         break;
+                    case BetStatus.Running:
                     case BetStatus.Won:
                         values.Add(selection.Item2 * selection.Item3);
                         break;

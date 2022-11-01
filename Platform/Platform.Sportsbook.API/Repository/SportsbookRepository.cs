@@ -3931,7 +3931,7 @@ namespace Platform.Sportsbook.API.Repository
                 MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
                 SMSCode = string.Empty,
                 StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
-                Score = s.Sc,
+                Score = s.SpId == 138 ? string.Empty : s.Sc, /*don't display score for kabbadi sport*/
                 CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
                 CurrentMinute = s.CuMi.ToString(),
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
@@ -4562,7 +4562,7 @@ namespace Platform.Sportsbook.API.Repository
                     MarketCount = markets.Result.Where(c => c.FiId == fixture.FiId).Count(),
                     SMSCode = string.Empty,
                     StatisticsURL = GetStatisticsURL(request.ClientId, fixture.StUr, request.LanguageCode),
-                    Score = fixture.Sc,
+                    Score = fixture.SpId == 138 ? string.Empty : fixture.Sc, /*empty score for kabaddi sport*/
                     CurrentPeriod = CurrentPeriodHelper.ToShortName(fixture.CuPe),
                     CurrentMinute = fixture.CuMi.ToString(),
                     BetStop = fixture.IsSu ? new List<int> { 1 } : new List<int> { },

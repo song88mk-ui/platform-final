@@ -5,6 +5,7 @@ using Platform.Client.API.ActionFilters;
 using Platform.Client.API.Repository;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -31,8 +32,9 @@ namespace Platform.Client.API.Controllers
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? LanguageCode.EN : Enum.Parse<LanguageCode>(HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper());
 
-            var result = await _sportsbookRepository.GetActiveFixtures(apiKey, clientId, ipCountryCode, LanguageCode.EN);
+            var result = await _sportsbookRepository.GetActiveFixtures(apiKey, clientId, ipCountryCode, languageCode);
 
             var properties = new Dictionary<string, string>
                             {

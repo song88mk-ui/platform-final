@@ -1541,7 +1541,7 @@ namespace Platform.API.Controllers
 
         [HttpPost("v1/sportsbook/betbuilder/selections/odds")]
         public async Task<IActionResult> GetBetBuilderSelectionsOdds([FromBody] BetBuilderSelectionsOddsRequest request)
-        {//
+        {
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();

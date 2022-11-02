@@ -1442,7 +1442,7 @@ namespace Platform.Betting.API.Repository
 
                 var runningfinalStake = bet.TrueStake - bet.StakeBonus;
                 var runningTaxedStake = bet.IsFreeBet == false ? runningfinalStake - (runningfinalStake / (1 + bet.StakeTax)) : 0;
-                var runningStake = GetStake(selections, runningTaxedStake, bet.TrueStake);
+                var runningStake = GetStake(filteredSelections, runningTaxedStake, bet.TrueStake);
                 var runningPayout = GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), runningStake, isBetBuilder, bet.Odds);
                 var runningTaxedWinnings = runningPayout + parlayBonusWinnings;
 
@@ -1709,7 +1709,12 @@ namespace Platform.Betting.API.Repository
                 var hasVirtualSport = filteredSelections.Any(s => s.SportId > 1000) ? true : false;
                 var wonOrRunningSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running).Count();
                 var lostSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
-                
+
+
+                var runningNonTaxedStake = bet.TrueStake;
+                var runningNonTaxedPayout = GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), runningNonTaxedStake, isBetBuilder, bet.Odds);
+                var runningNonTaxedParlayBonusWinnings = 0m;
+
                 var parlayBonusWinnings = 0m;
                 var parlayBonus = 0m;
                 if (hasVirtualSport == false && wonOrRunningSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
@@ -1719,15 +1724,20 @@ namespace Platform.Betting.API.Repository
                     if (parlayConfig.Item1 == true)
                     {
                         parlayBonus = parlayConfig.Item2.ParlayBonus;
+
+                        runningNonTaxedParlayBonusWinnings = runningNonTaxedPayout * parlayConfig.Item2.ParlayBonus;
                     }
                 }
 
+                runningNonTaxedPayout = runningNonTaxedPayout + runningNonTaxedParlayBonusWinnings;
+
+
                 var runningfinalStake = bet.TrueStake - bet.StakeBonus;
                 var runningTaxedStake = bet.IsFreeBet == false ? runningfinalStake - (runningfinalStake / (1 + bet.StakeTax)) : 0;
-                var runningStake = GetStake(selections, runningTaxedStake, bet.TrueStake);
+                var runningStake = GetStake(filteredSelections, runningTaxedStake, bet.TrueStake);
                 var runningPayout = GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), runningStake, isBetBuilder, bet.Odds);
                 var runningTaxedWinnings = runningPayout + parlayBonusWinnings;
-                
+
                 if (bet.IsFreeBet)
                     runningfinalStake = bet.TrueStake;
 
@@ -1743,7 +1753,8 @@ namespace Platform.Betting.API.Repository
                     CashOutStatusId = bet.BetStatusId == (int)BetStatus.Running ? (int)cashOut.CashOutStatus : (int)CashOutStatus.Unavailable,
                     CashOutStatusName = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStatus.ToString() : CashOutStatus.Unavailable.ToString(),
                     TaxedWinnings = runningTaxedWinnings,
-                    TaxedStake = runningTaxedStake
+                    TaxedStake = runningTaxedStake,
+                    NonTaxedPayout = runningNonTaxedPayout
                 });
             }
 

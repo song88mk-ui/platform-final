@@ -4840,10 +4840,10 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = s.SeNa,
-                                DecimalOdds = s.Od.ToString("0.00"),
-                                MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
-                                HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
-                                IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
+                                Odds = s.Od.ToString("0.00"),
+                                //MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                                //HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                                //IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
                             }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
                         });
                     }
@@ -4881,10 +4881,10 @@ namespace Platform.Sportsbook.API.Repository
                                 SelectionId = s.SeId.ToString(),
                                 SelectionName = s.SeNa,
                                 //Odds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
-                                DecimalOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).DecimalOdds.ToString(),
-                                MalaysianOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).MalaysianOdds.ToString(),
-                                HongkongOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).HongkongOdds.ToString(),
-                                IndonesianOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).IndonesianOdds.ToString(),
+                                Odds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).DecimalOdds.ToString(),
+                                //MalaysianOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).MalaysianOdds.ToString(),
+                                //HongkongOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).HongkongOdds.ToString(),
+                                //IndonesianOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).IndonesianOdds.ToString(),
                             }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
                         });
                     }
@@ -4912,10 +4912,10 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             SelectionId = s.SeId.ToString(),
                             SelectionName = s.SeNa,
-                            DecimalOdds = s.Od.ToString("0.00"),
-                            MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
-                            HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
-                            IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
+                            Odds = s.Od.ToString("0.00"),
+                            //MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                            //HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                            //IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
                         }).OrderBy(o => Convert.ToInt64(o.SelectionId)).ToList()
                     });
                 }

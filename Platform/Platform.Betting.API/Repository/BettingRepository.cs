@@ -2805,7 +2805,7 @@ namespace Platform.Betting.API.Repository
 
             if (isBetBuilder == true)
             {
-                if (selections.Count() == selections.Where(s => s.Item1 == BetStatus.Won).Count())
+                if (selections.Count() == selections.Where(s => s.Item1 == BetStatus.Won || s.Item1 == BetStatus.Running).Count())
                     return (odds * stake);
                 else if (selections.Any(s => s.Item1 == BetStatus.Lost))
                     return 0m;

@@ -5875,7 +5875,7 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureName = GetFixtureName(s.FiNa, s.FiNaTr, request.LanguageCode),
                 Home = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                 Away = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                FixtureStatus = !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
+                FixtureStatus = s.FiTyId == (int)FixtureType.Outright || s.SpId > 1000 ? s.FiStNa : s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.SpId == 21 ? s.FiStId == (int)FixtureStatus.Live ? true : false : s.IsOfLi,
                 IsLiveStream = IsLiveStream(s.LiId, s.GeAl, request.IPCountryCode),

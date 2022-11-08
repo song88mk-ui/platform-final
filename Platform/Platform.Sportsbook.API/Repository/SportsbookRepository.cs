@@ -1454,8 +1454,14 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (betBuilderSportIds.Contains(item.SpId) && item.FiTyId == (int)FixtureType.Match)
                         {
-                            filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == item.SpId).ToList();
-                            isBetBuilder = true;
+
+                            if(item.FiStId == (int)FixtureStatus.Prematch)
+                                filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == item.SpId && c.Prematch == true).ToList();
+                            else if (item.FiStId == (int)FixtureStatus.Live)
+                                filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == item.SpId && c.Live == true).ToList();
+
+                            isBetBuilder = filteredBetBuilderMarketTemplates.Any() ? true : false;
+
                         }
 
                         result.Add(new FixtureDTO
@@ -1989,7 +1995,7 @@ namespace Platform.Sportsbook.API.Repository
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
-                IsBetBuilder = betBuilderSportIds.Contains(s.SpId) && s.FiTyId == (int)FixtureType.Match ? true : false,
+                IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates), 
                 SortOrder = clientFixtures.Where(c => c.FixtureId == s.FiId).Select(s => s.SortOrder).FirstOrDefault()
             }).OrderBy(o => o.SortOrder).ToList();
 
@@ -2314,7 +2320,7 @@ namespace Platform.Sportsbook.API.Repository
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
-                IsBetBuilder = betBuilderSportIds.Contains(s.SpId) && s.FiTyId == (int)FixtureType.Match ? true : false,
+                IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
                 SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -2467,7 +2473,7 @@ namespace Platform.Sportsbook.API.Repository
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
-                IsBetBuilder = betBuilderSportIds.Contains(s.SpId) && s.FiTyId == (int)FixtureType.Match ? true : false,
+                IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
                 SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -2667,7 +2673,7 @@ namespace Platform.Sportsbook.API.Repository
                     BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                     IsBetStop = s.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo,
-                    IsBetBuilder = betBuilderSportIds.Contains(s.SpId) && s.FiTyId == (int)FixtureType.Match ? true : false,
+                    IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
                     SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                     == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -2880,7 +2886,7 @@ namespace Platform.Sportsbook.API.Repository
                     BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                     IsBetStop = s.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo,
-                    IsBetBuilder = betBuilderSportIds.Contains(s.SpId) && s.FiTyId == (int)FixtureType.Match ? true : false,
+                    IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
                     SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                     == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -3085,7 +3091,7 @@ namespace Platform.Sportsbook.API.Repository
                     BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                     IsBetStop = s.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo,
-                    IsBetBuilder = betBuilderSportIds.Contains(s.SpId) && s.FiTyId == (int)FixtureType.Match ? true : false,
+                    IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
                     SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                     == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -3248,7 +3254,7 @@ namespace Platform.Sportsbook.API.Repository
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
-                IsBetBuilder = betBuilderSportIds.Contains(s.SpId) && s.FiTyId == (int)FixtureType.Match ? true : false,
+                IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
                 SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -3412,7 +3418,7 @@ namespace Platform.Sportsbook.API.Repository
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
-                IsBetBuilder = betBuilderSportIds.Contains(s.SpId) && s.FiTyId == (int)FixtureType.Match ? true : false,
+                IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
                 SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -3937,7 +3943,7 @@ namespace Platform.Sportsbook.API.Repository
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
-                IsBetBuilder = betBuilderSportIds.Contains(s.SpId) && s.FiTyId == (int)FixtureType.Match ? true : false,
+                IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
                 SortOrder = clientTopLeagues.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() == 0 ? sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() : clientTopLeagues.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault(),
                 Markets = GetMainMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, s.FiStId, filteredBetBuilderMarketTemplates)
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -4042,7 +4048,7 @@ namespace Platform.Sportsbook.API.Repository
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
-                IsBetBuilder = betBuilderSportIds.Contains(s.SpId) && s.FiTyId == (int)FixtureType.Match ? true : false,
+                IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
                 SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault(),
                 Markets = GetMainMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, s.FiStId, filteredBetBuilderMarketTemplates)
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -4154,7 +4160,7 @@ namespace Platform.Sportsbook.API.Repository
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
-                IsBetBuilder = betBuilderSportIds.Contains(s.SpId) && s.FiTyId == (int)FixtureType.Match ? true : false,
+                IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
                 Markets = GetMainMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, s.FiStId, filteredBetBuilderMarketTemplates)
             }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
@@ -4532,8 +4538,12 @@ namespace Platform.Sportsbook.API.Repository
 
             if (betBuilderSportIds.Contains(fixture.SpId) && fixture.FiTyId == (int)FixtureType.Match)
             {
-                filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SpId).ToList();
-                isBetBuilder = true;
+                if (fixture.FiStId == (int)FixtureStatus.Prematch)
+                    filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SpId && c.Prematch == true).ToList();
+                else if (fixture.FiStId == (int)FixtureStatus.Live)
+                    filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SpId && c.Live == true).ToList();
+
+                isBetBuilder = filteredBetBuilderMarketTemplates.Any() ? true : false;
             }
 
             var finalMarkets = GetMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), request.LanguageCode, request.ClientCode, fixture.SpId, fixture.FiTyId, fixture.FiStId, clientInitial, filteredBetBuilderMarketTemplates);
@@ -8712,6 +8722,18 @@ namespace Platform.Sportsbook.API.Repository
             }, 24);
 
             return result;
+        }
+
+        private bool IsBetBuilder(int sportId, int fixtureTypeId, int fixtureStatusId, List<BetBuilderMarketTemplates> betBuilderMarketTemplates)
+        {
+            if(fixtureTypeId == (int)FixtureType.Match)
+                return true;
+            else if (fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplates.Any(c => c.SportId == sportId && c.Prematch == true))
+                return true;
+            else if (fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplates.Any(c => c.SportId == sportId && c.Live == true))
+                return true;
+
+            return false;
         }
     }
 

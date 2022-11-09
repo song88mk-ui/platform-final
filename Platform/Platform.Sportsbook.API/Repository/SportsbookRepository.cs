@@ -6287,31 +6287,11 @@ namespace Platform.Sportsbook.API.Repository
 
                     if (root.Name != "filtered_calculation_response")
                     {
-                        if (root.Name == "response")
+                        return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
                         {
-                            var message = string.Empty;
-                            foreach (XmlElement node in root.ChildNodes)
-                            {
-                                if (node.Name == "message")
-                                {
-                                    message = node.InnerText;
-                                }
-                            }
-
-                            return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
-                            {
-                                StatusCode = string.IsNullOrEmpty(message) ? StatusCode.No_Record_Found : StatusCode.Error,
-                                Message = string.IsNullOrEmpty(message) ? StatusCode.No_Record_Found.ToString().Replace('_', ' ') : message
-                            };
-                        }
-                        else
-                        {
-                            return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
-                            {
-                                StatusCode = StatusCode.No_Record_Found,
-                                Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
-                            };
-                        }
+                            StatusCode = StatusCode.No_Record_Found,
+                            Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                        };
                     }
 
                     foreach (XmlElement node in root.ChildNodes)
@@ -6347,6 +6327,33 @@ namespace Platform.Sportsbook.API.Repository
                 }
                 else
                 {
+                    if(response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                    {
+                        var result = await response.Content.ReadAsStringAsync();
+
+                        XmlDocument doc = new XmlDocument();
+
+                        doc.LoadXml(result);
+
+                        XmlElement root = doc.DocumentElement;
+
+                        if (root.Name == "response")
+                        {
+                            var message = string.Empty;
+                            foreach (XmlElement node in root.ChildNodes)
+                            {
+                                if (node.Name == "message")
+                                    message = node.InnerText;
+                            }
+
+                            return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                            {
+                                StatusCode = string.IsNullOrEmpty(message) ? StatusCode.No_Record_Found : StatusCode.Error,
+                                Message = string.IsNullOrEmpty(message) ? StatusCode.No_Record_Found.ToString().Replace('_', ' ') : message
+                            };
+                        }
+                    }
+
                     return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
                     {
                         StatusCode = StatusCode.No_Record_Found,

@@ -1455,7 +1455,7 @@ namespace Platform.Sportsbook.API.Repository
                         if (betBuilderSportIds.Contains(item.SpId) && item.FiTyId == (int)FixtureType.Match)
                         {
 
-                            if(item.FiStId == (int)FixtureStatus.Prematch)
+                            if (item.FiStId == (int)FixtureStatus.Prematch)
                                 filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == item.SpId && c.Prematch == true).ToList();
                             else if (item.FiStId == (int)FixtureStatus.Live)
                                 filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == item.SpId && c.Live == true).ToList();
@@ -1995,7 +1995,7 @@ namespace Platform.Sportsbook.API.Repository
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
-                IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates), 
+                IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
                 SortOrder = clientFixtures.Where(c => c.FixtureId == s.FiId).Select(s => s.SortOrder).FirstOrDefault()
             }).OrderBy(o => o.SortOrder).ToList();
 
@@ -6287,11 +6287,31 @@ namespace Platform.Sportsbook.API.Repository
 
                     if (root.Name != "filtered_calculation_response")
                     {
-                        return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                        if (root.Name == "response")
                         {
-                            StatusCode = StatusCode.No_Record_Found,
-                            Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
-                        };
+                            var message = string.Empty;
+                            foreach (XmlElement node in root.ChildNodes)
+                            {
+                                if (node.Name == "message")
+                                {
+                                    message = node.InnerText;
+                                }
+                            }
+
+                            return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                            {
+                                StatusCode = string.IsNullOrEmpty(message) ? StatusCode.No_Record_Found : StatusCode.Error,
+                                Message = string.IsNullOrEmpty(message) ? StatusCode.No_Record_Found.ToString().Replace('_', ' ') : message
+                            };
+                        }
+                        else
+                        {
+                            return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                            {
+                                StatusCode = StatusCode.No_Record_Found,
+                                Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                            };
+                        }
                     }
 
                     foreach (XmlElement node in root.ChildNodes)
@@ -8685,7 +8705,7 @@ namespace Platform.Sportsbook.API.Repository
                     if (sconflict == false)
                         continue;
 
-                    var selection = selections.FirstOrDefault(m => marketMapped.MaId == m.MaId && !selectionIds.Contains(m.SeId));
+                    var selection = selections.FirstOrDefault(m => marketMapped.MaId == m.MaId && m.SeTeId == selectionTemplateId && !selectionIds.Contains(m.SeId));
                     if (selection == null)
                         continue;
 
@@ -8726,7 +8746,7 @@ namespace Platform.Sportsbook.API.Repository
 
         private bool IsBetBuilder(int sportId, int fixtureTypeId, int fixtureStatusId, List<BetBuilderMarketTemplates> betBuilderMarketTemplates)
         {
-            if(fixtureTypeId == (int)FixtureType.Match)
+            if (fixtureTypeId == (int)FixtureType.Match)
                 return true;
             else if (fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplates.Any(c => c.SportId == sportId && c.Prematch == true))
                 return true;

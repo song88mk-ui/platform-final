@@ -8747,11 +8747,12 @@ namespace Platform.Sportsbook.API.Repository
         private bool IsBetBuilder(int sportId, int fixtureTypeId, int fixtureStatusId, List<BetBuilderMarketTemplates> betBuilderMarketTemplates)
         {
             if (fixtureTypeId == (int)FixtureType.Match)
-                return true;
-            else if (fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplates.Any(c => c.SportId == sportId && c.Prematch == true))
-                return true;
-            else if (fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplates.Any(c => c.SportId == sportId && c.Live == true))
-                return true;
+            {
+                if (fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplates.Any(c => c.SportId == sportId && c.Prematch == true))
+                    return true;
+                else if (fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplates.Any(c => c.SportId == sportId && c.Live == true))
+                    return true;
+            }
 
             return false;
         }

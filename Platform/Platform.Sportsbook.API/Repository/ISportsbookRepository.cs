@@ -25,9 +25,9 @@ namespace Platform.Sportsbook.API.Repository
 
         Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(ActiveFixturesRequestDTO request);
         Task<BaseResponseDTO<ActiveFixtureCountResponseDTO>> GetActiveFixtureCount(ActiveFixtureCountRequestDTO request);
-        Task<BaseResponseDTO<SportsLookupResponseDTO>> GetSportsLookup(string clientCode);
-        Task<BaseResponseDTO<SegmentsLookupResponseDTO>> GetSegmentsLookup(string clientCode);
-        Task<BaseResponseDTO<LeaguesLookupResponseDTO>> GetLeaguesLookup(string clientCode);
+        Task<BaseResponseDTO<SportsLookupResponseDTO>> GetSportsLookup(SportsLookupRequestDTO request);
+        Task<BaseResponseDTO<SegmentsLookupResponseDTO>> GetSegmentsLookup(SegmentsLookupRequestDTO request);
+        Task<BaseResponseDTO<LeaguesLookupResponseDTO>> GetLeaguesLookup(LeaguesLookupRequestDTO request);
 
         Task<BaseResponseDTO<TWResponseDTO>> GetTopFixturesTW(TWRequestDTO request);
         Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(TWFLiveFixtureCountRequestDTO request);

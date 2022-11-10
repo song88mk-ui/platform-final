@@ -42,6 +42,7 @@ namespace Platform.Client.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-language-code", languageCode.ToString() },
                                 { "requestParameters", JsonSerializer.Serialize("") },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -60,13 +61,14 @@ namespace Platform.Client.API.Controllers
 
         [HttpGet("v1/sportsbook/activefixtures/details")]
         public async Task<IActionResult> GetFixtureDetails([FromQuery] string fixtureId)
-        { //
+        {
             var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? LanguageCode.EN : Enum.Parse<LanguageCode>(HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper());
 
-            var result = await _sportsbookRepository.GetActiveFixtureDetails(apiKey, clientId, fixtureId, ipCountryCode, LanguageCode.EN);
+            var result = await _sportsbookRepository.GetActiveFixtureDetails(apiKey, clientId, fixtureId, ipCountryCode, languageCode);
 
             var properties = new Dictionary<string, string>
                             {
@@ -74,6 +76,7 @@ namespace Platform.Client.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-language-code", languageCode.ToString() },
                                 { "requestParameters", JsonSerializer.Serialize(fixtureId) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -96,14 +99,16 @@ namespace Platform.Client.API.Controllers
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? LanguageCode.EN : Enum.Parse<LanguageCode>(HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper());
 
-            var result = await _sportsbookRepository.GetActiveFixtureCount(apiKey, clientId, LanguageCode.EN);
+            var result = await _sportsbookRepository.GetActiveFixtureCount(apiKey, clientId, languageCode);
 
             var properties = new Dictionary<string, string>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-language-code", languageCode.ToString() },
                                 { "requestParameters", JsonSerializer.Serialize("") },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -126,14 +131,16 @@ namespace Platform.Client.API.Controllers
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? LanguageCode.EN : Enum.Parse<LanguageCode>(HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper());
 
-            var result = await _sportsbookRepository.GetSportsLookup(apiKey, clientId, LanguageCode.EN);
+            var result = await _sportsbookRepository.GetSportsLookup(apiKey, clientId, languageCode);
 
             var properties = new Dictionary<string, string>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-language-code", languageCode.ToString() },
                                 { "requestParameters", JsonSerializer.Serialize("") },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -156,14 +163,16 @@ namespace Platform.Client.API.Controllers
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? LanguageCode.EN : Enum.Parse<LanguageCode>(HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper());
 
-            var result = await _sportsbookRepository.GetSegmentsLookup(apiKey, clientId, LanguageCode.EN);
+            var result = await _sportsbookRepository.GetSegmentsLookup(apiKey, clientId, languageCode);
 
             var properties = new Dictionary<string, string>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-language-code", languageCode.ToString() },
                                 { "requestParameters", JsonSerializer.Serialize("") },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -186,14 +195,16 @@ namespace Platform.Client.API.Controllers
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? LanguageCode.EN : Enum.Parse<LanguageCode>(HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper());
 
-            var result = await _sportsbookRepository.GetLeaguesLookup(apiKey, clientId, LanguageCode.EN);
+            var result = await _sportsbookRepository.GetLeaguesLookup(apiKey, clientId, languageCode);
 
             var properties = new Dictionary<string, string>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-language-code", languageCode.ToString() },
                                 { "requestParameters", JsonSerializer.Serialize("") },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }

@@ -566,7 +566,7 @@ namespace Platform.Sportsbook.API.Controllers
         [HttpPost("v1/sportsbook/lookup/sports")]
         public async Task<IActionResult> GetSportsLookup([FromBody] SportsLookupRequestDTO request)
         {
-            var result = await _sportsbookRepository.GetSportsLookup(request.ClientCode);
+            var result = await _sportsbookRepository.GetSportsLookup(request);
 
             switch (result.StatusCode)
             {
@@ -580,7 +580,7 @@ namespace Platform.Sportsbook.API.Controllers
         [HttpPost("v1/sportsbook/lookup/segments")]
         public async Task<IActionResult> GetSegmentsLookup([FromBody] SegmentsLookupRequestDTO request)
         {
-            var result = await _sportsbookRepository.GetSegmentsLookup(request.ClientCode);
+            var result = await _sportsbookRepository.GetSegmentsLookup(request);
 
             switch (result.StatusCode)
             {
@@ -594,7 +594,7 @@ namespace Platform.Sportsbook.API.Controllers
         [HttpPost("v1/sportsbook/lookup/leagues")]
         public async Task<IActionResult> GetLeaguesLookup([FromBody] LeaguesLookupRequestDTO request)
         {
-            var result = await _sportsbookRepository.GetLeaguesLookup(request.ClientCode);
+            var result = await _sportsbookRepository.GetLeaguesLookup(request);
 
             switch (result.StatusCode)
             {

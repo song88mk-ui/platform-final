@@ -233,9 +233,12 @@ namespace Platform.CashOut.Service.Repository
             {
                 var tempSelection = message.Probabilities.Where(c => c.BetSelectionId == selection.BetSelectionId).FirstOrDefault();
 
-                selection.IsSettled = true;
-                selection.BetSelectionStatusId = (int)BetStatus.CashedOut;
-                selection.BetSelectionStatusName = BetStatus.CashedOut.ToString();
+                if (selection.BetSelectionStatusId == (int)BetStatus.Running)
+                {
+                    selection.IsSettled = true;
+                    selection.BetSelectionStatusId = (int)BetStatus.CashedOut;
+                    selection.BetSelectionStatusName = BetStatus.CashedOut.ToString();
+                }
 
                 if (tempSelection != null)
                 {

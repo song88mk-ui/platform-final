@@ -628,6 +628,9 @@ namespace Platform.Settlement.Service.Repository
                 if (bet.IsResettled && isManualSettle == false)
                     return false;
 
+            if (bet.BetStatusId == (int)BetStatus.CashedOut)
+                return false;
+
             filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;
             filteredSelection.BetSelectionStatusName = message.SelectionStatus.ToString();
             if (!string.IsNullOrEmpty(message.SettlementScore))
@@ -1103,7 +1106,7 @@ namespace Platform.Settlement.Service.Repository
                         {
                             var bet = context.Bet.Find(betItem.BetId);
 
-                            if (bet == null || bet.BetStatusId == (int)BetStatus.Waiting || bet.BetStatusId == (int)BetStatus.Cancelled || bet.BetStatusId == (int)BetStatus.Rejected)
+                            if (bet == null || bet.BetStatusId == (int)BetStatus.Waiting || bet.BetStatusId == (int)BetStatus.Cancelled || bet.BetStatusId == (int)BetStatus.Rejected || bet.BetStatusId == (int)BetStatus.CashedOut)
                             {
                                 scope.Complete();
                                 continue;

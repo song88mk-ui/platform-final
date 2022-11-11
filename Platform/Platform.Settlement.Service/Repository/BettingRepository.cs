@@ -882,7 +882,7 @@ namespace Platform.Settlement.Service.Repository
 
             nonTaxedPayout = nonTaxedPayout + nonTaxedParlayBonusWinnings;
 
-            if (betStatus == (BetStatus)bet.BetStatusId)
+            if (betStatus == (BetStatus)bet.BetStatusId && totalPayout == bet.Payout)
                 isInsertToBetAudit = false;
 
             bet.WinLoss = totalPayout == 0 ? -bet.TrueStake : totalPayout - stake;

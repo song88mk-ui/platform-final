@@ -312,6 +312,11 @@ namespace Platform.Settlement.Service.Repository
                                 scope.Complete();
                                 continue;
                             }
+                            //--
+                            if (betSelection.BetId == Guid.Parse("7D43F478-8602-4523-7074-08DAC3A5209E"))
+                            {
+                                //parlay
+                            }
 
                             if (filteredSelection.IsSettled == false)
                                 isPublish = SettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection, false, string.Empty);
@@ -722,10 +727,16 @@ namespace Platform.Settlement.Service.Repository
 
         private bool ApplyLost(BettingContext context, OnUOFBetSettlement message, OnBetSettlement payload, Bet bet, List<BetSelection> selections, BetSelection betSelection, DateTime settledDate, bool isPublish, bool isManualSettle, string reason)
         {
+            var isInsertToBetAudit = true;
+            isPublish = false;
+
             var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
             var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), bet.TrueStake, isBetBuilder, bet.Odds);
             var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake, isBetBuilder);
+
+            if (betStatus == (BetStatus)bet.BetStatusId)
+                isInsertToBetAudit = false;
 
             payload.NonTaxedPayout = payout;
 
@@ -755,63 +766,70 @@ namespace Platform.Settlement.Service.Repository
 
             var betEntity = context.Bet.Update(bet).Entity;
 
-            context.BetAudit.Add(new BetAudit
+            if (isInsertToBetAudit)
             {
-                BetId = betEntity.BetId,
-                UserId = betEntity.UserId,
-                Stake = betEntity.Stake,
-                TrueStake = betEntity.TrueStake,
-                Odds = betEntity.Odds,
-                OddsTypeId = betEntity.OddsTypeId,
-                OddsTypeName = betEntity.OddsTypeName,
-                Payout = betEntity.Payout,
-                WinLoss = betEntity.WinLoss,
-                BetStatusId = betEntity.BetStatusId,
-                BetStatusName = betEntity.BetStatusName,
-                Reason = betEntity.Reason,
-                CurrencyCode = betEntity.CurrencyCode,
-                LanguageCode = betEntity.LanguageCode,
-                ExchangeRate = betEntity.ExchangeRate,
-                IPAddress = betEntity.IPAddress,
-                Channel = betEntity.Channel,
-                ClientId = betEntity.ClientId,
-                ClientIdRef = betEntity.ClientIdRef,
-                ClientCode = betEntity.ClientCode,
-                ClientName = betEntity.ClientName,
-                LimitId = betEntity.LimitId,
-                Endpoint = betEntity.Endpoint,
-                OperatorToken = betEntity.OperatorToken,
-                CompanyShare = betEntity.CompanyShare,
-                IsResettled = betEntity.IsResettled,
-                IsCashout = betEntity.IsCashout,
-                BetDate = betEntity.BetDate,
-                BetDateOffset = betEntity.BetDateOffset,
-                SettlementDate = betEntity.SettlementDate,
-                SettlementDateOffset = betEntity.SettlementDateOffset,
-                StakeTax = betEntity.StakeTax,
-                WinningsTax = betEntity.WinningsTax,
-                TaxedStake = betEntity.TaxedStake,
-                TaxedWinnings = betEntity.TaxedWinnings,
-                ParlayBonus = betEntity.ParlayBonus,
-                ParlayBonusWinnings = betEntity.ParlayBonusWinnings,
-                StakeReal = betEntity.StakeReal,
-                StakeBonus = betEntity.StakeBonus,
-                StakeRealPayout = betEntity.StakeRealPayout,
-                StakeBonusPayout = betEntity.StakeBonusPayout,
-                IsFreeBet = betEntity.IsFreeBet,
-                BetTypeId = betEntity.BetTypeId,
-                BetTypeName = betEntity.BetTypeName,
-                OddsRef = betEntity.OddsRef
-            });
+                context.BetAudit.Add(new BetAudit
+                {
+                    BetId = betEntity.BetId,
+                    UserId = betEntity.UserId,
+                    Stake = betEntity.Stake,
+                    TrueStake = betEntity.TrueStake,
+                    Odds = betEntity.Odds,
+                    OddsTypeId = betEntity.OddsTypeId,
+                    OddsTypeName = betEntity.OddsTypeName,
+                    Payout = betEntity.Payout,
+                    WinLoss = betEntity.WinLoss,
+                    BetStatusId = betEntity.BetStatusId,
+                    BetStatusName = betEntity.BetStatusName,
+                    Reason = betEntity.Reason,
+                    CurrencyCode = betEntity.CurrencyCode,
+                    LanguageCode = betEntity.LanguageCode,
+                    ExchangeRate = betEntity.ExchangeRate,
+                    IPAddress = betEntity.IPAddress,
+                    Channel = betEntity.Channel,
+                    ClientId = betEntity.ClientId,
+                    ClientIdRef = betEntity.ClientIdRef,
+                    ClientCode = betEntity.ClientCode,
+                    ClientName = betEntity.ClientName,
+                    LimitId = betEntity.LimitId,
+                    Endpoint = betEntity.Endpoint,
+                    OperatorToken = betEntity.OperatorToken,
+                    CompanyShare = betEntity.CompanyShare,
+                    IsResettled = betEntity.IsResettled,
+                    IsCashout = betEntity.IsCashout,
+                    BetDate = betEntity.BetDate,
+                    BetDateOffset = betEntity.BetDateOffset,
+                    SettlementDate = betEntity.SettlementDate,
+                    SettlementDateOffset = betEntity.SettlementDateOffset,
+                    StakeTax = betEntity.StakeTax,
+                    WinningsTax = betEntity.WinningsTax,
+                    TaxedStake = betEntity.TaxedStake,
+                    TaxedWinnings = betEntity.TaxedWinnings,
+                    ParlayBonus = betEntity.ParlayBonus,
+                    ParlayBonusWinnings = betEntity.ParlayBonusWinnings,
+                    StakeReal = betEntity.StakeReal,
+                    StakeBonus = betEntity.StakeBonus,
+                    StakeRealPayout = betEntity.StakeRealPayout,
+                    StakeBonusPayout = betEntity.StakeBonusPayout,
+                    IsFreeBet = betEntity.IsFreeBet,
+                    BetTypeId = betEntity.BetTypeId,
+                    BetTypeName = betEntity.BetTypeName,
+                    OddsRef = betEntity.OddsRef
+                });
+
+                isPublish = true;
+            }
 
             payload.Bet = betEntity;
             payload.BetSelections = selections;
-            isPublish = true;
 
             return isPublish;
         }
         private bool ApplyAllSettled(BettingContext context, OnUOFBetSettlement message, OnBetSettlement payload, Bet bet, List<BetSelection> selections, BetSelection betSelection, DateTime settledDate, bool isPublish, bool isManualSettle, string reason, bool isResettle)
         {
+            var isInsertToBetAudit = true;
+            isPublish = false;
+
             var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
             var finalStake = bet.TrueStake - bet.StakeBonus;
@@ -864,6 +882,9 @@ namespace Platform.Settlement.Service.Repository
 
             nonTaxedPayout = nonTaxedPayout + nonTaxedParlayBonusWinnings;
 
+            if (betStatus == (BetStatus)bet.BetStatusId)
+                isInsertToBetAudit = false;
+
             bet.WinLoss = totalPayout == 0 ? -bet.TrueStake : totalPayout - stake;
             bet.BetStatusId = (int)betStatus;
             bet.BetStatusName = betStatus.ToString();
@@ -890,61 +911,65 @@ namespace Platform.Settlement.Service.Repository
 
             var betEntity = context.Bet.Update(bet).Entity;
 
-            context.BetAudit.Add(new BetAudit
+            if (isInsertToBetAudit)
             {
-                BetId = betEntity.BetId,
-                UserId = betEntity.UserId,
-                Stake = betEntity.Stake,
-                TrueStake = betEntity.TrueStake,
-                Odds = betEntity.Odds,
-                OddsTypeId = betEntity.OddsTypeId,
-                OddsTypeName = betEntity.OddsTypeName,
-                Payout = betEntity.Payout,
-                WinLoss = betEntity.WinLoss,
-                BetStatusId = betEntity.BetStatusId,
-                BetStatusName = betEntity.BetStatusName,
-                Reason = betEntity.Reason,
-                CurrencyCode = betEntity.CurrencyCode,
-                LanguageCode = betEntity.LanguageCode,
-                ExchangeRate = betEntity.ExchangeRate,
-                IPAddress = betEntity.IPAddress,
-                Channel = betEntity.Channel,
-                ClientId = betEntity.ClientId,
-                ClientIdRef = betEntity.ClientIdRef,
-                ClientCode = betEntity.ClientCode,
-                ClientName = betEntity.ClientName,
-                LimitId = betEntity.LimitId,
-                Endpoint = betEntity.Endpoint,
-                OperatorToken = betEntity.OperatorToken,
-                CompanyShare = betEntity.CompanyShare,
-                IsResettled = betEntity.IsResettled,
-                IsCashout = betEntity.IsCashout,
-                BetDate = betEntity.BetDate,
-                BetDateOffset = betEntity.BetDateOffset,
-                SettlementDate = betEntity.SettlementDate,
-                SettlementDateOffset = betEntity.SettlementDateOffset,
-                StakeTax = betEntity.StakeTax,
-                WinningsTax = betEntity.WinningsTax,
-                TaxedStake = betEntity.TaxedStake,
-                TaxedWinnings = betEntity.TaxedWinnings,
-                ParlayBonus = betEntity.ParlayBonus,
-                ParlayBonusWinnings = betEntity.ParlayBonusWinnings,
-                StakeReal = betEntity.StakeReal,
-                StakeBonus = betEntity.StakeBonus,
-                StakeRealPayout = betEntity.StakeRealPayout,
-                StakeBonusPayout = betEntity.StakeBonusPayout,
-                IsFreeBet = betEntity.IsFreeBet,
-                BetTypeId = betEntity.BetTypeId,
-                BetTypeName = betEntity.BetTypeName,
-                OddsRef = betEntity.OddsRef
-            });
+                context.BetAudit.Add(new BetAudit
+                {
+                    BetId = betEntity.BetId,
+                    UserId = betEntity.UserId,
+                    Stake = betEntity.Stake,
+                    TrueStake = betEntity.TrueStake,
+                    Odds = betEntity.Odds,
+                    OddsTypeId = betEntity.OddsTypeId,
+                    OddsTypeName = betEntity.OddsTypeName,
+                    Payout = betEntity.Payout,
+                    WinLoss = betEntity.WinLoss,
+                    BetStatusId = betEntity.BetStatusId,
+                    BetStatusName = betEntity.BetStatusName,
+                    Reason = betEntity.Reason,
+                    CurrencyCode = betEntity.CurrencyCode,
+                    LanguageCode = betEntity.LanguageCode,
+                    ExchangeRate = betEntity.ExchangeRate,
+                    IPAddress = betEntity.IPAddress,
+                    Channel = betEntity.Channel,
+                    ClientId = betEntity.ClientId,
+                    ClientIdRef = betEntity.ClientIdRef,
+                    ClientCode = betEntity.ClientCode,
+                    ClientName = betEntity.ClientName,
+                    LimitId = betEntity.LimitId,
+                    Endpoint = betEntity.Endpoint,
+                    OperatorToken = betEntity.OperatorToken,
+                    CompanyShare = betEntity.CompanyShare,
+                    IsResettled = betEntity.IsResettled,
+                    IsCashout = betEntity.IsCashout,
+                    BetDate = betEntity.BetDate,
+                    BetDateOffset = betEntity.BetDateOffset,
+                    SettlementDate = betEntity.SettlementDate,
+                    SettlementDateOffset = betEntity.SettlementDateOffset,
+                    StakeTax = betEntity.StakeTax,
+                    WinningsTax = betEntity.WinningsTax,
+                    TaxedStake = betEntity.TaxedStake,
+                    TaxedWinnings = betEntity.TaxedWinnings,
+                    ParlayBonus = betEntity.ParlayBonus,
+                    ParlayBonusWinnings = betEntity.ParlayBonusWinnings,
+                    StakeReal = betEntity.StakeReal,
+                    StakeBonus = betEntity.StakeBonus,
+                    StakeRealPayout = betEntity.StakeRealPayout,
+                    StakeBonusPayout = betEntity.StakeBonusPayout,
+                    IsFreeBet = betEntity.IsFreeBet,
+                    BetTypeId = betEntity.BetTypeId,
+                    BetTypeName = betEntity.BetTypeName,
+                    OddsRef = betEntity.OddsRef
+                });
 
-            if (isResettle == false)
-            {
-                ProcessStakeFixtureLimit(message, betSelection, context, selections, betEntity);
+                if (isResettle == false)
+                {
+                    ProcessStakeFixtureLimit(message, betSelection, context, selections, betEntity);
+                }
+
+                isPublish = true;
             }
 
-            isPublish = true;
             payload.Bet = betEntity;
             payload.BetSelections = selections;
             payload.NonTaxedPayout = nonTaxedPayout;
@@ -1037,7 +1062,6 @@ namespace Platform.Settlement.Service.Repository
                 BetTypeName = betEntity.BetTypeName,
                 OddsRef = betEntity.OddsRef
             });
-
         }
 
         public void ProcessBetCancellation(OnUOFBetCancellation message, IMessageBroker messageBroker, string correlationId)

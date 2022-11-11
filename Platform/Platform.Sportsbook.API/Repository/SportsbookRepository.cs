@@ -4597,7 +4597,14 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<TWLimitedResponseDTO>> GetFixtureDetailsLimited(TWFixtureDetailsRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == Convert.ToInt64(request.FixtureId));
-            var tempFixture = fixtureCollection.Find(fixtureFilter).FirstOrDefaultAsync();
+            var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.PrFiId).Include(c => c.FiStId).Include(c => c.ClCo).Include(c => c.SpId)
+                .Include(c => c.SpNa).Include(c => c.SegId).Include(c => c.SegNa).Include(c => c.LeId).Include(c => c.LeNa).Include(c => c.FiNa).Include(c => c.FiTyId)
+                .Include(c => c.FiStDa).Include(c => c.FiStNa).Include(c => c.IsOfLi).Include(c => c.LiId).Include(c => c.GeAl)
+                .Include(c => c.SpNaTr).ElemMatch(c => c.SpNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
+                .Include(c => c.SegNaTr).ElemMatch(c => c.SegNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
+                .Include(c => c.LeNaTr).ElemMatch(c => c.LeNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
+                .Include(c => c.FiNaTr).ElemMatch(c => c.FiNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var tempFixture = fixtureCollection.Find(fixtureFilter).Project<FixtureDetailsLimitedProjection>(fixtureProjection).FirstOrDefaultAsync();
 
             var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
             var tempBettingStatus = bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
@@ -4622,11 +4629,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.ClCo).Include(c => c.ClCoMa);
-            var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
+            var marketProjection = Builders<Market>.Projection.Include(c => c.MaId).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var markets = marketCollection.Find(marketFilter).Project<MarketLimitedProjection>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId);
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.ClBoOd).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -4636,21 +4643,21 @@ namespace Platform.Sportsbook.API.Repository
                 new FixtureLimitedDTO
                 {
                     SportId = fixture.SpId,
-                    SportName = fixture.SpNa,
+                    SportName = GetSportName(fixture.SpNa, fixture.SpNaTr, request.LanguageCode),
                     SegmentId = fixture.SegId,
-                    SegmentName = fixture.SegNa,
+                    SegmentName = GetSegmentName(fixture.SegNa, fixture.SegNaTr, request.LanguageCode),
                     LeagueId = fixture.LeId,
-                    LeagueName = fixture.LeNa,
+                    LeagueName = GetLeagueName(fixture.LeNa, fixture.LeNaTr, request.LanguageCode),
                     FixtureId = fixture.FiId.ToString(),
                     ProviderFixtureId = fixture.PrFiId,
-                    FixtureName = fixture.FiNa,
-                    Home = fixture.FiTyId == (int)FixtureType.Match ? fixture.FiNa.Split(" vs. ").First().Trim() : string.Empty,
-                    Away = fixture.FiTyId == (int)FixtureType.Match ? fixture.FiNa.Split(" vs. ").Last().Trim() : string.Empty,
+                    FixtureName = GetFixtureName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode),
+                    Home = GetHomeName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
+                    Away = GetAwayName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
                     FixtureStartDate = fixture.FiStDa,
                     FixtureStatus = fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStNa : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
                     IsLive = fixture.SpId == 21 ? fixture.FiStId == (int)FixtureStatus.Live ? true : false : fixture.IsOfLi,
                     IsLiveStream = IsLiveStream(fixture.LiId, fixture.GeAl, request.IpCountryCode),
-                    Markets = GetMarketsLimited(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), request.ClientCode, fixture.SpId, fixture.FiTyId)
+                    Markets = GetMarketsLimited(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), request.LanguageCode, request.ClientCode, fixture.SpId, fixture.FiTyId)
                 }
             };
 
@@ -4826,7 +4833,7 @@ namespace Platform.Sportsbook.API.Repository
 
             return sportMarketTemplateGroup;
         }
-        private List<MarketLimitedDTO> GetMarketsLimited(List<MarketFilter> markets, List<SelectionFilter> selections, string clientCode, int sportId, int fixtureTypeId)
+        private List<MarketLimitedDTO> GetMarketsLimited(List<MarketLimitedProjection> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, int sportId, int fixtureTypeId)
         {
             if (IsOEEnable(clientCode))
             {
@@ -4843,13 +4850,13 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
-                            MarketName = market.MaNa,
+                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
                             Line = market.Li,
                             MarketStatus = market.MaStNa,
                             Selections = filteredSelections.Select(s => new SelectionLimitedDTO
                             {
                                 SelectionId = s.SeId.ToString(),
-                                SelectionName = s.SeNa,
+                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
                                 Odds = s.Od.ToString("0.00"),
                                 //MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                                 //HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -4883,13 +4890,13 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
-                            MarketName = market.MaNa,
+                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
                             Line = market.Li,
                             MarketStatus = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
                             Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionLimitedDTO
                             {
                                 SelectionId = s.SeId.ToString(),
-                                SelectionName = s.SeNa,
+                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
                                 //Odds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
                                 Odds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).DecimalOdds.ToString(),
                                 //MalaysianOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).MalaysianOdds.ToString(),
@@ -4915,13 +4922,13 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         MarketTemplateId = market.MaTeId,
                         MarketId = market.MaId.ToString(),
-                        MarketName = market.MaNa,
+                        MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
                         Line = market.Li,
                         MarketStatus = market.MaStNa,
                         Selections = filteredSelections.Select(s => new SelectionLimitedDTO
                         {
                             SelectionId = s.SeId.ToString(),
-                            SelectionName = s.SeNa,
+                            SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
                             Odds = s.Od.ToString("0.00"),
                             //MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                             //HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -5857,7 +5864,14 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(ActiveFixturesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.PrFiId).Include(c => c.FiStId).Include(c => c.ClCo).Include(c => c.SpId)
+                .Include(c => c.SpNa).Include(c => c.SegId).Include(c => c.SegNa).Include(c => c.LeId).Include(c => c.LeNa).Include(c => c.FiNa).Include(c => c.FiTyId)
+                .Include(c => c.FiTyNa).Include(c => c.FiStDa).Include(c => c.FiStNa).Include(c => c.IsOfLi).Include(c => c.LiId).Include(c => c.GeAl)
+                .Include(c => c.SpNaTr).ElemMatch(c => c.SpNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
+                .Include(c => c.SegNaTr).ElemMatch(c => c.SegNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
+                .Include(c => c.LeNaTr).ElemMatch(c => c.LeNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
+                .Include(c => c.FiNaTr).ElemMatch(c => c.FiNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var fixtures = await fixtureCollection.Find(fixtureFilter).Project<ActiveFixtureProjection>(fixtureProjection).ToListAsync();
             if (IsOEEnable(request.ClientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
 
@@ -5904,7 +5918,8 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<ActiveFixtureCountResponseDTO>> GetActiveFixtureCount(ActiveFixtureCountRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.FiStId).Include(c => c.ClCo).Include(c => c.SpId).Include(c => c.SpNa).Include(c => c.FiTyId).Include(c => c.SpNaTr).ElemMatch(c => c.SpNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var fixtures = await fixtureCollection.Find(fixtureFilter).Project<ActiveFixtureCountProjection>(fixtureProjection).ToListAsync();
             if (IsOEEnable(request.ClientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
 
@@ -5921,7 +5936,7 @@ namespace Platform.Sportsbook.API.Repository
             var result = fixtures.GroupBy(g => g.SpId).Select(s => new ActiveFixtureCount
             {
                 SportId = s.Key,
-                SportName = s.Select(ss => ss.SpNa).FirstOrDefault(),
+                SportName = GetSportName(s.Select(ss => ss.SpNa).FirstOrDefault(), s.Select(ss => ss.SpNaTr).FirstOrDefault(), request.LanguageCode),
                 PrematchCount = s.Where(c => c.FiStId == (int)FixtureStatus.Prematch).Count(),
                 LiveCount = s.Where(c => c.FiStId == (int)FixtureStatus.Live).Count(),
             }).OrderBy(o => o.SportId).ToList();
@@ -5936,12 +5951,14 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
-        public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetSportsLookup(string clientCode)
+
+        public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetSportsLookup(SportsLookupRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            if (IsOEEnable(clientCode))
-                fixtures = fixtures.Where(f => f.ClCo.Contains(clientCode) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
+            var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.FiStId).Include(c => c.FiTyId).Include(c => c.SpId).Include(c => c.SpNa).Include(c => c.ClCo).Include(c => c.SpNaTr).ElemMatch(c => c.SpNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var fixtures = await fixtureCollection.Find(fixtureFilter).Project<SportsLookupProjection>(fixtureProjection).ToListAsync();
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -5959,7 +5976,7 @@ namespace Platform.Sportsbook.API.Repository
             {
                 if (finalResult.Any(c => c.SportId == item.SpId)) continue;
 
-                finalResult.Add(new SportLookup { SportId = item.SpId, SportName = item.SpNa });
+                finalResult.Add(new SportLookup { SportId = item.SpId, SportName = GetSportName(item.SpNa, item.SpNaTr, request.LanguageCode) });
             }
 
             return new BaseResponseDTO<SportsLookupResponseDTO>
@@ -5972,12 +5989,13 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
-        public async Task<BaseResponseDTO<SegmentsLookupResponseDTO>> GetSegmentsLookup(string clientCode)
+        public async Task<BaseResponseDTO<SegmentsLookupResponseDTO>> GetSegmentsLookup(SegmentsLookupRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            if (IsOEEnable(clientCode))
-                fixtures = fixtures.Where(f => f.ClCo.Contains(clientCode) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
+            var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.FiStId).Include(c => c.FiTyId).Include(c => c.SpId).Include(c => c.SpNa).Include(c => c.SegId).Include(c => c.SegNa).Include(c => c.ClCo).Include(c => c.SpNaTr).ElemMatch(c => c.SpNaTr, cc => cc.LaCo == request.LanguageCode.ToString()).Include(c => c.SegNaTr).ElemMatch(c => c.SegNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var fixtures = await fixtureCollection.Find(fixtureFilter).Project<SegmentsLookupProjection>(fixtureProjection).ToListAsync();
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -5998,9 +6016,9 @@ namespace Platform.Sportsbook.API.Repository
                 finalResult.Add(new SegmentLookup
                 {
                     SportId = item.SpId,
-                    SportName = item.SpNa,
+                    SportName = GetSportName(item.SpNa, item.SpNaTr, request.LanguageCode),
                     SegmentId = item.SegId,
-                    SegmentName = item.SegNa
+                    SegmentName = GetSegmentName(item.SegNa, item.SegNaTr, request.LanguageCode)
                 });
             }
 
@@ -6014,12 +6032,13 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
-        public async Task<BaseResponseDTO<LeaguesLookupResponseDTO>> GetLeaguesLookup(string clientCode)
+        public async Task<BaseResponseDTO<LeaguesLookupResponseDTO>> GetLeaguesLookup(LeaguesLookupRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            if (IsOEEnable(clientCode))
-                fixtures = fixtures.Where(f => f.ClCo.Contains(clientCode) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
+            var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.FiStId).Include(c => c.FiTyId).Include(c => c.SpId).Include(c => c.SpNa).Include(c => c.SegId).Include(c => c.SegNa).Include(c => c.LeId).Include(c => c.LeNa).Include(c => c.ClCo).Include(c => c.SpNaTr).ElemMatch(c => c.SpNaTr, cc => cc.LaCo == request.LanguageCode.ToString()).Include(c => c.SegNaTr).ElemMatch(c => c.SegNaTr, cc => cc.LaCo == request.LanguageCode.ToString()).Include(c => c.LeNaTr).ElemMatch(c => c.LeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var fixtures = await fixtureCollection.Find(fixtureFilter).Project<LeaguesLookupProjection>(fixtureProjection).ToListAsync();
+            if (IsOEEnable(request.ClientCode))
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -6040,11 +6059,11 @@ namespace Platform.Sportsbook.API.Repository
                 finalResult.Add(new LeagueLookup
                 {
                     SportId = item.SpId,
-                    SportName = item.SpNa,
+                    SportName = GetSportName(item.SpNa, item.SpNaTr, request.LanguageCode),
                     SegmentId = item.SegId,
-                    SegmentName = item.SegNa,
+                    SegmentName = GetSegmentName(item.SegNa, item.SegNaTr, request.LanguageCode),
                     LeagueId = item.LeId,
-                    LeagueName = item.LeNa
+                    LeagueName = GetLeagueName(item.LeNa, item.LeNaTr, request.LanguageCode)
                 });
             }
 

@@ -520,7 +520,7 @@ namespace Platform.Settlement.Service.Repository
 
             if (validStatus.Contains(filteredSelection.BetSelectionStatusId))
                 filteredSelection.Probability = 1;
-            else if (filteredSelection.BetSelectionStatusId == (int)BetStatus.Lost)
+            else
                 filteredSelection.Probability = 0;
 
             var betSelectionEntity = context.BetSelection.Update(filteredSelection).Entity;
@@ -645,7 +645,7 @@ namespace Platform.Settlement.Service.Repository
 
             if (validStatus.Contains(filteredSelection.BetSelectionStatusId))
                 filteredSelection.Probability = 1;
-            else if (filteredSelection.BetSelectionStatusId == (int)BetStatus.Lost)
+            else
                 filteredSelection.Probability = 0;
 
             var betSelectionEntity = context.BetSelection.Update(filteredSelection).Entity;

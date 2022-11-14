@@ -312,11 +312,6 @@ namespace Platform.Settlement.Service.Repository
                                 scope.Complete();
                                 continue;
                             }
-                            //--
-                            if (betSelection.BetId == Guid.Parse("7D43F478-8602-4523-7074-08DAC3A5209E"))
-                            {
-                                //parlay
-                            }
 
                             if (filteredSelection.IsSettled == false)
                                 isPublish = SettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection, false, string.Empty);
@@ -521,6 +516,13 @@ namespace Platform.Settlement.Service.Repository
             filteredSelection.IsSettled = true;
             filteredSelection.DeadHeatFactor = message.DeadHeatFactor;
 
+            var validStatus = new List<int> { (int)BetStatus.Won, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost, (int)BetStatus.Void };
+
+            if (validStatus.Contains(filteredSelection.BetSelectionStatusId))
+                filteredSelection.Probability = 1;
+            else if (filteredSelection.BetSelectionStatusId == (int)BetStatus.Lost)
+                filteredSelection.Probability = 0;
+
             var betSelectionEntity = context.BetSelection.Update(filteredSelection).Entity;
 
             context.BetSelectionAudit.Add(new BetSelectionAudit
@@ -638,6 +640,13 @@ namespace Platform.Settlement.Service.Repository
             filteredSelection.IsSettled = true;
             filteredSelection.IsResettled = true;
             filteredSelection.DeadHeatFactor = message.DeadHeatFactor;
+
+            var validStatus = new List<int> { (int)BetStatus.Won, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost, (int)BetStatus.Void };
+
+            if (validStatus.Contains(filteredSelection.BetSelectionStatusId))
+                filteredSelection.Probability = 1;
+            else if (filteredSelection.BetSelectionStatusId == (int)BetStatus.Lost)
+                filteredSelection.Probability = 0;
 
             var betSelectionEntity = context.BetSelection.Update(filteredSelection).Entity;
 

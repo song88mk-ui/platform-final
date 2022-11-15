@@ -5417,12 +5417,12 @@ namespace Platform.Sportsbook.API.Repository
 
                     if (fixtureTypeId == (int)FixtureType.Match && betBuilderMarketTemplate != null)
                     {
-                        var  = Convert.ToDecimal(0) != 0 && Convert.ToDecimal(market.Li) > 0 ? Convert.ToDecimal(market.Li) % 0.25m == 0 ? true : false;
-                        if (! && fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == true)
+                        var isQuarterMarket = Convert.ToDecimal(0) != 0 && Convert.ToDecimal(market.Li) % 0.25m == 0 ? true : false;
+                        if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == true)
                         {
                             isBetBuilder = true;
                         }
-                        else if (! && fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplate.Live == true)
+                        else if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplate.Live == true)
                         {
                             isBetBuilder = true;
                         }

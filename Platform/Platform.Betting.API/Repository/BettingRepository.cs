@@ -1442,8 +1442,8 @@ namespace Platform.Betting.API.Repository
 
                 var runningfinalStake = bet.TrueStake - bet.StakeBonus;
                 var runningTaxedStake = bet.IsFreeBet == false ? runningfinalStake - (runningfinalStake / (1 + bet.StakeTax)) : 0;
-                var runningStake = GetStake(filteredSelections, runningTaxedStake, bet.TrueStake);
-                var runningPayout = GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), runningStake, isBetBuilder, bet.Odds);
+                var runningStake = bet.BetStatusId == (int)BetStatus.Running ? GetStake(filteredSelections, runningTaxedStake, bet.TrueStake) : 0;
+                var runningPayout = bet.BetStatusId == (int)BetStatus.Running ? GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), runningStake, isBetBuilder, bet.Odds) : 0;
                 var runningTaxedWinnings = runningPayout + parlayBonusWinnings;
 
                 if (bet.IsFreeBet)
@@ -2831,6 +2831,8 @@ namespace Platform.Betting.API.Repository
                         values.Add(0.5m);
                         break;
                     case BetStatus.Running:
+                        values.Add(selection.Item2 * selection.Item3);
+                        break;
                     case BetStatus.Won:
                         values.Add(selection.Item2 * selection.Item3);
                         break;

@@ -5031,7 +5031,7 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (betBuilderMarketTemplate != null )
                         {
-                            var isQuarterMarket = Convert.ToDecimal(0) != 0 && Convert.ToDecimal(market.Li)%0.25m == 0 ? true : false;
+                            var isQuarterMarket = Convert.ToDecimal(market.Li).ToString("0.00").Contains(".25") || Convert.ToDecimal(market.Li).ToString("0.00").Contains(".75") ? true : false;
                             if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == true)
                             {
                                 isBetBuilder = true;
@@ -5367,7 +5367,7 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (fixtureTypeId == (int)FixtureType.Match && betBuilderMarketTemplate != null)
                         {
-                            var isQuarterMarket = Convert.ToDecimal(0) != 0 && Convert.ToDecimal(market.Li) % 0.25m == 0 ? true : false;
+                            var isQuarterMarket = Convert.ToDecimal(market.Li).ToString("0.00").Contains(".25") || Convert.ToDecimal(market.Li).ToString("0.00").Contains(".75") ? true : false;
                             if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == true)
                             {
                                 isBetBuilder = true;
@@ -5417,7 +5417,7 @@ namespace Platform.Sportsbook.API.Repository
 
                     if (fixtureTypeId == (int)FixtureType.Match && betBuilderMarketTemplate != null)
                     {
-                        var isQuarterMarket = Convert.ToDecimal(0) != 0 && Convert.ToDecimal(market.Li) % 0.25m == 0 ? true : false;
+                        var isQuarterMarket = Convert.ToDecimal(market.Li).ToString("0.00").Contains(".25") || Convert.ToDecimal(market.Li).ToString("0.00").Contains(".75") ? true : false;
                         if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == true)
                         {
                             isBetBuilder = true;

@@ -8071,6 +8071,28 @@ namespace Platform.Sportsbook.API.Repository
             }
         }
 
+        public async Task<BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>> GetMarketTemplatePlayerProps(MarketTemplatePlayerPropsRequestDTO request)
+        {
+            var result = _memCache.GetCache("mtpp", () =>
+            {
+                return _sportsbookContext.MarketTemplatePlayerProps.AsNoTracking().ToList();
+            }, 24);
+
+            result = result.Where(c => c.SportId == request.SportId).ToList();
+
+            return new BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = result.Select(s => new MarketTemplatePlayerPropsResponseDTO
+                { 
+                    SportId = s.SportId,
+                    FixtureStatusId = s.FixtureStatusId,
+                    MarketTemplates = s.MarketTemplates
+                }).ToList()
+            };
+        }
+
         private string GetSportName(string name, List<SportTranslationMDB> translations, LanguageCode languageCode)
         {
             if (translations == null)

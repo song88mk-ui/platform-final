@@ -3476,6 +3476,14 @@ namespace Platform.API.Repository
             });
         }
 
+        public async Task<BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>> GetMarketTemplatePlayerProps(int sportId)
+        {
+            return await _sportsbookRepository.GetMarketTemplatePlayerProps(new MarketTemplatePlayerPropsRequestDTO
+            {
+                SportId = sportId
+            });
+        }
+
         private DateTime GetFirstDayOfNextMonth()
         {
             DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);

@@ -1036,5 +1036,19 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/sportsbook/client/markettemplateplayerprops")]
+        public async Task<IActionResult> GetMarketTemplatePlayerProps([FromBody] MarketTemplatePlayerPropsRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetMarketTemplatePlayerProps(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

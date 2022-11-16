@@ -80,5 +80,6 @@ namespace Platform.Sportsbook.API.Repository
         Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO>> CopyClientMarketTemplateGroup(ClientCopyMarketTemplateGroupRequestDTO request);
         Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>> GetClientMarketSortOrder(MarketSortOrderRequestDTO request);
         Task<BaseResponseDTO<ClientFixtureSortOrderResponseDTO>> GetClientFixtureSortOrder(FixtureSortOrderRequestDTO request);
+        Task<BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>> GetMarketTemplatePlayerProps(MarketTemplatePlayerPropsRequestDTO request);
     }
 }

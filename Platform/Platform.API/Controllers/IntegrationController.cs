@@ -1578,5 +1578,38 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpGet("v1/sportsbook/client/markettemplateplayerprops")]
+        public async Task<IActionResult> GetMarketTemplatePlayerProps([FromQuery] int sportId)
+        {
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
+
+            var result = await _platformRepository.GetMarketTemplatePlayerProps(sportId);
+
+            var parameters = new { };
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/sportsbook/client/markettemplateplayerprops", properties);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
     }
 }

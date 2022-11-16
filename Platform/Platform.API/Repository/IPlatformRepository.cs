@@ -72,6 +72,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>> GetBetBuilderSelectionsOdds(string clientId, string langCode, BetBuilderSelectionsOddsRequest request);
         Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>> GetMarketSortOrder(string clientId);
         Task<BaseResponseDTO<ClientFixtureSortOrderResponseDTO>> GetFixtureSortOrder(string clientId);
+        Task<BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>> GetMarketTemplatePlayerProps(int sportId);
 
     }
 }

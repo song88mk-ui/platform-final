@@ -8394,7 +8394,7 @@ namespace Platform.Sportsbook.API.Repository
                 boostedOdds = split.Where(s => s.Contains(clientCode)).FirstOrDefault();
 
                 if (string.IsNullOrEmpty(boostedOdds))
-                    return string.Empty;
+                    return odds;
 
                 boostedOdds = boostedOdds.Split(":")[1];
                 var cBoostedOdds = Convert.ToDecimal(boostedOdds);

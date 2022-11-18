@@ -8434,18 +8434,21 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         var targetMargin = client.Item2;
 
-                        if (playerPropMarketTemplateIds.Contains(marketTemplateId) && selections.Count() > 2)
+                        if (playerPropMarketTemplateIds.Contains(marketTemplateId))
                         {
-                            activeSelectionCount = 2;
+                            if (selection.SeTeId != "12" || selection.SeTeId != "13")
+                            {
+                                activeSelectionCount = 2;
 
-                            //var overProbability = 100 / selection.Od;
+                                //var overProbability = 100 / selection.Od;
 
-                            //var underOdds = 1 / (1 - (1 / selection.Od));
-                            //var underProbability = 100 / underOdds;
+                                //var underOdds = 1 / (1 - (1 / selection.Od));
+                                //var underProbability = 100 / underOdds;
 
-                            //margin = ((overProbability + underProbability) - 100) / 100;
+                                //margin = ((overProbability + underProbability) - 100) / 100;
 
-                            margin = 0m;
+                                margin = 0m;
+                            }
                         }
 
                         var fairOddsInitialDivideBy = activeSelectionCount - (margin * selection.Od);
@@ -8584,18 +8587,21 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         var targetMargin = client.Item2;
 
-                        if (playerPropMarketTemplateIds.Contains(marketTemplateId) && selections.Count() != 2)
+                        if (playerPropMarketTemplateIds.Contains(marketTemplateId))
                         {
-                            activeSelectionCount = 2;
+                            if (selection.SeTeId != "12" || selection.SeTeId != "13")
+                            {
+                                activeSelectionCount = 2;
 
-                            //var overProbability = 100 / selection.Od;
+                                //var overProbability = 100 / selection.Od;
 
-                            //var underOdds = 1 / (1 - (1 / selection.Od));
-                            //var underProbability = 100 / underOdds;
+                                //var underOdds = 1 / (1 - (1 / selection.Od));
+                                //var underProbability = 100 / underOdds;
 
-                            //margin = ((overProbability + underProbability) - 100) / 100;
+                                //margin = ((overProbability + underProbability) - 100) / 100;
 
-                            margin = 0m;
+                                margin = 0m;
+                            }
                         }
 
                         var fairOddsInitialDivideBy = activeSelectionCount - (margin * selection.Od);

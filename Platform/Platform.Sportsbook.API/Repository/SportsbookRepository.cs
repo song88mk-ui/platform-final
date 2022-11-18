@@ -5390,7 +5390,7 @@ namespace Platform.Sportsbook.API.Repository
 
                                 if (modulo == 0m && tempLine >= 1m)
                                 {
-                                    isBetBuilder = true;
+                                    isBetBuilder = false;
                                 }
                             }
                         }

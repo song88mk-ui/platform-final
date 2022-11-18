@@ -8449,7 +8449,7 @@ namespace Platform.Sportsbook.API.Repository
 
                                 //margin = 0m;
 
-                                var tempOdds = selection.Od - (selection.Od * targetMargin);
+                                var tempOdds = Math.Round(selection.Od - (selection.Od * targetMargin), 2);
 
                                 result.Add(new ClientOdds
                                 {
@@ -8617,7 +8617,7 @@ namespace Platform.Sportsbook.API.Repository
 
                                 //margin = 0m;
 
-                                var tempOdds = selection.Od - (selection.Od * targetMargin);
+                                var tempOdds = Math.Round(selection.Od - (selection.Od * targetMargin), 2);
 
                                 result.Add(new ClientOdds
                                 {

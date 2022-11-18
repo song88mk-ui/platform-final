@@ -8438,7 +8438,7 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             if (selection.SeTeId != "12" || selection.SeTeId != "13")
                             {
-                                activeSelectionCount = 2;
+                                //activeSelectionCount = 2;
 
                                 //var overProbability = 100 / selection.Od;
 
@@ -8447,7 +8447,22 @@ namespace Platform.Sportsbook.API.Repository
 
                                 //margin = ((overProbability + underProbability) - 100) / 100;
 
-                                margin = 0m;
+                                //margin = 0m;
+
+                                var tempOdds = GetMasterOddsWithAddedMargin(selection.Od - (selection.Od * 0.10m));
+
+                                result.Add(new ClientOdds
+                                {
+                                    ClientCode = client.Item1,
+                                    DecimalOdds = tempOdds,
+                                    MalaysianOdds = GetMalayOdds(tempOdds, isBinary),
+                                    HongkongOdds = GetHongkongOdds(tempOdds, isBinary),
+                                    IndonesianOdds = GetIndoOdds(tempOdds, isBinary),
+                                    SelectionTemplateId = selection.SeTeId,
+                                    SelectionId = selection.SeId
+                                });
+
+                                continue;
                             }
                         }
 
@@ -8591,7 +8606,7 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             if (selection.SeTeId != "12" || selection.SeTeId != "13")
                             {
-                                activeSelectionCount = 2;
+                                //activeSelectionCount = 2;
 
                                 //var overProbability = 100 / selection.Od;
 
@@ -8600,7 +8615,22 @@ namespace Platform.Sportsbook.API.Repository
 
                                 //margin = ((overProbability + underProbability) - 100) / 100;
 
-                                margin = 0m;
+                                //margin = 0m;
+
+                                var tempOdds = GetMasterOddsWithAddedMargin(selection.Od - (selection.Od * 0.10m));
+
+                                result.Add(new ClientOdds
+                                {
+                                    ClientCode = client.Item1,
+                                    DecimalOdds = tempOdds,
+                                    MalaysianOdds = GetMalayOdds(tempOdds, isBinary),
+                                    HongkongOdds = GetHongkongOdds(tempOdds, isBinary),
+                                    IndonesianOdds = GetIndoOdds(tempOdds, isBinary),
+                                    SelectionTemplateId = selection.SeTeId,
+                                    SelectionId = selection.SeId
+                                });
+
+                                continue;
                             }
                         }
 

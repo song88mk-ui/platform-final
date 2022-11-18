@@ -5382,12 +5382,16 @@ namespace Platform.Sportsbook.API.Repository
                                 isBetBuilder = true;
                             }
 
-                            var line = Convert.ToDecimal(market.Li);
-                            var modulo = line % 1.00m;
+                            var isDecimal = decimal.TryParse(market.Li, out decimal tempLine);
 
-                            if (modulo == 0m && line >= 1m)
+                            if (isDecimal == true)
                             {
-                                isBetBuilder = true;
+                                var modulo = tempLine % 1.00m;
+
+                                if (modulo == 0m && tempLine >= 1m)
+                                {
+                                    isBetBuilder = true;
+                                }
                             }
                         }
 

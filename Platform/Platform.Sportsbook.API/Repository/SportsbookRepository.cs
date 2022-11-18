@@ -5381,6 +5381,14 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 isBetBuilder = true;
                             }
+
+                            var line = Convert.ToDecimal(market.Li);
+                            var modulo = line % 1.00m;
+
+                            if (modulo == 0m && line >= 1m)
+                            {
+                                isBetBuilder = true;
+                            }
                         }
 
                         var marketToAdd = new MarketDTO

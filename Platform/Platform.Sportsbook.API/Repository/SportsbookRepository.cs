@@ -1091,6 +1091,7 @@ namespace Platform.Sportsbook.API.Repository
 
                 var finalMarkets = new List<Market>();
                 var finalSelections = new List<SelectionExtension>();
+                var marketTemplateGroupPlayerProps = GetMarketTemplatePlayerProps();
 
                 foreach (var fixture in newFixtures)
                 {
@@ -1121,7 +1122,7 @@ namespace Platform.Sportsbook.API.Repository
                             var activeSelections = marketSelections.Where(c => c.MaId == market.MaId && c.IsAc == true && c.Od > 0m).ToList();
                             var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-                            clientOdds = GetClientOdds(activeSelections.Count, margin, marketSelections, market.ClCoMa, request.ClientCode);
+                            clientOdds = GetClientOdds(activeSelections.Count, margin, marketSelections, market.ClCoMa, request.ClientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == fixture.SpId).ToList());
                         }
 
                         foreach (var selection in marketSelections)
@@ -4871,6 +4872,7 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     var filteredMarkets = markets.Where(c => c.ClCo != null && c.ClCo.Contains(clientCode)).ToList();
                     var result = new List<MarketLimitedDTO>();
+                    var marketTemplateGroupPlayerProps = GetMarketTemplatePlayerProps();
 
                     foreach (var market in filteredMarkets)
                     {
@@ -4883,7 +4885,7 @@ namespace Platform.Sportsbook.API.Repository
                             var activeSelections = tempSelections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
                             var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-                            clientOdds = GetClientOdds(activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
+                            clientOdds = GetClientOdds(activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
                         }
 
                         result.Add(new MarketLimitedDTO
@@ -4990,6 +4992,7 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     var filteredMarkets = markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo != null && c.ClCo.Contains(clientCode)).ToList();
                     var result = new List<MarketDTO>();
+                    var marketTemplateGroupPlayerProps = GetMarketTemplatePlayerProps();
 
                     foreach (var market in filteredMarkets)
                     {
@@ -5002,7 +5005,7 @@ namespace Platform.Sportsbook.API.Repository
                             var activeSelections = tempSelections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
                             var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-                            clientOdds = GetClientOdds(activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
+                            clientOdds = GetClientOdds(activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
                         }
 
                         var selectionsToAdd = new List<SelectionDTO>();
@@ -5174,6 +5177,7 @@ namespace Platform.Sportsbook.API.Repository
 
                     var filteredMarkets = markets.Where(c => c.ClCo != null && c.ClCo.Contains(clientCode) && c.IsBo == true).ToList(); //marketTemplates.Contains(c.MaTeId) &&
                     var result = new List<BoostedMarketDTO>();
+                    var marketTemplateGroupPlayerProps = GetMarketTemplatePlayerProps();
 
                     foreach (var market in filteredMarkets)
                     {
@@ -5186,7 +5190,7 @@ namespace Platform.Sportsbook.API.Repository
                             var activeSelections = tempSelections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
                             var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-                            clientOdds = GetClientOdds(activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
+                            clientOdds = GetClientOdds(activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
                         }
 
                         result.Add(new BoostedMarketDTO
@@ -5325,7 +5329,8 @@ namespace Platform.Sportsbook.API.Repository
                     }
 
                     var filteredMarkets = markets.Where(c => c.ClCo != null && c.ClCo.Contains(clientCode)).ToList();
-                    var result = new List<MarketDTO>();
+                    var result = new List<MarketDTO>(); 
+                    var marketTemplateGroupPlayerProps = GetMarketTemplatePlayerProps();
 
                     foreach (var market in filteredMarkets)
                     {
@@ -5338,7 +5343,7 @@ namespace Platform.Sportsbook.API.Repository
                             var activeSelections = tempSelections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
                             var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-                            clientOdds = GetClientOdds(activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode);
+                            clientOdds = GetClientOdds(activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
                         }
 
                         var selectionsToAdd = new List<SelectionDTO>();
@@ -8073,12 +8078,10 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>> GetMarketTemplatePlayerProps(MarketTemplatePlayerPropsRequestDTO request)
         {
-            var result = _memCache.GetCache("mtpp", () =>
-            {
-                return _sportsbookContext.MarketTemplatePlayerProps.AsNoTracking().ToList();
-            }, 24);
+            var result = GetMarketTemplatePlayerProps();
 
-            result = result.Where(c => c.SportId == request.SportId).ToList();
+            if (request.SportId != 0)
+                result = result.Where(c => c.SportId == request.SportId).ToList();
 
             return new BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>
             {
@@ -8407,7 +8410,7 @@ namespace Platform.Sportsbook.API.Repository
             }
         }
 
-        private static List<ClientOdds> GetClientOdds(int activeSelectionCount, decimal margin, List<SelectionFilter> selections, string clientMarketConfig, string clientCode)
+        private static List<ClientOdds> GetClientOdds(int activeSelectionCount, decimal margin, List<SelectionFilter> selections, string clientMarketConfig, string clientCode, string marketTemplateId, List<MarketTemplatePlayerProps> marketTemplateGroups)
         {
             if (string.IsNullOrEmpty(clientMarketConfig))
                 return new List<ClientOdds>();
@@ -8420,14 +8423,30 @@ namespace Platform.Sportsbook.API.Repository
             var result = new List<ClientOdds>();
             var isBinary = selections.Count > 2 ? false : true;
 
+            // prepare market player props
+            var playerPropMarketTemplateIds = string.Join(",", marketTemplateGroups.Select(s => s.MarketTemplates).ToList()).Split(",").ToList();
+
             foreach (var client in clients)
             {
                 foreach (var selection in selections)
                 {
-
                     if (selection.IsAc == true && selection.Od > 0m)
                     {
                         var targetMargin = client.Item2;
+
+                        if (playerPropMarketTemplateIds.Contains(marketTemplateId) && selections.Count() > 2)
+                        {
+                            activeSelectionCount = 2;
+
+                            //var overProbability = 100 / selection.Od;
+
+                            //var underOdds = 1 / (1 - (1 / selection.Od));
+                            //var underProbability = 100 / underOdds;
+
+                            //margin = ((overProbability + underProbability) - 100) / 100;
+
+                            margin = 0m;
+                        }
 
                         var fairOddsInitialDivideBy = activeSelectionCount - (margin * selection.Od);
 
@@ -8541,7 +8560,7 @@ namespace Platform.Sportsbook.API.Repository
 
             return result;
         }
-        private static List<ClientOdds> GetClientOdds(int activeSelectionCount, decimal margin, List<Selection> selections, string clientMarketConfig, string clientCode)
+        private static List<ClientOdds> GetClientOdds(int activeSelectionCount, decimal margin, List<Selection> selections, string clientMarketConfig, string clientCode, string marketTemplateId, List<MarketTemplatePlayerProps> marketTemplateGroups)
         {
             if (string.IsNullOrEmpty(clientMarketConfig))
                 return new List<ClientOdds>();
@@ -8554,6 +8573,9 @@ namespace Platform.Sportsbook.API.Repository
             var result = new List<ClientOdds>();
             var isBinary = selections.Count > 2 ? false : true;
 
+            // prepare market player props
+            var playerPropMarketTemplateIds = string.Join(",", marketTemplateGroups.Select(s => s.MarketTemplates).ToList()).Split(",").ToList();
+
             foreach (var client in clients)
             {
                 foreach (var selection in selections)
@@ -8561,6 +8583,20 @@ namespace Platform.Sportsbook.API.Repository
                     if (selection.IsAc == true && selection.Od > 0m)
                     {
                         var targetMargin = client.Item2;
+
+                        if (playerPropMarketTemplateIds.Contains(marketTemplateId) && selections.Count() != 2)
+                        {
+                            activeSelectionCount = 2;
+
+                            //var overProbability = 100 / selection.Od;
+
+                            //var underOdds = 1 / (1 - (1 / selection.Od));
+                            //var underProbability = 100 / underOdds;
+
+                            //margin = ((overProbability + underProbability) - 100) / 100;
+
+                            margin = 0m;
+                        }
 
                         var fairOddsInitialDivideBy = activeSelectionCount - (margin * selection.Od);
 
@@ -8793,6 +8829,11 @@ namespace Platform.Sportsbook.API.Repository
             }, 24);
 
             return result;
+        }
+
+        private List<MarketTemplatePlayerProps> GetMarketTemplatePlayerProps()
+        {
+            return _memCache.GetCache("mtpp", () => _sportsbookContext.MarketTemplatePlayerProps.AsNoTracking().ToList(), 24);
         }
 
         private bool IsBetBuilder(int sportId, int fixtureTypeId, int fixtureStatusId, List<BetBuilderMarketTemplates> betBuilderMarketTemplates)

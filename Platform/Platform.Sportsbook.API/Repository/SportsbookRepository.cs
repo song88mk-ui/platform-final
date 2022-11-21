@@ -9083,7 +9083,7 @@ namespace Platform.Sportsbook.API.Repository
                     selectionResponse.Add(new BetBuilderSelection
                     {
                         SelectionId = selection.SeId.ToString(),
-                        IsActive = isConflict
+                        IsActive = isConflict == false ? true : false
                     });
                 }
 

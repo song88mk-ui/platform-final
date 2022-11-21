@@ -9051,7 +9051,7 @@ namespace Platform.Sportsbook.API.Repository
 
             return response;
         }
-        private List<BetBuilderMarket> GetBetBuilderMarketsXmlFiltered2(XmlNodeList list, List<BetBuilderSelectionProjectionDTO> marketMappings)
+        private List<BetBuilderMarket> GetBetBuilderMarketsXmlFiltered2(XmlNodeList list, List<BetBuilderSelectionProjectionDTO> selections)
         {
             var response = new List<BetBuilderMarket>();
 
@@ -9060,26 +9060,20 @@ namespace Platform.Sportsbook.API.Repository
                 var marketTemplateId = marketNode.Attributes["id"].Value;
                 var specifiers = marketNode.HasAttribute("specifiers") ? marketNode.Attributes["specifiers"].Value : string.Empty;
 
-                var marketMapped = marketMappings.FirstOrDefault(m => m.MaTeId == marketTemplateId && m.MaSp == specifiers);
+                var marketMapped = selections.FirstOrDefault(m => m.MaTeId == marketTemplateId && m.MaSp == specifiers);
                 if (marketMapped == null)
                     continue;
 
                 var selectionResponse = new List<BetBuilderSelection>();
-                var selectionIds = new List<long>();
 
                 foreach (XmlElement selectionNode in marketNode.ChildNodes)
                 {
                     var selectionTemplateId = selectionNode.Attributes["id"].Value;
 
-                    var sconflict = selectionNode.HasAttribute("conflict") ? Convert.ToBoolean(selectionNode.Attributes["conflict"].Value) : false;
-                    if (sconflict == false)
-                        continue;
+                    var isConflict = selectionNode.HasAttribute("conflict") ? Convert.ToBoolean(selectionNode.Attributes["conflict"].Value) : false;
 
-                    var selection = marketMappings.FirstOrDefault(m => marketMapped.MaId == m.MaId && m.SeTeId == selectionTemplateId && !selectionIds.Contains(m.SeId));
+                    var selection = selections.FirstOrDefault(m => marketMapped.MaId == m.MaId && m.SeTeId == selectionTemplateId);
                     if (selection == null)
-                        continue;
-
-                    if (selectionResponse.Any(s => s.SelectionId == selection.SeId.ToString()))
                         continue;
 
                     selectionResponse.Add(new BetBuilderSelection
@@ -9087,7 +9081,6 @@ namespace Platform.Sportsbook.API.Repository
                         SelectionId = selection.SeId.ToString(),
                         IsActive = false
                     });
-                    selectionIds.Add(selection.SeId);
                 }
 
                 if (!selectionResponse.Any())

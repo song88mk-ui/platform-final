@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -9060,8 +9061,10 @@ namespace Platform.Sportsbook.API.Repository
                 var marketTemplateId = marketNode.Attributes["id"].Value;
                 var specifiers = marketNode.HasAttribute("specifiers") ? marketNode.Attributes["specifiers"].Value : string.Empty;
 
-                var marketMapped = selections.FirstOrDefault(m => m.MaTeId == marketTemplateId && m.MaSp == specifiers);
-                if (marketMapped == null)
+                var initialSelections = selections.Where(c => c.MaTeId == marketTemplateId && c.MaSp == specifiers).ToList();
+                var marketId = initialSelections.Select(s => s.MaId).Distinct().FirstOrDefault();
+
+                if (initialSelections.Count == 0)
                     continue;
 
                 var selectionResponse = new List<BetBuilderSelection>();
@@ -9070,9 +9073,10 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     var selectionTemplateId = selectionNode.Attributes["id"].Value;
 
-                    var isConflict = selectionNode.HasAttribute("conflict") ? Convert.ToBoolean(selectionNode.Attributes["conflict"].Value) : false;
+                    var isConflict = Convert.ToBoolean(selectionNode.Attributes["conflict"].Value);
 
-                    var selection = selections.FirstOrDefault(m => marketMapped.MaId == m.MaId && m.SeTeId == selectionTemplateId);
+                    var selection = initialSelections.Where(c => c.MaTeId == marketTemplateId && c.MaSp == specifiers && c.SeTeId == selectionTemplateId).FirstOrDefault();
+
                     if (selection == null)
                         continue;
 
@@ -9088,7 +9092,7 @@ namespace Platform.Sportsbook.API.Repository
 
                 response.Add(new BetBuilderMarket
                 {
-                    MarketId = marketMapped.MaId.ToString(),
+                    MarketId = marketId.ToString(),
                     Selections = selectionResponse
                 });
 

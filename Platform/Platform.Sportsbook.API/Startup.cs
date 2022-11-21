@@ -53,6 +53,7 @@ namespace Platform.Sportsbook.API
             services.AddSingleton<IMemCache, MemCache>();
             services.AddHttpClient<ISportsbookRepository, SportsbookRepository>();
             services.AddHttpClient<IRabbitMQRepository, RabbitMQRepository>();
+            services.AddHttpClient<IBetBuilderRepository, BetBuilderRepository>();
 
             services.AddSwaggerGen(c =>
             {

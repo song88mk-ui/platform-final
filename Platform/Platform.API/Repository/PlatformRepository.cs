@@ -3472,6 +3472,7 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.GetBetBuilderSelectionsOdds(new BetBuilderSelectionsOddsRequestDTO
             {
                 LanguageCode = languageCode,
+                ClientCode = clientResponse.Result.ClientCode,
                 Selections = request.Selections
             });
         }

@@ -6425,7 +6425,7 @@ namespace Platform.Sportsbook.API.Repository
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.MaId).Include(c => c.MaTeId).Include(c => c.Li).Include(c => c.ClCo).Include(c => c.ClCoMa);
+            var marketProjection = Builders<Market>.Projection.Include(c => c.MaId).Include(c => c.MaTeId).Include(c => c.Li).Include(c => c.ClCo);
             var markets = marketCollection.Find(marketFilter).Project<BetBuilderMarketProjection>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
@@ -6435,8 +6435,11 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(fixture, markets, selections);
 
             var newFixture = fixture.Result;
-            var newMarkets = markets.Result;
-            var newSelections = selections.Result;
+            var newMarkets = markets.Result.Where(c => c.ClCo != null && c.ClCo.Contains(request.ClientCode));
+
+            var marketIds = newMarkets.Select(s => s.MaId).Distinct().ToList();
+
+            var newSelections = selections.Result.Where(c => marketIds.Contains(c.MaId)).ToList();
 
             if (newSelections.Count == 0)
             {

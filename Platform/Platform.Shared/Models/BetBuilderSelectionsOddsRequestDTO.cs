@@ -11,6 +11,7 @@ namespace Platform.Shared.Models
             Selections = new List<BetSelectionOddsRequest>();
         }
         public List<BetSelectionOddsRequest> Selections { get; set; }
+        public string ClientCode { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }
 

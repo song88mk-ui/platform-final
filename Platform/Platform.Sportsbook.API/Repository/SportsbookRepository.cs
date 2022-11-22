@@ -6463,7 +6463,7 @@ namespace Platform.Sportsbook.API.Repository
                     MaId = selection.MaId,
                     MaTeId = selection.MaTeId,
                     SeTeId = selection.SeTeId,
-                    MaSp = marketSpecifierTemp
+                    MaSp = marketSpecifierTemp.Replace('&', '|')
                 });
             }
 

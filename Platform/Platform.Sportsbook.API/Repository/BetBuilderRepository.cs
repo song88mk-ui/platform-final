@@ -1,57 +1,35 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Platform.Shared.Enums;
-using Platform.Shared.Models;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System;
+using System.Net;
 
 namespace Platform.Sportsbook.API.Repository
 {
     public class BetBuilderRepository : IBetBuilderRepository
     {
         private readonly HttpClient _httpClient;
-        private readonly IConfiguration _configuration;
-        public BetBuilderRepository(HttpClient httpClient, IConfiguration configuration)
+        public BetBuilderRepository(HttpClient httpClient)
         {
-            _configuration = configuration;
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri("https://api.betradar.com");
             _httpClient.DefaultRequestHeaders.Add("x-access-token", "wLCaM7vc80CADU33rz");
         }
 
-        public async Task<BaseResponseDTO<MessageResponseDTO>> PublishToRabbitMQAPI(MessageRequestDTO request)
+        public async Task<Tuple<HttpStatusCode, string>> ValidateBetBuilderCombination(string payload)
         {
             try
             {
-                var response = await _httpClient.PostAsync($"v1/broker/publish", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
-
+                var response = await _httpClient.PostAsync($"v1/custombet/calculate-filter", new StringContent(payload, System.Text.Encoding.UTF8, "application/xml"));
+                
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<MessageResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return new Tuple<HttpStatusCode, string>(response.StatusCode, await response.Content.ReadAsStringAsync());
                 else
-                {
-                    return new BaseResponseDTO<MessageResponseDTO>
-                    {
-                        StatusCode = StatusCode.Error,
-                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})",
-                        Result = new MessageResponseDTO
-                        {
-                            IsSuccess = false
-                        }
-                    };
-                }
+                    return new Tuple<HttpStatusCode, string>(response.StatusCode, string.Empty);
             }
             catch (Exception ex)
             {
-                return new BaseResponseDTO<MessageResponseDTO>
-                {
-                    StatusCode = StatusCode.Error,
-                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
-                    Result = new MessageResponseDTO
-                    {
-                        IsSuccess = false
-                    }
-                };
+                return new Tuple<HttpStatusCode, string>(HttpStatusCode.InternalServerError, ex.Message);
             }
         }
     }

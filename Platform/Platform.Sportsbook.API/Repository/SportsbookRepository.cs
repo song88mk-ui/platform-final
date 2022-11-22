@@ -12,6 +12,7 @@ using Platform.Sportsbook.API.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -39,10 +40,11 @@ namespace Platform.Sportsbook.API.Repository
         private static IMongoCollection<BettingStatus> primaryBettingStatusCollection;
         private readonly HttpClient _httpClient;
         private readonly IRabbitMQRepository _rabbitMQRepository;
+        private readonly IBetBuilderRepository _betBuilderRepository;
         private readonly List<string> _africaClientCodes = new List<string>();
         private readonly List<string> _countryWhiteList = new List<string>();
 
-        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMemCache memCache, IConfiguration configuration, IRabbitMQRepository rabbitMQRepository)
+        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMemCache memCache, IConfiguration configuration, IRabbitMQRepository rabbitMQRepository, IBetBuilderRepository betBuilderRepository)
         {
             _configuration = configuration;
 
@@ -87,7 +89,7 @@ namespace Platform.Sportsbook.API.Repository
             _memCache = memCache;
 
             _rabbitMQRepository = rabbitMQRepository;
-
+            _betBuilderRepository = betBuilderRepository;
             _httpClient.BaseAddress = new Uri("https://av-api.betradar.com");
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer D6ewpdvADa8k5U7Xcx");
         }
@@ -6474,121 +6476,108 @@ namespace Platform.Sportsbook.API.Repository
             selectionOddsResponse.FixtureId = newFixture.FiId.ToString();
             selectionOddsResponse.TotalOdds = 0.0m;
 
-            #region SR API to calculate odds - Filtered
-            using (var client = new HttpClient())
+            var payload = $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+            if (request.Selections.Any())
             {
-                client.BaseAddress = new Uri("https://api.betradar.com");
-                client.DefaultRequestHeaders.Add("x-access-token", "wLCaM7vc80CADU33rz");
 
-                var payload = $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
-                if (request.Selections.Any())
+                payload = payload + $"<filterSelections xmlns=\"http://schemas.sportradar.com/custombet/v1/endpoints\">";
+                payload = payload + $"<selection id=\"{newFixture.FiSp}\">";
+
+                foreach (var sel in request.Selections)
                 {
+                    var selection = selectionProjectionTemp.FirstOrDefault(s => s.SeId == Convert.ToInt64(sel.SelectionId));
 
-                    payload = payload + $"<filterSelections xmlns=\"http://schemas.sportradar.com/custombet/v1/endpoints\">";
-                    payload = payload + $"<selection id=\"{newFixture.FiSp}\">";
-
-                    foreach (var sel in request.Selections)
-                    {
-                        var selection = selectionProjectionTemp.FirstOrDefault(s => s.SeId == Convert.ToInt64(sel.SelectionId));
-
-                        payload = payload + $"<market market_id=\"{selection.MaTeId}\" specifiers=\"{selection.MaSp}\" outcome_id=\"{selection.SeTeId}\"/>";
-                    }
-
-                    payload = payload + $"</selection>";
-                    payload = payload + $"</filterSelections>";
+                    payload = payload + $"<market market_id=\"{selection.MaTeId}\" specifiers=\"{selection.MaSp}\" outcome_id=\"{selection.SeTeId}\"/>";
                 }
 
-                var response = await client.PostAsync($"/v1/custombet/calculate-filter", new StringContent(payload, System.Text.Encoding.UTF8, "application/xml"));
-                if (response.IsSuccessStatusCode)
+                payload = payload + $"</selection>";
+                payload = payload + $"</filterSelections>";
+            }
+
+            var response = await _betBuilderRepository.ValidateBetBuilderCombination(payload);
+
+            if (response.Item1 == HttpStatusCode.OK)
+            {
+                var result = response.Item2;
+
+                XmlDocument doc = new XmlDocument();
+
+                doc.LoadXml(result);
+
+                XmlElement root = doc.DocumentElement;
+
+                if (root.Name != "filtered_calculation_response")
                 {
-                    var result = await response.Content.ReadAsStringAsync();
-
-                    XmlDocument doc = new XmlDocument();
-
-                    doc.LoadXml(result);
-
-                    #region Validate response
-
-                    XmlElement root = doc.DocumentElement;
-
-                    if (root.Name != "filtered_calculation_response")
-                    {
-                        return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
-                        {
-                            StatusCode = StatusCode.No_Record_Found,
-                            Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
-                        };
-                    }
-
-                    foreach (XmlElement node in root.ChildNodes)
-                    {
-                        if (node.Name == "calculation")
-                        {
-                            selectionOddsResponse.TotalOdds = Convert.ToDecimal(node.Attributes["odds"].Value);
-                        }
-                        else if (node.Name == "available_selections")
-                        {
-                            var eventNode = node.ChildNodes[0];
-
-                            if (eventNode.ChildNodes.Count == 0)
-                                continue;
-
-                            var marketNodes = eventNode.ChildNodes[0];
-
-                            var marketResponse = GetBetBuilderMarketsXmlFiltered2(marketNodes.ChildNodes, selectionProjectionTemp);
-                            if (marketResponse.Any())
-                                selectionOddsResponse.Markets.AddRange(marketResponse);
-                        }
-                    }
-
-
-                    #endregion
-
-                    return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
-                    {
-                        StatusCode = StatusCode.Success,
-                        Message = StatusCode.Success.ToString(),
-                        Result = selectionOddsResponse
-                    };
-                }
-                else
-                {
-                    if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
-                    {
-                        var result = await response.Content.ReadAsStringAsync();
-
-                        XmlDocument doc = new XmlDocument();
-
-                        doc.LoadXml(result);
-
-                        XmlElement root = doc.DocumentElement;
-
-                        if (root.Name == "response")
-                        {
-                            var message = string.Empty;
-                            foreach (XmlElement node in root.ChildNodes)
-                            {
-                                if (node.Name == "message")
-                                    message = node.InnerText;
-                            }
-
-                            return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
-                            {
-                                StatusCode = string.IsNullOrEmpty(message) ? StatusCode.No_Record_Found : StatusCode.Error,
-                                Message = string.IsNullOrEmpty(message) ? StatusCode.No_Record_Found.ToString().Replace('_', ' ') : message
-                            };
-                        }
-                    }
-
                     return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
                     {
                         StatusCode = StatusCode.No_Record_Found,
                         Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
                     };
                 }
-            }
 
-            #endregion
+                foreach (XmlElement node in root.ChildNodes)
+                {
+                    if (node.Name == "calculation")
+                    {
+                        selectionOddsResponse.TotalOdds = Convert.ToDecimal(node.Attributes["odds"].Value);
+                    }
+                    else if (node.Name == "available_selections")
+                    {
+                        var eventNode = node.ChildNodes[0];
+
+                        if (eventNode.ChildNodes.Count == 0)
+                            continue;
+
+                        var marketNodes = eventNode.ChildNodes[0];
+
+                        var marketResponse = GetBetBuilderMarketsXmlFiltered2(marketNodes.ChildNodes, selectionProjectionTemp);
+                        if (marketResponse.Any())
+                            selectionOddsResponse.Markets.AddRange(marketResponse);
+                    }
+                }
+
+                return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = selectionOddsResponse
+                };
+            }
+            else
+            {
+                if (response.Item1 == HttpStatusCode.BadRequest)
+                {
+                    var result = response.Item2;
+
+                    XmlDocument doc = new XmlDocument();
+
+                    doc.LoadXml(result);
+
+                    XmlElement root = doc.DocumentElement;
+
+                    if (root.Name == "response")
+                    {
+                        var message = string.Empty;
+                        foreach (XmlElement node in root.ChildNodes)
+                        {
+                            if (node.Name == "message")
+                                message = node.InnerText;
+                        }
+
+                        return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                        {
+                            StatusCode = string.IsNullOrEmpty(message) ? StatusCode.No_Record_Found : StatusCode.Error,
+                            Message = string.IsNullOrEmpty(message) ? StatusCode.No_Record_Found.ToString().Replace('_', ' ') : message
+                        };
+                    }
+                }
+
+                return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                {
+                    StatusCode = StatusCode.No_Record_Found,
+                    Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                };
+            }
         }
 
 

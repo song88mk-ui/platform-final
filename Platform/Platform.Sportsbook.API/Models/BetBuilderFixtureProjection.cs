@@ -19,7 +19,6 @@ namespace Platform.Sportsbook.API.Models
         public string MaTeId { get; set; }
         public string Li { get; set; }
         public string ClCo { get; set; }
-        public string ClCoMa { get; set; }
     }
 
     public class BetBuilderSelectionProjection

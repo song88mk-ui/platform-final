@@ -7777,37 +7777,37 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var sportId in sportIds)
             {
-                // fetch record by sportId, clientId
-                var marketTemplates = await _sportsbookContext.ClientMarketTemplateOrder.Where(c => c.ClientId == request.ClientId && c.SportId == sportId).ToListAsync();
+                //// fetch record by sportId, clientId
+                //var marketTemplates = await _sportsbookContext.ClientMarketTemplateOrder.Where(c => c.ClientId == request.ClientId && c.SportId == sportId).ToListAsync();
 
                 #region ClientMarketTemplateSortOrder
 
-                var marketTemplateIds = request.MarketTemplates.Select(s => s.MarketTemplateId).ToList();
-                var editMarketTemplates = marketTemplates.Where(c => marketTemplateIds.Contains(c.MarketTemplateId)).ToList();
+                //var marketTemplateIds = request.MarketTemplates.Select(s => s.MarketTemplateId).ToList();
+                //var editMarketTemplates = marketTemplates.Where(c => marketTemplateIds.Contains(c.MarketTemplateId)).ToList();
 
-                // update
-                foreach (var marketTemplate in editMarketTemplates)
-                {
-                    var editMarketTemplate = request.MarketTemplates.FirstOrDefault(c => c.MarketTemplateId == marketTemplate.MarketTemplateId);
+                //// update
+                //foreach (var marketTemplate in editMarketTemplates)
+                //{
+                //    var editMarketTemplate = request.MarketTemplates.FirstOrDefault(c => c.MarketTemplateId == marketTemplate.MarketTemplateId);
 
-                    if (editMarketTemplate != null && editMarketTemplate.SortOrder > 0)
-                        marketTemplate.SortOrder = editMarketTemplate.SortOrder;
-                }
+                //    if (editMarketTemplate != null && editMarketTemplate.SortOrder > 0)
+                //        marketTemplate.SortOrder = editMarketTemplate.SortOrder;
+                //}
 
-                // insert
-                marketTemplateIds = marketTemplates.Select(s => s.MarketTemplateId).ToList();
-                var insertMarketTemplates = request.MarketTemplates.Where(c => !marketTemplateIds.Contains(c.MarketTemplateId))
-                    .Select(s => new ClientMarketTemplateOrder
-                    {
-                        ClientId = request.ClientId,
-                        SportId = sportId,
-                        MarketTemplateId = s.MarketTemplateId,
-                        SortOrder = s.SortOrder
-                    })
-                    .ToList();
+                //// insert
+                //marketTemplateIds = marketTemplates.Select(s => s.MarketTemplateId).ToList();
+                //var insertMarketTemplates = request.MarketTemplates.Where(c => !marketTemplateIds.Contains(c.MarketTemplateId))
+                //    .Select(s => new ClientMarketTemplateOrder
+                //    {
+                //        ClientId = request.ClientId,
+                //        SportId = sportId,
+                //        MarketTemplateId = s.MarketTemplateId,
+                //        SortOrder = s.SortOrder
+                //    })
+                //    .ToList();
 
-                if (insertMarketTemplates.Any())
-                    _sportsbookContext.ClientMarketTemplateOrder.AddRange(insertMarketTemplates);
+                //if (insertMarketTemplates.Any())
+                //    _sportsbookContext.ClientMarketTemplateOrder.AddRange(insertMarketTemplates);
 
                 #endregion
 
@@ -7857,11 +7857,14 @@ namespace Platform.Sportsbook.API.Repository
 
                     if (marketTemplateGroupName.ToLower() == "all markets")
                     {
-                        _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
-                            request.ClientId.ToString(), sportId, (int)FixtureStatus.Prematch, marketTemplateGroupName, finalMarketTemplateIds);
+                        //_sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
+                        //    request.ClientId.ToString(), sportId, (int)FixtureStatus.Prematch, marketTemplateGroupName, finalMarketTemplateIds);
+
+                        //_sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
+                        //    request.ClientId.ToString(), sportId, (int)FixtureStatus.Live, marketTemplateGroupName, finalMarketTemplateIds);
 
                         _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
-                            request.ClientId.ToString(), sportId, (int)FixtureStatus.Live, marketTemplateGroupName, finalMarketTemplateIds);
+                            request.ClientId.ToString(), sportId, request.FixtureStatusId, marketTemplateGroupName, finalMarketTemplateIds);
                     }
                     else
                     {
@@ -7869,13 +7872,13 @@ namespace Platform.Sportsbook.API.Repository
 
                         #region Prepare MarketGroupModel
 
-                        var clientMarketTemplateGroup = _sportsbookContext.ClientMarketTemplateGroup.AsNoTracking()
+                        var clientMarketTemplateGroups = _sportsbookContext.ClientMarketTemplateGroup.AsNoTracking()
                             .Where(c => c.ClientId == request.ClientId && c.SportId == sportId && c.Name == marketTemplateGroupName)
                             .ToList();
 
-                        if (clientMarketTemplateGroup.Any())
+                        if (clientMarketTemplateGroups.Any())
                         {
-                            marketGroupModel = clientMarketTemplateGroup.Select(s => new SelectedClientMarketGroupModel
+                            marketGroupModel = clientMarketTemplateGroups.Select(s => new SelectedClientMarketGroupModel
                             {
                                 FixtureStatusId = s.FixtureStatusId,
                                 MarketTemplateIds = s.MarketTemplates
@@ -7908,19 +7911,19 @@ namespace Platform.Sportsbook.API.Repository
                             }
                             else
                             {
-                                // modify marketTemplateIds (sort order)
-                                var currentMarketTemplateIds = marketGroup.MarketTemplateIds.Split(',').ToList();
+                                //// modify marketTemplateIds (sort order)
+                                //var currentMarketTemplateIds = marketGroup.MarketTemplateIds.Split(',').ToList();
 
-                                selectedMarketTemplateIds = request.MarketTemplates
-                                    .Where(c => currentMarketTemplateIds.Contains(c.MarketTemplateId))
-                                    .OrderBy(o => o.SortOrder)
-                                    .Select(s => s.MarketTemplateId)
-                                    .ToList();
+                                //selectedMarketTemplateIds = request.MarketTemplates
+                                //    .Where(c => currentMarketTemplateIds.Contains(c.MarketTemplateId))
+                                //    .OrderBy(o => o.SortOrder)
+                                //    .Select(s => s.MarketTemplateId)
+                                //    .ToList();
 
-                                finalMarketTemplateIds = string.Join(",", selectedMarketTemplateIds);
+                                //finalMarketTemplateIds = string.Join(",", selectedMarketTemplateIds);
 
-                                _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
-                                    request.ClientId.ToString(), sportId, marketGroup.FixtureStatusId, marketTemplateGroupName, finalMarketTemplateIds);
+                                //_sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}",
+                                //    request.ClientId.ToString(), sportId, marketGroup.FixtureStatusId, marketTemplateGroupName, finalMarketTemplateIds);
                             }
                         }
 

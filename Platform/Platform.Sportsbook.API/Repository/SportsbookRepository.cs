@@ -6498,6 +6498,9 @@ namespace Platform.Sportsbook.API.Repository
 
             if (response.Item1 == HttpStatusCode.OK)
             {
+                var isSuccess = true;
+                var selectionIds = request.Selections.Select(s => s.SelectionId).ToList();
+
                 var result = response.Item2;
 
                 XmlDocument doc = new XmlDocument();
@@ -6530,16 +6533,19 @@ namespace Platform.Sportsbook.API.Repository
 
                         var marketNodes = eventNode.ChildNodes[0];
 
-                        var marketResponse = GetBetBuilderMarketsXmlFiltered2(marketNodes.ChildNodes, selectionProjectionTemp);
-                        if (marketResponse.Any())
-                            selectionOddsResponse.Markets.AddRange(marketResponse);
+                        var marketResponse = GetBetBuilderMarketsXmlFiltered2(marketNodes.ChildNodes, selectionProjectionTemp, selectionIds);
+
+                        if (marketResponse.Item2.Any())
+                            selectionOddsResponse.Markets.AddRange(marketResponse.Item2);
+
+                        isSuccess = marketResponse.Item1;
                     }
                 }
 
                 return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
                 {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
+                    StatusCode = isSuccess == true ? StatusCode.Success : StatusCode.Bet_Builder_Selections_Cannot_Be_Combined,
+                    Message = isSuccess == true ? StatusCode.Success.ToString() : StatusCode.Bet_Builder_Selections_Cannot_Be_Combined.ToString().Replace('_', ' '),
                     Result = selectionOddsResponse
                 };
             }
@@ -9047,8 +9053,9 @@ namespace Platform.Sportsbook.API.Repository
 
             return response;
         }
-        private List<BetBuilderMarket> GetBetBuilderMarketsXmlFiltered2(XmlNodeList list, List<BetBuilderSelectionProjectionDTO> selections)
+        private Tuple<bool, List<BetBuilderMarket>> GetBetBuilderMarketsXmlFiltered2(XmlNodeList list, List<BetBuilderSelectionProjectionDTO> selections, List<string> selectionIds)
         {
+            var isSuccess = true;
             var response = new List<BetBuilderMarket>();
 
             foreach (XmlElement marketNode in list)
@@ -9075,10 +9082,21 @@ namespace Platform.Sportsbook.API.Repository
                     if (selection == null)
                         continue;
 
+                    var isActive = isConflict == false ? true : false;
+
+                    if (selectionIds.Contains(selection.SeId.ToString()))
+                    {
+                        if (isActive == false)
+                        {
+                            if (isSuccess == true)
+                                isSuccess = false;
+                        }
+                    }
+
                     selectionResponse.Add(new BetBuilderSelection
                     {
                         SelectionId = selection.SeId.ToString(),
-                        IsActive = isConflict == false ? true : false
+                        IsActive = isActive
                     });
                 }
 
@@ -9093,7 +9111,7 @@ namespace Platform.Sportsbook.API.Repository
 
             }
 
-            return response;
+            return new Tuple<bool, List<BetBuilderMarket>>(isSuccess, response);
         }
 
         private List<BetBuilderMarketTemplates> GetBetBuilderMarketTemplates()

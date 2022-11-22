@@ -84,6 +84,7 @@
         Bet_Builder_Must_Be_On_The_Same_Fixture = 157,
 
         Total_Odds_Must_Be_Greater_Or_Higher_To_1 = 158,
+        Bet_Builder_Selections_Cannot_Be_Combined = 159,
 
         Error = 1000,
         Operator_Error = 1001

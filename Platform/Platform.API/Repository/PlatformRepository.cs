@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Platform.API.Models;
 using Platform.Shared.Data;
 using Platform.Shared.Data.Platform;
@@ -24,13 +25,16 @@ namespace Platform.API.Repository
         private readonly ISportsbookRepository _sportsbookRepository;
         private readonly PlatformContext _platformContext;
         private readonly IMemCache _memCache;
-        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, PlatformContext platformContext, IMemCache memCache)
+        private readonly IConfiguration _configuration;
+
+        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, PlatformContext platformContext, IMemCache memCache, IConfiguration configuration)
         {
             _operatorRepository = operatorRepository;
             _bettingRepository = bettingRepository;
             _sportsbookRepository = sportsbookRepository;
             _platformContext = platformContext;
             _memCache = memCache;
+            _configuration = configuration;
         }
         public async Task<BaseResponseDTO<WalletBalanceResponseDTO>> GetWalletBalance(string clientId, string operatorToken)
         {
@@ -814,7 +818,7 @@ namespace Platform.API.Repository
                     Line = selection.Line,
                     SelectionId = selection.SelectionId.ToString(),
                     SelectionName = translation == null ? selection.SelectionName : translation.SelectionName,
-                    Odds = selection.Odds,
+                    Odds = GetSelectionOdds(selection.Odds),
                     BetScore = selection.BetScore,
                     SettlementScore = selection.SettlementScore,
                     BetSelectionId = selection.BetSelectionId.ToString(),
@@ -3575,6 +3579,14 @@ namespace Platform.API.Repository
                 {
                 }
             }
+        }
+
+        private object GetSelectionOdds(object odds)
+        {
+            if (!string.IsNullOrEmpty(_configuration["Custom:IsOddsString"]) && Convert.ToBoolean(_configuration["Custom:IsOddsString"]) == true)
+                return Convert.ToDecimal(odds).ToString("0.00");
+            else
+                return Convert.ToDecimal(odds);
         }
     }
 }

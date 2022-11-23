@@ -21,11 +21,8 @@ namespace Platform.Sportsbook.API.Repository
             try
             {
                 var response = await _httpClient.PostAsync($"v1/custombet/calculate-filter", new StringContent(payload, System.Text.Encoding.UTF8, "application/xml"));
-                
-                if (response.IsSuccessStatusCode)
-                    return new Tuple<HttpStatusCode, string>(response.StatusCode, await response.Content.ReadAsStringAsync());
-                else
-                    return new Tuple<HttpStatusCode, string>(response.StatusCode, string.Empty);
+
+                return new Tuple<HttpStatusCode, string>(response.StatusCode, await response.Content.ReadAsStringAsync());
             }
             catch (Exception ex)
             {

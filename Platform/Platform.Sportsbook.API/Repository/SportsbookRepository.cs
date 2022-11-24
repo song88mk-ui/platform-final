@@ -1318,7 +1318,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var betBuilderOddsStatus = new Tuple<decimal, StatusCode>(0m, StatusCode.Success);
             if (request.IsBetBuilder)
-                betBuilderOddsStatus = await GetBetBuilderOddsStatus(request.OddsChangeType, request.Selections, result, request.TotalOdds);
+                betBuilderOddsStatus = await GetBetBuilderOddsStatus(request.OddsChangeType, request.Selections, result, request.TotalOdds, request.ClientCode);
 
             foreach (var selection in request.Selections)
             {
@@ -5843,7 +5843,7 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
-        private async Task<Tuple<decimal, StatusCode>> GetBetBuilderOddsStatus(OddsChangeType oddsChangeType, List<BetFixtureSelectionRequestDTO> selections, Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>> result, decimal currentTotalOdds)
+        private async Task<Tuple<decimal, StatusCode>> GetBetBuilderOddsStatus(OddsChangeType oddsChangeType, List<BetFixtureSelectionRequestDTO> selections, Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>> result, decimal currentTotalOdds, string clientCode)
         {
 
             if (result.Item1.Select(f => f.FiId).Distinct().Count() > 1)
@@ -5859,7 +5859,8 @@ namespace Platform.Sportsbook.API.Repository
                     SportId = s.SportId,
                     CorrelationId = s.CorrelationId
                 }).ToList(),
-                LanguageCode = LanguageCode.EN
+                LanguageCode = LanguageCode.EN,
+                ClientCode = clientCode
             });
 
             if (oddsResult.StatusCode != StatusCode.Success)

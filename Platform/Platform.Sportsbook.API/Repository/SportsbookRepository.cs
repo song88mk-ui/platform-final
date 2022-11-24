@@ -7825,14 +7825,23 @@ namespace Platform.Sportsbook.API.Repository
                 }
 
                 var rawMarketTemplateGroupNames = _sportsbookContext.ClientMarketTemplateGroup.AsNoTracking()
-                    .Where(c => c.ClientId == request.ClientId && c.SportId == sportId)
+                    .Where(c => c.ClientId == request.ClientId && c.SportId == sportId && c.FixtureStatusId == request.FixtureStatusId)
                     .Select(s => s.Name)
                     .ToList();
 
                 foreach (var marketTemplateGroupName in rawMarketTemplateGroupNames)
                 {
-                    if (!marketTemplateGroupNames.Any(c => c.ToLower() == marketTemplateGroupName.ToLower()))
+                    var currentMarketTemplateGroupName = marketTemplateGroupNames.FirstOrDefault(c => c.ToLower() == marketTemplateGroupName.ToLower());
+
+                    if (string.IsNullOrEmpty(currentMarketTemplateGroupName))
+                    {
                         marketTemplateGroupNames.Add(marketTemplateGroupName);
+                    }
+                    else if (currentMarketTemplateGroupName != marketTemplateGroupName)
+                    {
+                        marketTemplateGroupNames.Remove(currentMarketTemplateGroupName);
+                        marketTemplateGroupNames.Add(marketTemplateGroupName);
+                    }
                 }
 
                 foreach (var marketTemplateGroupName in marketTemplateGroupNames)
@@ -7844,7 +7853,7 @@ namespace Platform.Sportsbook.API.Repository
                         .ToList()
                         :
                         request.MarketTemplates
-                        .Where(c => c.MarketTemplateGroupNames.Contains(marketTemplateGroupName))
+                        .Where(c => c.MarketTemplateGroupNames.ConvertAll(s => s.ToLower()).Contains(marketTemplateGroupName.ToLower()))
                         .OrderBy(o => o.SortOrder)
                         .Select(s => s.MarketTemplateId)
                         .ToList();

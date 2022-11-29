@@ -28,6 +28,6 @@ resources:
 extends:
   template: dotnetservice.yml@bt
   parameters:
-    runtime: win-64
+    runtime: win-x64
     projects:
       - Platform/Platform.BetStatus.Service

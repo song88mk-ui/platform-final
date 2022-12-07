@@ -1279,7 +1279,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            return await _sportsbookRepository.GetSelectorMarketTemplates();
+            return await _sportsbookRepository.GetSelectorMarketTemplates(new SelectorMarketTemplatesRequestDTO { ClientId = clientResponse.Result.ClientId });
         }
         public async Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>> GetMarketSortOrder(string clientId)
         {

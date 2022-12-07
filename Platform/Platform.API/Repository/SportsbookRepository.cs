@@ -212,11 +212,11 @@ namespace Platform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>> GetSelectorMarketTemplates()
+        public async Task<BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>> GetSelectorMarketTemplates(SelectorMarketTemplatesRequestDTO request)
         {
             try
             {
-                var response = await _httpClient.PostAsync($"v1/sportsbook/selectormarkettemplates", new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.PostAsync($"v1/sportsbook/selectormarkettemplates", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
                     return JsonSerializer.Deserialize<BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });

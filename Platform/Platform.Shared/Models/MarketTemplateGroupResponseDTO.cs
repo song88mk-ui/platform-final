@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Platform.Shared.Models
 {
@@ -46,5 +47,6 @@ namespace Platform.Shared.Models
         public string MarketTemplateId { get; set; }
         public string MarketTemplateCode { get; set; }
         public int SortOrder { get; set; }
+        public string Identifier { get; set; }
     }
 }

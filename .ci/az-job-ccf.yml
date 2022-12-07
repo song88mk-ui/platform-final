@@ -28,6 +28,8 @@ resources:
 extends:
   template: dotnetservice.yml@bt
   parameters:
+    pool:
+      vmImage: 'windows-2019'
     runtime: win-x64
     projects:
       - Platform/Platform.Job.CCF

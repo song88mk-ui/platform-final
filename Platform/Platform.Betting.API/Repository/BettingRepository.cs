@@ -1711,9 +1711,9 @@ namespace Platform.Betting.API.Repository
                 var lostSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
 
 
-                var runningNonTaxedStake = bet.TrueStake;
-                var runningNonTaxedPayout = GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), runningNonTaxedStake, isBetBuilder, bet.Odds);
-                var runningNonTaxedParlayBonusWinnings = 0m;
+                //var runningNonTaxedStake = bet.TrueStake;
+                //var runningNonTaxedPayout = GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), runningNonTaxedStake, isBetBuilder, bet.Odds);
+                //var runningNonTaxedParlayBonusWinnings = 0m;
 
                 var parlayBonusWinnings = 0m;
                 var parlayBonus = 0m;
@@ -1725,11 +1725,11 @@ namespace Platform.Betting.API.Repository
                     {
                         parlayBonus = parlayConfig.Item2.ParlayBonus;
 
-                        runningNonTaxedParlayBonusWinnings = runningNonTaxedPayout * parlayConfig.Item2.ParlayBonus;
+                        //runningNonTaxedParlayBonusWinnings = runningNonTaxedPayout * parlayConfig.Item2.ParlayBonus;
                     }
                 }
 
-                runningNonTaxedPayout = runningNonTaxedPayout + runningNonTaxedParlayBonusWinnings;
+                //runningNonTaxedPayout = runningNonTaxedPayout + runningNonTaxedParlayBonusWinnings;
 
 
                 var runningfinalStake = bet.TrueStake - bet.StakeBonus;
@@ -1754,7 +1754,7 @@ namespace Platform.Betting.API.Repository
                     CashOutStatusName = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStatus.ToString() : CashOutStatus.Unavailable.ToString(),
                     TaxedWinnings = runningTaxedWinnings,
                     TaxedStake = runningTaxedStake,
-                    NonTaxedPayout = runningNonTaxedPayout
+                    Payout = runningPayout
                 });
             }
 

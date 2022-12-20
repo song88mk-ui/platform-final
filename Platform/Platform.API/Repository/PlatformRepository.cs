@@ -3584,9 +3584,9 @@ namespace Platform.API.Repository
         private object GetSelectionOdds(object odds)
         {
             if (!string.IsNullOrEmpty(_configuration["Custom:IsOddsString"]) && Convert.ToBoolean(_configuration["Custom:IsOddsString"]) == true)
-                return Convert.ToDecimal(odds).ToString("0.00");
+                return Convert.ToDecimal(odds.ToString()).ToString("0.00");
             else
-                return Convert.ToDecimal(odds);
+                return Convert.ToDecimal(odds.ToString());
         }
     }
 }

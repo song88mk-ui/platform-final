@@ -320,6 +320,8 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
+            request.IPAddress = String.IsNullOrEmpty(request.IPAddress) ? ipAddress : request.IPAddress;
+
             var result = await _platformRepository.GetLivestream(apiKey, clientId, operatorToken, ipCountryCode, request);
 
             var parameters = request;

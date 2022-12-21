@@ -33,7 +33,7 @@ namespace Platform.ClientPlatform.API.Controllers
 
         [HttpGet("v1/bet/history")]
         public async Task<IActionResult> GetBetHistory([FromQuery] BetHistoryRequest request)
-        {
+        {//
             var result = await _platformRepository.GetBetHistory(ApiKey, ClientId, LanguageCode, OperatorToken, request);
 
             switch (result.StatusCode)

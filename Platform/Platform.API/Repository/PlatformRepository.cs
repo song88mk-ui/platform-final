@@ -623,7 +623,8 @@ namespace Platform.API.Repository
                 BetStatusFilter = request.BetStatusFilter,
                 IsCurrent = request.IsCurrent,
                 Page = request.Page,
-                PageSize = request.PageSize
+                PageSize = request.PageSize,
+                IsOddsString = !string.IsNullOrEmpty(_configuration["Custom:IsOddsString"]) && Convert.ToBoolean(_configuration["Custom:IsOddsString"]) == true
             };
 
             if (languageCode == LanguageCode.EN)
@@ -789,7 +790,8 @@ namespace Platform.API.Repository
                 FromDate = request.FromDate,
                 ToDate = request.ToDate,
                 Page = request.Page,
-                PageSize = request.PageSize
+                PageSize = request.PageSize,
+                IsOddsString = !string.IsNullOrEmpty(_configuration["Custom:IsOddsString"]) && Convert.ToBoolean(_configuration["Custom:IsOddsString"]) == true
             };
 
             return await _bettingRepository.GetBetHistorySettled(payload);

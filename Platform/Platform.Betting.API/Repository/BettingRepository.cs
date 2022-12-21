@@ -1496,7 +1496,7 @@ namespace Platform.Betting.API.Repository
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
                         SelectionName = s.SelectionName,
-                        Odds = GetSelectionOdds(s.Odds),
+                        Odds = GetSelectionOdds(s.Odds, request.IsOddsString),
                         BetScore = s.BetScore,
                         SettlementScore = s.SettlementScore,
                         BetSelectionId = s.BetSelectionId.ToString(),
@@ -1626,7 +1626,7 @@ namespace Platform.Betting.API.Repository
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
                         SelectionName = s.SelectionName,
-                        Odds = GetSelectionOdds(s.Odds),
+                        Odds = GetSelectionOdds(s.Odds, request.IsOddsString),
                         BetScore = s.BetScore,
                         SettlementScore = s.SettlementScore,
                         BetSelectionId = s.BetSelectionId.ToString(),
@@ -2848,12 +2848,12 @@ namespace Platform.Betting.API.Repository
             return values.Aggregate((a, b) => a * b) * stake;
         }
 
-        private object GetSelectionOdds(object odds)
+        private object GetSelectionOdds(object odds, bool isOddsString)
         {
-            if (!string.IsNullOrEmpty(_configuration["Custom:IsOddsString"]) && Convert.ToBoolean(_configuration["Custom:IsOddsString"]) == true)
-                return Convert.ToDecimal(odds).ToString("0.00");
+            if (isOddsString == true)
+                return Convert.ToDecimal(odds.ToString()).ToString("0.00");
             else
-                return Convert.ToDecimal(odds);
+                return Convert.ToDecimal(odds.ToString());
         }
     }
 }

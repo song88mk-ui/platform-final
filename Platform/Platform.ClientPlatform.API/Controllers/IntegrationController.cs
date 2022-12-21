@@ -61,7 +61,7 @@ namespace Platform.ClientPlatform.API.Controllers
 
         [HttpGet("v1/bet/history/running")]
         public async Task<IActionResult> GetBetHistoryRunning()
-        {
+        {//
             var result = await _platformRepository.GetBetHistoryRunning(ApiKey, ClientId, OperatorToken, IPAddress);
 
             switch (result.StatusCode)

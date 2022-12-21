@@ -19,6 +19,6 @@ namespace Platform.Shared.Models
         public decimal CashOutStake { get; set; }
         public decimal TaxedStake { get; set; }
         public decimal TaxedWinnings { get; set; }
-        public decimal NonTaxedPayout { get; set; }
+        public decimal Payout { get; set; }
     }
 }

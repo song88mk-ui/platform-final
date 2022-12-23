@@ -135,6 +135,17 @@ namespace Platform.Shared.Models
         public string ClientCode { get; set; }
         public string IpCountryCode { get; set; }
     }
+    public class TWLeagueUpcomingFixtureRequestDTO
+    {
+        public int MinuteUTCOffset { get; set; }
+        public int SportId { get; set; }
+        public int SegmentId { get; set; }
+        public int LeagueId { get; set; }
+        public Guid ClientId { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+        public string ClientCode { get; set; }
+        public string IpCountryCode { get; set; }
+    }
     public class TWLeagueTodayFixtureRequestDTO
     {
         public int MinuteUTCOffset { get; set; }

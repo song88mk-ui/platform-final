@@ -1670,6 +1670,55 @@ namespace Platform.API.Repository
                 IpCountryCode = ipCountryCode,
             });
         }
+
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetUpcomingFixturesByLeague(string apiKey, string clientId, string langCode, UpcomingFixtureRequest request, string ipCountryCode)
+        {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetUpcomingFixturesByLeague(new TWLeagueUpcomingFixtureRequestDTO
+            {
+                MinuteUTCOffset = request.MinuteUTCOffset,
+                ClientId = clientResponse.Result.ClientId,
+                LanguageCode = languageCode,
+                SportId = request.SportId,
+                SegmentId = request.SegmentId,
+                LeagueId = request.LeagueId,
+                ClientCode = clientResponse.Result.ClientCode,
+                IpCountryCode = ipCountryCode,
+            });
+        }
+
         public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixtures(string apiKey, string clientId, string langCode, DailyFixtureRequest request, string ipCountryCode)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;

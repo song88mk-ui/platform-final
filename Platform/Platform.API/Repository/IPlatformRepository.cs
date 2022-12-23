@@ -36,6 +36,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(string apiKey, string clientId, string langCode, TodayFixtureRequest request, string ipCountryCode);
         Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixturesByLeague(string apiKey, string clientId, string langCode, TodayFixtureRequest request, string ipCountryCode);
         Task<BaseResponseDTO<TWResponseDTO>> GetUpcomingFixtures(string apiKey, string clientId, string langCode, UpcomingFixtureRequest request, string ipCountryCode);
+        Task<BaseResponseDTO<TWResponseDTO>> GetUpcomingFixturesByLeague(string apiKey, string clientId, string langCode, UpcomingFixtureRequest request, string ipCountryCode);
         Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixtures(string apiKey, string clientId, string langCode, DailyFixtureRequest request, string ipCountryCode);
         Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixturesByLeague(string apiKey, string clientId, string langCode, DailyFixtureRequest request, string ipCountryCode);
         Task<BaseResponseDTO<TWResponseDTO>> GetTopLeagueFixtures(string apiKey, string clientId, string langCode, TopLeagueFixtureRequest request, string ipCountryCode);

@@ -966,6 +966,48 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpGet("v1/sportsbook/sports/segments/leagues/upcomingfixtures")]
+        public async Task<IActionResult> GetUpcomingFixturesByLeague([FromQuery] int sportId, int segmentId, int leagueId, int minuteUTCOffset)
+        {
+            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
+
+            var result = await _platformRepository.GetUpcomingFixturesByLeague(apiKey, clientId, languageCode, new UpcomingFixtureRequest { SportId = sportId, SegmentId = segmentId, LeagueId = leagueId, MinuteUTCOffset = minuteUTCOffset }, ipCountryCode);
+
+            var parameters = new
+            {
+                sportId,
+                segmentId,
+                leagueId,
+                minuteUTCOffset
+            };
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "ipCountryCode", ipCountryCode },
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "x-operator-token", string.Empty },
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/upcomingfixtures", properties);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpGet("v1/sportsbook/sports/dailyfixtures")]
         public async Task<IActionResult> GetDailyFixtures([FromQuery] int sportId, DateTime dateUTC, int minuteUTCOffset)
         {

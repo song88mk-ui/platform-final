@@ -5867,6 +5867,26 @@ namespace Platform.Sportsbook.API.Repository
             //        selection.Od = Convert.ToDecimal(boostedOddsStr);
             //}
 
+            if (fixture.SpId == 1021)
+            {
+                var timeStamp = ConvertToDateTime(Convert.ToDouble(selection.CoId));
+                var difference = (DateTime.UtcNow - timeStamp).TotalSeconds;
+
+                if (difference >= 60)
+                {
+                    return new BetSelectionState
+                    {
+                        SelectionId = selection.SeId.ToString(),
+                        DecimalOdds = selection.Od,
+                        MalaysianOdds = selection.MaOd,
+                        HongkongOdds = selection.HoOd,
+                        IndonesianOdds = selection.InOd,
+                        CorrelationId = selection.CoId,
+                        StatusCode = StatusCode.Odds_Is_Inactive,
+                        Message = StatusCode.Odds_Is_Inactive.ToString().Replace('_', ' ')
+                    };
+                }
+            }
 
             if ((fixture.SpId == 1001 || fixture.SpId == 1002 || fixture.SpId == 1055 || fixture.SpId == 1058) && fixture.FiStDa < DateTime.UtcNow)
             {
@@ -9391,6 +9411,12 @@ namespace Platform.Sportsbook.API.Repository
             }
 
             return false;
+        }
+
+        private static DateTime ConvertToDateTime(double timestamp)
+        {
+            DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+            return dtDateTime.AddMilliseconds(timestamp).ToUniversalTime();
         }
     }
 

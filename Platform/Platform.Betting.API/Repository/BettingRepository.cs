@@ -1818,7 +1818,9 @@ namespace Platform.Betting.API.Repository
             result.TaxConfig = new TaxConfig
             {
                 StakeTax = taxConfig.StakeTax,
-                WinningsTax = taxConfig.WinningsTax
+                WinningsTax = taxConfig.WinningsTax,
+                ExcludeStakeSportTypes = taxConfig.ExcludeStakeSportTypes,
+                ExcludeWinningsSportTypes = taxConfig.ExcludeWinningsSportTypes
             };
 
             result.PriceboostConfig = priceboostConfig;

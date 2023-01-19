@@ -56,6 +56,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.BetPlacement.Conso
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Job.BetAudit.Tableau", "Platform.Job.BetAudit.Tableau\Platform.Job.BetAudit.Tableau.csproj", "{30E9FA1B-CF2F-4D05-BF6B-3F0198A7F8DC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Wallet.API", "Platform.Wallet.API\Platform.Wallet.API.csproj", "{322DDB28-0707-4E30-A33B-94A07BC384BD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -162,6 +164,10 @@ Global
 		{30E9FA1B-CF2F-4D05-BF6B-3F0198A7F8DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{30E9FA1B-CF2F-4D05-BF6B-3F0198A7F8DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{30E9FA1B-CF2F-4D05-BF6B-3F0198A7F8DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{322DDB28-0707-4E30-A33B-94A07BC384BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{322DDB28-0707-4E30-A33B-94A07BC384BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{322DDB28-0707-4E30-A33B-94A07BC384BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{322DDB28-0707-4E30-A33B-94A07BC384BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

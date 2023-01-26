@@ -682,6 +682,9 @@ namespace Platform.Sportsbook.API.Repository
             if (IsOEEnable(request.ClientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
 
+            if (request.SportGroup == Shared.Enums.SportGroup.SimulatedRealitySports)
+                fixtures = fixtures.Where(c => c.SegNa.ToLower().Contains("simulated")).ToList();
+
             if (fixtures.Count == 0)
             {
                 return new BaseResponseDTO<SportsResponseDTO>

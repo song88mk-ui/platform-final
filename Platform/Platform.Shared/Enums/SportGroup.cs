@@ -6,6 +6,7 @@
         Sports = 1,
         eSports = 2,
         VirtualSports = 3,
-        SportsAndVirtualSports = 4
+        SportsAndVirtualSports = 4,
+        SimulatedRealitySports = 5
     }
 }

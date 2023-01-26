@@ -17,7 +17,7 @@ namespace Platform.API.Controllers
 {
     [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(APIKeyFilter))]
     public class IntegrationController : ControllerBase
-    {
+    {//
         private readonly IPlatformRepository _platformRepository;
         private readonly TelemetryClient _telemetryClient;
         public IntegrationController(IPlatformRepository platformRepository, TelemetryClient telemetryClient)

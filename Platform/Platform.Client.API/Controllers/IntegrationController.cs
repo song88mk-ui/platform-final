@@ -21,6 +21,7 @@ namespace Platform.Client.API.Controllers
 
         public IntegrationController(ISportsbookRepository sportsbookRepository, TelemetryClient telemetryClient)
         {
+            //
             _sportsbookRepository = sportsbookRepository;
             _telemetryClient = telemetryClient;
         }

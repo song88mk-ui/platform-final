@@ -943,7 +943,8 @@ namespace Platform.Operator.Servicev2.Repository
                     SelectionName = s.SelectionName,
                     Odds = s.Odds,
                     HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
-                    AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
+                    AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty,
+                    DeadHeatFactor = s.DeadHeatFactor
                 }).ToList()
             };
 

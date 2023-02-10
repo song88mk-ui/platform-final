@@ -563,7 +563,7 @@ namespace Platform.Operator.Servicev2.Repository
                     TransactionDate = betData.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                     IsBoosted = message.IsBoosted,
                     IsBetBuilder = message.IsBetBuilder,
-                    OriginalOdds = betData.OddsRef,
+                    OddsRef = betData.OddsRef,
                     BetSelections = betSelectionData.Select(s => new OperatorBetSelectionRequestDTO
                     {
                         BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
@@ -587,7 +587,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Odds = s.Odds,
                         HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
                         AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty,
-                        OriginalOdds = s.OddsRef
+                        OddsRef = s.OddsRef
                     }).ToList()
                 };
 

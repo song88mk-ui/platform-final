@@ -108,7 +108,7 @@ namespace Platform.Operator.API.Repository
         }
         public async Task<OperatorBetResponseDTO> BetPlacement(OperatorBetRequestDTO request, string operatorToken, string clientId)
         {
-            //
+            ////
             Guid.TryParse(clientId, out Guid id);
 
             var res = _platformContext.NegativeTest.Find(id);

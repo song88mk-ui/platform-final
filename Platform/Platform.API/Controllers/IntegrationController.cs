@@ -487,6 +487,7 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/selectormarkettemplates")]
         public async Task<IActionResult> GetSelectorMarketTemplates()
         {
+            //
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();

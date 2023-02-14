@@ -46,7 +46,8 @@ namespace Platform.Shared.Models
     {
         public string MarketTemplateId { get; set; }
         public string MarketTemplateCode { get; set; }
-        public int SortOrder { get; set; }
+        public int AsiaSortOrder { get; set; }
+        public int EuroSortOrder { get; set; }
         public string Identifier { get; set; }
     }
 }

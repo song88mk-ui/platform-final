@@ -899,32 +899,32 @@ namespace Platform.Sportsbook.API.Repository
             return initialResult;
         }
 
-        public async Task<BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>> GetSelectorMarketTemplates()
-        {
-            var result = GetSelectorMarketTemplate();
-            var finalResult = new List<SportSelectorMarketTemplateDTO>();
+        //public async Task<BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>> GetSelectorMarketTemplates()
+        //{
+        //    var result = GetSelectorMarketTemplate();
+        //    var finalResult = new List<SportSelectorMarketTemplateDTO>();
 
-            foreach (var sport in result.GroupBy(g => g.SportId).ToList())
-            {
-                finalResult.Add(new SportSelectorMarketTemplateDTO
-                {
-                    SportId = sport.Key,
-                    MarketTemplates = sport.Select(s => new SelectorMarketTemplateDTO
-                    {
-                        MarketTemplateId = s.MarketTemplateId,
-                        MarketTemplateCode = s.MarketTemplateCode,
-                        SortOrder = s.SortOrder
-                    }).OrderBy(o => o.SortOrder).ToList()
-                });
-            }
+        //    foreach (var sport in result.GroupBy(g => g.SportId).ToList())
+        //    {
+        //        finalResult.Add(new SportSelectorMarketTemplateDTO
+        //        {
+        //            SportId = sport.Key,
+        //            MarketTemplates = sport.Select(s => new SelectorMarketTemplateDTO
+        //            {
+        //                MarketTemplateId = s.MarketTemplateId,
+        //                MarketTemplateCode = s.MarketTemplateCode,
+        //                SortOrder = s.SortOrder
+        //            }).OrderBy(o => o.SortOrder).ToList()
+        //        });
+        //    }
 
-            return new BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = finalResult
-            };
-        }
+        //    return new BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>
+        //    {
+        //        StatusCode = StatusCode.Success,
+        //        Message = StatusCode.Success.ToString(),
+        //        Result = finalResult
+        //    };
+        //}
 
         public async Task<BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>> GetClientSelectorMarketTemplates(SelectorMarketTemplatesRequestDTO request)
         {
@@ -940,9 +940,10 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         MarketTemplateId = s.MarketTemplateId,
                         MarketTemplateCode = s.MarketTemplateCode,
-                        SortOrder = s.SortOrder,
+                        AsiaSortOrder = s.AsiaSortOrder,
+                        EuroSortOrder = s.EuroSortOrder,
                         Identifier = s.Identifier
-                    }).OrderBy(o => o.SortOrder).ToList()
+                    }).OrderBy(o => o.AsiaSortOrder).ToList()
                 });
             }
 

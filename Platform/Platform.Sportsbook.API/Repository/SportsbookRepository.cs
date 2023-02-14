@@ -940,10 +940,11 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         MarketTemplateId = s.MarketTemplateId,
                         MarketTemplateCode = s.MarketTemplateCode,
+                        SortOrder = s.EuroSortOrder,
                         AsiaSortOrder = s.AsiaSortOrder,
                         EuroSortOrder = s.EuroSortOrder,
                         Identifier = s.Identifier
-                    }).OrderBy(o => o.AsiaSortOrder).ToList()
+                    }).OrderBy(o => o.Identifier).ThenBy(o => o.AsiaSortOrder).ToList()
                 });
             }
 

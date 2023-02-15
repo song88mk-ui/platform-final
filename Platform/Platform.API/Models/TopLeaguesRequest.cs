@@ -1,15 +1,19 @@
-﻿namespace Platform.API.Models
+﻿using System;
+
+namespace Platform.API.Models
 {
     public class TopLeaguesRequest
     {
         public int SportId { get; set; }
+        public int FixtureStatusGroup { get; set; }
+        public int MinuteUTCOffset { get; set; }
     }
     public class TopLeaguesRequest2
     {
         public int SportId { get; set; }
         public string LanguageCode { get; set; }
         public int LeagueId { get; set; }
-        public int SegmentId { get; set; }
+        public int SegmentId { get; set; }        
     }
     public class TempTopLeaguesRequest
     {

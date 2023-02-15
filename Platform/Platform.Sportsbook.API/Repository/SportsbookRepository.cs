@@ -436,11 +436,32 @@ namespace Platform.Sportsbook.API.Repository
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TopLeaguesResponseDTO>>(mKey);
 
+            var fixtures = new List<Fixture>();                        
+
             if (mCache != null)
                 return mCache;
 
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            if (request.FixtureStatusGroup == FixtureStatusGroup.Live)
+            {
+                var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset);
+
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
+
+                fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            }
+            else if (request.FixtureStatusGroup == FixtureStatusGroup.Prematch)
+            {
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 0 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
+
+                fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            }
+            else
+            {
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
+
+                fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            }
+
             if (IsOEEnable(request.ClientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000).ToList();
 

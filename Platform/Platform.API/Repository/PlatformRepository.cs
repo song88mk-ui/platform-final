@@ -1155,12 +1155,16 @@ namespace Platform.API.Repository
                 };
             }
 
+            var fixtureStatusGroup = (FixtureStatusGroup)request.FixtureStatusGroup;
+
             return await _sportsbookRepository.GetAllLeagues(new TopLeaguesRequestDTO
             {
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
                 SportId = request.SportId,
-                ClientCode = clientResponse.Result.ClientCode
+                ClientCode = clientResponse.Result.ClientCode,
+                FixtureStatusGroup = fixtureStatusGroup,
+                MinuteUTCOffset = request.MinuteUTCOffset
             });
         }
 

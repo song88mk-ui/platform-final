@@ -441,23 +441,23 @@ namespace Platform.Sportsbook.API.Repository
             if (mCache != null)
                 return mCache;
 
-            if (request.FixtureStatusGroup == FixtureStatusGroup.Live)
+            if (request.FixtureStatusGroup == FixtureStatusGroup.Prematch)
             {
                 var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset);
 
-                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
 
                 fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             }
-            else if (request.FixtureStatusGroup == FixtureStatusGroup.Prematch)
+            else if (request.FixtureStatusGroup == FixtureStatusGroup.Live)
             {
-                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 0 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Live && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
 
                 fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             }
             else
             {
-                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < (int)FixtureStatus.Suspended && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
 
                 fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             }

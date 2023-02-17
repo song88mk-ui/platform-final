@@ -432,7 +432,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues(TopLeaguesRequestDTO request)
         {
-            var mKey = $"nal:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportId}";
+            var mKey = $"nal:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportId}:{(int)request.FixtureStatusGroup}:{request.MinuteUTCOffset}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TopLeaguesResponseDTO>>(mKey);
 

@@ -397,6 +397,16 @@ namespace Platform.Operator.Servicev2
             catch (Exception ex)
             {
                 Console.WriteLine($"{DateTime.UtcNow} {ex.Message}");
+
+                var error = new
+                {
+                    ErrorMessage = ex.Message,
+                    StackTrace = ex.StackTrace,
+                    Payload = payload
+                };
+
+                _messageBroker.Publish(JsonSerializer.Serialize(error), $"{messageType}Error", "r.bet.error.operator", Guid.NewGuid().ToString());
+
                 _messageBroker.Acknowledge(e);
             }
         }

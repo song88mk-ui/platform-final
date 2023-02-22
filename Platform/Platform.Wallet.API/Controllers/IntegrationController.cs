@@ -1,83 +1,40 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Cors;
+using Platform.Wallet.API.Models;
+using Platform.Wallet.API.Repository;
 
 namespace Platform.Wallet.API.Controllers
 {
+    [ApiController, EnableCors("AllowAllOrigins")]
     public class IntegrationController : Controller
     {
-        // GET: IntegrationController
-        public ActionResult Index()
+        private readonly IWalletRepository _walletRepository;
+        public IntegrationController(IWalletRepository walletRepository)
         {
-            return View();
+            _walletRepository = walletRepository;
         }
 
-        // GET: IntegrationController/Details/5
-        public ActionResult Details(int id)
+        [HttpPost("v1/credit")]
+        public async Task<IActionResult> Credit([FromBody] CreditOrDebitRequest request)
         {
-            return View();
+            var result = await _walletRepository.CreditUserWallet(request);
+
+            if (result.Item1 == 1000)
+                return Ok(new { StatusCode = result.Item1, Message = result.Item2, Balance = result.Item3 });
+            else
+                return BadRequest(new { StatusCode = result.Item1, Message = result.Item2, Balance = result.Item3 });
         }
 
-        // GET: IntegrationController/Create
-        public ActionResult Create()
+        [HttpPost("v1/debit")]
+        public async Task<IActionResult> Debit([FromBody] CreditOrDebitRequest request)
         {
-            return View();
-        }
+            var result = await _walletRepository.DebitUserWallet(request);
 
-        // POST: IntegrationController/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: IntegrationController/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        // POST: IntegrationController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: IntegrationController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: IntegrationController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            if (result.Item1 == 1000)
+                return Ok(new { StatusCode = result.Item1, Message = result.Item2, Balance = result.Item3 });
+            else
+                return BadRequest(new { StatusCode = result.Item1, Message = result.Item2, Balance = result.Item3 });
         }
     }
 }

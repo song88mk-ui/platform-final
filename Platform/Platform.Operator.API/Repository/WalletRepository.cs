@@ -6,6 +6,8 @@ using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Platform.Operator.API.Repository
 {
@@ -44,6 +46,122 @@ namespace Platform.Operator.API.Repository
             catch (Exception ex)
             {
                 return new WalletResponse
+                {
+                    StatusCode = 1000,
+                    Message = $"Error ({ex.Message})",
+                };
+            }
+        }
+
+        public async Task<BetResponse> PlaceBet(CreditOrDebitRequest request)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"v1/debit", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return result;
+                }
+                else
+                {
+                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BetResponse
+                {
+                    StatusCode = 1000,
+                    Message = $"Error ({ex.Message})",
+                };
+            }
+        }
+
+        public async Task<BetResponse> SettleBet(CreditOrDebitRequest request)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"v1/credit", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return result;
+                }
+                else
+                {
+                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BetResponse
+                {
+                    StatusCode = 1000,
+                    Message = $"Error ({ex.Message})",
+                };
+            }
+        }
+
+        public async Task<BetResponse> CashOutBet(CreditOrDebitRequest request)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"v1/credit", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return result;
+                }
+                else
+                {
+                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BetResponse
+                {
+                    StatusCode = 1000,
+                    Message = $"Error ({ex.Message})",
+                };
+            }
+        }
+
+        public async Task<BetResponse> CancelBet(CreditOrDebitRequest request)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"v1/credit", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return result;
+                }
+                else
+                {
+                    var result = JsonSerializer.Deserialize<BetResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BetResponse
                 {
                     StatusCode = 1000,
                     Message = $"Error ({ex.Message})",

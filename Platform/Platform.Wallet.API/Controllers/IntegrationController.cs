@@ -43,9 +43,9 @@ namespace Platform.Wallet.API.Controllers
             var result = await _walletRepository.GetUserWallet(request);
 
             if (result.Item1 == 1000)
-                return Ok(new { StatusCode = result.Item1, Message = result.Item2, Balance = result.Item3 });
+                return Ok(new { StatusCode = result.Item1, Message = result.Item2, Balance = result.Item3, CurrencyCode = result.Item4 });
             else
-                return BadRequest(new { StatusCode = result.Item1, Message = result.Item2, Balance = result.Item3 });
+                return BadRequest(new { StatusCode = result.Item1, Message = result.Item2, Balance = result.Item3, CurrencyCode = result.Item4 });
         }
     }
 }

@@ -46,6 +46,14 @@ namespace Platform.Wallet.API.Repository
                 },
                 new SqlParameter
                 {
+                    ParameterName = "@CurrencyCode",
+                    SqlDbType = System.Data.SqlDbType.NVarChar,
+                    Size = 50,
+                    Direction = System.Data.ParameterDirection.Input,
+                    Value = request.CurrencyCode
+                },
+                new SqlParameter
+                {
                     ParameterName = "@Direction",
                     SqlDbType = System.Data.SqlDbType.Int,
                     Direction = System.Data.ParameterDirection.Input,
@@ -97,11 +105,11 @@ namespace Platform.Wallet.API.Repository
                 }
             };
 
-            await _walletContext.Database.ExecuteSqlRawAsync($"EXEC CreditOrDebitUserWallet @ClientId, @UserId, @Amount, @Direction, @TransactionTypeId, @TransactionTypeName, @ReferenceId, @StatusCode OUTPUT, @StatusName OUTPUT, @Balance OUTPUT", param);
+            await _walletContext.Database.ExecuteSqlRawAsync($"EXEC CreditOrDebitUserWallet @ClientId, @UserId, @Amount, @CurrencyCode, @Direction, @TransactionTypeId, @TransactionTypeName, @ReferenceId, @StatusCode OUTPUT, @StatusName OUTPUT, @Balance OUTPUT", param);
 
-            var statusCode = (int)param[7].Value;
-            var statusName = (string)param[8].Value;
-            var balance = (decimal)param[9].Value;
+            var statusCode = (int)param[8].Value;
+            var statusName = (string)param[9].Value;
+            var balance = (decimal)param[10].Value;
 
             return new Tuple<int, string, decimal>(statusCode, statusName, balance);
         }
@@ -132,6 +140,14 @@ namespace Platform.Wallet.API.Repository
                     Scale = 12,
                     Direction = System.Data.ParameterDirection.Input,
                     Value = request.Amount
+                },
+                new SqlParameter
+                {
+                    ParameterName = "@CurrencyCode",
+                    SqlDbType = System.Data.SqlDbType.NVarChar,
+                    Size = 50,
+                    Direction = System.Data.ParameterDirection.Input,
+                    Value = request.CurrencyCode
                 },
                 new SqlParameter
                 {
@@ -186,16 +202,16 @@ namespace Platform.Wallet.API.Repository
                 }
             };
 
-            await _walletContext.Database.ExecuteSqlRawAsync($"EXEC CreditOrDebitUserWallet @ClientId, @UserId, @Amount, @Direction, @TransactionTypeId, @TransactionTypeName, @ReferenceId, @StatusCode OUTPUT, @StatusName OUTPUT, @Balance OUTPUT", param);
+            await _walletContext.Database.ExecuteSqlRawAsync($"EXEC CreditOrDebitUserWallet @ClientId, @UserId, @Amount, @CurrencyCode, @Direction, @TransactionTypeId, @TransactionTypeName, @ReferenceId, @StatusCode OUTPUT, @StatusName OUTPUT, @Balance OUTPUT", param);
 
-            var statusCode = (int)param[7].Value;
-            var statusName = (string)param[8].Value;
-            var balance = (decimal)param[9].Value;
+            var statusCode = (int)param[8].Value;
+            var statusName = (string)param[9].Value;
+            var balance = (decimal)param[10].Value;
 
             return new Tuple<int, string, decimal>(statusCode, statusName, balance);
         }
 
-        public async Task<Tuple<int, string, decimal>> GetUserWallet(UserWalletRequest request)
+        public async Task<Tuple<int, string, decimal, string>> GetUserWallet(UserWalletRequest request)
         {
             var param = new SqlParameter[]
 {
@@ -234,16 +250,24 @@ namespace Platform.Wallet.API.Repository
                     Precision = 26,
                     Scale = 12,
                     Direction = System.Data.ParameterDirection.Output,
+                },
+                new SqlParameter
+                {
+                    ParameterName = "@CurrencyCode",
+                    SqlDbType = System.Data.SqlDbType.NVarChar,
+                    Size = 50,
+                    Direction = System.Data.ParameterDirection.Output
                 }
 };
 
-            await _walletContext.Database.ExecuteSqlRawAsync($"EXEC GetUserWallet @ClientId, @UserId, @StatusCode OUTPUT, @StatusName OUTPUT, @Balance OUTPUT", param);
+            await _walletContext.Database.ExecuteSqlRawAsync($"EXEC GetUserWallet @ClientId, @UserId, @StatusCode OUTPUT, @StatusName OUTPUT, @Balance OUTPUT, @CurrencyCode OUTPUT", param);
 
             var statusCode = (int)param[2].Value;
             var statusName = (string)param[3].Value;
             var balance = (decimal)param[4].Value;
+            var currencyCode = (string)param[5].Value;
 
-            return new Tuple<int, string, decimal>(statusCode, statusName, balance);
+            return new Tuple<int, string, decimal, string>(statusCode, statusName, balance, currencyCode);
         }
     }
 }

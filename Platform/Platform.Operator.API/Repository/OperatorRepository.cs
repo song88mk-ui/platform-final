@@ -2,7 +2,6 @@
 using Platform.Shared.Models;
 using System;
 using System.Threading.Tasks;
-using BetPlacementResponseDTO = Platform.Operator.API.Models.BetPlacementResponseDTO;
 
 namespace Platform.Operator.API.Repository
 {

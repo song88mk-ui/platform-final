@@ -1,8 +1,10 @@
-﻿namespace Platform.Wallet.API.Models
+﻿using System;
+
+namespace Platform.Wallet.API.Models
 {
     public class CreditOrDebitRequest
     {
-        public string ClientId { get; set; }
+        public Guid ClientId { get; set; }
         public string UserId { get; set; }
         public decimal Amount { get; set; }
         public int TransactionTypeId { get; set; }

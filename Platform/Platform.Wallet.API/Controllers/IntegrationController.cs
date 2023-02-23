@@ -36,5 +36,16 @@ namespace Platform.Wallet.API.Controllers
             else
                 return BadRequest(new { StatusCode = result.Item1, Message = result.Item2, Balance = result.Item3 });
         }
+
+        [HttpGet("v1/userwallet")]
+        public async Task<IActionResult> GetUserWallet([FromQuery] UserWalletRequest request)
+        {
+            var result = await _walletRepository.GetUserWallet(request);
+
+            if (result.Item1 == 1000)
+                return Ok(new { StatusCode = result.Item1, Message = result.Item2, Balance = result.Item3 });
+            else
+                return BadRequest(new { StatusCode = result.Item1, Message = result.Item2, Balance = result.Item3 });
+        }
     }
 }

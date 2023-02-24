@@ -29,6 +29,6 @@ extends:
   template: dotnetservice2.yml@bt
   parameters:
     dotnetVersion: 3.1.x
-    autoToFeeds: false
+    authToFeeds: false
     projects:
       - Platform/Platform.Job.BetAudit.Tableau

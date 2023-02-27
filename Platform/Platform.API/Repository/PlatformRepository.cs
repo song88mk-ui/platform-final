@@ -58,7 +58,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -202,7 +202,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -445,7 +445,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -601,7 +601,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -729,7 +729,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -1058,7 +1058,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -2219,7 +2219,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -2336,7 +2336,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -2400,7 +2400,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -2464,7 +2464,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -2913,7 +2913,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(operatorToken, clientResponse.Result.Endpoint);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {

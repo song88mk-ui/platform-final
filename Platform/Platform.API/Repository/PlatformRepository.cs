@@ -358,6 +358,7 @@ namespace Platform.API.Repository
                 IsBoosted = request.IsBoosted,
                 Selections = selections,
                 IsBetBuilder = request.IsBetBuilder,
+                BonusId = request.BonusId,
                 Odds = result.Result.TotalOdds,
             };
 

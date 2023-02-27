@@ -563,6 +563,7 @@ namespace Platform.Operator.Servicev2.Repository
                     TransactionDate = betData.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                     IsBoosted = message.IsBoosted,
                     IsBetBuilder = message.IsBetBuilder,
+                    BonusId = message.BonusId,
                     OddsRef = betData.OddsRef,
                     BetSelections = betSelectionData.Select(s => new OperatorBetSelectionRequestDTO
                     {

@@ -35,6 +35,7 @@ namespace Platform.Placement.Servicev2.Repository
             var payload = new OnBetPlacement();
             payload.IsBoosted = message.IsBoosted;
             payload.IsBetBuilder = message.IsBetBuilder;
+            payload.BonusId = message.BonusId;
             payload.Odds = message.Odds;
 
             var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?

@@ -541,6 +541,7 @@ namespace Platform.Betting.API.Repository
                         BetSelections = betSelectionData,
                         IsBoosted = request.IsBoosted,
                         IsBetBuilder = request.IsBetBuilder,
+                        BonusId = request.BonusId,
                         Odds = request.Odds
                     };
 
@@ -1103,6 +1104,7 @@ namespace Platform.Betting.API.Repository
                         BetSelections = betSelectionData,
                         IsBoosted = request.IsBoosted,
                         IsBetBuilder = request.IsBetBuilder,
+                        BonusId = request.BonusId,
                         Odds = request.Odds
                     };
 

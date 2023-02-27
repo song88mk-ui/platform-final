@@ -50,6 +50,9 @@ namespace Platform.Shared.Models
         [JsonPropertyName("isBetBuilder")]
         public bool IsBetBuilder { get; set; }
 
+        [JsonPropertyName("bonusId")]
+        public string BonusId { get; set; }
+
         [JsonPropertyName("betSelections")]
         public List<OperatorBetSelectionRequestDTO> BetSelections { get; set; }
 

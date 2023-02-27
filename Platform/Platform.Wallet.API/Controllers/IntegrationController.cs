@@ -37,6 +37,17 @@ namespace Platform.Wallet.API.Controllers
                 return BadRequest(new { StatusCode = result.Item1, Message = result.Item2, Balance = result.Item3 });
         }
 
+        [HttpPost("v1/userwallettransfer")]
+        public async Task<IActionResult> TransferWallet([FromBody] TransferUserWalletRequest request)
+        {
+            var result = await _walletRepository.TransferUserWallet(request);
+
+            if (result.Item1 == 1000)
+                return Ok(new { StatusCode = result.Item1, Message = result.Item2, FromBalance = result.Item3, ToBalance = result.Item4 });
+            else
+                return BadRequest(new { StatusCode = result.Item1, Message = result.Item2, FromBalance = result.Item3, ToBalance = result.Item4 });
+        }
+
         [HttpGet("v1/userwallet")]
         public async Task<IActionResult> GetUserWallet([FromQuery] UserWalletRequest request)
         {

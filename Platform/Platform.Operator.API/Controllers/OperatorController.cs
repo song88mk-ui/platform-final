@@ -12,7 +12,7 @@ namespace Platform.Operator.API.Controllers
     {
         private readonly IOperatorRepository _operatorRepository;
         public OperatorController(IOperatorRepository operatorRepository)
-        {
+        {//
             _operatorRepository = operatorRepository;
         }
 

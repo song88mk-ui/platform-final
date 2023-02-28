@@ -27,6 +27,7 @@ namespace Platform.Shared.Models
             Selections = new List<BetSelectionHistoryDTO>();
         }
         public string BetId { get; set; }
+        public string UserId { get; set; }
         public decimal Stake { get; set; }
         public string Odds { get; set; }
         public decimal Payout { get; set; }

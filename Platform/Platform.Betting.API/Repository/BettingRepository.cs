@@ -1561,7 +1561,7 @@ namespace Platform.Betting.API.Repository
                 rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
 
             rowCount = rawSettled.Count();
-            transactions = rawSettled.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
+            transactions = rawSettled.OrderBy(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
 
             if (transactions.Count == 0)
             {

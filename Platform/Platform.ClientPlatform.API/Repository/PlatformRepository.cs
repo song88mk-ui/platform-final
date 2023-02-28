@@ -110,7 +110,7 @@ namespace Platform.ClientPlatform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistorySettled(string apiKey, string clientId, string languageCode, string ipAddress, BetHistorySettledRequest request)
+        public async Task<BaseResponseDTO<SettlementHistoryResponseDTO>> GetBetHistorySettled(string apiKey, string clientId, string languageCode, string ipAddress, BetHistorySettledRequest request)
         {
             try
             {
@@ -124,14 +124,14 @@ namespace Platform.ClientPlatform.API.Repository
                 var response = await _httpClient.GetAsync($"v1/bet/history/settled{queryString}");
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<BetHistoryResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<BaseResponseDTO<SettlementHistoryResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<BetHistoryResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<BaseResponseDTO<SettlementHistoryResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     else
                     {
-                        return new BaseResponseDTO<BetHistoryResponseDTO>
+                        return new BaseResponseDTO<SettlementHistoryResponseDTO>
                         {
                             StatusCode = StatusCode.Error,
                             Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
@@ -141,7 +141,7 @@ namespace Platform.ClientPlatform.API.Repository
             }
             catch (Exception ex)
             {
-                return new BaseResponseDTO<BetHistoryResponseDTO>
+                return new BaseResponseDTO<SettlementHistoryResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"

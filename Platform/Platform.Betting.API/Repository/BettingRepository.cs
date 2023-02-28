@@ -1595,6 +1595,7 @@ namespace Platform.Betting.API.Repository
                 result.Add(new SettlementHistoryDTO
                 {
                     BetId = bet.BetId.ToString(),
+                    UserId = bet.UserId,
                     Stake = bet.Stake,
                     Odds = bet.Odds.ToString(),
                     Payout = bet.Payout,

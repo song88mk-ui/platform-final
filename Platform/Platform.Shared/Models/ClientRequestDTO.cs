@@ -16,6 +16,7 @@ namespace Platform.Shared.Models
         public DateTime EffectiveDate { get; set; }
         public decimal NextCompanyShare { get; set; }
         public int ClientIdRef { get; set; }
+        public bool IsAgent { get; set; } = false;
     }
 
 }

@@ -2524,7 +2524,8 @@ namespace Platform.API.Repository
                         MonthlyFee = request.MonthlyFee,
                         CurrentCompanyShare = currentCompanyShare,
                         EffectiveDate = effectiveDate,
-                        NextCompanyShare = nextCompanyShare
+                        NextCompanyShare = nextCompanyShare,
+                        IsAgent = request.IsAgent
                     }).Entity;
 
                     clientId = clientEntity.ClientId;

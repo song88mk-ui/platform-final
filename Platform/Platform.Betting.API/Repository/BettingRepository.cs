@@ -1552,7 +1552,13 @@ namespace Platform.Betting.API.Repository
             var transactions = new List<Bet>();
 
             var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running, (int)BetStatus.Rejected };
-            var rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
+
+            IQueryable<Bet> rawSettled;
+
+            if (string.IsNullOrEmpty(request.UserId))
+                rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
+            else
+                rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
 
             rowCount = rawSettled.Count();
             transactions = rawSettled.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();

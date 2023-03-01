@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Data.Platform;
@@ -363,7 +364,10 @@ namespace Platform.Operator.Servicev2.Repository
                         context.SaveChanges();
                         scope.Complete();
 
-                        messageBroker.Publish(payload, "OnBetPlacement", "r.bet.reports", correlationId);
+                        if (payload.Bet.IsAgent)
+                            messageBroker.Publish(payload, "OnBetPlacement", "r.bet.reports.agent", correlationId);
+                        else
+                            messageBroker.Publish(payload, "OnBetPlacement", "r.bet.reports", correlationId);
 
                         //TODO: delete when TW is no longer the frontend
                         messageBroker.Publish(new OnBetStatus
@@ -766,7 +770,12 @@ namespace Platform.Operator.Servicev2.Repository
             try
             {
                 if (message.IsRetry == false)
-                    messageBroker.Publish(message, "OnBetFullCashOut", "r.bet.reports", correlationId);
+                {
+                    if (message.Bet.IsAgent)
+                        messageBroker.Publish(message, "OnBetFullCashOut", "r.bet.reports.agent", correlationId);
+                    else
+                        messageBroker.Publish(message, "OnBetFullCashOut", "r.bet.reports", correlationId);
+                }
 
                 AddOperatorLog(new OperatorLog
                 {
@@ -943,7 +952,13 @@ namespace Platform.Operator.Servicev2.Repository
             try
             {
                 if (message.IsRetry == false)
-                    messageBroker.Publish(message, "OnBetSettlement", "r.bet.reports", correlationId);
+                {
+                    if (message.Bet.IsAgent)
+                        messageBroker.Publish(message, "OnBetSettlement", "r.bet.reports.agent", correlationId);
+                    else
+                        messageBroker.Publish(message, "OnBetSettlement", "r.bet.reports", correlationId);
+                }
+
 
                 AddOperatorLog(new OperatorLog
                 {
@@ -1137,7 +1152,13 @@ namespace Platform.Operator.Servicev2.Repository
                 }, "OnBetStatus", $"r.bet.betstatus.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
                 if (message.IsRetry == false)
-                    messageBroker.Publish(message, "OnBetCancellation", "r.bet.reports", correlationId);
+                {
+                    if (message.Bet.IsAgent)
+                        messageBroker.Publish(message, "OnBetCancellation", "r.bet.reports.agent", correlationId);
+                    else
+                        messageBroker.Publish(message, "OnBetCancellation", "r.bet.reports", correlationId);
+                }
+
 
                 messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackOfficeCancellation", "r.bet.cancellation", correlationId);
 

@@ -20,7 +20,7 @@ namespace Platform.Operator.API.Repository
             _httpClient = httpClient;
 
             _httpClient.BaseAddress = new Uri(_configuration["API:AuthAPI"]);
-            _httpClient.DefaultRequestHeaders.Add("x-api-key", "02a8035d376ab8e3a0333eb363770584");
+            _httpClient.DefaultRequestHeaders.Add("x-api-key", configuration["Custom:AuthAPIKey"]);
         }
 
         public async Task<BaseResponse<AuthResponse>> Authenticate(string operatorToken)

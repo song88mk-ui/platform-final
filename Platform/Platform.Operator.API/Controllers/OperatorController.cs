@@ -70,8 +70,9 @@ namespace Platform.Operator.API.Controllers
         public async Task<IActionResult> CashOutBet([FromBody] OperatorBetSettlementRequestDTO request)
         {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
-            var result = await _operatorRepository.CashOutBet(request, clientId);
+            var result = await _operatorRepository.CashOutBet(request, clientId, operatorToken);
 
             switch (result.StatusId)
             {

@@ -22,6 +22,7 @@ namespace Platform.Operator.API.Repository
             _httpClient = httpClient;
 
             _httpClient.BaseAddress = new Uri(_configuration["API:WalletAPI"]);
+            _httpClient.DefaultRequestHeaders.Add("x-api-key", configuration["Custom:WalletAPIKey"]);
         }
 
         public async Task<WalletResponse> GetUserWallet(UserWalletRequest request)

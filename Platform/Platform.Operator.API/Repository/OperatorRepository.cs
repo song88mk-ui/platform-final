@@ -43,9 +43,89 @@ namespace Platform.Operator.API.Repository
                 UserId = authResponse.Result.UserId,
                 Balance = walletResponse.Balance,
                 CurrencyCode = walletResponse.CurrencyCode,
-                LanguageCode = "EN"
+                LanguageCode = GetLanguageCode(walletResponse.CurrencyCode)
             };
         }
+
+        private static string GetLanguageCode(string currencyCode)
+        {
+            switch (currencyCode)
+            {
+                case "KRW":
+                    return "KO";
+                case "VND":
+                    return "VI";
+                case "THB":
+                    return "TH";
+                case "CNY":
+                    return "ZH";
+                case "MYR":
+                    return "MS";
+                case "KHR":
+                    return "KH";
+                case "IDR":
+                    return "ID";
+
+                //case "INR":
+                //    return "KH";
+                //case "JPY":
+                //    return "KH";
+                //case "MMK":
+                //    return "KH";
+                //case "HKD":
+                //    return "KH";
+                //case "PHP":
+                //    return "KH";
+                //case "AED":
+                //    return "KH";
+                //case "TRY":
+                //    return "KH";
+                //case "TWD":
+                //    return "KH";
+                //case "NZD":
+                //    return "KH";
+                //case "ZAR":
+                //    return "KH";
+                //case "KES":
+                //    return "KH";
+                //case "TZS":
+                //    return "KH";
+                //case "GHS":
+                //    return "KH";
+                //case "ZMW":
+                //    return "KH";
+                //case "MZN":
+                //    return "KH";
+                //case "CDF":
+                //    return "KH";
+                //case "ETB":
+                //    return "KH";
+                //case "MWK":
+                //    return "KH";
+                //case "XAF":
+                //    return "KH";
+                //case "NGN":
+                //    return "KH";
+                //case "BTC":
+                //    return "KH";
+                //case "ETH":
+                //    return "KH";
+                //case "PKR":
+                //    return "KH";
+                //case "BRL":
+                //    return "KH";
+                //case "CLP":
+                //    return "KH";
+                //case "PEN":
+                //    return "KH";
+                //case "MXN":
+                //    return "KH";
+
+                default:
+                    return "EN";
+            }
+        }
+
         public async Task<BetPlacementResponseDTO> BetPlacement(OperatorBetRequestDTO request, string clientId, string operatorToken)
         {
             var authResponse = await _authRepository.Authenticate(operatorToken);
@@ -97,8 +177,18 @@ namespace Platform.Operator.API.Repository
                 Balance = betResponse.Balance
             };
         }
-        public async Task<BetSettlementResponseDTO> CashOutBet(OperatorBetSettlementRequestDTO request, string clientId)
+        public async Task<BetSettlementResponseDTO> CashOutBet(OperatorBetSettlementRequestDTO request, string clientId, string operatorToken)
         {
+            var authResponse = await _authRepository.Authenticate(operatorToken);
+
+            if (authResponse.StatusCode != Enums.AuthStatusCode.Success)
+            {
+                return new BetSettlementResponseDTO
+                {
+                    StatusId = 1002
+                };
+            }
+
             var betResponse = await _walletRepository.CashOutBet(new CreditOrDebitRequest
             {
                 ClientId = Guid.Parse(clientId),

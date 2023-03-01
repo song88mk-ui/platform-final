@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using Platform.Wallet.API.ActionFilters;
 using Platform.Wallet.API.Data;
 using Platform.Wallet.API.Repository;
 using System;
@@ -57,6 +58,8 @@ namespace Platform.Wallet.API
 
             services.AddScoped<IWalletRepository, WalletRepository>();
             services.AddDbContext<WalletContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Wallet"]));
+
+            services.AddScoped<APIKeyFilter>();
 
             services.AddControllers();
         }

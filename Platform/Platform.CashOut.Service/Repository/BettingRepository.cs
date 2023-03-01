@@ -376,7 +376,8 @@ namespace Platform.CashOut.Service.Repository
                 IsFreeBet = betEntity.IsFreeBet,
                 BetTypeId = betEntity.BetTypeId,
                 BetTypeName = betEntity.BetTypeName,
-                OddsRef = betEntity.OddsRef
+                OddsRef = betEntity.OddsRef,
+                IsAgent = betEntity.IsAgent
             });
 
             isPublish = true;

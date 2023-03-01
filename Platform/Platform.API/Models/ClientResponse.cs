@@ -13,6 +13,7 @@ namespace Platform.API.Models
         public string Endpoint { get; set; }
         public decimal CompanyShare { get; set; }
         public int ClientIdRef { get; set; }
+        public bool IsAgent { get; set; }
     }
 
     public class ForexEURResponse

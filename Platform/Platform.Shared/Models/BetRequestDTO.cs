@@ -11,6 +11,7 @@ namespace Platform.Shared.Models
             Selections = new List<BetSelectionRequestDTO>();
         }
         public string APIKey { get; set; }
+        public bool IsAgent { get; set; }
         public string OperatorToken { get; set; }
         public string ClientId { get; set; }
         public string ClientCode { get; set; }

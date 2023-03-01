@@ -338,6 +338,7 @@ namespace Platform.API.Repository
             var payload = new BetRequestDTO
             {
                 APIKey = apiKey,
+                IsAgent = clientResponse.Result.IsAgent,
                 OperatorToken = operatorToken,
                 ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
                 ClientIdRef = clientResponse.Result.ClientIdRef,
@@ -875,7 +876,8 @@ namespace Platform.API.Repository
                             IsActive = result.IsActive,
                             Endpoint = result.Endpoint,
                             CompanyShare = result.EffectiveDate.Date < DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare,
-                            ClientIdRef = result.ClientIdRef
+                            ClientIdRef = result.ClientIdRef,
+                            IsAgent = result.IsAgent
                         }
                     };
 
@@ -923,7 +925,8 @@ namespace Platform.API.Repository
                                 IsActive = result.IsActive,
                                 Endpoint = result.Endpoint,
                                 CompanyShare = result.EffectiveDate.Date < DateTime.UtcNow.Date ? result.NextCompanyShare : result.CurrentCompanyShare,
-                                ClientIdRef = result.ClientIdRef
+                                ClientIdRef = result.ClientIdRef,
+                                IsAgent = result.IsAgent
                             }
                         };
 

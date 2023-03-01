@@ -58,6 +58,7 @@ namespace Platform.BetForwarder.Service
                 {
                     case "OnBetPlacement":
                         var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
+                        //
 
                         _messageBrokerExternal.ExternalPublish(onBetPlacement, messageType, e.RoutingKey, correlationId);
                         break;

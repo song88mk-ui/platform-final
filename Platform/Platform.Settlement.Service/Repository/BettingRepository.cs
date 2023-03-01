@@ -281,6 +281,7 @@ namespace Platform.Settlement.Service.Repository
 
         public void ProcesssBetSettlement(OnUOFBetSettlement message, IMessageBroker messageBroker, string correlationId)
         {
+            //
             var betSelections = GetBetSelections(message.SelectionId);
 
             foreach (var betSelection in betSelections)
@@ -826,7 +827,8 @@ namespace Platform.Settlement.Service.Repository
                     IsFreeBet = betEntity.IsFreeBet,
                     BetTypeId = betEntity.BetTypeId,
                     BetTypeName = betEntity.BetTypeName,
-                    OddsRef = betEntity.OddsRef
+                    OddsRef = betEntity.OddsRef,
+                    IsAgent = betEntity.IsAgent
                 });
 
                 isPublish = true;
@@ -971,7 +973,8 @@ namespace Platform.Settlement.Service.Repository
                     IsFreeBet = betEntity.IsFreeBet,
                     BetTypeId = betEntity.BetTypeId,
                     BetTypeName = betEntity.BetTypeName,
-                    OddsRef = betEntity.OddsRef
+                    OddsRef = betEntity.OddsRef,
+                    IsAgent = betEntity.IsAgent
                 });
 
                 if (isResettle == false)
@@ -1072,7 +1075,8 @@ namespace Platform.Settlement.Service.Repository
                 IsFreeBet = betEntity.IsFreeBet,
                 BetTypeId = betEntity.BetTypeId,
                 BetTypeName = betEntity.BetTypeName,
-                OddsRef = betEntity.OddsRef
+                OddsRef = betEntity.OddsRef,
+                IsAgent = betEntity.IsAgent
             });
         }
 
@@ -1204,7 +1208,8 @@ namespace Platform.Settlement.Service.Repository
                                 IsFreeBet = betEntity.IsFreeBet,
                                 BetTypeId = betEntity.BetTypeId,
                                 BetTypeName = betEntity.BetTypeName,
-                                OddsRef = betEntity.OddsRef
+                                OddsRef = betEntity.OddsRef,
+                                IsAgent = betEntity.IsAgent
                             });
 
                             foreach (var betSelection in betSelections)

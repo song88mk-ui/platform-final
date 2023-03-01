@@ -60,19 +60,6 @@ namespace Platform.Operator.Servicev2.Repository
                 return httpClient.Item2;
             }
         }
-        //private HttpClient GetHttpClient(string endpoint, string operatorToken, string clientId)
-        //{
-        //    var result = new HttpClient
-        //    {
-        //        BaseAddress = new Uri(endpoint),
-        //        Timeout = TimeSpan.FromSeconds(5)
-        //    };
-
-        //    result.DefaultRequestHeaders.Add("x-client-id", clientId);
-        //    result.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
-
-        //    return result;
-        //}
         private void CancelBet(Guid betId, string reason, string correlationId, IMessageBroker messageBroker, bool isFreebet, bool isBoosted, string threadId)
         {
             var betData = new Bet();
@@ -140,7 +127,8 @@ namespace Platform.Operator.Servicev2.Repository
                             IsFreeBet = betEntity.IsFreeBet,
                             BetTypeId = betEntity.BetTypeId,
                             BetTypeName = betEntity.BetTypeName,
-                            OddsRef = betEntity.OddsRef
+                            OddsRef = betEntity.OddsRef,
+                            IsAgent = betEntity.IsAgent
                         });
 
                         var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
@@ -303,7 +291,8 @@ namespace Platform.Operator.Servicev2.Repository
                             IsFreeBet = betEntity.IsFreeBet,
                             BetTypeId = betEntity.BetTypeId,
                             BetTypeName = betEntity.BetTypeName,
-                            OddsRef = betEntity.OddsRef
+                            OddsRef = betEntity.OddsRef,
+                            IsAgent = betEntity.IsAgent
                         });
 
                         var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();

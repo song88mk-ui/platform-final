@@ -902,7 +902,8 @@ namespace Platform.Betting.API.Repository
                         IsFreeBet = false,
                         BetTypeId = (int)betType,
                         BetTypeName = betType.ToString(),
-                        OddsRef = totalOddsRef
+                        OddsRef = totalOddsRef,
+                        IsAgent = request.IsAgent
                     }).Entity;
 
                     betData = betEntity;
@@ -955,7 +956,8 @@ namespace Platform.Betting.API.Repository
                         IsFreeBet = betEntity.IsFreeBet,
                         BetTypeId = betEntity.BetTypeId,
                         BetTypeName = betEntity.BetTypeName,
-                        OddsRef = betEntity.OddsRef
+                        OddsRef = betEntity.OddsRef,
+                        IsAgent = betEntity.IsAgent
                     });
 
                     foreach (var selection in request.Selections)

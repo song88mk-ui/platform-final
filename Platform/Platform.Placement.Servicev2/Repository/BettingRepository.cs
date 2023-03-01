@@ -30,7 +30,7 @@ namespace Platform.Placement.Servicev2.Repository
         }
         public void ProcesssBetPlacement(OnBetPlacement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
         {
-            //Console.WriteLine($"{DateTime.UtcNow} - BEG - {message.Bet.BetId.ToString().ToUpper()}");
+            //Console.WriteLine($"{DateTime.UtcNow} - BEG - {message.Bet.BetId.ToString().ToUpper()}"); //
 
             var payload = new OnBetPlacement();
             payload.IsBoosted = message.IsBoosted;
@@ -110,7 +110,8 @@ namespace Platform.Placement.Servicev2.Repository
                                     IsFreeBet = betEntity.IsFreeBet,
                                     BetTypeId = betEntity.BetTypeId,
                                     BetTypeName = betEntity.BetTypeName,
-                                    OddsRef = betEntity.OddsRef
+                                    OddsRef = betEntity.OddsRef,
+                                    IsAgent = betEntity.IsAgent
                                 });
 
                                 var betSelections = context.BetSelection.Where(c => c.BetId == betEntity.BetId).ToList();
@@ -291,7 +292,8 @@ namespace Platform.Placement.Servicev2.Repository
                                     IsFreeBet = betEntity.IsFreeBet,
                                     BetTypeId = betEntity.BetTypeId,
                                     BetTypeName = betEntity.BetTypeName,
-                                    OddsRef = betEntity.OddsRef
+                                    OddsRef = betEntity.OddsRef,
+                                    IsAgent = betEntity.IsAgent
                                 });
 
                                 var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
@@ -500,7 +502,8 @@ namespace Platform.Placement.Servicev2.Repository
                                 IsFreeBet = betEntity.IsFreeBet,
                                 BetTypeId = betEntity.BetTypeId,
                                 BetTypeName = betEntity.BetTypeName,
-                                OddsRef = betEntity.OddsRef
+                                OddsRef = betEntity.OddsRef,
+                                IsAgent = betEntity.IsAgent
                             });
 
                             var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();

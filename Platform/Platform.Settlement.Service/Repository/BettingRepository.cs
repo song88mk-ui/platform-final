@@ -631,6 +631,9 @@ namespace Platform.Settlement.Service.Repository
                 if (bet.IsResettled && isManualSettle == false)
                     return false;
 
+            if (bet.IsAgent)
+                return false;
+
             if (bet.BetStatusId == (int)BetStatus.CashedOut)
                 return false;
 

@@ -21,8 +21,9 @@ namespace Platform.Operator.API.Controllers
         {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var isAgent = HttpContext.Request.Headers["x-is-agent"].FirstOrDefault();
 
-            var result = await _operatorRepository.Authenticate(clientId, operatorToken);
+            var result = await _operatorRepository.Authenticate(clientId, operatorToken, isAgent);
 
             switch (result.StatusId)
             {
@@ -38,8 +39,9 @@ namespace Platform.Operator.API.Controllers
         {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var isAgent = HttpContext.Request.Headers["x-is-agent"].FirstOrDefault();
 
-            var result = await _operatorRepository.BetPlacement(request, clientId, operatorToken);
+            var result = await _operatorRepository.BetPlacement(request, clientId, operatorToken, isAgent);
 
             switch (result.StatusId)
             {
@@ -71,8 +73,9 @@ namespace Platform.Operator.API.Controllers
         {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var isAgent = HttpContext.Request.Headers["x-is-agent"].FirstOrDefault();
 
-            var result = await _operatorRepository.CashOutBet(request, clientId, operatorToken);
+            var result = await _operatorRepository.CashOutBet(request, clientId, operatorToken, isAgent);
 
             switch (result.StatusId)
             {

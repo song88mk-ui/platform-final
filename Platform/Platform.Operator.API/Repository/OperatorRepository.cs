@@ -15,9 +15,9 @@ namespace Platform.Operator.API.Repository
             _authRepository = authRepository;
             _walletRepository = walletRepository;
         }
-        public async Task<AuthResponseDTO> Authenticate(string clientId, string operatorToken)
+        public async Task<AuthResponseDTO> Authenticate(string clientId, string operatorToken, string isAgent)
         {
-            var authResponse = await _authRepository.Authenticate(operatorToken);
+            var authResponse = await _authRepository.Authenticate(operatorToken, isAgent);
 
             if (authResponse.StatusCode != Enums.AuthStatusCode.Success)
             {
@@ -126,9 +126,9 @@ namespace Platform.Operator.API.Repository
             }
         }
 
-        public async Task<BetPlacementResponseDTO> BetPlacement(OperatorBetRequestDTO request, string clientId, string operatorToken)
+        public async Task<BetPlacementResponseDTO> BetPlacement(OperatorBetRequestDTO request, string clientId, string operatorToken, string isAgent)
         {
-            var authResponse = await _authRepository.Authenticate(operatorToken);
+            var authResponse = await _authRepository.Authenticate(operatorToken, isAgent);
 
             if (authResponse.StatusCode != Enums.AuthStatusCode.Success)
             {
@@ -177,9 +177,9 @@ namespace Platform.Operator.API.Repository
                 Balance = betResponse.Balance
             };
         }
-        public async Task<BetSettlementResponseDTO> CashOutBet(OperatorBetSettlementRequestDTO request, string clientId, string operatorToken)
+        public async Task<BetSettlementResponseDTO> CashOutBet(OperatorBetSettlementRequestDTO request, string clientId, string operatorToken, string isAgent)
         {
-            var authResponse = await _authRepository.Authenticate(operatorToken);
+            var authResponse = await _authRepository.Authenticate(operatorToken, isAgent);
 
             if (authResponse.StatusCode != Enums.AuthStatusCode.Success)
             {

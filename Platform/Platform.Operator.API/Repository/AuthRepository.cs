@@ -23,7 +23,7 @@ namespace Platform.Operator.API.Repository
             _httpClient.DefaultRequestHeaders.Add("x-api-key", configuration["Custom:AuthAPIKey"]);
         }
 
-        public async Task<BaseResponse<AuthResponse>> Authenticate(string operatorToken)
+        public async Task<BaseResponse<AuthResponse>> Authenticate(string operatorToken, string isAgent)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
@@ -33,6 +33,19 @@ namespace Platform.Operator.API.Repository
                     Message = AuthStatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
                 };
             }
+
+            var isAgentTemp = false.ToString();
+
+            if (!string.IsNullOrEmpty(isAgent))
+                isAgentTemp = Convert.ToBoolean(isAgent).ToString();
+
+            if (_httpClient.DefaultRequestHeaders.Contains("x-is-agent"))
+            {
+                _httpClient.DefaultRequestHeaders.Remove("x-is-agent");
+                _httpClient.DefaultRequestHeaders.Add("x-is-agent", isAgentTemp);
+            }
+            else
+                _httpClient.DefaultRequestHeaders.Add("x-is-agent", isAgentTemp);
 
             if (_httpClient.DefaultRequestHeaders.Contains("x-operator-token"))
             {

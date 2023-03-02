@@ -5,6 +5,6 @@ namespace Platform.Operator.API.Repository
 {
     public interface IAuthRepository
     {
-        Task<BaseResponse<AuthResponse>> Authenticate(string operatorToken);
+        Task<BaseResponse<AuthResponse>> Authenticate(string operatorToken, string isAgent);
     }
 }

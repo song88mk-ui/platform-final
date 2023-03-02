@@ -21,7 +21,7 @@ namespace Platform.API.Repository
             _telemetryClient = telemetryClient;
             _httpClient.Timeout = TimeSpan.FromSeconds(2);
         }
-        public async Task<BaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string clientId, string operatorToken, string endpoint)
+        public async Task<BaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string clientId, string operatorToken, string endpoint, bool isAgent)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
@@ -33,6 +33,15 @@ namespace Platform.API.Repository
             }
 
             _httpClient.BaseAddress = new Uri(endpoint);
+
+            if (_httpClient.DefaultRequestHeaders.Contains("x-is-agent"))
+            {
+                _httpClient.DefaultRequestHeaders.Remove("x-is-agent");
+
+                _httpClient.DefaultRequestHeaders.Add("x-is-agent", isAgent.ToString());
+            }
+            else
+                _httpClient.DefaultRequestHeaders.Add("x-is-agent", isAgent.ToString());
 
             if (_httpClient.DefaultRequestHeaders.Contains("x-operator-token"))
             {

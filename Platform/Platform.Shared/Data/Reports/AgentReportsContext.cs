@@ -23,11 +23,11 @@ namespace Platform.Shared.Data.Reports
             modelBuilder.Entity<PartnerRevenueShare>().HasKey(k => new { k.Id }); ;
         }
 
-        public DbSet<Bet> BetFinal { get; set; }
+        public DbSet<Bet> Bet { get; set; }
         public DbSet<BetTransaction> BetTransaction { get; set; }
-        public DbSet<BetSelection> BetSelectionFinal { get; set; }
-        public DbSet<BetSelectionTransaction> BetSelectionTransactionFinal { get; set; }
-        public DbSet<WinLoss> WinLossFinal { get; set; }
+        public DbSet<BetSelection> BetSelection { get; set; }
+        public DbSet<BetSelectionTransaction> BetSelectionTransaction { get; set; }
+        public DbSet<WinLoss> WinLoss { get; set; }
         public DbSet<RunningBalance> RunningBalance { get; set; }
         public DbSet<RunningBalanceTransaction> RunningBalanceTransaction { get; set; }
         public DbSet<CashBalanceTracker> CashBalanceTracker { get; set; }

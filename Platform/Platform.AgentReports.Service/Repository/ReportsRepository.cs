@@ -43,10 +43,10 @@ namespace Platform.AgentReports.Service.Repository
                 {
                     foreach (var agent in agents)
                     {
-                        var bet = context.BetFinal.Find(agent.AgentId, message.Bet.BetId);
+                        var bet = context.Bet.Find(agent.AgentId, message.Bet.BetId);
 
                         if (bet == null)
-                            bet = context.BetFinal.Add(ConvertToBetEntityInsertFinal(message, agent, agents)).Entity;
+                            bet = context.Bet.Add(ConvertToBetEntityInsertFinal(message, agent, agents)).Entity;
                         else
                         {
                             bet.Payout = message.Bet.Payout;
@@ -55,17 +55,17 @@ namespace Platform.AgentReports.Service.Repository
                             bet.StatusName = message.Bet.BetStatusName;
                             bet.Reason = message.Bet.Reason;
                             bet.ReceivePositionTaking = GetReceivePTFinal(message, agent);
-                            context.BetFinal.Update(bet);
+                            context.Bet.Update(bet);
                         }
 
                         context.BetTransaction.Add(ConvertToBetTransactionEntityInsertFinal(message, agent));
 
                         foreach (var selection in message.BetSelections)
                         {
-                            var betSelection = context.BetSelectionFinal.Find(agent.AgentId, selection.BetId, selection.BetSelectionId);
+                            var betSelection = context.BetSelection.Find(agent.AgentId, selection.BetId, selection.BetSelectionId);
 
                             if (betSelection == null)
-                                context.BetSelectionFinal.Add(ConvertToBetSelectionEntityInsertFinal(selection, agent));
+                                context.BetSelection.Add(ConvertToBetSelectionEntityInsertFinal(selection, agent));
                             else
                             {
                                 betSelection.StatusId = selection.BetSelectionStatusId;
@@ -73,10 +73,10 @@ namespace Platform.AgentReports.Service.Repository
                                 betSelection.IsSettled = selection.IsSettled;
                                 betSelection.IsResettled = selection.IsResettled;
 
-                                context.BetSelectionFinal.Update(betSelection);
+                                context.BetSelection.Update(betSelection);
                             }
 
-                            context.BetSelectionTransactionFinal.Add(ConvertToBetSelectionTransactionEntityInsertFinal(selection, agent));
+                            context.BetSelectionTransaction.Add(ConvertToBetSelectionTransactionEntityInsertFinal(selection, agent));
                         }
 
                         AddOrUpdateRunningBalanceFinal(context, message, agent, 0, agents);
@@ -102,7 +102,7 @@ namespace Platform.AgentReports.Service.Repository
                 {
                     foreach (var agent in agents)
                     {
-                        var bet = context.BetFinal.Find(agent.AgentId, message.Bet.BetId);
+                        var bet = context.Bet.Find(agent.AgentId, message.Bet.BetId);
 
                         if (bet != null)
                         {
@@ -112,16 +112,16 @@ namespace Platform.AgentReports.Service.Repository
                             bet.StatusName = message.Bet.BetStatusName;
                             bet.Reason = message.Bet.Reason;
                             bet.ReceivePositionTaking = GetReceivePTFinal(message, agent);
-                            context.BetFinal.Update(bet);
+                            context.Bet.Update(bet);
 
                             context.BetTransaction.Add(ConvertToBetTransactionEntityInsertFinal(message, agent));
 
                             foreach (var selection in message.BetSelections)
                             {
-                                var betSelection = context.BetSelectionFinal.Find(agent.AgentId, selection.BetId, selection.BetSelectionId);
+                                var betSelection = context.BetSelection.Find(agent.AgentId, selection.BetId, selection.BetSelectionId);
 
                                 if (betSelection == null)
-                                    context.BetSelectionFinal.Add(ConvertToBetSelectionEntityInsertFinal(selection, agent));
+                                    context.BetSelection.Add(ConvertToBetSelectionEntityInsertFinal(selection, agent));
                                 else
                                 {
                                     betSelection.StatusId = selection.BetSelectionStatusId;
@@ -129,10 +129,10 @@ namespace Platform.AgentReports.Service.Repository
                                     betSelection.IsSettled = selection.IsSettled;
                                     betSelection.IsResettled = selection.IsResettled;
 
-                                    context.BetSelectionFinal.Update(betSelection);
+                                    context.BetSelection.Update(betSelection);
                                 }
 
-                                context.BetSelectionTransactionFinal.Add(ConvertToBetSelectionTransactionEntityInsertFinal(selection, agent));
+                                context.BetSelectionTransaction.Add(ConvertToBetSelectionTransactionEntityInsertFinal(selection, agent));
                             }
 
                             AddOrUpdateWinLossFinal(context, message, agent, agents, bet);
@@ -159,7 +159,7 @@ namespace Platform.AgentReports.Service.Repository
                 {
                     foreach (var agent in agents)
                     {
-                        var bet = context.BetFinal.Find(agent.AgentId, message.Bet.BetId);
+                        var bet = context.Bet.Find(agent.AgentId, message.Bet.BetId);
 
                         if (bet != null)
                         {
@@ -169,16 +169,16 @@ namespace Platform.AgentReports.Service.Repository
                             bet.StatusName = message.Bet.BetStatusName;
                             bet.Reason = message.Bet.Reason;
                             bet.ReceivePositionTaking = GetReceivePTFinal(message, agent);
-                            context.BetFinal.Update(bet);
+                            context.Bet.Update(bet);
 
                             context.BetTransaction.Add(ConvertToBetTransactionEntityInsertFinal(message, agent));
 
                             foreach (var selection in message.BetSelections)
                             {
-                                var betSelection = context.BetSelectionFinal.Find(agent.AgentId, selection.BetId, selection.BetSelectionId);
+                                var betSelection = context.BetSelection.Find(agent.AgentId, selection.BetId, selection.BetSelectionId);
 
                                 if (betSelection == null)
-                                    context.BetSelectionFinal.Add(ConvertToBetSelectionEntityInsertFinal(selection, agent));
+                                    context.BetSelection.Add(ConvertToBetSelectionEntityInsertFinal(selection, agent));
                                 else
                                 {
                                     betSelection.StatusId = selection.BetSelectionStatusId;
@@ -186,10 +186,10 @@ namespace Platform.AgentReports.Service.Repository
                                     betSelection.IsSettled = selection.IsSettled;
                                     betSelection.IsResettled = selection.IsResettled;
 
-                                    context.BetSelectionFinal.Update(betSelection);
+                                    context.BetSelection.Update(betSelection);
                                 }
 
-                                context.BetSelectionTransactionFinal.Add(ConvertToBetSelectionTransactionEntityInsertFinal(selection, agent));
+                                context.BetSelectionTransaction.Add(ConvertToBetSelectionTransactionEntityInsertFinal(selection, agent));
                             }
 
                             AddOrUpdateWinLossFinal(context, message, agent, agents, bet);
@@ -216,7 +216,7 @@ namespace Platform.AgentReports.Service.Repository
                 {
                     foreach (var agent in agents)
                     {
-                        var bet = context.BetFinal.Find(agent.AgentId, message.Bet.BetId);
+                        var bet = context.Bet.Find(agent.AgentId, message.Bet.BetId);
 
                         if (bet != null)
                         {
@@ -226,16 +226,16 @@ namespace Platform.AgentReports.Service.Repository
                             bet.StatusName = message.Bet.BetStatusName;
                             bet.Reason = message.Bet.Reason;
                             bet.ReceivePositionTaking = GetReceivePTFinal(message, agent);
-                            context.BetFinal.Update(bet);
+                            context.Bet.Update(bet);
 
                             context.BetTransaction.Add(ConvertToBetTransactionEntityInsertFinal(message, agent));
 
                             foreach (var selection in message.BetSelections)
                             {
-                                var betSelection = context.BetSelectionFinal.Find(agent.AgentId, selection.BetId, selection.BetSelectionId);
+                                var betSelection = context.BetSelection.Find(agent.AgentId, selection.BetId, selection.BetSelectionId);
 
                                 if (betSelection == null)
-                                    context.BetSelectionFinal.Add(ConvertToBetSelectionEntityInsertFinal(selection, agent));
+                                    context.BetSelection.Add(ConvertToBetSelectionEntityInsertFinal(selection, agent));
                                 else
                                 {
                                     betSelection.StatusId = selection.BetSelectionStatusId;
@@ -243,10 +243,10 @@ namespace Platform.AgentReports.Service.Repository
                                     betSelection.IsSettled = selection.IsSettled;
                                     betSelection.IsResettled = selection.IsResettled;
 
-                                    context.BetSelectionFinal.Update(betSelection);
+                                    context.BetSelection.Update(betSelection);
                                 }
 
-                                context.BetSelectionTransactionFinal.Add(ConvertToBetSelectionTransactionEntityInsertFinal(selection, agent));
+                                context.BetSelectionTransaction.Add(ConvertToBetSelectionTransactionEntityInsertFinal(selection, agent));
                             }
 
                             AddOrUpdateWinLossFinal(context, message, agent, agents, bet);
@@ -858,7 +858,7 @@ namespace Platform.AgentReports.Service.Repository
                     downlineWLC = tempDownlineWLC;
                 }
 
-                var winloss = context.WinLossFinal.Where(x => x.ParentUserId == parentUserId && x.DirectUserId == directUserId
+                var winloss = context.WinLoss.Where(x => x.ParentUserId == parentUserId && x.DirectUserId == directUserId
                 && x.IndirectUserId == indirectUserId && x.BetId == betEntity.BetId && x.TransactionDate == betEntity.TransactionDate).SingleOrDefault();
 
                 if (winloss != null)
@@ -924,7 +924,7 @@ namespace Platform.AgentReports.Service.Repository
                     winloss.GGR = message.Bet.BetStatusId == (int)BetStatus.Cancelled || message.Bet.BetStatusId == (int)BetStatus.Void ? 0 : (message.Bet.TrueStake - message.Bet.Payout);
                 }
                 else
-                    context.WinLossFinal.Add(new WinLoss
+                    context.WinLoss.Add(new WinLoss
                     {
                         ParentUserId = parentUserId,
                         DirectUserId = directUserId,

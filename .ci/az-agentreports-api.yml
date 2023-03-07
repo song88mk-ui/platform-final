@@ -11,7 +11,6 @@ trigger:
     include:
       - Platform/Platform.AgentReports.API
 
-
 resources:
   repositories:
     - repository: bt
@@ -28,6 +27,5 @@ resources:
 extends:
   template: dotnetservice.yml@bt
   parameters:
-    runtime: win-x64
     projects:
       - Platform/Platform.AgentReports.API

@@ -42,6 +42,7 @@ namespace Platform.AgentReports.API
             });
 
             services.AddControllers();
+            services.AddHttpClient();
 
             var connectionString = Configuration["ConnectionStrings:AgentReports"];
             services.AddDbContext<AgentReportsContext>(o => o.UseSqlServer(connectionString));

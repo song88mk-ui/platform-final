@@ -16,21 +16,21 @@ namespace Platform.Shared.Data.Reports
             modelBuilder.Entity<BetSelectionTransactionFinal>().HasKey(k => new { k.Id });
             modelBuilder.Entity<WinLossFinal>().HasKey(k => new { k.ParentUserId, k.DirectUserId, k.IndirectUserId, k.TransactionDate, k.BetId });
 
-            modelBuilder.Entity<BetTransaction>().HasKey(k => new { k.Id });
-            modelBuilder.Entity<RunningBalance>().HasKey(k => new { k.ParentUserId, k.UserId });
-            modelBuilder.Entity<RunningBalanceTransaction>().HasKey(k => new { k.Id });
-            modelBuilder.Entity<CashBalanceTracker>().HasKey(k => new { k.ParentUserId, k.UserId, k.BetId });
-            modelBuilder.Entity<PartnerRevenueShare>().HasKey(k => new { k.Id }); ;
+            modelBuilder.Entity<BetTransactionFinal>().HasKey(k => new { k.Id });
+            modelBuilder.Entity<RunningBalanceFinal>().HasKey(k => new { k.ParentUserId, k.UserId });
+            modelBuilder.Entity<RunningBalanceTransactionFinal>().HasKey(k => new { k.Id });
+            modelBuilder.Entity<CashBalanceTrackerFinal>().HasKey(k => new { k.ParentUserId, k.UserId, k.BetId });
+            modelBuilder.Entity<PartnerRevenueShareFinal>().HasKey(k => new { k.Id }); ;
         }
 
         public DbSet<BetFinal> BetFinal { get; set; }
-        public DbSet<BetTransaction> BetTransaction { get; set; }
+        public DbSet<BetTransactionFinal> BetTransaction { get; set; }
         public DbSet<BetSelectionFinal> BetSelectionFinal { get; set; }
         public DbSet<BetSelectionTransactionFinal> BetSelectionTransactionFinal { get; set; }
         public DbSet<WinLossFinal> WinLossFinal { get; set; }
-        public DbSet<RunningBalance> RunningBalance { get; set; }
-        public DbSet<RunningBalanceTransaction> RunningBalanceTransaction { get; set; }
-        public DbSet<CashBalanceTracker> CashBalanceTracker { get; set; }
-        public DbSet<PartnerRevenueShare> PartnerRevenueShare { get; set; }
+        public DbSet<RunningBalanceFinal> RunningBalance { get; set; }
+        public DbSet<RunningBalanceTransactionFinal> RunningBalanceTransaction { get; set; }
+        public DbSet<CashBalanceTrackerFinal> CashBalanceTracker { get; set; }
+        public DbSet<PartnerRevenueShareFinal> PartnerRevenueShare { get; set; }
     }
 }

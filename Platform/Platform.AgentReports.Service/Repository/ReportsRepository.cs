@@ -427,9 +427,9 @@ namespace Platform.AgentReports.Service.Repository
 
             return result;
         }
-        private BetTransaction ConvertToBetTransactionEntityInsertFinal(OnBetPlacement message, AgentSettings agent)
+        private BetTransactionFinal ConvertToBetTransactionEntityInsertFinal(OnBetPlacement message, AgentSettings agent)
         {
-            return new BetTransaction
+            return new BetTransactionFinal
             {
                 ParentUserId = agent.AgentId,
                 BetId = message.Bet.BetId,
@@ -535,7 +535,7 @@ namespace Platform.AgentReports.Service.Repository
             if (message.Bet.BetStatusId != (int)BetStatus.Running) return;
             if (agent.UserType == UserType.Company) return;
 
-            var runningBalanceEntity = new RunningBalance();
+            var runningBalanceEntity = new RunningBalanceFinal();
 
             var runningBalance = context.RunningBalance.Find(agent.UplineUserId, agent.AgentId);
 
@@ -553,7 +553,7 @@ namespace Platform.AgentReports.Service.Repository
             {
                 outstandingBalance = agent.UserType == UserType.Player ? message.Bet.TrueStake : message.Bet.TrueStake * uplinePT;
 
-                runningBalanceEntity = context.RunningBalance.Add(new RunningBalance
+                runningBalanceEntity = context.RunningBalance.Add(new RunningBalanceFinal
                 {
                     ParentUserId = agent.UplineUserId,
                     CurrencyCode = message.Bet.CurrencyCode,
@@ -585,7 +585,7 @@ namespace Platform.AgentReports.Service.Repository
                         else
                             stakeDeducted = Math.Abs(runningBalance.TrueCashBalance);
 
-                        context.CashBalanceTracker.Add(new CashBalanceTracker
+                        context.CashBalanceTracker.Add(new CashBalanceTrackerFinal
                         {
                             ParentUserId = agent.UplineUserId,
                             UserId = agent.AgentId,
@@ -609,7 +609,7 @@ namespace Platform.AgentReports.Service.Repository
                 runningBalanceEntity = context.RunningBalance.Update(runningBalance).Entity;
             }
 
-            context.RunningBalanceTransaction.Add(new RunningBalanceTransaction
+            context.RunningBalanceTransaction.Add(new RunningBalanceTransactionFinal
             {
                 ParentUserId = runningBalanceEntity.ParentUserId,
                 UserId = runningBalanceEntity.UserId,
@@ -741,9 +741,9 @@ namespace Platform.AgentReports.Service.Repository
 
             return result;
         }
-        private BetTransaction ConvertToBetTransactionEntityInsertFinal(OnBetSettlement message, AgentSettings agent)
+        private BetTransactionFinal ConvertToBetTransactionEntityInsertFinal(OnBetSettlement message, AgentSettings agent)
         {
-            return new BetTransaction
+            return new BetTransactionFinal
             {
                 ParentUserId = agent.AgentId,
                 BetId = message.Bet.BetId,
@@ -1124,7 +1124,7 @@ namespace Platform.AgentReports.Service.Repository
 
                 var entity = context.RunningBalance.Update(runningBalance).Entity;
 
-                context.RunningBalanceTransaction.Add(new RunningBalanceTransaction
+                context.RunningBalanceTransaction.Add(new RunningBalanceTransactionFinal
                 {
                     ParentUserId = entity.ParentUserId,
                     UserId = entity.UserId,

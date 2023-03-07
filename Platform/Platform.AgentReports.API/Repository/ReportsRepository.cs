@@ -249,7 +249,7 @@ namespace Platform.AgentReports.API.Repository
                     PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
                     PageSize = request.PageSize,
                     RowCount = (int)rowCount,
-                    Bets = new List<OutstandingBetResponse.Bet>()
+                    Bets = result
                 }
             };
         }

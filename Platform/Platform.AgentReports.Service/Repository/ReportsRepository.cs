@@ -328,11 +328,11 @@ namespace Platform.AgentReports.Service.Repository
 
             return agents;
         }
-        private BetFinal ConvertToBetEntityInsertFinal(OnBetPlacement message, AgentSettings agent, List<AgentSettings> agents)
+        private Shared.Data.Reports.Entities.Bet ConvertToBetEntityInsertFinal(OnBetPlacement message, AgentSettings agent, List<AgentSettings> agents)
         {
             var agentId = agents.Where(c => c.UserType == UserType.Player).Select(s => s.UplineUserId).FirstOrDefault();
 
-            return new BetFinal
+            return new Shared.Data.Reports.Entities.Bet
             {
                 ParentUserId = agent.AgentId,
                 BetId = message.Bet.BetId,
@@ -429,9 +429,9 @@ namespace Platform.AgentReports.Service.Repository
 
             return result;
         }
-        private BetTransactionFinal ConvertToBetTransactionEntityInsertFinal(OnBetPlacement message, AgentSettings agent)
+        private BetTransaction ConvertToBetTransactionEntityInsertFinal(OnBetPlacement message, AgentSettings agent)
         {
-            return new BetTransactionFinal
+            return new BetTransaction
             {
                 ParentUserId = agent.AgentId,
                 BetId = message.Bet.BetId,
@@ -458,9 +458,9 @@ namespace Platform.AgentReports.Service.Repository
                 TransactionDateOffset = message.Bet.BetDate.AddHours(-4)
             };
         }
-        private BetSelectionFinal ConvertToBetSelectionEntityInsertFinal(BetSelection betSelection, AgentSettings agent)
+        private Shared.Data.Reports.Entities.BetSelection ConvertToBetSelectionEntityInsertFinal(Shared.Data.Betting.Entities.BetSelection betSelection, AgentSettings agent)
         {
-            return new BetSelectionFinal
+            return new Shared.Data.Reports.Entities.BetSelection
             {
                 ParentUserId = agent.AgentId,
                 BetId = betSelection.BetId,
@@ -495,9 +495,9 @@ namespace Platform.AgentReports.Service.Repository
                 Score = betSelection.BetScore
             };
         }
-        private BetSelectionTransactionFinal ConvertToBetSelectionTransactionEntityInsertFinal(BetSelection betSelection, AgentSettings agent)
+        private BetSelectionTransaction ConvertToBetSelectionTransactionEntityInsertFinal(Shared.Data.Betting.Entities.BetSelection betSelection, AgentSettings agent)
         {
-            return new BetSelectionTransactionFinal
+            return new BetSelectionTransaction
             {
                 ParentUserId = agent.AgentId,
                 BetId = betSelection.BetId,
@@ -537,7 +537,7 @@ namespace Platform.AgentReports.Service.Repository
             if (message.Bet.BetStatusId != (int)BetStatus.Running) return;
             if (agent.UserType == UserType.Company) return;
 
-            var runningBalanceEntity = new RunningBalanceFinal();
+            var runningBalanceEntity = new RunningBalance();
 
             var runningBalance = context.RunningBalance.Find(agent.UplineUserId, agent.AgentId);
 
@@ -555,7 +555,7 @@ namespace Platform.AgentReports.Service.Repository
             {
                 outstandingBalance = agent.UserType == UserType.Player ? message.Bet.TrueStake : message.Bet.TrueStake * uplinePT;
 
-                runningBalanceEntity = context.RunningBalance.Add(new RunningBalanceFinal
+                runningBalanceEntity = context.RunningBalance.Add(new RunningBalance
                 {
                     ParentUserId = agent.UplineUserId,
                     CurrencyCode = message.Bet.CurrencyCode,
@@ -587,7 +587,7 @@ namespace Platform.AgentReports.Service.Repository
                         else
                             stakeDeducted = Math.Abs(runningBalance.TrueCashBalance);
 
-                        context.CashBalanceTracker.Add(new CashBalanceTrackerFinal
+                        context.CashBalanceTracker.Add(new CashBalanceTracker
                         {
                             ParentUserId = agent.UplineUserId,
                             UserId = agent.AgentId,
@@ -611,7 +611,7 @@ namespace Platform.AgentReports.Service.Repository
                 runningBalanceEntity = context.RunningBalance.Update(runningBalance).Entity;
             }
 
-            context.RunningBalanceTransaction.Add(new RunningBalanceTransactionFinal
+            context.RunningBalanceTransaction.Add(new RunningBalanceTransaction
             {
                 ParentUserId = runningBalanceEntity.ParentUserId,
                 UserId = runningBalanceEntity.UserId,
@@ -745,9 +745,9 @@ namespace Platform.AgentReports.Service.Repository
 
             return result;
         }
-        private BetTransactionFinal ConvertToBetTransactionEntityInsertFinal(OnBetSettlement message, AgentSettings agent)
+        private BetTransaction ConvertToBetTransactionEntityInsertFinal(OnBetSettlement message, AgentSettings agent)
         {
-            return new BetTransactionFinal
+            return new BetTransaction
             {
                 ParentUserId = agent.AgentId,
                 BetId = message.Bet.BetId,
@@ -774,7 +774,7 @@ namespace Platform.AgentReports.Service.Repository
                 TransactionDateOffset = message.Bet.BetDate.AddHours(-4)
             };
         }
-        private void AddOrUpdateWinLossFinal(AgentReportsContext context, OnBetSettlement message, AgentSettings agent, List<AgentSettings> agents, BetFinal betEntity)
+        private void AddOrUpdateWinLossFinal(AgentReportsContext context, OnBetSettlement message, AgentSettings agent, List<AgentSettings> agents, Shared.Data.Reports.Entities.Bet betEntity)
         {
             if (message.Bet.BetStatusId == (int)BetStatus.Running) return;
 
@@ -924,7 +924,7 @@ namespace Platform.AgentReports.Service.Repository
                     winloss.GGR = message.Bet.BetStatusId == (int)BetStatus.Cancelled || message.Bet.BetStatusId == (int)BetStatus.Void ? 0 : (message.Bet.TrueStake - message.Bet.Payout);
                 }
                 else
-                    context.WinLossFinal.Add(new WinLossFinal
+                    context.WinLossFinal.Add(new WinLoss
                     {
                         ParentUserId = parentUserId,
                         DirectUserId = directUserId,
@@ -1001,7 +1001,7 @@ namespace Platform.AgentReports.Service.Repository
                     });
             }
         }
-        private bool HasHalfSettlementFinal(List<BetSelection> selections)
+        private bool HasHalfSettlementFinal(List<Shared.Data.Betting.Entities.BetSelection> selections)
         {
             var halfSettlements = new List<int> { (int)BetStatus.HalfWon, (int)BetStatus.HalfLost };
 
@@ -1128,7 +1128,7 @@ namespace Platform.AgentReports.Service.Repository
 
                 var entity = context.RunningBalance.Update(runningBalance).Entity;
 
-                context.RunningBalanceTransaction.Add(new RunningBalanceTransactionFinal
+                context.RunningBalanceTransaction.Add(new RunningBalanceTransaction
                 {
                     ParentUserId = entity.ParentUserId,
                     UserId = entity.UserId,

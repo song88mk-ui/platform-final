@@ -2,7 +2,7 @@
 
 namespace Platform.Shared.Data.Reports.Entities
 {
-    public class CashBalanceTrackerFinal
+    public class CashBalanceTracker
     {
         public long ParentUserId { get; set; }
 

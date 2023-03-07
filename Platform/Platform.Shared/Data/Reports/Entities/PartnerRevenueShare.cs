@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Platform.Shared.Data.Reports.Entities
 {
-    public class PartnerRevenueShareFinal
+    public class PartnerRevenueShare
     {
         [Key]
         public long Id { get; set; }

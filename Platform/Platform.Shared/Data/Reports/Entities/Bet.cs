@@ -2,7 +2,7 @@
 
 namespace Platform.Shared.Data.Reports.Entities
 {
-    public class BetFinal
+    public class Bet
     {
         public long ParentUserId { get; set; }
 

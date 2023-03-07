@@ -2,7 +2,7 @@
 
 namespace Platform.Shared.Data.Reports.Entities
 {
-    public class RunningBalanceTransactionFinal
+    public class RunningBalanceTransaction
     {
         public long Id { get; set; }
 

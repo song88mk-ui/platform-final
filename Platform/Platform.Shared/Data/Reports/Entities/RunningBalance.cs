@@ -1,6 +1,6 @@
 ﻿namespace Platform.Shared.Data.Reports.Entities
 {
-    public class RunningBalanceFinal
+    public class RunningBalance
     {
         public long ParentUserId { get; set; }
 

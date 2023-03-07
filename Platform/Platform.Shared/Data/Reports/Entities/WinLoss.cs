@@ -2,7 +2,7 @@
 
 namespace Platform.Shared.Data.Reports.Entities
 {
-    public class WinLossFinal
+    public class WinLoss
     {
         public long ParentUserId { get; set; }
 

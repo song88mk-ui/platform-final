@@ -8,15 +8,15 @@ namespace Platform.AgentReports.API.Controllers
     [ApiController, EnableCors("AllowAllOrigins")]
     public class ReportsController : ControllerBase
     {
-        private readonly IAgentsReportsRepository _agentsReportsRepository;
+        private readonly IReportsRepository _agentsReportsRepository;
 
-        public ReportsController(IAgentsReportsRepository agentsReportsRepository)
+        public ReportsController(IReportsRepository agentsReportsRepository)
         {
             _agentsReportsRepository = agentsReportsRepository;
         }
 
-        [HttpGet("v1/reports/get")]
-        public async Task<IActionResult> Get()
+        [HttpPost("v1/reports/allbets")]
+        public async Task<IActionResult> GetAllBets()
         {            
             return Ok();
         }

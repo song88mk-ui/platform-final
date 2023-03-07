@@ -41,7 +41,7 @@ namespace Platform.AgentReports.API
 
             services.AddControllers();
 
-            services.AddScoped<IAgentsReportsRepository, AgentsReportsRepository>();
+            services.AddScoped<IReportsRepository, ReportsRepository>();
 
             services.AddSwaggerGen(c =>
             {

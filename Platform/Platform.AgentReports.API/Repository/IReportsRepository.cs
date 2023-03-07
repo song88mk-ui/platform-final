@@ -1,6 +1,6 @@
 ﻿namespace Platform.AgentReports.API.Repository
 {
-    public interface IAgentsReportsRepository
+    public interface IReportsRepository
     {
 
     }

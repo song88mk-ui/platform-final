@@ -1,6 +1,6 @@
 ﻿namespace Platform.AgentReports.API.Repository
 {
-    public class AgentsReportsRepository : IAgentsReportsRepository
+    public class ReportsRepository : IReportsRepository
     {
         #region Properties
         #endregion
@@ -9,7 +9,7 @@
         #endregion
 
         #region CTOR
-        public AgentsReportsRepository() 
+        public ReportsRepository() 
         {
 
         }

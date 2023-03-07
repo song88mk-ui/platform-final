@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Platform.AgentReports.API.Repository;
 
 namespace Platform.AgentReports.API
 {
@@ -39,6 +40,8 @@ namespace Platform.AgentReports.API
             });
 
             services.AddControllers();
+
+            services.AddScoped<IAgentsReportsRepository, AgentsReportsRepository>();
 
             services.AddSwaggerGen(c =>
             {

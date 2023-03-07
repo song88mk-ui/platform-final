@@ -13,9 +13,5 @@
     <ProjectReference Include="..\Platform.Shared\Platform.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Models\Request\" />
-  </ItemGroup>
-
 
 </Project>

@@ -298,6 +298,8 @@ namespace Platform.AgentReports.Service.Repository
             var url = $"{_agentUrl}/api/v3/ptc2/{message.Bet.UserId}/{categoryId}/{subCategoryId}/{betSelectionCount}?transactionDate={message.Bet.BetDate.ToString("s")}";
             using (var httpClient = new HttpClient())
             {
+                httpClient.BaseAddress = new Uri(url);
+
                 var request = new HttpRequestMessage(HttpMethod.Get, url);
                 var response = httpClient.SendAsync(request).Result;
 
@@ -677,6 +679,8 @@ namespace Platform.AgentReports.Service.Repository
             var url = $"{_agentUrl}/api/v3/ptc2/{message.Bet.UserId}/{categoryId}/{subCategoryId}/{betSelectionCount}?transactionDate={message.Bet.BetDate.ToString("s")}";
             using (var httpClient = new HttpClient())
             {
+                httpClient.BaseAddress = new Uri(url);
+
                 var request = new HttpRequestMessage(HttpMethod.Get, url);
                 var response = httpClient.SendAsync(request).Result;
 

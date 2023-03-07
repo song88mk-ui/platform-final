@@ -178,21 +178,149 @@ namespace Platform.AgentReports.API.Repository
             };
         }
 
-        #endregion
-
-        #region Utilities
-
-        private string GetMarketTemplateGroupName(string marketTemplateGroupId)
+        public async Task<BaseResponseDTO<OutstandingBetResponseDTO>> GetParlayBets(SearchBetRequest request)
         {
-            switch (marketTemplateGroupId)
+            var skip = (request.Page - 1) * request.PageSize;
+            var rowCount = (double)0;
+            var result = new List<OutstandingBetResponseDTO.Bet>();
+            var totalReceive = 0m;
+            var totalStake = 0m;
+
+            var query = _context.Bet.Where(c => c.ParentUserId == request.AgentId && c.StatusId == (int)BetStatus.Running && c.Count > 1);
+
+            if (!query.Any())
             {
-                case "1":
-                    return "Full Time";
-                case "2":
-                    return "Half Time";
-                default:
-                    return "Others";
+                return new BaseResponseDTO<OutstandingBetResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new OutstandingBetResponseDTO
+                    {
+                        CurrentPage = request.Page,
+                        PageCount = (int)Math.Ceiling((double)rowCount / request.PageSize),
+                        PageSize = request.PageSize,
+                        RowCount = (int)rowCount,
+                        Bets = new List<OutstandingBetResponseDTO.Bet>()
+                    }
+                };
             }
+
+            rowCount = query.Count();
+
+            var bets = query.OrderByDescending(o => o.TransactionDate)
+                .Skip(skip).Take(request.PageSize)
+                .Select(s => new
+                {
+                    BetId = s.BetId,
+                    Stake = s.Stake,
+                    PositionTaking = s.PositionTaking,
+                    TrueStake = s.TrueStake,
+                    TransactionDate = s.TransactionDate,
+                    ParentUserId = s.ParentUserId,
+                    UserId = s.UserId,
+                    Username = s.Username,
+                    Commission = s.Commission,
+                    Odds = s.Odds,
+                    OddsTypeId = s.OddsTypeId,
+                    OddsTypeName = s.OddsTypeName,
+                    Payout = s.Payout,
+                    WinLoss = s.WinLoss,
+                    StatusId = s.StatusId,
+                    StatusName = s.StatusName,
+                    Reason = s.Reason,
+                    CurrencyCode = s.CurrencyCode,
+                    IPAddress = s.IPAddress,
+                    MarketName = s.MarketName,
+                    MarketTemplateId = s.MarketTemplateId,
+                    MarketTypeId = s.MarketTypeId
+                }).ToList();
+
+            totalReceive = query.Sum(s => s.ReceivePositionTaking);
+            totalStake = query.Sum(s => s.Stake);
+
+            var betIds = bets.Select(s => s.BetId).Distinct().ToList();
+            var betSelections = _context.BetSelection.Where(c => c.ParentUserId == request.AgentId && betIds.Contains(c.BetId)).ToList();
+
+            foreach (var bet in bets)
+            {
+                var selections = betSelections.Where(c => c.BetId == bet.BetId).Select(s => new OutstandingBetResponseDTO.BetSelection
+                {
+                    ParentUserId = s.ParentUserId,
+                    BetId = s.BetId,
+                    BetSelectionId = s.BetSelectionId,
+                    UserId = s.UserId,
+                    SportId = s.SportId,
+                    SportName = s.SportName,
+                    SegmentId = s.SegmentId,
+                    SegmentName = s.SegmentName,
+                    LeagueId = s.LeagueId,
+                    LeagueName = string.IsNullOrEmpty(s.LeagueName) ? s.SegmentName : s.LeagueName,
+                    FixtureId = s.FixtureId,
+                    FixtureName = s.FixtureName,
+                    MarketId = s.MarketId,
+                    MarketName = s.MarketName,
+                    SelectionId = s.SelectionId,
+                    SelectionName = s.SelectionName,
+                    FixtureStatusId = s.FixtureStatusId,
+                    FixtureStatusName = s.FixtureStatusName,
+                    Line = s.Line,
+                    Odds = s.Odds,
+                    StatusId = s.StatusId,
+                    StatusName = s.StatusName,
+                    IsSettled = s.IsSettled,
+                    IsResettled = s.IsResettled,
+                    FixtureStartDate = s.FixtureStartDate,
+                    MarketTemplateGroupId = s.MarketTemplateGroupId,
+                    MarketTemplateGroupName = GetMarketTemplateGroupName(s.MarketTemplateGroupId),
+                    MarketTemplateId = s.MarketTemplateId,
+                    SelectionTemplateId = s.SelectionTemplateId,
+                    Score = s.Score
+                }).ToList();
+
+                var fixtureName = selections.Select(s => s.FixtureName).FirstOrDefault();
+
+                result.Add(new OutstandingBetResponseDTO.Bet
+                {
+                    ParentUserId = bet.ParentUserId,
+                    BetId = bet.BetId,
+                    UserId = bet.UserId,
+                    Username = bet.Username,
+                    PositionTaking = bet.PositionTaking,
+                    Commission = bet.Commission,
+                    Stake = bet.Stake,
+                    TrueStake = bet.TrueStake,
+                    Odds = bet.Odds,
+                    OddsTypeId = bet.OddsTypeId,
+                    OddsTypeName = bet.OddsTypeName,
+                    Payout = bet.Payout,
+                    WinLoss = bet.WinLoss,
+                    StatusId = bet.StatusId,
+                    StatusName = bet.StatusName,
+                    Reason = bet.Reason,
+                    CurrencyCode = bet.CurrencyCode,
+                    IPAddress = bet.IPAddress,
+                    TransactionDate = bet.TransactionDate,
+                    FixtureName = fixtureName,
+                    Receive = bet.Stake * bet.PositionTaking,
+                    BetSelections = selections
+                });
+            }
+
+            return new BaseResponseDTO<OutstandingBetResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new OutstandingBetResponseDTO
+                {
+                    CurrentPage = request.Page,
+                    PageCount = (int)Math.Ceiling((double)rowCount / request.PageSize),
+                    PageSize = request.PageSize,
+                    RowCount = (int)rowCount,
+                    TotalReceive = totalReceive,
+                    TotalStake = totalStake,
+                    Bets = result
+                }
+            };
         }
         public async Task<BaseResponseDTO<OutstandingBetFixtureResponseDTO>> GetOutstandingBetFixtures(long agentId, int page, int pageSize, CurrencyCode currency)
         {
@@ -479,6 +607,7 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
+
         public BaseResponseDTO<WinLossDetailsResponse> GetProfitLossDetailsV2(long parentAgentId, long directUserId, ProfitLossRequest request)
         {
             #region W/O BACK AND LAY
@@ -1221,6 +1350,7 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
+
         public BaseResponseDTO<WinLossDetailsResponse> GetProfitLossDetails(long parentAgentId, long directUserId, string product, DateTime fromDate, DateTime toDate, int page, int pageSize, string currency, string status, string dateFilter)
         {
             #region W/ BACK AND LAY
@@ -2032,9 +2162,23 @@ namespace Platform.AgentReports.API.Repository
                 }
             };
         }
+
         #endregion
 
         #region Utilities
+
+        private string GetMarketTemplateGroupName(string marketTemplateGroupId)
+        {
+            switch (marketTemplateGroupId)
+            {
+                case "1":
+                    return "Full Time";
+                case "2":
+                    return "Half Time";
+                default:
+                    return "Others";
+            }
+        }
 
         private IQueryable<WinLoss> GetProfitLossAggregateQueryable(long parentUserId, DateTime fromDate, DateTime toDate, string[] currencies, string dateFilter, List<int> productTypes)
         {
@@ -2080,6 +2224,7 @@ namespace Platform.AgentReports.API.Repository
 
             return result;
         }
+
         private IQueryable<WinLoss> GetProfitLossAggregateQueryable2(long parentUserId, ProfitLossRequest request)
         {
 
@@ -2205,6 +2350,7 @@ namespace Platform.AgentReports.API.Repository
 
             return result;
         }
+
         private List<Tuple<long, int>> GetDistinctMembers(DateTime fromDate, DateTime toDate, string[] currencies, string dateFilter, List<int> productTypes)
         {
             var result = new List<Tuple<long, int>>();
@@ -2249,6 +2395,7 @@ namespace Platform.AgentReports.API.Repository
 
             return result;
         }
+
         private List<Tuple<long, int>> GetDistinctMembers2(WinLossAccountRequest request)
         {
             var result = new List<Tuple<long, int>>();
@@ -2329,6 +2476,7 @@ namespace Platform.AgentReports.API.Repository
 
             return result;
         }
+
         private List<Tuple<long, int>> GetDistinctMembers2(ProfitLossRequest request)
         {
             var productTypes = request.Product.Split(',').Select(int.Parse).ToList();
@@ -2408,6 +2556,7 @@ namespace Platform.AgentReports.API.Repository
 
             return result;
         }
+
         private IQueryable<WinLoss> GetProfitLossAggregateQueryableParentUserIdAndDirectUserId(long parentUserId, long directUserId, DateTime fromDate, DateTime toDate, string[] currencies, string dateFilter, List<int> productTypes)
         {
             IQueryable<WinLoss> result;
@@ -2449,6 +2598,7 @@ namespace Platform.AgentReports.API.Repository
 
             return result;
         }
+
         private IQueryable<WinLoss> GetProfitLossAggregateQueryableParentUserIdAndDirectUserId2(long parentUserId, long directUserId, ProfitLossRequest request)
         {
             var productTypes = request.Product.Split(',').Select(int.Parse).ToList();
@@ -2582,6 +2732,7 @@ namespace Platform.AgentReports.API.Repository
             return obj;
 
         }
+
         private string GetScore(int scope, Guid betId)
         {
             var score = "0 - 0";
@@ -2752,6 +2903,7 @@ namespace Platform.AgentReports.API.Repository
 
             return result;
         }
+
         #endregion
     }
 }

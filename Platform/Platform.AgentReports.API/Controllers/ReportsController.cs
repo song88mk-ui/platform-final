@@ -4,7 +4,6 @@ using Platform.AgentReports.API.Models;
 using Platform.AgentReports.API.Models.Request;
 using Platform.AgentReports.API.Repository;
 using Platform.Shared.Enums;
-using System;
 using System.Threading.Tasks;
 
 namespace Platform.AgentReports.API.Controllers
@@ -23,6 +22,20 @@ namespace Platform.AgentReports.API.Controllers
         public async Task<IActionResult> GetAllBets([FromBody] SearchBetRequest request)
         {
             var result = await _reportsRepository.GetAllBets(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/reports/parlaybets")]
+        public async Task<IActionResult> GetParlayBets([FromBody] SearchBetRequest request)
+        {
+            var result = await _reportsRepository.GetParlayBets(request);
 
             switch (result.StatusCode)
             {
@@ -53,8 +66,6 @@ namespace Platform.AgentReports.API.Controllers
             }
         }
 
-        #region Profit Loss
-
         [HttpPost("v2/reports/profitloss/{agentId}")]
         public IActionResult GetProfitLossV2(long agentId, [FromBody] ProfitLossRequest request)
         {
@@ -72,8 +83,6 @@ namespace Platform.AgentReports.API.Controllers
         {
             return Ok(_reportsRepository.GetProfitLossDetailsV2(agentId, directUserId, request));
         }
-        #endregion
-        #region GGR
 
         [HttpPost("v2/reports/ggr/{agentId}/{directAgentId}")]
         public IActionResult GetGGRV2(long agentId, long directAgentId, [FromBody] WinLossAccountRequestExtendedDTO request)
@@ -86,6 +95,5 @@ namespace Platform.AgentReports.API.Controllers
         {
             return Ok(_reportsRepository.GetGGRDetailsV2(agentId, playerId, request));
         }
-        #endregion
     }
 }

@@ -4,6 +4,7 @@ using Platform.AgentReports.API.Models;
 using Platform.AgentReports.API.Models.Request;
 using Platform.AgentReports.API.Repository;
 using Platform.Shared.Enums;
+using System;
 using System.Threading.Tasks;
 
 namespace Platform.AgentReports.API.Controllers
@@ -19,9 +20,17 @@ namespace Platform.AgentReports.API.Controllers
         }
 
         [HttpPost("v1/reports/allbets")]
-        public async Task<IActionResult> GetAllBets()
-        {            
-            return Ok();
+        public async Task<IActionResult> GetAllBets([FromBody] SearchBetRequest request)
+        {
+            var result = await _reportsRepository.GetAllBets(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
         }
 
         [HttpGet("v1/reports/partner/revenue/monthly/{userId}/{year}")]

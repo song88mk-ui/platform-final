@@ -10,7 +10,8 @@ namespace Platform.AgentReports.API.Repository
 {
     public interface IReportsRepository
     {
-        Task<BaseResponseDTO<OutstandingBetFixtureResponse>> GetOutstandingBetFixtures(long agentId, int page, int pageSize, CurrencyCode currency);
+        Task<BaseResponseDTO<OutstandingBetFixtureResponse>> GetOutstandingBetFixtures(long agentId, int page, int pageSize, CurrencyCode currency); 
+        Task<BaseResponseDTO<OutstandingBetResponse>> GetAllBets(SearchBetRequest request);
         BaseResponseDTO<WinLossResponse> GetProfitLossV2(long parentAgentId, ProfitLossRequest request);
         BaseResponseDTO<WinLossResponse> GetProfitLossV2(long parentAgentId, long directUserId, ProfitLossRequest request);
         BaseResponseDTO<WinLossDetailsResponse> GetProfitLossDetailsV2(long parentAgentId, long directUserId, ProfitLossRequest request);

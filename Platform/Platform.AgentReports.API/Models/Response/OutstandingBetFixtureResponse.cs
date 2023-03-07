@@ -5,7 +5,7 @@ namespace Platform.AgentReports.API.Models.Response
 {
     public class OutstandingBetFixtureResponse
     {
-        public OutstandingBetFixtureResponse() 
+        public OutstandingBetFixtureResponse()
         {
 
         }
@@ -59,3 +59,4 @@ namespace Platform.AgentReports.API.Models.Response
         #endregion
     }
 }
+

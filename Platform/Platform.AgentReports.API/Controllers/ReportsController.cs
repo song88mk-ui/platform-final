@@ -31,7 +31,15 @@ namespace Platform.AgentReports.API.Controllers
         [HttpGet("v1/bets/outstanding/fixtures/{agentId}/{page}/{pageSize}")]
         public async Task<IActionResult> GetOutstandingBetFixtures(long agentId, int page, int pageSize, [FromQuery] CurrencyCode currency)
         {
-            return Ok();
+            var result = await _reportsRepository.GetOutstandingBetFixtures(agentId, page, pageSize, currency);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
         }
     }
 }

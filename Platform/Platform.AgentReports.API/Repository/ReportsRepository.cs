@@ -7,7 +7,7 @@ using System.Linq;
 using System;
 using System.Threading.Tasks;
 using static Platform.AgentReports.API.Models.Response.OutstandingBetFixtureResponse;
-using Platform.AgentReports.API.Models.Enums;
+using Platform.Shared.Models;
 
 namespace Platform.AgentReports.API.Repository
 {
@@ -31,7 +31,7 @@ namespace Platform.AgentReports.API.Repository
 
         #region Methods
 
-        public async Task<BaseResponse<OutstandingBetFixtureResponse>> GetOutstandingBetFixtures(long agentId, long fixtureId, int marketTemplateId, int selectionTemplateId, int page, int pageSize, CurrencyCode currency)
+        public async Task<BaseResponseDTO<OutstandingBetFixtureResponse>> GetOutstandingBetFixtures(long agentId, int page, int pageSize, CurrencyCode currency)
         {
             var skip = (page - 1) * pageSize;
             double rowCount = 0;
@@ -86,10 +86,10 @@ namespace Platform.AgentReports.API.Repository
 
             if (bets.Count == 0)
             {
-                return new BaseResponse<OutstandingBetFixtureResponse>
+                return new BaseResponseDTO<OutstandingBetFixtureResponse>
                 {
-                    StatusCode = (int)ResultType.Success,
-                    StatusName = ResultType.Success.ToString(),
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
                     Result = new OutstandingBetFixtureResponse
                     {
                         CurrentPage = page,
@@ -101,10 +101,10 @@ namespace Platform.AgentReports.API.Repository
                 };
             }
 
-            return new BaseResponse<OutstandingBetFixtureResponse>
+            return new BaseResponseDTO<OutstandingBetFixtureResponse>
             {
-                StatusCode = (int)ResultType.Success,
-                StatusName = ResultType.Success.ToString(),
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
                 Result = new OutstandingBetFixtureResponse
                 {
                     CurrentPage = page,

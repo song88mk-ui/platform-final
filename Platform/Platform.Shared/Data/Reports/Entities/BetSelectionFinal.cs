@@ -1,0 +1,76 @@
+﻿using System;
+
+namespace Platform.Shared.Data.Reports.Entities
+{
+    public class BetSelectionFinal
+    {
+        public long ParentUserId { get; set; }
+
+        public Guid BetId { get; set; }
+
+        public Guid BetSelectionId { get; set; }
+
+        public long UserId { get; set; }
+
+        public string Username { get; set; }
+
+        public int UserTypeId { get; set; }
+
+        public int SportId { get; set; }
+
+        public string SportName { get; set; }
+
+        public int SegmentId { get; set; }
+
+        public string SegmentName { get; set; }
+
+        public int LeagueId { get; set; }
+
+        public string LeagueName { get; set; }
+
+        public long FixtureId { get; set; }
+
+        public string FixtureName { get; set; }
+
+        public long MarketId { get; set; }
+
+        public string MarketName { get; set; }
+
+        public long SelectionId { get; set; }
+
+        public string SelectionName { get; set; }
+
+        public int FixtureStatusId { get; set; }
+
+        public string FixtureStatusName { get; set; }
+
+        public string Line { get; set; }
+
+        public decimal Odds { get; set; }
+
+        public int StatusId { get; set; }
+
+        public string StatusName { get; set; }
+
+        public bool IsSettled { get; set; }
+
+        public bool IsResettled { get; set; }
+
+        public DateTime FixtureStartDate { get; set; }
+
+        public string MarketTemplateGroupId { get; set; }
+
+        public string MarketTemplateId { get; set; }
+
+        public string SelectionTemplateId { get; set; }
+
+        public string Score { get; set; }
+
+        public string FirstScore { get; set; }
+
+        public string SecondScore { get; set; }
+
+        public string HalftimeScore { get; set; }
+
+    }
+}

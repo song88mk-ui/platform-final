@@ -13,9 +13,7 @@ using Platform.Shared.Data.Reports.Entities;
 using Newtonsoft.Json;
 using System.Net.Http;
 using Microsoft.Extensions.Configuration;
-using Platform.AgentReports.API.Models.Request;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Mvc;
+using Platform.AgentReports.API.Models.Response;
 
 namespace Platform.AgentReports.API.Repository
 {
@@ -322,7 +320,7 @@ namespace Platform.AgentReports.API.Repository
                 }
             };
         }
-        public async Task<BaseResponseDTO<OutstandingBetFixtureResponseDTO>> GetOutstandingBetFixtures(long agentId, int page, int pageSize, CurrencyCode currency)
+        public async Task<BaseResponseDTO<OutstandingBetFixtureResponseDTO>> GetOutstandingBetFixtures(long agentId, int page, int pageSize, Currency currency)
         {
             var skip = (page - 1) * pageSize;
             double rowCount = 0;
@@ -333,7 +331,9 @@ namespace Platform.AgentReports.API.Repository
 
             var marketTemplateIds = new List<string> { "1", "2", "3", "22", "23", "8", "9", "10" };
 
-            var currencies = Enum.GetValues(typeof(CurrencyCode)).Cast<CurrencyCode>().Select(s => s.ToString()).ToList();
+            var currencies = currency == Currency.All
+                ? Enum.GetValues(typeof(Currency)).Cast<Currency>().Select(s => s.ToString()).ToList()
+                : new List<string>() { currency.ToString() };
 
             rowCount = _context.Bet.Where(c => c.ParentUserId == agentId && c.ProductId == 1 && c.Count == 1 && c.StatusId == (int)BetStatus.Running && marketTemplateIds.Contains(c.MarketTemplateId) && currencies.Contains(c.CurrencyCode)).GroupBy(g => g.FixtureId).Count();
             var bets = _context.Bet.Where(c => c.ParentUserId == agentId && c.ProductId == 1 && c.Count == 1 && c.StatusId == (int)BetStatus.Running && marketTemplateIds.Contains(c.MarketTemplateId) && currencies.Contains(c.CurrencyCode))
@@ -404,6 +404,103 @@ namespace Platform.AgentReports.API.Repository
                     RowCount = (int)rowCount,
                     Bets = bets
                 }
+            };
+        }
+
+        public async Task<BaseResponseDTO<List<MonthlyGrossGamingRevenueResponse>>> GetPartnerMonthlyGGR(long userId, int year, string currencyCode)
+        {
+            if (year > DateTime.UtcNow.AddHours(-4).Year)
+                return new BaseResponseDTO<List<MonthlyGrossGamingRevenueResponse>>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new List<MonthlyGrossGamingRevenueResponse>()
+                };
+
+            var result = new List<MonthlyGrossGamingRevenueResponse>();
+
+            var partnerRevenueShare = _context.PartnerRevenueShare.AsNoTracking().Where(p => p.UserId == userId && p.EffectivityDate.Year == year).OrderByDescending(o => o.EffectivityDate) ??
+                                        _context.PartnerRevenueShare.AsNoTracking().Where(p => p.UserId == userId && p.EffectivityDate.Year < year).OrderByDescending(x => x.EffectivityDate);
+
+            if (!partnerRevenueShare.Any()) return new BaseResponseDTO<List<MonthlyGrossGamingRevenueResponse>>()
+            {
+                StatusCode = StatusCode.Error,
+                Message = "Partner cannot be found.",
+                Result = null
+            };
+
+            if (!partnerRevenueShare.First().IsGGREnabled) return new BaseResponseDTO<List<MonthlyGrossGamingRevenueResponse>>()
+            {
+                StatusCode = StatusCode.Error,
+                Message = "GGR is disabled.",
+                Result = null
+            };
+
+            var winLoss = _context.WinLoss.Where(w => w.ParentUserId == 0 && w.DirectUserId == userId && w.SettledDateOffset.Year == year && w.CurrencyCode == currencyCode).AsNoTracking().ToList();
+
+            var noOfMonths = DateTime.UtcNow.AddHours(-4).Month;
+
+            if (winLoss.Any())
+            {
+                for (var i = 1; i < (noOfMonths + 1); i++)
+                {
+                    var winLossPerMonth = winLoss.Where(w => w.SettledDateOffset.Month == i).ToList();
+                    var date = new DateTime(year, i, 1);
+                    if (!winLossPerMonth.Any())
+                    {
+                        var partnerConfig = partnerRevenueShare.OrderByDescending(p => p.Id).FirstOrDefault(p => p.EffectivityDate.Month <= date.Month && p.EffectivityDate.Year <= date.Year);
+
+                        var monthlyFee = 0.00m;
+                        var companyShare = 0.00m;
+                        if (partnerConfig != null)
+                        {
+                            monthlyFee = partnerConfig.MonthlyFee;
+                            companyShare = partnerConfig.CompanyGGR;
+                        }
+
+                        result.Add(new MonthlyGrossGamingRevenueResponse()
+                        {
+                            Month = $"{date:MMM}-{date:yyyy}",
+                            CompanyGGR = 0.00m,
+                            CompanyShare = companyShare * 100,
+                            GGR = 0.00m,
+                            MonthlyFee = monthlyFee,
+                            SettlementAmount = monthlyFee
+
+                        });
+                    }
+                    else
+                    {
+                        var effectiveDate = winLoss.Select(ss => ss.SettledDateOffset).FirstOrDefault();
+
+                        var partnerConfig = partnerRevenueShare.FirstOrDefault(p => p.EffectivityDate.Month == effectiveDate.Month) ??
+                                            partnerRevenueShare.First();
+
+                        var companyShare = partnerConfig.CompanyGGR;
+                        var monthlyFee = partnerConfig.MonthlyFee;
+                        var totalGgr = winLossPerMonth.Sum(s => s.GGR).GetValueOrDefault(0);
+                        var companyGgr = totalGgr < 0 ? 0 : totalGgr * companyShare;
+
+                        var companyGgrShare = totalGgr * companyShare;
+
+                        result.Add(new MonthlyGrossGamingRevenueResponse()
+                        {
+                            Month = $"{date:MMM}-{date:yyyy}",
+                            GGR = totalGgr,
+                            CompanyGGR = companyGgr,
+                            CompanyShare = companyShare * 100,
+                            MonthlyFee = monthlyFee,
+                            SettlementAmount = companyGgr == 0 ? monthlyFee : (companyGgrShare + monthlyFee)
+                        });
+                    }
+                }
+            }
+
+            return new BaseResponseDTO<List<MonthlyGrossGamingRevenueResponse>>()
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = result
             };
         }
 
@@ -2903,7 +3000,7 @@ namespace Platform.AgentReports.API.Repository
 
             return result;
         }
-
+       
         #endregion
     }
 }

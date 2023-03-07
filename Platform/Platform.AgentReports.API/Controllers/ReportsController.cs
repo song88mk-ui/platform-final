@@ -49,11 +49,19 @@ namespace Platform.AgentReports.API.Controllers
         [HttpGet("v1/reports/partner/revenue/monthly/{userId}/{year}")]
         public async Task<IActionResult> GetPartnerMonthlyRevenue(long userId, int year, [FromQuery] string currencyCode)
         {
-            return Ok();
+            var result = await _reportsRepository.GetPartnerMonthlyGGR(userId, year, currencyCode);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
         }
 
         [HttpGet("v1/bets/outstanding/fixtures/{agentId}/{page}/{pageSize}")]
-        public async Task<IActionResult> GetOutstandingBetFixtures(long agentId, int page, int pageSize, [FromQuery] CurrencyCode currency)
+        public async Task<IActionResult> GetOutstandingBetFixtures(long agentId, int page, int pageSize, [FromQuery] Currency currency)
         {
             var result = await _reportsRepository.GetOutstandingBetFixtures(agentId, page, pageSize, currency);
 

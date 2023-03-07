@@ -58,7 +58,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Job.BetAudit.Table
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Wallet.API", "Platform.Wallet.API\Platform.Wallet.API.csproj", "{322DDB28-0707-4E30-A33B-94A07BC384BD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.AgentReports.Service", "Platform.AgentReports.Service\Platform.AgentReports.Service.csproj", "{049B1A8C-8A09-4C5C-85FF-E128043365B7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.AgentReports.Service", "Platform.AgentReports.Service\Platform.AgentReports.Service.csproj", "{049B1A8C-8A09-4C5C-85FF-E128043365B7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.AgentReports.API", "Platform.AgentReports.API\Platform.AgentReports.API.csproj", "{87EAD75E-572B-4357-A426-1456636E2F7A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -174,6 +176,10 @@ Global
 		{049B1A8C-8A09-4C5C-85FF-E128043365B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{049B1A8C-8A09-4C5C-85FF-E128043365B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{049B1A8C-8A09-4C5C-85FF-E128043365B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87EAD75E-572B-4357-A426-1456636E2F7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87EAD75E-572B-4357-A426-1456636E2F7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87EAD75E-572B-4357-A426-1456636E2F7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87EAD75E-572B-4357-A426-1456636E2F7A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.AgentReports.API.Repository;
+using Platform.Shared.Data.Reports;
 
 namespace Platform.AgentReports.API
 {
@@ -40,6 +42,9 @@ namespace Platform.AgentReports.API
             });
 
             services.AddControllers();
+
+            var connectionString = Configuration["ConnectionStrings:AgentReports"];
+            services.AddDbContext<AgentReportsContext>(o => o.UseSqlServer(connectionString));
 
             services.AddScoped<IReportsRepository, ReportsRepository>();
 

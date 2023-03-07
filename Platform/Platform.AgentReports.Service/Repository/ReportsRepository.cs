@@ -37,7 +37,7 @@ namespace Platform.AgentReports.Service.Repository
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
-                var optionsBuilder = new DbContextOptionsBuilder<ReportsContext>().UseSqlServer(_configuration["ReportsDBConnectionString"]);
+                var optionsBuilder = new DbContextOptionsBuilder<ReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Reports"]);
 
                 using (var context = new ReportsContext(optionsBuilder.Options))
                 {
@@ -96,7 +96,7 @@ namespace Platform.AgentReports.Service.Repository
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
-                var optionsBuilder = new DbContextOptionsBuilder<ReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+                var optionsBuilder = new DbContextOptionsBuilder<ReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Reports"]);
 
                 using (var context = new ReportsContext(optionsBuilder.Options))
                 {
@@ -153,7 +153,7 @@ namespace Platform.AgentReports.Service.Repository
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
-                var optionsBuilder = new DbContextOptionsBuilder<ReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+                var optionsBuilder = new DbContextOptionsBuilder<ReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Reports"]);
 
                 using (var context = new ReportsContext(optionsBuilder.Options))
                 {
@@ -210,7 +210,7 @@ namespace Platform.AgentReports.Service.Repository
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
-                var optionsBuilder = new DbContextOptionsBuilder<ReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+                var optionsBuilder = new DbContextOptionsBuilder<ReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Reports"]);
 
                 using (var context = new ReportsContext(optionsBuilder.Options))
                 {

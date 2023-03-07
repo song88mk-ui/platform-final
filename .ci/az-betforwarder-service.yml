@@ -18,7 +18,7 @@ resources:
       type: github
       name: FlyingCockatoo/BuildTemplates
       endpoint: FlyingCockatoo
-      ref: refs/tags/v0.1.1
+      ref: refs/tags/v0.1.4
     - repository: nuget-helper
       type: github
       name: FlyingCockatoo/infra-build-nuget-helper
@@ -28,5 +28,6 @@ resources:
 extends:
   template: dotnetservice.yml@bt
   parameters:
+    runtime: win-x64
     projects:
       - Platform/Platform.BetForwarder.Service

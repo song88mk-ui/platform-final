@@ -1,16 +1,19 @@
 ﻿using Platform.AgentReports.API.Models;
-using Platform.AgentReports.API.Models.Response;
 using Platform.AgentReports.API.Models.Request;
+using Platform.AgentReports.API.Models.Response;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Platform.AgentReports.API.Repository
 {
     public interface IReportsRepository
     {       
+        Task<BaseResponseDTO<WinLossResponse>> GetWinLossV2(long parentAgentId, bool isAgents, WinLossAccountRequest request);
+        Task<BaseResponseDTO<WinLossResponse>> GetWinLossV2(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request);
+        Task<BaseResponseDTO<WinLossDetailsResponse>> GetWinLossDetailsV2(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request);
         Task<BaseResponseDTO<OutstandingBetResponseDTO>> GetAllBets(SearchBetRequest request);
         Task<BaseResponseDTO<OutstandingBetResponseDTO>> GetParlayBets(SearchBetRequest request);
         BaseResponseDTO<WinLossResponseDTO> GetProfitLossV2(long parentAgentId, ProfitLossRequest request);

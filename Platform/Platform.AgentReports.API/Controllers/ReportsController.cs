@@ -18,6 +18,48 @@ namespace Platform.AgentReports.API.Controllers
             _reportsRepository = reportsRepository;
         }
 
+        [HttpPost("v1/reports/winloss/{agentId}/{isAgent}")]
+        public async Task<IActionResult> GetWinLossV2(long agentId, bool isAgent, [FromBody] WinLossAccountRequest request)
+        {
+            var result = await _reportsRepository.GetWinLossV2(agentId, isAgent, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/reports/winloss/{agentId}/{directUserId}/{isAgent}")]
+        public async Task<IActionResult> GetWinLossV2(long agentId, long directUserId, bool isAgent, [FromBody] WinLossAccountRequestExtended request)
+        {
+            var result = await _reportsRepository.GetWinLossV2(agentId, directUserId, isAgent, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/reports/winloss/details/{agentId}/{directUserId}/{isAgent}")]
+        public async Task<IActionResult> GetWinLossDetailsV2(long agentId, long directUserId, bool isAgent, [FromBody] WinLossAccountRequestExtended request)
+        {
+            var result = await _reportsRepository.GetWinLossDetailsV2(agentId, directUserId, isAgent, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/reports/allbets")]
         public async Task<IActionResult> GetAllBets([FromBody] SearchBetRequest request)
         {

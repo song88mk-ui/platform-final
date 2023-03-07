@@ -26,7 +26,7 @@ namespace Platform.AgentReports.Service.Repository
         public ReportsRepository(IConfiguration configuration)
         {
             _configuration = configuration;
-            _agentUrl = _configuration[""];
+            _agentUrl = _configuration["API:AgentAPI"];
         }
         public void ProcessBetPlacement(OnBetPlacement message)
         {

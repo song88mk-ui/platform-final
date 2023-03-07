@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Platform.AgentReports.API.Models.Response
+namespace Platform.Shared.Models
 {
-    public class GGRModelResponse
+    public class GGRModelResponseDTO
     {
         public long UserId { get; set; }
 
@@ -93,7 +93,7 @@ namespace Platform.AgentReports.API.Models.Response
 
         public string MarketTemplateGroupName { get; set; }
 
-        public CasinoDetail CasinoDetails { get; set; }
+        public CasinoDetailDTO CasinoDetails { get; set; }
         public string Reason { get; set; }
 
         public string BetScore { get; set; }

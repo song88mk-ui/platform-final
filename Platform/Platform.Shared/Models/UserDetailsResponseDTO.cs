@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Platform.AgentReports.API.Models.Response
+namespace Platform.Shared.Models
 {
-    public class UserDetailsResponse
+    public class UserDetailsResponseDTO
     {
         public long UserId { get; set; }
         public string FullName { get; set; }

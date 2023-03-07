@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Platform.AgentReports.API.Models
+namespace Platform.Shared.Models
 {
-    public class CasinoDetail
+    public class CasinoDetailDTO
     {
         public string ProviderTransactionId { get; set; }
         public DateTime ProviderTransactionDate { get; set; }

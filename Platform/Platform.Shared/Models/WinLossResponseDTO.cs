@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 
-namespace Platform.AgentReports.API.Models.Response
+namespace Platform.Shared.Models
 {
-    public class WinLossResponse
+    public class WinLossResponseDTO
     {
-        public WinLossResponse()
+        public WinLossResponseDTO()
         {
-            Bets = new List<WinLossModel>();
+            Bets = new List<WinLossModelDTO>();
         }
 
         public int CurrentPage { get; set; }
@@ -53,14 +53,14 @@ namespace Platform.AgentReports.API.Models.Response
 
         public int TotalMemberCount { get; set; }
 
-        public List<WinLossModel> Bets { get; set; }
+        public List<WinLossModelDTO> Bets { get; set; }
     }
 
     public class WinLossDetailsResponse
     {
         public WinLossDetailsResponse()
         {
-            Bets = new List<WinLossDetailsModel>();
+            Bets = new List<WinLossDetailsModelDTO>();
         }
 
         public int CurrentPage { get; set; }
@@ -101,6 +101,6 @@ namespace Platform.AgentReports.API.Models.Response
 
         public decimal TotalUplineWLC { get; set; }
 
-        public List<WinLossDetailsModel> Bets { get; set; }
+        public List<WinLossDetailsModelDTO> Bets { get; set; }
     }
 }

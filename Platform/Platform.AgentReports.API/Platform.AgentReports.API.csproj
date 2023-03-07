@@ -11,6 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Models\Response\" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Platform.Shared\Platform.Shared.csproj" />
   </ItemGroup>
 

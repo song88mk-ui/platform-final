@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 
-namespace Platform.AgentReports.API.Models.Response
+namespace Platform.Shared.Models
 {
-    public class GGRResponse
+    public class GGRResponseDTO
     {
-        public GGRResponse()
+        public GGRResponseDTO()
         {
-            Bets = new List<GGRModelResponse>();
+            Bets = new List<GGRModelResponseDTO>();
         }
 
         public int CurrentPage { get; set; }
@@ -27,7 +27,7 @@ namespace Platform.AgentReports.API.Models.Response
 
         public int TotalMemberCount { get; set; }
 
-        public List<GGRModelResponse> Bets { get; set; }
+        public List<GGRModelResponseDTO> Bets { get; set; }
     }
 
     public class GGRDetailsResponse

@@ -1,4 +1,5 @@
-﻿using Platform.AgentReports.Service.Enums;
+﻿
+using Platform.Shared.Enums;
 
 namespace Platform.AgentReports.Service.Models
 {

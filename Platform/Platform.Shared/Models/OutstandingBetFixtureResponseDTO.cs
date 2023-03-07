@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Platform.AgentReports.API.Models.Response
+namespace Platform.Shared.Models
 {
-    public class OutstandingBetFixtureResponse
+    public class OutstandingBetFixtureResponseDTO
     {
-        public OutstandingBetFixtureResponse()
+        public OutstandingBetFixtureResponseDTO()
         {
 
         }

@@ -2,7 +2,7 @@
 
 namespace Platform.AgentReports.API.Models
 {
-    public class WinLossAccountRequestExtended : WinLossAccountRequest
+    public class WinLossAccountRequestExtendedDTO : WinLossAccountRequest
     {
         public long? SelectedUserId { get; set; }
     }

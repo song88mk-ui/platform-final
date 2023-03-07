@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System;
 
-namespace Platform.AgentReports.API.Models
+namespace Platform.Shared.Models
 {
-    public class WinLossModel
+    public class WinLossModelDTO
     {
         public long UserId { get; set; }
 
@@ -58,7 +58,7 @@ namespace Platform.AgentReports.API.Models
         public int MemberCount { get; set; }
     }
 
-    public class WinLossDetailsModel
+    public class WinLossDetailsModelDTO
     {
         public long UserId { get; set; }
 
@@ -160,7 +160,7 @@ namespace Platform.AgentReports.API.Models
 
         public List<CommissionDetails> CommissionDetails { get; set; }
 
-        public CasinoDetail CasinoDetails { get; set; }
+        public CasinoDetailDTO CasinoDetails { get; set; }
         public string Reason { get; set; }
 
         public string BetScore { get; set; }

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Platform.AgentReports.API.Models.Response
+namespace Platform.Shared.Models
 {
-    public class OutstandingBetResponse
+    public class OutstandingBetResponseDTO
     {
-        public OutstandingBetResponse()
+        public OutstandingBetResponseDTO()
         {
             Bets = new List<Bet>();
         }

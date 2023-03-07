@@ -1,12 +1,11 @@
 ﻿using Platform.AgentReports.API.Models;
-using Platform.AgentReports.API.Models.Response;
 using Platform.Shared.Data.Reports;
 using Platform.Shared.Enums;
 using System.Collections.Generic;
 using System.Linq;
 using System;
 using System.Threading.Tasks;
-using static Platform.AgentReports.API.Models.Response.OutstandingBetFixtureResponse;
+using static Platform.Shared.Models.OutstandingBetFixtureResponseDTO;
 using Platform.Shared.Models;
 using Platform.AgentReports.API.Models.Request;
 using Microsoft.EntityFrameworkCore;
@@ -42,15 +41,15 @@ namespace Platform.AgentReports.API.Repository
         #endregion
 
         #region Methods
-        public async Task<BaseResponseDTO<OutstandingBetResponse>> GetAllBets(SearchBetRequest request)
+        public async Task<BaseResponseDTO<OutstandingBetResponseDTO>> GetAllBets(SearchBetRequest request)
         {
             var skip = (request.Page - 1) * request.PageSize;
             var rowCount = (double)0;
-            var result = new List<OutstandingBetResponse.Bet>();
+            var result = new List<OutstandingBetResponseDTO.Bet>();
             var totalReceive = 0m;
             var totalStake = 0m;
             var supportedProduct = new[] { 1 };
-            var mergedResults = new List<OutstandingBetResponse.Bet>();
+            var mergedResults = new List<OutstandingBetResponseDTO.Bet>();
 
             var records = _context.Bet.Where(c => c.ParentUserId == request.AgentId && c.StatusId == (int)BetStatus.Running && supportedProduct.Contains(c.ProductId)).AsNoTracking();
 
@@ -76,17 +75,17 @@ namespace Platform.AgentReports.API.Repository
 
             if (!bets.Any())
             {
-                return new BaseResponseDTO<OutstandingBetResponse>
+                return new BaseResponseDTO<OutstandingBetResponseDTO>
                 {
                     StatusCode = StatusCode.Success,
                     Message = StatusCode.Success.ToString(),
-                    Result = new OutstandingBetResponse
+                    Result = new OutstandingBetResponseDTO
                     {
                         CurrentPage = request.Page,
                         PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
                         PageSize = request.PageSize,
                         RowCount = (int)rowCount,
-                        Bets = new List<OutstandingBetResponse.Bet>()
+                        Bets = new List<OutstandingBetResponseDTO.Bet>()
                     }
                 };
             }
@@ -98,7 +97,7 @@ namespace Platform.AgentReports.API.Repository
 
             foreach (var bet in bets)
             {
-                var selections = betSelections.Where(c => c.BetId == bet.BetId).Select(s => new OutstandingBetResponse.BetSelection
+                var selections = betSelections.Where(c => c.BetId == bet.BetId).Select(s => new OutstandingBetResponseDTO.BetSelection
                 {
                     ParentUserId = s.ParentUserId,
                     BetId = s.BetId,
@@ -134,7 +133,7 @@ namespace Platform.AgentReports.API.Repository
 
                 var fixtureName = selections.Select(s => s.FixtureName).FirstOrDefault();
 
-                result.Add(new OutstandingBetResponse.Bet
+                result.Add(new OutstandingBetResponseDTO.Bet
                 {
                     ParentUserId = bet.ParentUserId,
                     BetId = bet.BetId,
@@ -164,11 +163,11 @@ namespace Platform.AgentReports.API.Repository
                 });
             }
 
-            return new BaseResponseDTO<OutstandingBetResponse>
+            return new BaseResponseDTO<OutstandingBetResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new OutstandingBetResponse
+                Result = new OutstandingBetResponseDTO
                 {
                     CurrentPage = request.Page,
                     PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
@@ -195,7 +194,7 @@ namespace Platform.AgentReports.API.Repository
                     return "Others";
             }
         }
-        public async Task<BaseResponseDTO<OutstandingBetFixtureResponse>> GetOutstandingBetFixtures(long agentId, int page, int pageSize, CurrencyCode currency)
+        public async Task<BaseResponseDTO<OutstandingBetFixtureResponseDTO>> GetOutstandingBetFixtures(long agentId, int page, int pageSize, CurrencyCode currency)
         {
             var skip = (page - 1) * pageSize;
             double rowCount = 0;
@@ -250,11 +249,11 @@ namespace Platform.AgentReports.API.Repository
 
             if (bets.Count == 0)
             {
-                return new BaseResponseDTO<OutstandingBetFixtureResponse>
+                return new BaseResponseDTO<OutstandingBetFixtureResponseDTO>
                 {
                     StatusCode = StatusCode.Success,
                     Message = StatusCode.Success.ToString(),
-                    Result = new OutstandingBetFixtureResponse
+                    Result = new OutstandingBetFixtureResponseDTO
                     {
                         CurrentPage = page,
                         PageCount = (int)Math.Ceiling(rowCount / pageSize),
@@ -265,11 +264,11 @@ namespace Platform.AgentReports.API.Repository
                 };
             }
 
-            return new BaseResponseDTO<OutstandingBetFixtureResponse>
+            return new BaseResponseDTO<OutstandingBetFixtureResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new OutstandingBetFixtureResponse
+                Result = new OutstandingBetFixtureResponseDTO
                 {
                     CurrentPage = page,
                     PageCount = (int)Math.Ceiling(rowCount / pageSize),
@@ -280,7 +279,7 @@ namespace Platform.AgentReports.API.Repository
             };
         }
 
-        public BaseResponseDTO<WinLossResponse> GetProfitLossV2(long parentAgentId, ProfitLossRequest request)
+        public BaseResponseDTO<WinLossResponseDTO> GetProfitLossV2(long parentAgentId, ProfitLossRequest request)
         {
             #region W/O BACK AND LAY
 
@@ -317,7 +316,7 @@ namespace Platform.AgentReports.API.Repository
                 UplineCommission = s.UplineCommission,
                 UplineWLC = s.UplineWLC,
                 ExchangeRate = s.ExchangeRate
-            }).ToList().GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModel()
+            }).ToList().GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModelDTO()
             {
                 UserId = d.Key.IndirectUserId,
                 Username = d.Key.Username,
@@ -346,11 +345,11 @@ namespace Platform.AgentReports.API.Repository
             rowCount = bets.Count();
             var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
 
-            return new BaseResponseDTO<WinLossResponse>
+            return new BaseResponseDTO<WinLossResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new WinLossResponse
+                Result = new WinLossResponseDTO
                 {
                     CurrentPage = request.Page,
                     PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
@@ -380,7 +379,7 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
-        public BaseResponseDTO<WinLossResponse> GetProfitLossV2(long parentAgentId, long directUserId, ProfitLossRequest request)
+        public BaseResponseDTO<WinLossResponseDTO> GetProfitLossV2(long parentAgentId, long directUserId, ProfitLossRequest request)
         {
             #region W/O BACK AND LAY
 
@@ -417,7 +416,7 @@ namespace Platform.AgentReports.API.Repository
                 UplineCommission = s.UplineCommission,
                 UplineWLC = s.UplineWLC,
                 ExchangeRate = s.ExchangeRate
-            }).ToList().GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModel()
+            }).ToList().GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModelDTO()
             {
                 UserId = d.Key.IndirectUserId,
                 Username = d.Key.Username,
@@ -446,11 +445,11 @@ namespace Platform.AgentReports.API.Repository
             rowCount = bets.Count();
             var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
 
-            return new BaseResponseDTO<WinLossResponse>
+            return new BaseResponseDTO<WinLossResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new WinLossResponse
+                Result = new WinLossResponseDTO
                 {
                     CurrentPage = request.Page,
                     PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
@@ -630,7 +629,7 @@ namespace Platform.AgentReports.API.Repository
                 {
                     Result = new WinLossDetailsResponse()
                     {
-                        Bets = new List<WinLossDetailsModel>(),
+                        Bets = new List<WinLossDetailsModelDTO>(),
                         CurrentPage = request.PageSize,
                         PageCount = 0,
                         PageSize = request.PageSize
@@ -643,7 +642,7 @@ namespace Platform.AgentReports.API.Repository
             var totalStakeAmount = betsRaw.Sum(s => s.Stake / s.ExchangeRate);
             var totalValidStakeAmount = betsRaw.Sum(s => s.TrueStake / s.ExchangeRate);
 
-            var bets = betsRaw.OrderBy(p => p.SettledDate).Skip(skip).Take(request.PageSize).ToList().Select(s => new WinLossDetailsModel()
+            var bets = betsRaw.OrderBy(p => p.SettledDate).Skip(skip).Take(request.PageSize).ToList().Select(s => new WinLossDetailsModelDTO()
             {
                 UserId = s.IndirectUserId,
                 BetId = string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId),
@@ -735,7 +734,7 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
-        public BaseResponseDTO<WinLossResponse> GetProfitLoss(long parentAgentId, string product, DateTime fromDate, DateTime toDate, int page, int pageSize, string currency, string status, string dateFilter)
+        public BaseResponseDTO<WinLossResponseDTO> GetProfitLoss(long parentAgentId, string product, DateTime fromDate, DateTime toDate, int page, int pageSize, string currency, string status, string dateFilter)
         {
             #region W/ BACK AND LAY
 
@@ -916,7 +915,7 @@ namespace Platform.AgentReports.API.Repository
                 UplineCommission = s.UplineCommission,
                 UplineWLC = s.UplineWLC,
                 ExchangeRate = s.ExchangeRate
-            }).ToList().GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModel()
+            }).ToList().GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModelDTO()
             {
                 UserId = d.Key.IndirectUserId,
                 Username = d.Key.Username,
@@ -945,11 +944,11 @@ namespace Platform.AgentReports.API.Repository
             rowCount = bets.Count();
             var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
 
-            return new BaseResponseDTO<WinLossResponse>
+            return new BaseResponseDTO<WinLossResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new WinLossResponse
+                Result = new WinLossResponseDTO
                 {
                     CurrentPage = page,
                     PageCount = (int)Math.Ceiling(rowCount / pageSize),
@@ -979,7 +978,7 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
-        public BaseResponseDTO<WinLossResponse> GetProfitLoss(long parentAgentId, long directUserId, string product, DateTime fromDate, DateTime toDate, int page, int pageSize, string currency, string status, string dateFilter)
+        public BaseResponseDTO<WinLossResponseDTO> GetProfitLoss(long parentAgentId, long directUserId, string product, DateTime fromDate, DateTime toDate, int page, int pageSize, string currency, string status, string dateFilter)
         {
             #region W/ BACK AND LAY
 
@@ -1159,7 +1158,7 @@ namespace Platform.AgentReports.API.Repository
                 UplineCommission = s.UplineCommission,
                 UplineWLC = s.UplineWLC,
                 ExchangeRate = s.ExchangeRate
-            }).ToList().GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModel()
+            }).ToList().GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModelDTO()
             {
                 UserId = d.Key.IndirectUserId,
                 Username = d.Key.Username,
@@ -1188,11 +1187,11 @@ namespace Platform.AgentReports.API.Repository
             rowCount = bets.Count();
             var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
 
-            return new BaseResponseDTO<WinLossResponse>
+            return new BaseResponseDTO<WinLossResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new WinLossResponse
+                Result = new WinLossResponseDTO
                 {
                     CurrentPage = page,
                     PageCount = (int)Math.Ceiling(rowCount / pageSize),
@@ -1623,7 +1622,7 @@ namespace Platform.AgentReports.API.Repository
                 {
                     Result = new WinLossDetailsResponse()
                     {
-                        Bets = new List<WinLossDetailsModel>(),
+                        Bets = new List<WinLossDetailsModelDTO>(),
                         CurrentPage = pageSize,
                         PageCount = 0,
                         PageSize = pageSize
@@ -1636,7 +1635,7 @@ namespace Platform.AgentReports.API.Repository
             var totalStakeAmount = betsRaw.Sum(s => s.Stake / s.ExchangeRate);
             var totalValidStakeAmount = betsRaw.Sum(s => s.TrueStake / s.ExchangeRate);
 
-            var bets = betsRaw.OrderBy(p => p.SettledDate).Skip(skip).Take(pageSize).ToList().Select(s => new WinLossDetailsModel()
+            var bets = betsRaw.OrderBy(p => p.SettledDate).Skip(skip).Take(pageSize).ToList().Select(s => new WinLossDetailsModelDTO()
             {
                 UserId = s.IndirectUserId,
                 BetId = string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId),
@@ -1728,7 +1727,7 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
-        public BaseResponseDTO<GGRResponse> GetGGRV2(long parentAgentId, long directUserId, WinLossAccountRequestExtended request)
+        public BaseResponseDTO<GGRResponseDTO> GetGGRV2(long parentAgentId, long directUserId, WinLossAccountRequestExtendedDTO request)
         {
             var skip = (request.Page - 1) * request.PageSize;
             double rowCount = 0;
@@ -1773,7 +1772,7 @@ namespace Platform.AgentReports.API.Repository
 
             betData.AddRange(reSettledBets);
 
-            var bets = betData.GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new GGRModelResponse()
+            var bets = betData.GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new GGRModelResponseDTO()
             {
                 UserId = d.Key.IndirectUserId,
                 Username = d.Key.Username,
@@ -1789,11 +1788,11 @@ namespace Platform.AgentReports.API.Repository
             rowCount = bets.Count();
             var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
 
-            return new BaseResponseDTO<GGRResponse>
+            return new BaseResponseDTO<GGRResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new GGRResponse
+                Result = new GGRResponseDTO
                 {
                     CurrentPage = request.Page,
                     PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
@@ -1808,7 +1807,7 @@ namespace Platform.AgentReports.API.Repository
                 }
             };
         }
-        public BaseResponseDTO<GGRDetailsResponse> GetGGRDetailsV2(long agentId, long playerId, WinLossAccountRequestExtended request)
+        public BaseResponseDTO<GGRDetailsResponse> GetGGRDetailsV2(long agentId, long playerId, WinLossAccountRequestExtendedDTO request)
         {
             var skip = (request.Page - 1) * request.PageSize;
             var productTypes = request.Product.Split(',').Select(int.Parse).ToList();
@@ -2005,7 +2004,7 @@ namespace Platform.AgentReports.API.Repository
                 Line = s.Line,
                 MarketTemplateGroupId = s.MarketTemplateGroupId,
                 MarketTemplateGroupName = s.MarketTemplateGroupName,
-                CasinoDetails = JsonConvert.DeserializeObject<CasinoDetail>(s.CasinoDetails),
+                CasinoDetails = JsonConvert.DeserializeObject<CasinoDetailDTO>(s.CasinoDetails),
                 Reason = string.IsNullOrEmpty(s.ReferenceId) ? string.Empty : $"ADJUSTMENT - {s.StatusName}",
                 BetScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(1, string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId)) : "",
                 FinalScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(2, string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId)) : "",
@@ -2572,12 +2571,12 @@ namespace Platform.AgentReports.API.Repository
 
             return result;
         }
-        private CasinoDetail GetCasinoDetailForPL(string details, decimal exchangeRate)
+        private CasinoDetailDTO GetCasinoDetailForPL(string details, decimal exchangeRate)
         {
             if (string.IsNullOrEmpty(details))
                 return null;
 
-            var obj = JsonConvert.DeserializeObject<CasinoDetail>(details);
+            var obj = JsonConvert.DeserializeObject<CasinoDetailDTO>(details);
             obj.Payout = obj.Payout / exchangeRate;
 
             return obj;
@@ -2599,20 +2598,20 @@ namespace Platform.AgentReports.API.Repository
 
             return score;
         }
-        private BaseResponseDTO<UserDetailsResponse> GetUserDetails(long userId)
+        private BaseResponseDTO<UserDetailsResponseDTO> GetUserDetails(long userId)
         {
             var client = _httpClient.CreateClient();
             var response = client.GetAsync($"{_config["AgentUrl"]}/user/details/{userId}").Result;
 
             if (response.IsSuccessStatusCode)
             {
-                return JsonConvert.DeserializeObject<BaseResponseDTO<UserDetailsResponse>>(response.Content
+                return JsonConvert.DeserializeObject<BaseResponseDTO<UserDetailsResponseDTO>>(response.Content
                     .ReadAsStringAsync().Result);
             }
 
-            return new BaseResponseDTO<UserDetailsResponse>();
+            return new BaseResponseDTO<UserDetailsResponseDTO>();
         }
-        private IQueryable<WinLoss> GetWinLossAggregateQueryableParentAndAgentId2(long parentUserId, long directUserId, bool isAgent, WinLossAccountRequestExtended request)
+        private IQueryable<WinLoss> GetWinLossAggregateQueryableParentAndAgentId2(long parentUserId, long directUserId, bool isAgent, WinLossAccountRequestExtendedDTO request)
         {
             IQueryable<WinLoss> result;
             IQueryable<Tuple<long, string, string>> accountsResult;

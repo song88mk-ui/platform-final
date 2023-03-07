@@ -76,13 +76,13 @@ namespace Platform.AgentReports.API.Controllers
         #region GGR
 
         [HttpPost("v2/reports/ggr/{agentId}/{directAgentId}")]
-        public IActionResult GetGGRV2(long agentId, long directAgentId, [FromBody] WinLossAccountRequestExtended request)
+        public IActionResult GetGGRV2(long agentId, long directAgentId, [FromBody] WinLossAccountRequestExtendedDTO request)
         {
             return Ok(_reportsRepository.GetGGRV2(agentId, directAgentId, request));
         }
 
         [HttpPost("v2/reports/ggr/details/{agentId}/{playerId}")]
-        public IActionResult GetGGRDetailsV2(long agentId, long playerId, [FromBody] WinLossAccountRequestExtended request)
+        public IActionResult GetGGRDetailsV2(long agentId, long playerId, [FromBody] WinLossAccountRequestExtendedDTO request)
         {
             return Ok(_reportsRepository.GetGGRDetailsV2(agentId, playerId, request));
         }

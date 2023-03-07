@@ -37,9 +37,9 @@ namespace Platform.AgentReports.Service.Repository
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
-                var optionsBuilder = new DbContextOptionsBuilder<ReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Reports"]);
+                var optionsBuilder = new DbContextOptionsBuilder<AgentReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Reports"]);
 
-                using (var context = new ReportsContext(optionsBuilder.Options))
+                using (var context = new AgentReportsContext(optionsBuilder.Options))
                 {
                     foreach (var agent in agents)
                     {
@@ -96,9 +96,9 @@ namespace Platform.AgentReports.Service.Repository
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
-                var optionsBuilder = new DbContextOptionsBuilder<ReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Reports"]);
+                var optionsBuilder = new DbContextOptionsBuilder<AgentReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Reports"]);
 
-                using (var context = new ReportsContext(optionsBuilder.Options))
+                using (var context = new AgentReportsContext(optionsBuilder.Options))
                 {
                     foreach (var agent in agents)
                     {
@@ -153,9 +153,9 @@ namespace Platform.AgentReports.Service.Repository
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
-                var optionsBuilder = new DbContextOptionsBuilder<ReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Reports"]);
+                var optionsBuilder = new DbContextOptionsBuilder<AgentReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Reports"]);
 
-                using (var context = new ReportsContext(optionsBuilder.Options))
+                using (var context = new AgentReportsContext(optionsBuilder.Options))
                 {
                     foreach (var agent in agents)
                     {
@@ -210,9 +210,9 @@ namespace Platform.AgentReports.Service.Repository
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
-                var optionsBuilder = new DbContextOptionsBuilder<ReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Reports"]);
+                var optionsBuilder = new DbContextOptionsBuilder<AgentReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Reports"]);
 
-                using (var context = new ReportsContext(optionsBuilder.Options))
+                using (var context = new AgentReportsContext(optionsBuilder.Options))
                 {
                     foreach (var agent in agents)
                     {
@@ -532,7 +532,7 @@ namespace Platform.AgentReports.Service.Repository
                 SelectionTemplateId = betSelection.SelectionTemplateId
             };
         }
-        private void AddOrUpdateRunningBalanceFinal(ReportsContext context, OnBetPlacement message, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents)
+        private void AddOrUpdateRunningBalanceFinal(AgentReportsContext context, OnBetPlacement message, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents)
         {
             if (message.Bet.BetStatusId != (int)BetStatus.Running) return;
             if (agent.UserType == UserType.Company) return;
@@ -774,7 +774,7 @@ namespace Platform.AgentReports.Service.Repository
                 TransactionDateOffset = message.Bet.BetDate.AddHours(-4)
             };
         }
-        private void AddOrUpdateWinLossFinal(ReportsContext context, OnBetSettlement message, AgentSettings agent, List<AgentSettings> agents, BetFinal betEntity)
+        private void AddOrUpdateWinLossFinal(AgentReportsContext context, OnBetSettlement message, AgentSettings agent, List<AgentSettings> agents, BetFinal betEntity)
         {
             if (message.Bet.BetStatusId == (int)BetStatus.Running) return;
 
@@ -1037,7 +1037,7 @@ namespace Platform.AgentReports.Service.Repository
             else
                 return GetReceiveCommissionFinal(bet, agent, agents);
         }
-        private void AddOrUpdateSettledBalanceFinal(ReportsContext context, OnBetSettlement message, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents)
+        private void AddOrUpdateSettledBalanceFinal(AgentReportsContext context, OnBetSettlement message, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents)
         {
             if (message.Bet.BetStatusId == (int)BetStatus.Running) return;
             if (agent.UserType == UserType.Company) return;

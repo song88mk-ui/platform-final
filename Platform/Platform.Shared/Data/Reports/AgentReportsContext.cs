@@ -3,9 +3,9 @@ using Platform.Shared.Data.Reports.Entities;
 
 namespace Platform.Shared.Data.Reports
 {
-    public class ReportsContext : DbContext
+    public class AgentReportsContext : DbContext
     {
-        public ReportsContext(DbContextOptions<ReportsContext> options) : base(options)
+        public AgentReportsContext(DbContextOptions<AgentReportsContext> options) : base(options)
         {
         }
 

@@ -20,6 +20,6 @@ namespace Platform.AgentReports.Service
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IReportsRepository, ReportsRepository>();
                     services.AddHostedService<Worker>();
-                });
+                }).UseWindowsService();
     }
 }

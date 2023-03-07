@@ -144,14 +144,118 @@ namespace Platform.AgentReports.Service.Repository
             }
         }
 
-        public void ProcessBetSettlement(OnBetSettlement onBetSettlement)
+        public void ProcessBetSettlement(OnBetSettlement message)
         {
-            throw new NotImplementedException();
+            var agents = GetAgentSettingsFinal(message).OrderBy(o => o.Hierarchy).ToList();
+
+            if (agents.Count == 0)
+                return;
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<ReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+
+                using (var context = new ReportsContext(optionsBuilder.Options))
+                {
+                    foreach (var agent in agents)
+                    {
+                        var bet = context.BetFinal.Find(agent.AgentId, message.Bet.BetId);
+
+                        if (bet != null)
+                        {
+                            bet.Payout = message.Bet.Payout;
+                            bet.WinLoss = message.Bet.WinLoss;
+                            bet.StatusId = message.Bet.BetStatusId;
+                            bet.StatusName = message.Bet.BetStatusName;
+                            bet.Reason = message.Bet.Reason;
+                            bet.ReceivePositionTaking = GetReceivePTFinal(message, agent);
+                            context.BetFinal.Update(bet);
+
+                            context.BetTransaction.Add(ConvertToBetTransactionEntityInsertFinal(message, agent));
+
+                            foreach (var selection in message.BetSelections)
+                            {
+                                var betSelection = context.BetSelectionFinal.Find(agent.AgentId, selection.BetId, selection.BetSelectionId);
+
+                                if (betSelection == null)
+                                    context.BetSelectionFinal.Add(ConvertToBetSelectionEntityInsertFinal(selection, agent));
+                                else
+                                {
+                                    betSelection.StatusId = selection.BetSelectionStatusId;
+                                    betSelection.StatusName = selection.BetSelectionStatusName;
+                                    betSelection.IsSettled = selection.IsSettled;
+                                    betSelection.IsResettled = selection.IsResettled;
+
+                                    context.BetSelectionFinal.Update(betSelection);
+                                }
+
+                                context.BetSelectionTransactionFinal.Add(ConvertToBetSelectionTransactionEntityInsertFinal(selection, agent));
+                            }
+
+                            AddOrUpdateWinLossFinal(context, message, agent, agents, bet);
+                        }
+                    }
+                    context.SaveChanges();
+                }
+                scope.Complete();
+            }
         }
 
-        public void ProcessBetCancellation(OnBetSettlement onBetCancellation)
+        public void ProcessBetCancellation(OnBetSettlement message)
         {
-            throw new NotImplementedException();
+            var agents = GetAgentSettingsFinal(message).OrderBy(o => o.Hierarchy).ToList();
+
+            if (agents.Count == 0)
+                return;
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<ReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+
+                using (var context = new ReportsContext(optionsBuilder.Options))
+                {
+                    foreach (var agent in agents)
+                    {
+                        var bet = context.BetFinal.Find(agent.AgentId, message.Bet.BetId);
+
+                        if (bet != null)
+                        {
+                            bet.Payout = message.Bet.Payout;
+                            bet.WinLoss = message.Bet.WinLoss;
+                            bet.StatusId = message.Bet.BetStatusId;
+                            bet.StatusName = message.Bet.BetStatusName;
+                            bet.Reason = message.Bet.Reason;
+                            bet.ReceivePositionTaking = GetReceivePTFinal(message, agent);
+                            context.BetFinal.Update(bet);
+
+                            context.BetTransaction.Add(ConvertToBetTransactionEntityInsertFinal(message, agent));
+
+                            foreach (var selection in message.BetSelections)
+                            {
+                                var betSelection = context.BetSelectionFinal.Find(agent.AgentId, selection.BetId, selection.BetSelectionId);
+
+                                if (betSelection == null)
+                                    context.BetSelectionFinal.Add(ConvertToBetSelectionEntityInsertFinal(selection, agent));
+                                else
+                                {
+                                    betSelection.StatusId = selection.BetSelectionStatusId;
+                                    betSelection.StatusName = selection.BetSelectionStatusName;
+                                    betSelection.IsSettled = selection.IsSettled;
+                                    betSelection.IsResettled = selection.IsResettled;
+
+                                    context.BetSelectionFinal.Update(betSelection);
+                                }
+
+                                context.BetSelectionTransactionFinal.Add(ConvertToBetSelectionTransactionEntityInsertFinal(selection, agent));
+                            }
+
+                            AddOrUpdateWinLossFinal(context, message, agent, agents, bet);
+                        }
+                    }
+                    context.SaveChanges();
+                }
+                scope.Complete();
+            }
         }
 
 

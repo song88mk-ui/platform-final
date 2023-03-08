@@ -90,9 +90,24 @@ namespace Platform.AgentReports.API.Controllers
         }
 
         [HttpPost("v1/reports/totalbets")]
-        public async Task<IActionResult> GetTotalBets([FromBody] SearchBetRequest request)
+        public async Task<IActionResult> GetTotalBets([FromBody] TotalBetsRequest request)
         {
             var result = await _reportsRepository.GetTotalBets(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("v1/reports/totalbets/others")]
+
+        public async Task<IActionResult> GetTotalBetsOthers([FromBody] TotalBetsRequest request)
+        {
+            var result = await _reportsRepository.GetTotalBetsOthers(request);
 
             switch (result.StatusCode)
             {

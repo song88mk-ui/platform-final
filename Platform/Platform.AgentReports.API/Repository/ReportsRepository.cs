@@ -3364,7 +3364,6 @@ namespace Platform.AgentReports.API.Repository
                    currencies.Contains(w.CurrencyCode) &&
                    w.UserTypeId == (int)UserType.Agent).AsNoTracking();
             }
-
             else
             {
                 result = _context.WinLoss.Where(w =>
@@ -3437,7 +3436,7 @@ namespace Platform.AgentReports.API.Repository
 
             if (status.Any())
             {
-                result = result.Where(p => status.Any(s => s.Equals((string.IsNullOrEmpty(p.ReferenceId) || p.StatusName.ToUpper() == "CANCELLED") ? p.StatusName.ToUpper() : $"ADJUSTMENT{p.StatusName.ToUpper()}")));
+                result = result.Where(p => status.Contains(p.StatusName.ToUpper()));
             }
 
             return result;

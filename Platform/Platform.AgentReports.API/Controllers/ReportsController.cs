@@ -104,7 +104,7 @@ namespace Platform.AgentReports.API.Controllers
         }
 
         [HttpGet("v1/bets/outstanding/fixtures/{agentId}/{page}/{pageSize}")]
-        public async Task<IActionResult> GetOutstandingBetFixtures(long agentId, int page, int pageSize, [FromQuery] Currency currency)
+        public async Task<IActionResult> GetOutstandingBetFixtures(long agentId, int page, int pageSize, [FromQuery] CurrencyCode currency)
         {
             var result = await _reportsRepository.GetOutstandingBetFixtures(agentId, page, pageSize, currency);
 

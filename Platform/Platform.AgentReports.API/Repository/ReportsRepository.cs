@@ -49,8 +49,8 @@ namespace Platform.AgentReports.API.Repository
 
             var states = new int[] { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost };
 
-            if (request.Currency == Currency.All && parentAgentId > 0)
-                request.Currency = Enum.Parse<Currency>(GetUserDetails(parentAgentId).Result.Currency);
+            if (request.Currency == CurrencyCode.ALL && parentAgentId > 0)
+                request.Currency = Enum.Parse<CurrencyCode>(GetUserDetails(parentAgentId).Result.Currency);
 
             var iQueryableData = GetWinLossAggregateQueryable2(parentAgentId, isAgents, request).AsNoTracking();
             var membersCount = GetDistinctMembers2(request);
@@ -156,8 +156,8 @@ namespace Platform.AgentReports.API.Repository
 
             //var states = new int[] { (int)StatusType.Won, (int)StatusType.Lost, (int)StatusType.HalfWon, (int)StatusType.HalfLost };
 
-            if (request.Currency == Currency.All && parentAgentId > 0)
-                request.Currency = Enum.Parse<Currency>(GetUserDetails(parentAgentId).Result.Currency);
+            if (request.Currency == CurrencyCode.ALL && parentAgentId > 0)
+                request.Currency = Enum.Parse<CurrencyCode>(GetUserDetails(parentAgentId).Result.Currency);
 
             var iQueryableData = GetWinLossAggregateQueryableParentAndAgentId2(parentAgentId, directUserId, isAgents, request).AsNoTracking();
             var membersCount = GetDistinctMembers2(request);
@@ -778,7 +778,7 @@ namespace Platform.AgentReports.API.Repository
                 }
             };
         }
-        public async Task<BaseResponseDTO<OutstandingBetFixtureResponseDTO>> GetOutstandingBetFixtures(long agentId, int page, int pageSize, Currency currency)
+        public async Task<BaseResponseDTO<OutstandingBetFixtureResponseDTO>> GetOutstandingBetFixtures(long agentId, int page, int pageSize, CurrencyCode currency)
         {
             var skip = (page - 1) * pageSize;
             double rowCount = 0;
@@ -789,8 +789,8 @@ namespace Platform.AgentReports.API.Repository
 
             var marketTemplateIds = new List<string> { "1", "2", "3", "22", "23", "8", "9", "10" };
 
-            var currencies = currency == Currency.All
-                ? Enum.GetValues(typeof(Currency)).Cast<Currency>().Select(s => s.ToString()).ToList()
+            var currencies = currency == CurrencyCode.ALL
+                ? Enum.GetValues(typeof(CurrencyCode)).Cast<CurrencyCode>().Select(s => s.ToString()).ToList()
                 : new List<string>() { currency.ToString() };
 
             rowCount = _context.Bet.Where(c => c.ParentUserId == agentId && c.ProductId == 1 && c.Count == 1 && c.StatusId == (int)BetStatus.Running && marketTemplateIds.Contains(c.MarketTemplateId) && currencies.Contains(c.CurrencyCode)).GroupBy(g => g.FixtureId).Count();
@@ -882,14 +882,14 @@ namespace Platform.AgentReports.API.Repository
 
             if (!partnerRevenueShare.Any()) return new BaseResponseDTO<List<MonthlyGrossGamingRevenueResponse>>()
             {
-                StatusCode = StatusCode.Error,
+                StatusCode = StatusCode.Success,
                 Message = "Partner cannot be found.",
                 Result = null
             };
 
             if (!partnerRevenueShare.First().IsGGREnabled) return new BaseResponseDTO<List<MonthlyGrossGamingRevenueResponse>>()
             {
-                StatusCode = StatusCode.Error,
+                StatusCode = StatusCode.Success,
                 Message = "GGR is disabled.",
                 Result = null
             };
@@ -2419,8 +2419,8 @@ namespace Platform.AgentReports.API.Repository
 
             //var states = new int[] { (int)StatusType.Won, (int)StatusType.Lost, (int)StatusType.HalfWon, (int)StatusType.HalfLost, (int)StatusType.Void };
 
-            if (request.Currency == Currency.All && parentAgentId > 0)
-                request.Currency = Enum.Parse<Currency>(GetUserDetails(parentAgentId).Result.Currency);
+            if (request.Currency == CurrencyCode.ALL && parentAgentId > 0)
+                request.Currency = Enum.Parse<CurrencyCode>(GetUserDetails(parentAgentId).Result.Currency);
 
             var iQueryableData = GetWinLossAggregateQueryableParentAndAgentId2(parentAgentId, directUserId, true, request).AsNoTracking();
             var membersCount = GetDistinctMembers2(request);

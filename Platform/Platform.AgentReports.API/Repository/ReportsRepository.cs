@@ -1118,7 +1118,7 @@ namespace Platform.AgentReports.API.Repository
             };
         }
 
-        public BaseResponseDTO<WinLossResponse> GetProfitLoss(long parentAgentId, ProfitLossRequest request)
+        public async Task<BaseResponseDTO<WinLossResponse>> GetProfitLoss(long parentAgentId, ProfitLossRequest request)
         {
             #region W/O BACK AND LAY
 
@@ -1218,7 +1218,7 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
-        public BaseResponseDTO<WinLossResponse> GetProfitLoss(long parentAgentId, long directUserId, ProfitLossRequest request)
+        public async Task<BaseResponseDTO<WinLossResponse>> GetProfitLoss(long parentAgentId, long directUserId, ProfitLossRequest request)
         {
             #region W/O BACK AND LAY
 
@@ -1319,7 +1319,7 @@ namespace Platform.AgentReports.API.Repository
             #endregion
         }
 
-        public BaseResponseDTO<WinLossDetailsResponse> GetProfitLossDetails(long parentAgentId, long directUserId, ProfitLossRequest request)
+        public async Task<BaseResponseDTO<WinLossDetailsResponse>> GetProfitLossDetails(long parentAgentId, long directUserId, ProfitLossRequest request)
         {
             #region W/O BACK AND LAY
 
@@ -1574,7 +1574,7 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
-        public BaseResponseDTO<WinLossResponse> GetProfitLoss(long parentAgentId, string product, DateTime fromDate, DateTime toDate, int page, int pageSize, string currency, string status, string dateFilter)
+        public async Task<BaseResponseDTO<WinLossResponse>> GetProfitLoss(long parentAgentId, string product, DateTime fromDate, DateTime toDate, int page, int pageSize, string currency, string status, string dateFilter)
         {
             #region W/ BACK AND LAY
 
@@ -1818,7 +1818,7 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
-        public BaseResponseDTO<WinLossResponse> GetProfitLoss(long parentAgentId, long directUserId, string product, DateTime fromDate, DateTime toDate, int page, int pageSize, string currency, string status, string dateFilter)
+        public async Task<BaseResponseDTO<WinLossResponse>> GetProfitLoss(long parentAgentId, long directUserId, string product, DateTime fromDate, DateTime toDate, int page, int pageSize, string currency, string status, string dateFilter)
         {
             #region W/ BACK AND LAY
 
@@ -2062,7 +2062,7 @@ namespace Platform.AgentReports.API.Repository
             #endregion
         }
 
-        public BaseResponseDTO<WinLossDetailsResponse> GetProfitLossDetails(long parentAgentId, long directUserId, string product, DateTime fromDate, DateTime toDate, int page, int pageSize, string currency, string status, string dateFilter)
+        public async Task<BaseResponseDTO<WinLossDetailsResponse>> GetProfitLossDetails(long parentAgentId, long directUserId, string product, DateTime fromDate, DateTime toDate, int page, int pageSize, string currency, string status, string dateFilter)
         {
             #region W/ BACK AND LAY
 
@@ -2568,7 +2568,7 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
-        public BaseResponseDTO<GGRResponse> GetGGR(long parentAgentId, long directUserId, WinLossAccountRequestExtendedDTO request)
+        public async Task<BaseResponseDTO<GGRResponse>> GetGGR(long parentAgentId, long directUserId, WinLossAccountRequestExtendedDTO request)
         {
             var skip = (request.Page - 1) * request.PageSize;
             double rowCount = 0;
@@ -2648,7 +2648,7 @@ namespace Platform.AgentReports.API.Repository
                 }
             };
         }
-        public BaseResponseDTO<GGRDetailsResponse> GetGGRDetails(long agentId, long playerId, WinLossAccountRequestExtendedDTO request)
+        public async Task<BaseResponseDTO<GGRDetailsResponse>> GetGGRDetails(long agentId, long playerId, WinLossAccountRequestExtendedDTO request)
         {
             var skip = (request.Page - 1) * request.PageSize;
             var productTypes = request.Product.Split(',').Select(int.Parse).ToList();

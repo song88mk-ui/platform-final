@@ -27,18 +27,18 @@ namespace Platform.AgentReports.API.Repository
         #endregion
 
         #region Methods
-        public BaseResponseDTO<UserDetailsResponseDTO> GetUserDetails(long userId)
+        public BaseResponseDTO<UserDetailsResponse> GetUserDetails(long userId)
         {
             var client = _httpClient.CreateClient();
             var response = client.GetAsync($"{_config["AgentUrl"]}api/v3/user/details/{userId}").Result;
 
             if (response.IsSuccessStatusCode)
             {
-                return JsonConvert.DeserializeObject<BaseResponseDTO<UserDetailsResponseDTO>>(response.Content
+                return JsonConvert.DeserializeObject<BaseResponseDTO<UserDetailsResponse>>(response.Content
                     .ReadAsStringAsync().Result);
             }
 
-            return new BaseResponseDTO<UserDetailsResponseDTO>();
+            return new BaseResponseDTO<UserDetailsResponse>();
         }
 
         #endregion

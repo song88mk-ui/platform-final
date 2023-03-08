@@ -6,7 +6,7 @@ namespace Platform.AgentReports.API.Models.Response
     {
         public WinLossResponseDTO()
         {
-            Bets = new List<WinLossModelDTO>();
+            Bets = new List<WinLossModel>();
         }
 
         public int CurrentPage { get; set; }
@@ -53,7 +53,7 @@ namespace Platform.AgentReports.API.Models.Response
 
         public int TotalMemberCount { get; set; }
 
-        public List<WinLossModelDTO> Bets { get; set; }
+        public List<WinLossModel> Bets { get; set; }
     }
 
     public class WinLossDetailsResponse

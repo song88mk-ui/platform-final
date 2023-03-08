@@ -3,7 +3,7 @@ using System;
 
 namespace Platform.AgentReports.API.Models.Response
 {
-    public class GGRModelResponseDTO
+    public class GGRModelResponse
     {
         public long UserId { get; set; }
 

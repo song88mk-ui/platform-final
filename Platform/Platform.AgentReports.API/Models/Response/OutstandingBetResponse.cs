@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace Platform.AgentReports.API.Models.Response
 {
-    public class OutstandingBetResponseDTO
+    public class OutstandingBetResponse
     {
-        public OutstandingBetResponseDTO()
+        public OutstandingBetResponse()
         {
             Bets = new List<Bet>();
         }

@@ -4,7 +4,7 @@ using Platform.Shared.Models;
 
 namespace Platform.AgentReports.API.Models.Response
 {
-    public class WinLossModelDTO
+    public class WinLossModel
     {
         public long UserId { get; set; }
 
@@ -59,7 +59,7 @@ namespace Platform.AgentReports.API.Models.Response
         public int MemberCount { get; set; }
     }
 
-    public class WinLossDetailsModelDTO
+    public class WinLossDetailsModel
     {
         public long UserId { get; set; }
 

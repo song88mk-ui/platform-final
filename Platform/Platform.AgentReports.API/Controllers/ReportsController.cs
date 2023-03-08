@@ -117,31 +117,31 @@ namespace Platform.AgentReports.API.Controllers
         }
 
         [HttpPost("v1/reports/profitloss/{agentId}")]
-        public IActionResult GetProfitLossV2(long agentId, [FromBody] ProfitLossRequest request)
+        public IActionResult GetProfitLoss(long agentId, [FromBody] ProfitLossRequest request)
         {
             return Ok(_reportsRepository.GetProfitLoss(agentId, request));
         }
 
         [HttpPost("v1/reports/profitloss/{agentId}/{directUserId}")]
-        public IActionResult GetProfitLossV2(long agentId, long directUserId, [FromBody] ProfitLossRequest request)
+        public IActionResult GetProfitLoss(long agentId, long directUserId, [FromBody] ProfitLossRequest request)
         {
             return Ok(_reportsRepository.GetProfitLoss(agentId, directUserId, request));
         }
 
         [HttpPost("v1/reports/profitloss/details/{agentId}/{directUserId}")]
-        public IActionResult GetProfitLossDetailsV2(long agentId, long directUserId, [FromBody] ProfitLossRequest request)
+        public IActionResult GetProfitLossDetails(long agentId, long directUserId, [FromBody] ProfitLossRequest request)
         {
             return Ok(_reportsRepository.GetProfitLossDetails(agentId, directUserId, request));
         }
 
         [HttpPost("v1/reports/ggr/{agentId}/{directAgentId}")]
-        public IActionResult GetGGRV2(long agentId, long directAgentId, [FromBody] WinLossAccountRequestExtendedDTO request)
+        public IActionResult GetGGR(long agentId, long directAgentId, [FromBody] WinLossAccountRequestExtendedDTO request)
         {
             return Ok(_reportsRepository.GetGGR(agentId, directAgentId, request));
         }
 
         [HttpPost("v1/reports/ggr/details/{agentId}/{playerId}")]
-        public IActionResult GetGGRDetailsV2(long agentId, long playerId, [FromBody] WinLossAccountRequestExtendedDTO request)
+        public IActionResult GetGGRDetails(long agentId, long playerId, [FromBody] WinLossAccountRequestExtendedDTO request)
         {
             return Ok(_reportsRepository.GetGGRDetails(agentId, playerId, request));
         }

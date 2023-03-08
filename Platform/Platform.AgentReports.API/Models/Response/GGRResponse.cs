@@ -2,11 +2,11 @@
 
 namespace Platform.AgentReports.API.Models.Response
 {
-    public class GGRResponseDTO
+    public class GGRResponse
     {
-        public GGRResponseDTO()
+        public GGRResponse()
         {
-            Bets = new List<GGRModelResponseDTO>();
+            Bets = new List<GGRModelResponse>();
         }
 
         public int CurrentPage { get; set; }
@@ -27,7 +27,7 @@ namespace Platform.AgentReports.API.Models.Response
 
         public int TotalMemberCount { get; set; }
 
-        public List<GGRModelResponseDTO> Bets { get; set; }
+        public List<GGRModelResponse> Bets { get; set; }
     }
 
     public class GGRDetailsResponse

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace Platform.AgentReports.API.Models.Response
 {
-    public class OutstandingBetFixtureResponseDTO
+    public class OutstandingBetFixtureResponse
     {
-        public OutstandingBetFixtureResponseDTO()
+        public OutstandingBetFixtureResponse()
         {
 
         }

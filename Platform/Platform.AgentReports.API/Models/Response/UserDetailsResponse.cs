@@ -2,7 +2,7 @@
 
 namespace Platform.AgentReports.API.Models.Response
 {
-    public class UserDetailsResponseDTO
+    public class UserDetailsResponse
     {
         public long UserId { get; set; }
         public string FullName { get; set; }

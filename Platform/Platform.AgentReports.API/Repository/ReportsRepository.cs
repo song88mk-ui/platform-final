@@ -39,7 +39,7 @@ namespace Platform.AgentReports.API.Repository
         #endregion
 
         #region Methods
-        public async Task<BaseResponseDTO<WinLossResponse>> GetWinLossV2(long parentAgentId, bool isAgents, WinLossAccountRequest request)
+        public async Task<BaseResponseDTO<WinLossResponse>> GetWinLoss(long parentAgentId, bool isAgents, WinLossAccountRequest request)
         {
 
             #region W/O BACK AND LAY
@@ -144,7 +144,7 @@ namespace Platform.AgentReports.API.Repository
             #endregion
         }
 
-        public async Task<BaseResponseDTO<WinLossResponse>> GetWinLossV2(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request)
+        public async Task<BaseResponseDTO<WinLossResponse>> GetWinLoss(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request)
         {
 
             #region W/O BACK AND LAY
@@ -248,7 +248,7 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
-        public async Task<BaseResponseDTO<WinLossDetailsResponse>> GetWinLossDetailsV2(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request)
+        public async Task<BaseResponseDTO<WinLossDetailsResponse>> GetWinLossDetails(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request)
         {
 
             #region W/O BACK AND LAY

@@ -19,9 +19,9 @@ namespace Platform.AgentReports.API.Controllers
         }
 
         [HttpPost("v1/reports/winloss/{agentId}/{isAgent}")]
-        public async Task<IActionResult> GetWinLossV2(long agentId, bool isAgent, [FromBody] WinLossAccountRequest request)
+        public async Task<IActionResult> GetWinLoss(long agentId, bool isAgent, [FromBody] WinLossAccountRequest request)
         {
-            var result = await _reportsRepository.GetWinLossV2(agentId, isAgent, request);
+            var result = await _reportsRepository.GetWinLoss(agentId, isAgent, request);
 
             switch (result.StatusCode)
             {
@@ -33,9 +33,9 @@ namespace Platform.AgentReports.API.Controllers
         }
 
         [HttpPost("v1/reports/winloss/{agentId}/{directUserId}/{isAgent}")]
-        public async Task<IActionResult> GetWinLossV2(long agentId, long directUserId, bool isAgent, [FromBody] WinLossAccountRequestExtended request)
+        public async Task<IActionResult> GetWinLoss(long agentId, long directUserId, bool isAgent, [FromBody] WinLossAccountRequestExtended request)
         {
-            var result = await _reportsRepository.GetWinLossV2(agentId, directUserId, isAgent, request);
+            var result = await _reportsRepository.GetWinLoss(agentId, directUserId, isAgent, request);
 
             switch (result.StatusCode)
             {
@@ -47,9 +47,9 @@ namespace Platform.AgentReports.API.Controllers
         }
 
         [HttpPost("v1/reports/winloss/details/{agentId}/{directUserId}/{isAgent}")]
-        public async Task<IActionResult> GetWinLossDetailsV2(long agentId, long directUserId, bool isAgent, [FromBody] WinLossAccountRequestExtended request)
+        public async Task<IActionResult> GetWinLossDetails(long agentId, long directUserId, bool isAgent, [FromBody] WinLossAccountRequestExtended request)
         {
-            var result = await _reportsRepository.GetWinLossDetailsV2(agentId, directUserId, isAgent, request);
+            var result = await _reportsRepository.GetWinLossDetails(agentId, directUserId, isAgent, request);
 
             switch (result.StatusCode)
             {

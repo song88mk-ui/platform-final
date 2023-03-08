@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Platform.Shared.Models
+namespace Platform.AgentReports.API.Models.Response
 {
     public class UserDetailsResponseDTO
     {

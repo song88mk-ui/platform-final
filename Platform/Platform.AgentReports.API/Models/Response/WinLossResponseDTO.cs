@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Platform.Shared.Models
+namespace Platform.AgentReports.API.Models.Response
 {
     public class WinLossResponseDTO
     {

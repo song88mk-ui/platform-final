@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System;
+using Platform.Shared.Models;
 
-namespace Platform.Shared.Models
+namespace Platform.AgentReports.API.Models.Response
 {
     public class WinLossModelDTO
     {

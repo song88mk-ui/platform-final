@@ -1,6 +1,7 @@
-﻿using System;
+﻿using Platform.Shared.Models;
+using System;
 
-namespace Platform.Shared.Models
+namespace Platform.AgentReports.API.Models.Response
 {
     public class GGRModelResponseDTO
     {

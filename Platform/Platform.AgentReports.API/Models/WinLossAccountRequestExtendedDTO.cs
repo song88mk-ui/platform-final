@@ -4,6 +4,6 @@ namespace Platform.AgentReports.API.Models
 {
     public class WinLossAccountRequestExtendedDTO : WinLossAccountRequest
     {
-        public long? SelectedUserId { get; set; }
+        public long? SelectedUserId { get; set; } = null;
     }
 }

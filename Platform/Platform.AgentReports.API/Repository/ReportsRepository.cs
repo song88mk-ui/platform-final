@@ -1,19 +1,18 @@
-﻿using Platform.AgentReports.API.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Platform.AgentReports.API.Models;
+using Platform.AgentReports.API.Models.Request;
+using Platform.AgentReports.API.Models.Response;
 using Platform.Shared.Data.Reports;
+using Platform.Shared.Data.Reports.Entities;
 using Platform.Shared.Enums;
+using Platform.Shared.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using System.Net.Http;
-using Microsoft.Extensions.Configuration;
-using Platform.AgentReports.API.Models.Response;
-using static Platform.Shared.Models.OutstandingBetFixtureResponseDTO;
-using Platform.Shared.Models;
-using Platform.Shared.Data.Reports.Entities;
-using Platform.AgentReports.API.Models.Request;
+using static Platform.AgentReports.API.Models.Response.OutstandingBetFixtureResponseDTO;
 
 namespace Platform.AgentReports.API.Repository
 {
@@ -22,24 +21,24 @@ namespace Platform.AgentReports.API.Repository
         #region Fields
 
         private readonly AgentReportsContext _context;
-        private readonly IHttpClientFactory _httpClient;
         private readonly IConfiguration _config;
+        private readonly IAgentRepository _agentRepository;
 
         #endregion
 
         #region Ctor
 
-        public ReportsRepository(AgentReportsContext context, IHttpClientFactory httpClient, IConfiguration config)
+        public ReportsRepository(AgentReportsContext context, IAgentRepository agentRepository, IConfiguration config)
         {
             _context = context;
-            _httpClient = httpClient;
             _config = config;
+            _agentRepository = agentRepository;
         }
 
         #endregion
 
         #region Methods
-        public async Task<BaseResponseDTO<WinLossResponse>> GetWinLoss(long parentAgentId, bool isAgents, WinLossAccountRequest request)
+        public async Task<BaseResponseDTO<WinLossResponseDTO>> GetWinLoss(long parentAgentId, bool isAgents, WinLossAccountRequest request)
         {
 
             #region W/O BACK AND LAY
@@ -50,7 +49,7 @@ namespace Platform.AgentReports.API.Repository
             var states = new int[] { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost };
 
             if (request.Currency == Currency.All && parentAgentId > 0)
-                request.Currency = Enum.Parse<Currency>(GetUserDetails(parentAgentId).Result.Currency);
+                request.Currency = Enum.Parse<Currency>(_agentRepository.GetUserDetails(parentAgentId).Result.Currency);
 
             var iQueryableData = GetWinLossAggregateQueryable2(parentAgentId, isAgents, request).AsNoTracking();
             var membersCount = GetDistinctMembers2(request);
@@ -79,7 +78,7 @@ namespace Platform.AgentReports.API.Repository
                 UplineWinLoss = s.UplineWinLoss,
                 UplineCommission = s.UplineCommission,
                 UplineWLC = s.UplineWLC
-            }).ToList().GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModel()
+            }).ToList().GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModelDTO()
             {
                 UserId = d.Key.IndirectUserId,
                 Username = d.Key.Username,
@@ -109,11 +108,11 @@ namespace Platform.AgentReports.API.Repository
             rowCount = bets.Count();
             var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
 
-            return new BaseResponseDTO<WinLossResponse>
+            return new BaseResponseDTO<WinLossResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new WinLossResponse
+                Result = new WinLossResponseDTO
                 {
                     CurrentPage = request.Page,
                     PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
@@ -144,7 +143,7 @@ namespace Platform.AgentReports.API.Repository
             #endregion
         }
 
-        public async Task<BaseResponseDTO<WinLossResponse>> GetWinLoss(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request)
+        public async Task<BaseResponseDTO<WinLossResponseDTO>> GetWinLoss(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request)
         {
 
             #region W/O BACK AND LAY
@@ -155,7 +154,7 @@ namespace Platform.AgentReports.API.Repository
             //var states = new int[] { (int)StatusType.Won, (int)StatusType.Lost, (int)StatusType.HalfWon, (int)StatusType.HalfLost };
 
             if (request.Currency == Currency.All && parentAgentId > 0)
-                request.Currency = Enum.Parse<Currency>(GetUserDetails(parentAgentId).Result.Currency);
+                request.Currency = Enum.Parse<Currency>(_agentRepository.GetUserDetails(parentAgentId).Result.Currency);
 
             var iQueryableData = GetWinLossAggregateQueryableParentAndAgentId2(parentAgentId, directUserId, isAgents, request).AsNoTracking();
             var membersCount = GetDistinctMembers2(request);
@@ -184,7 +183,7 @@ namespace Platform.AgentReports.API.Repository
                 UplineWinLoss = s.UplineWinLoss,
                 UplineCommission = s.UplineCommission,
                 UplineWLC = s.UplineWLC
-            }).ToList().GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModel()
+            }).ToList().GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModelDTO()
             {
                 UserId = d.Key.IndirectUserId,
                 Username = d.Key.Username,
@@ -214,11 +213,11 @@ namespace Platform.AgentReports.API.Repository
             rowCount = bets.Count();
             var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
 
-            return new BaseResponseDTO<WinLossResponse>
+            return new BaseResponseDTO<WinLossResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new WinLossResponse
+                Result = new WinLossResponseDTO
                 {
                     CurrentPage = request.Page,
                     PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
@@ -960,7 +959,7 @@ namespace Platform.AgentReports.API.Repository
             };
         }
 
-        public BaseResponseDTO<WinLossResponseDTO> GetProfitLossV2(long parentAgentId, ProfitLossRequest request)
+        public BaseResponseDTO<WinLossResponseDTO> GetProfitLoss(long parentAgentId, ProfitLossRequest request)
         {
             #region W/O BACK AND LAY
 
@@ -1060,7 +1059,7 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
-        public BaseResponseDTO<WinLossResponseDTO> GetProfitLossV2(long parentAgentId, long directUserId, ProfitLossRequest request)
+        public BaseResponseDTO<WinLossResponseDTO> GetProfitLoss(long parentAgentId, long directUserId, ProfitLossRequest request)
         {
             #region W/O BACK AND LAY
 
@@ -1161,7 +1160,7 @@ namespace Platform.AgentReports.API.Repository
             #endregion
         }
 
-        public BaseResponseDTO<WinLossDetailsResponse> GetProfitLossDetailsV2(long parentAgentId, long directUserId, ProfitLossRequest request)
+        public BaseResponseDTO<WinLossDetailsResponse> GetProfitLossDetails(long parentAgentId, long directUserId, ProfitLossRequest request)
         {
             #region W/O BACK AND LAY
 
@@ -2410,7 +2409,7 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
-        public BaseResponseDTO<GGRResponseDTO> GetGGRV2(long parentAgentId, long directUserId, WinLossAccountRequestExtendedDTO request)
+        public BaseResponseDTO<GGRResponseDTO> GetGGR(long parentAgentId, long directUserId, WinLossAccountRequestExtendedDTO request)
         {
             var skip = (request.Page - 1) * request.PageSize;
             double rowCount = 0;
@@ -2418,7 +2417,7 @@ namespace Platform.AgentReports.API.Repository
             //var states = new int[] { (int)StatusType.Won, (int)StatusType.Lost, (int)StatusType.HalfWon, (int)StatusType.HalfLost, (int)StatusType.Void };
 
             if (request.Currency == Currency.All && parentAgentId > 0)
-                request.Currency = Enum.Parse<Currency>(GetUserDetails(parentAgentId).Result.Currency);
+                request.Currency = Enum.Parse<Currency>(_agentRepository.GetUserDetails(parentAgentId).Result.Currency);
 
             var iQueryableData = GetWinLossAggregateQueryableParentAndAgentId2(parentAgentId, directUserId, true, request).AsNoTracking();
             var membersCount = GetDistinctMembers2(request);
@@ -2490,7 +2489,7 @@ namespace Platform.AgentReports.API.Repository
                 }
             };
         }
-        public BaseResponseDTO<GGRDetailsResponse> GetGGRDetailsV2(long agentId, long playerId, WinLossAccountRequestExtendedDTO request)
+        public BaseResponseDTO<GGRDetailsResponse> GetGGRDetails(long agentId, long playerId, WinLossAccountRequestExtendedDTO request)
         {
             var skip = (request.Page - 1) * request.PageSize;
             var productTypes = request.Product.Split(',').Select(int.Parse).ToList();
@@ -3616,19 +3615,6 @@ namespace Platform.AgentReports.API.Repository
 
             return score;
         }
-        private BaseResponseDTO<UserDetailsResponseDTO> GetUserDetails(long userId)
-        {
-            var client = _httpClient.CreateClient();
-            var response = client.GetAsync($"{_config["AgentUrl"]}/user/details/{userId}").Result;
-
-            if (response.IsSuccessStatusCode)
-            {
-                return JsonConvert.DeserializeObject<BaseResponseDTO<UserDetailsResponseDTO>>(response.Content
-                    .ReadAsStringAsync().Result);
-            }
-
-            return new BaseResponseDTO<UserDetailsResponseDTO>();
-        }
         private IQueryable<WinLoss> GetWinLossAggregateQueryableParentAndAgentId2(long parentUserId, long directUserId, bool isAgent, WinLossAccountRequestExtendedDTO request)
         {
             IQueryable<WinLoss> result;
@@ -3770,7 +3756,7 @@ namespace Platform.AgentReports.API.Repository
 
             return result;
         }
-       
+
         #endregion
     }
 }

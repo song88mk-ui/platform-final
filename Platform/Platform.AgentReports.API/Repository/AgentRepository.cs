@@ -13,13 +13,13 @@ namespace Platform.AgentReports.API.Repository
     {
         #region Fields
 
-        private readonly IHttpClientFactory _httpClient;
+        private readonly HttpClient _httpClient;
         private readonly IConfiguration _config;
 
         #endregion
 
         #region CTOR
-        public AgentRepository(IHttpClientFactory httpClient, IConfiguration config)
+        public AgentRepository(HttpClient httpClient, IConfiguration config)
         {
             _httpClient = httpClient;
             _config = config;
@@ -29,8 +29,7 @@ namespace Platform.AgentReports.API.Repository
         #region Methods
         public BaseResponseDTO<UserDetailsResponse> GetUserDetails(long userId)
         {
-            var client = _httpClient.CreateClient();
-            var response = client.GetAsync($"{_config["AgentUrl"]}api/v3/user/details/{userId}").Result;
+            var response = _httpClient.GetAsync($"{_config["AgentUrl"]}api/v3/user/details/{userId}").Result;
 
             if (response.IsSuccessStatusCode)
             {

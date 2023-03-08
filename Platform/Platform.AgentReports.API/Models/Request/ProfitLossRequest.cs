@@ -8,7 +8,7 @@ namespace Platform.AgentReports.API.Models.Request
         public int PageSize { get; set; }
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
-        public long? SelectedUserId { get; set; } = null;
+        public long? SelectedUserId { get; set; }
         public string Product { get; set; }
         public string Currency { get; set; }
         public string Status { get; set; }

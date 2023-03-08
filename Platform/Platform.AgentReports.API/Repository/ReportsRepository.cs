@@ -38,7 +38,8 @@ namespace Platform.AgentReports.API.Repository
         #endregion
 
         #region Methods
-        public async Task<BaseResponseDTO<WinLossResponseDTO>> GetWinLoss(long parentAgentId, bool isAgents, WinLossAccountRequest request)
+
+        public async Task<BaseResponseDTO<WinLossResponse>> GetWinLoss(long parentAgentId, bool isAgents, WinLossAccountRequest request)
         {
 
             #region W/O BACK AND LAY
@@ -110,11 +111,11 @@ namespace Platform.AgentReports.API.Repository
             rowCount = bets.Count();
             var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
 
-            return new BaseResponseDTO<WinLossResponseDTO>
+            return new BaseResponseDTO<WinLossResponse>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new WinLossResponseDTO
+                Result = new WinLossResponse
                 {
                     CurrentPage = request.Page,
                     PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
@@ -145,7 +146,7 @@ namespace Platform.AgentReports.API.Repository
             #endregion
         }
 
-        public async Task<BaseResponseDTO<WinLossResponseDTO>> GetWinLoss(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request)
+        public async Task<BaseResponseDTO<WinLossResponse>> GetWinLoss(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request)
         {
 
             #region W/O BACK AND LAY
@@ -215,11 +216,11 @@ namespace Platform.AgentReports.API.Repository
             rowCount = bets.Count();
             var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
 
-            return new BaseResponseDTO<WinLossResponseDTO>
+            return new BaseResponseDTO<WinLossResponse>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new WinLossResponseDTO
+                Result = new WinLossResponse
                 {
                     CurrentPage = request.Page,
                     PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
@@ -783,6 +784,156 @@ namespace Platform.AgentReports.API.Repository
                 }
             };
         }
+
+        public async Task<BaseResponseDTO<TotalBetResponse>> GetTotalBets(SearchBetRequest request)
+        {
+            var startDate = GetStartDate();
+            var endDate = GetEndDate(startDate);
+
+            var states = new int[] { (int)StatusType.Void, (int)StatusType.Rejected };
+
+            var currentBets = _context.Bet.AsNoTracking()
+                .Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
+                .Select(s => new
+                {
+                    ParentUserId = s.ParentUserId,
+                    ProductId = s.ProductId,
+                    TransactionDateOffset = s.TransactionDateOffset,
+                    StatusId = s.StatusId,
+                    AgentId = s.AgentId,
+                    TrueStake = s.TrueStake,
+                    UserId = s.UserId
+                }).ToList();
+
+            var currentWinLoss = _context.WinLoss.AsNoTracking()
+                .Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
+                .Select(s => new
+                {
+                    ParentUserId = s.ParentUserId,
+                    DirectUserId = s.DirectUserId,
+                    ProductId = s.ProductId,
+                    TransactionDateOffset = s.TransactionDateOffset,
+                    MemberWLC = s.MemberWLC,
+                    AgentWLC = s.AgentWLC,
+                    StatusId = s.StatusId,
+                    IsParlay = s.IsParlay,
+                    SportId = s.SportId,
+                    TrueStake = s.TrueStake,
+                    SportName = s.SportName
+                }).ToList();
+
+            var currentLeaderBoard = _context.WinLoss.AsNoTracking()
+                .Where(c => c.ParentUserId == request.AgentId && c.UserTypeId == (int)UserType.Player && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
+                .Select(s => new
+                {
+                    ParentUserId = s.ParentUserId,
+                    IndirectUserId = s.IndirectUserId,
+                    UserTypeId = s.UserTypeId,
+                    TransactionDateOffset = s.TransactionDateOffset,
+                    Username = s.Username,
+                    MemberWLC = s.MemberWLC,
+                    AgentUsername = s.AgentUsername
+                }).ToList();
+
+            var totalStakeCount = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Count();
+            var totalStakeAmount = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && !states.ToArray().Contains(c.StatusId) && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Sum(s => s.TrueStake);
+            var totalAgentcount = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.AgentId != request.AgentId && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Select(s => s.AgentId).Distinct().Count();
+            var totalMemberCount = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Select(s => s.UserId).Distinct().Count();
+
+            var stakes = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && !states.ToArray().Contains(c.StatusId) && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Select(s => s.TrueStake).ToList();
+
+            var averageStake = stakes.Count == 0 ? 0 : totalStakeAmount / totalStakeCount;
+
+            var totalMemberWLC = currentWinLoss.Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Sum(s => s.MemberWLC);
+            var totalAgentWLC = currentWinLoss.Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Sum(s => s.AgentWLC);
+            var totalTurnover = currentWinLoss.Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && !states.ToArray().Contains(c.StatusId) && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Sum(s => s.TrueStake);
+
+            var betTotalDaily = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && !states.ToArray().Contains(c.StatusId) && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
+                .GroupBy(g => g.TransactionDateOffset.Date)
+                .Select(s => new TotalBetResponse.DailyBetTotal
+                {
+                    Day = s.Key.DayOfWeek.ToString(),
+                    TotalStakeCount = s.Count(),
+                    TotalStakeAmount = s.Sum(ss => ss.TrueStake)
+                }).ToList();
+
+            var leaderBoard = currentLeaderBoard.Where(c => c.ParentUserId == request.AgentId && c.UserTypeId == (int)UserType.Player && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
+                .GroupBy(g => g.IndirectUserId)
+                .Select(s => new TotalBetResponse.BetTotalLeaderboard
+                {
+                    Username = s.Select(ss => ss.Username).FirstOrDefault(),
+                    TotalAmount = s.Sum(ss => ss.MemberWLC),
+                    AgentName = s.Select(ss => ss.AgentUsername).FirstOrDefault()
+
+                }).ToList();
+
+            //won
+            var leaderBoardWon = leaderBoard.Where(l => l.TotalAmount > 0)
+                .OrderByDescending(o => o.TotalAmount)
+                .Take(5)
+                .ToList();
+
+            //lost
+            var leaderBoardLost = leaderBoard.Where(l => l.TotalAmount < 0)
+                .OrderBy(o => o.TotalAmount)
+                .Take(5)
+                .ToList();
+
+            var sportsBetTotal = currentWinLoss.Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.IsParlay == false && !states.ToArray().Contains(c.StatusId) && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
+                .GroupBy(g => g.SportId)
+                .Select(s => new TotalBetResponse.SportBetTotal
+                {
+                    SportId = s.Key,
+                    SportName = s.Select(ss => ss.SportName).FirstOrDefault(),
+                    TotalStakeCount = s.Count(),
+                    TotalMemberWLC = s.Sum(ss => ss.MemberWLC),
+                    TotalAgentWLC = s.Sum(ss => ss.AgentWLC),
+                    TotalTurnover = s.Sum(ss => ss.TrueStake),
+                    TotalMargin = s.Sum(ss => ss.AgentWLC) < 0 ? ((Math.Abs(s.Sum(ss => ss.AgentWLC)) / Math.Abs(s.Sum(ss => ss.TrueStake))) * 100) * -1 : s.Sum(ss => ss.AgentWLC) == 0 ? 0 : (Math.Abs(s.Sum(ss => ss.AgentWLC)) / Math.Abs(s.Sum(ss => ss.TrueStake))) * 100
+                }).ToList();
+
+            var parlayBetTotal = currentWinLoss.Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.IsParlay == true && !states.ToArray().Contains(c.StatusId) && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
+                .GroupBy(g => g.SportId)
+                .Select(s => new TotalBetResponse.SportBetTotal
+                {
+                    SportId = 0,
+                    SportName = "Parlay",
+                    TotalStakeCount = s.Count(),
+                    TotalMemberWLC = s.Sum(ss => ss.MemberWLC),
+                    TotalAgentWLC = s.Sum(ss => ss.AgentWLC),
+                    TotalTurnover = s.Sum(ss => ss.TrueStake),
+                    TotalMargin = s.Sum(ss => ss.AgentWLC) < 0 ? ((Math.Abs(s.Sum(ss => ss.AgentWLC)) / Math.Abs(s.Sum(ss => ss.TrueStake))) * 100) * -1 : s.Sum(ss => ss.AgentWLC) == 0 ? 0 : (Math.Abs(s.Sum(ss => ss.AgentWLC)) / Math.Abs(s.Sum(ss => ss.TrueStake))) * 100
+                }).FirstOrDefault();
+
+            if (parlayBetTotal != null)
+                sportsBetTotal.Add(parlayBetTotal);
+
+            var betTotal = new TotalBetResponse
+            {
+                TotalStakeCount = totalStakeCount,
+                TotalStakeAmount = totalStakeAmount,
+                TotalAgentCount = totalAgentcount,
+                TotalMemberCount = totalMemberCount,
+                TotalMemberWLC = totalMemberWLC,
+                TotalAgentWLC = totalAgentWLC,
+                TotalTurnover = totalTurnover,
+                TotalMargin = totalAgentWLC < 0 ? (Math.Abs(totalAgentWLC) / Math.Abs(totalTurnover) * 100) * -1 : totalAgentWLC == 0 ? 0 : (Math.Abs(totalAgentWLC) / Math.Abs(totalTurnover)) * 100,
+                AverageStake = averageStake,
+                StartWeek = startDate,
+                EndWeek = endDate,
+                BetTotalDaily = betTotalDaily,
+                LeaderboardWon = leaderBoardWon,
+                LeaderboardLost = leaderBoardLost,
+                SportsBetTotal = sportsBetTotal
+            };
+
+            return new BaseResponseDTO<TotalBetResponse>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = betTotal
+            };
+        }
         public async Task<BaseResponseDTO<OutstandingBetFixtureResponse>> GetOutstandingBetFixtures(long agentId, int page, int pageSize, CurrencyCode currency)
         {
             var skip = (page - 1) * pageSize;
@@ -967,7 +1118,7 @@ namespace Platform.AgentReports.API.Repository
             };
         }
 
-        public BaseResponseDTO<WinLossResponseDTO> GetProfitLoss(long parentAgentId, ProfitLossRequest request)
+        public BaseResponseDTO<WinLossResponse> GetProfitLoss(long parentAgentId, ProfitLossRequest request)
         {
             #region W/O BACK AND LAY
 
@@ -1033,11 +1184,11 @@ namespace Platform.AgentReports.API.Repository
             rowCount = bets.Count();
             var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
 
-            return new BaseResponseDTO<WinLossResponseDTO>
+            return new BaseResponseDTO<WinLossResponse>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new WinLossResponseDTO
+                Result = new WinLossResponse
                 {
                     CurrentPage = request.Page,
                     PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
@@ -1067,7 +1218,7 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
-        public BaseResponseDTO<WinLossResponseDTO> GetProfitLoss(long parentAgentId, long directUserId, ProfitLossRequest request)
+        public BaseResponseDTO<WinLossResponse> GetProfitLoss(long parentAgentId, long directUserId, ProfitLossRequest request)
         {
             #region W/O BACK AND LAY
 
@@ -1133,11 +1284,11 @@ namespace Platform.AgentReports.API.Repository
             rowCount = bets.Count();
             var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
 
-            return new BaseResponseDTO<WinLossResponseDTO>
+            return new BaseResponseDTO<WinLossResponse>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new WinLossResponseDTO
+                Result = new WinLossResponse
                 {
                     CurrentPage = request.Page,
                     PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
@@ -1423,7 +1574,7 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
-        public BaseResponseDTO<WinLossResponseDTO> GetProfitLoss(long parentAgentId, string product, DateTime fromDate, DateTime toDate, int page, int pageSize, string currency, string status, string dateFilter)
+        public BaseResponseDTO<WinLossResponse> GetProfitLoss(long parentAgentId, string product, DateTime fromDate, DateTime toDate, int page, int pageSize, string currency, string status, string dateFilter)
         {
             #region W/ BACK AND LAY
 
@@ -1633,11 +1784,11 @@ namespace Platform.AgentReports.API.Repository
             rowCount = bets.Count();
             var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
 
-            return new BaseResponseDTO<WinLossResponseDTO>
+            return new BaseResponseDTO<WinLossResponse>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new WinLossResponseDTO
+                Result = new WinLossResponse
                 {
                     CurrentPage = page,
                     PageCount = (int)Math.Ceiling(rowCount / pageSize),
@@ -1667,7 +1818,7 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
-        public BaseResponseDTO<WinLossResponseDTO> GetProfitLoss(long parentAgentId, long directUserId, string product, DateTime fromDate, DateTime toDate, int page, int pageSize, string currency, string status, string dateFilter)
+        public BaseResponseDTO<WinLossResponse> GetProfitLoss(long parentAgentId, long directUserId, string product, DateTime fromDate, DateTime toDate, int page, int pageSize, string currency, string status, string dateFilter)
         {
             #region W/ BACK AND LAY
 
@@ -1876,11 +2027,11 @@ namespace Platform.AgentReports.API.Repository
             rowCount = bets.Count();
             var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
 
-            return new BaseResponseDTO<WinLossResponseDTO>
+            return new BaseResponseDTO<WinLossResponse>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new WinLossResponseDTO
+                Result = new WinLossResponse
                 {
                     CurrentPage = page,
                     PageCount = (int)Math.Ceiling(rowCount / pageSize),
@@ -3055,6 +3206,7 @@ namespace Platform.AgentReports.API.Repository
 
             return result;
         }
+
         private IQueryable<WinLoss> GetProfitLossAggregateQueryable(long parentUserId, DateTime fromDate, DateTime toDate, string[] currencies, string dateFilter, List<int> productTypes)
         {
             IQueryable<WinLoss> result;
@@ -3596,6 +3748,7 @@ namespace Platform.AgentReports.API.Repository
 
             return result;
         }
+
         private CasinoDetailDTO GetCasinoDetailForPL(string details, decimal exchangeRate)
         {
             if (string.IsNullOrEmpty(details))
@@ -3764,6 +3917,74 @@ namespace Platform.AgentReports.API.Repository
             }
 
             return result;
+        }
+
+        private DateTime GetStartDate()
+        {
+            var startDate = new DateTime();
+
+            switch (DateTime.UtcNow.AddHours(-4).DayOfWeek)
+            {
+                case DayOfWeek.Monday:
+                    startDate = DateTime.UtcNow.AddHours(-4);
+                    break;
+                case DayOfWeek.Tuesday:
+                    startDate = DateTime.UtcNow.AddHours(-4).AddDays(-1);
+                    break;
+                case DayOfWeek.Wednesday:
+                    startDate = DateTime.UtcNow.AddHours(-4).AddDays(-2);
+                    break;
+                case DayOfWeek.Thursday:
+                    startDate = DateTime.UtcNow.AddHours(-4).AddDays(-3);
+                    break;
+                case DayOfWeek.Friday:
+                    startDate = DateTime.UtcNow.AddHours(-4).AddDays(-4);
+                    break;
+                case DayOfWeek.Saturday:
+                    startDate = DateTime.UtcNow.AddHours(-4).AddDays(-5);
+                    break;
+                case DayOfWeek.Sunday:
+                    startDate = DateTime.UtcNow.AddHours(-4).AddDays(-6);
+                    break;
+                default:
+                    break;
+            }
+
+            return startDate.Date;
+        }
+
+        private DateTime GetEndDate(DateTime startDate)
+        {
+            var endDate = new DateTime();
+
+            switch (startDate.DayOfWeek)
+            {
+                case DayOfWeek.Monday:
+                    endDate = startDate.AddDays(6);
+                    break;
+                case DayOfWeek.Tuesday:
+                    endDate = startDate.AddDays(5);
+                    break;
+                case DayOfWeek.Wednesday:
+                    endDate = startDate.AddDays(4);
+                    break;
+                case DayOfWeek.Thursday:
+                    endDate = startDate.AddDays(3);
+                    break;
+                case DayOfWeek.Friday:
+                    endDate = startDate.AddDays(2);
+                    break;
+                case DayOfWeek.Saturday:
+                    endDate = startDate.AddDays(1);
+                    break;
+                case DayOfWeek.Sunday:
+                    endDate = startDate;
+                    break;
+                default:
+                    break;
+            }
+
+            return endDate.Date;
         }
 
         #endregion

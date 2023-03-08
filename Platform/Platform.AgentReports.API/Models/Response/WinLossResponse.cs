@@ -2,9 +2,9 @@
 
 namespace Platform.AgentReports.API.Models.Response
 {
-    public class WinLossResponseDTO
+    public class WinLossResponse
     {
-        public WinLossResponseDTO()
+        public WinLossResponse()
         {
             Bets = new List<WinLossModel>();
         }

@@ -813,7 +813,8 @@ namespace Platform.AgentReports.Service.Repository
             var tempDownlineWLC = 0m;
 
             var isGGREnabled = false;
-            var partnerRevShare = context.PartnerRevenueShare.FirstOrDefault(p => p.UserId == agents.FirstOrDefault(a => a.Hierarchy == 1).AgentId);
+            var agentId = agents.FirstOrDefault(a => a.Hierarchy == 1)?.AgentId ?? 0;
+            var partnerRevShare = context.PartnerRevenueShare.FirstOrDefault(p => p.UserId == agentId);
             if (partnerRevShare != null)
                 isGGREnabled = partnerRevShare.IsGGREnabled;
 

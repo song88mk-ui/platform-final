@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Platform.AgentReports.API.ActionFilters;
 using Platform.AgentReports.API.Models;
 using Platform.AgentReports.API.Models.Request;
 using Platform.AgentReports.API.Repository;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Platform.AgentReports.API.Controllers
 {
-    [ApiController, EnableCors("AllowAllOrigins")]
+    [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(APIKeyFilter))]
     public class ReportsController : ControllerBase
     {
         private readonly IReportsRepository _reportsRepository;
@@ -103,7 +104,7 @@ namespace Platform.AgentReports.API.Controllers
         }
 
         [HttpGet("v1/bets/outstanding/fixtures/{agentId}/{page}/{pageSize}")]
-        public async Task<IActionResult> GetOutstandingBetFixtures(long agentId, int page, int pageSize, [FromQuery] Currency currency)
+        public async Task<IActionResult> GetOutstandingBetFixtures(long agentId, int page, int pageSize, [FromQuery] CurrencyCode currency)
         {
             var result = await _reportsRepository.GetOutstandingBetFixtures(agentId, page, pageSize, currency);
 

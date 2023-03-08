@@ -60,7 +60,7 @@ namespace Platform.AgentReports.API.Models.Response
     {
         public WinLossDetailsResponse()
         {
-            Bets = new List<WinLossDetailsModelDTO>();
+            Bets = new List<WinLossDetailsModel>();
         }
 
         public int CurrentPage { get; set; }
@@ -101,6 +101,6 @@ namespace Platform.AgentReports.API.Models.Response
 
         public decimal TotalUplineWLC { get; set; }
 
-        public List<WinLossDetailsModelDTO> Bets { get; set; }
+        public List<WinLossDetailsModel> Bets { get; set; }
     }
 }

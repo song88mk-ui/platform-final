@@ -9,7 +9,7 @@ namespace Platform.AgentReports.API.Models.Request
         public int PageSize { get; set; }
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
-        public Currency Currency { get; set; } = Currency.All;
+        public CurrencyCode Currency { get; set; } = CurrencyCode.ALL;
         public string Product { get; set; }
         public string Status { get; set; }
         public string DateFilter { get; set; } = "transactiondate";

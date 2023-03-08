@@ -39,7 +39,7 @@ namespace Platform.AgentReports.Service
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _messageBroker.Connect();
+            _messageBroker.ConnectWithManualAck();
             _messageBroker.MessageReceived += MessageReceivedEvent;
 
             return Task.CompletedTask;
@@ -72,9 +72,12 @@ namespace Platform.AgentReports.Service
                         _reportsRepository.ProcessBetCancellation(onBetCancellation);
                         break;
                 }
+
+                _messageBroker.Acknowledge(e);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.Message.ToString());
             }
         }
     }

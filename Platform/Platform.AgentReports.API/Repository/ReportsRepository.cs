@@ -48,13 +48,13 @@ namespace Platform.AgentReports.API.Repository
 
             var states = new int[] { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost };
 
-            if (request.Currency == Currency.All && parentAgentId > 0)
-                request.Currency = Enum.Parse<Currency>(_agentRepository.GetUserDetails(parentAgentId).Result.Currency);
+            if (request.Currency == CurrencyCode.ALL && parentAgentId > 0)
+                request.Currency = Enum.Parse<CurrencyCode>(_agentRepository.GetUserDetails(parentAgentId).Result.Currency);
 
             var iQueryableData = GetWinLossAggregateQueryable2(parentAgentId, isAgents, request).AsNoTracking();
             var membersCount = GetDistinctMembers2(request);
 
-            var bets = iQueryableData.Select(s => new
+            var tempbets = iQueryableData.Select(s => new
             {
                 IndirectUserId = s.IndirectUserId,
                 Username = s.Username,
@@ -78,7 +78,9 @@ namespace Platform.AgentReports.API.Repository
                 UplineWinLoss = s.UplineWinLoss,
                 UplineCommission = s.UplineCommission,
                 UplineWLC = s.UplineWLC
-            }).ToList().GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModel()
+            }).ToList();
+            
+            var bets = tempbets.GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModel()
             {
                 UserId = d.Key.IndirectUserId,
                 Username = d.Key.Username,
@@ -153,8 +155,8 @@ namespace Platform.AgentReports.API.Repository
 
             //var states = new int[] { (int)StatusType.Won, (int)StatusType.Lost, (int)StatusType.HalfWon, (int)StatusType.HalfLost };
 
-            if (request.Currency == Currency.All && parentAgentId > 0)
-                request.Currency = Enum.Parse<Currency>(_agentRepository.GetUserDetails(parentAgentId).Result.Currency);
+            if (request.Currency == CurrencyCode.ALL && parentAgentId > 0)
+                request.Currency = Enum.Parse<CurrencyCode>(_agentRepository.GetUserDetails(parentAgentId).Result.Currency);
 
             var iQueryableData = GetWinLossAggregateQueryableParentAndAgentId2(parentAgentId, directUserId, isAgents, request).AsNoTracking();
             var membersCount = GetDistinctMembers2(request);
@@ -389,7 +391,7 @@ namespace Platform.AgentReports.API.Repository
                     Message = StatusCode.Success.ToString(),
                     Result = new WinLossDetailsResponse()
                     {
-                        Bets = new List<WinLossDetailsModelDTO>(),
+                        Bets = new List<WinLossDetailsModel>(),
                         CurrentPage = request.PageSize,
                         PageCount = 0,
                         PageSize = request.PageSize
@@ -402,7 +404,7 @@ namespace Platform.AgentReports.API.Repository
 
             var betIds = betsRaw.Select(m => string.IsNullOrEmpty(m.ReferenceId) ? m.BetId : Guid.Parse(m.ReferenceId)).ToList();
 
-            var bets = betsRaw.OrderBy(p => p.SettledDate).Skip(skip).Take(request.PageSize).Select(s => new WinLossDetailsModelDTO()
+            var bets = betsRaw.OrderBy(p => p.SettledDate).Skip(skip).Take(request.PageSize).Select(s => new WinLossDetailsModel()
             {
                 UserId = s.IndirectUserId,
                 BetId = string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId),
@@ -520,6 +522,12 @@ namespace Platform.AgentReports.API.Repository
 
             if (!string.IsNullOrEmpty(request.BetId))
                 records = records.Where(c => c.BetId.ToString().Trim().ToLower().Contains(request.BetId.Trim().ToLower()));
+
+            if (request.CurrencyCode != CurrencyCode.ALL)
+            {
+                var currencyCode = request.CurrencyCode.ToString();
+                records = records.Where(c => c.CurrencyCode == currencyCode);
+            }
 
             rowCount = records.Count();
             totalReceive = records.Sum(s => s.PositionTaking * s.TrueStake);
@@ -775,7 +783,7 @@ namespace Platform.AgentReports.API.Repository
                 }
             };
         }
-        public async Task<BaseResponseDTO<OutstandingBetFixtureResponse>> GetOutstandingBetFixtures(long agentId, int page, int pageSize, Currency currency)
+        public async Task<BaseResponseDTO<OutstandingBetFixtureResponse>> GetOutstandingBetFixtures(long agentId, int page, int pageSize, CurrencyCode currency)
         {
             var skip = (page - 1) * pageSize;
             double rowCount = 0;
@@ -786,8 +794,8 @@ namespace Platform.AgentReports.API.Repository
 
             var marketTemplateIds = new List<string> { "1", "2", "3", "22", "23", "8", "9", "10" };
 
-            var currencies = currency == Currency.All
-                ? Enum.GetValues(typeof(Currency)).Cast<Currency>().Select(s => s.ToString()).ToList()
+            var currencies = currency == CurrencyCode.ALL
+                ? Enum.GetValues(typeof(CurrencyCode)).Cast<CurrencyCode>().Select(s => s.ToString()).ToList()
                 : new List<string>() { currency.ToString() };
 
             rowCount = _context.Bet.Where(c => c.ParentUserId == agentId && c.ProductId == 1 && c.Count == 1 && c.StatusId == (int)BetStatus.Running && marketTemplateIds.Contains(c.MarketTemplateId) && currencies.Contains(c.CurrencyCode)).GroupBy(g => g.FixtureId).Count();
@@ -879,14 +887,14 @@ namespace Platform.AgentReports.API.Repository
 
             if (!partnerRevenueShare.Any()) return new BaseResponseDTO<List<MonthlyGrossGamingRevenueResponse>>()
             {
-                StatusCode = StatusCode.Error,
+                StatusCode = StatusCode.Success,
                 Message = "Partner cannot be found.",
                 Result = null
             };
 
             if (!partnerRevenueShare.First().IsGGREnabled) return new BaseResponseDTO<List<MonthlyGrossGamingRevenueResponse>>()
             {
-                StatusCode = StatusCode.Error,
+                StatusCode = StatusCode.Success,
                 Message = "GGR is disabled.",
                 Result = null
             };
@@ -1310,7 +1318,7 @@ namespace Platform.AgentReports.API.Repository
                 {
                     Result = new WinLossDetailsResponse()
                     {
-                        Bets = new List<WinLossDetailsModelDTO>(),
+                        Bets = new List<WinLossDetailsModel>(),
                         CurrentPage = request.PageSize,
                         PageCount = 0,
                         PageSize = request.PageSize
@@ -1323,7 +1331,7 @@ namespace Platform.AgentReports.API.Repository
             var totalStakeAmount = betsRaw.Sum(s => s.Stake / s.ExchangeRate);
             var totalValidStakeAmount = betsRaw.Sum(s => s.TrueStake / s.ExchangeRate);
 
-            var bets = betsRaw.OrderBy(p => p.SettledDate).Skip(skip).Take(request.PageSize).ToList().Select(s => new WinLossDetailsModelDTO()
+            var bets = betsRaw.OrderBy(p => p.SettledDate).Skip(skip).Take(request.PageSize).ToList().Select(s => new WinLossDetailsModel()
             {
                 UserId = s.IndirectUserId,
                 BetId = string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId),
@@ -2304,7 +2312,7 @@ namespace Platform.AgentReports.API.Repository
                 {
                     Result = new WinLossDetailsResponse()
                     {
-                        Bets = new List<WinLossDetailsModelDTO>(),
+                        Bets = new List<WinLossDetailsModel>(),
                         CurrentPage = pageSize,
                         PageCount = 0,
                         PageSize = pageSize
@@ -2317,7 +2325,7 @@ namespace Platform.AgentReports.API.Repository
             var totalStakeAmount = betsRaw.Sum(s => s.Stake / s.ExchangeRate);
             var totalValidStakeAmount = betsRaw.Sum(s => s.TrueStake / s.ExchangeRate);
 
-            var bets = betsRaw.OrderBy(p => p.SettledDate).Skip(skip).Take(pageSize).ToList().Select(s => new WinLossDetailsModelDTO()
+            var bets = betsRaw.OrderBy(p => p.SettledDate).Skip(skip).Take(pageSize).ToList().Select(s => new WinLossDetailsModel()
             {
                 UserId = s.IndirectUserId,
                 BetId = string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId),
@@ -2416,8 +2424,8 @@ namespace Platform.AgentReports.API.Repository
 
             //var states = new int[] { (int)StatusType.Won, (int)StatusType.Lost, (int)StatusType.HalfWon, (int)StatusType.HalfLost, (int)StatusType.Void };
 
-            if (request.Currency == Currency.All && parentAgentId > 0)
-                request.Currency = Enum.Parse<Currency>(_agentRepository.GetUserDetails(parentAgentId).Result.Currency);
+            if (request.Currency == CurrencyCode.ALL && parentAgentId > 0)
+                request.Currency = Enum.Parse<CurrencyCode>(_agentRepository.GetUserDetails(parentAgentId).Result.Currency);
 
             var iQueryableData = GetWinLossAggregateQueryableParentAndAgentId2(parentAgentId, directUserId, true, request).AsNoTracking();
             var membersCount = GetDistinctMembers2(request);
@@ -2894,7 +2902,7 @@ namespace Platform.AgentReports.API.Repository
 
             if (status.Any())
             {
-                result = result.Where(p => status.Any(s => s.Equals((string.IsNullOrEmpty(p.ReferenceId) || p.StatusName.ToUpper() == "CANCELLED") ? p.StatusName.ToUpper() : $"ADJUSTMENT{p.StatusName.ToUpper()}")));
+                result = result.Where(p => status.Any(s => s.Equals((string.IsNullOrEmpty(p.ReferenceId) || p.StatusName.ToUpper() == "CANCELLED") ? p.StatusName.ToUpper() : "ADJUSTMENT" + p.StatusName)));
             }
 
             if (betIds.Any())
@@ -2905,6 +2913,7 @@ namespace Platform.AgentReports.API.Repository
 
             return result;
         }
+
         private IQueryable<WinLoss> GetWinLossAggregateQueryableParentAndAgentId2(long parentUserId, long directUserId, bool isAgent, WinLossAccountRequestExtended request)
         {
             IQueryable<WinLoss> result;
@@ -3041,7 +3050,7 @@ namespace Platform.AgentReports.API.Repository
 
             if (status.Any())
             {
-                result = result.Where(p => status.Any(s => s.Equals((string.IsNullOrEmpty(p.ReferenceId) || p.StatusName.ToUpper() == "CANCELLED") ? p.StatusName.ToUpper() : $"ADJUSTMENT{p.StatusName.ToUpper()}")));
+                result = result.Where(p => status.Any(s => s.Equals((string.IsNullOrEmpty(p.ReferenceId) || p.StatusName.ToUpper() == "CANCELLED") ? p.StatusName.ToUpper() : "ADJUSTMENT" + p.StatusName)));
             }
 
             return result;

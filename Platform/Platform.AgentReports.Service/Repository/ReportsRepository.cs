@@ -345,7 +345,7 @@ namespace Platform.AgentReports.Service.Repository
                 Commission = agent.Commission,
                 Stake = message.Bet.Stake,
                 TrueStake = message.Bet.TrueStake,
-                Odds = message.Odds,
+                Odds = message.Bet.Odds,
                 OddsTypeId = message.Bet.OddsTypeId,
                 OddsTypeName = message.Bet.OddsTypeName,
                 Payout = message.Bet.Payout,
@@ -442,7 +442,7 @@ namespace Platform.AgentReports.Service.Repository
                 Commission = agent.Commission,
                 Stake = message.Bet.Stake,
                 TrueStake = message.Bet.TrueStake,
-                Odds = message.Odds,
+                Odds = message.Bet.Odds,
                 OddsTypeId = message.Bet.OddsTypeId,
                 OddsTypeName = message.Bet.OddsTypeName,
                 Payout = message.Bet.Payout,
@@ -813,7 +813,8 @@ namespace Platform.AgentReports.Service.Repository
             var tempDownlineWLC = 0m;
 
             var isGGREnabled = false;
-            var partnerRevShare = context.PartnerRevenueShare.FirstOrDefault(p => p.UserId == agents.FirstOrDefault(a => a.Hierarchy == 1).AgentId);
+            var agentId = agents.FirstOrDefault(a => a.Hierarchy == 1)?.AgentId ?? 0;
+            var partnerRevShare = context.PartnerRevenueShare.FirstOrDefault(p => p.UserId == agentId);
             if (partnerRevShare != null)
                 isGGREnabled = partnerRevShare.IsGGREnabled;
 
@@ -1035,8 +1036,28 @@ namespace Platform.AgentReports.Service.Repository
                 return hasHalfSettlement ? playerCommission / 2 : playerCommission;
             }
             else
-                return GetReceiveCommissionFinal(bet, agent, agents);
+                
+                return GetAgentReceiveCommissionFinal(bet, agent, agents);
         }
+
+        private decimal GetAgentReceiveCommissionFinal(OnBetSettlement bet, AgentSettings agent, List<AgentSettings> agents)
+        {
+            var receivableComm = agent.Commission;
+            var payableComm = agents.OrderBy(o => o.Hierarchy).Where(c => c.AgentId > agent.AgentId).Select(s => s.Commission).FirstOrDefault();
+
+            var uplineReceivablePT = agents.OrderBy(o => o.Hierarchy).Where(c => c.AgentId < agent.AgentId).Sum(s => s.PositionTaking);
+            var uplinePayablePT = agents.OrderBy(o => o.Hierarchy).Where(c => c.AgentId <= agent.AgentId).Sum(s => s.PositionTaking);
+
+            var ptReceivableComm = bet.Bet.Stake * uplineReceivablePT * receivableComm;
+            var ptPayableComm = bet.Bet.Stake * uplinePayablePT * payableComm;
+
+            var commission = ptReceivableComm - ptPayableComm;
+
+            var hasHalfSettlement = HasHalfSettlementFinal(bet.BetSelections);
+
+            return hasHalfSettlement ? commission / 2 : commission;
+        }
+
         private void AddOrUpdateSettledBalanceFinal(AgentReportsContext context, OnBetSettlement message, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents)
         {
             if (message.Bet.BetStatusId == (int)BetStatus.Running) return;

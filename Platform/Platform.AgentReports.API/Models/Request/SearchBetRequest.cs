@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Platform.Shared.Enums;
+using System;
 
 namespace Platform.AgentReports.API.Models.Request
 {
@@ -12,7 +13,7 @@ namespace Platform.AgentReports.API.Models.Request
         public string AgentPartnerUserName { get; set; }
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
-        public string CurrencyCode { get; set; }
+        public CurrencyCode CurrencyCode { get; set; }
         public string BetId { get; set; }
     }
 }

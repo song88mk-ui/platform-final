@@ -524,6 +524,12 @@ namespace Platform.AgentReports.API.Repository
             if (!string.IsNullOrEmpty(request.BetId))
                 records = records.Where(c => c.BetId.ToString().Trim().ToLower().Contains(request.BetId.Trim().ToLower()));
 
+            if (request.CurrencyCode != CurrencyCode.ALL)
+            {
+                var currencyCode = request.CurrencyCode.ToString();
+                records = records.Where(c => c.CurrencyCode == currencyCode);
+            }
+
             rowCount = records.Count();
             totalReceive = records.Sum(s => s.PositionTaking * s.TrueStake);
             totalStake = records.Sum(s => s.Stake);

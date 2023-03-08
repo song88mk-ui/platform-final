@@ -74,31 +74,31 @@ namespace Platform.AgentReports.API.Controllers
             }
         }
 
-        [HttpPost("v2/reports/profitloss/{agentId}")]
+        [HttpPost("v1/reports/profitloss/{agentId}")]
         public IActionResult GetProfitLossV2(long agentId, [FromBody] ProfitLossRequest request)
         {
             return Ok(_reportsRepository.GetProfitLossV2(agentId, request));
         }
 
-        [HttpPost("v2/reports/profitloss/{agentId}/{directUserId}")]
+        [HttpPost("v1/reports/profitloss/{agentId}/{directUserId}")]
         public IActionResult GetProfitLossV2(long agentId, long directUserId, [FromBody] ProfitLossRequest request)
         {
             return Ok(_reportsRepository.GetProfitLossV2(agentId, directUserId, request));
         }
 
-        [HttpPost("v2/reports/profitloss/details/{agentId}/{directUserId}")]
+        [HttpPost("v1/reports/profitloss/details/{agentId}/{directUserId}")]
         public IActionResult GetProfitLossDetailsV2(long agentId, long directUserId, [FromBody] ProfitLossRequest request)
         {
             return Ok(_reportsRepository.GetProfitLossDetailsV2(agentId, directUserId, request));
         }
 
-        [HttpPost("v2/reports/ggr/{agentId}/{directAgentId}")]
+        [HttpPost("v1/reports/ggr/{agentId}/{directAgentId}")]
         public IActionResult GetGGRV2(long agentId, long directAgentId, [FromBody] WinLossAccountRequestExtendedDTO request)
         {
             return Ok(_reportsRepository.GetGGRV2(agentId, directAgentId, request));
         }
 
-        [HttpPost("v2/reports/ggr/details/{agentId}/{playerId}")]
+        [HttpPost("v1/reports/ggr/details/{agentId}/{playerId}")]
         public IActionResult GetGGRDetailsV2(long agentId, long playerId, [FromBody] WinLossAccountRequestExtendedDTO request)
         {
             return Ok(_reportsRepository.GetGGRDetailsV2(agentId, playerId, request));

@@ -16,6 +16,7 @@ namespace Platform.API.Controllers
 
         public InternalController(IPlatformRepository platformRepository)
         {
+            //
             _platformRepository = platformRepository;
         }
 

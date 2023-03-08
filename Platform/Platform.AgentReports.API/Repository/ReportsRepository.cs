@@ -789,11 +789,10 @@ namespace Platform.AgentReports.API.Repository
         {
             var startDate = GetStartDate();
             var endDate = GetEndDate(startDate);
-
             var statuses = new int[] { (int)StatusType.Void, (int)StatusType.Rejected };
 
             var currentBets = _context.Bet.AsNoTracking()
-                .Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
+                .Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.CurrencyCode == request.CurrencyCode.ToString() && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
                 .Select(s => new
                 {
                     ParentUserId = s.ParentUserId,
@@ -802,11 +801,13 @@ namespace Platform.AgentReports.API.Repository
                     StatusId = s.StatusId,
                     AgentId = s.AgentId,
                     TrueStake = s.TrueStake,
-                    UserId = s.UserId
+                    UserId = s.UserId,
+                    CurrencyCode = s.CurrencyCode,
+                    AgentUsername = s.AgentUsername
                 }).ToList();
 
             var currentWinLoss = _context.WinLoss.AsNoTracking()
-                .Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
+                .Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.CurrencyCode == request.CurrencyCode.ToString() && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
                 .Select(s => new
                 {
                     ParentUserId = s.ParentUserId,
@@ -819,11 +820,15 @@ namespace Platform.AgentReports.API.Repository
                     IsParlay = s.IsParlay,
                     SportId = s.SportId,
                     TrueStake = s.TrueStake,
-                    SportName = s.SportName
-                }).ToList();
+                    SportName = s.SportName,
+                    CurrencyCode = s.CurrencyCode,
+                    AgentUsername = s.AgentUsername,
+                    Username = s.Username
+                })
+                .ToList();
 
             var currentLeaderBoard = _context.WinLoss.AsNoTracking()
-                .Where(c => c.ParentUserId == request.AgentId && c.UserTypeId == (int)UserType.Player && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
+                .Where(c => c.ParentUserId == request.AgentId && c.UserTypeId == (int)UserType.Player && c.CurrencyCode == request.CurrencyCode.ToString() && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
                 .Select(s => new
                 {
                     ParentUserId = s.ParentUserId,
@@ -832,24 +837,35 @@ namespace Platform.AgentReports.API.Repository
                     TransactionDateOffset = s.TransactionDateOffset,
                     Username = s.Username,
                     MemberWLC = s.MemberWLC,
-                    AgentUsername = s.AgentUsername
-                }).ToList();
+                    AgentUsername = s.AgentUsername,
+                    CurrencyCode = s.CurrencyCode
+                })
+                .ToList();
 
-            var totalStakeCount = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Count();
-            var totalStakeAmount = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && !statuses.ToArray().Contains(c.StatusId) && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Sum(s => s.TrueStake);
-            var totalAgentcount = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.AgentId != request.AgentId && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Select(s => s.AgentId).Distinct().Count();
-            var totalMemberCount = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Select(s => s.UserId).Distinct().Count();
+            if (!string.IsNullOrEmpty(request.AgentPartnerUserName))
+            {
+                var agentPartnerList = request.AgentPartnerUserName.Split(',').ToList();
+                currentBets = currentBets.Where(b => agentPartnerList.Contains(b.AgentUsername)).ToList();
 
-            var stakes = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && !statuses.ToArray().Contains(c.StatusId) && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Select(s => s.TrueStake).ToList();
+                currentWinLoss = currentWinLoss.Where(b => agentPartnerList.Contains(b.AgentUsername.Trim().ToUpper().Equals("COMPANY") ? b.Username : b.AgentUsername)).ToList();
+
+                currentLeaderBoard = currentLeaderBoard.Where(b => agentPartnerList.Contains(b.AgentUsername.Trim().ToUpper().Equals("COMPANY") ? b.Username : b.AgentUsername)).ToList();
+            }
+
+            var totalStakeCount = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.CurrencyCode == request.CurrencyCode.ToString() && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Count();
+            var totalStakeAmount = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.CurrencyCode == request.CurrencyCode.ToString() && !statuses.ToArray().Contains(c.StatusId) && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Sum(s => s.TrueStake);
+            var totalAgentcount = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.CurrencyCode == request.CurrencyCode.ToString() && c.AgentId != request.AgentId && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Select(s => s.AgentId).Distinct().Count();
+            var totalMemberCount = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.CurrencyCode == request.CurrencyCode.ToString() && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Select(s => s.UserId).Distinct().Count();
+
+            var stakes = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.CurrencyCode == request.CurrencyCode.ToString() && !statuses.ToArray().Contains(c.StatusId) && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Select(s => s.TrueStake).ToList();
 
             var averageStake = stakes.Count == 0 ? 0 : totalStakeAmount / totalStakeCount;
 
-            var totalMemberWLC = currentWinLoss.Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Sum(s => s.MemberWLC);
-            var totalAgentWLC = currentWinLoss.Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Sum(s => s.AgentWLC);
-            var totalTurnover = currentWinLoss.Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && !statuses.ToArray().Contains(c.StatusId) && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Sum(s => s.TrueStake);
+            var totalMemberWLC = currentWinLoss.Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.CurrencyCode == request.CurrencyCode.ToString() && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Sum(s => s.MemberWLC);
+            var totalAgentWLC = currentWinLoss.Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.CurrencyCode == request.CurrencyCode.ToString() && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Sum(s => s.AgentWLC);
+            var totalTurnover = currentWinLoss.Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.CurrencyCode == request.CurrencyCode.ToString() && !statuses.ToArray().Contains(c.StatusId) && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).Sum(s => s.TrueStake);
 
-            var betTotalDaily = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && !statuses.ToArray().Contains(c.StatusId) && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
-                .GroupBy(g => g.TransactionDateOffset.Date)
+            var betTotalDaily = currentBets.Where(c => c.ParentUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.CurrencyCode == request.CurrencyCode.ToString() && !statuses.ToArray().Contains(c.StatusId) && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1)).GroupBy(g => g.TransactionDateOffset.Date)
                 .Select(s => new TotalBetResponse.DailyBetTotal
                 {
                     Day = s.Key.DayOfWeek.ToString(),
@@ -857,9 +873,8 @@ namespace Platform.AgentReports.API.Repository
                     TotalStakeAmount = s.Sum(ss => ss.TrueStake)
                 }).ToList();
 
-            var leaderBoard = currentLeaderBoard.Where(c => c.ParentUserId == request.AgentId && c.UserTypeId == (int)UserType.Player && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
-                .GroupBy(g => g.IndirectUserId)
-                .Select(s => new TotalBetResponse.BetTotalLeaderboard
+            var leaderBoard = currentLeaderBoard.Where(c => c.ParentUserId == request.AgentId && c.UserTypeId == (int)UserType.Player && c.CurrencyCode == request.CurrencyCode.ToString() && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
+                .GroupBy(g => g.IndirectUserId).Select(s => new TotalBetResponse.BetTotalLeaderboard
                 {
                     Username = s.Select(ss => ss.Username).FirstOrDefault(),
                     TotalAmount = s.Sum(ss => ss.MemberWLC),
@@ -868,20 +883,15 @@ namespace Platform.AgentReports.API.Repository
                 }).ToList();
 
             //won
-            var leaderBoardWon = leaderBoard.Where(l => l.TotalAmount > 0)
-                .OrderByDescending(o => o.TotalAmount)
-                .Take(5)
+            var leaderBoardWon = leaderBoard.Where(l => l.TotalAmount > 0).OrderByDescending(o => o.TotalAmount).Take(5)
                 .ToList();
 
             //lost
-            var leaderBoardLost = leaderBoard.Where(l => l.TotalAmount < 0)
-                .OrderBy(o => o.TotalAmount)
-                .Take(5)
+            var leaderBoardLost = leaderBoard.Where(l => l.TotalAmount < 0).OrderBy(o => o.TotalAmount).Take(5)
                 .ToList();
 
-            var sportsBetTotal = currentWinLoss.Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.IsParlay == false && !statuses.ToArray().Contains(c.StatusId) && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
-                .GroupBy(g => g.SportId)
-                .Select(s => new TotalBetResponse.SportBetTotal
+            var sportsBetTotal = currentWinLoss.Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.IsParlay == false && !statuses.ToArray().Contains(c.StatusId) && c.CurrencyCode == request.CurrencyCode.ToString() && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
+                .GroupBy(g => g.SportId).Select(s => new TotalBetResponse.SportBetTotal
                 {
                     SportId = s.Key,
                     SportName = s.Select(ss => ss.SportName).FirstOrDefault(),
@@ -892,9 +902,8 @@ namespace Platform.AgentReports.API.Repository
                     TotalMargin = s.Sum(ss => ss.AgentWLC) < 0 ? ((Math.Abs(s.Sum(ss => ss.AgentWLC)) / Math.Abs(s.Sum(ss => ss.TrueStake))) * 100) * -1 : s.Sum(ss => ss.AgentWLC) == 0 ? 0 : (Math.Abs(s.Sum(ss => ss.AgentWLC)) / Math.Abs(s.Sum(ss => ss.TrueStake))) * 100
                 }).ToList();
 
-            var parlayBetTotal = currentWinLoss.Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.IsParlay == true && !statuses.ToArray().Contains(c.StatusId) && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
-                .GroupBy(g => g.SportId)
-                .Select(s => new TotalBetResponse.SportBetTotal
+            var parlayBetTotal = currentWinLoss.Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId == (int)Product.Sportsbook && c.IsParlay == true && !statuses.ToArray().Contains(c.StatusId) && c.CurrencyCode == request.CurrencyCode.ToString() && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
+                .GroupBy(g => g.SportId).Select(s => new TotalBetResponse.SportBetTotal
                 {
                     SportId = 0,
                     SportName = "Parlay",
@@ -933,6 +942,7 @@ namespace Platform.AgentReports.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = betTotal
             };
+
         }
 
         public async Task<BaseResponseDTO<TotalBetOtherResponse>> GetTotalBetsOthers(TotalBetsRequest request)
@@ -941,36 +951,44 @@ namespace Platform.AgentReports.API.Repository
             var endDate = GetEndDate(startDate);
 
             var productBetTotal = _context.WinLoss.AsNoTracking()
-                .Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId > (int)Product.Sportsbook && c.IsParlay == false && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
+                .Where(c => c.ParentUserId == request.AgentId && c.DirectUserId == request.AgentId && c.ProductId > (int)Product.Sportsbook && c.IsParlay == false && c.CurrencyCode == request.CurrencyCode.ToString() && c.TransactionDateOffset >= startDate && c.TransactionDateOffset < endDate.AddDays(1))
                 .Select(s => new
-                   {
-                       ParentUserId = s.ParentUserId,
-                       ProductId = s.ProductId,
-                       TransactionDateOffset = s.TransactionDateOffset,
-                       StatusId = s.StatusId,
-                       SportId = s.SportId,
-                       SportName = s.SportName,
-                       ReferenceId = s.ReferenceId,
-                       AgentWLC = s.AgentWLC,
-                       MemberWLC = s.MemberWLC,
-                       BetId = s.BetId,
-                       TrueStake = s.TrueStake
-                   }).ToList()
-                   .GroupBy(g => g.SportId)
-                   .Select(s => new TotalBetOtherResponse.TotalBetOther
-                   {
-                       ProductId = s.Key,
-                       ProductName = s.Select(ss => ss.SportName).FirstOrDefault(),
-                       TotalStakeCount = s.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper() }).Distinct().Count(),
-                       TotalMemberWLC = s.Sum(ss => ss.MemberWLC),
-                       TotalAgentWLC = s.Sum(ss => ss.AgentWLC),
-                       TotalTurnover = s.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper(), TrueStake = ss.TrueStake }).Distinct().Sum(ss => ss.TrueStake),
-                       TotalMargin = s.Sum(ss => ss.AgentWLC) < 0 ? ((Math.Abs(s.Sum(ss => ss.AgentWLC)) / Math.Abs(s.Sum(ss => ss.TrueStake))) * 100) * -1 : s.Sum(ss => ss.AgentWLC) == 0 ? 0 : (Math.Abs(s.Sum(ss => ss.AgentWLC)) / Math.Abs(s.Sum(ss => ss.TrueStake))) * 100
-                   }).ToList();
+                {
+                    ParentUserId = s.ParentUserId,
+                    ProductId = s.ProductId,
+                    TransactionDateOffset = s.TransactionDateOffset,
+                    StatusId = s.StatusId,
+                    SportId = s.SportId,
+                    SportName = s.SportName,
+                    ReferenceId = s.ReferenceId,
+                    AgentWLC = s.AgentWLC,
+                    MemberWLC = s.MemberWLC,
+                    BetId = s.BetId,
+                    TrueStake = s.TrueStake,
+                    AgentUsername = s.AgentUsername,
+                    Username = s.Username
+                }).ToList();
+
+            if (!string.IsNullOrEmpty(request.AgentPartnerUserName))
+            {
+                var agentPartnerList = request.AgentPartnerUserName.Split(',').ToList();
+                productBetTotal = productBetTotal.Where(b => agentPartnerList.Contains(b.AgentUsername.Trim().ToUpper().Equals("COMPANY") ? b.Username : b.AgentUsername)).ToList();
+            }
+
+            var newProductBetTotal = productBetTotal.GroupBy(g => g.SportId).Select(s => new TotalBetOtherResponse.TotalBetOther
+            {
+                ProductId = s.Key,
+                ProductName = s.Select(ss => ss.SportName).FirstOrDefault(),
+                TotalStakeCount = s.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper() }).Distinct().Count(),
+                TotalMemberWLC = s.Sum(ss => ss.MemberWLC),
+                TotalAgentWLC = s.Sum(ss => ss.AgentWLC),
+                TotalTurnover = s.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper(), TrueStake = ss.TrueStake }).Distinct().Sum(ss => ss.TrueStake),
+                TotalMargin = s.Sum(ss => ss.AgentWLC) < 0 ? ((Math.Abs(s.Sum(ss => ss.AgentWLC)) / Math.Abs(s.Sum(ss => ss.TrueStake))) * 100) * -1 : s.Sum(ss => ss.AgentWLC) == 0 ? 0 : (Math.Abs(s.Sum(ss => ss.AgentWLC)) / Math.Abs(s.Sum(ss => ss.TrueStake))) * 100
+            }).ToList();
 
             var betTotal = new TotalBetOtherResponse
             {
-                ProductBetTotal = productBetTotal
+                ProductBetTotal = newProductBetTotal
             };
 
             return new BaseResponseDTO<TotalBetOtherResponse>
@@ -980,6 +998,7 @@ namespace Platform.AgentReports.API.Repository
                 Result = betTotal
             };
         }
+
         public async Task<BaseResponseDTO<OutstandingBetFixtureResponse>> GetOutstandingBetFixtures(long agentId, int page, int pageSize, CurrencyCode currency)
         {
             var skip = (page - 1) * pageSize;

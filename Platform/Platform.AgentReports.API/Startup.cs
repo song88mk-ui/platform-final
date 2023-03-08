@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Platform.AgentReports.API.ActionFilters;
 using Platform.AgentReports.API.Repository;
 using Platform.Shared.Data.Reports;
 
@@ -46,7 +47,7 @@ namespace Platform.AgentReports.API
 
             var connectionString = Configuration["ConnectionStrings:AgentReports"];
             services.AddDbContext<AgentReportsContext>(o => o.UseSqlServer(connectionString));
-
+            services.AddScoped<APIKeyFilter>();
             services.AddScoped<IReportsRepository, ReportsRepository>();
 
             services.AddSwaggerGen(c =>

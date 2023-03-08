@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Platform.AgentReports.API.ActionFilters;
 using Platform.AgentReports.API.Models;
 using Platform.AgentReports.API.Models.Request;
 using Platform.AgentReports.API.Repository;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Platform.AgentReports.API.Controllers
 {
-    [ApiController, EnableCors("AllowAllOrigins")]
+    [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(APIKeyFilter))]
     public class ReportsController : ControllerBase
     {
         private readonly IReportsRepository _reportsRepository;

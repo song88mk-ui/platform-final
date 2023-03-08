@@ -50,7 +50,7 @@ namespace Platform.AgentReports.API.Repository
             var states = new int[] { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost };
 
             if (request.Currency == CurrencyCode.ALL && parentAgentId > 0)
-                request.Currency = Enum.Parse<CurrencyCode>(_agentRepository.GetUserDetails(parentAgentId).Result.Currency);
+                request.Currency = Enum.Parse<CurrencyCode>((await _agentRepository.GetUserDetails(parentAgentId)).Result.Currency);
 
             var iQueryableData = GetWinLossAggregateQueryable2(parentAgentId, isAgents, request).AsNoTracking();
             var membersCount = GetDistinctMembers2(request);
@@ -157,7 +157,7 @@ namespace Platform.AgentReports.API.Repository
             //var states = new int[] { (int)StatusType.Won, (int)StatusType.Lost, (int)StatusType.HalfWon, (int)StatusType.HalfLost };
 
             if (request.Currency == CurrencyCode.ALL && parentAgentId > 0)
-                request.Currency = Enum.Parse<CurrencyCode>(_agentRepository.GetUserDetails(parentAgentId).Result.Currency);
+                request.Currency = Enum.Parse<CurrencyCode>((await _agentRepository.GetUserDetails(parentAgentId)).Result.Currency);
 
             var iQueryableData = GetWinLossAggregateQueryableParentAndAgentId2(parentAgentId, directUserId, isAgents, request).AsNoTracking();
             var membersCount = GetDistinctMembers2(request);
@@ -2641,7 +2641,7 @@ namespace Platform.AgentReports.API.Repository
             //var states = new int[] { (int)StatusType.Won, (int)StatusType.Lost, (int)StatusType.HalfWon, (int)StatusType.HalfLost, (int)StatusType.Void };
 
             if (request.Currency == CurrencyCode.ALL && parentAgentId > 0)
-                request.Currency = Enum.Parse<CurrencyCode>(_agentRepository.GetUserDetails(parentAgentId).Result.Currency);
+                request.Currency = Enum.Parse<CurrencyCode>((await _agentRepository.GetUserDetails(parentAgentId)).Result.Currency);
 
             var iQueryableData = GetWinLossAggregateQueryableParentAndAgentId2(parentAgentId, directUserId, true, request).AsNoTracking();
             var membersCount = GetDistinctMembers2(request);

@@ -48,11 +48,11 @@ namespace Platform.AgentReports.API
 
             var connectionString = Configuration["ConnectionStrings:AgentReports"];
             services.AddDbContext<AgentReportsContext>(o => o.UseSqlServer(connectionString));
+
             services.AddScoped<APIKeyFilter>();
+
             services.AddScoped<IReportsRepository, ReportsRepository>();
-            services.AddHttpClient<IAgentRepository, AgentRepository>(client => {
-                client.BaseAddress = new Uri(Configuration["AgentUrl"]);
-            });
+            services.AddHttpClient<IAgentRepository, AgentRepository>();
 
             services.AddSwaggerGen(c =>
             {

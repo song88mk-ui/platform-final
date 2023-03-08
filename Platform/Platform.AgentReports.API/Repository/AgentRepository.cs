@@ -1,11 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Configuration;
 using Platform.AgentReports.API.Models.Response;
-using Platform.Shared.Data.Reports;
+using Platform.Shared.Enums;
 using Platform.Shared.Models;
+using System;
+using System.Net;
 using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Platform.AgentReports.API.Repository
 {
@@ -14,30 +15,53 @@ namespace Platform.AgentReports.API.Repository
         #region Fields
 
         private readonly HttpClient _httpClient;
-        private readonly IConfiguration _config;
+        private readonly IConfiguration _configuration;
 
         #endregion
 
-        #region CTOR
-        public AgentRepository(HttpClient httpClient, IConfiguration config)
+        #region Ctor
+
+        public AgentRepository(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _config = config;
+            _configuration = configuration;
+
+            _httpClient.BaseAddress = new Uri(_configuration["AgentUrl"]);
         }
+
         #endregion
 
         #region Methods
-        public BaseResponseDTO<UserDetailsResponse> GetUserDetails(long userId)
+        public async Task<BaseResponseDTO<UserDetailsResponse>> GetUserDetails(long userId)
         {
-            var response = _httpClient.GetAsync($"{_config["AgentUrl"]}api/v3/user/details/{userId}").Result;
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                return JsonConvert.DeserializeObject<BaseResponseDTO<UserDetailsResponse>>(response.Content
-                    .ReadAsStringAsync().Result);
-            }
+                var response = await _httpClient.GetAsync($"/api/v3/user/details/{userId}");
 
-            return new BaseResponseDTO<UserDetailsResponse>();
+                if (response.IsSuccessStatusCode)
+                    return JsonSerializer.Deserialize<BaseResponseDTO<UserDetailsResponse>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                        return JsonSerializer.Deserialize<BaseResponseDTO<UserDetailsResponse>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    else
+                    {
+                        return new BaseResponseDTO<UserDetailsResponse>
+                        {
+                            StatusCode = StatusCode.Error,
+                            Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<UserDetailsResponse>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
+            }
         }
 
         #endregion

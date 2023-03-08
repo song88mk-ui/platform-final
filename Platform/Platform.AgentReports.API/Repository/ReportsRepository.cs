@@ -55,7 +55,7 @@ namespace Platform.AgentReports.API.Repository
             var iQueryableData = GetWinLossAggregateQueryable2(parentAgentId, isAgents, request).AsNoTracking();
             var membersCount = GetDistinctMembers2(request);
 
-            var bets = iQueryableData.Select(s => new
+            var tempbets = iQueryableData.Select(s => new
             {
                 IndirectUserId = s.IndirectUserId,
                 Username = s.Username,
@@ -79,7 +79,9 @@ namespace Platform.AgentReports.API.Repository
                 UplineWinLoss = s.UplineWinLoss,
                 UplineCommission = s.UplineCommission,
                 UplineWLC = s.UplineWLC
-            }).ToList().GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModel()
+            }).ToList();
+            
+            var bets = tempbets.GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModel()
             {
                 UserId = d.Key.IndirectUserId,
                 Username = d.Key.Username,
@@ -2895,7 +2897,7 @@ namespace Platform.AgentReports.API.Repository
 
             if (status.Any())
             {
-                result = result.Where(p => status.Any(s => s.Equals((string.IsNullOrEmpty(p.ReferenceId) || p.StatusName.ToUpper() == "CANCELLED") ? p.StatusName.ToUpper() : $"ADJUSTMENT{p.StatusName.ToUpper()}")));
+                result = result.Where(p => status.Any(s => s.Equals((string.IsNullOrEmpty(p.ReferenceId) || p.StatusName.ToUpper() == "CANCELLED") ? p.StatusName.ToUpper() : "ADJUSTMENT" + p.StatusName)));
             }
 
             if (betIds.Any())
@@ -2906,6 +2908,7 @@ namespace Platform.AgentReports.API.Repository
 
             return result;
         }
+
         private IQueryable<WinLoss> GetWinLossAggregateQueryableParentAndAgentId2(long parentUserId, long directUserId, bool isAgent, WinLossAccountRequestExtended request)
         {
             IQueryable<WinLoss> result;
@@ -3042,7 +3045,7 @@ namespace Platform.AgentReports.API.Repository
 
             if (status.Any())
             {
-                result = result.Where(p => status.Any(s => s.Equals((string.IsNullOrEmpty(p.ReferenceId) || p.StatusName.ToUpper() == "CANCELLED") ? p.StatusName.ToUpper() : $"ADJUSTMENT{p.StatusName.ToUpper()}")));
+                result = result.Where(p => status.Any(s => s.Equals((string.IsNullOrEmpty(p.ReferenceId) || p.StatusName.ToUpper() == "CANCELLED") ? p.StatusName.ToUpper() : "ADJUSTMENT" + p.StatusName)));
             }
 
             return result;

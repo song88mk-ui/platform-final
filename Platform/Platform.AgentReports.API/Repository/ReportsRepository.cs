@@ -317,7 +317,7 @@ namespace Platform.AgentReports.API.Repository
 
             if (status.Any())
             {
-                profitLossDetails = profitLossDetails.Where(p => status.Any(s => s.Equals((string.IsNullOrEmpty(p.ReferenceId) || p.StatusName.ToUpper() == "CANCELLED") ? p.StatusName.ToUpper() : $"ADJUSTMENT{p.StatusName.ToUpper()}")));
+                profitLossDetails = profitLossDetails.Where(p => status.Contains(p.StatusName.ToUpper()));
             }
 
             if (!string.IsNullOrEmpty(request.BetIds))
@@ -436,7 +436,7 @@ namespace Platform.AgentReports.API.Repository
                 OddsTypeId = s.OddsTypeId,
                 OddsTypeName = s.OddsTypeName,
                 StatusId = s.StatusId,
-                StatusName = (string.IsNullOrEmpty(s.ReferenceId) || s.StatusName.ToUpper() == "CANCELLED") ? s.StatusName : $"Adjustment-{s.StatusName}",
+                StatusName = s.StatusName,
                 VirtualSportName = s.ProductId == 2 ? s.SegmentName : string.Empty,
                 ProductId = s.ProductId,
                 ProductName = s.ProductName,
@@ -1460,7 +1460,7 @@ namespace Platform.AgentReports.API.Repository
 
             if (status.Any())
             {
-                profitLossDetails = profitLossDetails.Where(p => status.Any(s => s.Equals((string.IsNullOrEmpty(p.ReferenceId) || p.StatusName.ToUpper() == "CANCELLED") ? p.StatusName.ToUpper() : $"ADJUSTMENT{p.StatusName.ToUpper()}")));
+                profitLossDetails = profitLossDetails.Where(p => status.Contains(p.StatusName.ToUpper()));
             }
 
             if (betIds.Any())
@@ -1578,7 +1578,7 @@ namespace Platform.AgentReports.API.Repository
                 OddsTypeId = s.OddsTypeId,
                 OddsTypeName = s.OddsTypeName,
                 StatusId = s.StatusId,
-                StatusName = (string.IsNullOrEmpty(s.ReferenceId) || s.StatusName.ToUpper() == "CANCELLED") ? s.StatusName : $"Adjustment-{s.StatusName}",
+                StatusName = s.StatusName,
                 VirtualSportName = s.ProductId == 2 ? s.SegmentName : string.Empty,
                 ProductId = s.ProductId,
                 ProductName = s.ProductName,
@@ -2780,7 +2780,7 @@ namespace Platform.AgentReports.API.Repository
 
             if (status.Any())
             {
-                profitLossDetails = profitLossDetails.Where(p => status.Any(s => s.Equals((string.IsNullOrEmpty(p.ReferenceId) || p.StatusName.ToUpper() == "CANCELLED") ? p.StatusName.ToUpper() : $"ADJUSTMENT{p.StatusName.ToUpper()}")));
+                profitLossDetails = profitLossDetails.Where(p => status.Contains(p.StatusName.ToUpper()));
             }
 
             if (betIds.Any())
@@ -2891,7 +2891,7 @@ namespace Platform.AgentReports.API.Repository
                 OddsTypeId = s.OddsTypeId,
                 OddsTypeName = s.OddsTypeName,
                 StatusId = s.StatusId,
-                StatusName = (string.IsNullOrEmpty(s.ReferenceId) || s.StatusName.ToUpper() == "CANCELLED") ? s.StatusName : $"Adjustment-{s.StatusName}",
+                StatusName = s.StatusName,
                 VirtualSportName = s.ProductId == 2 ? s.SegmentName : string.Empty,
                 ProductId = s.ProductId,
                 ProductName = s.ProductName,
@@ -3118,7 +3118,7 @@ namespace Platform.AgentReports.API.Repository
 
             if (status.Any())
             {
-                result = result.Where(p => status.Any(s => s.Equals((string.IsNullOrEmpty(p.ReferenceId) || p.StatusName.ToUpper() == "CANCELLED") ? p.StatusName.ToUpper() : "ADJUSTMENT" + p.StatusName)));
+                result = result.Where(p => status.Contains(p.StatusName.ToUpper()));
             }
 
             if (betIds.Any())
@@ -3266,7 +3266,7 @@ namespace Platform.AgentReports.API.Repository
 
             if (status.Any())
             {
-                result = result.Where(p => status.Any(s => s.Equals((string.IsNullOrEmpty(p.ReferenceId) || p.StatusName.ToUpper() == "CANCELLED") ? p.StatusName.ToUpper() : "ADJUSTMENT" + p.StatusName)));
+                result = result.Where(p => status.Contains(p.StatusName.ToUpper()));
             }
 
             return result;
@@ -3807,7 +3807,7 @@ namespace Platform.AgentReports.API.Repository
 
             if (status.Any())
             {
-                result = result.Where(p => status.Any(s => s.Equals((string.IsNullOrEmpty(p.ReferenceId) || p.StatusName.ToUpper() == "CANCELLED") ? p.StatusName.ToUpper() : $"ADJUSTMENT{p.StatusName.ToUpper()}")));
+                result = result.Where(p => status.Contains(p.StatusName.ToUpper()));
             }
 
             return result;
@@ -3977,7 +3977,7 @@ namespace Platform.AgentReports.API.Repository
 
             if (status.Any())
             {
-                result = result.Where(p => status.Any(s => s.Equals((string.IsNullOrEmpty(p.ReferenceId) || p.StatusName.ToUpper() == "CANCELLED") ? p.StatusName.ToUpper() : $"ADJUSTMENT{p.StatusName.ToUpper()}")));
+                result = result.Where(p => status.Contains(p.StatusName.ToUpper()));
             }
 
             return result;

@@ -147,33 +147,37 @@ namespace Platform.AgentReports.API.Controllers
         }
 
         [HttpPost("v1/reports/profitloss/{agentId}")]
-        public IActionResult GetProfitLoss(long agentId, [FromBody] ProfitLossRequest request)
+        public async Task<IActionResult> GetProfitLoss(long agentId, [FromBody] ProfitLossRequest request)
         {
-            return Ok(_reportsRepository.GetProfitLoss(agentId, request));
+            var result = await _reportsRepository.GetProfitLoss(agentId, request);
+            return Ok(result);
         }
 
         [HttpPost("v1/reports/profitloss/{agentId}/{directUserId}")]
-        public IActionResult GetProfitLoss(long agentId, long directUserId, [FromBody] ProfitLossRequest request)
+        public async Task<IActionResult> GetProfitLoss(long agentId, long directUserId, [FromBody] ProfitLossRequest request)
         {
-            return Ok(_reportsRepository.GetProfitLoss(agentId, directUserId, request));
+            var result = await _reportsRepository.GetProfitLoss(agentId, directUserId, request);
+
+            return Ok(result);
         }
 
         [HttpPost("v1/reports/profitloss/details/{agentId}/{directUserId}")]
-        public IActionResult GetProfitLossDetails(long agentId, long directUserId, [FromBody] ProfitLossRequest request)
+        public async Task<IActionResult> GetProfitLossDetails(long agentId, long directUserId, [FromBody] ProfitLossRequest request)
         {
-            return Ok(_reportsRepository.GetProfitLossDetails(agentId, directUserId, request));
+            var result = await _reportsRepository.GetProfitLossDetails(agentId, directUserId, request);
+            return Ok();
         }
 
         [HttpPost("v1/reports/ggr/{agentId}/{directAgentId}")]
-        public IActionResult GetGGR(long agentId, long directAgentId, [FromBody] WinLossAccountRequestExtendedDTO request)
+        public async Task<IActionResult> GetGGR(long agentId, long directAgentId, [FromBody] WinLossAccountRequestExtendedDTO request)
         {
-            return Ok(_reportsRepository.GetGGR(agentId, directAgentId, request));
+            return Ok(await _reportsRepository.GetGGR(agentId, directAgentId, request));
         }
 
         [HttpPost("v1/reports/ggr/details/{agentId}/{playerId}")]
-        public IActionResult GetGGRDetails(long agentId, long playerId, [FromBody] WinLossAccountRequestExtendedDTO request)
+        public async Task<IActionResult> GetGGRDetails(long agentId, long playerId, [FromBody] WinLossAccountRequestExtendedDTO request)
         {
-            return Ok(_reportsRepository.GetGGRDetails(agentId, playerId, request));
+            return Ok(await _reportsRepository.GetGGRDetails(agentId, playerId, request));
         }
     }
 }

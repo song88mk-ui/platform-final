@@ -635,6 +635,8 @@ namespace Platform.AgentReports.API.Repository
                     PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
                     PageSize = request.PageSize,
                     RowCount = (int)rowCount,
+                    TotalReceive = totalReceive,
+                    TotalStake = totalStake,
                     Bets = result
                 }
             };
@@ -780,7 +782,7 @@ namespace Platform.AgentReports.API.Repository
                     RowCount = (int)rowCount,
                     TotalReceive = totalReceive,
                     TotalStake = totalStake,
-                    Bets = result
+                    Bets = result,
                 }
             };
         }

@@ -1398,7 +1398,7 @@ namespace Platform.AgentReports.API.Repository
             IQueryable<WinLoss> profitLossDetails;
             string[] currencies = new string[0];
 
-            if (!string.IsNullOrEmpty(request.Currency))
+            if (!string.IsNullOrEmpty(request.Currency.ToString()))
             {
                 currencies = request.Currency.Split(',');
             }

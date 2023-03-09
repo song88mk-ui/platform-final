@@ -165,7 +165,7 @@ namespace Platform.AgentReports.API.Controllers
         public async Task<IActionResult> GetProfitLossDetails(long agentId, long directUserId, [FromBody] ProfitLossRequest request)
         {
             var result = await _reportsRepository.GetProfitLossDetails(agentId, directUserId, request);
-            return Ok();
+            return Ok(result);
         }
 
         [HttpPost("v1/reports/ggr/{agentId}/{directAgentId}")]

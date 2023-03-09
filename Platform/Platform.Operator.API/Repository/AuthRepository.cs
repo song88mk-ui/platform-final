@@ -1,11 +1,11 @@
-﻿using System.Net;
+﻿using Microsoft.Extensions.Configuration;
+using Platform.Operator.API.Enums;
+using Platform.Operator.API.Models;
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Platform.Operator.API.Models;
-using Platform.Operator.API.Enums;
-using Microsoft.Extensions.Configuration;
 
 namespace Platform.Operator.API.Repository
 {
@@ -22,7 +22,57 @@ namespace Platform.Operator.API.Repository
             _httpClient.BaseAddress = new Uri(_configuration["API:AuthAPI"]);
             _httpClient.DefaultRequestHeaders.Add("x-api-key", configuration["Custom:AuthAPIKey"]);
         }
+        public async Task<BaseResponse<LoginResponse>> Login(LoginRequest request)
+        {
+            if (string.IsNullOrEmpty(request.UserName) || string.IsNullOrWhiteSpace(request.Password))
+            {
+                return new BaseResponse<LoginResponse>
+                {
+                    StatusCode = AuthStatusCode.Not_Authorized,
+                    Message = AuthStatusCode.Not_Authorized.ToString().Replace('_', ' '),
+                    Result = new LoginResponse
+                    {
+                        OperatorToken = string.Empty
+                    }
+                };
+            }
 
+            try
+            {
+                var response = await _httpClient.PostAsync($"v1/login", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<BaseResponse<LoginResponse>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return result;
+                }
+                else
+                {
+                    return new BaseResponse<LoginResponse>
+                    {
+                        StatusCode = AuthStatusCode.Not_Authorized,
+                        Message = AuthStatusCode.Not_Authorized.ToString().Replace('_', ' '),
+                        Result = new LoginResponse
+                        {
+                            OperatorToken = string.Empty
+                        }
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponse<LoginResponse>
+                {
+                    StatusCode = AuthStatusCode.Error,
+                    Message = $"{AuthStatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
+                    Result = new LoginResponse
+                    {
+                        OperatorToken = string.Empty
+                    }
+                };
+            }
+        }
         public async Task<BaseResponse<AuthResponse>> Authenticate(string operatorToken, string isAgent)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))

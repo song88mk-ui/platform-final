@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Platform.Operator.API.Models;
 using Platform.Operator.API.Repository;
 using Platform.Shared.Models;
 using System.Linq;
@@ -16,6 +17,23 @@ namespace Platform.Operator.API.Controllers
             _operatorRepository = operatorRepository;
         }
 
+        [HttpPost("operator/v1/authentication/login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequestDTO request)
+        {
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var isAgent = HttpContext.Request.Headers["x-is-agent"].FirstOrDefault();
+
+            var result = await _operatorRepository.Login(new LoginRequestDTO { UserName = request.UserName, Password = request.Password });
+
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return new BadRequestObjectResult(result.StatusId);
+            }
+        }
+
         [HttpPost("operator/v1/authentication")]
         public async Task<IActionResult> Authenticate()
         {
@@ -23,7 +41,7 @@ namespace Platform.Operator.API.Controllers
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var isAgent = HttpContext.Request.Headers["x-is-agent"].FirstOrDefault();
 
-            var result = await _operatorRepository.Authenticate(clientId, operatorToken, isAgent);
+            var result = await _operatorRepository.Authenticate(new AuthRequestDTO { ClientId = clientId, OperatorToken = operatorToken, IsAgent = isAgent });
 
             switch (result.StatusId)
             {

@@ -2,6 +2,7 @@
 using Platform.Shared.Models;
 using System;
 using System.Threading.Tasks;
+using LoginResponseDTO = Platform.Operator.API.Models.LoginResponseDTO;
 
 namespace Platform.Operator.API.Repository
 {
@@ -15,9 +16,28 @@ namespace Platform.Operator.API.Repository
             _authRepository = authRepository;
             _walletRepository = walletRepository;
         }
-        public async Task<AuthResponseDTO> Authenticate(string clientId, string operatorToken, string isAgent)
+        public async Task<LoginResponseDTO> Login(LoginRequestDTO request)
         {
-            var authResponse = await _authRepository.Authenticate(operatorToken, isAgent);
+            var loginResponse = await _authRepository.Login(new LoginRequest { UserName = request.UserName, Password = request.Password, Provider = "1002" });
+
+            if (loginResponse.StatusCode != Enums.AuthStatusCode.Success)
+            {
+                return new LoginResponseDTO
+                {
+                    StatusId = 1002,
+                    OperatorToken = loginResponse.Result.OperatorToken
+                };
+            }
+
+            return new LoginResponseDTO
+            {
+                StatusId = 1000,
+                OperatorToken = loginResponse.Result.OperatorToken
+            };
+        }
+        public async Task<AuthResponseDTO> Authenticate(AuthRequestDTO request)
+        {
+            var authResponse = await _authRepository.Authenticate(request.OperatorToken, request.IsAgent);
 
             if (authResponse.StatusCode != Enums.AuthStatusCode.Success)
             {
@@ -27,7 +47,7 @@ namespace Platform.Operator.API.Repository
                 };
             }
 
-            var walletResponse = await _walletRepository.GetUserWallet(new UserWalletRequest { ClientId = Guid.Parse(clientId), UserId = authResponse.Result.UserId });
+            var walletResponse = await _walletRepository.GetUserWallet(new UserWalletRequest { ClientId = Guid.Parse(request.ClientId), UserId = authResponse.Result.UserId });
 
             if (walletResponse.StatusCode != 1000)
             {

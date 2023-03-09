@@ -36,6 +36,41 @@ namespace Platform.API.Repository
             _memCache = memCache;
             _configuration = configuration;
         }
+        
+        public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string clientId, LoginRequest request)
+        {
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<LoginResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var loginResponse = await _operatorRepository.Login(request.UserName, request.Password, clientResponse.Result.Endpoint);
+
+            if (loginResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<LoginResponseDTO>
+                {
+                    StatusCode = loginResponse.StatusCode,
+                    Message = loginResponse.Message,
+                };
+            }
+
+            return new BaseResponseDTO<LoginResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new LoginResponseDTO
+                {
+                    OperatorToken = loginResponse.Result.OperatorToken
+                }
+            };
+        }
         public async Task<BaseResponseDTO<WalletBalanceResponseDTO>> GetWalletBalance(string clientId, string operatorToken)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))

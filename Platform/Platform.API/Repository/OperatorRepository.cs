@@ -1,4 +1,5 @@
 ﻿using Microsoft.ApplicationInsights;
+using Microsoft.AspNetCore.Http;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
@@ -20,6 +21,82 @@ namespace Platform.API.Repository
             _httpClient = httpClient;
             _telemetryClient = telemetryClient;
             _httpClient.Timeout = TimeSpan.FromSeconds(2);
+        }
+
+        public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string userName, string password, string endpoint)
+        {
+            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
+            {
+                return new BaseResponseDTO<LoginResponseDTO>
+                {
+                    StatusCode = StatusCode.Not_Authorized,
+                    Message = StatusCode.Not_Authorized.ToString().Replace('_', ' ')
+                };
+            }
+
+            try
+            {
+                var response = await _httpClient.PostAsync($"{endpoint}/v1/authentication/login", new StringContent(JsonSerializer.Serialize(new { UserName = userName, Password = password }), System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<LoginResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return new BaseResponseDTO<LoginResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString(),
+                        Result = new LoginResponseDTO
+                        {
+                            OperatorToken = result.OperatorToken
+                        }
+                    };
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        try
+                        {
+                            var result = JsonSerializer.Deserialize<LoginResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                            var properties = new Dictionary<string, string>
+                            {
+                                { "userName", userName },
+                                { "password", password },
+                                { "endpoint", endpoint }
+                            };
+
+                            _telemetryClient.TrackEvent("Login", properties);
+                        }
+                        catch (Exception)
+                        {
+                        }
+
+                        return new BaseResponseDTO<LoginResponseDTO>
+                        {
+                            StatusCode = StatusCode.Not_Authorized,
+                            Message = StatusCode.Not_Authorized.ToString().Replace('_', ' '),
+                        };
+                    }
+                    else
+                    {
+                        return new BaseResponseDTO<LoginResponseDTO>
+                        {
+                            StatusCode = StatusCode.Operator_Error,
+                            Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})",
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<LoginResponseDTO>
+                {
+                    StatusCode = StatusCode.Operator_Error,
+                    Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({ex.Message})",
+                };
+            }
         }
         public async Task<BaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string clientId, string operatorToken, string endpoint, bool isAgent)
         {
@@ -127,7 +204,6 @@ namespace Platform.API.Repository
                 };
             }
         }
-
         public async Task<BaseResponseDTO<OperatorBetResponseDTO>> ResendCancellation(string endpoint, string info)
         {
             _httpClient.BaseAddress = new Uri(endpoint);
@@ -177,7 +253,5 @@ namespace Platform.API.Repository
                 };
             }
         }
-
-
     }
 }

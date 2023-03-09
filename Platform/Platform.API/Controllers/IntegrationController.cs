@@ -26,7 +26,7 @@ namespace Platform.API.Controllers
         }
 
         [HttpPost("v1/authentication/login")]
-        public async Task<IActionResult> PlaceBet([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();

@@ -2453,14 +2453,16 @@ namespace Platform.AgentReports.API.Repository
             var result = new PartnerRevenueSettlementResponse();
 
             //get partners
-            var partners = _context.PartnerRevenueShare.Where(c => c.IsGGREnabled)
+            var partnerQuery = _context.PartnerRevenueShare.Where(c => c.IsGGREnabled)
                 .Select(s => new { s.UserId, s.UserName })
                 .Distinct();
 
             if (!string.IsNullOrEmpty(request.Username))
             {
-                partners = partners.Where(c => c.UserName.Contains(request.Username));
+                partnerQuery = partnerQuery.Where(c => c.UserName.Contains(request.Username));
             }
+
+            var partners = partnerQuery.ToList();
 
             var rowCount = 0;
             var skip = (request.Page - 1) * request.PageSize;
@@ -2604,6 +2606,66 @@ namespace Platform.AgentReports.API.Repository
             result.RevenueSettlementDetails = result.RevenueSettlementDetails.Skip(skip).Take(request.PageSize).ToList();
 
             return new BaseResponseDTO<PartnerRevenueSettlementResponse>()
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = result
+            };
+        }
+
+        public async Task<BaseResponseDTO<PartnerRevenueSettlementHistoryResponse>> GetPartnerRevenueForSettlementHistory(PartnerRevenueSettlementHistoryRequest request)
+        {
+            var result = new PartnerRevenueSettlementHistoryResponse();
+            var skip = (request.Page - 1) * request.PageSize;
+
+            var settlementHistory = _context.SettlementHistory.Where(c => c.IsSettled && c.CurrencyCode == request.CurrencyCode && c.DateSettled.Value.AddHours(-4).Date >= request.DateFrom.Date && c.DateSettled.Value.AddHours(-4).Date <= request.DateTo.Date).AsNoTracking().OrderBy(o => o.DateSettled).ToList();
+
+            if (!string.IsNullOrEmpty(request.UserIds))
+            {
+                var userIdsAsLong = request.UserIds.Split(',').Select(long.Parse).ToList();
+                settlementHistory = settlementHistory.Where(c => userIdsAsLong.Contains(c.UserId)).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(request.SettledBy))
+            {
+                settlementHistory = settlementHistory.Where(c => c.SettledBy.ToLower().Trim().Contains(request.SettledBy.ToLower().Trim())).ToList();
+            }
+
+            var groupedSettlementHistory = settlementHistory.GroupBy(g => new { g.UserId, g.DateSettled }).ToList();
+            var rowCount = groupedSettlementHistory.Count();
+            groupedSettlementHistory = groupedSettlementHistory.Skip(skip).Take(request.PageSize).ToList();
+
+            result.Page = request.Page;
+            result.PageSize = request.PageSize;
+            result.PageCount = (int)Math.Ceiling((double)rowCount / request.PageSize);
+            result.RowCount = rowCount;
+            result.RevenueSettlementHistoryDetails = new List<PartnerRevenueSettlementHistoryResponse.Detail>();
+
+            foreach (var settlement in groupedSettlementHistory)
+            {
+                var firstSettlementMonth = Convert.ToInt32(settlement.OrderBy(o => o.Coverage).First().Coverage.Split("/")[0]);
+                var firstSettlementYear = Convert.ToInt32(settlement.OrderBy(o => o.Coverage).First().Coverage.Split("/")[1]);
+                DateTime firstSettlementDate = new DateTime(firstSettlementYear, firstSettlementMonth, 1);
+                var coverage = $"{firstSettlementDate:MMM}-{firstSettlementDate:yyyy}";
+                if (settlement.Count() > 1)
+                {
+                    var lastSettlementMonth = Convert.ToInt32(settlement.OrderBy(s => s.Coverage).Last().Coverage.Split("/")[0]);
+                    var lastSettlementYear = Convert.ToInt32(settlement.OrderBy(s => s.Coverage).Last().Coverage.Split("/")[1]);
+                    DateTime lastSettlementDate = new DateTime(lastSettlementYear, lastSettlementMonth, 1);
+                    coverage += $" - {lastSettlementDate:MMM}-{lastSettlementDate:yyyy}";
+                }
+
+                result.RevenueSettlementHistoryDetails.Add(new PartnerRevenueSettlementHistoryResponse.Detail()
+                {
+                    UserName = settlement.FirstOrDefault().UserName,
+                    SettlementDate = settlement.FirstOrDefault().DateSettled.Value,
+                    SettledAmount = settlement.FirstOrDefault().AmountSettled.Value,
+                    MonthSettled = coverage,
+                    SettledBy = settlement.FirstOrDefault().SettledBy
+                });
+            }
+
+            return new BaseResponseDTO<PartnerRevenueSettlementHistoryResponse>()
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),

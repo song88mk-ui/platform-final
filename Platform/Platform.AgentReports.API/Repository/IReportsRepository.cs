@@ -30,5 +30,6 @@ namespace Platform.AgentReports.API.Repository
         Task<BaseResponseDTO<List<MonthlyGrossGamingRevenueResponse>>> GetPartnerMonthlyGGR(long userId, int year, string currencyCode);
         Task<BaseResponseDTO<TransferHistoryResponse>> GetPaymentTransferHistory(TransferHistoryRequest request);
         Task<BaseResponseDTO<PartnerRevenueSettlementResponse>> GetPartnerRevenueForSettlement(PartnerRevenueSettlementRequest request);
+        Task<BaseResponseDTO<PartnerRevenueSettlementHistoryResponse>> GetPartnerRevenueForSettlementHistory(PartnerRevenueSettlementHistoryRequest request);
     }
 }

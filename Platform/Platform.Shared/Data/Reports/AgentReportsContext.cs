@@ -21,6 +21,7 @@ namespace Platform.Shared.Data.Reports
             modelBuilder.Entity<RunningBalanceTransaction>().HasKey(k => new { k.Id });
             modelBuilder.Entity<CashBalanceTracker>().HasKey(k => new { k.ParentUserId, k.UserId, k.BetId });
             modelBuilder.Entity<PartnerRevenueShare>().HasKey(k => new { k.Id }); ;
+            modelBuilder.Entity<TransferHistory>().HasKey(k => new { k.ParentUserId, k.UserId, k.ReferenceId }); ;
         }
 
         public DbSet<Bet> Bet { get; set; }
@@ -32,5 +33,6 @@ namespace Platform.Shared.Data.Reports
         public DbSet<RunningBalanceTransaction> RunningBalanceTransaction { get; set; }
         public DbSet<CashBalanceTracker> CashBalanceTracker { get; set; }
         public DbSet<PartnerRevenueShare> PartnerRevenueShare { get; set; }
+        public DbSet<TransferHistory> TransferHistory { get; set; }
     }
 }

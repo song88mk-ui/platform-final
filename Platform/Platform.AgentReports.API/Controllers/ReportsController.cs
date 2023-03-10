@@ -179,5 +179,19 @@ namespace Platform.AgentReports.API.Controllers
         {
             return Ok(await _reportsRepository.GetGGRDetails(agentId, playerId, request));
         }
+
+        [HttpPost("v1/reports/payment/transferhistory")]
+        public async Task<IActionResult> GetPaymentTransferHistory([FromBody] TransferHistoryRequest request)
+        {
+            var result = await _reportsRepository.GetPaymentTransferHistory(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

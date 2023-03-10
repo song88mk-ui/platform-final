@@ -1,0 +1,40 @@
+﻿namespace Platform.Shared.Enums
+{
+    public enum TransactionType
+    {
+        Running = 2000,
+        Won = 3000,
+        HalfWon = 3001,
+        Lost = 4000,
+        HalfLost = 4001,
+        Void = 5000,
+        Rejected = 6000,
+        Cancelled = 7000,
+        CashedOut = 8000,
+        Deposit = 9000,
+        Withdrawal = 10000,
+        WithdrawalRejected = 10001,
+        CreditTransferCompany = 11000,
+        CreditTransferAgent = 11001,
+        CreditFlush = 11002,
+        CreditReset = 11003,
+        CreditAdjustment = 11004,
+        DebitTransferCompany = 12000,
+        DebitTransferAgent = 12001,
+        DebitAdjustment = 12002,
+        //FreeSpin = 5005,
+        PositionTakingRunning = 13000,
+        PositionTakingWon = 13001,
+        PositionTakingVoid = 13002,
+        CommissionRunning = 14000,
+        CommissionWon = 14001,
+        CommissionLost = 14002,
+        PaymentFullTransfer = 15000,
+        DebitFullPaymentTransfer = 15001,
+        CreditFullPaymentTransfer = 15002,
+        PaymentPartialTransfer = 16000,
+        DebitPartialPaymentTransfer = 16001,
+        CreditPartialPaymentTransfer = 16002,
+        ProcessTrueBalance = 17000
+    }
+}

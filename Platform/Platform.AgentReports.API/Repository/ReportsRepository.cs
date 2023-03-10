@@ -2955,6 +2955,49 @@ namespace Platform.AgentReports.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<TransferHistoryResponse>> GetPaymentTransferHistory(TransferHistoryRequest request)
+        {
+            var skip = (request.Page - 1) * request.PageSize;
+
+            var records = _context.TransferHistory.AsNoTracking().Where(c => c.ParentUserId == request.AgentId && c.UserTypeId == request.UserTypeId && c.IsCashPlayer == request.IsCashMarket);
+
+            if (request.FromDate != null)
+                records = records.Where(x => x.TransactionDateOffset.Date >= request.FromDate.Value.Date);
+            if (request.ToDate != null)
+                records = records.Where(x => x.TransactionDateOffset.Date <= request.ToDate.Value.AddDays(1).Date);
+            if (!string.IsNullOrEmpty(request.CurrencyCode))
+                records = records.Where(x => x.CurrencyCode.Trim() == request.CurrencyCode.Trim());
+            if (!string.IsNullOrEmpty(request.Username))
+                records = records.Where(x => x.Username.Trim().ToLower().Contains(request.Username.Trim().ToLower()));
+
+            var rowCount = (double)records.Count();
+            var transferHistory = records.OrderByDescending(x => x.TransactionDateOffset).Skip(skip).Take(request.PageSize);
+
+            var result = transferHistory.Select(s => new TransferHistoryResponse.Detail
+            {
+                UserId = s.UserId,
+                Username = s.Username,
+                TransactionDate = s.TransactionDate,
+                CurrencyCode = s.CurrencyCode,
+                TransferredAmount = GetTransferredAmount(s.Amount, (TransactionType)s.TransactionTypeId),
+                RemainingCashBalance = request.IsCashMarket ? s.PostBalance : s.PostBalance * -1
+            }).ToList();
+
+            return new BaseResponseDTO<TransferHistoryResponse>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new TransferHistoryResponse
+                {
+                    CurrentPage = request.Page,
+                    PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
+                    PageSize = request.PageSize,
+                    RowCount = (int)rowCount,
+                    Transfers = result
+                }
+            };
+        }
+
         #endregion
 
         #region Utilities
@@ -3857,6 +3900,7 @@ namespace Platform.AgentReports.API.Repository
 
             return score;
         }
+
         private IQueryable<WinLoss> GetWinLossAggregateQueryableParentAndAgentId2(long parentUserId, long directUserId, bool isAgent, WinLossAccountRequestExtendedDTO request)
         {
             IQueryable<WinLoss> result;
@@ -4065,6 +4109,26 @@ namespace Platform.AgentReports.API.Repository
             }
 
             return endDate.Date;
+        }
+
+        private decimal GetTransferredAmount(decimal amount, TransactionType transactionType)
+        {
+            switch (transactionType)
+            {
+                //MDIO
+                case TransactionType.Deposit:
+                    return amount;
+                case TransactionType.Withdrawal:
+                    return amount * -1;
+                case TransactionType.DebitPartialPaymentTransfer:
+                case TransactionType.DebitFullPaymentTransfer:
+                    return amount * -1;
+                case TransactionType.CreditPartialPaymentTransfer:
+                case TransactionType.CreditFullPaymentTransfer:
+                    return amount * -1;
+                default:
+                    return amount;
+            }
         }
 
         #endregion

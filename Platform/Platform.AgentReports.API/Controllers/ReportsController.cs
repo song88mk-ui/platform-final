@@ -193,5 +193,19 @@ namespace Platform.AgentReports.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/reports/partner/revenue/settlement")]
+        public async Task<IActionResult> GetPartnerRevenueForSettlement([FromBody] PartnerRevenueSettlementRequest request)
+        {
+            var result = await _reportsRepository.GetPartnerRevenueForSettlement(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

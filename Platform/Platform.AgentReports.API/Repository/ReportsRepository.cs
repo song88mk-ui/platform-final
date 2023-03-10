@@ -10,6 +10,7 @@ using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using static Platform.AgentReports.API.Models.Response.OutstandingBetFixtureResponse;
@@ -2400,63 +2401,214 @@ namespace Platform.AgentReports.API.Repository
 
         public async Task<BaseResponseDTO<TransferHistoryResponse>> GetPaymentTransferHistory(TransferHistoryRequest request)
         {
-            try
+            var skip = (request.Page - 1) * request.PageSize;
+
+            var records = _context.TransferHistory.AsNoTracking().Where(c => c.ParentUserId == request.AgentId && c.UserTypeId == request.UserTypeId && c.IsCashPlayer == request.IsCashMarket);
+
+            if (request.FromDate != null)
+                records = records.Where(c => c.TransactionDateOffset.Date >= request.FromDate.Value.Date);
+
+            if (request.ToDate != null)
+                records = records.Where(c => c.TransactionDateOffset.Date <= request.ToDate.Value.AddDays(1).Date);
+
+            if (!string.IsNullOrEmpty(request.CurrencyCode))
+                records = records.Where(c => c.CurrencyCode.Trim() == request.CurrencyCode.Trim());
+
+            if (!string.IsNullOrEmpty(request.Username))
+                records = records.Where(c => c.Username.Trim().ToLower().Contains(request.Username.Trim().ToLower()));
+
+            var rowCount = (double)records.Count();
+            var transferHistory = records.OrderByDescending(o => o.TransactionDateOffset)
+                .Skip(skip)
+                .Take(request.PageSize)
+                .ToList();
+
+            var result = transferHistory.Select(s => new TransferHistoryResponse.Detail
             {
-                var skip = (request.Page - 1) * request.PageSize;
+                UserId = s.UserId,
+                Username = s.Username,
+                TransactionDate = s.TransactionDate,
+                CurrencyCode = s.CurrencyCode,
+                TransferredAmount = GetTransferredAmount(s.Amount, (TransactionType)s.TransactionTypeId),
+                RemainingCashBalance = request.IsCashMarket ? s.PostBalance : s.PostBalance * -1
+            }).ToList();
 
-                var records = _context.TransferHistory.AsNoTracking().Where(c => c.ParentUserId == request.AgentId && c.UserTypeId == request.UserTypeId && c.IsCashPlayer == request.IsCashMarket);
-
-                if (request.FromDate != null)
-                    records = records.Where(c => c.TransactionDateOffset.Date >= request.FromDate.Value.Date);
-
-                if (request.ToDate != null)
-                    records = records.Where(c => c.TransactionDateOffset.Date <= request.ToDate.Value.AddDays(1).Date);
-
-                if (!string.IsNullOrEmpty(request.CurrencyCode))
-                    records = records.Where(c => c.CurrencyCode.Trim() == request.CurrencyCode.Trim());
-
-                if (!string.IsNullOrEmpty(request.Username))
-                    records = records.Where(c => c.Username.Trim().ToLower().Contains(request.Username.Trim().ToLower()));
-
-                var rowCount = (double)records.Count();
-                var transferHistory = records.OrderByDescending(o => o.TransactionDateOffset)
-                    .Skip(skip)
-                    .Take(request.PageSize)
-                    .ToList();
-
-                var result = transferHistory.Select(s => new TransferHistoryResponse.Detail
+            return new BaseResponseDTO<TransferHistoryResponse>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new TransferHistoryResponse
                 {
-                    UserId = s.UserId,
-                    Username = s.Username,
-                    TransactionDate = s.TransactionDate,
-                    CurrencyCode = s.CurrencyCode,
-                    TransferredAmount = GetTransferredAmount(s.Amount, (TransactionType)s.TransactionTypeId),
-                    RemainingCashBalance = request.IsCashMarket ? s.PostBalance : s.PostBalance * -1
-                }).ToList();
+                    CurrentPage = request.Page,
+                    PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
+                    PageSize = request.PageSize,
+                    RowCount = (int)rowCount,
+                    Transfers = result
+                }
+            };
+        }
 
-                return new BaseResponseDTO<TransferHistoryResponse>
+        public async Task<BaseResponseDTO<PartnerRevenueSettlementResponse>> GetPartnerRevenueForSettlement(PartnerRevenueSettlementRequest request)
+        {
+            var result = new PartnerRevenueSettlementResponse();
+
+            //get partners
+            var partners = _context.PartnerRevenueShare.Where(c => c.IsGGREnabled)
+                .Select(s => new { s.UserId, s.UserName })
+                .Distinct();
+
+            if (!string.IsNullOrEmpty(request.Username))
+            {
+                partners = partners.Where(c => c.UserName.Contains(request.Username));
+            }
+
+            var rowCount = 0;
+            var skip = (request.Page - 1) * request.PageSize;
+
+            var monthlyFee = 0.00m;
+            var companyShare = 0.00m;
+
+            var currentDate = new DateTime(DateTime.UtcNow.AddHours(-4).Year, DateTime.UtcNow.AddHours(-4).Month, 1);
+
+            foreach (var partner in partners)
+            {
+                var userDetails = await _agentRepository.GetUserDetails(partner.UserId);
+
+                if (userDetails.Result.Currency != request.CurrencyCode)
+                    continue;
+
+                rowCount += 1;
+
+                var lastSettlement = _context.SettlementHistory.Where(c => c.UserId == partner.UserId).OrderByDescending(o => o.Id).FirstOrDefault();
+
+                if (lastSettlement == null)
                 {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new TransferHistoryResponse
+                    var winLoss = _context.WinLoss.Where(c => c.ParentUserId == 0 && c.DirectUserId == partner.UserId && c.CurrencyCode == request.CurrencyCode).AsNoTracking().ToList();
+
+                    if (winLoss.Any())
                     {
-                        CurrentPage = request.Page,
-                        PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
-                        PageSize = request.PageSize,
-                        RowCount = (int)rowCount,
-                        Transfers = result
+                        var winLossGrouped = winLoss.GroupBy(g => new { g.SettledDateOffset.Year, g.SettledDateOffset.Month });
+
+                        foreach (var winLossGroup in winLossGrouped)
+                        {
+                            var winLossGroupDate = new DateTime(winLossGroup.Key.Year, winLossGroup.Key.Month, 1);
+
+                            var revShare = _context.PartnerRevenueShare.Where(c => c.UserId == partner.UserId &&
+                                                           c.EffectivityDate.Month == winLossGroupDate.Month &&
+                                                           c.EffectivityDate.Year == winLossGroupDate.Year)
+                                               .OrderByDescending(o => o.CreatedDate).FirstOrDefault() ??
+                                           _context.PartnerRevenueShare
+                                               .Where(c => c.UserId == partner.UserId && c.EffectivityDate < winLossGroupDate)
+                                               .OrderByDescending(o => o.CreatedDate).FirstOrDefault();
+
+                            monthlyFee = revShare?.MonthlyFee ?? 0.00m;
+                            companyShare = revShare?.CompanyGGR ?? 0.00m;
+
+                            if (winLossGroupDate < currentDate)
+                            {
+                                //var balance = (winLossGroup.Sum(w => w.GGR < 0 ? 0 : w.GGR).GetValueOrDefault(0) * companyShare) + monthlyFee;
+                                var balance = winLossGroup.Sum(s => s.GGR) < 0 ? monthlyFee : ((winLossGroup.Sum(s => s.GGR) * companyShare) + monthlyFee);
+
+                                _context.SettlementHistory.Add(new SettlementHistory
+                                {
+                                    UserId = partner.UserId,
+                                    UserName = partner.UserName,
+                                    CurrencyCode = userDetails.Result.Currency,
+                                    Coverage = $"{winLossGroup.FirstOrDefault()?.SettledDateOffset:MM}/{winLossGroup.FirstOrDefault()?.SettledDateOffset:yyyy}",
+                                    Balance = balance.Value,
+                                    IsSettled = false
+                                });
+
+                                _context.SaveChanges();
+                            }
+                        }
                     }
-                };
-            }
-            catch (Exception ex)
-            {
-                return new BaseResponseDTO<TransferHistoryResponse>
+
+                }
+                else
                 {
-                    StatusCode = StatusCode.Error,
-                    Message = StatusCode.Error.ToString(),
-                    Result = new TransferHistoryResponse()
-                };
+                    var lastSettlementMonth = Convert.ToInt32(lastSettlement.Coverage.Split("/")[0]);
+                    var lastSettlementYear = Convert.ToInt32(lastSettlement.Coverage.Split("/")[1]);
+                    var lastSettlementDate = new DateTime(lastSettlementYear, lastSettlementMonth, 1);
+
+                    var winLoss = _context.WinLoss.Where(c => c.ParentUserId == 0 && c.DirectUserId == partner.UserId && c.SettledDateOffset > lastSettlementDate.AddMonths(1) && c.SettledDateOffset < currentDate && c.CurrencyCode == request.CurrencyCode).AsNoTracking().AsEnumerable();
+                    var winLossGrouped = winLoss.GroupBy(g => new { g.SettledDateOffset.Year, g.SettledDateOffset.Month }).ToList();
+
+                    foreach (var winLossGroup in winLossGrouped)
+                    {
+                        var winLossGroupDate = new DateTime(winLossGroup.Key.Year, winLossGroup.Key.Month, 1);
+
+                        var revShare = _context.PartnerRevenueShare
+                                           .Where(c => c.UserId == partner.UserId &&
+                                                       c.EffectivityDate.Month == winLossGroupDate.Month &&
+                                                       c.EffectivityDate.Year == winLossGroupDate.Year)
+                                           .OrderByDescending(o => o.CreatedDate).FirstOrDefault() ??
+                                       _context.PartnerRevenueShare
+                                           .Where(c => c.UserId == partner.UserId && c.EffectivityDate < winLossGroupDate)
+                                           .OrderByDescending(o => o.CreatedDate).FirstOrDefault();
+
+                        monthlyFee = revShare?.MonthlyFee ?? 0.00m;
+                        companyShare = revShare?.CompanyGGR ?? 0.00m;
+
+                        if (winLossGroupDate < currentDate)
+                        {
+                            //var balance = (winLossGroup.Sum(w => w.GGR < 0 ? 0 : w.GGR).GetValueOrDefault(0) * companyShare) + monthlyFee;
+                            var balance = winLossGroup.Sum(s => s.GGR) < 0 ? monthlyFee : ((winLossGroup.Sum(s => s.GGR) * companyShare) + monthlyFee);
+
+                            _context.SettlementHistory.Add(new SettlementHistory
+                            {
+                                UserId = partner.UserId,
+                                UserName = partner.UserName,
+                                CurrencyCode = userDetails.Result.Currency,
+                                Coverage = $"{winLossGroup.FirstOrDefault()?.SettledDateOffset:MM}/{winLossGroup.FirstOrDefault()?.SettledDateOffset:yyyy}",
+                                Balance = balance.Value,
+                                IsSettled = false
+                            });
+
+                            _context.SaveChanges();
+
+                        }
+                    }
+                }
+
+                var revenueShare = _context.PartnerRevenueShare
+                    .Where(p => p.UserId == partner.UserId).OrderByDescending(o => o.CreatedDate).FirstOrDefault();
+
+                var unsettledRevenue = _context.SettlementHistory.Where(c => c.UserId == partner.UserId && c.IsSettled == false).AsNoTracking().OrderBy(o => o.Id).ToList();
+                var currentProfitLoss = _context.WinLoss.Where(c => c.ParentUserId == 0 && c.DirectUserId == partner.UserId && c.SettledDateOffset >= currentDate).AsNoTracking().ToList();
+
+                if (revenueShare != null)
+                {
+                    monthlyFee = revenueShare.MonthlyFee;
+                    companyShare = revenueShare.CompanyGGR;
+                }
+
+                result.RevenueSettlementDetails.Add(new PartnerRevenueSettlementResponse.Detail
+                {
+                    UserId = partner.UserId,
+                    UserName = partner.UserName,
+                    CurrentMonthBalance = (currentProfitLoss?.Sum(s => s.GGR) < 0 ? monthlyFee : ((currentProfitLoss?.Sum(s => s.GGR) * companyShare) + monthlyFee)).GetValueOrDefault(0).ToString(CultureInfo.InvariantCulture),
+                    UnsettledAmount = unsettledRevenue.Sum(s => s.Balance).ToString(CultureInfo.InvariantCulture),
+                    SettlementAmount = unsettledRevenue.Sum(s => s.Balance).ToString(CultureInfo.InvariantCulture),
+                });
             }
+
+            result.RowCount = rowCount;
+            result.CurrentPage = request.Page;
+            result.PageSize = request.PageSize;
+            result.PageCount = (int)Math.Ceiling((double)rowCount / request.PageSize);
+
+            result.TotalUnsettledAmount = result.RevenueSettlementDetails.Sum(r => Convert.ToDecimal(r.UnsettledAmount)).ToString(CultureInfo.InvariantCulture);
+            result.TotalSettlementAmount = result.RevenueSettlementDetails.Sum(r => Convert.ToDecimal(r.SettlementAmount)).ToString(CultureInfo.InvariantCulture);
+
+            result.RevenueSettlementDetails = result.RevenueSettlementDetails.Skip(skip).Take(request.PageSize).ToList();
+
+            return new BaseResponseDTO<PartnerRevenueSettlementResponse>()
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = result
+            };
         }
 
         #endregion

@@ -2957,45 +2957,63 @@ namespace Platform.AgentReports.API.Repository
 
         public async Task<BaseResponseDTO<TransferHistoryResponse>> GetPaymentTransferHistory(TransferHistoryRequest request)
         {
-            var skip = (request.Page - 1) * request.PageSize;
-
-            var records = _context.TransferHistory.AsNoTracking().Where(c => c.ParentUserId == request.AgentId && c.UserTypeId == request.UserTypeId && c.IsCashPlayer == request.IsCashMarket);
-
-            if (request.FromDate != null)
-                records = records.Where(x => x.TransactionDateOffset.Date >= request.FromDate.Value.Date);
-            if (request.ToDate != null)
-                records = records.Where(x => x.TransactionDateOffset.Date <= request.ToDate.Value.AddDays(1).Date);
-            if (!string.IsNullOrEmpty(request.CurrencyCode))
-                records = records.Where(x => x.CurrencyCode.Trim() == request.CurrencyCode.Trim());
-            if (!string.IsNullOrEmpty(request.Username))
-                records = records.Where(x => x.Username.Trim().ToLower().Contains(request.Username.Trim().ToLower()));
-
-            var rowCount = (double)records.Count();
-            var transferHistory = records.OrderByDescending(x => x.TransactionDateOffset).Skip(skip).Take(request.PageSize);
-
-            var result = transferHistory.Select(s => new TransferHistoryResponse.Detail
+            try
             {
-                UserId = s.UserId,
-                Username = s.Username,
-                TransactionDate = s.TransactionDate,
-                CurrencyCode = s.CurrencyCode,
-                TransferredAmount = GetTransferredAmount(s.Amount, (TransactionType)s.TransactionTypeId),
-                RemainingCashBalance = request.IsCashMarket ? s.PostBalance : s.PostBalance * -1
-            }).ToList();
+                var skip = (request.Page - 1) * request.PageSize;
 
-            return new BaseResponseDTO<TransferHistoryResponse>
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = new TransferHistoryResponse
+                var records = _context.TransferHistory.AsNoTracking().Where(c => c.ParentUserId == request.AgentId && c.UserTypeId == request.UserTypeId && c.IsCashPlayer == request.IsCashMarket);
+
+                if (request.FromDate != null)
+                    records = records.Where(c => c.TransactionDateOffset.Date >= request.FromDate.Value.Date);
+
+                if (request.ToDate != null)
+                    records = records.Where(c => c.TransactionDateOffset.Date <= request.ToDate.Value.AddDays(1).Date);
+
+                if (!string.IsNullOrEmpty(request.CurrencyCode))
+                    records = records.Where(c => c.CurrencyCode.Trim() == request.CurrencyCode.Trim());
+
+                if (!string.IsNullOrEmpty(request.Username))
+                    records = records.Where(c => c.Username.Trim().ToLower().Contains(request.Username.Trim().ToLower()));
+
+                var rowCount = (double)records.Count();
+                var transferHistory = records.OrderByDescending(o => o.TransactionDateOffset)
+                    .Skip(skip)
+                    .Take(request.PageSize)
+                    .ToList();
+
+                var result = transferHistory.Select(s => new TransferHistoryResponse.Detail
                 {
-                    CurrentPage = request.Page,
-                    PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
-                    PageSize = request.PageSize,
-                    RowCount = (int)rowCount,
-                    Transfers = result
-                }
-            };
+                    UserId = s.UserId,
+                    Username = s.Username,
+                    TransactionDate = s.TransactionDate,
+                    CurrencyCode = s.CurrencyCode,
+                    TransferredAmount = GetTransferredAmount(s.Amount, (TransactionType)s.TransactionTypeId),
+                    RemainingCashBalance = request.IsCashMarket ? s.PostBalance : s.PostBalance * -1
+                }).ToList();
+
+                return new BaseResponseDTO<TransferHistoryResponse>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new TransferHistoryResponse
+                    {
+                        CurrentPage = request.Page,
+                        PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
+                        PageSize = request.PageSize,
+                        RowCount = (int)rowCount,
+                        Transfers = result
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<TransferHistoryResponse>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString(),
+                    Result = new TransferHistoryResponse()
+                };
+            }
         }
 
         #endregion

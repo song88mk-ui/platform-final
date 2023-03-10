@@ -20,10 +20,22 @@ namespace Platform.Operator.API.Controllers
         [HttpPost("operator/v1/authentication/login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDTO request)
         {
-            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-            var isAgent = HttpContext.Request.Headers["x-is-agent"].FirstOrDefault();
-
             var result = await _operatorRepository.Login(new LoginRequestDTO { UserName = request.UserName, Password = request.Password });
+
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return new BadRequestObjectResult(result.StatusId);
+            }
+        }
+        [HttpPost("operator/v1/authentication/logout")]
+        public async Task<IActionResult> Logout()
+        {
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+
+            var result = await _operatorRepository.Logout(operatorToken);
 
             switch (result.StatusId)
             {

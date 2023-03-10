@@ -71,6 +71,36 @@ namespace Platform.API.Repository
                 }
             };
         }
+        public async Task<BaseResponseDTO<object>> Logout(string clientId, string operatorToken)
+        {
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<object>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var loginResponse = await _operatorRepository.Logout(operatorToken, clientResponse.Result.Endpoint);
+
+            if (loginResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<object>
+                {
+                    StatusCode = loginResponse.StatusCode,
+                    Message = loginResponse.Message,
+                };
+            }
+
+            return new BaseResponseDTO<object>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString()
+            };
+        }
         public async Task<BaseResponseDTO<WalletBalanceResponseDTO>> GetWalletBalance(string clientId, string operatorToken)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))

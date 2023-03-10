@@ -98,6 +98,53 @@ namespace Platform.API.Repository
                 };
             }
         }
+        public async Task<BaseResponseDTO<object>> Logout(string operatorToken, string endpoint)
+        {
+            if (string.IsNullOrEmpty(operatorToken))
+            {
+                return new BaseResponseDTO<object>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString().Replace('_', ' ')
+                };
+            }
+
+            try
+            {
+                var response = await _httpClient.PostAsync($"{endpoint}/v1/authentication/logout", new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<LogoutResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return new BaseResponseDTO<object>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString(),
+                        Result = new LogoutResponseDTO
+                        {
+                            StatusId = result.StatusId
+                        }
+                    };
+                }
+                else
+                {
+                    return new BaseResponseDTO<object>
+                    {
+                        StatusCode = StatusCode.Operator_Error,
+                        Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})",
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<object>
+                {
+                    StatusCode = StatusCode.Operator_Error,
+                    Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({ex.Message})",
+                };
+            }
+        }
         public async Task<BaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string clientId, string operatorToken, string endpoint, bool isAgent)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))

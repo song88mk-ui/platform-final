@@ -9,6 +9,7 @@ namespace Platform.API.Repository
     public interface IPlatformRepository
     {
         Task<BaseResponseDTO<LoginResponseDTO>> Login(string clientId, LoginRequest request);
+        Task<BaseResponseDTO<object>> Logout(string clientId, string operatorToken);
         Task<BaseResponseDTO<WalletBalanceResponseDTO>> GetWalletBalance(string clientId, string operatorToken);
         Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(string apiKey, string clientId, string operatorToken, BetRequest request);
         Task<BaseResponseDTO<MaxStakeResponseDTO>> GetMaxStake(string apiKey, string clientId, string operatorToken, BetRequest request);

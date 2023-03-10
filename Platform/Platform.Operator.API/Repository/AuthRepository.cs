@@ -73,6 +73,47 @@ namespace Platform.Operator.API.Repository
                 };
             }
         }
+        public async Task<BaseResponse<object>> Logout(string operatorToken)
+        {
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Remove("x-operator-token");
+                _httpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+
+                var response = await _httpClient.PostAsync($"v1/logout", new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<BaseResponse<object>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return result;
+                }
+                else
+                {
+                    return new BaseResponse<object>
+                    {
+                        StatusCode = AuthStatusCode.Error,
+                        Message = AuthStatusCode.Error.ToString().Replace('_', ' '),
+                        Result = new LoginResponse
+                        {
+                            OperatorToken = string.Empty
+                        }
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponse<object>
+                {
+                    StatusCode = AuthStatusCode.Error,
+                    Message = $"{AuthStatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
+                    Result = new LoginResponse
+                    {
+                        OperatorToken = string.Empty
+                    }
+                };
+            }
+        }
         public async Task<BaseResponse<AuthResponse>> Authenticate(string operatorToken, string isAgent)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))

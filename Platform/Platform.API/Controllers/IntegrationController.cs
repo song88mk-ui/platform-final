@@ -59,6 +59,41 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+        [HttpPost("v1/authentication/logout")]
+        public async Task<IActionResult> Logout([FromBody] LoginRequest request)
+        {
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
+
+            var result = await _platformRepository.Logout(clientId, operatorToken);
+
+            var parameters = request;
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "user-agent", userAgent },
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/authentication/logout", properties);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
 
         [HttpGet("v1/wallet/balance")]
         public async Task<IActionResult> GetWalletBalance()

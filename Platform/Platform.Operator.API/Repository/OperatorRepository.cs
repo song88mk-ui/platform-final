@@ -3,6 +3,7 @@ using Platform.Shared.Models;
 using System;
 using System.Threading.Tasks;
 using LoginResponseDTO = Platform.Operator.API.Models.LoginResponseDTO;
+using LogoutResponseDTO = Platform.Operator.API.Models.LogoutResponseDTO;
 
 namespace Platform.Operator.API.Repository
 {
@@ -33,6 +34,23 @@ namespace Platform.Operator.API.Repository
             {
                 StatusId = 1000,
                 OperatorToken = loginResponse.Result.OperatorToken
+            };
+        }
+        public async Task<LogoutResponseDTO> Logout(string operatorToken)
+        {
+            var loginResponse = await _authRepository.Logout(operatorToken);
+
+            if (loginResponse.StatusCode != Enums.AuthStatusCode.Success)
+            {
+                return new LogoutResponseDTO
+                {
+                    StatusId = 1002
+                };
+            }
+
+            return new LogoutResponseDTO
+            {
+                StatusId = 1000
             };
         }
         public async Task<AuthResponseDTO> Authenticate(AuthRequestDTO request)

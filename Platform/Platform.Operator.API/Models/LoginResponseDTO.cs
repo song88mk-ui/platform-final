@@ -5,4 +5,9 @@
         public int StatusId { get; set; }
         public string OperatorToken { get; set; }
     }
+
+    public class LogoutResponseDTO
+    {
+        public int StatusId { get; set; }
+    }
 }

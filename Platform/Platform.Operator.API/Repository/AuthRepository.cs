@@ -73,7 +73,7 @@ namespace Platform.Operator.API.Repository
                 };
             }
         }
-        public async Task<BaseResponse<object>> Logout(string operatorToken)
+        public async Task<BaseResponse<bool>> Logout(string operatorToken)
         {
             try
             {
@@ -84,33 +84,27 @@ namespace Platform.Operator.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<BaseResponse<object>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<BaseResponse<bool>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                     return result;
                 }
                 else
                 {
-                    return new BaseResponse<object>
+                    return new BaseResponse<bool>
                     {
                         StatusCode = AuthStatusCode.Error,
                         Message = AuthStatusCode.Error.ToString().Replace('_', ' '),
-                        Result = new LoginResponse
-                        {
-                            OperatorToken = string.Empty
-                        }
+                        Result = false
                     };
                 }
             }
             catch (Exception ex)
             {
-                return new BaseResponse<object>
+                return new BaseResponse<bool>
                 {
                     StatusCode = AuthStatusCode.Error,
                     Message = $"{AuthStatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
-                    Result = new LoginResponse
-                    {
-                        OperatorToken = string.Empty
-                    }
+                    Result = false
                 };
             }
         }

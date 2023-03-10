@@ -60,7 +60,7 @@ namespace Platform.API.Controllers
             }
         }
         [HttpPost("v1/authentication/logout")]
-        public async Task<IActionResult> Logout([FromBody] LoginRequest request)
+        public async Task<IActionResult> Logout()
         {
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
@@ -70,7 +70,7 @@ namespace Platform.API.Controllers
 
             var result = await _platformRepository.Logout(clientId, operatorToken);
 
-            var parameters = request;
+            var parameters = new { };
 
             var properties = new Dictionary<string, string>
                             {

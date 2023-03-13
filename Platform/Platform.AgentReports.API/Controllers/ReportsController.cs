@@ -221,5 +221,19 @@ namespace Platform.AgentReports.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/reports/cancelbethistory")]
+        public async Task<IActionResult> GetCancelBetHistory([FromBody] CancelBetHistoryRequest request)
+        {
+            var result = await _reportsRepository.GetCancelBetHistory(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

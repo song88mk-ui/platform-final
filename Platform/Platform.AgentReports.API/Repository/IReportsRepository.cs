@@ -31,5 +31,6 @@ namespace Platform.AgentReports.API.Repository
         Task<BaseResponseDTO<TransferHistoryResponse>> GetPaymentTransferHistory(TransferHistoryRequest request);
         Task<BaseResponseDTO<PartnerRevenueSettlementResponse>> GetPartnerRevenueForSettlement(PartnerRevenueSettlementRequest request);
         Task<BaseResponseDTO<PartnerRevenueSettlementHistoryResponse>> GetPartnerRevenueForSettlementHistory(PartnerRevenueSettlementHistoryRequest request);
+        Task<BaseResponseDTO<CancelBetHistoryResponse>> GetCancelBetHistory(CancelBetHistoryRequest request);
     }
 }

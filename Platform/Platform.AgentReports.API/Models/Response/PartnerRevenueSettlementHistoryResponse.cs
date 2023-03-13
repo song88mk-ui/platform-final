@@ -29,6 +29,5 @@ namespace Platform.AgentReports.API.Models.Response
 
         #endregion
     }
-
 }
 

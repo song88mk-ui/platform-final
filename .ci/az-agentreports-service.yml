@@ -1,4 +1,4 @@
-name: $(System.TeamProject)-Platform-AgentReports-Service-$(Build.BuildId).$(Rev:r)
+name: $(System.TeamProject)-Platform-AgentReports-Service-$(Build.BuildId)
 
 pr: none
 

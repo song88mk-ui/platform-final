@@ -1,4 +1,4 @@
-name: $(System.TeamProject)-Platform-Wallet-API-$(Build.BuildId).$(Rev:r)
+name: $(System.TeamProject)-Platform-Wallet-API-$(Build.BuildId)
 
 pr: none
 

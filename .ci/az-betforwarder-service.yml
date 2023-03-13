@@ -1,4 +1,4 @@
-name: $(System.TeamProject)-Platform-BetForwarder-Service-$(Build.BuildId).$(Rev:r)
+name: $(System.TeamProject)-Platform-BetForwarder-Service-$(Build.BuildId)
 
 pr: none
 

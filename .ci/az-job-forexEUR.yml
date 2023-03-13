@@ -1,4 +1,4 @@
-name: $(System.TeamProject)-Platform-Job-ForexEUR-$(Build.BuildId).$(Rev:r)
+name: $(System.TeamProject)-Platform-Job-ForexEUR-$(Build.BuildId)
 
 pr: none
 

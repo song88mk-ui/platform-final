@@ -1,4 +1,4 @@
-name: $(System.TeamProject)-Platform-Job-BetAudit-Tableau-$(Build.BuildId).$(Rev:r)
+name: $(System.TeamProject)-Platform-Job-BetAudit-Tableau-$(Build.BuildId)
 
 pr: none
 

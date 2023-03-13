@@ -1,4 +1,4 @@
-name: $(System.TeamProject)-Platform-Operator-Service-v2-$(Build.BuildId).$(Rev:r)
+name: $(System.TeamProject)-Platform-Operator-Service-v2-$(Build.BuildId)
 
 pr: none
 

@@ -1,4 +1,4 @@
-name: $(System.TeamProject)-Platform-Job-Operator-Score-$(Build.BuildId).$(Rev:r)
+name: $(System.TeamProject)-Platform-Job-Operator-Score-$(Build.BuildId)
 
 pr: none
 

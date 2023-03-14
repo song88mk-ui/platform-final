@@ -1,4 +1,4 @@
-name: $(System.TeamProject)-Platform-BetStatus-Service-$(Build.BuildId).$(Rev:r)
+name: $(System.TeamProject)-Platform-BetStatus-Service-$(Build.BuildId)
 
 pr: none
 

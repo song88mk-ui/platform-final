@@ -2673,6 +2673,204 @@ namespace Platform.AgentReports.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<CancelBetHistoryResponse>> GetCancelBetHistory(CancelBetHistoryRequest request)
+        {
+            var clientName = "song88";
+
+            if (!string.IsNullOrEmpty(request.PartnerName) && clientName.IndexOf(request.PartnerName, StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                return new BaseResponseDTO<CancelBetHistoryResponse>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new CancelBetHistoryResponse()
+                };
+            }
+
+            var query = _context.WinLoss.AsNoTracking()
+                .Where(m => m.ParentUserId == 0
+                    && m.UserTypeId == (int)UserType.Player
+                    && m.SettledDate >= request.FromSettledDate
+                    && m.SettledDate <= request.ToSettledDate.AddDays(1)
+                    && (m.StatusId == (int)StatusType.Void || m.StatusId == (int)StatusType.Cancelled));
+
+            if (request.BetIds.Count() > 0)
+                query = query.Where(m => request.BetIds.Contains(string.IsNullOrEmpty(m.ReferenceId) ? m.BetId.ToString() : m.ReferenceId));
+
+            if (!string.IsNullOrEmpty(request.MemberName))
+                query = query.Where(m => m.Username.IndexOf(request.MemberName, StringComparison.OrdinalIgnoreCase) >= 0);
+
+            // Get cancelled bets in the WinLoss table
+            var betsRaw = query
+                .Select(m => new
+                {
+                    m.SettledDate,
+                    m.IndirectUserId,
+                    m.ReferenceId,
+                    m.BetId,
+                    m.TrueStake,
+                    m.TransactionDate,
+                    m.Username,
+                    m.UserTypeId,
+                    m.CurrencyCode,
+                    m.Stake,
+                    m.Commission,
+                    m.MemberCommission,
+                    m.MemberWinLoss,
+                    m.MemberWLC,
+                    m.DownlineCommission,
+                    m.DownlineWLC,
+                    m.DownlineWinLoss,
+                    m.AgentWinLoss,
+                    m.AgentCommission,
+                    m.AgentWLC,
+                    m.UplineCommission,
+                    m.UplineWinLoss,
+                    m.UplineWLC,
+                    m.IsParlay,
+                    m.Odds,
+                    m.OddsTypeId,
+                    m.OddsTypeName,
+                    m.StatusId,
+                    m.StatusName,
+                    m.ProductId,
+                    m.SegmentName,
+                    m.ProductName,
+                    m.LeagueId,
+                    m.LeagueName,
+                    m.FixtureId,
+                    m.FixtureName,
+                    m.FixtureStartDate,
+                    m.MarketTemplateId,
+                    m.MarketName,
+                    m.SelectionTemplateId,
+                    m.SelectionName,
+                    m.Score,
+                    m.FixtureStatusId,
+                    m.FixtureStatusName,
+                    m.Line,
+                    m.MarketTemplateGroupId,
+                    m.MarketTemplateGroupName,
+                    m.PositionTakingDetails,
+                    m.CommissionDetails,
+                    m.CasinoDetails,
+                    m.MarketTypeId,
+                    m.MarketGroupId
+                })
+                .ToList();
+
+            var selectedBetIds = betsRaw
+                .Select(m =>
+                {
+                    var betId = string.IsNullOrEmpty(m.ReferenceId) ? m.BetId : Guid.Parse(m.ReferenceId);
+                    return betId;
+                })
+                .Distinct()
+                .ToList();
+
+            var bets = _context.Bet.AsNoTracking().Where(m => selectedBetIds.Contains(m.BetId))
+                .Select(m => new
+                {
+                    m.BetId,
+                    m.Reason
+                })
+                .ToList();
+
+            var betSelections = _context.BetSelection.AsNoTracking().Where(m => m.ParentUserId == 0 && selectedBetIds.Contains(m.BetId)).ToList();
+
+            var betsResponse = betsRaw.OrderBy(p => p.SettledDate)
+                .Select(m => new CancelBetHistoryResponse.Bet()
+                {
+                    UserId = m.IndirectUserId,
+                    BetId = string.IsNullOrEmpty(m.ReferenceId) ? m.BetId : Guid.Parse(m.ReferenceId),
+                    TransactionDate = m.TransactionDate,
+                    SettlementDate = m.SettledDate,
+                    Username = m.Username,
+                    UserTypeId = m.UserTypeId,
+                    CurrencyCode = m.CurrencyCode,
+                    StakeAmount = m.Stake,
+                    IsParlay = m.IsParlay,
+                    Stake = m.Stake,
+                    TrueStake = m.TrueStake,
+                    Odds = m.Odds,
+                    OddsTypeId = m.OddsTypeId,
+                    OddsTypeName = m.OddsTypeName,
+                    StatusId = m.StatusId,
+                    StatusName = m.StatusName,
+                    VirtualSportName = m.ProductId == 2 ? m.SegmentName : string.Empty,
+                    ProductId = m.ProductId,
+                    ProductName = m.ProductName,
+                    LeagueId = m.LeagueId,
+                    LeagueName = string.IsNullOrEmpty(m.LeagueName) ? m.SegmentName : m.LeagueName,
+                    FixtureId = m.FixtureId,
+                    FixtureName = m.FixtureName,
+                    FixtureStartDate = m.FixtureStartDate,
+                    MarketTemplateId = m.MarketTemplateId,
+                    MarketName = m.MarketName,
+                    SelectionTemplateId = m.SelectionTemplateId,
+                    SelectionName = m.SelectionName,
+                    Score = m.Score,
+                    FixtureStatusId = m.FixtureStatusId,
+                    FixtureStatusName = m.FixtureStatusName,
+                    Line = MarketLine(m.Line, m.MarketTemplateId, m.SelectionName),
+                    MarketTemplateGroupId = m.MarketTemplateGroupId,
+                    MarketTemplateGroupName = m.MarketTemplateGroupName,
+                    Reason = string.IsNullOrEmpty(m.ReferenceId) ? bets.FirstOrDefault(b => b.BetId == m.BetId)?.Reason : bets.FirstOrDefault(b => b.BetId == Guid.Parse(m.ReferenceId))?.Reason,
+                    BetScore = (!m.IsParlay && m.ProductId == (int)Product.Sportsbook) ? GetScore(1, string.IsNullOrEmpty(m.ReferenceId) ? m.BetId : Guid.Parse(m.ReferenceId)) : "",
+                    FinalScore = (!m.IsParlay && m.ProductId == (int)Product.Sportsbook) ? GetScore(2, string.IsNullOrEmpty(m.ReferenceId) ? m.BetId : Guid.Parse(m.ReferenceId)) : "",
+                    MarketTypeId = m.MarketTypeId,
+                    MarketGroupId = m.MarketGroupId,
+                    ClientName = "Song88",
+                    ModifiedByBackofficeUser = string.Empty,
+                    BetSelections = betSelections.Where(b => b.BetId == (string.IsNullOrEmpty(m.ReferenceId) ? m.BetId : Guid.Parse(m.ReferenceId)))
+                    .Select(b => new CancelBetHistoryResponse.BetSelection
+                    {
+                        ParentUserId = b.ParentUserId,
+                        BetId = b.BetId,
+                        BetSelectionId = b.BetSelectionId,
+                        UserId = b.UserId,
+                        SportId = b.SportId,
+                        SportName = b.SportName,
+                        SegmentId = b.SegmentId,
+                        SegmentName = b.SegmentName,
+                        LeagueId = b.LeagueId,
+                        LeagueName = string.IsNullOrEmpty(b.LeagueName) ? b.SegmentName : b.LeagueName,
+                        FixtureId = b.FixtureId,
+                        FixtureName = b.FixtureName,
+                        MarketId = b.MarketId,
+                        MarketName = b.MarketName,
+                        SelectionId = b.SelectionId,
+                        SelectionName = b.SelectionName,
+                        FixtureStatusId = b.FixtureStatusId,
+                        FixtureStatusName = b.FixtureStatusName,
+                        Line = b.Line,
+                        Odds = b.Odds,
+                        StatusId = b.StatusId,
+                        StatusName = b.StatusName,
+                        IsSettled = b.IsSettled,
+                        IsResettled = b.IsResettled,
+                        FixtureStartDate = b.FixtureStartDate,
+                        MarketTemplateGroupId = b.MarketTemplateGroupId,
+                        MarketTemplateGroupName = GetMarketTemplateGroupName(b.MarketTemplateGroupId),
+                        MarketTemplateId = b.MarketTemplateId,
+                        SelectionTemplateId = b.SelectionTemplateId,
+                        Score = b.Score
+                    }).ToList()
+                })
+                .ToList();
+
+            return new BaseResponseDTO<CancelBetHistoryResponse>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new CancelBetHistoryResponse
+                {
+                    RowCount = betsResponse.Count(),
+                    Bets = betsResponse,
+                }
+            };
+        }
+
         #endregion
 
         #region Utilities

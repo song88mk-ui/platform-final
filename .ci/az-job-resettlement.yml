@@ -1,4 +1,4 @@
-name: $(System.TeamProject)-Platform-Job-Resettlement-$(Build.BuildId).$(Rev:r)
+name: $(System.TeamProject)-Platform-Job-Resettlement-$(Build.BuildId)
 
 pr: none
 

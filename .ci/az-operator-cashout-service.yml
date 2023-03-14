@@ -1,4 +1,4 @@
-name: $(System.TeamProject)-Platform-Operator-Cashout-Service-$(Build.BuildId).$(Rev:r)
+name: $(System.TeamProject)-Platform-Operator-Cashout-Service-$(Build.BuildId)
 
 pr: none
 

@@ -109,6 +109,9 @@ namespace Platform.API.Repository
                 };
             }
 
+            _httpClient.DefaultRequestHeaders.Remove("x-operator-token");
+            _httpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+
             try
             {
                 var response = await _httpClient.PostAsync($"{endpoint}/v1/authentication/logout", new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json"));

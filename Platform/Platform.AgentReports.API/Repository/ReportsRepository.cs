@@ -2891,7 +2891,7 @@ namespace Platform.AgentReports.API.Repository
         private string MarketLine(string lineStr, string marketTemplateIdStr, string selectionName)
         {
             var line = string.IsNullOrEmpty(lineStr) ? 0m : Convert.ToDecimal(lineStr);
-            var marketTemplateId = string.IsNullOrEmpty(marketTemplateIdStr) ? 0l : Convert.ToInt64(line);
+            var marketTemplateId = string.IsNullOrEmpty(marketTemplateIdStr) ? 0l : Convert.ToInt64(marketTemplateIdStr);
 
             //long[] handicapMarkets = { 2, 9, 22, 25, 26 };
             long[] handicapMarkets = { 2, 9, 22, 25, 26, 29, 32, 33, 36, 39, 42, 44, 49, 52, 108, 153, 161, 163, 204 };

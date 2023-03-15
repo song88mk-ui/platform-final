@@ -87,6 +87,9 @@
         Bet_Builder_Selections_Cannot_Be_Combined = 159,
 
         Error = 1000,
-        Operator_Error = 1001
+        Operator_Error = 1001,
+
+        Invalid_Password = 201,
+        Username_Not_Found = 202
     }
 }

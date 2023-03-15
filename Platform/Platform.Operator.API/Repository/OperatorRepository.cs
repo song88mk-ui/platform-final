@@ -1,6 +1,9 @@
 ﻿using Platform.Operator.API.Models;
 using Platform.Shared.Models;
+using Platform.Shared.Utility;
 using System;
+using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using LoginResponseDTO = Platform.Operator.API.Models.LoginResponseDTO;
 using LogoutResponseDTO = Platform.Operator.API.Models.LogoutResponseDTO;
@@ -25,15 +28,19 @@ namespace Platform.Operator.API.Repository
             {
                 return new LoginResponseDTO
                 {
-                    StatusId = 1002,
+                    StatusId = (int)loginResponse.StatusCode,
                     OperatorToken = loginResponse.Result.OperatorToken
                 };
             }
 
+            var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(JwtParser.ParseClaimsFromJwt(loginResponse.Result.AccessToken), "jwtAuthType"));
+            var userId = claimsPrincipal.Claims.FirstOrDefault(c => c.Type.ToUpper() == "USERID");
+
             return new LoginResponseDTO
             {
                 StatusId = 1000,
-                OperatorToken = loginResponse.Result.OperatorToken
+                OperatorToken = loginResponse.Result.OperatorToken,
+                Userid = userId.Value
             };
         }
         public async Task<LogoutResponseDTO> Logout(string operatorToken)

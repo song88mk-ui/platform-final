@@ -3,6 +3,7 @@
     public class LoginResponseDTO
     {
         public string OperatorToken { get; set; }
+        public string UserId { get; set; }
     }
     public class LogoutResponseDTO
     {

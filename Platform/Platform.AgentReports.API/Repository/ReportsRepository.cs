@@ -508,33 +508,33 @@ namespace Platform.AgentReports.API.Repository
             var supportedProduct = new[] { 1 };
             var mergedResults = new List<OutstandingBetResponse.Bet>();
 
-            var records = _context.Bet.Where(c => c.ParentUserId == request.AgentId && c.StatusId == (int)BetStatus.Running && supportedProduct.Contains(c.ProductId)).AsNoTracking();
+            var records = _context.Bet.Where(c => c.ParentUserId == request.AgentId && c.StatusId == (int)BetStatus.Running && supportedProduct.Contains(c.ProductId)).AsNoTracking().ToList();
 
             if (request.FromDate.HasValue)
-                records = records.Where(c => c.TransactionDateOffset.Date >= request.FromDate.Value.Date);
+                records = records.Where(c => c.TransactionDateOffset.Date >= request.FromDate.Value.Date).ToList();
 
             if (request.ToDate.HasValue)
-                records = records.Where(c => c.TransactionDateOffset.Date <= request.ToDate.Value.Date);
+                records = records.Where(c => c.TransactionDateOffset.Date <= request.ToDate.Value.Date).ToList();
 
             if (!string.IsNullOrEmpty(request.UserName))
-                records = records.Where(c => c.Username.Trim().ToLower().Contains(request.UserName.Trim().ToLower()));
+                records = records.Where(c => c.Username.Trim().ToLower().Contains(request.UserName.Trim().ToLower())).ToList();
 
             if (!string.IsNullOrEmpty(request.AgentPartnerUserName))
-                records = records.Where(c => c.AgentUsername.ToString().Trim().ToLower().Contains(request.AgentPartnerUserName.Trim().ToLower()));
+                records = records.Where(c => c.AgentUsername.ToString().Trim().ToLower().Contains(request.AgentPartnerUserName.Trim().ToLower())).ToList();
 
             if (!string.IsNullOrEmpty(request.BetId))
-                records = records.Where(c => c.BetId.ToString().Trim().ToLower().Contains(request.BetId.Trim().ToLower()));
+                records = records.Where(c => c.BetId.ToString().Trim().ToLower().Contains(request.BetId.Trim().ToLower())).ToList();
 
             if (request.CurrencyCode != CurrencyCode.ALL)
             {
                 var currencyCode = request.CurrencyCode.ToString();
-                records = records.Where(c => c.CurrencyCode == currencyCode);
+                records = records.Where(c => c.CurrencyCode == currencyCode).ToList();
             }
 
             rowCount = records.Count();
             totalReceive = records.Sum(s => s.PositionTaking * s.TrueStake);
             totalStake = records.Sum(s => s.Stake);
-            var bets = records.OrderByDescending(o => o.TransactionDate).AsNoTracking().ToList();
+            var bets = records.OrderByDescending(o => o.TransactionDate).ToList();
 
             if (!bets.Any())
             {

@@ -48,8 +48,7 @@ namespace Platform.API.Repository
                         Message = StatusCode.Success.ToString(),
                         Result = new LoginResponseDTO
                         {
-                            OperatorToken = result.OperatorToken,
-                            UserId = result.UserId,
+                            OperatorToken = result.OperatorToken
                         }
                     };
                 }

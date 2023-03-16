@@ -3347,13 +3347,13 @@ namespace Platform.AgentReports.API.Repository
                     //{
                     //    indirectUserIds.AddRange(accountsResult.Where(a => a.Item1 <= indirectUserId.Item1 && a.Item3 == indirectUserId.Item3).Select(s => s.Item1).Distinct().ToList());
                     //}
-                    var indirectUserId = accountsResult.Where(a => a.Item2.ToLower().Contains(account.Trim().ToLower())).ToList();
+                    var indirectUserId = accountsResult.ToList().Where(a => a.Item2.ToLower().Contains(account.Trim().ToLower())).ToList();
 
                     if (indirectUserId.Count > 0)
                     {
                         foreach (var item in indirectUserId)
                         {
-                            indirectUserIds.AddRange(accountsResult.Where(a => a.Item1 <= item.Item1 && a.Item3 == item.Item3).Select(s => s.Item1).Distinct().ToList());
+                            indirectUserIds.AddRange(accountsResult.ToList().Where(a => a.Item1 <= item.Item1 && a.Item3 == item.Item3).Select(s => s.Item1).Distinct().ToList());
                         }
                     }
                 }

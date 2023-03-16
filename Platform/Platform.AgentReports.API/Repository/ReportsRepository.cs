@@ -3029,7 +3029,7 @@ namespace Platform.AgentReports.API.Repository
                 foreach (var account in accounts)
                 {
                     //var indirectUserId = accountsResult.Where(a => account == a.Item2).FirstOrDefault();
-                    var indirectUserId = accountsResult.Where(a => a.Item2.ToLower().Contains(account.Trim().ToLower())).ToList();
+                    var indirectUserId = accountsResult.ToList().Where(a => a.Item2.ToLower().Contains(account.Trim().ToLower())).ToList();
 
                     //if (indirectUserId != null)
                     //{
@@ -3039,7 +3039,7 @@ namespace Platform.AgentReports.API.Repository
                     {
                         foreach (var item in indirectUserId)
                         {
-                            indirectUserIds.AddRange(accountsResult.Where(a => a.Item1 <= item.Item1 && a.Item3 == item.Item3).Select(s => s.Item1).Distinct().ToList());
+                            indirectUserIds.AddRange(accountsResult.ToList().Where(a => a.Item1 <= item.Item1 && a.Item3 == item.Item3).Select(s => s.Item1).Distinct().ToList());
                         }
                     }
                 }

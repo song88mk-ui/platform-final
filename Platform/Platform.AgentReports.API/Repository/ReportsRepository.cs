@@ -508,33 +508,33 @@ namespace Platform.AgentReports.API.Repository
             var supportedProduct = new[] { 1 };
             var mergedResults = new List<OutstandingBetResponse.Bet>();
 
-            var records = _context.Bet.Where(c => c.ParentUserId == request.AgentId && c.StatusId == (int)BetStatus.Running && supportedProduct.Contains(c.ProductId)).AsNoTracking();
+            var records = _context.Bet.Where(c => c.ParentUserId == request.AgentId && c.StatusId == (int)BetStatus.Running && supportedProduct.Contains(c.ProductId)).AsNoTracking().ToList();
 
             if (request.FromDate.HasValue)
-                records = records.Where(c => c.TransactionDateOffset.Date >= request.FromDate.Value.Date);
+                records = records.Where(c => c.TransactionDateOffset.Date >= request.FromDate.Value.Date).ToList();
 
             if (request.ToDate.HasValue)
-                records = records.Where(c => c.TransactionDateOffset.Date <= request.ToDate.Value.Date);
+                records = records.Where(c => c.TransactionDateOffset.Date <= request.ToDate.Value.Date).ToList();
 
             if (!string.IsNullOrEmpty(request.UserName))
-                records = records.Where(c => c.Username.Trim().ToLower().Contains(request.UserName.Trim().ToLower()));
+                records = records.Where(c => c.Username.Trim().ToLower().Contains(request.UserName.Trim().ToLower())).ToList();
 
             if (!string.IsNullOrEmpty(request.AgentPartnerUserName))
-                records = records.Where(c => c.AgentUsername.ToString().Trim().ToLower().Contains(request.AgentPartnerUserName.Trim().ToLower()));
+                records = records.Where(c => c.AgentUsername.ToString().Trim().ToLower().Contains(request.AgentPartnerUserName.Trim().ToLower())).ToList();
 
             if (!string.IsNullOrEmpty(request.BetId))
-                records = records.Where(c => c.BetId.ToString().Trim().ToLower().Contains(request.BetId.Trim().ToLower()));
+                records = records.Where(c => c.BetId.ToString().Trim().ToLower().Contains(request.BetId.Trim().ToLower())).ToList();
 
             if (request.CurrencyCode != CurrencyCode.ALL)
             {
                 var currencyCode = request.CurrencyCode.ToString();
-                records = records.Where(c => c.CurrencyCode == currencyCode);
+                records = records.Where(c => c.CurrencyCode == currencyCode).ToList();
             }
 
             rowCount = records.Count();
             totalReceive = records.Sum(s => s.PositionTaking * s.TrueStake);
             totalStake = records.Sum(s => s.Stake);
-            var bets = records.OrderByDescending(o => o.TransactionDate).AsNoTracking().ToList();
+            var bets = records.OrderByDescending(o => o.TransactionDate).ToList();
 
             if (!bets.Any())
             {
@@ -2246,7 +2246,7 @@ namespace Platform.AgentReports.API.Repository
             if (betIds.Any())
             {
                 //profitLossDetails = profitLossDetails.Where(p => betIds.Select(s => s.ToUpper()).Contains(string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString().ToUpper() : p.ReferenceId.ToUpper()));                
-                profitLossDetails = profitLossDetails.Where(p => betIds.Any(p2 => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(p2.Trim().ToUpper())));
+                profitLossDetails = profitLossDetails.ToList().Where(p => betIds.Any(p2 => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(p2.Trim().ToUpper()))).AsQueryable();
             }
 
             double rowCount = profitLossDetails.AsNoTracking().Count();
@@ -2891,7 +2891,7 @@ namespace Platform.AgentReports.API.Repository
         private string MarketLine(string lineStr, string marketTemplateIdStr, string selectionName)
         {
             var line = string.IsNullOrEmpty(lineStr) ? 0m : Convert.ToDecimal(lineStr);
-            var marketTemplateId = string.IsNullOrEmpty(marketTemplateIdStr) ? 0l : Convert.ToInt64(lineStr);
+            var marketTemplateId = string.IsNullOrEmpty(marketTemplateIdStr) ? 0l : Convert.ToInt64(marketTemplateIdStr);
 
             //long[] handicapMarkets = { 2, 9, 22, 25, 26 };
             long[] handicapMarkets = { 2, 9, 22, 25, 26, 29, 32, 33, 36, 39, 42, 44, 49, 52, 108, 153, 161, 163, 204 };
@@ -3029,7 +3029,7 @@ namespace Platform.AgentReports.API.Repository
                 foreach (var account in accounts)
                 {
                     //var indirectUserId = accountsResult.Where(a => account == a.Item2).FirstOrDefault();
-                    var indirectUserId = accountsResult.Where(a => a.Item2.ToLower().Contains(account.Trim().ToLower())).ToList();
+                    var indirectUserId = accountsResult.ToList().Where(a => a.Item2.ToLower().Contains(account.Trim().ToLower())).ToList();
 
                     //if (indirectUserId != null)
                     //{
@@ -3039,7 +3039,7 @@ namespace Platform.AgentReports.API.Repository
                     {
                         foreach (var item in indirectUserId)
                         {
-                            indirectUserIds.AddRange(accountsResult.Where(a => a.Item1 <= item.Item1 && a.Item3 == item.Item3).Select(s => s.Item1).Distinct().ToList());
+                            indirectUserIds.AddRange(accountsResult.ToList().Where(a => a.Item1 <= item.Item1 && a.Item3 == item.Item3).Select(s => s.Item1).Distinct().ToList());
                         }
                     }
                 }
@@ -3177,12 +3177,12 @@ namespace Platform.AgentReports.API.Repository
                     //{
                     //    indirectUserIds.AddRange(accountsResult.Where(a => a.Item1 <= indirectUserId.Item1 && a.Item3 == indirectUserId.Item3).Select(s => s.Item1).Distinct().ToList());
                     //}
-                    var indirectUserId = accountsResult.Where(a => a.Item2.ToLower().Contains(account.Trim().ToLower())).ToList();
+                    var indirectUserId = accountsResult.ToList().Where(a => a.Item2.ToLower().Contains(account.Trim().ToLower())).ToList();
                     if (indirectUserId.Count > 0)
                     {
                         foreach (var item in indirectUserId)
                         {
-                            indirectUserIds.AddRange(accountsResult.Where(a => a.Item1 <= item.Item1 && a.Item3 == item.Item3).Select(s => s.Item1).Distinct().ToList());
+                            indirectUserIds.AddRange(accountsResult.ToList().Where(a => a.Item1 <= item.Item1 && a.Item3 == item.Item3).Select(s => s.Item1).Distinct().ToList());
                         }
                     }
                 }
@@ -3194,7 +3194,7 @@ namespace Platform.AgentReports.API.Repository
             if (betIds.Any())
             {
                 //result = result.Where(p => betIds.Select(s => s.ToUpper()).Contains(string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString().ToUpper() : p.ReferenceId.ToUpper()));
-                result = result.Where(p => betIds.Any(p2 => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(p2.Trim().ToUpper())));
+                result = result.ToList().Where(p => betIds.Any(p2 => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(p2.Trim().ToUpper()))).AsQueryable();
             }
 
             if (status.Any())
@@ -3347,13 +3347,13 @@ namespace Platform.AgentReports.API.Repository
                     //{
                     //    indirectUserIds.AddRange(accountsResult.Where(a => a.Item1 <= indirectUserId.Item1 && a.Item3 == indirectUserId.Item3).Select(s => s.Item1).Distinct().ToList());
                     //}
-                    var indirectUserId = accountsResult.Where(a => a.Item2.ToLower().Contains(account.Trim().ToLower())).ToList();
+                    var indirectUserId = accountsResult.ToList().Where(a => a.Item2.ToLower().Contains(account.Trim().ToLower())).ToList();
 
                     if (indirectUserId.Count > 0)
                     {
                         foreach (var item in indirectUserId)
                         {
-                            indirectUserIds.AddRange(accountsResult.Where(a => a.Item1 <= item.Item1 && a.Item3 == item.Item3).Select(s => s.Item1).Distinct().ToList());
+                            indirectUserIds.AddRange(accountsResult.ToList().Where(a => a.Item1 <= item.Item1 && a.Item3 == item.Item3).Select(s => s.Item1).Distinct().ToList());
                         }
                     }
                 }
@@ -3364,7 +3364,7 @@ namespace Platform.AgentReports.API.Repository
             if (betIds.Any())
             {
                 //result = result.Where(p => betIds.Select(s => s.ToUpper()).Contains(string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString().ToUpper() : p.ReferenceId.ToUpper()));
-                result = result.Where(p => betIds.Any(p2 => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(p2.Trim().ToUpper())));
+                result = result.ToList().Where(p => betIds.Any(p2 => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(p2.Trim().ToUpper()))).AsQueryable();
             }
 
             if (status.Any())
@@ -3563,7 +3563,7 @@ namespace Platform.AgentReports.API.Repository
             if (betIds.Any())
             {
                 //winLossRaw = winLossRaw.Where(p => betIds.Select(s => s.ToUpper()).Contains(string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString().ToUpper() : p.ReferenceId.ToUpper()));
-                winLossRaw = winLossRaw.Where(p => betIds.Any(p2 => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(p2.Trim().ToUpper())));
+                winLossRaw = winLossRaw.ToList().Where(p => betIds.Any(p2 => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(p2.Trim().ToUpper()))).AsQueryable();
             }
 
             if (playerNames.Any())
@@ -3719,13 +3719,13 @@ namespace Platform.AgentReports.API.Repository
                     //    indirectUserIds.AddRange(accountsResult.Where(a => a.Item1 <= indirectUserId.Item1 && a.Item3 == indirectUserId.Item3).Select(s => s.Item1).Distinct().ToList());
                     //}
 
-                    var indirectUserId = accountsResult.Where(a => a.Item2.ToLower().Contains(account.Trim().ToLower())).ToList();
+                    var indirectUserId = accountsResult.ToList().Where(a => a.Item2.ToLower().Contains(account.Trim().ToLower())).ToList();
 
                     if (indirectUserId.Count > 0)
                     {
                         foreach (var item in indirectUserId)
                         {
-                            indirectUserIds.AddRange(accountsResult.Where(a => a.Item1 <= item.Item1 && a.Item3 == item.Item3).Select(s => s.Item1).Distinct().ToList());
+                            indirectUserIds.AddRange(accountsResult.ToList().Where(a => a.Item1 <= item.Item1 && a.Item3 == item.Item3).Select(s => s.Item1).Distinct().ToList());
                         }
                     }
                 }
@@ -3736,7 +3736,7 @@ namespace Platform.AgentReports.API.Repository
             if (betIds.Any())
             {
                 //result = result.Where(p => betIds.Select(s => s.ToUpper()).Contains(string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString().ToUpper() : p.ReferenceId.ToUpper()));
-                result = result.Where(p => betIds.Any(p2 => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(p2.Trim().ToUpper())));
+                result = result.ToList().Where(p => betIds.Any(p2 => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(p2.Trim().ToUpper()))).AsQueryable();
             }
 
             if (status.Any())
@@ -3890,12 +3890,12 @@ namespace Platform.AgentReports.API.Repository
                     //{
                     //    indirectUserIds.AddRange(accountsResult.Where(a => a.Item1 <= indirectUserId.Item1 && a.Item3 == indirectUserId.Item3).Select(s => s.Item1).Distinct().ToList());
                     //}
-                    var indirectUserId = accountsResult.Where(a => a.Item2.ToLower().Contains(account.Trim().ToLower())).ToList();
+                    var indirectUserId = accountsResult.ToList().Where(a => a.Item2.ToLower().Contains(account.Trim().ToLower())).ToList();
                     if (indirectUserId.Count > 0)
                     {
                         foreach (var item in indirectUserId)
                         {
-                            indirectUserIds.AddRange(accountsResult.Where(a => a.Item1 <= item.Item1 && a.Item3 == item.Item3).Select(s => s.Item1).Distinct().ToList());
+                            indirectUserIds.AddRange(accountsResult.ToList().Where(a => a.Item1 <= item.Item1 && a.Item3 == item.Item3).Select(s => s.Item1).Distinct().ToList());
                         }
                     }
                 }
@@ -3907,7 +3907,7 @@ namespace Platform.AgentReports.API.Repository
             if (betIds.Any())
             {
                 //result = result.Where(p => betIds.Select(s => s.ToUpper()).Contains(string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString().ToUpper() : p.ReferenceId.ToUpper()));
-                result = result.Where(p => betIds.Any(p2 => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(p2.Trim().ToUpper())));
+                result = result.ToList().Where(p => betIds.Any(p2 => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(p2.Trim().ToUpper()))).AsQueryable();
             }
 
             if (status.Any())

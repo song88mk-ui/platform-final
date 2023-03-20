@@ -58,8 +58,6 @@ namespace Platform.API.Repository
                     {
                         try
                         {
-                            var result = JsonSerializer.Deserialize<LoginResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-
                             var properties = new Dictionary<string, string>
                             {
                                 { "userName", userName },
@@ -73,10 +71,12 @@ namespace Platform.API.Repository
                         {
                         }
 
+                        var result = JsonSerializer.Deserialize<int>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
                         return new BaseResponseDTO<LoginResponseDTO>
                         {
-                            StatusCode = StatusCode.Not_Authorized,
-                            Message = StatusCode.Not_Authorized.ToString().Replace('_', ' '),
+                            StatusCode = (StatusCode)result,
+                            Message = ((StatusCode)result).ToString().Replace('_', ' '),
                         };
                     }
                     else
@@ -108,6 +108,9 @@ namespace Platform.API.Repository
                     Message = StatusCode.Error.ToString().Replace('_', ' ')
                 };
             }
+
+            _httpClient.DefaultRequestHeaders.Remove("x-operator-token");
+            _httpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
 
             try
             {

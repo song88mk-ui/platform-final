@@ -25,7 +25,7 @@ namespace Platform.Operator.API.Repository
             {
                 return new LoginResponseDTO
                 {
-                    StatusId = 1002,
+                    StatusId = (int)loginResponse.StatusCode,
                     OperatorToken = loginResponse.Result.OperatorToken
                 };
             }

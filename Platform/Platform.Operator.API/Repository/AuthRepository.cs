@@ -41,23 +41,25 @@ namespace Platform.Operator.API.Repository
             {
                 var response = await _httpClient.PostAsync($"v1/login", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
+                var result = JsonSerializer.Deserialize<BaseResponse<LoginResponse>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<BaseResponse<LoginResponse>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-
                     return result;
                 }
                 else
                 {
                     return new BaseResponse<LoginResponse>
                     {
-                        StatusCode = AuthStatusCode.Not_Authorized,
-                        Message = AuthStatusCode.Not_Authorized.ToString().Replace('_', ' '),
+                        StatusCode = result.StatusCode,
+                        Message = result.Message,
                         Result = new LoginResponse
                         {
-                            OperatorToken = string.Empty
+                            OperatorToken = string.Empty,
+                            AccessToken = string.Empty
                         }
                     };
+
                 }
             }
             catch (Exception ex)

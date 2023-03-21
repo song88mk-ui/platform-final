@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Platform.Shared.Models;
 using Platform.Wallet.API.Data;
 using Platform.Wallet.API.Models;
 using System;
@@ -16,7 +17,7 @@ namespace Platform.Wallet.API.Repository
             _walletContext = walletContext;
         }
 
-        public async Task<Tuple<int, string, decimal>> CreditUserWallet(CreditOrDebitRequest request)
+        public async Task<Tuple<int, string, decimal>> CreditUserWallet(CreditOrDebitRequestDTO request)
         {
             var param = new SqlParameter[]
             {
@@ -113,7 +114,7 @@ namespace Platform.Wallet.API.Repository
 
             return new Tuple<int, string, decimal>(statusCode, statusName, balance);
         }
-        public async Task<Tuple<int, string, decimal>> DebitUserWallet(CreditOrDebitRequest request)
+        public async Task<Tuple<int, string, decimal>> DebitUserWallet(CreditOrDebitRequestDTO request)
         {
             var param = new SqlParameter[]
             {

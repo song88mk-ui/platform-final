@@ -12,5 +12,6 @@ namespace Platform.AgentReports.API.Models.Request
         public string Username { get; set; }
         public string CurrencyCode { get; set; }
         public bool IsCashMarket { get; set; }
+        public string ClientId { get; set; }
     }
 }

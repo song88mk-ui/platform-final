@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Cors;
 using Platform.Wallet.API.Models;
 using Platform.Wallet.API.Repository;
+using Platform.Shared.Models;
 
 namespace Platform.Wallet.API.Controllers
 {
@@ -16,7 +17,7 @@ namespace Platform.Wallet.API.Controllers
         }
 
         [HttpPost("v1/credit")]
-        public async Task<IActionResult> Credit([FromBody] CreditOrDebitRequest request)
+        public async Task<IActionResult> Credit([FromBody] CreditOrDebitRequestDTO request)
         {
             var result = await _walletRepository.CreditUserWallet(request);
 
@@ -27,7 +28,7 @@ namespace Platform.Wallet.API.Controllers
         }
 
         [HttpPost("v1/debit")]
-        public async Task<IActionResult> Debit([FromBody] CreditOrDebitRequest request)
+        public async Task<IActionResult> Debit([FromBody] CreditOrDebitRequestDTO request)
         {
             var result = await _walletRepository.DebitUserWallet(request);
 

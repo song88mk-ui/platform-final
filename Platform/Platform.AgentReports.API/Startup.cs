@@ -52,6 +52,8 @@ namespace Platform.AgentReports.API
             services.AddScoped<APIKeyFilter>();
 
             services.AddScoped<IReportsRepository, ReportsRepository>();
+            services.AddScoped<IPaymentsRepository, PaymentsRepository>();
+
             services.AddHttpClient<IAgentRepository, AgentRepository>();
 
             services.AddSwaggerGen(c =>

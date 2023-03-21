@@ -44,6 +44,7 @@ namespace Platform.ClientPlatform.API
             services.AddControllers();
 
             services.AddHttpClient<IPlatformRepository, PlatformRepository>();
+            services.AddHttpClient<IReadOnlyRepository, ReadOnlyRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

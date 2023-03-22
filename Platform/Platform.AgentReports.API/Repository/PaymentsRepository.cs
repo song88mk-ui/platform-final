@@ -145,83 +145,150 @@ namespace Platform.AgentReports.API.Repository
                             };
                         }
 
-                        if (balance.UserTypeId == (int)UserType.Player)
+                        #region Wallet
+
+                        var amount = Math.Abs(request.TransferAmount);
+
+                        // wallet repository here
+                        var creditTypes = new TransactionType[] { TransactionType.CreditPartialPaymentTransfer, TransactionType.CreditFullPaymentTransfer };
+
+                        if (creditTypes.Contains(transactionType))
                         {
-                            var amount = 0m;
-
-                            if (result.IsFullTransfer)
+                            var walletResponse = _walletRepository.Credit(new CreditOrDebitRequestDTO
                             {
-                                if (balance.UserTypeId == (int)UserType.Player)
-                                {
-                                    amount = request.OriginalCreditLimit - balance.OutstandingBalance;
-                                }
-                                else
-                                {
-                                    amount = request.OriginalCreditLimit;
-                                }
-                            }
-                            else
+                                ClientId = Guid.Parse(request.ClientId),
+                                UserId = request.UserId.ToString(),
+                                Amount = amount,
+                                CurrencyCode = balance.CurrencyCode,
+                                ReferenceId = Guid.NewGuid().ToString(),
+                                TransactionTypeId = (int)transactionType,
+                                TransactionTypeName = transactionType.ToString()
+                            }).Result;
+
+                            if (walletResponse.StatusCode != 1000)
                             {
-                                amount = Math.Abs(request.TransferAmount);
-                            }
+                                scope.Complete();
 
-                            // wallet repository here
-                            var creditTypes = new TransactionType[] { TransactionType.CreditPartialPaymentTransfer, TransactionType.CreditFullPaymentTransfer };
-
-                            if (creditTypes.Contains(transactionType))
-                            {
-                                var walletResponse = _walletRepository.Credit(new CreditOrDebitRequestDTO
+                                return new BaseResponseDTO<PaymentTransferResponse>
                                 {
-                                    ClientId = Guid.Parse(request.ClientId),
-                                    UserId = request.UserId.ToString(),
-                                    Amount = amount,
-                                    CurrencyCode = balance.CurrencyCode,
-                                    ReferenceId = Guid.NewGuid().ToString(),
-                                    TransactionTypeId = (int)transactionType,
-                                    TransactionTypeName = transactionType.ToString()
-                                }).Result;
-
-                                if (walletResponse.StatusCode != 1000)
-                                {
-                                    scope.Complete();
-
-                                    return new BaseResponseDTO<PaymentTransferResponse>
-                                    {
-                                        StatusCode = StatusCode.Error,
-                                        Message = walletResponse.Message,
-                                        Result = new PaymentTransferResponse()
-                                    };
-                                }
-                            }
-
-                            var debitTypes = new TransactionType[] { TransactionType.DebitPartialPaymentTransfer, TransactionType.DebitFullPaymentTransfer };
-
-                            if (debitTypes.Contains(transactionType))
-                            {
-                                var walletResponse = _walletRepository.Debit(new CreditOrDebitRequestDTO
-                                {
-                                    ClientId = Guid.Parse(request.ClientId),
-                                    UserId = request.UserId.ToString(),
-                                    Amount = amount,
-                                    CurrencyCode = balance.CurrencyCode,
-                                    ReferenceId = Guid.NewGuid().ToString(),
-                                    TransactionTypeId = (int)transactionType,
-                                    TransactionTypeName = transactionType.ToString()
-                                }).Result;
-
-                                if (walletResponse.StatusCode != 1000)
-                                {
-                                    scope.Complete();
-
-                                    return new BaseResponseDTO<PaymentTransferResponse>
-                                    {
-                                        StatusCode = StatusCode.Error,
-                                        Message = walletResponse.Message,
-                                        Result = new PaymentTransferResponse()
-                                    };
-                                }
+                                    StatusCode = StatusCode.Error,
+                                    Message = walletResponse.Message,
+                                    Result = new PaymentTransferResponse()
+                                };
                             }
                         }
+
+                        var debitTypes = new TransactionType[] { TransactionType.DebitPartialPaymentTransfer, TransactionType.DebitFullPaymentTransfer };
+
+                        if (debitTypes.Contains(transactionType))
+                        {
+                            var walletResponse = _walletRepository.Debit(new CreditOrDebitRequestDTO
+                            {
+                                ClientId = Guid.Parse(request.ClientId),
+                                UserId = request.UserId.ToString(),
+                                Amount = amount,
+                                CurrencyCode = balance.CurrencyCode,
+                                ReferenceId = Guid.NewGuid().ToString(),
+                                TransactionTypeId = (int)transactionType,
+                                TransactionTypeName = transactionType.ToString()
+                            }).Result;
+
+                            if (walletResponse.StatusCode != 1000)
+                            {
+                                scope.Complete();
+
+                                return new BaseResponseDTO<PaymentTransferResponse>
+                                {
+                                    StatusCode = StatusCode.Error,
+                                    Message = walletResponse.Message,
+                                    Result = new PaymentTransferResponse()
+                                };
+                            }
+                        }
+
+                        #endregion
+
+                        #region Old Code
+
+                        //if (balance.UserTypeId == (int)UserType.Player)
+                        //{
+                        //    var amount = 0m;
+
+                        //    if (result.IsFullTransfer)
+                        //    {
+                        //        if (balance.UserTypeId == (int)UserType.Player)
+                        //        {
+                        //            amount = request.OriginalCreditLimit - balance.OutstandingBalance;
+                        //        }
+                        //        else
+                        //        {
+                        //            amount = request.OriginalCreditLimit;
+                        //        }
+                        //    }
+                        //    else
+                        //    {
+                        //        amount = Math.Abs(request.TransferAmount);
+                        //    }
+
+                        //    // wallet repository here
+                        //    var creditTypes = new TransactionType[] { TransactionType.CreditPartialPaymentTransfer, TransactionType.CreditFullPaymentTransfer };
+
+                        //    if (creditTypes.Contains(transactionType))
+                        //    {
+                        //        var walletResponse = _walletRepository.Credit(new CreditOrDebitRequestDTO
+                        //        {
+                        //            ClientId = Guid.Parse(request.ClientId),
+                        //            UserId = request.UserId.ToString(),
+                        //            Amount = amount,
+                        //            CurrencyCode = balance.CurrencyCode,
+                        //            ReferenceId = Guid.NewGuid().ToString(),
+                        //            TransactionTypeId = (int)transactionType,
+                        //            TransactionTypeName = transactionType.ToString()
+                        //        }).Result;
+
+                        //        if (walletResponse.StatusCode != 1000)
+                        //        {
+                        //            scope.Complete();
+
+                        //            return new BaseResponseDTO<PaymentTransferResponse>
+                        //            {
+                        //                StatusCode = StatusCode.Error,
+                        //                Message = walletResponse.Message,
+                        //                Result = new PaymentTransferResponse()
+                        //            };
+                        //        }
+                        //    }
+
+                        //    var debitTypes = new TransactionType[] { TransactionType.DebitPartialPaymentTransfer, TransactionType.DebitFullPaymentTransfer };
+
+                        //    if (debitTypes.Contains(transactionType))
+                        //    {
+                        //        var walletResponse = _walletRepository.Debit(new CreditOrDebitRequestDTO
+                        //        {
+                        //            ClientId = Guid.Parse(request.ClientId),
+                        //            UserId = request.UserId.ToString(),
+                        //            Amount = amount,
+                        //            CurrencyCode = balance.CurrencyCode,
+                        //            ReferenceId = Guid.NewGuid().ToString(),
+                        //            TransactionTypeId = (int)transactionType,
+                        //            TransactionTypeName = transactionType.ToString()
+                        //        }).Result;
+
+                        //        if (walletResponse.StatusCode != 1000)
+                        //        {
+                        //            scope.Complete();
+
+                        //            return new BaseResponseDTO<PaymentTransferResponse>
+                        //            {
+                        //                StatusCode = StatusCode.Error,
+                        //                Message = walletResponse.Message,
+                        //                Result = new PaymentTransferResponse()
+                        //            };
+                        //        }
+                        //    }
+                        //}
+
+                        #endregion
 
                         var dateUTCNow = DateTime.UtcNow;
 

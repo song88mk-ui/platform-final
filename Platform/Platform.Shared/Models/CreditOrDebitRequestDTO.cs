@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Platform.Wallet.API.Models
+namespace Platform.Shared.Models
 {
-    public class CreditOrDebitRequest
+    public class CreditOrDebitRequestDTO
     {
         public Guid ClientId { get; set; }
         public string UserId { get; set; }
@@ -12,4 +12,5 @@ namespace Platform.Wallet.API.Models
         public string TransactionTypeName { get; set; }
         public string ReferenceId { get; set; }
     }
+
 }

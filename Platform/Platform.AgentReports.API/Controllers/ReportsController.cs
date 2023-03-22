@@ -183,6 +183,8 @@ namespace Platform.AgentReports.API.Controllers
         [HttpPost("v1/reports/payment/transferhistory")]
         public async Task<IActionResult> GetPaymentTransferHistory([FromBody] TransferHistoryRequest request)
         {
+            request.UserTypeId = request.UserTypeId == 10 ? (int)UserType.Agent : (int)UserType.Player;
+
             var result = await _reportsRepository.GetPaymentTransferHistory(request);
 
             switch (result.StatusCode)

@@ -148,5 +148,7 @@ namespace Platform.Shared.Models
 
         [JsonPropertyName("deadHeatFactor")]
         public decimal DeadHeatFactor { get; set; }
+        [JsonPropertyName("marketTemplateId")]
+        public string MarketTemplateId { get; set; }
     }
 }

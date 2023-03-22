@@ -584,7 +584,8 @@ namespace Platform.Operator.Servicev2.Repository
                         Odds = s.Odds,
                         HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
                         AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty,
-                        OddsRef = s.OddsRef
+                        OddsRef = s.OddsRef,
+                        MarketTemplateId = s.MarketTemplateId
                     }).ToList()
                 };
 
@@ -765,6 +766,7 @@ namespace Platform.Operator.Servicev2.Repository
                     SelectionId = s.SelectionId.ToString(),
                     SelectionName = s.SelectionName,
                     Odds = s.Odds,
+                    MarketTemplateId = s.MarketTemplateId,
                     HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
                     AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
                 }).ToList()
@@ -948,7 +950,8 @@ namespace Platform.Operator.Servicev2.Repository
                     Odds = s.Odds,
                     HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
                     AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty,
-                    DeadHeatFactor = s.DeadHeatFactor
+                    DeadHeatFactor = s.DeadHeatFactor,
+                    MarketTemplateId = s.MarketTemplateId,
                 }).ToList()
             };
 
@@ -1129,7 +1132,8 @@ namespace Platform.Operator.Servicev2.Repository
                     SelectionName = s.SelectionName,
                     Odds = s.Odds,
                     HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
-                    AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
+                    AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty,
+                    MarketTemplateId = s.MarketTemplateId
                 }).ToList()
             };
 

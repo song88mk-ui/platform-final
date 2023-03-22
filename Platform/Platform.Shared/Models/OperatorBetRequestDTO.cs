@@ -53,11 +53,11 @@ namespace Platform.Shared.Models
         [JsonPropertyName("bonusId")]
         public string BonusId { get; set; }
 
-        [JsonPropertyName("betSelections")]
-        public List<OperatorBetSelectionRequestDTO> BetSelections { get; set; }
-
         [JsonPropertyName("oddsRef")]
         public decimal OddsRef { get; set; }
+
+        [JsonPropertyName("betSelections")]
+        public List<OperatorBetSelectionRequestDTO> BetSelections { get; set; }        
     }
 
     public class OperatorBetSelectionRequestDTO
@@ -129,5 +129,7 @@ namespace Platform.Shared.Models
         public decimal DeadHeatFactor { get; set; }
         [JsonPropertyName("oddsRef")]
         public decimal OddsRef { get; set; }
+        [JsonPropertyName("marketTemplateId")]
+        public string MarketTemplateId { get; set; }
     }
 }

@@ -7,7 +7,7 @@ namespace Platform.AgentReports.API.Models.Response
         public long UserId { get; set; }
         public decimal TransferAmount { get; set; }
         public bool IsFullTransfer { get; set; }
-        public Guid ReferenceId { get; set; }
+        public string ReferenceId { get; set; }
     }
 }
 

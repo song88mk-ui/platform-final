@@ -74,7 +74,19 @@ namespace Platform.Client.API.Repository
         }
         public async Task<BaseResponseDTO<TWLimitedResponseDTO>> GetActiveFixtureDetails(string apiKey, string clientId, string fixtureId, string ipCountryCode, LanguageCode languageCode)
         {
-            var clientCode = (await GetClient(clientId)).Result;
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<TWLimitedResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var clientCode = clientResponse.Result;
+
 
             var request = new TWFixtureDetailsRequestDTO
             {

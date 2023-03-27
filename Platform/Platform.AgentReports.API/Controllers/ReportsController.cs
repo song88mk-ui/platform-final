@@ -238,6 +238,20 @@ namespace Platform.AgentReports.API.Controllers
             }
         }
 
+        [HttpGet("v1/reports/profile/{userId}")]
+        public async Task<IActionResult> GetProfile(long userId)
+        {
+            var result = await _reportsRepository.GetProfile(userId);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpGet("v1/reports/runningbalance/{userId}")]
         public async Task<IActionResult> GetRunningBalance(string userId)
         {

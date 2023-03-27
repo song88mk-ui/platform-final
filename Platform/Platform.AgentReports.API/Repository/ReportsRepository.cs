@@ -2872,6 +2872,89 @@ namespace Platform.AgentReports.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<ProfileResponse>> GetProfile(long userId)
+        {
+            var startDateLastWeek = GetStartDate().AddDays(-7);
+            var endDateLastWeek = GetEndDate(startDateLastWeek);
+
+            var agentRunningBalance = _context.RunningBalance.Where(c => c.ParentUserId == userId).AsNoTracking().ToList();
+            var downlineRunningBalance = _context.RunningBalance.Where(c => c.ParentUserId == userId && c.UserTypeId == (int)UserType.Player && c.IsCashPlayer == false).AsNoTracking().ToList();
+            var totalOutstandingCount = _context.Bet.Where(c => c.ParentUserId == userId && c.UserTypeId == (int)UserType.Player && c.StatusId == (int)StatusType.Running).AsNoTracking().Count();
+            var totalOutstanding = _context.Bet.Where(c => c.ParentUserId == userId && c.UserTypeId == (int)UserType.Player && c.StatusId == (int)StatusType.Running).AsNoTracking();
+            var agentBalance = _context.RunningBalance.Where(c => c.ParentUserId == userId && c.UserTypeId == (int)UserType.Agent && c.IsCashPlayer == false).AsNoTracking();
+            var memberBalance = _context.RunningBalance.Where(c => c.ParentUserId == userId && c.UserTypeId == (int)UserType.Player && c.IsCashPlayer == false).AsNoTracking();
+
+            var cashBalance = 0m;
+            cashBalance += (agentBalance.Sum(x => x.TrueCashBalance) * -1);
+            cashBalance += memberBalance.Sum(x => x.TrueCashBalance);
+
+            //check if the userId is player
+            //need to refactor this. need to get the userTypeId from agentApi (Internal)
+            var winLoss = _context.WinLoss.FirstOrDefault(c => c.ParentUserId == 0 && c.IndirectUserId == userId);
+
+            var userType = (int)UserType.Agent;
+
+            if (winLoss != null)
+            {
+                userType = winLoss.UserTypeId;
+            }
+
+            var wlcToday = 0.0m;
+            var wlcYesterday = 0.0m;
+            var wlcLastWeek = 0.0m;
+
+            if (userType == (int)UserType.Player)
+            {
+                wlcToday = _context.WinLoss
+                    .Where(c => c.ParentUserId == 0 && c.IndirectUserId == userId &&
+                                c.TransactionDateOffset.Date == DateTime.UtcNow.AddHours(-4).Date)
+                    .AsNoTracking().Sum(s => s.MemberWLC);
+                wlcYesterday = _context.WinLoss
+                    .Where(c => c.ParentUserId == 0 && c.IndirectUserId == userId &&
+                                c.TransactionDateOffset.Date == DateTime.UtcNow.AddHours(-4).AddDays(-1).Date)
+                    .AsNoTracking().Sum(s => s.MemberWLC);
+                wlcLastWeek = _context.WinLoss
+                    .Where(c => c.ParentUserId == 0 && c.IndirectUserId == userId &&
+                                c.TransactionDateOffset >= startDateLastWeek &&
+                                c.TransactionDateOffset <= endDateLastWeek).AsNoTracking().Sum(s => s.MemberWLC);
+                cashBalance = _context.RunningBalance.First(r => r.UserId == userId).CashBalance * -1;
+            }
+            else if (userType == (int)UserType.Agent)
+            {
+                var currDate = DateTime.UtcNow.AddHours(-4).Day;
+
+                wlcToday = _context.WinLoss
+                    .Where(c => c.ParentUserId == userId && c.DirectUserId == userId &&
+                                c.SettledDateOffset.Date == DateTime.UtcNow.AddHours(-4).Date).AsNoTracking()
+                    .Sum(s => s.AgentWLC);
+                wlcYesterday = _context.WinLoss
+                    .Where(c => c.ParentUserId == userId && c.DirectUserId == userId &&
+                                c.SettledDateOffset.Date == DateTime.UtcNow.AddHours(-4).AddDays(-1).Date)
+                    .AsNoTracking().Sum(s => s.AgentWLC);
+                wlcLastWeek = _context.WinLoss
+                    .Where(c => c.ParentUserId == userId && c.DirectUserId == userId &&
+                                c.SettledDateOffset.Date >= startDateLastWeek.Date &&
+                                c.SettledDateOffset.Date <= endDateLastWeek.Date).AsNoTracking().Sum(s => s.AgentWLC);
+            }
+
+            return new BaseResponseDTO<ProfileResponse>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new ProfileResponse
+                {
+                    AgentId = agentRunningBalance.Select(s => s.ParentUserId).FirstOrDefault(),
+                    PlayersBalance = downlineRunningBalance.Sum(s => s.CashBalance) * -1, //changed from true cash balance to cash balance (FCI-1309)
+                    CashBalance = cashBalance,
+                    TotalOutstanding = totalOutstanding.Sum(s => s.ReceivePositionTaking),
+                    TotalOutstandingCount = totalOutstandingCount,
+                    WLCToday = wlcToday,
+                    WLCYesterday = wlcYesterday,
+                    WLCLastWeek = wlcLastWeek
+                }
+            };
+        }
+
         public async Task<Tuple<int, string, decimal, decimal>> GetRunningBalance(string userId)
         {
             var param = new SqlParameter[]

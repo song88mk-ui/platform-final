@@ -32,6 +32,7 @@ namespace Platform.AgentReports.API.Repository
         Task<BaseResponseDTO<PartnerRevenueSettlementResponse>> GetPartnerRevenueForSettlement(PartnerRevenueSettlementRequest request);
         Task<BaseResponseDTO<PartnerRevenueSettlementHistoryResponse>> GetPartnerRevenueForSettlementHistory(PartnerRevenueSettlementHistoryRequest request);
         Task<BaseResponseDTO<CancelBetHistoryResponse>> GetCancelBetHistory(CancelBetHistoryRequest request);
+        Task<BaseResponseDTO<ProfileResponse>> GetProfile(long userId);
         Task<Tuple<int, string, decimal, decimal>> GetRunningBalance(string userId);
     }
 }

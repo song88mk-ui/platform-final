@@ -281,11 +281,11 @@ namespace Platform.Settlement.Service.Repository
 
         public void ProcesssBetSettlement(OnUOFBetSettlement message, IMessageBroker messageBroker, string correlationId)
         {
-            //
             var betSelections = GetBetSelections(message.SelectionId);
 
             foreach (var betSelection in betSelections)
             {
+                var finalResult = new Tuple<bool, bool>(false, false);
                 var isPublish = false;
                 var payload = new OnBetSettlement();
                 var settledDate = DateTime.UtcNow;
@@ -315,14 +315,16 @@ namespace Platform.Settlement.Service.Repository
                             }
 
                             if (filteredSelection.IsSettled == false)
-                                isPublish = SettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection, false, string.Empty);
+                                finalResult = SettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection, false, string.Empty);
                             else
-                                isPublish = ResettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection, false, string.Empty);
+                                finalResult = ResettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection, false, string.Empty);
 
                             scope.Complete();
 
-                            if (isPublish)
+                            if (finalResult.Item1)
                             {
+                                payload.IsAudit = finalResult.Item2;
+
                                 if (payload.Bet.BetStatusId == (int)BetStatus.Cancelled)
                                 {
                                     messageBroker.Publish(payload, "OnBetCancellation", "r.bet.operator", correlationId);
@@ -368,6 +370,7 @@ namespace Platform.Settlement.Service.Repository
 
             foreach (var betSelection in betSelections)
             {
+                var finalResult = new Tuple<bool, bool>(false, false);
                 var isPublish = false;
                 var payload = new OnBetSettlement();
                 var settledDate = DateTime.UtcNow;
@@ -451,12 +454,14 @@ namespace Platform.Settlement.Service.Repository
                                 continue;
                             }
 
-                            isPublish = SettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection, false, string.Empty);
+                            finalResult = SettleBet(message, betSelection, isPublish, payload, settledDate, context, selections, filteredSelection, false, string.Empty);
 
                             scope.Complete();
 
                             if (isPublish)
                             {
+                                payload.IsAudit = finalResult.Item2;
+
                                 if (payload.Bet.BetStatusId == (int)BetStatus.Cancelled)
                                 {
                                     messageBroker.Publish(payload, "OnBetCancellation", "r.bet.operator", correlationId);
@@ -504,10 +509,12 @@ namespace Platform.Settlement.Service.Repository
             return trueStake - taxedStake;
         }
 
-        private bool SettleBet(OnUOFBetSettlement message, BetSelection betSelection, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, BetSelection filteredSelection, bool isManualSettle, string reason)
+        private Tuple<bool, bool> SettleBet(OnUOFBetSettlement message, BetSelection betSelection, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, BetSelection filteredSelection, bool isManualSettle, string reason)
         {
+            var finalResult = new Tuple<bool, bool>(false, false);
+
             if (filteredSelection.BetSelectionStatusId != (int)BetStatus.Running)
-                return false;
+                return new Tuple<bool, bool>(false, false);
 
             if (!string.IsNullOrEmpty(message.SettlementScore))
                 filteredSelection.SettlementScore = message.SettlementScore;
@@ -584,11 +591,11 @@ namespace Platform.Settlement.Service.Repository
             {
                 if (message.SelectionStatus == BetStatus.Lost)
                 {
-                    isPublish = ApplyLost(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason);
+                    finalResult = ApplyLost(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason);
                 }
                 else if (bet.BetTypeId == (int)BetType.BetBuilder && message.SelectionStatus == BetStatus.Void)
                 {
-                    isPublish = ApplyAllSettled(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason, false);
+                    finalResult = ApplyAllSettled(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason, false);
                 }
                 else
                 {
@@ -597,13 +604,13 @@ namespace Platform.Settlement.Service.Repository
 
                     if (totalSettled == totalSelections)
                     {
-                        isPublish = ApplyAllSettled(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason, false);
+                        finalResult = ApplyAllSettled(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason, false);
                     }
                 }
             }
 
             context.SaveChanges();
-            return isPublish;
+            return finalResult;
         }
 
         private static void ProcessStakeFixtureLimit(OnUOFBetSettlement message, BetSelection betSelection, BettingContext context, List<BetSelection> selections, Bet betEntity)
@@ -621,21 +628,23 @@ namespace Platform.Settlement.Service.Repository
             }
         }
 
-        private bool ResettleBet(OnUOFBetSettlement message, BetSelection betSelection, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, BetSelection filteredSelection, bool isManualSettle, string reason)
+        private Tuple<bool, bool> ResettleBet(OnUOFBetSettlement message, BetSelection betSelection, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, BetSelection filteredSelection, bool isManualSettle, string reason)
         {
+            var finalResult = new Tuple<bool, bool>(false, false);
+
             if (filteredSelection.BetSelectionStatusId == (int)message.SelectionStatus || filteredSelection.BetSelectionStatusId == (int)BetStatus.Waiting || filteredSelection.BetSelectionStatusId == (int)BetStatus.Cancelled || filteredSelection.BetSelectionStatusId == (int)BetStatus.Rejected || filteredSelection.BetSelectionStatusId == (int)BetStatus.CashedOut)
-                return false;
+                return new Tuple<bool, bool>(false, false);
 
             var bet = context.Bet.Find(betSelection.BetId);
             if (bet != null)
                 if (bet.IsResettled && isManualSettle == false)
-                    return false;
+                    return new Tuple<bool, bool>(false, false);
 
             if (bet.IsAgent)
-                return false;
+                return new Tuple<bool, bool>(false, false);
 
             if (bet.BetStatusId == (int)BetStatus.CashedOut)
-                return false;
+                return new Tuple<bool, bool>(false, false);
 
             filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;
             filteredSelection.BetSelectionStatusName = message.SelectionStatus.ToString();
@@ -711,11 +720,11 @@ namespace Platform.Settlement.Service.Repository
             {
                 if (message.SelectionStatus == BetStatus.Lost)
                 {
-                    isPublish = ApplyLost(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason);
+                    finalResult = ApplyLost(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason);
                 }
                 else if (bet.BetTypeId == (int)BetType.BetBuilder && message.SelectionStatus == BetStatus.Void)
                 {
-                    isPublish = ApplyAllSettled(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason, true);
+                    finalResult = ApplyAllSettled(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason, true);
                 }
                 else
                 {
@@ -728,7 +737,7 @@ namespace Platform.Settlement.Service.Repository
 
                     if (totalSettled == totalSelections)
                     {
-                        isPublish = ApplyAllSettled(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason, true);
+                        finalResult = ApplyAllSettled(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason, true);
                     }
                     else if ((int)initialBetStatus != bet.BetStatusId && initialBetStatus == BetStatus.Running)
                     {
@@ -738,13 +747,13 @@ namespace Platform.Settlement.Service.Repository
             }
 
             context.SaveChanges();
-            return isPublish;
+            return finalResult;
         }
 
-        private bool ApplyLost(BettingContext context, OnUOFBetSettlement message, OnBetSettlement payload, Bet bet, List<BetSelection> selections, BetSelection betSelection, DateTime settledDate, bool isPublish, bool isManualSettle, string reason)
+        private Tuple<bool, bool> ApplyLost(BettingContext context, OnUOFBetSettlement message, OnBetSettlement payload, Bet bet, List<BetSelection> selections, BetSelection betSelection, DateTime settledDate, bool isPublish, bool isManualSettle, string reason)
         {
             var isInsertToBetAudit = true;
-            isPublish = false;
+            isPublish = true;
 
             var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
@@ -833,19 +842,17 @@ namespace Platform.Settlement.Service.Repository
                     OddsRef = betEntity.OddsRef,
                     IsAgent = betEntity.IsAgent
                 });
-
-                isPublish = true;
             }
 
             payload.Bet = betEntity;
             payload.BetSelections = selections;
 
-            return isPublish;
+            return new Tuple<bool, bool>(isPublish, isInsertToBetAudit);
         }
-        private bool ApplyAllSettled(BettingContext context, OnUOFBetSettlement message, OnBetSettlement payload, Bet bet, List<BetSelection> selections, BetSelection betSelection, DateTime settledDate, bool isPublish, bool isManualSettle, string reason, bool isResettle)
+        private Tuple<bool, bool> ApplyAllSettled(BettingContext context, OnUOFBetSettlement message, OnBetSettlement payload, Bet bet, List<BetSelection> selections, BetSelection betSelection, DateTime settledDate, bool isPublish, bool isManualSettle, string reason, bool isResettle)
         {
             var isInsertToBetAudit = true;
-            isPublish = false;
+            isPublish = true;
 
             var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
@@ -984,15 +991,13 @@ namespace Platform.Settlement.Service.Repository
                 {
                     ProcessStakeFixtureLimit(message, betSelection, context, selections, betEntity);
                 }
-
-                isPublish = true;
             }
 
             payload.Bet = betEntity;
             payload.BetSelections = selections;
             payload.NonTaxedPayout = nonTaxedPayout;
 
-            return isPublish;
+            return new Tuple<bool, bool>(isPublish, isInsertToBetAudit);
         }
 
         private void ApplyRunning(BettingContext context, Bet bet, List<BetSelection> selections, BetSelection betSelection, DateTime settledDate)
@@ -1309,6 +1314,7 @@ namespace Platform.Settlement.Service.Repository
         {
             foreach (var betItem in message.Bets)
             {
+                var finalResult = new Tuple<bool, bool>(false, false);
                 var isPublish = false;
                 var payload = new OnBetSettlement();
                 var settledDate = DateTime.UtcNow;
@@ -1347,14 +1353,16 @@ namespace Platform.Settlement.Service.Repository
                             betItem.Reason = $"1000 - {betItem.Reason}";
 
                             if (filteredSelection.IsSettled == false)
-                                isPublish = SettleBet(request, filteredSelection, isPublish, payload, settledDate, context, selections, filteredSelection, true, betItem.Reason);
+                                finalResult = SettleBet(request, filteredSelection, isPublish, payload, settledDate, context, selections, filteredSelection, true, betItem.Reason);
                             else
-                                isPublish = ResettleBet(request, filteredSelection, isPublish, payload, settledDate, context, selections, filteredSelection, true, betItem.Reason);
+                                finalResult = ResettleBet(request, filteredSelection, isPublish, payload, settledDate, context, selections, filteredSelection, true, betItem.Reason);
 
                             scope.Complete();
 
-                            if (isPublish)
+                            if (finalResult.Item1)
                             {
+                                payload.IsAudit = finalResult.Item2;
+
                                 if (payload.Bet.BetStatusId == (int)BetStatus.Cancelled)
                                 {
                                     messageBroker.Publish(payload, "OnBetCancellation", "r.bet.operator", correlationId);

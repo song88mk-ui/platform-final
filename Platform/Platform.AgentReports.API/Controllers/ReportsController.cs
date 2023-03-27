@@ -237,5 +237,19 @@ namespace Platform.AgentReports.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpGet("v1/reports/runningbalance/{userId}")]
+        public async Task<IActionResult> GetRunningBalance(string userId)
+        {
+            var result = await _reportsRepository.GetRunningBalance(userId);
+
+            switch ((StatusCode)result.Item1)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(new { StatusCode = result.Item1, Message = result.Item2, OutstandingBalance = result.Item3, CashBalance = result.Item4 });
+                default:
+                    return BadRequest(new { StatusCode = result.Item1, Message = result.Item2, OutstandingBalance = result.Item3, CashBalance = result.Item4 });
+            }
+        }
     }
 }

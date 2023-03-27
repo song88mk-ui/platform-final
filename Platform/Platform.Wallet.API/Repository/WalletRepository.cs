@@ -322,7 +322,7 @@ namespace Platform.Wallet.API.Repository
         public async Task<Tuple<int, string, decimal, string>> GetUserWallet(UserWalletRequest request)
         {
             var param = new SqlParameter[]
-{
+            {
                 new SqlParameter
                 {
                     ParameterName = "@ClientId",
@@ -366,7 +366,7 @@ namespace Platform.Wallet.API.Repository
                     Size = 50,
                     Direction = System.Data.ParameterDirection.Output
                 }
-};
+            };
 
             await _walletContext.Database.ExecuteSqlRawAsync($"EXEC GetUserWallet @ClientId, @UserId, @StatusCode OUTPUT, @StatusName OUTPUT, @Balance OUTPUT, @CurrencyCode OUTPUT", param);
 

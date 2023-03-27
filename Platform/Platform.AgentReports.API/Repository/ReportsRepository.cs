@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Platform.AgentReports.API.Models;
@@ -2869,6 +2870,58 @@ namespace Platform.AgentReports.API.Repository
                     Bets = betsResponse,
                 }
             };
+        }
+
+        public async Task<Tuple<int, string, decimal, decimal>> GetRunningBalance(string userId)
+        {
+            var param = new SqlParameter[]
+            {
+                new SqlParameter
+                {
+                    ParameterName = "@UserId",
+                    SqlDbType = System.Data.SqlDbType.NVarChar,
+                    Direction = System.Data.ParameterDirection.Input,
+                    Value = userId
+                },
+                new SqlParameter
+                {
+                    ParameterName = "@StatusCode",
+                    SqlDbType = System.Data.SqlDbType.Int,
+                    Direction = System.Data.ParameterDirection.Output,
+                },
+                new SqlParameter
+                {
+                    ParameterName = "@StatusName",
+                    SqlDbType = System.Data.SqlDbType.NVarChar,
+                    Size = 50,
+                    Direction = System.Data.ParameterDirection.Output,
+                },
+                new SqlParameter
+                {
+                    ParameterName = "@OutstandingBalance",
+                    SqlDbType = System.Data.SqlDbType.Decimal,
+                    Precision = 26,
+                    Scale = 12,
+                    Direction = System.Data.ParameterDirection.Output,
+                },
+                new SqlParameter
+                {
+                    ParameterName = "@CashBalance",
+                    SqlDbType = System.Data.SqlDbType.Decimal,
+                    Precision = 26,
+                    Scale = 12,
+                    Direction = System.Data.ParameterDirection.Output
+                }
+            };
+
+            await _context.Database.ExecuteSqlRawAsync($"EXEC GetRunningBalance @UserId, @StatusCode OUTPUT, @StatusName OUTPUT, @OutstandingBalance OUTPUT, @CashBalance OUTPUT", param);
+
+            var statusCode = (int)param[1].Value;
+            var statusName = (string)param[2].Value;
+            var outstandingBalance = (decimal)param[3].Value;
+            var cashBalance = (decimal)param[4].Value;
+
+            return new Tuple<int, string, decimal, decimal>(statusCode, statusName, outstandingBalance, cashBalance);
         }
 
         #endregion

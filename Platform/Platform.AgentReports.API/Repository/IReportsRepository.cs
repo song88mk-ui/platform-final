@@ -34,5 +34,6 @@ namespace Platform.AgentReports.API.Repository
         Task<BaseResponseDTO<CancelBetHistoryResponse>> GetCancelBetHistory(CancelBetHistoryRequest request);
         Task<BaseResponseDTO<ProfileResponse>> GetProfile(long userId);
         Task<Tuple<int, string, decimal, decimal>> GetRunningBalance(string userId);
+        Task<BaseResponseDTO<bool>> CreateRunningBalance(CreateRunningBalanceRequest request);
     }
 }

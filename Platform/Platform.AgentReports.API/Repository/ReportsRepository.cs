@@ -3007,6 +3007,43 @@ namespace Platform.AgentReports.API.Repository
             return new Tuple<int, string, decimal, decimal>(statusCode, statusName, outstandingBalance, cashBalance);
         }
 
+        public async Task<BaseResponseDTO<bool>> CreateRunningBalance(CreateRunningBalanceRequest request)
+        {
+            var runningBalance = _context.RunningBalance.FirstOrDefault(c => c.ParentUserId == request.ParentAgentId && c.UserId == request.UserId);
+
+            if (runningBalance == null)
+            {
+                _context.RunningBalance.Add(new RunningBalance
+                {
+                    ParentUserId = request.ParentAgentId,
+                    UserId = request.UserId,
+                    Username = request.Username,
+                    UserTypeId = request.UserType,
+                    CashBalance = 0,
+                    TrueCashBalance = 0,
+                    OutstandingBalance = 0,
+                    IsCashPlayer = request.PlayerType == 1 ? true : false,
+                    CurrencyCode = ((CurrencyCode)request.CurrencyCode).ToString()
+                });
+
+                _context.SaveChanges();
+
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = true
+                };
+            }
+
+            return new BaseResponseDTO<bool>
+            {
+                StatusCode = StatusCode.Record_Is_Already_Existing,
+                Message = StatusCode.Record_Is_Already_Existing.ToString().Replace("_", " "),
+                Result = false
+            };
+        }
+
         #endregion
 
         #region Utilities

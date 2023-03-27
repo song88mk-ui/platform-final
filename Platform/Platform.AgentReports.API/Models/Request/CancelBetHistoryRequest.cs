@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Platform.Shared.Enums;
+using System;
 using System.Collections.Generic;
 
 namespace Platform.AgentReports.API.Models.Request

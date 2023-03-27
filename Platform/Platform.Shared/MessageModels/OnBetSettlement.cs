@@ -16,6 +16,7 @@ namespace Platform.Shared.MessageModels
         public string Message { get; set; }
         public bool IsRetry { get; set; }
         public decimal NonTaxedPayout { get; set; }
+        public bool IsAudit { get; set; } = false;
     }
 
     public class OnBetSettlementRetry

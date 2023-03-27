@@ -965,19 +965,19 @@ namespace Platform.Operator.Servicev2.Repository
                         messageBroker.Publish(message, "OnBetSettlement", "r.bet.reports", correlationId);
                 }
 
-
-                AddOperatorLog(new OperatorLog
-                {
-                    Direction = "REQUEST",
-                    ClientId = message.Bet.ClientId,
-                    ClientCode = message.Bet.ClientCode,
-                    URL = $"{message.Bet.Endpoint}{path}",
-                    BetId = message.Bet.BetId.ToString().ToUpper(),
-                    Info = JsonSerializer.Serialize(payload),
-                    OperatorToken = message.Bet.OperatorToken,
-                    CorrelationId = correlationId,
-                    Timestamp = DateTime.UtcNow
-                });
+                if (message.IsAudit)
+                    AddOperatorLog(new OperatorLog
+                    {
+                        Direction = "REQUEST",
+                        ClientId = message.Bet.ClientId,
+                        ClientCode = message.Bet.ClientCode,
+                        URL = $"{message.Bet.Endpoint}{path}",
+                        BetId = message.Bet.BetId.ToString().ToUpper(),
+                        Info = JsonSerializer.Serialize(payload),
+                        OperatorToken = message.Bet.OperatorToken,
+                        CorrelationId = correlationId,
+                        Timestamp = DateTime.UtcNow
+                    });
 
                 var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
@@ -985,51 +985,8 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                    AddOperatorLog(new OperatorLog
+                    if (message.IsAudit)
                     {
-                        Direction = "RESPONSE",
-                        ClientId = message.Bet.ClientId,
-                        ClientCode = message.Bet.ClientCode,
-                        URL = $"{message.Bet.Endpoint}{path}",
-                        BetId = message.Bet.BetId.ToString().ToUpper(),
-                        Info = JsonSerializer.Serialize(result),
-                        OperatorToken = message.Bet.OperatorToken,
-                        CorrelationId = correlationId,
-                        Timestamp = DateTime.UtcNow
-                    });
-
-                    //TODO: delete when TW is no longer the frontend
-                    messageBroker.Publish(new OnWalletChange
-                    {
-                        ClientId = message.Bet.ClientId.ToUpper(),
-                        UserId = message.Bet.UserId,
-                        Balance = result.Balance
-                    }, "OnWalletChange", "r.bet.betstatus", correlationId);
-
-                    messageBroker.Publish(new OnBetStatus
-                    {
-                        ClientId = message.Bet.ClientId.ToUpper(),
-                        UserId = message.Bet.UserId,
-                        BetId = message.Bet.BetId.ToString().ToUpper(),
-                        BetStatus = (BetStatus)message.Bet.BetStatusId,
-                        Message = message.Message
-                    }, "OnBetStatus", $"r.bet.betstatus.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
-
-                    messageBroker.Publish(new OnWalletChange
-                    {
-                        ClientId = message.Bet.ClientId.ToUpper(),
-                        UserId = message.Bet.UserId,
-                        Balance = result.Balance
-                    }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
-
-                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetSettlement", correlationId, response.IsSuccessStatusCode);
-                }
-                else
-                {
-                    if (response.StatusCode == HttpStatusCode.BadRequest)
-                    {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-
                         AddOperatorLog(new OperatorLog
                         {
                             Direction = "RESPONSE",
@@ -1043,43 +1000,98 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
+                        //TODO: delete when TW is no longer the frontend
+                        messageBroker.Publish(new OnWalletChange
+                        {
+                            ClientId = message.Bet.ClientId.ToUpper(),
+                            UserId = message.Bet.UserId,
+                            Balance = result.Balance
+                        }, "OnWalletChange", "r.bet.betstatus", correlationId);
+
+                        messageBroker.Publish(new OnBetStatus
+                        {
+                            ClientId = message.Bet.ClientId.ToUpper(),
+                            UserId = message.Bet.UserId,
+                            BetId = message.Bet.BetId.ToString().ToUpper(),
+                            BetStatus = (BetStatus)message.Bet.BetStatusId,
+                            Message = message.Message
+                        }, "OnBetStatus", $"r.bet.betstatus.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+
+                        messageBroker.Publish(new OnWalletChange
+                        {
+                            ClientId = message.Bet.ClientId.ToUpper(),
+                            UserId = message.Bet.UserId,
+                            Balance = result.Balance
+                        }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+
+                        AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetSettlement", correlationId, response.IsSuccessStatusCode);
+                    }
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                        if (message.IsAudit)
+                        {
+                            AddOperatorLog(new OperatorLog
+                            {
+                                Direction = "RESPONSE",
+                                ClientId = message.Bet.ClientId,
+                                ClientCode = message.Bet.ClientCode,
+                                URL = $"{message.Bet.Endpoint}{path}",
+                                BetId = message.Bet.BetId.ToString().ToUpper(),
+                                Info = JsonSerializer.Serialize(result),
+                                OperatorToken = message.Bet.OperatorToken,
+                                CorrelationId = correlationId,
+                                Timestamp = DateTime.UtcNow
+                            });
+
+                            RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
+                        }
                     }
                     else
                     {
-                        AddOperatorLog(new OperatorLog
+                        if (message.IsAudit)
                         {
-                            Direction = "RESPONSE",
-                            ClientId = message.Bet.ClientId,
-                            ClientCode = message.Bet.ClientCode,
-                            URL = $"{message.Bet.Endpoint}{path}",
-                            BetId = message.Bet.BetId.ToString().ToUpper(),
-                            Info = JsonSerializer.Serialize(response.ReasonPhrase),
-                            OperatorToken = message.Bet.OperatorToken,
-                            CorrelationId = correlationId,
-                            Timestamp = DateTime.UtcNow
-                        });
+                            AddOperatorLog(new OperatorLog
+                            {
+                                Direction = "RESPONSE",
+                                ClientId = message.Bet.ClientId,
+                                ClientCode = message.Bet.ClientCode,
+                                URL = $"{message.Bet.Endpoint}{path}",
+                                BetId = message.Bet.BetId.ToString().ToUpper(),
+                                Info = JsonSerializer.Serialize(response.ReasonPhrase),
+                                OperatorToken = message.Bet.OperatorToken,
+                                CorrelationId = correlationId,
+                                Timestamp = DateTime.UtcNow
+                            });
 
-                        RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
+                            RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
-                AddOperatorLog(new OperatorLog
+                if (message.IsAudit)
                 {
-                    Direction = "RESPONSE",
-                    ClientId = message.Bet.ClientId,
-                    ClientCode = message.Bet.ClientCode,
-                    URL = $"{message.Bet.Endpoint}{path}",
-                    BetId = message.Bet.BetId.ToString().ToUpper(),
-                    Info = JsonSerializer.Serialize(new { message = ex.Message, stackTrace = ex.StackTrace }),
-                    OperatorToken = message.Bet.OperatorToken,
-                    CorrelationId = correlationId,
-                    Timestamp = DateTime.UtcNow
-                });
+                    AddOperatorLog(new OperatorLog
+                    {
+                        Direction = "RESPONSE",
+                        ClientId = message.Bet.ClientId,
+                        ClientCode = message.Bet.ClientCode,
+                        URL = $"{message.Bet.Endpoint}{path}",
+                        BetId = message.Bet.BetId.ToString().ToUpper(),
+                        Info = JsonSerializer.Serialize(new { message = ex.Message, stackTrace = ex.StackTrace }),
+                        OperatorToken = message.Bet.OperatorToken,
+                        CorrelationId = correlationId,
+                        Timestamp = DateTime.UtcNow
+                    });
 
-                RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
+                    RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
+                }
             }
         }
         public void ProcesssBetCancellation(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId)

@@ -35,5 +35,6 @@ namespace Platform.AgentReports.API.Repository
         Task<BaseResponseDTO<ProfileResponse>> GetProfile(long userId);
         Task<Tuple<int, string, decimal, decimal>> GetRunningBalance(string userId);
         Task<BaseResponseDTO<bool>> CreateRunningBalance(CreateRunningBalanceRequest request);
+        Task<BaseResponseDTO<bool>> CreateRevenueShareConfig(RevenueShareConfigRequest request);
     }
 }

@@ -3044,6 +3044,33 @@ namespace Platform.AgentReports.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<bool>> CreateRevenueShareConfig(RevenueShareConfigRequest request)
+        {
+            var revShareConfig = _context.PartnerRevenueShare.Where(c => c.UserId == request.UserId);
+
+            _context.PartnerRevenueShare.Add(new PartnerRevenueShare
+            {
+                UserId = request.UserId,
+                UserName = request.UserName,
+                IsGGREnabled = request.IsGGREnabled,
+                ClientGGR = request.ClientGGR,
+                CompanyGGR = request.CompanyGGR,
+                MonthlyFee = request.MonthlyFee,
+                CreatedBy = request.CreatedBy,
+                CreatedDate = DateTime.UtcNow,
+                EffectivityDate = !revShareConfig.Any() ? DateTime.UtcNow : GetFirstDayOfNextMonth()
+            });
+
+            _context.SaveChanges();
+
+            return new BaseResponseDTO<bool>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = true
+            };
+        }
+
         #endregion
 
         #region Utilities
@@ -4157,6 +4184,13 @@ namespace Platform.AgentReports.API.Repository
             }
 
             return endDate.Date;
+        }
+
+        private DateTime GetFirstDayOfNextMonth()
+        {
+            DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+
+            return ss.AddMonths(1);
         }
 
         private decimal GetTransferredAmount(decimal amount, TransactionType transactionType)

@@ -279,5 +279,19 @@ namespace Platform.AgentReports.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/reports/revenueshare")]
+        public async Task<IActionResult> CreateRevenueShareConfig([FromBody] RevenueShareConfigRequest request)
+        {
+            var result = await _reportsRepository.CreateRevenueShareConfig(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

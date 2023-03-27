@@ -5,6 +5,7 @@ using Platform.AgentReports.API.Models;
 using Platform.AgentReports.API.Models.Request;
 using Platform.AgentReports.API.Repository;
 using Platform.Shared.Enums;
+using System;
 using System.Threading.Tasks;
 
 namespace Platform.AgentReports.API.Controllers
@@ -284,6 +285,20 @@ namespace Platform.AgentReports.API.Controllers
         public async Task<IActionResult> CreateRevenueShareConfig([FromBody] RevenueShareConfigRequest request)
         {
             var result = await _reportsRepository.CreateRevenueShareConfig(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/reports/activemembers/{agentId}/{currency}")]
+        public async Task<IActionResult> GetActiveMembers(long agentId, CurrencyCode currency, DateTime? fromDate, DateTime? toDate)
+        {
+            var result = await _reportsRepository.GetActiveMembers(agentId, currency, fromDate, toDate);
 
             switch (result.StatusCode)
             {

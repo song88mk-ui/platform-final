@@ -3070,6 +3070,28 @@ namespace Platform.AgentReports.API.Repository
                 Result = true
             };
         }
+        
+        public async Task<BaseResponseDTO<List<long>>> GetActiveMembers(long agentId, CurrencyCode currency, DateTime? fromDate, DateTime? toDate)
+        {
+            var currentBets = _context.Bet.Where(c => c.ParentUserId == agentId && (currency == CurrencyCode.ALL ? c.CurrencyCode == c.CurrencyCode : c.CurrencyCode == currency.ToString()))
+                .Select(s => new
+                {
+                    TransactionDateOffset = s.TransactionDateOffset,
+                    UserId = s.UserId
+                }).ToList();
+
+            if (fromDate != null && toDate != null)
+                currentBets = currentBets.Where(c => c.TransactionDateOffset.Date >= fromDate.Value.Date && c.TransactionDateOffset.Date <= toDate.Value.Date).ToList();
+
+            var userIds = currentBets.Select(c => c.UserId).Distinct().ToList();
+
+            return new BaseResponseDTO<List<long>>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = userIds
+            };
+        }
 
         #endregion
 

@@ -500,44 +500,41 @@ namespace Platform.Operator.API.Repository
             if (prevOperatorAudit != null)
             {
 
-                if (prevOperatorAudit.TransactionTypeId == (int)Enum.Parse(typeof(BetStatus), betStatus))
-                    return new OperatorAudit()
-                    {
-                        PostBalance = postBalance
-                    };
-
-                switch (prevOperatorAudit.TransactionTypeId)
+                if (prevOperatorAudit.TransactionTypeId != (int)Enum.Parse(typeof(BetStatus), betStatus))
                 {
-                    case (int)BetStatus.CashedOut:
-                    case (int)BetStatus.Void:
-                    case (int)BetStatus.Lost:
-                    case (int)BetStatus.Won:
-                    case (int)BetStatus.HalfLost:
-                    case (int)BetStatus.HalfWon:
+                    switch (prevOperatorAudit.TransactionTypeId)
+                    {
+                        case (int)BetStatus.CashedOut:
+                        case (int)BetStatus.Void:
+                        case (int)BetStatus.Lost:
+                        case (int)BetStatus.Won:
+                        case (int)BetStatus.HalfLost:
+                        case (int)BetStatus.HalfWon:
 
-                        var hasVoid = _platformContext.OperatorAudit.AsNoTracking().Any(o => o.UserId == _operator.UserId && o.BetId == Guid.Parse(betId) && o.TransactionTypeId == (int)BetStatus.Void);
-                        if ((int)Enum.Parse(typeof(BetStatus), betStatus) != (int)BetStatus.Void && prevOperatorAudit.TransactionTypeId != (int)BetStatus.Void)
-                        {
-                            postBalance += (prevOperatorAudit.Amount * -1);
+                            var hasVoid = _platformContext.OperatorAudit.AsNoTracking().Any(o => o.UserId == _operator.UserId && o.BetId == Guid.Parse(betId) && o.TransactionTypeId == (int)BetStatus.Void);
+                            if ((int)Enum.Parse(typeof(BetStatus), betStatus) != (int)BetStatus.Void && prevOperatorAudit.TransactionTypeId != (int)BetStatus.Void)
+                            {
+                                postBalance += (prevOperatorAudit.Amount * -1);
 
-                            if (hasVoid)
-                                amount = payout - stake;
+                                if (hasVoid)
+                                    amount = payout - stake;
 
-                        }
-                        else if ((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Void)
-                        {
-                            if (hasVoid)
-                                amount = (payout - stake) + (prevOperatorAudit.Amount * -1);
+                            }
+                            else if ((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Void)
+                            {
+                                if (hasVoid)
+                                    amount = (payout - stake) + (prevOperatorAudit.Amount * -1);
+                                else
+                                    amount = payout + (prevOperatorAudit.Amount * -1);
+                            }
                             else
-                                amount = payout + (prevOperatorAudit.Amount * -1);
-                        }
-                        else
-                        {
-                            amount = payout - stake;
-                        }
-                        break;
-                    default:
-                        break;
+                            {
+                                amount = payout - stake;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
 

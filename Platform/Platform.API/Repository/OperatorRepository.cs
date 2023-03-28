@@ -202,6 +202,7 @@ namespace Platform.API.Repository
                         {
                             UserId = result.UserId,
                             Balance = result.Balance,
+                            Payable = result.Payable,
                             CurrencyCode = result.CurrencyCode,
                             StatusId = result.StatusId,
                             LanguageCode = result.LanguageCode

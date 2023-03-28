@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Cors;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
+using Platform.Shared.Models;
 using Platform.Wallet.API.Models;
 using Platform.Wallet.API.Repository;
-using Platform.Shared.Models;
+using System.Threading.Tasks;
 
 namespace Platform.Wallet.API.Controllers
 {
@@ -55,9 +55,9 @@ namespace Platform.Wallet.API.Controllers
             var result = await _walletRepository.GetUserWallet(request);
 
             if (result.Item1 == 1000)
-                return Ok(new { StatusCode = result.Item1, Message = result.Item2, Balance = result.Item3, CurrencyCode = result.Item4 });
+                return Ok(new { StatusCode = result.Item1, Message = result.Item2, Balance = result.Item3, Payable = result.Item4 , CurrencyCode = result.Item5 });
             else
-                return BadRequest(new { StatusCode = result.Item1, Message = result.Item2, Balance = result.Item3, CurrencyCode = result.Item4 });
+                return BadRequest(new { StatusCode = result.Item1, Message = result.Item2, Balance = result.Item3, Payable = result.Item4, CurrencyCode = result.Item5 });
         }
     }
 }

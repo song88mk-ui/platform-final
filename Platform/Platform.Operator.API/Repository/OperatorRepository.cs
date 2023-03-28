@@ -80,6 +80,7 @@ namespace Platform.Operator.API.Repository
                 StatusId = 1000,
                 UserId = authResponse.Result.UserId,
                 Balance = walletResponse.Balance,
+                Payable = walletResponse.Payable,
                 CurrencyCode = walletResponse.CurrencyCode,
                 LanguageCode = GetLanguageCode(walletResponse.CurrencyCode)
             };

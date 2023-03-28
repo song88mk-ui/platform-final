@@ -142,6 +142,7 @@ namespace Platform.API.Repository
                 {
                     UserId = authenticationResponse.Result.UserId,
                     Balance = authenticationResponse.Result.Balance,
+                    Payable = authenticationResponse.Result.Payable,
                     CurrencyCode = authenticationResponse.Result.CurrencyCode
                 }
             };

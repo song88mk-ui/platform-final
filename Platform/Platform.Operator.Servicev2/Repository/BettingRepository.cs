@@ -1047,9 +1047,9 @@ namespace Platform.Operator.Servicev2.Repository
                                 CorrelationId = correlationId,
                                 Timestamp = DateTime.UtcNow
                             });
-
-                            RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
                         }
+
+                        RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
                     }
                     else
                     {
@@ -1067,9 +1067,9 @@ namespace Platform.Operator.Servicev2.Repository
                                 CorrelationId = correlationId,
                                 Timestamp = DateTime.UtcNow
                             });
-
-                            RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
                         }
+
+                        RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
                     }
                 }
             }
@@ -1089,9 +1089,9 @@ namespace Platform.Operator.Servicev2.Repository
                         CorrelationId = correlationId,
                         Timestamp = DateTime.UtcNow
                     });
-
-                    RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
                 }
+
+                RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
             }
         }
         public void ProcesssBetCancellation(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId)

@@ -194,9 +194,9 @@ namespace Platform.AgentReports.Service.Repository
                                 context.BetSelectionTransaction.Add(ConvertToBetSelectionTransactionEntityInsertFinal(selection, agent));
                             }
 
-                            var invalidBetStatusId = new int[] { (int)BetStatus.Running, (int)BetStatus.Lost };
+                            var validBetStatusId = new int[] { (int)BetStatus.Running };
 
-                            if (!invalidBetStatusId.Contains(currentStatusId))
+                            if (validBetStatusId.Contains(currentStatusId))
                                 AddOrUpdateWinLossFinal(context, message, agent, agents, bet);
                         }
                     }

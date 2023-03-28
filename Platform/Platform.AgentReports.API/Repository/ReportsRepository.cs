@@ -1484,7 +1484,7 @@ namespace Platform.AgentReports.API.Repository
             if (betIds.Any())
             {
                 //profitLossDetails = profitLossDetails.Where(p => betIds.Select(s => s.ToUpper()).Contains(string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString().ToUpper() : p.ReferenceId.ToUpper()));
-                profitLossDetails = profitLossDetails.Where(p => betIds.Any(p2 => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(p2.Trim().ToUpper())));
+                profitLossDetails = profitLossDetails.Where(p => betIds.Contains(p.BetId.ToString()));
             }
 
             var betsRaw = profitLossDetails.Select(ss => new

@@ -92,6 +92,7 @@
         Invalid_Password = 201,
         Username_Not_Found = 202,
 
-        Record_Is_Already_Existing = 203
+        Record_Is_Already_Existing = 203,
+        User_Is_Locked = 204
     }
 }

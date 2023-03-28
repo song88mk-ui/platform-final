@@ -19,7 +19,7 @@ namespace Platform.Operator.API.Controllers
 
         [HttpPost("operator/v1/authentication/login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDTO request)
-        {
+        {//
             var result = await _operatorRepository.Login(new LoginRequestDTO { UserName = request.UserName, Password = request.Password });
 
             switch (result.StatusId)

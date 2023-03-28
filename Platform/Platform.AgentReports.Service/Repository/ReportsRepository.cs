@@ -163,6 +163,8 @@ namespace Platform.AgentReports.Service.Repository
 
                         if (bet != null)
                         {
+                            var currentStatusId = bet.StatusId;
+
                             bet.Payout = message.Bet.Payout;
                             bet.WinLoss = message.Bet.WinLoss;
                             bet.StatusId = message.Bet.BetStatusId;
@@ -192,9 +194,13 @@ namespace Platform.AgentReports.Service.Repository
                                 context.BetSelectionTransaction.Add(ConvertToBetSelectionTransactionEntityInsertFinal(selection, agent));
                             }
 
-                            AddOrUpdateWinLossFinal(context, message, agent, agents, bet);
+                            var invalidBetStatusId = new int[] { (int)BetStatus.Running, (int)BetStatus.Lost };
+
+                            if (!invalidBetStatusId.Contains(currentStatusId))
+                                AddOrUpdateWinLossFinal(context, message, agent, agents, bet);
                         }
                     }
+
                     context.SaveChanges();
                 }
                 scope.Complete();

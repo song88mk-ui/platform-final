@@ -1444,7 +1444,7 @@ namespace Platform.AgentReports.API.Repository
             {
                 profitLossDetails = _context.WinLoss.Where(w =>
                     w.ParentUserId == parentAgentId &&
-                    w.IndirectUserId == directUserId &&
+                    w.DirectUserId == directUserId &&
                     w.TransactionDateOffset >= request.FromDate &&
                     w.TransactionDateOffset < request.ToDate.AddDays(1) &&
                     currencies.Contains(w.CurrencyCode)).AsNoTracking();
@@ -1453,7 +1453,7 @@ namespace Platform.AgentReports.API.Repository
             {
                 profitLossDetails = _context.WinLoss.Where(w =>
                     w.ParentUserId == parentAgentId &&
-                    w.IndirectUserId == directUserId &&
+                    w.DirectUserId == directUserId &&
                     w.SettledDateOffset >= request.FromDate &&
                     w.SettledDateOffset < request.ToDate.AddDays(1) &&
                     currencies.Contains(w.CurrencyCode)).AsNoTracking();

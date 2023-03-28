@@ -37,5 +37,6 @@ namespace Platform.AgentReports.API.Repository
         Task<BaseResponseDTO<bool>> CreateRunningBalance(CreateRunningBalanceRequest request);
         Task<BaseResponseDTO<bool>> CreateRevenueShareConfig(RevenueShareConfigRequest request);        
         Task<BaseResponseDTO<List<long>>> GetActiveMembers(long agentId, CurrencyCode currency, DateTime? fromDate, DateTime? toDate);
+        Task<BaseResponseDTO<OutstandingBetResponse>> GetOutstandingBets(OutstandingBetRequest request);
     }
 }

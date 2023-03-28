@@ -3093,6 +3093,130 @@ namespace Platform.AgentReports.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<OutstandingBetResponse>> GetOutstandingBets(OutstandingBetRequest request)
+        {
+            var skip = (request.Page - 1) * request.PageSize;
+            var rowCount = (double)0;
+            var result = new List<OutstandingBetResponse.Bet>();
+            var supportedProduct = new[] { 1, 2 };
+            var mergedResults = new List<OutstandingBetResponse.Bet>();
+
+            var bets = _context.Bet.Where(c => c.ParentUserId == request.AgentId && c.StatusId == (int)StatusType.Running && supportedProduct.Contains(c.ProductId)).AsNoTracking();
+
+            if (!bets.Any())
+            {
+                return new BaseResponseDTO<OutstandingBetResponse>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new OutstandingBetResponse
+                    {
+                        CurrentPage = request.Page,
+                        PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
+                        PageSize = request.PageSize,
+                        RowCount = (int)rowCount,
+                        Bets = new List<OutstandingBetResponse.Bet>()
+                    }
+                };
+            }
+
+            var totalStake = bets.Sum(s => s.Stake);
+            var totalReceive = bets.Sum(s => s.PositionTaking * s.TrueStake);
+
+            rowCount = bets.Count();
+
+            bets = bets.Skip(skip).Take(request.PageSize);
+
+            var betIds = bets.Select(s => s.BetId).Distinct().ToList();
+            var betSelections = _context.BetSelection.Where(c => betIds.Contains(c.BetId)).ToList();
+
+            foreach (var bet in bets)
+            {
+                var selections = betSelections.Where(c => c.BetId == bet.BetId && c.ParentUserId == request.ParentId)
+                    .Select(s => new OutstandingBetResponse.BetSelection
+                    {
+                        ParentUserId = s.ParentUserId,
+                        BetId = s.BetId,
+                        BetSelectionId = s.BetSelectionId,
+                        UserId = s.UserId,
+                        SportId = s.SportId,
+                        SportName = s.SportName,
+                        SegmentId = s.SegmentId,
+                        SegmentName = s.SegmentName,
+                        LeagueId = s.LeagueId,
+                        LeagueName = string.IsNullOrEmpty(s.LeagueName) ? s.SegmentName : s.LeagueName,
+                        FixtureId = s.FixtureId,
+                        FixtureName = s.FixtureName,
+                        MarketId = s.MarketId,
+                        MarketName = s.MarketName,
+                        SelectionId = s.SelectionId,
+                        SelectionName = s.SelectionName,
+                        FixtureStatusId = s.FixtureStatusId,
+                        FixtureStatusName = s.FixtureStatusName,
+                        Line = MarketLine(s.Line, s.MarketTemplateId, s.SelectionName),
+                        Odds = s.Odds,
+                        StatusId = s.StatusId,
+                        StatusName = s.StatusName,
+                        IsSettled = s.IsSettled,
+                        IsResettled = s.IsResettled,
+                        FixtureStartDate = s.FixtureStartDate,
+                        MarketTemplateGroupId = s.MarketTemplateGroupId,
+                        MarketTemplateGroupName = GetMarketTemplateGroupName(s.MarketTemplateGroupId),
+                        MarketTemplateId = s.MarketTemplateId,
+                        SelectionTemplateId = s.SelectionTemplateId,
+                        Score = s.Score
+                    }).Distinct().ToList();
+
+                var fixtureName = selections.Select(s => s.FixtureName).FirstOrDefault();
+
+                result.Add(new OutstandingBetResponse.Bet
+                {
+                    ParentUserId = bet.ParentUserId,
+                    BetId = bet.BetId,
+                    UserId = bet.UserId,
+                    Username = bet.Username,
+                    PositionTaking = bet.PositionTaking,
+                    Commission = bet.Commission,
+                    //Stake = bet.Stake,
+                    Stake = bet.TrueStake,
+                    TrueStake = bet.TrueStake,
+                    Odds = bet.Odds,
+                    OddsTypeId = bet.OddsTypeId,
+                    OddsTypeName = bet.OddsTypeName,
+                    Payout = bet.Payout,
+                    WinLoss = bet.WinLoss,
+                    StatusId = bet.StatusId,
+                    StatusName = bet.StatusName,
+                    Reason = bet.Reason,
+                    CurrencyCode = bet.CurrencyCode,
+                    IPAddress = bet.IPAddress,
+                    TransactionDate = bet.TransactionDate,
+                    FixtureName = fixtureName,
+                    Receive = bet.Stake * bet.PositionTaking,
+                    BetSelections = selections,
+                    SelectionTemplateId = bet.SelectionTemplateId,
+                    SelectionName = bet.SelectionName,
+                    MarketTypeId = bet.MarketTypeId
+                });
+            }
+
+            return new BaseResponseDTO<OutstandingBetResponse>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new OutstandingBetResponse
+                {
+                    CurrentPage = request.Page,
+                    PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
+                    PageSize = request.PageSize,
+                    TotalReceive = totalReceive,
+                    TotalStake = totalStake,
+                    RowCount = (int)rowCount,
+                    Bets = result
+                }
+            };
+        }
+
         #endregion
 
         #region Utilities

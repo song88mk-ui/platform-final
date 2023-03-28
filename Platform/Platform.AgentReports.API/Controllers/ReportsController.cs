@@ -119,6 +119,20 @@ namespace Platform.AgentReports.API.Controllers
             }
         }
 
+        [HttpPost("v1/reports/bets/outstanding/downline")]
+        public async Task<IActionResult> GetOutstandingBets([FromBody] OutstandingBetRequest request)
+        {
+            var result = await _reportsRepository.GetOutstandingBets(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpGet("v1/reports/partner/revenue/monthly/{userId}/{year}")]
         public async Task<IActionResult> GetPartnerMonthlyRevenue(long userId, int year, [FromQuery] string currencyCode)
         {

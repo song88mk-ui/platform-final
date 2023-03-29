@@ -38,5 +38,8 @@ namespace Platform.AgentReports.API.Repository
         Task<BaseResponseDTO<bool>> CreateRevenueShareConfig(RevenueShareConfigRequest request);        
         Task<BaseResponseDTO<List<long>>> GetActiveMembers(long agentId, CurrencyCode currency, DateTime? fromDate, DateTime? toDate);
         Task<BaseResponseDTO<OutstandingBetResponse>> GetOutstandingBets(OutstandingBetRequest request);
+        Task<BaseResponseDTO<BetModelResponse>> GetBetHistory(long agentId, Guid betId);
+        Task<BaseResponseDTO<BetModelResponse>> GetBetHistoryProfitLoss(long agentId, Guid betId);
+
     }
 }

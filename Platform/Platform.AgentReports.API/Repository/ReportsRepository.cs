@@ -3217,6 +3217,188 @@ namespace Platform.AgentReports.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<BetModelResponse>> GetBetHistory(long agentId, Guid betId)
+        {
+            var bet = _context.Bet.Find(agentId, betId);
+            var betSelections = new List<BetSelection>();
+
+            if (bet == null)
+            {
+                return new BaseResponseDTO<BetModelResponse>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new BetModelResponse()
+                };
+            }
+
+
+            return new BaseResponseDTO<BetModelResponse>()
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BetModelResponse()
+                {
+                    ParentUserId = bet.ParentUserId,
+                    BetId = bet.BetId,
+                    UserId = bet.UserId,
+                    Username = bet.Username,
+                    PositionTaking = bet.PositionTaking,
+                    Commission = bet.Commission,
+                    Stake = bet.Stake,
+                    TrueStake = bet.TrueStake,
+                    Odds = bet.Odds,
+                    OddsTypeId = bet.OddsTypeId,
+                    OddsTypeName = bet.OddsTypeName,
+                    Payout = bet.Payout,
+                    WinLoss = bet.WinLoss,
+                    StatusId = bet.StatusId,
+                    StatusName = bet.StatusName,
+                    Reason = bet.Reason,
+                    CurrencyCode = bet.CurrencyCode,
+                    IPAddress = bet.IPAddress,
+                    TransactionDate = bet.TransactionDate,
+                    FixtureName = bet.FixtureName,
+                    Receive = bet.Stake * bet.PositionTaking,
+                    MarketTypeId = bet.MarketTypeId,
+                    SelectionTemplateId = bet.SelectionTemplateId,
+                    SelectionName = bet.SelectionName,
+                    ExchangeRate = bet.ExchangeRate,
+                    MarketName = bet.MarketName,
+                    MarketTemplateId = bet.MarketTemplateId,
+                    BetSelections = _context.BetSelection.Where(s => s.BetId == bet.BetId
+                                     && s.ParentUserId == 0).AsNoTracking().ToList()
+                                             .Select(s => new BetSelectionModelResponse()
+                                             {
+                                                 ParentUserId = s.ParentUserId,
+                                                 BetId = s.BetId,
+                                                 BetSelectionId = s.BetSelectionId,
+                                                 UserId = s.UserId,
+                                                 SportId = s.SportId,
+                                                 SportName = s.SportName,
+                                                 SegmentId = s.SegmentId,
+                                                 SegmentName = s.SegmentName,
+                                                 LeagueId = s.LeagueId,
+                                                 LeagueName = string.IsNullOrEmpty(s.LeagueName) ? s.SegmentName : s.LeagueName,
+                                                 FixtureId = s.FixtureId,
+                                                 FixtureName = s.FixtureName,
+                                                 MarketId = s.MarketId,
+                                                 MarketName = s.MarketName,
+                                                 SelectionId = s.SelectionId,
+                                                 SelectionName = s.SelectionName,
+                                                 FixtureStatusId = s.FixtureStatusId,
+                                                 FixtureStatusName = s.FixtureStatusName,
+                                                 Line = MarketLine(s.Line, s.MarketTemplateId, s.SelectionName),
+                                                 Odds = s.Odds,
+                                                 StatusId = s.StatusId,
+                                                 StatusName = s.StatusName,
+                                                 IsSettled = s.IsSettled,
+                                                 IsResettled = s.IsResettled,
+                                                 FixtureStartDate = s.FixtureStartDate,
+                                                 MarketTemplateGroupId = s.MarketTemplateGroupId,
+                                                 MarketTemplateGroupName = GetMarketTemplateGroupName(s.MarketTemplateGroupId),
+                                                 MarketTemplateId = s.MarketTemplateId,
+                                                 SelectionTemplateId = s.SelectionTemplateId,
+                                                 Score = s.Score,
+                                                 MarketTypeId = _context.Bet.First(ss => ss.BetId == s.BetId).MarketTypeId,
+                                                 BetScore = s.FirstScore,
+                                                 FinalScore = s.SecondScore
+                                             }).ToList()
+                }
+
+            };
+        }
+        public async Task<BaseResponseDTO<BetModelResponse>> GetBetHistoryProfitLoss(long agentId, Guid betId)
+        {
+            var bet = _context.Bet.Find(agentId, betId);
+            var betSelections = new List<BetSelection>();
+
+            if (bet == null)
+            {
+                return new BaseResponseDTO<BetModelResponse>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new BetModelResponse()
+                };
+            }
+
+            return new BaseResponseDTO<BetModelResponse>()
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BetModelResponse()
+                {
+                    ParentUserId = bet.ParentUserId,
+                    BetId = bet.BetId,
+                    UserId = bet.UserId,
+                    Username = bet.Username,
+                    PositionTaking = bet.PositionTaking,
+                    Commission = bet.Commission / bet.ExchangeRate,
+                    Stake = bet.Stake / bet.ExchangeRate,
+                    TrueStake = bet.TrueStake / bet.ExchangeRate,
+                    Odds = bet.Odds,
+                    OddsTypeId = bet.OddsTypeId,
+                    OddsTypeName = bet.OddsTypeName,
+                    Payout = bet.Payout / bet.ExchangeRate,
+                    WinLoss = bet.WinLoss / bet.ExchangeRate,
+                    StatusId = bet.StatusId,
+                    StatusName = bet.StatusName,
+                    Reason = bet.Reason,
+                    CurrencyCode = bet.CurrencyCode,
+                    IPAddress = bet.IPAddress,
+                    TransactionDate = bet.TransactionDate,
+                    FixtureName = bet.FixtureName,
+                    Receive = bet.Stake * bet.PositionTaking,
+                    MarketTypeId = bet.MarketTypeId,
+                    SelectionTemplateId = bet.SelectionTemplateId,
+                    SelectionName = bet.SelectionName,
+                    ExchangeRate = bet.ExchangeRate,
+                    MarketName = bet.MarketName,
+                    MarketTemplateId = bet.MarketTemplateId,
+                    BetSelections = _context.BetSelection.Where(s => s.BetId == bet.BetId
+                                     && s.ParentUserId == 0).AsNoTracking().ToList()
+                                             .Select(s => new BetSelectionModelResponse()
+                                             {
+                                                 ParentUserId = s.ParentUserId,
+                                                 BetId = s.BetId,
+                                                 BetSelectionId = s.BetSelectionId,
+                                                 UserId = s.UserId,
+                                                 SportId = s.SportId,
+                                                 SportName = s.SportName,
+                                                 SegmentId = s.SegmentId,
+                                                 SegmentName = s.SegmentName,
+                                                 LeagueId = s.LeagueId,
+                                                 LeagueName = string.IsNullOrEmpty(s.LeagueName) ? s.SegmentName : s.LeagueName,
+                                                 FixtureId = s.FixtureId,
+                                                 FixtureName = s.FixtureName,
+                                                 MarketId = s.MarketId,
+                                                 MarketName = s.MarketName,
+                                                 SelectionId = s.SelectionId,
+                                                 SelectionName = s.SelectionName,
+                                                 FixtureStatusId = s.FixtureStatusId,
+                                                 FixtureStatusName = s.FixtureStatusName,
+                                                 Line = MarketLine(s.Line, s.MarketTemplateId, s.SelectionName),
+                                                 Odds = s.Odds,
+                                                 StatusId = s.StatusId,
+                                                 StatusName = s.StatusName,
+                                                 IsSettled = s.IsSettled,
+                                                 IsResettled = s.IsResettled,
+                                                 FixtureStartDate = s.FixtureStartDate,
+                                                 MarketTemplateGroupId = s.MarketTemplateGroupId,
+                                                 MarketTemplateGroupName = GetMarketTemplateGroupName(s.MarketTemplateGroupId),
+                                                 MarketTemplateId = s.MarketTemplateId,
+                                                 SelectionTemplateId = s.SelectionTemplateId,
+                                                 Score = s.Score,
+                                                 MarketTypeId = _context.Bet.First(ss => ss.BetId == s.BetId).MarketTypeId,
+                                                 BetScore = s.FirstScore,
+                                                 FinalScore = s.SecondScore
+                                             }).ToList()
+                }
+
+            };
+        }
+
         #endregion
 
         #region Utilities

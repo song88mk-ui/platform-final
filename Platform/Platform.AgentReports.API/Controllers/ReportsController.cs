@@ -133,6 +133,34 @@ namespace Platform.AgentReports.API.Controllers
             }
         }
 
+        [HttpGet("v1/reports/bets/history/{agentId}/{betId}")]
+        public async Task<IActionResult> GetBetHistory(long agentId, Guid betId)
+        {
+            var result = await _reportsRepository.GetBetHistory(agentId, betId);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/reports/bets/history/profitloss/{agentId}/{betId}")]
+        public async Task<IActionResult> GetBetHistoryProfitLoss(long agentId, Guid betId)
+        {
+            var result = await _reportsRepository.GetBetHistoryProfitLoss(agentId, betId);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpGet("v1/reports/partner/revenue/monthly/{userId}/{year}")]
         public async Task<IActionResult> GetPartnerMonthlyRevenue(long userId, int year, [FromQuery] string currencyCode)
         {

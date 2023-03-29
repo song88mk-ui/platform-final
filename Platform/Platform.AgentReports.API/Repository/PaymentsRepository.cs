@@ -373,6 +373,44 @@ namespace Platform.AgentReports.API.Repository
             }
         }
 
+        public async Task<BaseResponseDTO<long>> GGRSettlement(GGRSettlementRequest request)
+        {
+            var transactionDate = DateTime.UtcNow;
+            var unsettledRevenues = _context.SettlementHistory.Where(s => s.UserId == request.UserId && s.IsSettled == false).ToList();
+
+            if (request.SettlementAmount != unsettledRevenues.Sum(u => u.Balance))
+            {
+                return new BaseResponseDTO<long>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString().Replace("_", " "),
+                    Result = request.UserId
+                };
+            }
+
+            foreach (var unsettledRevenue in unsettledRevenues)
+            {
+                var unsettled = _context.SettlementHistory.FirstOrDefault(s => s.Id == unsettledRevenue.Id);
+
+                unsettled.IsSettled = true;
+                unsettled.DateSettled = transactionDate;
+                unsettled.AmountSettled = request.SettlementAmount;
+                unsettled.SettledByUserId = request.SettledByUserId;
+                unsettled.SettledBy = request.SettledByUsername;
+
+                _context.Update(unsettled);
+            }
+
+            _context.SaveChanges();
+
+            return new BaseResponseDTO<long>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString().Replace("_", " "),
+                Result = request.UserId
+            };
+        }
+
         #endregion
 
         #region Utilities

@@ -47,5 +47,19 @@ namespace Platform.AgentReports.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/payment/partner/revenue/settlement")]
+        public async Task<IActionResult> GGRSettlement([FromBody] GGRSettlementRequest request)
+        {
+            var result = await _paymentsRepository.GGRSettlement(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

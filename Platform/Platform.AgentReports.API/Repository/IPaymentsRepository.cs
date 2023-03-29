@@ -9,5 +9,7 @@ namespace Platform.AgentReports.API.Repository
     {
         Task<BaseResponseDTO<PaymentTransferListResponse>> GetTransfers(PaymentTransferListRequest request);
         Task<BaseResponseDTO<PaymentTransferResponse>> Transfer(PaymentTransferRequest request);
+        Task<BaseResponseDTO<long>> GGRSettlement(GGRSettlementRequest request);
+
     }
 }

@@ -56,8 +56,6 @@ namespace Platform.Wallet.API
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Platform Wallet API", Version = "v1" });
             });
 
-            services.AddHttpClient<IReportsRepository, ReportRepository>();
-
             services.AddScoped<IWalletRepository, WalletRepository>();
             services.AddDbContext<WalletContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Wallet"]));
 

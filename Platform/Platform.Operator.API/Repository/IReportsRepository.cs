@@ -1,8 +1,7 @@
-﻿using Platform.Wallet.API.Models;
-using System;
+﻿using Platform.Operator.API.Models;
 using System.Threading.Tasks;
 
-namespace Platform.Wallet.API.Repository
+namespace Platform.Operator.API.Repository
 {
     public interface IReportsRepository
     {

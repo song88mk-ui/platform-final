@@ -10,6 +10,6 @@ namespace Platform.Wallet.API.Repository
         Task<Tuple<int, string, decimal>> CreditUserWallet(CreditOrDebitRequestDTO request);
         Task<Tuple<int, string, decimal>> DebitUserWallet(CreditOrDebitRequestDTO request);
         Task<Tuple<int, string, decimal, decimal>> TransferUserWallet(TransferUserWalletRequest request);
-        Task<Tuple<int, string, decimal, decimal, string>> GetUserWallet(UserWalletRequest request);
+        Task<Tuple<int, string, decimal, string>> GetUserWallet(UserWalletRequest request);
     }
 }

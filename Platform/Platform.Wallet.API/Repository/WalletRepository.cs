@@ -11,12 +11,10 @@ namespace Platform.Wallet.API.Repository
     public class WalletRepository : IWalletRepository
     {
         private readonly WalletContext _walletContext;
-        private readonly IReportsRepository _reportsRepository;
-
-        public WalletRepository(WalletContext walletContext, IReportsRepository reportsRepository)
+        
+        public WalletRepository(WalletContext walletContext)
         {
             _walletContext = walletContext;
-            _reportsRepository = reportsRepository;
         }
 
         public async Task<Tuple<int, string, decimal>> CreditUserWallet(CreditOrDebitRequestDTO request)
@@ -321,7 +319,7 @@ namespace Platform.Wallet.API.Repository
             return new Tuple<int, string, decimal, decimal>(statusCode, statusName, fromBalance, toBalance);
         }
 
-        public async Task<Tuple<int, string, decimal, decimal, string>> GetUserWallet(UserWalletRequest request)
+        public async Task<Tuple<int, string, decimal, string>> GetUserWallet(UserWalletRequest request)
         {
             var param = new SqlParameter[]
             {
@@ -377,9 +375,7 @@ namespace Platform.Wallet.API.Repository
             var balance = (decimal)param[4].Value;
             var currencyCode = (string)param[5].Value;
 
-            var runningBalance = await _reportsRepository.GetRunningBalance(request.UserId);
-
-            return new Tuple<int, string, decimal, decimal, string>(statusCode, statusName, balance, runningBalance.CashBalance, currencyCode);
+            return new Tuple<int, string, decimal, string>(statusCode, statusName, balance, currencyCode);
         }
     }
 }

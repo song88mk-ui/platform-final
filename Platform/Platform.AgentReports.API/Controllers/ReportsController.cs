@@ -300,9 +300,9 @@ namespace Platform.AgentReports.API.Controllers
         {
             var result = await _reportsRepository.GetRunningBalance(userId);
 
-            switch ((StatusCode)result.Item1)
+            switch (result.Item1)
             {
-                case Shared.Enums.StatusCode.Success:
+                case 1000:
                     return Ok(new { StatusCode = result.Item1, Message = result.Item2, OutstandingBalance = result.Item3, CashBalance = result.Item4 });
                 default:
                     return BadRequest(new { StatusCode = result.Item1, Message = result.Item2, OutstandingBalance = result.Item3, CashBalance = result.Item4 });

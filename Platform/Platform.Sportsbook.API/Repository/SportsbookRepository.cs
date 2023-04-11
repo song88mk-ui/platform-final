@@ -7147,15 +7147,16 @@ namespace Platform.Sportsbook.API.Repository
 
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            if (request.ClientCodes != null && request.ClientCodes.Any())
-            {
-                request.ClientCodes.ForEach(
-                    c =>
-                    {
-                        if (IsOEEnable(c))
-                            fixtures = fixtures.Where(f => f.ClCo.Contains(c)).ToList();
-                    });
-            }
+
+            //if (request.ClientCodes != null && request.ClientCodes.Any())
+            //{
+            //    request.ClientCodes.ForEach(
+            //        c =>
+            //        {
+            //            if (IsOEEnable(c))
+            //                fixtures = fixtures.Where(f => f.ClCo.Contains(c)).ToList();
+            //        });
+            //}
 
             if (fixtures.Count == 0)
             {

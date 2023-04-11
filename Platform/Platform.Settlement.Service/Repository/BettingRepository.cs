@@ -458,7 +458,7 @@ namespace Platform.Settlement.Service.Repository
 
                             scope.Complete();
 
-                            if (isPublish)
+                            if (finalResult.Item1)
                             {
                                 payload.IsAudit = finalResult.Item2;
 

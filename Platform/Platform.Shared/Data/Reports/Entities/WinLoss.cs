@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Platform.Shared.Data.Reports.Entities
 {
@@ -13,7 +15,7 @@ namespace Platform.Shared.Data.Reports.Entities
         public Guid BetId { get; set; }
 
         public DateTime TransactionDate { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal ExchangeRate { get; set; }
 
         public string AgentUsername { get; set; }
@@ -23,39 +25,39 @@ namespace Platform.Shared.Data.Reports.Entities
         public int UserTypeId { get; set; }
 
         public string CurrencyCode { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Commission { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal MemberWinLoss { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal MemberCommission { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal MemberWLC { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal DownlineWinLoss { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal DownlineCommission { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal DownlineWLC { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal AgentWinLoss { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal AgentCommission { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal AgentWLC { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal UplineWinLoss { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal UplineCommission { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal UplineWLC { get; set; }
 
         public bool IsParlay { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Stake { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal TrueStake { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Odds { get; set; }
 
         public int OddsTypeId { get; set; }
@@ -139,13 +141,13 @@ namespace Platform.Shared.Data.Reports.Entities
         public string MarketTypeId { get; set; }
 
         public string MarketGroupId { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal? MaxLiability { get; set; }
 
         public bool? IsGGREnabled { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal? GGR { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal? Payout { get; set; }
     }
 }

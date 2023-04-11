@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Platform.Shared.Data.Reports.Entities
 {
@@ -45,7 +47,7 @@ namespace Platform.Shared.Data.Reports.Entities
         public string FixtureStatusName { get; set; }
 
         public string Line { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Odds { get; set; }
 
         public int StatusId { get; set; }

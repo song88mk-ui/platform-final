@@ -379,42 +379,85 @@ namespace Platform.Betting.API.Repository
                                 nonTaxedPayout = nonTaxedStake - (nonTaxedStake * 0.10m);
                             }
 
-                            if (finalCashOutStake <= stake * bet.Odds)
+                            if (selections.First().Odds < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
                             {
-                                result.Add(new CashOutDetailsReponse
+                                if (finalCashOutStake <= stake + bet.Stake)
                                 {
-                                    BetId = bet.BetId,
-                                    CashOutStatus = CashOutStatus.Available,
-                                    CashOutStake = finalCashOutStake,
-                                    TaxedStake = taxedStake,
-                                    TaxedWinnings = taxedWinnings,
-                                    NonTaxedPayout = nonTaxedPayout,
-                                    HasLive = hasLive,
-                                    Probabilities = probabilites.Select(s => new Probabilities
+                                    result.Add(new CashOutDetailsReponse
                                     {
-                                        BetSelectionId = s.BetSelectionId,
-                                        CashOutStatusId = s.CashOutStatusId,
-                                        Probability = s.Probability,
-                                        WonProbability = s.WonProbability,
-                                        LostProbability = s.LostProbability,
-                                        VoidProbability = s.VoidProbability,
-                                        HalfWonProbability = s.HalfWonProbability,
-                                        HalfLostProbability = s.HalfLostProbability
-                                    }).ToList()
-                                });
+                                        BetId = bet.BetId,
+                                        CashOutStatus = CashOutStatus.Available,
+                                        CashOutStake = finalCashOutStake,
+                                        TaxedStake = taxedStake,
+                                        TaxedWinnings = taxedWinnings,
+                                        NonTaxedPayout = nonTaxedPayout,
+                                        HasLive = hasLive,
+                                        Probabilities = probabilites.Select(s => new Probabilities
+                                        {
+                                            BetSelectionId = s.BetSelectionId,
+                                            CashOutStatusId = s.CashOutStatusId,
+                                            Probability = s.Probability,
+                                            WonProbability = s.WonProbability,
+                                            LostProbability = s.LostProbability,
+                                            VoidProbability = s.VoidProbability,
+                                            HalfWonProbability = s.HalfWonProbability,
+                                            HalfLostProbability = s.HalfLostProbability
+                                        }).ToList()
+                                    });
 
-                                continue;
+                                    continue;
+                                }
+                                else
+                                {
+                                    result.Add(new CashOutDetailsReponse
+                                    {
+                                        BetId = bet.BetId,
+                                        CashOutStatus = CashOutStatus.Unavailable,
+                                        CashOutStake = 0m
+                                    });
+
+                                    continue;
+                                }
                             }
                             else
                             {
-                                result.Add(new CashOutDetailsReponse
+                                if (finalCashOutStake <= stake * bet.Odds)
                                 {
-                                    BetId = bet.BetId,
-                                    CashOutStatus = CashOutStatus.Unavailable,
-                                    CashOutStake = 0m
-                                });
+                                    result.Add(new CashOutDetailsReponse
+                                    {
+                                        BetId = bet.BetId,
+                                        CashOutStatus = CashOutStatus.Available,
+                                        CashOutStake = finalCashOutStake,
+                                        TaxedStake = taxedStake,
+                                        TaxedWinnings = taxedWinnings,
+                                        NonTaxedPayout = nonTaxedPayout,
+                                        HasLive = hasLive,
+                                        Probabilities = probabilites.Select(s => new Probabilities
+                                        {
+                                            BetSelectionId = s.BetSelectionId,
+                                            CashOutStatusId = s.CashOutStatusId,
+                                            Probability = s.Probability,
+                                            WonProbability = s.WonProbability,
+                                            LostProbability = s.LostProbability,
+                                            VoidProbability = s.VoidProbability,
+                                            HalfWonProbability = s.HalfWonProbability,
+                                            HalfLostProbability = s.HalfLostProbability
+                                        }).ToList()
+                                    });
 
-                                continue;
+                                    continue;
+                                }
+                                else
+                                {
+                                    result.Add(new CashOutDetailsReponse
+                                    {
+                                        BetId = bet.BetId,
+                                        CashOutStatus = CashOutStatus.Unavailable,
+                                        CashOutStake = 0m
+                                    });
+
+                                    continue;
+                                }
                             }
                         }
 

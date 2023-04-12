@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
+using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Helpers;
 using Platform.Shared.MessageModels;
@@ -2845,6 +2846,7 @@ namespace Platform.Betting.API.Repository
                         return 0.5m * trueStake;
 
                     case BetStatus.Won:
+                    case BetStatus.Running:
                         return trueStake + trueStake;
 
                     case BetStatus.Void:

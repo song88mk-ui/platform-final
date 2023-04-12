@@ -442,7 +442,8 @@ namespace Platform.Betting.API.Repository
                             HalfWonProbability = selection.HalfWonProbability,
                             HalfLostProbability = selection.HalfLostProbability,
                             CorrelationId = selection.CorrelationId,
-                            DeadHeatFactor = 1m
+                            DeadHeatFactor = 1m,
+                            IsBinary = selection.IsBinary
                         }).Entity;
 
                         betSelectionData.Add(betSelectionEntity);
@@ -491,7 +492,8 @@ namespace Platform.Betting.API.Repository
                             HalfWonProbability = betSelectionEntity.HalfWonProbability,
                             HalfLostProbability = betSelectionEntity.HalfLostProbability,
                             CorrelationId = selection.CorrelationId,
-                            DeadHeatFactor = betSelectionEntity.DeadHeatFactor
+                            DeadHeatFactor = betSelectionEntity.DeadHeatFactor,
+                            IsBinary = betSelectionEntity.IsBinary
                         });
 
                         if (request.IsBoosted == true)
@@ -1005,7 +1007,8 @@ namespace Platform.Betting.API.Repository
                             HalfWonProbability = selection.HalfWonProbability,
                             HalfLostProbability = selection.HalfLostProbability,
                             CorrelationId = selection.CorrelationId,
-                            DeadHeatFactor = 1m
+                            DeadHeatFactor = 1m,
+                            IsBinary = selection.IsBinary
                         }).Entity;
 
                         betSelectionData.Add(betSelectionEntity);
@@ -1055,7 +1058,8 @@ namespace Platform.Betting.API.Repository
                             HalfWonProbability = betSelectionEntity.HalfWonProbability,
                             HalfLostProbability = betSelectionEntity.HalfLostProbability,
                             CorrelationId = selection.CorrelationId,
-                            DeadHeatFactor = betSelectionEntity.DeadHeatFactor
+                            DeadHeatFactor = betSelectionEntity.DeadHeatFactor,
+                            IsBinary = betSelectionEntity.IsBinary
                         });
 
                         if (request.IsBoosted == true)
@@ -1503,7 +1507,7 @@ namespace Platform.Betting.API.Repository
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
                         SelectionName = s.SelectionName,
-                        Odds = GetSelectionOdds(s.Odds, request.IsOddsString),
+                        Odds = GetSelectionOdds(bet.OddsTypeId, s.Odds, request.IsOddsString, s.IsBinary),
                         BetScore = s.BetScore,
                         SettlementScore = s.SettlementScore,
                         BetSelectionId = s.BetSelectionId.ToString(),
@@ -1640,7 +1644,7 @@ namespace Platform.Betting.API.Repository
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
                         SelectionName = s.SelectionName,
-                        Odds = GetSelectionOdds(s.Odds, request.IsOddsString),
+                        Odds = GetSelectionOdds(bet.OddsTypeId, s.Odds, request.IsOddsString, s.IsBinary),
                         BetScore = s.BetScore,
                         SettlementScore = s.SettlementScore,
                         BetSelectionId = s.BetSelectionId.ToString(),
@@ -2861,12 +2865,81 @@ namespace Platform.Betting.API.Repository
             return values.Aggregate((a, b) => a * b) * stake;
         }
 
-        private object GetSelectionOdds(object odds, bool isOddsString)
+        private object GetSelectionOdds(int oddsTypeId, object odds, bool isOddsString, bool isBinary)
         {
             if (isOddsString == true)
-                return Convert.ToDecimal(odds.ToString()).ToString("0.00");
+                return GetOddsByOddsType(oddsTypeId, Convert.ToDecimal(odds.ToString()), isBinary).ToString("0.00");
             else
-                return Convert.ToDecimal(odds.ToString());
+                return GetOddsByOddsType(oddsTypeId, Convert.ToDecimal(odds.ToString()), isBinary);
+        }
+
+        private static decimal GetOddsByOddsType(int oddsTypeId, decimal odds, bool isBinary)
+        {
+            var retval = odds;
+
+            switch (oddsTypeId)
+            {
+                case (int)OddsType.Malaysian:
+                    retval = GetMalayOdds(odds, isBinary);
+                    break;
+                case (int)OddsType.HongKong:
+                    retval = GetHongkongOdds(odds, isBinary);
+                    break;
+                case (int)OddsType.Indonesian:
+                    retval = GetIndoOdds(odds, isBinary);
+                    break;
+                default:
+                    retval = odds;
+                    break;
+            };
+
+            return retval;
+        }
+
+        private static decimal GetMalayOdds(decimal odds, bool isBinary)
+        {
+            // add binary condition if more than 2 value is decimal
+            if (isBinary == false)
+                return odds;
+
+            if (odds == 1m)
+                return 0;
+
+            if (odds <= 2.00m)
+                return odds - 1m;
+
+            var retval = -1m / (odds - 1m);
+
+            return Math.Truncate(retval * 100) / 100;
+        }
+
+        private static decimal GetHongkongOdds(decimal odds, bool isBinary)
+        {
+            // add binary condition if more than 2 value is decimal
+            if (isBinary == false)
+                return odds;
+
+            if (odds == 1m)
+                return 0;
+
+            return odds - 1m;
+        }
+
+        private static decimal GetIndoOdds(decimal odds, bool isBinary)
+        {
+            // add binary condition if more than 2 value is decimal
+            if (isBinary == false)
+                return odds;
+
+            if (odds == 1m)
+                return 0;
+
+            if (odds >= 2.00m)
+                return odds - 1m;
+
+            var retval = -1m / (odds - 1m);
+
+            return Math.Truncate(retval * 100) / 100;
         }
     }
 }

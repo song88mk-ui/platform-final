@@ -575,7 +575,8 @@ namespace Platform.Settlement.Service.Repository
                 HalfWonProbability = betSelectionEntity.HalfWonProbability,
                 HalfLostProbability = betSelectionEntity.HalfLostProbability,
                 CorrelationId = betSelection.CorrelationId,
-                DeadHeatFactor = betSelectionEntity.DeadHeatFactor
+                DeadHeatFactor = betSelectionEntity.DeadHeatFactor,
+                IsBinary = betSelectionEntity.IsBinary
             });
 
             var betPriceboost = context.BetPriceBoost.Where(c => c.BetId == betSelectionEntity.BetId).FirstOrDefault();
@@ -705,7 +706,8 @@ namespace Platform.Settlement.Service.Repository
                 HalfWonProbability = betSelectionEntity.HalfWonProbability,
                 HalfLostProbability = betSelectionEntity.HalfLostProbability,
                 CorrelationId = betSelection.CorrelationId,
-                DeadHeatFactor = betSelectionEntity.DeadHeatFactor
+                DeadHeatFactor = betSelectionEntity.DeadHeatFactor,
+                IsBinary = betSelectionEntity.IsBinary
             });
 
             var betPriceboost = context.BetPriceBoost.Where(c => c.BetId == betSelectionEntity.BetId).FirstOrDefault();
@@ -1270,7 +1272,9 @@ namespace Platform.Settlement.Service.Repository
                                     VoidProbability = betSelectionEntity.VoidProbability,
                                     HalfWonProbability = betSelectionEntity.HalfWonProbability,
                                     HalfLostProbability = betSelectionEntity.HalfLostProbability,
-                                    CorrelationId = betSelectionEntity.CorrelationId
+                                    CorrelationId = betSelectionEntity.CorrelationId,
+                                    IsBinary = betSelectionEntity.IsBinary
+                                    
                                 });
                             }
 

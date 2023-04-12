@@ -263,7 +263,8 @@ namespace Platform.Betting.API.Repository
                     }
 
                     var taxedStake = 0m; // request.Stake - (request.Stake / (1 + stakeTax));
-                    var stake = request.Stake - taxedStake;
+                    var finalStake = request.Stake - taxedStake;
+                    var potentialPayout = finalStake * totalOdds;
 
                     // Malay and Indo
                     if (request.Selections.Count == 1)
@@ -273,13 +274,17 @@ namespace Platform.Betting.API.Repository
                         // malay code here
                         if ((int)request.OddsType == 1 && selection.MalaysianOdds < 0 && selection.IsBinary == true)
                         {
-                            stake = Math.Abs(stake * Math.Round(selection.MalaysianOdds, 2));
+                            var currentStake = finalStake;
+                            finalStake = Math.Abs(finalStake * Math.Round(selection.MalaysianOdds, 2));
+                            potentialPayout = currentStake + finalStake;
                         }
 
                         // indo code here
                         if ((int)request.OddsType == 3 && selection.IndonesianOdds < 0 && selection.IsBinary == true)
                         {
-                            stake = Math.Abs(stake * Math.Round(selection.IndonesianOdds, 2));
+                            var currentStake = finalStake;
+                            finalStake = Math.Abs(finalStake * Math.Round(selection.IndonesianOdds, 2));
+                            potentialPayout = currentStake + finalStake;
                         }
 
                         // hk code here
@@ -301,11 +306,11 @@ namespace Platform.Betting.API.Repository
                     {
                         UserId = request.UserId,
                         Stake = request.Stake,
-                        TrueStake = stake,
+                        TrueStake = finalStake,
                         Odds = totalOdds,
                         OddsTypeId = (int)request.OddsType,
                         OddsTypeName = request.OddsType.ToString(),
-                        Payout = stake * totalOdds,
+                        Payout = potentialPayout,
                         WinLoss = 0m,
                         BetStatusId = (int)BetStatus.Waiting,
                         BetStatusName = BetStatus.Waiting.ToString(),
@@ -827,7 +832,8 @@ namespace Platform.Betting.API.Repository
                     }
 
                     var taxedStake = 0m; // request.Stake - (request.Stake / (1 + stakeTax));
-                    var stake = request.Stake - taxedStake;
+                    var finalStake = request.Stake - taxedStake;
+                    var potentialPayout = finalStake * totalOdds;
 
                     // Malay and Indo
                     if (request.Selections.Count == 1)
@@ -837,13 +843,17 @@ namespace Platform.Betting.API.Repository
                         // malay code here
                         if ((int)request.OddsType == 1 && selection.MalaysianOdds < 0 && selection.IsBinary == true)
                         {
-                            stake = Math.Abs(stake * Math.Round(selection.MalaysianOdds, 2));
+                            var currentStake = finalStake;
+                            finalStake = Math.Abs(finalStake * Math.Round(selection.MalaysianOdds, 2));
+                            potentialPayout = currentStake + finalStake;
                         }
 
                         // indo code here
                         if ((int)request.OddsType == 3 && selection.IndonesianOdds < 0 && selection.IsBinary == true)
                         {
-                            stake = Math.Abs(stake * Math.Round(selection.IndonesianOdds, 2));
+                            var currentStake = finalStake;
+                            finalStake = Math.Abs(finalStake * Math.Round(selection.IndonesianOdds, 2));
+                            potentialPayout = currentStake + finalStake;
                         }
 
                         // hk code here
@@ -865,11 +875,11 @@ namespace Platform.Betting.API.Repository
                     {
                         UserId = request.UserId,
                         Stake = request.Stake,
-                        TrueStake = stake,
+                        TrueStake = finalStake,
                         Odds = totalOdds,
                         OddsTypeId = (int)request.OddsType,
                         OddsTypeName = request.OddsType.ToString(),
-                        Payout = stake * totalOdds,
+                        Payout = potentialPayout,
                         WinLoss = 0m,
                         BetStatusId = (int)BetStatus.Waiting,
                         BetStatusName = BetStatus.Waiting.ToString(),

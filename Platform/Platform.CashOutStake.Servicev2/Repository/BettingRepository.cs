@@ -59,9 +59,11 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 UserId = s.UserId,
                 BetStatusId = s.BetStatusId,
                 TrueStake = s.TrueStake,
+                Stake = s.Stake,
                 Odds = s.Odds,
                 StakeTax = s.StakeTax,
-                WinningsTax = s.WinningsTax
+                WinningsTax = s.WinningsTax,
+                OddsTypeId = s.OddsTypeId
             }).ToList();
 
             foreach (var bet in bets)
@@ -123,9 +125,11 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 UserId = message.Bet.UserId,
                 BetStatusId = message.Bet.BetStatusId,
                 TrueStake = message.Bet.TrueStake,
+                Stake = message.Bet.Stake,
                 Odds = message.Bet.Odds,
                 StakeTax = message.Bet.StakeTax,
-                WinningsTax = message.Bet.WinningsTax
+                WinningsTax = message.Bet.WinningsTax,
+                OddsTypeId = message.Bet.OddsTypeId
             };
 
             var betSelections = message.BetSelections.Select(s => new BetSelectionMemory
@@ -470,16 +474,34 @@ namespace Platform.CashOutStake.Servicev2.Repository
                     probabilites.First().HalfWonProbability > 0 ||
                     probabilites.First().HalfLostProbability > 0)
                 {
-                    var won = Convert.ToDecimal(probabilites.First().WonProbability) * (stake * bet.Odds);
+                    var won = 0m;
+                    var halfWon = 0m;
+
+                    if (bet.BetSelections.First().Odds < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
+                    {
+                        won = Convert.ToDecimal(probabilites.First().WonProbability) * (stake + bet.Stake);
+                        halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * (((stake + bet.Stake) + 1) / 2);
+                    }
+                    else
+                    {
+                        won = Convert.ToDecimal(probabilites.First().WonProbability) * (stake * bet.Odds);
+                        halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * (stake * ((bet.Odds + 1) / 2));
+                    }
+
                     var lost = Convert.ToDecimal(probabilites.First().LostProbability) * (stake * 0);
                     var voidd = Convert.ToDecimal(probabilites.First().VoidProbability) * (stake * 1);
-                    var halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * (stake * ((bet.Odds + 1) / 2));
                     var halfLost = Convert.ToDecimal(probabilites.First().HalfLostProbability) * (stake / 2);
 
                     cashOutStake = won + lost + voidd + halfWon + halfLost;
                 }
                 else
-                    cashOutStake = (stake * bet.Odds) * Convert.ToDecimal(probabilites.First().Probability);
+                {
+                    if (bet.BetSelections.First().Odds < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
+                        cashOutStake = (stake + bet.Stake) * Convert.ToDecimal(probabilites.First().Probability);
+                    else
+                        cashOutStake = (stake * bet.Odds) * Convert.ToDecimal(probabilites.First().Probability);
+                }
+
 
                 cashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
@@ -495,27 +517,55 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 if (!hasProbabilityChanged)
                     finalCashOutStake = stake - (stake * 0.10m);
 
-                if (finalCashOutStake <= stake * bet.Odds)
+                if (bet.BetSelections.First().Odds < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
                 {
-                    return new OnCashOutChange
+                    if (finalCashOutStake <= stake + bet.Stake)
                     {
-                        ClientId = bet.ClientId,
-                        UserId = bet.UserId,
-                        BetId = bet.BetId.ToString().ToUpper(),
-                        CashOutStatus = CashOutStatus.Available,
-                        CashOutStake = Convert.ToDecimal(finalCashOutStake.ToString().TrimEnd('0').TrimEnd('.'))
-                    };
+                        return new OnCashOutChange
+                        {
+                            ClientId = bet.ClientId,
+                            UserId = bet.UserId,
+                            BetId = bet.BetId.ToString().ToUpper(),
+                            CashOutStatus = CashOutStatus.Available,
+                            CashOutStake = Convert.ToDecimal(finalCashOutStake.ToString().TrimEnd('0').TrimEnd('.'))
+                        };
+                    }
+                    else
+                    {
+                        return new OnCashOutChange
+                        {
+                            ClientId = bet.ClientId,
+                            UserId = bet.UserId,
+                            BetId = bet.BetId.ToString().ToUpper(),
+                            CashOutStatus = CashOutStatus.Unavailable,
+                            CashOutStake = 0m
+                        };
+                    }
                 }
                 else
                 {
-                    return new OnCashOutChange
+                    if (finalCashOutStake <= stake * bet.Odds)
                     {
-                        ClientId = bet.ClientId,
-                        UserId = bet.UserId,
-                        BetId = bet.BetId.ToString().ToUpper(),
-                        CashOutStatus = CashOutStatus.Unavailable,
-                        CashOutStake = 0m
-                    };
+                        return new OnCashOutChange
+                        {
+                            ClientId = bet.ClientId,
+                            UserId = bet.UserId,
+                            BetId = bet.BetId.ToString().ToUpper(),
+                            CashOutStatus = CashOutStatus.Available,
+                            CashOutStake = Convert.ToDecimal(finalCashOutStake.ToString().TrimEnd('0').TrimEnd('.'))
+                        };
+                    }
+                    else
+                    {
+                        return new OnCashOutChange
+                        {
+                            ClientId = bet.ClientId,
+                            UserId = bet.UserId,
+                            BetId = bet.BetId.ToString().ToUpper(),
+                            CashOutStatus = CashOutStatus.Unavailable,
+                            CashOutStake = 0m
+                        };
+                    }
                 }
             }
         }
@@ -574,9 +624,11 @@ namespace Platform.CashOutStake.Servicev2.Repository
         public string UserId { get; set; }
         public int BetStatusId { get; set; }
         public decimal TrueStake { get; set; }
+        public decimal Stake { get; set; }
         public decimal Odds { get; set; }
         public decimal StakeTax { get; set; }
         public decimal WinningsTax { get; set; }
+        public int OddsTypeId { get; set; }
         public List<BetSelectionMemory> BetSelections { get; set; }
     }
 

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
+using Platform.Shared.Helpers;
 using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
@@ -317,7 +318,7 @@ namespace Platform.Betting.API.Repository
                                 var nonTaxedWon = 0m;
                                 var nonTaxedHalfWon = 0m;
 
-                                if (selections.First().Odds < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
+                                if (OddsTypeHelper.GetOddsByOddsType(bet.OddsTypeId, selections.First().Odds, selections.First().IsBinary) < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
                                 {
                                     won = Convert.ToDecimal(probabilites.First().WonProbability) * (stake + bet.Stake);
                                     halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * ((bet.Stake / 2) + stake);
@@ -347,7 +348,7 @@ namespace Platform.Betting.API.Repository
                             }
                             else
                             {
-                                if (selections.First().Odds < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
+                                if (OddsTypeHelper.GetOddsByOddsType(bet.OddsTypeId, selections.First().Odds, selections.First().IsBinary) < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
                                 {
                                     cashOutStake = (stake * bet.Stake) * Convert.ToDecimal(probabilites.First().Probability);
                                     nonTaxedPayout = (bet.TrueStake * bet.Stake) * Convert.ToDecimal(probabilites.First().Probability);
@@ -379,7 +380,7 @@ namespace Platform.Betting.API.Repository
                                 nonTaxedPayout = nonTaxedStake - (nonTaxedStake * 0.10m);
                             }
 
-                            if (selections.First().Odds < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
+                            if (OddsTypeHelper.GetOddsByOddsType(bet.OddsTypeId, selections.First().Odds, selections.First().IsBinary) < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
                             {
                                 if (finalCashOutStake <= stake + bet.Stake)
                                 {

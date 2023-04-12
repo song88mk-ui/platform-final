@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
+using Platform.Shared.Helpers;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
@@ -1464,7 +1465,7 @@ namespace Platform.Betting.API.Repository
                 var runningfinalStake = bet.TrueStake - bet.StakeBonus;
                 var runningTaxedStake = bet.IsFreeBet == false ? runningfinalStake - (runningfinalStake / (1 + bet.StakeTax)) : 0;
                 var runningStake = bet.BetStatusId == (int)BetStatus.Running ? GetStake(filteredSelections, runningTaxedStake, bet.TrueStake) : 0;
-                var runningPayout = bet.BetStatusId == (int)BetStatus.Running ? GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), runningStake, bet.Stake, isBetBuilder, bet.Odds, (OddsType)bet.OddsTypeId) : 0;
+                var runningPayout = bet.BetStatusId == (int)BetStatus.Running ? GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal, bool>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor, s.IsBinary)).ToList(), runningStake, bet.Stake, isBetBuilder, bet.Odds, (OddsType)bet.OddsTypeId) : 0;
                 var runningTaxedWinnings = runningPayout + parlayBonusWinnings;
 
                 if (bet.IsFreeBet)
@@ -1742,7 +1743,7 @@ namespace Platform.Betting.API.Repository
                 var runningfinalStake = bet.TrueStake - bet.StakeBonus;
                 var runningTaxedStake = bet.IsFreeBet == false ? runningfinalStake - (runningfinalStake / (1 + bet.StakeTax)) : 0;
                 var runningStake = GetStake(filteredSelections, runningTaxedStake, bet.TrueStake);
-                var runningPayout = GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), runningStake, bet.Stake, isBetBuilder, bet.Odds, (OddsType)bet.OddsTypeId);
+                var runningPayout = GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal, bool>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor, s.IsBinary)).ToList(), runningStake, bet.Stake, isBetBuilder, bet.Odds, (OddsType)bet.OddsTypeId);
 
                 var parlayBonusWinnings = 0m;
                 var parlayBonus = 0m;
@@ -2826,11 +2827,11 @@ namespace Platform.Betting.API.Repository
             return trueStake - taxedStake;
         }
 
-        private decimal GetPayout(List<Tuple<BetStatus, decimal, decimal>> selections, decimal trueStake, decimal stake, bool isBetBuilder, decimal odds, OddsType oddsType)
+        private decimal GetPayout(List<Tuple<BetStatus, decimal, decimal, bool>> selections, decimal trueStake, decimal stake, bool isBetBuilder, decimal odds, OddsType oddsType)
         {
             var values = new List<decimal>();
 
-            if (selections.Count == 1 && selections.First().Item2 < 0 && (oddsType == OddsType.Indonesian || oddsType == OddsType.Malaysian))
+            if (selections.Count == 1 && OddsTypeHelper.GetOddsByOddsType((int)oddsType, selections.First().Item2, selections.First().Item4) < 0 && (oddsType == OddsType.Indonesian || oddsType == OddsType.Malaysian))
             {
                 switch (selections.First().Item1)
                 {

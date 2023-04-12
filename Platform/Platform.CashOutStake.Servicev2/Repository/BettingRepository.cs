@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Enums;
+using Platform.Shared.Helpers;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using System;
@@ -86,6 +87,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                     HalfLostProbability = s.HalfLostProbability,
                     Odds = s.Odds,
                     DeadHeatFactor = s.DeadHeatFactor,
+                    IsBinary = s.IsBinary
                 }).ToList();
 
                 if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright)) //|| c.BetSelectionStatusId != (int)BetStatus.Running
@@ -150,7 +152,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 HalfLostProbability = s.HalfLostProbability,
                 Odds = s.Odds,
                 DeadHeatFactor = s.DeadHeatFactor,
-
+                IsBinary = s.IsBinary
             }).ToList();
 
             if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright)) // || c.BetSelectionStatusId != (int)BetStatus.Running
@@ -477,7 +479,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                     var won = 0m;
                     var halfWon = 0m;
 
-                    if (bet.BetSelections.First().Odds < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
+                    if (OddsTypeHelper.GetOddsByOddsType(bet.OddsTypeId, bet.BetSelections.First().Odds, bet.BetSelections.First().IsBinary) < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
                     {
                         won = Convert.ToDecimal(probabilites.First().WonProbability) * (stake + bet.Stake);
                         halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * ((bet.Stake / 2) + stake);
@@ -496,7 +498,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 }
                 else
                 {
-                    if (bet.BetSelections.First().Odds < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
+                    if (OddsTypeHelper.GetOddsByOddsType(bet.OddsTypeId, bet.BetSelections.First().Odds, bet.BetSelections.First().IsBinary) < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
                         cashOutStake = (stake + bet.Stake) * Convert.ToDecimal(probabilites.First().Probability);
                     else
                         cashOutStake = (stake * bet.Odds) * Convert.ToDecimal(probabilites.First().Probability);
@@ -517,7 +519,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 if (!hasProbabilityChanged)
                     finalCashOutStake = stake - (stake * 0.10m);
 
-                if (bet.BetSelections.First().Odds < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
+                if (OddsTypeHelper.GetOddsByOddsType(bet.OddsTypeId, bet.BetSelections.First().Odds, bet.BetSelections.First().IsBinary) < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
                 {
                     if (finalCashOutStake <= stake + bet.Stake)
                     {
@@ -652,6 +654,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
         public decimal Odds { get; set; }
         [Column(TypeName = "decimal(26,12)")]
         public decimal DeadHeatFactor { get; set; }
+        public bool IsBinary { get; set; }
     }
 
     public class OnExternalOddsChangeMessage

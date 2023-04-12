@@ -2838,7 +2838,7 @@ namespace Platform.Betting.API.Repository
                         return 0m * trueStake;
 
                     case BetStatus.HalfWon:
-                        return ((trueStake + trueStake) + 1) / 2;
+                        return (stake / 2) + trueStake;
 
                     case BetStatus.HalfLost:
                         return 0.5m * trueStake;

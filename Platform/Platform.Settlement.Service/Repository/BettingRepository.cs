@@ -152,7 +152,7 @@ namespace Platform.Settlement.Service.Repository
                         return 0m * trueStake;
 
                     case BetStatus.HalfWon:
-                        return ((trueStake + stake) + 1) / 2;
+                        return (stake / 2) + trueStake;
 
                     case BetStatus.HalfLost:
                         return 0.5m * stake;

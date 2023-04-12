@@ -480,7 +480,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                     if (bet.BetSelections.First().Odds < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
                     {
                         won = Convert.ToDecimal(probabilites.First().WonProbability) * (stake + bet.Stake);
-                        halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * (((stake + bet.Stake) + 1) / 2);
+                        halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * ((bet.Stake / 2) + stake);
                     }
                     else
                     {

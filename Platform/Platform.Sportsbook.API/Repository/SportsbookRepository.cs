@@ -2139,7 +2139,8 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStop = item.IsBetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     IsBetBuilder = item.IsBetBuilder,
-                    Markets = currentMarkets
+                    Markets = currentMarkets,
+                    SortOrder = item.SortOrder
                 });
 
                 if (finalResult.Count == 10) break;

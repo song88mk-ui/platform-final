@@ -2847,7 +2847,7 @@ namespace Platform.Betting.API.Repository
 
                     case BetStatus.Won:
                     case BetStatus.Running:
-                        return trueStake + trueStake;
+                        return trueStake + stake;
 
                     case BetStatus.Void:
                         return 1m * trueStake;

@@ -742,6 +742,7 @@ namespace Platform.API.Repository
                             TransactionDate = s.TransactionDate,
                             Commission = s.Commission,
                             CurrencyCode = s.CurrencyCode,
+                            OddsTypeId = s.OddsTypeId,
                             OddsType = s.OddsType,
                             CashOutStake = s.CashOutStake,
                             CashOutStatusId = s.CashOutStatusId,

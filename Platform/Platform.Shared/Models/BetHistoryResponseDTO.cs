@@ -35,6 +35,7 @@ namespace Platform.Shared.Models
         public decimal Commission { get; set; }
         public int BetStatusId { get; set; }
         public string BetStatusName { get; set; }
+        public int OddsTypeId { get; set; }
         public string OddsType { get; set; }
         public string CurrencyCode { get; set; }
         public int CashOutStatusId { get; set; }

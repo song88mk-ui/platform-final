@@ -1489,6 +1489,7 @@ namespace Platform.Betting.API.Repository
                     TransactionDate = bet.BetDate,
                     Commission = 0,
                     CurrencyCode = bet.CurrencyCode,
+                    OddsTypeId = bet.OddsTypeId,
                     OddsType = bet.OddsTypeName,
                     CashOutStake = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStake : 0,
                     CashOutStatusId = bet.BetStatusId == (int)BetStatus.Running ? (int)cashOut.CashOutStatus : (int)CashOutStatus.Unavailable,

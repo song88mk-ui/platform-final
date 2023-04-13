@@ -1967,13 +1967,6 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopFixturesTW(TWRequestDTO request)
         {
-            var mKey = $"nctf:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}";
-
-            var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
-
-            if (mCache != null)
-                return mCache;
-
             var sKey = $"sctf:{request.ClientId.ToString().ToUpper()}";
 
             var cache = _memCache.GetCache<List<ClientTopFixture>>(sKey);

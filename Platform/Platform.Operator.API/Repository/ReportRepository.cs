@@ -1,13 +1,13 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Platform.Operator.API.Models;
 using Platform.Shared.Enums;
-using Platform.Wallet.API.Models;
 using System;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Platform.Wallet.API.Repository
+namespace Platform.Operator.API.Repository
 {
     public class ReportRepository : IReportsRepository
     {
@@ -19,8 +19,8 @@ namespace Platform.Wallet.API.Repository
             _httpClient = httpClient;
             _configuration = configuration;
 
-            _httpClient.BaseAddress = new Uri(_configuration["PlatformAgentReports:Uri"]);
-            _httpClient.DefaultRequestHeaders.Add("x-api-key", _configuration["PlatformAgentReports:ApiKey"]);
+            _httpClient.BaseAddress = new Uri(_configuration["API:PlatformAgentReportsAPI"]);
+            _httpClient.DefaultRequestHeaders.Add("x-api-key", _configuration["Custom:PlatformAgentReportsAPIKey"]);
         }
 
         public async Task<RunningBalanceResponse> GetRunningBalance(string userId)

@@ -47,6 +47,7 @@ namespace Platform.Operator.API
             services.AddScoped<IOperatorRepository, OperatorRepository>();
             services.AddHttpClient<IAuthRepository, AuthRepository>();
             services.AddHttpClient<IWalletRepository, WalletRepository>();
+            services.AddHttpClient<IReportsRepository, ReportRepository>();
 
             services.AddScoped<InternalAPIKeyFilter>();
 

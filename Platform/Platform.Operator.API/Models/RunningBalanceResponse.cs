@@ -1,4 +1,4 @@
-﻿namespace Platform.Wallet.API.Models
+﻿namespace Platform.Operator.API.Models
 {
     public class RunningBalanceResponse
     {

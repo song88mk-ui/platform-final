@@ -188,7 +188,8 @@ namespace Platform.Operator.Servicev2.Repository
                                 HalfLostProbability = betSelectionEntity.HalfLostProbability,
                                 CorrelationId = betSelectionEntity.CorrelationId,
                                 DeadHeatFactor = betSelectionEntity.DeadHeatFactor,
-                                OddsRef = betSelectionEntity.OddsRef
+                                OddsRef = betSelectionEntity.OddsRef,
+                                IsBinary = betSelectionEntity.IsBinary
                             });
                         }
 
@@ -351,7 +352,8 @@ namespace Platform.Operator.Servicev2.Repository
                                 HalfWonProbability = betSelectionEntity.HalfWonProbability,
                                 HalfLostProbability = betSelectionEntity.HalfLostProbability,
                                 CorrelationId = betSelectionEntity.CorrelationId,
-                                DeadHeatFactor = betSelectionEntity.DeadHeatFactor
+                                DeadHeatFactor = betSelectionEntity.DeadHeatFactor,
+                                IsBinary = betSelectionEntity.IsBinary
                             });
                         }
 

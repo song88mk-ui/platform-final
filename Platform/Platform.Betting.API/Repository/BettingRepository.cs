@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
+using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Enums;
+using Platform.Shared.Helpers;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
@@ -263,7 +265,8 @@ namespace Platform.Betting.API.Repository
                     }
 
                     var taxedStake = 0m; // request.Stake - (request.Stake / (1 + stakeTax));
-                    var stake = request.Stake - taxedStake;
+                    var finalStake = request.Stake - taxedStake;
+                    var potentialPayout = finalStake * totalOdds;
 
                     // Malay and Indo
                     if (request.Selections.Count == 1)
@@ -273,13 +276,17 @@ namespace Platform.Betting.API.Repository
                         // malay code here
                         if ((int)request.OddsType == 1 && selection.MalaysianOdds < 0 && selection.IsBinary == true)
                         {
-                            stake = Math.Abs(stake * Math.Round(selection.MalaysianOdds, 2));
+                            var currentStake = finalStake;
+                            finalStake = Math.Abs(finalStake * Math.Round(selection.MalaysianOdds, 2));
+                            potentialPayout = currentStake + finalStake;
                         }
 
                         // indo code here
                         if ((int)request.OddsType == 3 && selection.IndonesianOdds < 0 && selection.IsBinary == true)
                         {
-                            stake = Math.Abs(stake * Math.Round(selection.IndonesianOdds, 2));
+                            var currentStake = finalStake;
+                            finalStake = Math.Abs(finalStake * Math.Round(selection.IndonesianOdds, 2));
+                            potentialPayout = currentStake + finalStake;
                         }
 
                         // hk code here
@@ -301,11 +308,11 @@ namespace Platform.Betting.API.Repository
                     {
                         UserId = request.UserId,
                         Stake = request.Stake,
-                        TrueStake = stake,
+                        TrueStake = finalStake,
                         Odds = totalOdds,
                         OddsTypeId = (int)request.OddsType,
                         OddsTypeName = request.OddsType.ToString(),
-                        Payout = stake * totalOdds,
+                        Payout = potentialPayout,
                         WinLoss = 0m,
                         BetStatusId = (int)BetStatus.Waiting,
                         BetStatusName = BetStatus.Waiting.ToString(),
@@ -442,7 +449,8 @@ namespace Platform.Betting.API.Repository
                             HalfWonProbability = selection.HalfWonProbability,
                             HalfLostProbability = selection.HalfLostProbability,
                             CorrelationId = selection.CorrelationId,
-                            DeadHeatFactor = 1m
+                            DeadHeatFactor = 1m,
+                            IsBinary = selection.IsBinary
                         }).Entity;
 
                         betSelectionData.Add(betSelectionEntity);
@@ -491,7 +499,8 @@ namespace Platform.Betting.API.Repository
                             HalfWonProbability = betSelectionEntity.HalfWonProbability,
                             HalfLostProbability = betSelectionEntity.HalfLostProbability,
                             CorrelationId = selection.CorrelationId,
-                            DeadHeatFactor = betSelectionEntity.DeadHeatFactor
+                            DeadHeatFactor = betSelectionEntity.DeadHeatFactor,
+                            IsBinary = betSelectionEntity.IsBinary
                         });
 
                         if (request.IsBoosted == true)
@@ -825,7 +834,8 @@ namespace Platform.Betting.API.Repository
                     }
 
                     var taxedStake = 0m; // request.Stake - (request.Stake / (1 + stakeTax));
-                    var stake = request.Stake - taxedStake;
+                    var finalStake = request.Stake - taxedStake;
+                    var potentialPayout = finalStake * totalOdds;
 
                     // Malay and Indo
                     if (request.Selections.Count == 1)
@@ -835,13 +845,17 @@ namespace Platform.Betting.API.Repository
                         // malay code here
                         if ((int)request.OddsType == 1 && selection.MalaysianOdds < 0 && selection.IsBinary == true)
                         {
-                            stake = Math.Abs(stake * Math.Round(selection.MalaysianOdds, 2));
+                            var currentStake = finalStake;
+                            finalStake = Math.Abs(finalStake * Math.Round(selection.MalaysianOdds, 2));
+                            potentialPayout = currentStake + finalStake;
                         }
 
                         // indo code here
                         if ((int)request.OddsType == 3 && selection.IndonesianOdds < 0 && selection.IsBinary == true)
                         {
-                            stake = Math.Abs(stake * Math.Round(selection.IndonesianOdds, 2));
+                            var currentStake = finalStake;
+                            finalStake = Math.Abs(finalStake * Math.Round(selection.IndonesianOdds, 2));
+                            potentialPayout = currentStake + finalStake;
                         }
 
                         // hk code here
@@ -863,11 +877,11 @@ namespace Platform.Betting.API.Repository
                     {
                         UserId = request.UserId,
                         Stake = request.Stake,
-                        TrueStake = stake,
+                        TrueStake = finalStake,
                         Odds = totalOdds,
                         OddsTypeId = (int)request.OddsType,
                         OddsTypeName = request.OddsType.ToString(),
-                        Payout = stake * totalOdds,
+                        Payout = potentialPayout,
                         WinLoss = 0m,
                         BetStatusId = (int)BetStatus.Waiting,
                         BetStatusName = BetStatus.Waiting.ToString(),
@@ -1005,7 +1019,8 @@ namespace Platform.Betting.API.Repository
                             HalfWonProbability = selection.HalfWonProbability,
                             HalfLostProbability = selection.HalfLostProbability,
                             CorrelationId = selection.CorrelationId,
-                            DeadHeatFactor = 1m
+                            DeadHeatFactor = 1m,
+                            IsBinary = selection.IsBinary
                         }).Entity;
 
                         betSelectionData.Add(betSelectionEntity);
@@ -1055,7 +1070,8 @@ namespace Platform.Betting.API.Repository
                             HalfWonProbability = betSelectionEntity.HalfWonProbability,
                             HalfLostProbability = betSelectionEntity.HalfLostProbability,
                             CorrelationId = selection.CorrelationId,
-                            DeadHeatFactor = betSelectionEntity.DeadHeatFactor
+                            DeadHeatFactor = betSelectionEntity.DeadHeatFactor,
+                            IsBinary = betSelectionEntity.IsBinary
                         });
 
                         if (request.IsBoosted == true)
@@ -1450,7 +1466,7 @@ namespace Platform.Betting.API.Repository
                 var runningfinalStake = bet.TrueStake - bet.StakeBonus;
                 var runningTaxedStake = bet.IsFreeBet == false ? runningfinalStake - (runningfinalStake / (1 + bet.StakeTax)) : 0;
                 var runningStake = bet.BetStatusId == (int)BetStatus.Running ? GetStake(filteredSelections, runningTaxedStake, bet.TrueStake) : 0;
-                var runningPayout = bet.BetStatusId == (int)BetStatus.Running ? GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), runningStake, isBetBuilder, bet.Odds) : 0;
+                var runningPayout = bet.BetStatusId == (int)BetStatus.Running ? GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal, bool>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor, s.IsBinary)).ToList(), runningStake, bet.Stake, isBetBuilder, bet.Odds, (OddsType)bet.OddsTypeId) : 0;
                 var runningTaxedWinnings = runningPayout + parlayBonusWinnings;
 
                 if (bet.IsFreeBet)
@@ -1503,7 +1519,7 @@ namespace Platform.Betting.API.Repository
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
                         SelectionName = s.SelectionName,
-                        Odds = GetSelectionOdds(s.Odds, request.IsOddsString),
+                        Odds = GetSelectionOdds(bet.OddsTypeId, s.Odds, request.IsOddsString, s.IsBinary),
                         BetScore = s.BetScore,
                         SettlementScore = s.SettlementScore,
                         BetSelectionId = s.BetSelectionId.ToString(),
@@ -1640,7 +1656,7 @@ namespace Platform.Betting.API.Repository
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
                         SelectionName = s.SelectionName,
-                        Odds = GetSelectionOdds(s.Odds, request.IsOddsString),
+                        Odds = GetSelectionOdds(bet.OddsTypeId, s.Odds, request.IsOddsString, s.IsBinary),
                         BetScore = s.BetScore,
                         SettlementScore = s.SettlementScore,
                         BetSelectionId = s.BetSelectionId.ToString(),
@@ -1728,7 +1744,7 @@ namespace Platform.Betting.API.Repository
                 var runningfinalStake = bet.TrueStake - bet.StakeBonus;
                 var runningTaxedStake = bet.IsFreeBet == false ? runningfinalStake - (runningfinalStake / (1 + bet.StakeTax)) : 0;
                 var runningStake = GetStake(filteredSelections, runningTaxedStake, bet.TrueStake);
-                var runningPayout = GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor)).ToList(), runningStake, isBetBuilder, bet.Odds);
+                var runningPayout = GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal, bool>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor, s.IsBinary)).ToList(), runningStake, bet.Stake, isBetBuilder, bet.Odds, (OddsType)bet.OddsTypeId);
 
                 var parlayBonusWinnings = 0m;
                 var parlayBonus = 0m;
@@ -2812,22 +2828,47 @@ namespace Platform.Betting.API.Repository
             return trueStake - taxedStake;
         }
 
-        private decimal GetPayout(List<Tuple<BetStatus, decimal, decimal>> selections, decimal stake, bool isBetBuilder, decimal odds)
+        private decimal GetPayout(List<Tuple<BetStatus, decimal, decimal, bool>> selections, decimal trueStake, decimal stake, bool isBetBuilder, decimal odds, OddsType oddsType)
         {
             var values = new List<decimal>();
+
+            if (selections.Count == 1 && OddsTypeHelper.GetOddsByOddsType((int)oddsType, selections.First().Item2, selections.First().Item4) < 0 && (oddsType == OddsType.Indonesian || oddsType == OddsType.Malaysian))
+            {
+                switch (selections.First().Item1)
+                {
+                    case BetStatus.Lost:
+                        return 0m * trueStake;
+
+                    case BetStatus.HalfWon:
+                        return (stake / 2) + trueStake;
+
+                    case BetStatus.HalfLost:
+                        return 0.5m * trueStake;
+
+                    case BetStatus.Won:
+                    case BetStatus.Running:
+                        return trueStake + stake;
+
+                    case BetStatus.Void:
+                        return 1m * trueStake;
+
+                    case BetStatus.Cancelled:
+                        return 1m * trueStake;
+                }
+            }
 
             if (isBetBuilder == true)
             {
                 if (selections.Count() == selections.Where(s => s.Item1 == BetStatus.Won || s.Item1 == BetStatus.Running).Count())
-                    return (odds * stake);
+                    return (odds * trueStake);
                 else if (selections.Any(s => s.Item1 == BetStatus.Lost))
                     return 0m;
                 else if (selections.Any(s => s.Item1 == BetStatus.Void))
-                    return stake;
+                    return trueStake;
                 else if (selections.Any(s => s.Item1 == BetStatus.Cancelled))
-                    return stake;
+                    return trueStake;
                 else
-                    return stake;
+                    return trueStake;
             }
 
             foreach (var selection in selections)
@@ -2858,15 +2899,84 @@ namespace Platform.Betting.API.Repository
                 }
             }
 
-            return values.Aggregate((a, b) => a * b) * stake;
+            return values.Aggregate((a, b) => a * b) * trueStake;
         }
 
-        private object GetSelectionOdds(object odds, bool isOddsString)
+        private object GetSelectionOdds(int oddsTypeId, object odds, bool isOddsString, bool isBinary)
         {
             if (isOddsString == true)
-                return Convert.ToDecimal(odds.ToString()).ToString("0.00");
+                return GetOddsByOddsType(oddsTypeId, Convert.ToDecimal(odds.ToString()), isBinary).ToString("0.00");
             else
-                return Convert.ToDecimal(odds.ToString());
+                return GetOddsByOddsType(oddsTypeId, Convert.ToDecimal(odds.ToString()), isBinary);
+        }
+
+        private static decimal GetOddsByOddsType(int oddsTypeId, decimal odds, bool isBinary)
+        {
+            var retval = odds;
+
+            switch (oddsTypeId)
+            {
+                case (int)OddsType.Malaysian:
+                    retval = GetMalayOdds(odds, isBinary);
+                    break;
+                case (int)OddsType.HongKong:
+                    retval = GetHongkongOdds(odds, isBinary);
+                    break;
+                case (int)OddsType.Indonesian:
+                    retval = GetIndoOdds(odds, isBinary);
+                    break;
+                default:
+                    retval = odds;
+                    break;
+            };
+
+            return retval;
+        }
+
+        private static decimal GetMalayOdds(decimal odds, bool isBinary)
+        {
+            // add binary condition if more than 2 value is decimal
+            if (isBinary == false)
+                return odds;
+
+            if (odds == 1m)
+                return 0;
+
+            if (odds <= 2.00m)
+                return odds - 1m;
+
+            var retval = -1m / (odds - 1m);
+
+            return Math.Truncate(retval * 100) / 100;
+        }
+
+        private static decimal GetHongkongOdds(decimal odds, bool isBinary)
+        {
+            // add binary condition if more than 2 value is decimal
+            if (isBinary == false)
+                return odds;
+
+            if (odds == 1m)
+                return 0;
+
+            return odds - 1m;
+        }
+
+        private static decimal GetIndoOdds(decimal odds, bool isBinary)
+        {
+            // add binary condition if more than 2 value is decimal
+            if (isBinary == false)
+                return odds;
+
+            if (odds == 1m)
+                return 0;
+
+            if (odds >= 2.00m)
+                return odds - 1m;
+
+            var retval = -1m / (odds - 1m);
+
+            return Math.Truncate(retval * 100) / 100;
         }
     }
 }

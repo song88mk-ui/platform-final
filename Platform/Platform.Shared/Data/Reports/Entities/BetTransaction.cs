@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Platform.Shared.Data.Reports.Entities
 {
@@ -15,23 +17,23 @@ namespace Platform.Shared.Data.Reports.Entities
         public string Username { get; set; }
 
         public int UserTypeId { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal PositionTaking { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Commission { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Stake { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal TrueStake { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Odds { get; set; }
 
         public int OddsTypeId { get; set; }
 
         public string OddsTypeName { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Payout { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal WinLoss { get; set; }
 
         public int StatusId { get; set; }
@@ -39,7 +41,7 @@ namespace Platform.Shared.Data.Reports.Entities
         public string StatusName { get; set; }
 
         public string Reason { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal ExchangeRate { get; set; }
 
         public string CurrencyCode { get; set; }

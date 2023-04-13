@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Platform.Shared.Data.Reports.Entities
 {
@@ -9,8 +11,11 @@ namespace Platform.Shared.Data.Reports.Entities
         public Guid ReferenceId { get; set; }
         public string Username { get; set; }
         public int UserTypeId { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
         public decimal PreBalance { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Amount { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
         public decimal PostBalance { get; set; }
         public string CurrencyCode { get; set; }
         public bool IsCashPlayer { get; set; }

@@ -1,4 +1,5 @@
 ﻿using Platform.Operator.API.Models;
+using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
 using System.Threading.Tasks;
@@ -11,11 +12,13 @@ namespace Platform.Operator.API.Repository
     {
         private readonly IAuthRepository _authRepository;
         private readonly IWalletRepository _walletRepository;
+        private readonly IReportsRepository _reportsRepository;
 
-        public OperatorRepository(IAuthRepository authRepository, IWalletRepository walletRepository)
+        public OperatorRepository(IAuthRepository authRepository, IWalletRepository walletRepository, IReportsRepository reportsRepository)
         {
             _authRepository = authRepository;
             _walletRepository = walletRepository;
+            _reportsRepository = reportsRepository;
         }
         public async Task<LoginResponseDTO> Login(LoginRequestDTO request)
         {
@@ -73,6 +76,13 @@ namespace Platform.Operator.API.Repository
                 {
                     StatusId = 1003
                 };
+            }
+
+            var reportResponse = await _reportsRepository.GetRunningBalance(authResponse.Result.UserId);
+
+            if (reportResponse.StatusCode == 1000)
+            {
+                walletResponse.Payable = reportResponse.CashBalance;
             }
 
             return new AuthResponseDTO

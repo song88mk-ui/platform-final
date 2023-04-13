@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Platform.Shared.Data.Reports.Entities
 {
@@ -16,25 +18,25 @@ namespace Platform.Shared.Data.Reports.Entities
 
         public string CurrencyCode { get; set; }
 
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal PreCashBalance { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal CashBalance { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal PostCashBalance { get; set; }
 
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal PreTrueCashBalance { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal TrueCashBalance { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal PostTrueCashBalance { get; set; }
 
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal PreOutstandingBalance { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal OutstandingBalance { get; set; }
-
+        [Column(TypeName = "decimal(26,12)")]
         public decimal PostOutstandingBalance { get; set; }
 
 

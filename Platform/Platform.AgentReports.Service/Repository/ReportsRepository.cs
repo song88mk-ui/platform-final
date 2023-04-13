@@ -536,7 +536,7 @@ namespace Platform.AgentReports.Service.Repository
                 Score = betSelection.BetScore,
                 MarketTemplateGroupId = string.Empty,
                 MarketTemplateId = betSelection.MarketTemplateId,
-                SelectionTemplateId = betSelection.SelectionTemplateId
+                SelectionTemplateId = betSelection.SelectionTemplateId,
                 IsBinary = betSelection.IsBinary
             };
         }

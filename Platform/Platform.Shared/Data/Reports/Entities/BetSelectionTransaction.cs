@@ -73,6 +73,7 @@ namespace Platform.Shared.Data.Reports.Entities
         public string FirstScore { get; set; }
 
         public string SecondScore { get; set; }
+        public bool IsBinary { get; set; }
 
     }
 }

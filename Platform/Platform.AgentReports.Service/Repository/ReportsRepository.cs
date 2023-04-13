@@ -498,7 +498,8 @@ namespace Platform.AgentReports.Service.Repository
                 MarketTemplateGroupId = string.Empty,
                 MarketTemplateId = betSelection.MarketTemplateId,
                 SelectionTemplateId = betSelection.SelectionTemplateId,
-                Score = betSelection.BetScore
+                Score = betSelection.BetScore,
+                IsBinary = betSelection.IsBinary
             };
         }
         private BetSelectionTransaction ConvertToBetSelectionTransactionEntityInsertFinal(Shared.Data.Betting.Entities.BetSelection betSelection, AgentSettings agent)
@@ -536,6 +537,7 @@ namespace Platform.AgentReports.Service.Repository
                 MarketTemplateGroupId = string.Empty,
                 MarketTemplateId = betSelection.MarketTemplateId,
                 SelectionTemplateId = betSelection.SelectionTemplateId
+                IsBinary = betSelection.IsBinary
             };
         }
         private void AddOrUpdateRunningBalanceFinal(AgentReportsContext context, OnBetPlacement message, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents)

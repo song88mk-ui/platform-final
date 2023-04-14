@@ -1,5 +1,6 @@
 ﻿using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Data.SqlClient.Server;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
@@ -23,7 +24,7 @@ namespace Platform.API.Repository
             _httpClient.Timeout = TimeSpan.FromSeconds(2);
         }
 
-        public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string userName, string password, string endpoint)
+        public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string userName, string password, string endpoint, string userAgent = "")
         {
             if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
             {
@@ -36,6 +37,12 @@ namespace Platform.API.Repository
 
             try
             {
+                if(_httpClient.DefaultRequestHeaders.Contains("User-Agent") && !string.IsNullOrWhiteSpace(userAgent))
+                {
+                    _httpClient.DefaultRequestHeaders.Remove("User-Agent");
+                    _httpClient.DefaultRequestHeaders.Add("User-Agent", userAgent);
+                }
+
                 var response = await _httpClient.PostAsync($"{endpoint}/v1/authentication/login", new StringContent(JsonSerializer.Serialize(new { UserName = userName, Password = password }), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)

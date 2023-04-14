@@ -34,7 +34,7 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
 
-            var result = await _platformRepository.Login(clientId, request);
+            var result = await _platformRepository.Login(clientId, request, userAgent);
 
             var parameters = request;
 

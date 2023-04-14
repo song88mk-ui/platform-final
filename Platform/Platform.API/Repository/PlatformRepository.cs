@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.Extensions.Configuration;
 using Platform.API.Models;
 using Platform.Shared.Data;
@@ -37,7 +38,7 @@ namespace Platform.API.Repository
             _configuration = configuration;
         }
         
-        public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string clientId, LoginRequest request)
+        public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string clientId, LoginRequest request, string userAgent = "")
         {
             var clientResponse = await GetClient(clientId);
 
@@ -50,7 +51,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var loginResponse = await _operatorRepository.Login(request.UserName, request.Password, clientResponse.Result.Endpoint);
+            var loginResponse = await _operatorRepository.Login(request.UserName, request.Password, clientResponse.Result.Endpoint, userAgent);
 
             if (loginResponse.StatusCode != StatusCode.Success)
             {

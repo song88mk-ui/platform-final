@@ -37,10 +37,10 @@ namespace Platform.API.Repository
 
             try
             {
-                if(_httpClient.DefaultRequestHeaders.Contains("User-Agent") && !string.IsNullOrWhiteSpace(userAgent))
+                if(_httpClient.DefaultRequestHeaders.Contains("user-agent") && !string.IsNullOrWhiteSpace(userAgent))
                 {
-                    _httpClient.DefaultRequestHeaders.Remove("User-Agent");
-                    _httpClient.DefaultRequestHeaders.Add("User-Agent", userAgent);
+                    _httpClient.DefaultRequestHeaders.Remove("user-agent");
+                    _httpClient.DefaultRequestHeaders.Add("user-agent", userAgent);
                 }
 
                 var response = await _httpClient.PostAsync($"{endpoint}/v1/authentication/login", new StringContent(JsonSerializer.Serialize(new { UserName = userName, Password = password }), System.Text.Encoding.UTF8, "application/json"));

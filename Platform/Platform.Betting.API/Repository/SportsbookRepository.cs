@@ -350,7 +350,7 @@ namespace Platform.Betting.API.Repository
                             {
                                 if (OddsTypeHelper.GetOddsByOddsType(bet.OddsTypeId, selections.First().Odds, selections.First().IsBinary) < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
                                 {
-                                    cashOutStake = (stake * bet.Stake) * Convert.ToDecimal(probabilites.First().Probability);
+                                    cashOutStake = (stake + bet.Stake) * Convert.ToDecimal(probabilites.First().Probability);
                                     nonTaxedPayout = (bet.TrueStake * bet.Stake) * Convert.ToDecimal(probabilites.First().Probability);
                                 }
                                 else

@@ -240,6 +240,15 @@ namespace Platform.API.Repository
                 };
             }
 
+            if (request.IsBoosted && request.OddsType != OddsType.Decimal)
+            {
+                return new BaseResponseDTO<BetResponseDTO>
+                {
+                    StatusCode = StatusCode.Boosted_Odds_Is_Only_Applicable_With_Decimal_Odds_Type_Format,
+                    Message = StatusCode.Boosted_Odds_Is_Only_Applicable_With_Decimal_Odds_Type_Format.ToString().Replace('_', ' '),
+                };
+            }
+
             if (request.IsBetBuilder && request.Selections.Count < 2)
             {
                 return new BaseResponseDTO<BetResponseDTO>

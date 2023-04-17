@@ -86,6 +86,8 @@
         Total_Odds_Must_Be_Greater_Or_Higher_To_1 = 158,
         Bet_Builder_Selections_Cannot_Be_Combined = 159,   
 
+        Boosted_Odds_Is_Only_Applicable_With_Decimal_Odds_Type_Format = 160,
+
         Error = 1000,
         Operator_Error = 1001,
 

@@ -1099,7 +1099,16 @@ namespace Platform.Sportsbook.API.Repository
 
                 newFixtures = fixtures.Result;
                 newMarkets = markets.Result;
-                var isBinary = selections.Count > 2 ? false : true;
+                newAllSelections = allSelections.Result;
+
+                //var isBinary = allSelection.Count > 2 ? false : true;
+
+                var binaryMarkets = newAllSelections.GroupBy(c => c.MaId)
+                    .Select(s => new
+                    {
+                        MaId = s.Key,
+                        IsBinary = s.Count() > 2 ? false : true
+                    }).ToList();
 
                 newSelectionExtension = selections.Select(s => new SelectionExtension()
                 {
@@ -1114,9 +1123,9 @@ namespace Platform.Sportsbook.API.Repository
                     SeNa = s.SeNa,
                     Od = s.Od,
                     OddsRef = s.Od,
-                    HoOd = GetHongkongOdds(s.Od, isBinary),
-                    MaOd = GetMalayOdds(s.Od, isBinary),
-                    InOd = GetIndoOdds(s.Od, isBinary),
+                    HoOd = GetHongkongOdds(s.Od, binaryMarkets.FirstOrDefault(c => c.MaId == s.MaId)?.IsBinary ?? false),
+                    MaOd = GetMalayOdds(s.Od, binaryMarkets.FirstOrDefault(c => c.MaId == s.MaId)?.IsBinary ?? false),
+                    InOd = GetIndoOdds(s.Od, binaryMarkets.FirstOrDefault(c => c.MaId == s.MaId)?.IsBinary ?? false),
                     IsAc = s.IsAc,
                     SeSoOr = s.SeSoOr,
                     SeStId = s.SeStId,
@@ -1139,7 +1148,6 @@ namespace Platform.Sportsbook.API.Repository
                     ClBoSeNaTr = s.ClBoSeNaTr,
                 }).ToList();
 
-                newAllSelections = allSelections.Result;
                 newBettingStatus = bettingStatus.Result;
             }
 

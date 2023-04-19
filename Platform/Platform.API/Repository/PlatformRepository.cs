@@ -900,6 +900,7 @@ namespace Platform.API.Repository
                     SelectionId = selection.SelectionId.ToString(),
                     SelectionName = translation == null ? selection.SelectionName : translation.SelectionName,
                     Odds = GetSelectionOdds(selection.Odds),
+                    OddsTypeId = selection.OddsTypeId,
                     BetScore = selection.BetScore,
                     SettlementScore = selection.SettlementScore,
                     BetSelectionId = selection.BetSelectionId.ToString(),

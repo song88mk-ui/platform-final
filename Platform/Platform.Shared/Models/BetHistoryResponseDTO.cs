@@ -77,6 +77,7 @@ namespace Platform.Shared.Models
         public string SelectionId { get; set; }
         public string SelectionName { get; set; }
         public object Odds { get; set; }
+        public int OddsTypeId { get; set; }
         public int FixtureStatusId { get; set; }
         public string FixtureStatusName { get; set; }
         public DateTime FixtureStartDate { get; set; }

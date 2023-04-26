@@ -1,0 +1,32 @@
+name: Platform-ClientPlatform-API-$(Build.BuildId)
+
+pr: none
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - Platform/Platform.AgentReports.API
+      - Platform/Platform.Shared
+
+resources:
+  repositories:
+    - repository: bt
+      type: github
+      name: FlyingCockatoo/BuildTemplates
+      endpoint: FlyingCockatoo
+      ref: refs/tags/v1.4.0
+    - repository: nuget-helper
+      type: github
+      name: FlyingCockatoo/infra-build-nuget-helper
+      endpoint: FlyingCockatoo
+      ref: refs/heads/main
+
+extends:
+  template: dotnetservice.yml@bt
+  parameters:
+    projects:
+      - Platform/Platform.ClientPlatform.API

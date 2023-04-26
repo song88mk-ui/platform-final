@@ -10,6 +10,7 @@ trigger:
   paths:
     include:
       - Platform/Platform.Job.CCF
+      - Platform/Platform.Shared
 
 
 resources:

@@ -10,6 +10,7 @@ trigger:
   paths:
     include:
       - Platform/Platform.Job.Operator.Score
+      - Platform/Platform.Shared
 
 
 resources:

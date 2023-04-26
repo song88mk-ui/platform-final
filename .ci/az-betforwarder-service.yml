@@ -10,6 +10,7 @@ trigger:
   paths:
     include:
       - Platform/Platform.BetForwarder.Service
+      - Platform/Platform.Shared
 
 
 resources:

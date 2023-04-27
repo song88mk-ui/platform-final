@@ -72,9 +72,9 @@ namespace Platform.API.Controllers
             }
         }
         [HttpPost("v3/client/topfixtures")]
-        public async Task<IActionResult> GetClientTopFixturesv3([FromBody] string clientRefIds)
+        public async Task<IActionResult> GetClientTopFixturesv3([FromBody] ClientTopFixtureRequestV3 request)
         {
-            var result = await _platformRepository.GetClientTopFixtures(clientRefIds);
+            var result = await _platformRepository.GetClientTopFixtures(request.clientRefIds);
 
             switch (result.StatusCode)
             {

@@ -146,6 +146,19 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+        [HttpPost("v3/client/topleagues")]
+        public async Task<IActionResult> GetClientTopLeagues3([FromBody] BackOfficeTopLeaguesRequestDTO request)
+        {
+            var result = await _platformRepository.GetClientTopLeagues(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
 
         [HttpPost("v1/client/topleagues")]
         public async Task<IActionResult> AddOrUpdateTopLeagues([FromBody] BackOfficeClientTopLeague request)

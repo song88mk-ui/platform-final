@@ -1,4 +1,4 @@
-name: $(System.TeamProject)-Platform-Job-BetAudit-Tableau-$(Build.BuildId)
+name: Platform-Betting-API-$(Build.BuildId)
 
 pr: none
 
@@ -9,8 +9,8 @@ trigger:
       - main
   paths:
     include:
-      - Platform/Platform.Job.BetAudit.Tableau
-
+      - Platform/Platform.Betting.API
+      - Platform/Platform.Shared
 
 resources:
   repositories:
@@ -18,7 +18,7 @@ resources:
       type: github
       name: FlyingCockatoo/BuildTemplates
       endpoint: FlyingCockatoo
-      ref: refs/tags/v0.2.0
+      ref: refs/tags/v1.5.0
     - repository: nuget-helper
       type: github
       name: FlyingCockatoo/infra-build-nuget-helper
@@ -26,9 +26,7 @@ resources:
       ref: refs/heads/main
 
 extends:
-  template: dotnetservice2.yml@bt
+  template: dotnetservice.yml@bt
   parameters:
-    dotnetVersion: 3.1.x
-    authToFeeds: false
     projects:
-      - Platform/Platform.Job.BetAudit.Tableau
+      - Platform/Platform.Betting.API

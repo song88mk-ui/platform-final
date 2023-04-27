@@ -54,13 +54,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Job.Operator.Score
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.BetPlacement.Console", "Platform.BetPlacement.Console\Platform.BetPlacement.Console.csproj", "{2E4BE879-0304-4505-A688-42A080B030E8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Job.BetAudit.Tableau", "Platform.Job.BetAudit.Tableau\Platform.Job.BetAudit.Tableau.csproj", "{30E9FA1B-CF2F-4D05-BF6B-3F0198A7F8DC}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Wallet.API", "Platform.Wallet.API\Platform.Wallet.API.csproj", "{322DDB28-0707-4E30-A33B-94A07BC384BD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.AgentReports.Service", "Platform.AgentReports.Service\Platform.AgentReports.Service.csproj", "{049B1A8C-8A09-4C5C-85FF-E128043365B7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.AgentReports.API", "Platform.AgentReports.API\Platform.AgentReports.API.csproj", "{87EAD75E-572B-4357-A426-1456636E2F7A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.AgentReports.API", "Platform.AgentReports.API\Platform.AgentReports.API.csproj", "{87EAD75E-572B-4357-A426-1456636E2F7A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -164,10 +162,6 @@ Global
 		{2E4BE879-0304-4505-A688-42A080B030E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E4BE879-0304-4505-A688-42A080B030E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E4BE879-0304-4505-A688-42A080B030E8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{30E9FA1B-CF2F-4D05-BF6B-3F0198A7F8DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{30E9FA1B-CF2F-4D05-BF6B-3F0198A7F8DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{30E9FA1B-CF2F-4D05-BF6B-3F0198A7F8DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{30E9FA1B-CF2F-4D05-BF6B-3F0198A7F8DC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{322DDB28-0707-4E30-A33B-94A07BC384BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{322DDB28-0707-4E30-A33B-94A07BC384BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{322DDB28-0707-4E30-A33B-94A07BC384BD}.Release|Any CPU.ActiveCfg = Release|Any CPU

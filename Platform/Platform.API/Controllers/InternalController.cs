@@ -44,10 +44,10 @@ namespace Platform.API.Controllers
         /// <summary>
         /// Get list of all top fixtures per client ids that are included in the request.
         /// </summary>
-        [HttpGet("v1/client/topfixtures")]
-        public async Task<IActionResult> GetClientTopFixtures([FromQuery] string clientRefIds)
+        [HttpPost("v1/client/topfixtures/list")]
+        public async Task<IActionResult> GetClientTopFixtures([FromBody] ClientTopFixtureListRequest clientRefIds)
         {
-            var result = await _platformRepository.GetClientTopFixtures(clientRefIds);
+            var result = await _platformRepository.GetClientTopFixtures(clientRefIds.ClientRefIds);
 
             switch (result.StatusCode)
             {
@@ -62,19 +62,6 @@ namespace Platform.API.Controllers
         public async Task<IActionResult> GetClientTopFixtures2([FromQuery] string clientCodes)
         {
             var result = await _platformRepository.GetClientTopFixtures2(clientCodes);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-        [HttpPost("v3/client/topfixtures")]
-        public async Task<IActionResult> GetClientTopFixturesv3([FromBody] ClientTopFixtureRequestV3 request)
-        {
-            var result = await _platformRepository.GetClientTopFixtures(request.clientRefIds);
 
             switch (result.StatusCode)
             {
@@ -133,21 +120,8 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v1/client/topleagues")]
-        public async Task<IActionResult> GetClientTopLeagues([FromQuery] BackOfficeTopLeaguesRequestDTO request)
-        {
-            var result = await _platformRepository.GetClientTopLeagues(request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-        [HttpPost("v3/client/topleagues")]
-        public async Task<IActionResult> GetClientTopLeagues3([FromBody] BackOfficeTopLeaguesRequestDTO request)
+        [HttpPost("v1/client/topleagues/list")]
+        public async Task<IActionResult> GetClientTopLeagues([FromBody] BackOfficeTopLeaguesRequestDTO request)
         {
             var result = await _platformRepository.GetClientTopLeagues(request);
 

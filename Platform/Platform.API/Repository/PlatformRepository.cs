@@ -740,12 +740,6 @@ namespace Platform.API.Repository
                     StatusCode = betHistory.StatusCode,
                     Result = new BetHistoryResponseDTO
                     {
-                        CurrentPage = betHistory.Result.CurrentPage,
-                        PageCount = betHistory.Result.PageCount,
-                        PageSize = betHistory.Result.PageSize,
-                        RowCount = betHistory.Result.RowCount,
-                        TotalCommission = betHistory.Result.TotalCommission,
-                        TotalWLC = betHistory.Result.TotalWLC,
                         Bets = betHistory.Result.Bets.Select(s => new BetHistoryDTO
                         {
                             BetId = s.BetId,

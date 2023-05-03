@@ -120,6 +120,21 @@ namespace Platform.API.Controllers
             }
         }
 
+        // Temporary Fix to provide backward compatibility for Old BO
+        [HttpGet("v1/client/topleagues")]
+        public async Task<IActionResult> TempGetClientTopLeagues([FromQuery] BackOfficeTopLeaguesRequestDTO request)
+        {
+            var result = await _platformRepository.GetClientTopLeagues(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/client/topleagues/list")]
         public async Task<IActionResult> GetClientTopLeagues([FromBody] BackOfficeTopLeaguesRequestDTO request)
         {

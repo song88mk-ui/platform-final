@@ -9026,7 +9026,7 @@ namespace Platform.Sportsbook.API.Repository
 
                         var odds = Math.Round(fairOdds / finalOddsInitialDivideBy, 2);
 
-                        if (odds < 1.00m || Math.Round(1.00m / odds, 2) < 1.00m)
+                        if (odds < 1.00m)
                         {
                             var tempOdds = 1m; // GetMasterOddsWithAddedMargin(selection.Od);
 

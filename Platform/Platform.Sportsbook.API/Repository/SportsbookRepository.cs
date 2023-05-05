@@ -9044,7 +9044,7 @@ namespace Platform.Sportsbook.API.Repository
                             continue;
                         }
 
-                        if (odds > selection.Od)
+                        if (odds >= selection.Od)
                             odds = GetMasterOddsWithAddedMargin(selection.Od);
 
                         result.Add(new ClientOdds
@@ -9212,7 +9212,7 @@ namespace Platform.Sportsbook.API.Repository
                             continue;
                         }
 
-                        if (odds > selection.Od)
+                        if (odds >= selection.Od)
                             odds = GetMasterOddsWithAddedMargin(selection.Od);
 
                         result.Add(new ClientOdds

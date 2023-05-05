@@ -8968,7 +8968,7 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (fairOddsInitialDivideBy <= 0)
                         {
-                            var tempOdds = 1m; // GetMasterOddsWithAddedMargin(selection.Od);
+                            var tempOdds = GetMasterOddsWithAddedMargin(1m);
 
                             result.Add(new ClientOdds
                             {
@@ -8988,7 +8988,7 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (fairOdds <= 0)
                         {
-                            var tempOdds = 1m; // GetMasterOddsWithAddedMargin(selection.Od);
+                            var tempOdds = GetMasterOddsWithAddedMargin(1m);
 
                             result.Add(new ClientOdds
                             {
@@ -9008,7 +9008,7 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (finalOddsInitialDivideBy <= 0)
                         {
-                            var tempOdds = 1m; // GetMasterOddsWithAddedMargin(selection.Od);
+                            var tempOdds = GetMasterOddsWithAddedMargin(1m);
 
                             result.Add(new ClientOdds
                             {
@@ -9028,7 +9028,7 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (odds < 1.00m)
                         {
-                            var tempOdds = 1m; // GetMasterOddsWithAddedMargin(selection.Od);
+                            var tempOdds = GetMasterOddsWithAddedMargin(1m);
 
                             result.Add(new ClientOdds
                             {

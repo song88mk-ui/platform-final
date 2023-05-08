@@ -32,5 +32,6 @@ extends:
     pool:
       vmImage: 'windows-2019'
     runtime: win-x64
+    authToFeeds: false
     projects:
       - Platform/Platform.Job.CCF

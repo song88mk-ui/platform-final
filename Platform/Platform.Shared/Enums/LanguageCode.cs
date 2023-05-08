@@ -18,6 +18,7 @@
         SW = 14,    //Swahili
         FR = 15,    //French
         PT = 16,    //Portuguese
-        AM = 17     //Amharic
+        AM = 17,     //Amharic
+        ES = 18
     }
 }

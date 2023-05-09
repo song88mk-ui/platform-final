@@ -4786,11 +4786,13 @@ namespace Platform.Sportsbook.API.Repository
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            //var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr);
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            //var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr);
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -8599,7 +8601,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return name;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).FirstOrDefault();
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
             if (result != null)
                 return result.SpNa;
@@ -8611,7 +8613,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return name;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).FirstOrDefault();
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
             if (result != null)
                 return result.SegNa;
@@ -8623,7 +8625,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return name;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).FirstOrDefault();
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
             if (result != null)
                 return result.LeNa;
@@ -8635,7 +8637,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return name;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).FirstOrDefault();
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
             if (result != null)
                 return result.FiNa;
@@ -8647,7 +8649,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return fixtureType == FixtureType.Match ? name.Split(" vs. ").First().Trim() : string.Empty;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).FirstOrDefault();
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
             if (result != null)
                 return fixtureType == FixtureType.Match ? result.FiNa.Split(" vs. ").First().Trim() : string.Empty;
@@ -8659,7 +8661,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return fixtureType == FixtureType.Match ? name.Split(" vs. ").Last().Trim() : string.Empty;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).FirstOrDefault();
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
             if (result != null)
                 return fixtureType == FixtureType.Match ? result.FiNa.Split(" vs. ").Last().Trim() : string.Empty;
@@ -8671,7 +8673,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return name;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).FirstOrDefault();
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
             if (result != null)
                 return result.MaNa;
@@ -8683,7 +8685,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return name;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).FirstOrDefault();
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
             if (result != null)
                 return result.SeNa;
@@ -8698,7 +8700,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return boostedSelectionNames.FirstOrDefault(s => s.ClCo == clientCode).BoSeNa;
 
-            var result = translations.Where(c => c.ClCoLaCo == $"{clientCode}:{languageCode.ToString()}").FirstOrDefault();
+            var result = translations.Where(c => c.ClCoLaCo == $"{clientCode}:{languageCode.ToString()}").LastOrDefault();
 
             if (result != null)
                 return result.BoSeNa;
@@ -9028,7 +9030,7 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (odds < 1.00m)
                         {
-                            var tempOdds = GetMasterOddsWithAddedMargin(selection.Od);
+                            var tempOdds = GetMasterOddsWithAddedMargin(1m);
 
                             result.Add(new ClientOdds
                             {
@@ -9044,7 +9046,7 @@ namespace Platform.Sportsbook.API.Repository
                             continue;
                         }
 
-                        if (odds > selection.Od)
+                        if (odds >= selection.Od)
                             odds = GetMasterOddsWithAddedMargin(selection.Od);
 
                         result.Add(new ClientOdds
@@ -9196,7 +9198,7 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (odds < 1.00m)
                         {
-                            var tempOdds = GetMasterOddsWithAddedMargin(selection.Od);
+                            var tempOdds = GetMasterOddsWithAddedMargin(1m);
 
                             result.Add(new ClientOdds
                             {
@@ -9212,7 +9214,7 @@ namespace Platform.Sportsbook.API.Repository
                             continue;
                         }
 
-                        if (odds > selection.Od)
+                        if (odds >= selection.Od)
                             odds = GetMasterOddsWithAddedMargin(selection.Od);
 
                         result.Add(new ClientOdds

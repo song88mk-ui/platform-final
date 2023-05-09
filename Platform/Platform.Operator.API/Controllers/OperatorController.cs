@@ -20,7 +20,16 @@ namespace Platform.Operator.API.Controllers
         [HttpPost("operator/v1/authentication/login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDTO request)
         {//
-            var result = await _operatorRepository.Login(new LoginRequestDTO { UserName = request.UserName, Password = request.Password });
+            var ip = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+
+            if (string.IsNullOrEmpty(ip))
+            {
+                ip = HttpContext.Connection.RemoteIpAddress.ToString();
+            }
+
+            var ipAddress = ip.Split(':').FirstOrDefault().Split(",").FirstOrDefault();
+
+            var result = await _operatorRepository.Login(new LoginRequestDTO { UserName = request.UserName, Password = request.Password }, HttpContext.Request.Headers["User-Agent"].FirstOrDefault() ?? "", ipAddress, HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault() ?? "");
 
             switch (result.StatusId)
             {

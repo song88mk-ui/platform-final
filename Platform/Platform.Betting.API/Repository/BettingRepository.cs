@@ -251,7 +251,7 @@ namespace Platform.Betting.API.Repository
                     Guid betId;
 
                     var totalOdds = request.IsBetBuilder ? request.Odds : request.Selections.Select(s => s.DecimalOdds).Aggregate((a, b) => a * b);
-                    var totalOddsRef = request.Selections.Select(s => s.OddsRef).Aggregate((a, b) => a * b); 
+                    var totalOddsRef = request.Selections.Select(s => s.OddsRef).Aggregate((a, b) => a * b);
                     var selectionSports = request.Selections.Select(s => s.SportId).Distinct().ToList();
 
                     var stakeTax = taxConfig.StakeTax;
@@ -760,8 +760,8 @@ namespace Platform.Betting.API.Repository
             {
 
                 ParlayConfig parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-                
-                if(request.IsBetBuilder)
+
+                if (request.IsBetBuilder)
                 {
                     minStake = GetMinStake(betBuilderConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
                     maxStake = GetMaxStakeForBetBuilderWithMTS(parlayConfig.MaxStake, mtsMaxStake.Result.Stake, request.CompanyShare);
@@ -1350,217 +1350,225 @@ namespace Platform.Betting.API.Repository
         }
         public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(BetHistoryRequestDTO request)
         {
-            request.Page = request.Page <= 0 ? 1 : request.Page;
-            request.PageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-            request.PageSize = request.PageSize > 50 ? 50 : request.PageSize;
-
-            var skip = (request.Page - 1) * request.PageSize;
-            double rowCount = 0;
-            decimal winLoss = 0m;
-            var result = new List<BetHistoryDTO>();
-            var transactions = new List<Bet>();
-
-            if (request.IsCurrent)
+            try
             {
-                var openBets = new List<int> { (int)BetStatus.Running };
-                var openBetsResponse = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && openBets.Contains(c.BetStatusId)).ToList();
+                request.Page = request.Page <= 0 ? 1 : request.Page;
+                request.PageSize = request.PageSize <= 0 ? 10 : request.PageSize;
+                request.PageSize = request.PageSize > 50 ? 50 : request.PageSize;
 
-                if (openBetsResponse.Count > 0)
-                    transactions.AddRange(openBetsResponse);
+                var skip = (request.Page - 1) * request.PageSize;
+                double rowCount = 0;
+                decimal winLoss = 0m;
+                var result = new List<BetHistoryDTO>();
+                var transactions = new List<Bet>();
 
-                rowCount = Convert.ToDouble(transactions.Count());
-            }
-            else
-            {
-                if ((request.ToDate - request.FromDate).TotalDays > 30)
-                    request.FromDate = request.ToDate.AddDays(-30);
-
-                if (request.BetStatusFilter == BetStatusFilter.All)
+                if (request.IsCurrent)
                 {
-                    var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Rejected };
-                    var rawAll = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
+                    var openBets = new List<int> { (int)BetStatus.Running };
+                    var openBetsResponse = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && openBets.Contains(c.BetStatusId)).ToList();
 
-                    rowCount = rawAll.Count();
-                    //winLoss = rawAll.Sum(c => c.WinLoss);
-                    transactions = rawAll.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
+                    if (openBetsResponse.Count > 0)
+                        transactions.AddRange(openBetsResponse);
+
+                    rowCount = Convert.ToDouble(transactions.Count());
+                }
+                else
+                {
+                    if ((request.ToDate - request.FromDate).TotalDays > 30)
+                        request.FromDate = request.ToDate.AddDays(-30);
+
+                    if (request.BetStatusFilter == BetStatusFilter.All)
+                    {
+                        var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Rejected };
+                        var rawAll = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
+
+                        rowCount = rawAll.Count();
+                        //winLoss = rawAll.Sum(c => c.WinLoss);
+                        transactions = rawAll.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
+                    }
+
+                    if (request.BetStatusFilter == BetStatusFilter.Open)
+                    {
+                        var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running };
+                        var rawOpen = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
+
+                        rowCount = rawOpen.Count();
+                        //winLoss = rawOpen.Sum(c => c.WinLoss);
+                        transactions = rawOpen.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
+                    }
+
+                    if (request.BetStatusFilter == BetStatusFilter.Settled)
+                    {
+                        var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running, (int)BetStatus.Rejected };
+                        var rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
+
+                        rowCount = rawSettled.Count();
+                        //winLoss = rawSettled.Sum(c => c.WinLoss);
+                        transactions = rawSettled.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
+                    }
                 }
 
-                if (request.BetStatusFilter == BetStatusFilter.Open)
+                if (transactions.Count == 0)
                 {
-                    var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running };
-                    var rawOpen = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
-
-                    rowCount = rawOpen.Count();
-                    //winLoss = rawOpen.Sum(c => c.WinLoss);
-                    transactions = rawOpen.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
+                    return new BaseResponseDTO<BetHistoryResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString(),
+                        Result = new BetHistoryResponseDTO
+                        {
+                            CurrentPage = 1,
+                            PageCount = 1,
+                            PageSize = 1,
+                            RowCount = 0,
+                            TotalCommission = 0,
+                            TotalWinLoss = 0,
+                            TotalWLC = 0,
+                            Bets = new List<BetHistoryDTO>()
+                        }
+                    };
                 }
 
-                if (request.BetStatusFilter == BetStatusFilter.Settled)
+                var betIds = transactions.Select(s => s.BetId).Distinct().ToList();
+                var selections = _bettingContext.BetSelection.AsNoTracking().Where(c => betIds.Contains(c.BetId)).ToList();
+
+                var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => betIds.Contains(b.BetId) && b.BetStatusId != (int)BetStatus.Rejected
+                                                    && b.BetStatusId != (int)BetStatus.Cancelled).Select(s => s.BetId).ToList();
+
+
+                var runningBets = transactions.Where(c => c.BetStatusId == (int)BetStatus.Running).ToList();
+                var runningBetIds = runningBets.Select(s => s.BetId).Distinct().ToList();
+                var runningSelections = selections.Where(c => runningBetIds.Contains(c.BetId)).ToList();
+
+                var cashOutList = await _sportsbookRepository.GetCashOut(runningBets, runningSelections, betBoosted);
+
+
+                foreach (var bet in transactions)
                 {
-                    var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running, (int)BetStatus.Rejected };
-                    var rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
+                    var cashOut = cashOutList.Result.Where(c => c.BetId == bet.BetId).FirstOrDefault();
+                    var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
+                    var isBoosted = betBoosted.Any(b => b == bet.BetId);
+                    var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
-                    rowCount = rawSettled.Count();
-                    //winLoss = rawSettled.Sum(c => c.WinLoss);
-                    transactions = rawSettled.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
+                    var hasVirtualSport = filteredSelections.Any(s => s.SportId > 1000) ? true : false;
+                    var wonOrRunningSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running).Count();
+                    var lostSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
+
+                    var parlayBonusWinnings = 0m;
+                    var parlayBonus = 0m;
+                    if (hasVirtualSport == false && wonOrRunningSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
+                    {
+                        var parlayConfig = GetParlayBetConfig(_bettingContext, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, filteredSelections, bet.Payout, ref parlayBonusWinnings);
+
+                        if (parlayConfig.Item1 == true)
+                        {
+                            parlayBonus = parlayConfig.Item2.ParlayBonus;
+                        }
+                    }
+
+
+                    var runningfinalStake = bet.TrueStake - bet.StakeBonus;
+                    var runningTaxedStake = bet.IsFreeBet == false ? runningfinalStake - (runningfinalStake / (1 + bet.StakeTax)) : 0;
+                    var runningStake = bet.BetStatusId == (int)BetStatus.Running ? GetStake(filteredSelections, runningTaxedStake, bet.TrueStake) : 0;
+                    var runningPayout = bet.BetStatusId == (int)BetStatus.Running ? GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal, bool>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor, s.IsBinary)).ToList(), runningStake, bet.Stake, isBetBuilder, bet.Odds, (OddsType)bet.OddsTypeId) : 0;
+                    var runningTaxedWinnings = runningPayout + parlayBonusWinnings;
+
+                    if (bet.IsFreeBet)
+                        runningfinalStake = bet.TrueStake;
+
+                    runningTaxedWinnings = bet.IsFreeBet == false && bet.StakeBonus == bet.TrueStake ? 0 : (runningTaxedWinnings - runningfinalStake) * bet.WinningsTax;
+
+                    if (runningPayout < bet.TrueStake)
+                        runningTaxedWinnings = 0;
+
+                    result.Add(new BetHistoryDTO
+                    {
+                        BetId = bet.BetId.ToString(),
+                        Stake = bet.Stake,
+                        Odds = bet.Odds.ToString(),
+                        Payout = bet.BetStatusId == (int)BetStatus.Running ? runningPayout : bet.Payout,
+                        WinLoss = bet.WinLoss,
+                        BetStatusId = bet.BetStatusId,
+                        BetStatusName = bet.BetStatusName,
+                        TransactionDate = bet.BetDate,
+                        Commission = 0,
+                        CurrencyCode = bet.CurrencyCode,
+                        OddsTypeId = bet.OddsTypeId,
+                        OddsType = bet.OddsTypeName,
+                        CashOutStake = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStake : 0,
+                        CashOutStatusId = bet.BetStatusId == (int)BetStatus.Running ? (int)cashOut.CashOutStatus : (int)CashOutStatus.Unavailable,
+                        CashOutStatusName = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStatus.ToString() : CashOutStatus.Unavailable.ToString(),
+                        StakeTax = bet.StakeTax,
+                        WinningsTax = bet.WinningsTax,
+                        TaxedStake = bet.BetStatusId == (int)BetStatus.Running ? runningTaxedStake : bet.TaxedStake,
+                        TaxedWinnings = bet.BetStatusId == (int)BetStatus.Running ? runningTaxedWinnings : bet.TaxedWinnings,
+                        ParlayBonus = parlayBonus,
+                        ParlayBonusWinnings = bet.BetStatusId == (int)BetStatus.Running ? parlayBonusWinnings : bet.ParlayBonusWinnings,
+                        StakeReal = bet.StakeReal,
+                        StakeRealPayout = bet.StakeRealPayout,
+                        StakeBonus = bet.StakeBonus,
+                        StakeBonusPayout = bet.StakeBonusPayout,
+                        IsFreeBet = bet.IsFreeBet,
+                        IsBoosted = isBoosted,
+                        IsBetBuilder = isBetBuilder,
+                        Selections = filteredSelections.Select(s => new BetSelectionHistoryDTO
+                        {
+                            SportId = s.SportId,
+                            SportName = s.SportName,
+                            LeagueId = s.LeagueId,
+                            LeagueName = s.LeagueName,
+                            FixtureId = s.FixtureId.ToString(),
+                            FixtureName = s.FixtureName,
+                            MarketId = s.MarketId.ToString(),
+                            MarketName = s.MarketName,
+                            Line = s.Line,
+                            SelectionId = s.SelectionId.ToString(),
+                            SelectionName = s.SelectionName,
+                            Odds = GetSelectionOdds(bet.OddsTypeId, s.Odds, request.IsOddsString, s.IsBinary),
+                            OddsTypeId = s.IsBinary ? bet.OddsTypeId : (int)OddsType.Decimal,
+                            BetScore = s.BetScore,
+                            SettlementScore = s.SettlementScore,
+                            BetSelectionId = s.BetSelectionId.ToString(),
+                            FixtureStartDate = s.FixtureStartDate,
+                            FixtureStatusId = s.FixtureStatusId,
+                            FixtureStatusName = s.FixtureStatusName,
+                            MarketTemplateId = s.MarketTemplateId,
+                            SegmentId = s.SegmentId,
+                            SegmentName = s.SegmentName,
+                            SelectionTemplateId = s.SelectionTemplateId,
+                            BetSelectionStatusId = s.BetSelectionStatusId,
+                            BetSelectionStatusName = s.BetSelectionStatusName,
+                            Probability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.Probability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.Probability).FirstOrDefault(),
+                            WonProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.WonProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.WonProbability).FirstOrDefault(),
+                            LostProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.LostProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.LostProbability).FirstOrDefault(),
+                            VoidProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.VoidProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.VoidProbability).FirstOrDefault(),
+                            HalfWonProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfWonProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfWonProbability).FirstOrDefault(),
+                            HalfLostProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault(),
+                            DeadHeatFactor = s.DeadHeatFactor
+                        }).ToList()
+                    });
                 }
-            }
 
-            if (transactions.Count == 0)
-            {
                 return new BaseResponseDTO<BetHistoryResponseDTO>
                 {
                     StatusCode = StatusCode.Success,
                     Message = StatusCode.Success.ToString(),
                     Result = new BetHistoryResponseDTO
                     {
-                        CurrentPage = 1,
-                        PageCount = 1,
-                        PageSize = 1,
-                        RowCount = 0,
+                        CurrentPage = request.Page,
+                        PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
+                        PageSize = request.PageSize,
+                        RowCount = Convert.ToInt32(rowCount),
                         TotalCommission = 0,
-                        TotalWinLoss = 0,
-                        TotalWLC = 0,
-                        Bets = new List<BetHistoryDTO>()
+                        TotalWinLoss = winLoss,
+                        TotalWLC = winLoss,
+                        Bets = result.OrderByDescending(o => o.TransactionDate).ToList()
                     }
                 };
             }
-
-            var betIds = transactions.Select(s => s.BetId).Distinct().ToList();
-            var selections = _bettingContext.BetSelection.AsNoTracking().Where(c => betIds.Contains(c.BetId)).ToList();
-
-            var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => betIds.Contains(b.BetId) && b.BetStatusId != (int)BetStatus.Rejected
-                                                && b.BetStatusId != (int)BetStatus.Cancelled).Select(s => s.BetId).ToList();
-
-
-            var runningBets = transactions.Where(c => c.BetStatusId == (int)BetStatus.Running).ToList();
-            var runningBetIds = runningBets.Select(s => s.BetId).Distinct().ToList();
-            var runningSelections = selections.Where(c => runningBetIds.Contains(c.BetId)).ToList();
-
-            var cashOutList = await _sportsbookRepository.GetCashOut(runningBets, runningSelections, betBoosted);
-
-            foreach (var bet in transactions)
+            catch (Exception ex)
             {
-                var cashOut = cashOutList.Result.Where(c => c.BetId == bet.BetId).FirstOrDefault();
-                var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
-                var isBoosted = betBoosted.Any(b => b == bet.BetId);
-                var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
-
-                var hasVirtualSport = filteredSelections.Any(s => s.SportId > 1000) ? true : false;
-                var wonOrRunningSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running).Count();
-                var lostSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
-
-                var parlayBonusWinnings = 0m;
-                var parlayBonus = 0m;
-                if (hasVirtualSport == false && wonOrRunningSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
-                {
-                    var parlayConfig = GetParlayBetConfig(_bettingContext, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, filteredSelections, bet.Payout, ref parlayBonusWinnings);
-
-                    if (parlayConfig.Item1 == true)
-                    {
-                        parlayBonus = parlayConfig.Item2.ParlayBonus;
-                    }
-                }
-
-
-                var runningfinalStake = bet.TrueStake - bet.StakeBonus;
-                var runningTaxedStake = bet.IsFreeBet == false ? runningfinalStake - (runningfinalStake / (1 + bet.StakeTax)) : 0;
-                var runningStake = bet.BetStatusId == (int)BetStatus.Running ? GetStake(filteredSelections, runningTaxedStake, bet.TrueStake) : 0;
-                var runningPayout = bet.BetStatusId == (int)BetStatus.Running ? GetPayout(filteredSelections.Select(s => new Tuple<BetStatus, decimal, decimal, bool>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor, s.IsBinary)).ToList(), runningStake, bet.Stake, isBetBuilder, bet.Odds, (OddsType)bet.OddsTypeId) : 0;
-                var runningTaxedWinnings = runningPayout + parlayBonusWinnings;
-
-                if (bet.IsFreeBet)
-                    runningfinalStake = bet.TrueStake;
-
-                runningTaxedWinnings = bet.IsFreeBet == false && bet.StakeBonus == bet.TrueStake ? 0 : (runningTaxedWinnings - runningfinalStake) * bet.WinningsTax;
-
-                if (runningPayout < bet.TrueStake)
-                    runningTaxedWinnings = 0;
-
-                result.Add(new BetHistoryDTO
-                {
-                    BetId = bet.BetId.ToString(),
-                    Stake = bet.Stake,
-                    Odds = bet.Odds.ToString(),
-                    Payout = bet.BetStatusId == (int)BetStatus.Running ? runningPayout : bet.Payout,
-                    WinLoss = bet.WinLoss,
-                    BetStatusId = bet.BetStatusId,
-                    BetStatusName = bet.BetStatusName,
-                    TransactionDate = bet.BetDate,
-                    Commission = 0,
-                    CurrencyCode = bet.CurrencyCode,
-                    OddsTypeId = bet.OddsTypeId,
-                    OddsType = bet.OddsTypeName,
-                    CashOutStake = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStake : 0,
-                    CashOutStatusId = bet.BetStatusId == (int)BetStatus.Running ? (int)cashOut.CashOutStatus : (int)CashOutStatus.Unavailable,
-                    CashOutStatusName = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStatus.ToString() : CashOutStatus.Unavailable.ToString(),
-                    StakeTax = bet.StakeTax,
-                    WinningsTax = bet.WinningsTax,
-                    TaxedStake = bet.BetStatusId == (int)BetStatus.Running ? runningTaxedStake : bet.TaxedStake,
-                    TaxedWinnings = bet.BetStatusId == (int)BetStatus.Running ? runningTaxedWinnings : bet.TaxedWinnings,
-                    ParlayBonus = parlayBonus,
-                    ParlayBonusWinnings = bet.BetStatusId == (int)BetStatus.Running ? parlayBonusWinnings : bet.ParlayBonusWinnings,
-                    StakeReal = bet.StakeReal,
-                    StakeRealPayout = bet.StakeRealPayout,
-                    StakeBonus = bet.StakeBonus,
-                    StakeBonusPayout = bet.StakeBonusPayout,
-                    IsFreeBet = bet.IsFreeBet,
-                    IsBoosted = isBoosted,
-                    IsBetBuilder = isBetBuilder,
-                    Selections = filteredSelections.Select(s => new BetSelectionHistoryDTO
-                    {
-                        SportId = s.SportId,
-                        SportName = s.SportName,
-                        LeagueId = s.LeagueId,
-                        LeagueName = s.LeagueName,
-                        FixtureId = s.FixtureId.ToString(),
-                        FixtureName = s.FixtureName,
-                        MarketId = s.MarketId.ToString(),
-                        MarketName = s.MarketName,
-                        Line = s.Line,
-                        SelectionId = s.SelectionId.ToString(),
-                        SelectionName = s.SelectionName,
-                        Odds = GetSelectionOdds(bet.OddsTypeId, s.Odds, request.IsOddsString, s.IsBinary),
-                        OddsTypeId = s.IsBinary ? bet.OddsTypeId: (int)OddsType.Decimal,
-                        BetScore = s.BetScore,
-                        SettlementScore = s.SettlementScore,
-                        BetSelectionId = s.BetSelectionId.ToString(),
-                        FixtureStartDate = s.FixtureStartDate,
-                        FixtureStatusId = s.FixtureStatusId,
-                        FixtureStatusName = s.FixtureStatusName,
-                        MarketTemplateId = s.MarketTemplateId,
-                        SegmentId = s.SegmentId,
-                        SegmentName = s.SegmentName,
-                        SelectionTemplateId = s.SelectionTemplateId,
-                        BetSelectionStatusId = s.BetSelectionStatusId,
-                        BetSelectionStatusName = s.BetSelectionStatusName,
-                        Probability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.Probability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.Probability).FirstOrDefault(),
-                        WonProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.WonProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.WonProbability).FirstOrDefault(),
-                        LostProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.LostProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.LostProbability).FirstOrDefault(),
-                        VoidProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.VoidProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.VoidProbability).FirstOrDefault(),
-                        HalfWonProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfWonProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfWonProbability).FirstOrDefault(),
-                        HalfLostProbability = bet.BetStatusId == (int)BetStatus.Running ? cashOut.Probabilities == null ? 0 : cashOut.Probabilities.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault() : filteredSelections.Where(c => c.BetSelectionId == s.BetSelectionId).Select(ss => ss.HalfLostProbability).FirstOrDefault(),
-                        DeadHeatFactor = s.DeadHeatFactor
-                    }).ToList()
-                });
+                throw;
             }
-
-            return new BaseResponseDTO<BetHistoryResponseDTO>
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = new BetHistoryResponseDTO
-                {
-                    CurrentPage = request.Page,
-                    PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
-                    PageSize = request.PageSize,
-                    RowCount = Convert.ToInt32(rowCount),
-                    TotalCommission = 0,
-                    TotalWinLoss = winLoss,
-                    TotalWLC = winLoss,
-                    Bets = result.OrderByDescending(o => o.TransactionDate).ToList()
-                }
-            };
         }
         public async Task<BaseResponseDTO<SettlementHistoryResponseDTO>> GetBetHistorySettled(BetHistorySettledRequestDTO request)
         {
@@ -1800,66 +1808,75 @@ namespace Platform.Betting.API.Repository
         }
         public async Task<BaseResponseDTO<BetConfigFEResponseDTO>> GetBetConfig(BetConfigRequestDTO request)
         {
-            var result = new BetConfigFEResponseDTO();
-            var clientId = new Guid(request.ClientId);
-            var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == clientId && x.CurrencyCode == request.CurrencyCode).FirstOrDefault();
-
-            DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-            ParlayConfig parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-            List<OverrideSportConfig> overrideSportConfig = JsonSerializer.Deserialize<List<OverrideSportConfig>>(betConfig.OverrideConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-            TaxConfig taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
-            PriceboostConfig priceboostConfig = !string.IsNullOrEmpty(betConfig.PriceboostConfig) ? JsonSerializer.Deserialize<PriceboostConfig>(betConfig.PriceboostConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new PriceboostConfig();
-            BetBuilderConfig betBuilderConfig = !string.IsNullOrEmpty(betConfig.BetBuilderConfig) ? JsonSerializer.Deserialize<BetBuilderConfig>(betConfig.BetBuilderConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new BetBuilderConfig();
-
-            result.DefaultSportConfig = new DefaultSportConfigFE()
+            try
             {
-                MinStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
-                MaxStake = defaultSportConfig.MaxStake,
-                MaxPerGame = defaultSportConfig.StakeLimitFixture
-            };
 
-            result.OverrideSportConfig = new List<OverrideSportConfigFE>();
+                var result = new BetConfigFEResponseDTO();
+                var clientId = new Guid(request.ClientId);
+                var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == clientId && x.CurrencyCode == request.CurrencyCode).FirstOrDefault();
 
-            foreach (var overRide in overrideSportConfig)
-            {
-                OverrideSportConfigFE newOverrideSport = new OverrideSportConfigFE();
+                DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                ParlayConfig parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betConfig.ParlayConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                List<OverrideSportConfig> overrideSportConfig = JsonSerializer.Deserialize<List<OverrideSportConfig>>(betConfig.OverrideConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                TaxConfig taxConfig = !string.IsNullOrEmpty(betConfig.TaxConfig) ? JsonSerializer.Deserialize<TaxConfig>(betConfig.TaxConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new TaxConfig();
+                PriceboostConfig priceboostConfig = !string.IsNullOrEmpty(betConfig.PriceboostConfig) ? JsonSerializer.Deserialize<PriceboostConfig>(betConfig.PriceboostConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new PriceboostConfig();
+                BetBuilderConfig betBuilderConfig = !string.IsNullOrEmpty(betConfig.BetBuilderConfig) ? JsonSerializer.Deserialize<BetBuilderConfig>(betConfig.BetBuilderConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }) : new BetBuilderConfig();
 
-                newOverrideSport.SportId = overRide.SportId;
-                newOverrideSport.SportName = overRide.SportName;
-                newOverrideSport.MinStake = GetMinStake(overRide.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode);
-                newOverrideSport.MaxStake = overRide.MaxStake;
-                newOverrideSport.MaxPerGame = overRide.StakeLimitFixture;
+                result.DefaultSportConfig = new DefaultSportConfigFE()
+                {
+                    MinStake = GetMinStake(defaultSportConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
+                    MaxStake = defaultSportConfig.MaxStake,
+                    MaxPerGame = defaultSportConfig.StakeLimitFixture
+                };
 
-                result.OverrideSportConfig.Add(newOverrideSport);
+                result.OverrideSportConfig = new List<OverrideSportConfigFE>();
+
+                foreach (var overRide in overrideSportConfig)
+                {
+                    OverrideSportConfigFE newOverrideSport = new OverrideSportConfigFE();
+
+                    newOverrideSport.SportId = overRide.SportId;
+                    newOverrideSport.SportName = overRide.SportName;
+                    newOverrideSport.MinStake = GetMinStake(overRide.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode);
+                    newOverrideSport.MaxStake = overRide.MaxStake;
+                    newOverrideSport.MaxPerGame = overRide.StakeLimitFixture;
+
+                    result.OverrideSportConfig.Add(newOverrideSport);
+                }
+
+                result.Parlayconfig = new ParlayConfigFE()
+                {
+                    MinStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
+                    MaxStake = parlayConfig.MaxStake,
+                    MaxPayout = parlayConfig.MaxPayout,
+                    ParlayBonusMinOdds = parlayConfig.ParlayBonusMinOdds,
+                    ParlayBonusMaxWinnings = parlayConfig.ParlayBonusMaxWinnings,
+                    ParlayBonusConfig = parlayConfig.ParlayBonusConfig == null ? new List<ParlayBonusConfigFE>() : parlayConfig.ParlayBonusConfig.Select(s => new ParlayBonusConfigFE { ParlayBonus = s.ParlayBonus, SelectionCount = s.SelectionCount }).ToList()
+                };
+
+                result.TaxConfig = new TaxConfig
+                {
+                    StakeTax = taxConfig.StakeTax,
+                    WinningsTax = taxConfig.WinningsTax,
+                    ExcludeStakeSportTypes = taxConfig.ExcludeStakeSportTypes,
+                    ExcludeWinningsSportTypes = taxConfig.ExcludeWinningsSportTypes
+                };
+
+                result.PriceboostConfig = priceboostConfig;
+                result.BetBuilderConfig = betBuilderConfig;
+
+                return new BaseResponseDTO<BetConfigFEResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = result
+                };
             }
-
-            result.Parlayconfig = new ParlayConfigFE()
+            catch (Exception ex)
             {
-                MinStake = GetMinStake(parlayConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode),
-                MaxStake = parlayConfig.MaxStake,
-                MaxPayout = parlayConfig.MaxPayout,
-                ParlayBonusMinOdds = parlayConfig.ParlayBonusMinOdds,
-                ParlayBonusMaxWinnings = parlayConfig.ParlayBonusMaxWinnings,
-                ParlayBonusConfig = parlayConfig.ParlayBonusConfig == null ? new List<ParlayBonusConfigFE>() : parlayConfig.ParlayBonusConfig.Select(s => new ParlayBonusConfigFE { ParlayBonus = s.ParlayBonus, SelectionCount = s.SelectionCount }).ToList()
-            };
 
-            result.TaxConfig = new TaxConfig
-            {
-                StakeTax = taxConfig.StakeTax,
-                WinningsTax = taxConfig.WinningsTax,
-                ExcludeStakeSportTypes = taxConfig.ExcludeStakeSportTypes,
-                ExcludeWinningsSportTypes = taxConfig.ExcludeWinningsSportTypes
-            };
-
-            result.PriceboostConfig = priceboostConfig;
-            result.BetBuilderConfig = betBuilderConfig;
-
-            return new BaseResponseDTO<BetConfigFEResponseDTO>
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = result
-            };
+                throw;
+            }
         }
         public async Task<BaseResponseDTO<BetModifyResponseDTO>> CancelBets(BetModifyRequestDTO request)
         {
@@ -2460,7 +2477,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            if(bet.BetTypeId == (int)BetType.BetBuilder)
+            if (bet.BetTypeId == (int)BetType.BetBuilder)
             {
                 return new BaseResponseDTO<BetCashOutResponseDTO>
                 {
@@ -2741,7 +2758,7 @@ namespace Platform.Betting.API.Repository
         {
             var parlayBonusList = GetParlayBonusAudit(context).Where(c => c.ClientId == clientId && c.TimeStamp < betDate
                     && c.CurrencyCode == currencyCode).OrderByDescending(o => o.TimeStamp).ToList();
-            
+
             if (parlayBonusList == null || !parlayBonusList.Any())
                 return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
 

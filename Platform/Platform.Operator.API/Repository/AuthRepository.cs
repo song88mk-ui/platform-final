@@ -22,7 +22,7 @@ namespace Platform.Operator.API.Repository
             _httpClient.BaseAddress = new Uri(_configuration["API:AuthAPI"]);
             _httpClient.DefaultRequestHeaders.Add("x-api-key", configuration["Custom:AuthAPIKey"]);
         }
-        public async Task<BaseResponse<LoginResponse>> Login(LoginRequest request)
+        public async Task<BaseResponse<LoginResponse>> Login(LoginRequest request, string userAgent = "", string ipAddress = "", string country = "")
         {
             if (string.IsNullOrEmpty(request.UserName) || string.IsNullOrWhiteSpace(request.Password))
             {
@@ -39,7 +39,17 @@ namespace Platform.Operator.API.Repository
 
             try
             {
-                var response = await _httpClient.PostAsync($"v1/login", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+                var payload = new
+                {
+                    Username = request.UserName,
+                    Password = request.Password,
+                    Provider = request.Provider,
+                    UserAgent = userAgent,
+                    IpAddress = ipAddress,
+                    Country = country,
+                    Date = DateTime.UtcNow
+                };
+                var response = await _httpClient.PostAsync($"v1/login", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
 
                 var result = JsonSerializer.Deserialize<BaseResponse<LoginResponse>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 

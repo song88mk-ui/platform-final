@@ -20,7 +20,7 @@ namespace Platform.Operator.API.Repository
             _walletRepository = walletRepository;
             _reportsRepository = reportsRepository;
         }
-        public async Task<LoginResponseDTO> Login(LoginRequestDTO request)
+        public async Task<LoginResponseDTO> Login(LoginRequestDTO request, string userAgent = "", string ipAddress = "", string country = "")
         {
             var loginResponse = await _authRepository.Login(new LoginRequest { UserName = request.UserName, Password = request.Password, Provider = "1002" });
 

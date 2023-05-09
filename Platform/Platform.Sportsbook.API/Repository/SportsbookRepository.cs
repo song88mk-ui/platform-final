@@ -8599,7 +8599,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return name;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).FirstOrDefault();
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
             if (result != null)
                 return result.SpNa;
@@ -8611,7 +8611,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return name;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).FirstOrDefault();
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
             if (result != null)
                 return result.SegNa;
@@ -8623,7 +8623,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return name;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).FirstOrDefault();
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
             if (result != null)
                 return result.LeNa;
@@ -8635,7 +8635,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return name;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).FirstOrDefault();
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
             if (result != null)
                 return result.FiNa;
@@ -8647,7 +8647,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return fixtureType == FixtureType.Match ? name.Split(" vs. ").First().Trim() : string.Empty;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).FirstOrDefault();
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
             if (result != null)
                 return fixtureType == FixtureType.Match ? result.FiNa.Split(" vs. ").First().Trim() : string.Empty;
@@ -8659,7 +8659,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return fixtureType == FixtureType.Match ? name.Split(" vs. ").Last().Trim() : string.Empty;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).FirstOrDefault();
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
             if (result != null)
                 return fixtureType == FixtureType.Match ? result.FiNa.Split(" vs. ").Last().Trim() : string.Empty;
@@ -8671,7 +8671,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return name;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).FirstOrDefault();
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
             if (result != null)
                 return result.MaNa;
@@ -8683,7 +8683,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return name;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).FirstOrDefault();
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
             if (result != null)
                 return result.SeNa;
@@ -8698,7 +8698,7 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return boostedSelectionNames.FirstOrDefault(s => s.ClCo == clientCode).BoSeNa;
 
-            var result = translations.Where(c => c.ClCoLaCo == $"{clientCode}:{languageCode.ToString()}").FirstOrDefault();
+            var result = translations.Where(c => c.ClCoLaCo == $"{clientCode}:{languageCode.ToString()}").LastOrDefault();
 
             if (result != null)
                 return result.BoSeNa;

@@ -41,8 +41,8 @@ namespace Platform.API.Repository
                     if (_httpClient.DefaultRequestHeaders.Contains(item.Key) && !string.IsNullOrWhiteSpace(item.Value))
                     {
                         _httpClient.DefaultRequestHeaders.Remove(item.Key);
-                        _httpClient.DefaultRequestHeaders.Add(item.Key, item.Value);
                     }
+                    _httpClient.DefaultRequestHeaders.Add(item.Key, item.Value);
                 }
 
                 var response = await _httpClient.PostAsync($"{endpoint}/v1/authentication/login", new StringContent(JsonSerializer.Serialize(new { UserName = userName, Password = password }), System.Text.Encoding.UTF8, "application/json"));

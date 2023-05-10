@@ -23,7 +23,7 @@ namespace Platform.API.Repository
             _httpClient.Timeout = TimeSpan.FromSeconds(2);
         }
 
-        public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string userName, string password, string endpoint, Dictionary<string, string> headers = null) 
+        public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string userName, string password, string endpoint, Dictionary<string, string> headers = null)
         {
             if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
             {
@@ -36,13 +36,12 @@ namespace Platform.API.Repository
 
             try
             {
-                foreach(var item in headers)
+                foreach (var item in headers)
                 {
-                    if (_httpClient.DefaultRequestHeaders.Contains(item.Key) && !string.IsNullOrWhiteSpace(item.Value))
-                    {
+                    if (_httpClient.DefaultRequestHeaders.Contains(item.Key))
                         _httpClient.DefaultRequestHeaders.Remove(item.Key);
-                    }
-                    _httpClient.DefaultRequestHeaders.Add(item.Key, item.Value);
+                    if (!string.IsNullOrEmpty(item.Value))
+                        _httpClient.DefaultRequestHeaders.Add(item.Key, item.Value);
                 }
 
                 var response = await _httpClient.PostAsync($"{endpoint}/v1/authentication/login", new StringContent(JsonSerializer.Serialize(new { UserName = userName, Password = password }), System.Text.Encoding.UTF8, "application/json"));

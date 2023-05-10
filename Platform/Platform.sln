@@ -60,7 +60,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.AgentReports.Servi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.AgentReports.API", "Platform.AgentReports.API\Platform.AgentReports.API.csproj", "{87EAD75E-572B-4357-A426-1456636E2F7A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Oddin.API", "Platform.Oddin.API\Platform.Oddin.API.csproj", "{A2317DE0-41C4-4BA8-9819-D953D7208731}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Oddin.API", "Platform.Oddin.API\Platform.Oddin.API.csproj", "{A2317DE0-41C4-4BA8-9819-D953D7208731}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.QTech.API", "Platform.QTech.API\Platform.QTech.API.csproj", "{1BA25C18-3B8D-4916-8018-6C73AE1EE00D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -180,6 +182,10 @@ Global
 		{A2317DE0-41C4-4BA8-9819-D953D7208731}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2317DE0-41C4-4BA8-9819-D953D7208731}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A2317DE0-41C4-4BA8-9819-D953D7208731}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BA25C18-3B8D-4916-8018-6C73AE1EE00D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BA25C18-3B8D-4916-8018-6C73AE1EE00D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BA25C18-3B8D-4916-8018-6C73AE1EE00D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BA25C18-3B8D-4916-8018-6C73AE1EE00D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

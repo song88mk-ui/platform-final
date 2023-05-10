@@ -38,7 +38,7 @@ namespace Platform.API.Repository
             _configuration = configuration;
         }
         
-        public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string clientId, LoginRequest request, string userAgent = "")
+        public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string clientId, LoginRequest request, Dictionary<string, string> headers = null)
         {
             var clientResponse = await GetClient(clientId);
 
@@ -51,7 +51,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var loginResponse = await _operatorRepository.Login(request.UserName, request.Password, clientResponse.Result.Endpoint, userAgent);
+            var loginResponse = await _operatorRepository.Login(request.UserName, request.Password, clientResponse.Result.Endpoint, headers);
 
             if (loginResponse.StatusCode != StatusCode.Success)
             {

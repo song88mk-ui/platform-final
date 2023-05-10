@@ -2,6 +2,7 @@
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using LoginResponseDTO = Platform.Operator.API.Models.LoginResponseDTO;
 using LogoutResponseDTO = Platform.Operator.API.Models.LogoutResponseDTO;
@@ -20,9 +21,17 @@ namespace Platform.Operator.API.Repository
             _walletRepository = walletRepository;
             _reportsRepository = reportsRepository;
         }
-        public async Task<LoginResponseDTO> Login(LoginRequestDTO request, string userAgent = "", string ipAddress = "", string country = "")
+        public async Task<LoginResponseDTO> Login(LoginRequestDTO request)
         {
-            var loginResponse = await _authRepository.Login(new LoginRequest { UserName = request.UserName, Password = request.Password, Provider = "1002" });
+            var loginResponse = await _authRepository.Login(new LoginRequest
+            {
+                UserName = request.UserName,
+                Password = request.Password,
+                Provider = "1002",
+                UserAgent = request.UserAgent,
+                IpAddress= request.IpAddress,
+                Country= request.Country
+            });
 
             if (loginResponse.StatusCode != Enums.AuthStatusCode.Success)
             {

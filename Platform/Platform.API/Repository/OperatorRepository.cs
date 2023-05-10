@@ -1,6 +1,4 @@
 ﻿using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Data.SqlClient.Server;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
@@ -9,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Platform.API.Repository
 {
@@ -24,7 +23,7 @@ namespace Platform.API.Repository
             _httpClient.Timeout = TimeSpan.FromSeconds(2);
         }
 
-        public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string userName, string password, string endpoint, string userAgent = "")
+        public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string userName, string password, string endpoint, Dictionary<string, string> headers = null) 
         {
             if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
             {
@@ -37,10 +36,13 @@ namespace Platform.API.Repository
 
             try
             {
-                if(_httpClient.DefaultRequestHeaders.Contains("user-agent") && !string.IsNullOrWhiteSpace(userAgent))
+                foreach(var item in headers)
                 {
-                    _httpClient.DefaultRequestHeaders.Remove("user-agent");
-                    _httpClient.DefaultRequestHeaders.Add("user-agent", userAgent);
+                    if (_httpClient.DefaultRequestHeaders.Contains(item.Key) && !string.IsNullOrWhiteSpace(item.Value))
+                    {
+                        _httpClient.DefaultRequestHeaders.Remove(item.Key);
+                        _httpClient.DefaultRequestHeaders.Add(item.Key, item.Value);
+                    }
                 }
 
                 var response = await _httpClient.PostAsync($"{endpoint}/v1/authentication/login", new StringContent(JsonSerializer.Serialize(new { UserName = userName, Password = password }), System.Text.Encoding.UTF8, "application/json"));

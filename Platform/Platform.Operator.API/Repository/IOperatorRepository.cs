@@ -9,7 +9,7 @@ namespace Platform.Operator.API.Repository
 {
     public interface IOperatorRepository
     {
-        Task<LoginResponseDTO> Login(LoginRequestDTO request, string userAgent = "", string ipAddress = "", string country = "");
+        Task<LoginResponseDTO> Login(LoginRequestDTO request);
         Task<LogoutResponseDTO> Logout(string operatorToken);
         Task<AuthResponseDTO> Authenticate(AuthRequestDTO request);
         Task<BetPlacementResponseDTO> BetPlacement(OperatorBetRequestDTO request, string clientId, string operatorToken, string isAgent);

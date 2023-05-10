@@ -5,7 +5,7 @@ namespace Platform.Operator.API.Repository
 {
     public interface IAuthRepository
     {
-        Task<BaseResponse<LoginResponse>> Login(LoginRequest request, string userAgent = "", string ipAddress = "", string country = "");
+        Task<BaseResponse<LoginResponse>> Login(LoginRequest request);
         Task<BaseResponse<bool>> Logout(string operatorToken);
         Task<BaseResponse<AuthResponse>> Authenticate(string operatorToken, string isAgent);
     }

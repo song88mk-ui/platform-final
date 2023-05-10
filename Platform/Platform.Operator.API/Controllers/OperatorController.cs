@@ -19,17 +19,22 @@ namespace Platform.Operator.API.Controllers
 
         [HttpPost("operator/v1/authentication/login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDTO request)
-        {//
-            var ip = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        {
+            if (string.IsNullOrEmpty(request.IpAddress))
+                request.IpAddress = GetRemoteIpAddress().Trim();
+            if (string.IsNullOrEmpty(request.Country))
+                request.Country = GetIpCountry().Trim();
+            if (string.IsNullOrEmpty(request.UserAgent))
+                request.UserAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault() ?? "";
 
-            if (string.IsNullOrEmpty(ip))
+            var result = await _operatorRepository.Login(new LoginRequestDTO
             {
-                ip = HttpContext.Connection.RemoteIpAddress.ToString();
-            }
-
-            var ipAddress = ip.Split(':').FirstOrDefault().Split(",").FirstOrDefault();
-
-            var result = await _operatorRepository.Login(new LoginRequestDTO { UserName = request.UserName, Password = request.Password }, HttpContext.Request.Headers["User-Agent"].FirstOrDefault() ?? "", ipAddress, HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault() ?? "");
+                UserName = request.UserName,
+                Password = request.Password,
+                UserAgent = request.UserAgent,
+                IpAddress = request.IpAddress,
+                Country = request.Country
+            });
 
             switch (result.StatusId)
             {
@@ -140,5 +145,23 @@ namespace Platform.Operator.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        #region Utilities
+        private string GetIpCountry()
+        {
+            return HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault() ?? "";
+        }
+        private string GetRemoteIpAddress()
+        {
+            var ip = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+
+            if (string.IsNullOrEmpty(ip))
+            {
+                ip = HttpContext.Connection.RemoteIpAddress.ToString();
+            }
+
+            return ip.Split(':').FirstOrDefault().Split(",").FirstOrDefault();
+        }
+        #endregion
     }
 }

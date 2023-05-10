@@ -34,8 +34,14 @@ namespace Platform.API.Controllers
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
+            var headers = new Dictionary<string, string>()
+            {
+                { "X-Forwarded-For", ipAddress ?? ""},
+                { "user-agent", userAgent ?? ""},
+                { "CF-IPCountry", HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault() ?? ""}
+            };
 
-            var result = await _platformRepository.Login(clientId, request, userAgent);
+            var result = await _platformRepository.Login(clientId, request, headers);
 
             var parameters = request;
 

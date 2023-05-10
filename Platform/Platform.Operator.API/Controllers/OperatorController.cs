@@ -149,11 +149,11 @@ namespace Platform.Operator.API.Controllers
         #region Utilities
         private string GetIpCountry()
         {
-            return HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault() ?? "";
+            return HttpContext.Request.Headers["X-Original-User-Country"].FirstOrDefault() ?? "";
         }
         private string GetRemoteIpAddress()
         {
-            var ip = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var ip = HttpContext.Request.Headers["X-Original-User-IP"].FirstOrDefault();
 
             if (string.IsNullOrEmpty(ip))
             {

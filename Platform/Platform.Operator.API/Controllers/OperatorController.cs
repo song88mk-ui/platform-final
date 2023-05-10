@@ -25,7 +25,7 @@ namespace Platform.Operator.API.Controllers
             if (string.IsNullOrEmpty(request.Country))
                 request.Country = GetIpCountry().Trim();
             if (string.IsNullOrEmpty(request.UserAgent))
-                request.UserAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault() ?? "";
+                request.UserAgent = HttpContext.Request.Headers["X-Original-User-Agent"].FirstOrDefault() ?? "";
 
             var result = await _operatorRepository.Login(new LoginRequestDTO
             {

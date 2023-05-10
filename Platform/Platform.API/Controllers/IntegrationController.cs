@@ -37,7 +37,7 @@ namespace Platform.API.Controllers
             var headers = new Dictionary<string, string>()
             {
                 { "X-Original-User-IP", ipAddress ?? ""},
-                { "user-agent", userAgent ?? ""},
+                { "X-Original-User-Agent", userAgent ?? ""},
                 { "X-Original-User-Country", HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault() ?? ""}
             };
 

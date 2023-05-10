@@ -250,6 +250,7 @@ namespace Platform.Shared.Models
         public string ProviderFixtureId { get; set; }
         public int fixtureTypeId { get; set; }
         public string FixtureName { get; set; }
+        public bool IsHomeFavorite { get; set; }
         public string HomeName { get; set; }
         public string AwayName { get; set; }
         public DateTime FixtureStartDate { get; set; }
@@ -318,6 +319,7 @@ namespace Platform.Shared.Models
         public string FixtureId { get; set; }
         public string ProviderFixtureId { get; set; }
         public string FixtureName { get; set; }
+        public bool IsHomeFavorite { get; set; }
         public string HomeName { get; set; }
         public string AwayName { get; set; }
         public DateTime FixtureStartDate { get; set; }

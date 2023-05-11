@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Transactions;
+using System.Xml.Schema;
 
 namespace Platform.Settlement.Service.Repository
 {
@@ -936,7 +937,7 @@ namespace Platform.Settlement.Service.Repository
 
             if (betStatus == (BetStatus)bet.BetStatusId && totalPayout == bet.Payout)
                 isInsertToBetAudit = false;
-
+            
             bet.WinLoss = totalPayout == 0 ? -bet.TrueStake : totalPayout - stake;
             bet.BetStatusId = (int)betStatus;
             bet.BetStatusName = betStatus.ToString();
@@ -947,6 +948,15 @@ namespace Platform.Settlement.Service.Repository
             bet.TaxedWinnings = taxedWinnings;
             bet.ParlayBonus = parlayBonus;
             bet.ParlayBonusWinnings = parlayBonusWinnings;
+
+            switch (betStatus)
+            {
+                case BetStatus.Won:
+                case BetStatus.HalfWon:
+                case BetStatus.HalfLost:
+                    bet.Odds = RecomputeBetOdds(selections);
+                break;
+            }
 
             // get percentage of real and bonus payout.
             var stakeRealPayoutPercentage = bet.StakeReal / bet.TrueStake;
@@ -1440,6 +1450,33 @@ namespace Platform.Settlement.Service.Repository
                     context.StakeLimitFixture.Update(stakeLimitFixture);
                 }
             }
+        }
+
+        private decimal RecomputeBetOdds(List<BetSelection> betSelections)
+        {
+            decimal newOdds = 0m;
+
+            var wonSelections = betSelections.Where(x => x.BetSelectionStatusId == (int)BetStatus.Won).Select(x => x.Odds * x.DeadHeatFactor);            
+            var halfWonSelections = betSelections.Where(x => x.BetSelectionStatusId == (int)BetStatus.HalfWon).Select(x => x.Odds);
+            var halfLostSelections = betSelections.Where(x => x.BetSelectionStatusId == (int)BetStatus.HalfLost).Select(x => x.Odds);
+            var voidedSelections = betSelections.Where(x => x.BetSelectionStatusId == (int)BetStatus.Void).Select(x => x.Odds);
+
+            //multiply all odds
+            decimal wonSelectionOdds = wonSelections.Any() ? wonSelections.Aggregate((a, b) => a * b) : 1m;
+
+            //set odds to ((odds+1)/2) and multiply them
+            decimal halfWonSelectionOdds = halfWonSelections.Any() ? halfWonSelections.Select(x => (x + 1) / 2).Aggregate((a, b) => a * b) : 1m;
+
+            //set odds to 0.5 and multiply them
+            decimal halfLostSelectionOdds = halfLostSelections.Any() ? halfLostSelections.Select(x => 0.5m).Aggregate((a, b) => a * b) : 1m;
+
+            //set odds to 1m and multiply them
+            decimal voidedSelectionOdds = voidedSelections.Any() ? voidedSelections.Select(x => 1m).Aggregate((a,b) => a * b) : 1m;
+
+            //get product of all odds
+            newOdds = wonSelectionOdds * halfWonSelectionOdds * halfLostSelectionOdds * voidedSelectionOdds;
+
+            return newOdds;
         }
     }
 }

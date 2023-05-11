@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Data.Platform;
@@ -948,15 +949,7 @@ namespace Platform.Settlement.Service.Repository
             bet.TaxedWinnings = taxedWinnings;
             bet.ParlayBonus = parlayBonus;
             bet.ParlayBonusWinnings = parlayBonusWinnings;
-
-            switch (betStatus)
-            {
-                case BetStatus.Won:
-                case BetStatus.HalfWon:
-                case BetStatus.HalfLost:
-                    bet.Odds = RecomputeBetOdds(selections);
-                break;
-            }
+            bet.Odds = RecomputeBetOdds(bet.Odds, betStatus, selections);            
 
             // get percentage of real and bonus payout.
             var stakeRealPayoutPercentage = bet.StakeReal / bet.TrueStake;
@@ -1072,6 +1065,7 @@ namespace Platform.Settlement.Service.Repository
             bet.ParlayBonusWinnings = 0m;
             bet.StakeRealPayout = 0m;
             bet.StakeBonusPayout = 0m;
+            bet.Odds = RecomputeBetOdds(bet.Odds, (BetStatus)bet.BetStatusId, selections);
 
             var betEntity = context.Bet.Update(bet).Entity;
 
@@ -1452,29 +1446,48 @@ namespace Platform.Settlement.Service.Repository
             }
         }
 
-        private decimal RecomputeBetOdds(List<BetSelection> betSelections)
+        private decimal RecomputeBetOdds(decimal odds, BetStatus betStatus, List<BetSelection> betSelections)
         {
             decimal newOdds = 0m;
+            List<decimal> values = new List<decimal>();
 
-            var wonSelections = betSelections.Where(x => x.BetSelectionStatusId == (int)BetStatus.Won).Select(x => x.Odds * x.DeadHeatFactor);            
-            var halfWonSelections = betSelections.Where(x => x.BetSelectionStatusId == (int)BetStatus.HalfWon).Select(x => x.Odds);
-            var halfLostSelections = betSelections.Where(x => x.BetSelectionStatusId == (int)BetStatus.HalfLost).Select(x => x.Odds);
-            var voidedSelections = betSelections.Where(x => x.BetSelectionStatusId == (int)BetStatus.Void).Select(x => x.Odds);
+            switch (betStatus)
+            {
+                case BetStatus.Won:
+                case BetStatus.HalfWon:
+                case BetStatus.HalfLost:
+                    foreach (var selection in betSelections)
+                    {
+                        switch ((BetStatus)selection.BetSelectionStatusId)
+                        {
+                            case BetStatus.Lost:
+                                values.Add(0m);
+                                break;
+                            case BetStatus.HalfWon:
+                                values.Add((selection.Odds + 1) / 2);
+                                break;
+                            case BetStatus.HalfLost:
+                                values.Add(0.5m);
+                                break;
+                            case BetStatus.Won:
+                            case BetStatus.Running:
+                                values.Add(selection.Odds * selection.DeadHeatFactor);
+                                break;
+                            case BetStatus.Void:
+                                values.Add(1m);
+                                break;
+                            case BetStatus.Cancelled:
+                                values.Add(1m);
+                                break;
+                        }
+                    }
 
-            //multiply all odds
-            decimal wonSelectionOdds = wonSelections.Any() ? wonSelections.Aggregate((a, b) => a * b) : 1m;
-
-            //set odds to ((odds+1)/2) and multiply them
-            decimal halfWonSelectionOdds = halfWonSelections.Any() ? halfWonSelections.Select(x => (x + 1) / 2).Aggregate((a, b) => a * b) : 1m;
-
-            //set odds to 0.5 and multiply them
-            decimal halfLostSelectionOdds = halfLostSelections.Any() ? halfLostSelections.Select(x => 0.5m).Aggregate((a, b) => a * b) : 1m;
-
-            //set odds to 1m and multiply them
-            decimal voidedSelectionOdds = voidedSelections.Any() ? voidedSelections.Select(x => 1m).Aggregate((a,b) => a * b) : 1m;
-
-            //get product of all odds
-            newOdds = wonSelectionOdds * halfWonSelectionOdds * halfLostSelectionOdds * voidedSelectionOdds;
+                    newOdds = values.Aggregate((a, b) => a * b);
+                    
+                    break;
+                default:
+                    return odds;
+            }            
 
             return newOdds;
         }

@@ -6,6 +6,7 @@ using Platform.API.ActionFilters;
 using Platform.API.Models;
 using Platform.API.Repository;
 using Platform.Shared.Enums;
+using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -1742,7 +1743,15 @@ namespace Platform.API.Controllers
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = HttpContext.Request.Headers["x-language-code"].FirstOrDefault();
 
-            return Ok("https://google.com");
+            var result = await _platformRepository.GetCasinoURL(clientId, languageCode);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
         }
     }
 }

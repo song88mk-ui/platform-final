@@ -3633,6 +3633,52 @@ namespace Platform.API.Repository
             });
         }
 
+        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetCasinoURL(string clientId, string langCode)
+        {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return new BaseResponseDTO<CasinoURLResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new CasinoURLResponseDTO
+                {
+                    Url = "https://google.com"
+                }
+            };
+        }
+
         private DateTime GetFirstDayOfNextMonth()
         {
             DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);

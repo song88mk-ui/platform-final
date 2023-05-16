@@ -78,6 +78,7 @@ namespace Platform.API
             services.AddHttpClient<IBettingRepository, BettingRepository>();
             services.AddHttpClient<IOperatorRepository, OperatorRepository>();
             services.AddHttpClient<ISportsbookRepository, SportsbookRepository>();
+            services.AddHttpClient<ICasinoRepository, CasinoRepository>();
 
             services.AddSwaggerGen(c =>
             {

@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using Platform.QTech.API.Repository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,6 +48,9 @@ namespace Platform.QTech.API
             });
 
             services.AddControllers();
+
+            services.AddHttpClient<ICasinoRepository, CasinoRepository>();
+            services.AddHttpClient<IProviderRepository, ProviderRepository>();
 
             services.AddSwaggerGen(c =>
             {

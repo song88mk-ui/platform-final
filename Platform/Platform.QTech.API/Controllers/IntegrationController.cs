@@ -193,17 +193,21 @@ namespace Platform.QTech.API.Controllers
                     return BadRequest(new { code = result.ToString() });
             }
         }
-        [HttpPost("v1/authentication")]
-        public async Task<IActionResult> AuthenticateToQT([FromBody] AuthenticationRequest request)
+
+        [HttpPost("v1/lobby")]
+        public async Task<IActionResult> GetLobbyURL([FromBody] GameLobbyRequestDTO request)
         {
-            var result = await _casinoRepository.AuthenticateToQT(request);
+            var result = await _casinoRepository.GetLobbyURL(request);
 
             switch (result.Item1)
             {
-                case Enums.AuthenticationCode.OK:
+                case Enums.GameLobbyCode.OK:
                     return Ok(result.Item2);
                 default:
-                    return BadRequest(new { code = result.ToString() });
+                    return BadRequest(new 
+                    { 
+                        code = result.ToString() 
+                    });
             }
         }
     }

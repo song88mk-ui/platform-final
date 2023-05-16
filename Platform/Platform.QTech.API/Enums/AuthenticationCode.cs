@@ -7,6 +7,7 @@
         USER_BLOCKED = 403,
         LOGIN_FAILED = 401,
         UNKNOWN_ERROR = 500,
-        QT_NOT_AVAILABLE = 503
+        QT_NOT_AVAILABLE = 503,
+        PROVIDER_ERROR = 1000
     }
 }

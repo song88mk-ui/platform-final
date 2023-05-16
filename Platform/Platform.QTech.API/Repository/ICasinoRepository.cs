@@ -14,6 +14,6 @@ namespace Platform.QTech.API.Repository
         Task<Tuple<RollbackCode, RollbackResponse>> Rollback(RollbackRequest request);
         Task<BonusStatusCode> ProcessBonusStatus(BonusStatusRequest request);
         Task<Tuple<BonusRewardCode, BonusRewardResponse>> ProcessBonusReward(BonusRewardRequest request);
-        Task<Tuple<AuthenticationCode, AuthenticationResponse>> AuthenticateToQT(AuthenticationRequest request);
+        Task<Tuple<GameLobbyCode, GameLobbyResponse>> GetLobbyURL(GameLobbyRequestDTO request);
     }
 }

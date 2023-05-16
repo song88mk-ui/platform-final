@@ -1,12 +1,22 @@
 ﻿using Platform.QTech.API.Enums;
 using Platform.QTech.API.Models;
+using Platform.Shared.Utility;
 using System;
+using System.Net.WebSockets;
 using System.Threading.Tasks;
 
 namespace Platform.QTech.API.Repository
 {
     public class CasinoRepository : ICasinoRepository
     {
+        private readonly IProviderRepository _providerRepository;
+        private readonly IMemCache _memCache;
+
+        public CasinoRepository(IProviderRepository providerRepository, IMemCache memCache)
+        {
+            _providerRepository = providerRepository;
+            _memCache = memCache;
+        }
         public async Task<Tuple<SessionCode, GameSessionResponse>> GetSession(GameSessionRequest request)
         {
             return new Tuple<SessionCode, GameSessionResponse>(SessionCode.OK, new GameSessionResponse());
@@ -35,9 +45,48 @@ namespace Platform.QTech.API.Repository
         {
             return new Tuple<BonusRewardCode, BonusRewardResponse>(BonusRewardCode.OK, new BonusRewardResponse());
         }
-        public async Task<Tuple<AuthenticationCode, AuthenticationResponse>> AuthenticateToQT(AuthenticationRequest request)
+        public async Task<Tuple<GameLobbyCode, GameLobbyResponse>> GetLobbyURL(GameLobbyRequestDTO request)
         {
-            return new Tuple<AuthenticationCode, AuthenticationResponse>(AuthenticationCode.OK, new AuthenticationResponse());
+            var key = "qttoken";
+            var token = _memCache.GetCache<AuthenticationResponse>(key);
+
+            if (token == null)
+            {
+                var initialResult = await _providerRepository.GetToken();
+
+                if (initialResult.Item1 == AuthenticationCode.OK)
+                {
+                    token = initialResult.Item2;
+                    _memCache.AddOrUpdateCache(key, token, 5);
+                }
+                else
+                    return new Tuple<GameLobbyCode, GameLobbyResponse>(GameLobbyCode.PROVIDER_ERROR, new GameLobbyResponse());
+            }
+
+            var payload = new GameLobbyRequest
+            {
+                Token = token.Access_token,
+                PlayerId = request.UserId,
+                Currency = request.CurrencyCode,
+                Country = request.CountryCode,
+                Lang = request.LanguageCode,
+                Mode = request.IsDemo ? "DEMO" : "REAL_ONLY",
+                Device = request.IsMobile ? "mobile" : "desktop",
+                WalletSessionId = request.OperatorToken,
+                Balance = request.ShowBalance,
+                GameHistory = request.ShowBetHistory
+            };
+
+            var result = await _providerRepository.GetGameLobbyURL(payload);
+
+            if (result.Item1 != GameLobbyCode.INVALID_TOKEN)
+            {
+                _memCache.DeleteCache("qttoken");
+
+                 return await GetLobbyURL(request);
+            }
+            else
+                return result;
         }
     }
 }

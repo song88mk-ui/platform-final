@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Platform.QTech.API.Repository;
+using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,6 +50,7 @@ namespace Platform.QTech.API
 
             services.AddControllers();
 
+            services.AddSingleton<IMemCache, MemCache>();
             services.AddHttpClient<ICasinoRepository, CasinoRepository>();
             services.AddHttpClient<IProviderRepository, ProviderRepository>();
 

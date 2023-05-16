@@ -14,4 +14,8 @@
     <ProjectReference Include="..\Platform.WebSocket.API\Platform.WebSocket.API.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
 </Project>

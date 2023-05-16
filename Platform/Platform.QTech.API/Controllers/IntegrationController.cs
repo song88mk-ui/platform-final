@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Platform.QTech.API.Models;
 using Platform.QTech.API.Repository;
+using Platform.Shared.Models;
 using System.Linq;
 using System.Threading.Tasks;
 

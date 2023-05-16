@@ -1,5 +1,6 @@
 ﻿using Platform.QTech.API.Enums;
 using Platform.QTech.API.Models;
+using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
 using System.Net.WebSockets;
@@ -45,7 +46,7 @@ namespace Platform.QTech.API.Repository
         {
             return new Tuple<BonusRewardCode, BonusRewardResponse>(BonusRewardCode.OK, new BonusRewardResponse());
         }
-        public async Task<Tuple<GameLobbyCode, GameLobbyResponse>> GetLobbyURL(GameLobbyRequestDTO request)
+        public async Task<Tuple<GameLobbyCode, GameLobbyResponseDTO>> GetLobbyURL(GameLobbyRequestDTO request)
         {
             var key = "qttoken";
             var token = _memCache.GetCache<AuthenticationResponse>(key);
@@ -60,7 +61,7 @@ namespace Platform.QTech.API.Repository
                     _memCache.AddOrUpdateCache(key, token, 5);
                 }
                 else
-                    return new Tuple<GameLobbyCode, GameLobbyResponse>(GameLobbyCode.PROVIDER_ERROR, new GameLobbyResponse());
+                    return new Tuple<GameLobbyCode, GameLobbyResponseDTO>(GameLobbyCode.PROVIDER_ERROR, new GameLobbyResponseDTO());
             }
 
             var payload = new GameLobbyRequest
@@ -86,7 +87,9 @@ namespace Platform.QTech.API.Repository
                  return await GetLobbyURL(request);
             }
             else
-                return result;
+            {
+                return new Tuple<GameLobbyCode, GameLobbyResponseDTO>(result.Item1, new GameLobbyResponseDTO { Url = result.Item2.Url });
+            }
         }
     }
 }

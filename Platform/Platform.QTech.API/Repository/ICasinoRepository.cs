@@ -2,6 +2,7 @@
 using Platform.QTech.API.Models;
 using System.Threading.Tasks;
 using System;
+using Platform.Shared.Models;
 
 namespace Platform.QTech.API.Repository
 {
@@ -14,6 +15,6 @@ namespace Platform.QTech.API.Repository
         Task<Tuple<RollbackCode, RollbackResponse>> Rollback(RollbackRequest request);
         Task<BonusStatusCode> ProcessBonusStatus(BonusStatusRequest request);
         Task<Tuple<BonusRewardCode, BonusRewardResponse>> ProcessBonusReward(BonusRewardRequest request);
-        Task<Tuple<GameLobbyCode, GameLobbyResponse>> GetLobbyURL(GameLobbyRequestDTO request);
+        Task<Tuple<GameLobbyCode, GameLobbyResponseDTO>> GetLobbyURL(GameLobbyRequestDTO request);
     }
 }

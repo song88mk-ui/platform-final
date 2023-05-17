@@ -213,7 +213,7 @@ namespace Platform.QTech.API.Controllers
                     return BadRequest(new BaseResponseDTO<GameLobbyResponseDTO>
                     {
                         StatusCode = Shared.Enums.StatusCode.Error,
-                        Message = Shared.Enums.StatusCode.Error.ToString()
+                        Message = result.Item1.ToString()
                     });
             }
         }

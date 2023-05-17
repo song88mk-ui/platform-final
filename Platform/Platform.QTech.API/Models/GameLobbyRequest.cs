@@ -12,5 +12,6 @@
         public string WalletSessionId { get; set; }
         public bool Balance { get; set; }
         public bool GameHistory { get; set; }
+        public string[] GameTypes { get; set; }
     }
 }

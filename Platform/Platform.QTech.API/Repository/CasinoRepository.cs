@@ -75,7 +75,8 @@ namespace Platform.QTech.API.Repository
                 Device = request.IsMobile ? "mobile" : "desktop",
                 WalletSessionId = request.OperatorToken,
                 Balance = request.ShowBalance,
-                GameHistory = request.ShowBetHistory
+                GameHistory = request.ShowBetHistory,
+                GameTypes = request.GameTypes
             };
 
             var result = await _providerRepository.GetGameLobbyURL(payload);

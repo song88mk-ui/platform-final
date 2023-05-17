@@ -11,5 +11,6 @@
         public string OperatorToken { get; set; }
         public bool ShowBalance { get; set; }
         public bool ShowBetHistory { get; set; }
+        public string[] GameTypes { get; set; }
     }
 }

@@ -1753,5 +1753,45 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpGet("v1/livecasino")]
+        public async Task<IActionResult> GetLiveCasinoURL([FromQuery] bool isMobile = false)
+        {
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var languageCode = HttpContext.Request.Headers["x-language-code"].FirstOrDefault();
+
+            var result = await _platformRepository.GetLiveCasinoURL(clientId, operatorToken, languageCode, isMobile);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/virtualgames")]
+        public async Task<IActionResult> GetVirtualGamesURL([FromQuery] bool isMobile = false)
+        {
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var languageCode = HttpContext.Request.Headers["x-language-code"].FirstOrDefault();
+
+            var result = await _platformRepository.GetVirtualGames(clientId, operatorToken, languageCode, isMobile);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

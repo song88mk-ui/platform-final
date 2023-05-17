@@ -3681,7 +3681,152 @@ namespace Platform.API.Repository
                 IsMobile = isMobile,
                 OperatorToken = string.Empty,
                 ShowBalance = true,
-                ShowBetHistory = true
+                ShowBetHistory = true,
+                GameTypes = new string[] { "SLOT_GAMES", "TABLE_GAMES", "INSTANT_WIN", "BINGO_GAMES", "SCRATCH_CARDS", "SHOOTING_GAMES", "CASUAL_GAMES", "LOTTERY" } 
+            };
+
+            var result = await _casinoRepository.GetLobbyURL(demo);
+
+            if (result.StatusCode == StatusCode.Success)
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new CasinoURLResponseDTO
+                    {
+                        Url = result.Result.Url
+                    }
+                };
+            }
+            else
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString()
+                };
+            }
+        }
+        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetLiveCasinoURL(string clientId, string operatorToken, string langCode, bool isMobile)
+        {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var demo = new GameLobbyRequestDTO
+            {
+                UserId = Guid.NewGuid().ToString(),
+                CurrencyCode = "EUR",
+                CountryCode = "PH",
+                LanguageCode = "EN",
+                IsDemo = true,
+                IsMobile = isMobile,
+                OperatorToken = string.Empty,
+                ShowBalance = true,
+                ShowBetHistory = true,
+                GameTypes = new string[] { "LIVE_CASINO" }
+            };
+
+            var result = await _casinoRepository.GetLobbyURL(demo);
+
+            if (result.StatusCode == StatusCode.Success)
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new CasinoURLResponseDTO
+                    {
+                        Url = result.Result.Url
+                    }
+                };
+            }
+            else
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString()
+                };
+            }
+        }
+        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetVirtualGames(string clientId, string operatorToken, string langCode, bool isMobile)
+        {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var demo = new GameLobbyRequestDTO
+            {
+                UserId = Guid.NewGuid().ToString(),
+                CurrencyCode = "EUR",
+                CountryCode = "PH",
+                LanguageCode = "EN",
+                IsDemo = true,
+                IsMobile = isMobile,
+                OperatorToken = string.Empty,
+                ShowBalance = true,
+                ShowBetHistory = true,
+                GameTypes = new string[] { "VIRTUAL_SPORTS", "VIRTUAL_GAMES", "ESPORTS" }
             };
 
             var result = await _casinoRepository.GetLobbyURL(demo);

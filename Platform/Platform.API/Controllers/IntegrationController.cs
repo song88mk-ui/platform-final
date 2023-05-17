@@ -1754,7 +1754,7 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v1/livecasino")]
+        [HttpGet("v1/casino/live")]
         public async Task<IActionResult> GetLiveCasinoURL([FromQuery] bool isMobile = false)
         {
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
@@ -1774,7 +1774,7 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v1/virtualgames")]
+        [HttpGet("v1/casino/virtualgames")]
         public async Task<IActionResult> GetVirtualGamesURL([FromQuery] bool isMobile = false)
         {
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();

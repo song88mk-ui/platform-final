@@ -1743,7 +1743,7 @@ namespace Platform.API.Controllers
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = HttpContext.Request.Headers["x-language-code"].FirstOrDefault();
 
-            var result = await _platformRepository.GetCasinoURL(clientId, languageCode);
+            var result = await _platformRepository.GetCasinoURL(clientId, operatorToken, languageCode, isMobile);
 
             switch (result.StatusCode)
             {

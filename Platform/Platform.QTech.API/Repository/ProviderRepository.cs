@@ -52,6 +52,7 @@ namespace Platform.QTech.API.Repository
         {
             try
             {
+                _httpClient.DefaultRequestHeaders.Remove("Authorization");
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
 
                 var response = await _httpClient.PostAsync($"v1/auth/token", new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json"));
@@ -76,9 +77,17 @@ namespace Platform.QTech.API.Repository
         {
             try
             {
+                _httpClient.DefaultRequestHeaders.Remove("Authorization");
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {request.Token}");
 
-                var response = await _httpClient.PostAsync($"v1/games/lobby-url", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+                var serializeOptions = new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                };
+
+                var payload = JsonSerializer.Serialize(request, serializeOptions);
+
+                var response = await _httpClient.PostAsync($"v1/games/lobby-url", new StringContent(payload, System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -89,6 +98,8 @@ namespace Platform.QTech.API.Repository
                 else
                 {
                     var result = JsonSerializer.Deserialize<ErrorResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    var t1 = JsonSerializer.Serialize(result, serializeOptions);
 
                     return new Tuple<GameLobbyCode, GameLobbyResponse>(Enum.Parse<GameLobbyCode>(result.Code), new GameLobbyResponse());
                 }

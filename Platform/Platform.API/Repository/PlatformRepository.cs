@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.Extensions.Configuration;
 using Platform.API.Models;
@@ -24,15 +25,17 @@ namespace Platform.API.Repository
         private readonly IOperatorRepository _operatorRepository;
         private readonly IBettingRepository _bettingRepository;
         private readonly ISportsbookRepository _sportsbookRepository;
+        private readonly ICasinoRepository _casinoRepository;
         private readonly PlatformContext _platformContext;
         private readonly IMemCache _memCache;
         private readonly IConfiguration _configuration;
 
-        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, PlatformContext platformContext, IMemCache memCache, IConfiguration configuration)
+        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, ICasinoRepository casinoRepository, PlatformContext platformContext, IMemCache memCache, IConfiguration configuration)
         {
             _operatorRepository = operatorRepository;
             _bettingRepository = bettingRepository;
             _sportsbookRepository = sportsbookRepository;
+            _casinoRepository = casinoRepository;
             _platformContext = platformContext;
             _memCache = memCache;
             _configuration = configuration;
@@ -3633,7 +3636,7 @@ namespace Platform.API.Repository
             });
         }
 
-        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetCasinoURL(string clientId, string langCode)
+        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetCasinoURL(string clientId, string operatorToken, string langCode, bool isMobile)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -3668,15 +3671,41 @@ namespace Platform.API.Repository
                 };
             }
 
-            return new BaseResponseDTO<CasinoURLResponseDTO>
+            var demo = new GameLobbyRequestDTO
             {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = new CasinoURLResponseDTO
-                {
-                    Url = "https://google.com"
-                }
+                UserId = Guid.NewGuid().ToString(),
+                CurrencyCode = "EUR",
+                CountryCode = "PH",
+                LanguageCode = "EN",
+                IsDemo = true,
+                IsMobile = isMobile,
+                OperatorToken = string.Empty,
+                ShowBalance = true,
+                ShowBetHistory = true
             };
+
+            var result = await _casinoRepository.GetLobbyURL(demo);
+
+            if (result.StatusCode == StatusCode.Success)
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new CasinoURLResponseDTO
+                    {
+                        Url = result.Result.Url
+                    }
+                };
+            }
+            else
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString()
+                };
+            }
         }
 
         private DateTime GetFirstDayOfNextMonth()

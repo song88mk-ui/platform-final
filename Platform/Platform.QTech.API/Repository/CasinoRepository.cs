@@ -70,7 +70,7 @@ namespace Platform.QTech.API.Repository
                 PlayerId = request.UserId,
                 Currency = request.CurrencyCode,
                 Country = request.CountryCode,
-                Lang = request.LanguageCode,
+                Lang = $"{request.LanguageCode}_{request.CountryCode}",
                 Mode = request.IsDemo ? "DEMO" : "REAL_ONLY",
                 Device = request.IsMobile ? "mobile" : "desktop",
                 WalletSessionId = request.OperatorToken,
@@ -80,7 +80,7 @@ namespace Platform.QTech.API.Repository
 
             var result = await _providerRepository.GetGameLobbyURL(payload);
 
-            if (result.Item1 != GameLobbyCode.INVALID_TOKEN)
+            if (result.Item1 == GameLobbyCode.INVALID_TOKEN)
             {
                 _memCache.DeleteCache("qttoken");
 

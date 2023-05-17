@@ -51,7 +51,7 @@ namespace Platform.QTech.API
             services.AddControllers();
 
             services.AddSingleton<IMemCache, MemCache>();
-            services.AddHttpClient<ICasinoRepository, CasinoRepository>();
+            services.AddScoped<ICasinoRepository, CasinoRepository>();
             services.AddHttpClient<IProviderRepository, ProviderRepository>();
 
             services.AddSwaggerGen(c =>

@@ -76,7 +76,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>> GetMarketSortOrder(string clientId);
         Task<BaseResponseDTO<ClientFixtureSortOrderResponseDTO>> GetFixtureSortOrder(string clientId);
         Task<BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>> GetMarketTemplatePlayerProps(int sportId);
-        Task<BaseResponseDTO<CasinoURLResponseDTO>> GetCasinoURL(string clientId, string langCode);
+        Task<BaseResponseDTO<CasinoURLResponseDTO>> GetCasinoURL(string clientId, string operatorToken, string langCode, bool isMobile);
 
     }
 }

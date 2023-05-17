@@ -203,11 +203,17 @@ namespace Platform.QTech.API.Controllers
             switch (result.Item1)
             {
                 case Enums.GameLobbyCode.OK:
-                    return Ok(result.Item2);
+                    return Ok(new BaseResponseDTO<GameLobbyResponseDTO>
+                    {
+                        StatusCode = Shared.Enums.StatusCode.Success,
+                        Message = Shared.Enums.StatusCode.Success.ToString(),
+                        Result = result.Item2
+                    });
                 default:
-                    return BadRequest(new 
-                    { 
-                        code = result.ToString() 
+                    return BadRequest(new BaseResponseDTO<GameLobbyResponseDTO>
+                    {
+                        StatusCode = Shared.Enums.StatusCode.Error,
+                        Message = Shared.Enums.StatusCode.Error.ToString()
                     });
             }
         }

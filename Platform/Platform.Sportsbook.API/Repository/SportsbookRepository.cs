@@ -2164,6 +2164,62 @@ namespace Platform.Sportsbook.API.Repository
 
             return returnResult;
         }
+
+        public async Task<BaseResponseDTO<TWActiveFixtureResponseDTO>> GetActiveFixturesTW(TWRequestDTO request)
+        {
+            try
+            {
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.ClCo.Contains(request.ClientCode));
+
+                var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.PrFiId).Include(c => c.FiStId).Include(c => c.ClCo).Include(c => c.SpId)
+                    .Include(c => c.SpNa).Include(c => c.SegId).Include(c => c.SegNa).Include(c => c.LeId).Include(c => c.LeNa).Include(c => c.FiNa).Include(c => c.FiTyId)
+                    .Include(c => c.FiTyNa).Include(c => c.FiStDa).Include(c => c.FiStNa).Include(c => c.IsOfLi).Include(c => c.LiId).Include(c => c.GeAl)
+                    .Include(c => c.SpNaTr).ElemMatch(c => c.SpNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
+                    .Include(c => c.SegNaTr).ElemMatch(c => c.SegNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
+                    .Include(c => c.LeNaTr).ElemMatch(c => c.LeNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
+                    .Include(c => c.FiNaTr).ElemMatch(c => c.FiNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+
+                var fixtures = await fixtureCollection.Find(fixtureFilter).Project<ActiveFixtureProjection>(fixtureProjection).ToListAsync();
+
+                var fixtureResult = fixtures.Select(f => new TWActiveFixtureDTO()
+                {
+                    SportId = f.SpId,
+                    SportName = f.SpNa,
+                    SegmentId = f.SegId,
+                    SegmentName = f.SegNa,
+                    LeagueId = f.LeId,
+                    LeagueName = f.LeNa,
+                    FixtureId = f.FiId.ToString(),
+                    FixtureName = f.FiNa,
+                    FixtureStatus = f.FiStNa,
+                    FixtureStartDate = f.FiStDa,                    
+                    FixtureType = f.FiTyId
+                }).ToList();
+
+                return new BaseResponseDTO<TWActiveFixtureResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new TWActiveFixtureResponseDTO
+                    {
+                        Fixtures = fixtureResult
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<TWActiveFixtureResponseDTO>()
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString(),
+                    Result = new TWActiveFixtureResponseDTO
+                    {
+                        Fixtures = new List<TWActiveFixtureDTO>()
+                    }
+                };
+            }
+        }
+
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(TWFLiveFixtureCountRequestDTO request)
         {
             var mKey = $"nlfc:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportGroupId}";

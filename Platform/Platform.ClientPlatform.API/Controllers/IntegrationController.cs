@@ -31,6 +31,20 @@ namespace Platform.ClientPlatform.API.Controllers
             }
         }
 
+        [HttpGet("v1/sportsbook/activefixtures")]
+        public async Task<IActionResult> GetActiveFixtures()
+        {
+            var result = await _platformRepository.GetClientActiveFixtures(ApiKey, ClientId, CountryCode, LanguageCode);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpGet("v1/bet/history")]
         public async Task<IActionResult> GetBetHistory([FromQuery] BetHistoryRequest request)
         {

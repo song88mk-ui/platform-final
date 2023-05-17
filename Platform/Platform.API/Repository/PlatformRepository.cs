@@ -1451,6 +1451,49 @@ namespace Platform.API.Repository
                 IpCountryCode = ipCountryCode,
             });
         }
+        public async Task<BaseResponseDTO<TWActiveFixtureResponseDTO>> GetActiveFixtures(string apiKey, string clientId, string langCode, string ipCountryCode)
+        {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<TWActiveFixtureResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<TWActiveFixtureResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<TWActiveFixtureResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetActiveFixtures(new TWRequestDTO
+            {
+                ClientId = clientResponse.Result.ClientId,
+                LanguageCode = languageCode,
+                ClientCode = clientResponse.Result.ClientCode,
+                IpCountryCode = ipCountryCode,
+            });
+        }
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(string apiKey, string clientId, string langCode, SportGroup sportGroupId)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;

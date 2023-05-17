@@ -243,6 +243,20 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v2/sportsbook/activefixtures")]
+        public async Task<IActionResult> GetActiveFixturesTW([FromBody] TWRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetActiveFixturesTW(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v2/sportsbook/todayfixturecount")]
         public async Task<IActionResult> GetLiveFixtureCount([FromBody] TWFTodayFixtureCountRequestDTO request)
         {

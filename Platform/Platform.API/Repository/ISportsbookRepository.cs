@@ -23,6 +23,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<UserFavoriteResponseDTO>> AddUserFavorites(UserFavoriteInsertDeleteRequestDTO request);
         Task<BaseResponseDTO<UserFavoriteResponseDTO>> DeleteUserFavorites(UserFavoriteInsertDeleteRequestDTO request);
         Task<BaseResponseDTO<TWResponseDTO>> GetTopFixtures2(TWRequestDTO request);
+        Task<BaseResponseDTO<TWActiveFixtureResponseDTO>> GetActiveFixtures(TWRequestDTO request);
         Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(TWFLiveFixtureCountRequestDTO request);
         Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetTodayFixtureCount(TWFTodayFixtureCountRequestDTO request);
         Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixtures(TWLiveFixtureRequestDTO request);

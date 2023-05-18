@@ -20,7 +20,7 @@ namespace Platform.API.Controllers
     {
         private readonly IPlatformRepository _platformRepository;
         private readonly TelemetryClient _telemetryClient;
-        
+
         public IntegrationController(IPlatformRepository platformRepository, TelemetryClient telemetryClient)
         {
             //
@@ -186,7 +186,7 @@ namespace Platform.API.Controllers
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
-            
+
             request.IPAddress = String.IsNullOrEmpty(request.IPAddress) ? ipAddress : request.IPAddress;
 
             var result = await _platformRepository.GetMaxStake(apiKey, clientId, operatorToken, request);
@@ -761,6 +761,42 @@ namespace Platform.API.Controllers
                             };
 
             _telemetryClient.TrackEvent("e:v2/sportsbook/topfixtures", properties);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/sportsbook/activefixtures")]
+        public async Task<IActionResult> GetActiveFixtures()
+        {
+            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
+
+            var result = await _platformRepository.GetActiveFixtures(apiKey, clientId, languageCode, ipCountryCode);
+
+            var parameters = new { };
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "ipCountryCode", ipCountryCode },
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "x-operator-token", string.Empty },
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures", properties);
 
             switch (result.StatusCode)
             {

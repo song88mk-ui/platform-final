@@ -31,6 +31,12 @@ namespace Platform.ClientPlatform.API.Repository
         {
             return await _readOnlyRepository.GetClientTopFixtures(apiKey, clientId, countryCode, languageCode);
         }
+
+        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(string apiKey, string clientId, string countryCode, string languageCode)
+        {
+            return await _readOnlyRepository.GetClientActiveFixtures(apiKey, clientId, countryCode, languageCode);
+        }
+
         public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(string apiKey, string clientId, string languageCode, string operatorToken, BetHistoryRequest request)
         {
             return await _readOnlyRepository.GetBetHistory(apiKey, clientId, languageCode, operatorToken, request);

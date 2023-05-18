@@ -2163,7 +2163,7 @@ namespace Platform.Sportsbook.API.Repository
             //    _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddSeconds(5));
 
             return returnResult;
-        }
+        }        
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(TWFLiveFixtureCountRequestDTO request)
         {
             var mKey = $"nlfc:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportGroupId}";

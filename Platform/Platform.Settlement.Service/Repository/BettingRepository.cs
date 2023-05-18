@@ -948,8 +948,7 @@ namespace Platform.Settlement.Service.Repository
             bet.TaxedStake = betStatus == BetStatus.Cancelled ? 0 : taxedStake;
             bet.TaxedWinnings = taxedWinnings;
             bet.ParlayBonus = parlayBonus;
-            bet.ParlayBonusWinnings = parlayBonusWinnings;
-            bet.Odds = RecomputeBetOdds(bet.Odds, betStatus, selections);            
+            bet.ParlayBonusWinnings = parlayBonusWinnings;            
 
             // get percentage of real and bonus payout.
             var stakeRealPayoutPercentage = bet.StakeReal / bet.TrueStake;
@@ -1064,8 +1063,7 @@ namespace Platform.Settlement.Service.Repository
             bet.ParlayBonus = parlayBonus;
             bet.ParlayBonusWinnings = 0m;
             bet.StakeRealPayout = 0m;
-            bet.StakeBonusPayout = 0m;
-            bet.Odds = RecomputeBetOdds(bet.Odds, (BetStatus)bet.BetStatusId, selections);
+            bet.StakeBonusPayout = 0m;            
 
             var betEntity = context.Bet.Update(bet).Entity;
 

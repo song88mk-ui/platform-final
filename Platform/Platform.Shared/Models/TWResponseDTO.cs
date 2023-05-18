@@ -233,31 +233,6 @@ namespace Platform.Shared.Models
         public List<FixtureDTO> Fixtures { get; set; }
     }
 
-    public class TWActiveFixtureResponseDTO
-    {
-        public TWActiveFixtureResponseDTO()
-        {
-            Fixtures = new List<TWActiveFixtureDTO>();
-        }
-
-        public List<TWActiveFixtureDTO> Fixtures { get; set; }
-    }
-
-    public class TWActiveFixtureDTO
-    {
-        public int SportId { get; set; }
-        public string SportName { get; set; }
-        public int SegmentId { get; set; }
-        public string SegmentName { get; set; }
-        public int LeagueId { get; set; }
-        public string LeagueName { get; set; }
-        public string FixtureId { get; set; }
-        public string FixtureName { get; set; }
-        public string FixtureStatus { get; set; }
-        public DateTime FixtureStartDate { get; set; }
-        public int FixtureType { get; set; }
-    }
-
     public class FixtureDTO
     {
         public FixtureDTO()

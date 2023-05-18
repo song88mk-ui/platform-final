@@ -1451,13 +1451,13 @@ namespace Platform.API.Repository
                 IpCountryCode = ipCountryCode,
             });
         }
-        public async Task<BaseResponseDTO<TWActiveFixtureResponseDTO>> GetActiveFixtures(string apiKey, string clientId, string langCode, string ipCountryCode)
+        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(string apiKey, string clientId, string langCode, string ipCountryCode)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
             {
-                return new BaseResponseDTO<TWActiveFixtureResponseDTO>
+                return new BaseResponseDTO<ActiveFixturesResponseDTO>
                 {
                     StatusCode = StatusCode.Unsupported_LanguageCode,
                     Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
@@ -1468,7 +1468,7 @@ namespace Platform.API.Repository
 
             if (!IsValidLanguageCode(languageCode))
             {
-                return new BaseResponseDTO<TWActiveFixtureResponseDTO>
+                return new BaseResponseDTO<ActiveFixturesResponseDTO>
                 {
                     StatusCode = StatusCode.Unsupported_LanguageCode,
                     Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
@@ -1479,19 +1479,19 @@ namespace Platform.API.Repository
 
             if (clientResponse.StatusCode != StatusCode.Success)
             {
-                return new BaseResponseDTO<TWActiveFixtureResponseDTO>
+                return new BaseResponseDTO<ActiveFixturesResponseDTO>
                 {
                     StatusCode = clientResponse.StatusCode,
                     Message = clientResponse.Message
                 };
             }
 
-            return await _sportsbookRepository.GetActiveFixtures(new TWRequestDTO
+            return await _sportsbookRepository.GetActiveFixtures(new ActiveFixturesRequestDTO
             {
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
                 ClientCode = clientResponse.Result.ClientCode,
-                IpCountryCode = ipCountryCode,
+                IPCountryCode = ipCountryCode,
             });
         }
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(string apiKey, string clientId, string langCode, SportGroup sportGroupId)

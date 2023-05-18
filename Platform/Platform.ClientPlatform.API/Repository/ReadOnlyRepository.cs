@@ -61,7 +61,7 @@ namespace Platform.ClientPlatform.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<TWActiveFixtureResponseDTO>> GetClientActiveFixtures(string apiKey, string clientId, string countryCode, string languageCode)
+        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(string apiKey, string clientId, string countryCode, string languageCode)
         {
             try
             {
@@ -70,17 +70,17 @@ namespace Platform.ClientPlatform.API.Repository
                 _httpClient.DefaultRequestHeaders.Add("x-country-code", countryCode);
                 _httpClient.DefaultRequestHeaders.Add("x-language-code", languageCode);
 
-                var response = await _httpClient.GetAsync($"v2/sportsbook/activefixtures");
+                var response = await _httpClient.GetAsync($"v1/sportsbook/activefixtures");
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWActiveFixtureResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixturesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWActiveFixtureResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixturesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     else
                     {
-                        return new BaseResponseDTO<TWActiveFixtureResponseDTO>
+                        return new BaseResponseDTO<ActiveFixturesResponseDTO>
                         {
                             StatusCode = StatusCode.Error,
                             Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
@@ -90,7 +90,7 @@ namespace Platform.ClientPlatform.API.Repository
             }
             catch (Exception ex)
             {
-                return new BaseResponseDTO<TWActiveFixtureResponseDTO>
+                return new BaseResponseDTO<ActiveFixturesResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"

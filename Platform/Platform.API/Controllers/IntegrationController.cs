@@ -771,7 +771,7 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v2/sportsbook/activefixtures")]
+        [HttpGet("v1/sportsbook/activefixtures")]
         public async Task<IActionResult> GetActiveFixtures()
         {
             var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
@@ -782,21 +782,21 @@ namespace Platform.API.Controllers
 
             var result = await _platformRepository.GetActiveFixtures(apiKey, clientId, languageCode, ipCountryCode);
 
-            //var parameters = new { };
+            var parameters = new { };
 
-            //var properties = new Dictionary<string, string>
-            //                {
-            //                    { "ipCountryCode", ipCountryCode },
-            //                    { "ipAddress", ipAddress },
-            //                    { "x-api-key", apiKey },
-            //                    { "x-client-id", clientId },
-            //                    { "x-operator-token", string.Empty },
-            //                    { "requestParameters", JsonSerializer.Serialize(parameters) },
-            //                    { "statusCode", result.StatusCode.ToString() },
-            //                    { "message", result.Message.ToString() }
-            //                };
+            var properties = new Dictionary<string, string>
+                            {
+                                { "ipCountryCode", ipCountryCode },
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "x-operator-token", string.Empty },
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() }
+                            };
 
-            //_telemetryClient.TrackEvent("e:v2/sportsbook/activefixtures", properties);
+            _telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures", properties);
 
             switch (result.StatusCode)
             {

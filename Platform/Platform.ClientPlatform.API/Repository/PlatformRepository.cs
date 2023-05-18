@@ -32,7 +32,7 @@ namespace Platform.ClientPlatform.API.Repository
             return await _readOnlyRepository.GetClientTopFixtures(apiKey, clientId, countryCode, languageCode);
         }
 
-        public async Task<BaseResponseDTO<TWActiveFixtureResponseDTO>> GetClientActiveFixtures(string apiKey, string clientId, string countryCode, string languageCode)
+        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(string apiKey, string clientId, string countryCode, string languageCode)
         {
             return await _readOnlyRepository.GetClientActiveFixtures(apiKey, clientId, countryCode, languageCode);
         }

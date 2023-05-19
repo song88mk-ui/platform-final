@@ -1480,6 +1480,12 @@ namespace Platform.Betting.API.Repository
                     if (runningPayout < bet.TrueStake)
                         runningTaxedWinnings = 0;
 
+                    if (bet.BetTypeId == (int)BetType.Parlay)
+                    {
+                        //recompute bet odds for parlay bets
+                        bet.Odds = bet.BetStatusId == (int)BetStatus.Running ? bet.Odds : RecomputeBetOdds(bet.Odds, (BetStatus)bet.BetStatusId, filteredSelections);
+                    }
+
                     result.Add(new BetHistoryDTO
                     {
                         BetId = bet.BetId.ToString(),
@@ -2928,6 +2934,52 @@ namespace Platform.Betting.API.Repository
                 return OddsTypeHelper.GetOddsByOddsType(oddsTypeId, Convert.ToDecimal(odds.ToString()), isBinary).ToString("0.00");
             else
                 return OddsTypeHelper.GetOddsByOddsType(oddsTypeId, Convert.ToDecimal(odds.ToString()), isBinary);
+        }
+
+        private decimal RecomputeBetOdds(decimal odds, BetStatus betStatus, List<BetSelection> betSelections)
+        {
+            decimal newOdds = 0m;
+            List<decimal> values = new List<decimal>();
+
+            switch (betStatus)
+            {
+                case BetStatus.Won:
+                case BetStatus.HalfWon:
+                case BetStatus.HalfLost:
+                    foreach (var selection in betSelections)
+                    {
+                        switch ((BetStatus)selection.BetSelectionStatusId)
+                        {
+                            case BetStatus.Lost:
+                                values.Add(0m);
+                                break;
+                            case BetStatus.HalfWon:
+                                values.Add((selection.Odds + 1) / 2);
+                                break;
+                            case BetStatus.HalfLost:
+                                values.Add(0.5m);
+                                break;
+                            case BetStatus.Won:
+                            case BetStatus.Running:
+                                values.Add(selection.Odds * selection.DeadHeatFactor);
+                                break;
+                            case BetStatus.Void:
+                                values.Add(1m);
+                                break;
+                            case BetStatus.Cancelled:
+                                values.Add(1m);
+                                break;
+                        }
+                    }
+
+                    newOdds = values.Aggregate((a, b) => a * b);
+
+                    break;
+                default:
+                    return odds;
+            }
+
+            return newOdds;
         }
 
     }

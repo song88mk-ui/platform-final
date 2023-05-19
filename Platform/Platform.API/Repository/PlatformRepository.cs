@@ -3679,8 +3679,26 @@ namespace Platform.API.Repository
             });
         }
 
-        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetCasinoURL(string clientId, string operatorToken, string langCode, bool isMobile)
+        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetCasinoURL(string clientId, string operatorToken, string countryCode, string langCode, bool isMobile)
         {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (string.IsNullOrEmpty(countryCode) || string.IsNullOrWhiteSpace(countryCode))
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = "Country Code cannot be tracked"
+                };
+            }
+
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
@@ -3714,15 +3732,26 @@ namespace Platform.API.Repository
                 };
             }
 
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+
+            if (authenticationResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
+                };
+            }
+
             var demo = new GameLobbyRequestDTO
             {
-                UserId = Guid.NewGuid().ToString(),
-                CurrencyCode = "EUR",
-                CountryCode = "PH",
-                LanguageCode = "EN",
+                UserId = authenticationResponse.Result.UserId,
+                CurrencyCode = authenticationResponse.Result.CurrencyCode,
+                CountryCode = countryCode,
+                LanguageCode = languageCode.ToString(),
                 IsDemo = true,
                 IsMobile = isMobile,
-                OperatorToken = string.Empty,
+                OperatorToken = $"{clientResponse.Result.ClientId}|{operatorToken}",
                 ShowBalance = true,
                 ShowBetHistory = true,
                 GameTypes = new string[] { "SLOT_GAMES", "TABLE_GAMES", "INSTANT_WIN", "BINGO_GAMES", "SCRATCH_CARDS", "SHOOTING_GAMES", "CASUAL_GAMES", "LOTTERY" } 
@@ -3751,8 +3780,26 @@ namespace Platform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetLiveCasinoURL(string clientId, string operatorToken, string langCode, bool isMobile)
+        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetLiveCasinoURL(string clientId, string operatorToken, string countryCode, string langCode, bool isMobile)
         {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (string.IsNullOrEmpty(countryCode) || string.IsNullOrWhiteSpace(countryCode))
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = "Country Code cannot be tracked"
+                };
+            }
+
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
@@ -3786,15 +3833,26 @@ namespace Platform.API.Repository
                 };
             }
 
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+
+            if (authenticationResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
+                };
+            }
+
             var demo = new GameLobbyRequestDTO
             {
-                UserId = Guid.NewGuid().ToString(),
-                CurrencyCode = "EUR",
-                CountryCode = "PH",
-                LanguageCode = "EN",
+                UserId = authenticationResponse.Result.UserId,
+                CurrencyCode = authenticationResponse.Result.CurrencyCode,
+                CountryCode = countryCode,
+                LanguageCode = languageCode.ToString(),
                 IsDemo = true,
                 IsMobile = isMobile,
-                OperatorToken = string.Empty,
+                OperatorToken = $"{clientResponse.Result.ClientId}|{operatorToken}",
                 ShowBalance = true,
                 ShowBetHistory = true,
                 GameTypes = new string[] { "LIVE_CASINO" }
@@ -3823,8 +3881,26 @@ namespace Platform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetVirtualGames(string clientId, string operatorToken, string langCode, bool isMobile)
+        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetVirtualGames(string clientId, string operatorToken, string countryCode, string langCode, bool isMobile)
         {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (string.IsNullOrEmpty(countryCode) || string.IsNullOrWhiteSpace(countryCode))
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = "Country Code cannot be tracked"
+                };
+            }
+
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
             if (!isValidLanguageCode)
@@ -3858,15 +3934,26 @@ namespace Platform.API.Repository
                 };
             }
 
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+
+            if (authenticationResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<CasinoURLResponseDTO>
+                {
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
+                };
+            }
+
             var demo = new GameLobbyRequestDTO
             {
-                UserId = Guid.NewGuid().ToString(),
-                CurrencyCode = "EUR",
-                CountryCode = "PH",
-                LanguageCode = "EN",
+                UserId = authenticationResponse.Result.UserId,
+                CurrencyCode = authenticationResponse.Result.CurrencyCode,
+                CountryCode = countryCode,
+                LanguageCode = languageCode.ToString(),
                 IsDemo = true,
                 IsMobile = isMobile,
-                OperatorToken = string.Empty,
+                OperatorToken = $"{clientResponse.Result.ClientId}|{operatorToken}",
                 ShowBalance = true,
                 ShowBetHistory = true,
                 GameTypes = new string[] { "VIRTUAL_SPORTS", "VIRTUAL_GAMES", "ESPORTS" }

@@ -1773,13 +1773,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/casino")]
         public async Task<IActionResult> GetCasinoURL([FromQuery] bool isMobile = false)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var countryCode = HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault();
             var languageCode = HttpContext.Request.Headers["x-language-code"].FirstOrDefault();
 
-            var result = await _platformRepository.GetCasinoURL(clientId, operatorToken, languageCode, isMobile);
+            var result = await _platformRepository.GetCasinoURL(clientId, operatorToken, countryCode, languageCode, isMobile);
 
             switch (result.StatusCode)
             {
@@ -1793,13 +1792,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/casino/live")]
         public async Task<IActionResult> GetLiveCasinoURL([FromQuery] bool isMobile = false)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var countryCode = HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault();
             var languageCode = HttpContext.Request.Headers["x-language-code"].FirstOrDefault();
 
-            var result = await _platformRepository.GetLiveCasinoURL(clientId, operatorToken, languageCode, isMobile);
+            var result = await _platformRepository.GetLiveCasinoURL(clientId, operatorToken, countryCode, languageCode, isMobile);
 
             switch (result.StatusCode)
             {
@@ -1813,13 +1811,12 @@ namespace Platform.API.Controllers
         [HttpGet("v1/casino/virtualgames")]
         public async Task<IActionResult> GetVirtualGamesURL([FromQuery] bool isMobile = false)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var countryCode = HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault();
             var languageCode = HttpContext.Request.Headers["x-language-code"].FirstOrDefault();
 
-            var result = await _platformRepository.GetVirtualGames(clientId, operatorToken, languageCode, isMobile);
+            var result = await _platformRepository.GetVirtualGames(clientId, operatorToken, countryCode, languageCode, isMobile);
 
             switch (result.StatusCode)
             {

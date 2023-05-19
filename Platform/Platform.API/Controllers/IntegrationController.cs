@@ -10,6 +10,7 @@ using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -1780,6 +1781,20 @@ namespace Platform.API.Controllers
 
             var result = await _platformRepository.GetCasinoURL(clientId, operatorToken, countryCode, languageCode, isMobile);
 
+            var properties = new Dictionary<string, string>
+            {
+                                { "x-client-id", clientId },
+                                { "x-operator-token", operatorToken },
+                                { "cf-ipcountry", countryCode },
+                                { "x-language-code", languageCode },
+                                { "requestParameters", JsonSerializer.Serialize(new { IsMobile = isMobile }) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/casino", properties);
+
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
@@ -1799,6 +1814,20 @@ namespace Platform.API.Controllers
 
             var result = await _platformRepository.GetLiveCasinoURL(clientId, operatorToken, countryCode, languageCode, isMobile);
 
+            var properties = new Dictionary<string, string>
+            {
+                                { "x-client-id", clientId },
+                                { "x-operator-token", operatorToken },
+                                { "cf-ipcountry", countryCode },
+                                { "x-language-code", languageCode },
+                                { "requestParameters", JsonSerializer.Serialize(new { IsMobile = isMobile }) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/casino/live", properties);
+
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
@@ -1817,6 +1846,20 @@ namespace Platform.API.Controllers
             var languageCode = HttpContext.Request.Headers["x-language-code"].FirstOrDefault();
 
             var result = await _platformRepository.GetVirtualGames(clientId, operatorToken, countryCode, languageCode, isMobile);
+
+            var properties = new Dictionary<string, string>
+            {
+                                { "x-client-id", clientId },
+                                { "x-operator-token", operatorToken },
+                                { "cf-ipcountry", countryCode },
+                                { "x-language-code", languageCode },
+                                { "requestParameters", JsonSerializer.Serialize(new { IsMobile = isMobile }) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/casino/virtualgames", properties);
 
             switch (result.StatusCode)
             {

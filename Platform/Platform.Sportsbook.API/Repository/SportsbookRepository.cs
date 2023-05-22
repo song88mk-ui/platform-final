@@ -2062,7 +2062,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var initialResult = new List<TempFixtureDTO>();
 
-            var limit = 10;
+            var limit = 100;
 
             foreach (var item in result)
             {

@@ -2,12 +2,14 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Platform.QTech.API.Repository;
+using Platform.Shared.Data.Platform;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -53,11 +55,14 @@ namespace Platform.QTech.API
             services.AddSingleton<IMemCache, MemCache>();
             services.AddScoped<ICasinoRepository, CasinoRepository>();
             services.AddHttpClient<IProviderRepository, ProviderRepository>();
+            services.AddHttpClient<IOperatorRepository, OperatorRepository>();
 
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Platform QTech API", Version = "v1" });
             });
+
+            services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Platform"]));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

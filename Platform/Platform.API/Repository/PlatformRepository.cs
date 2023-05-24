@@ -3797,7 +3797,7 @@ namespace Platform.API.Repository
                 CurrencyCode = authenticationResponse.Result.CurrencyCode,
                 CountryCode = countryCode,
                 LanguageCode = languageCode.ToString(),
-                IsDemo = true,
+                IsDemo = authenticationResponse.Result.UserId.ToLower() == "100586" ? false : true,
                 IsMobile = isMobile,
                 OperatorToken = $"{clientResponse.Result.ClientId}|{operatorToken}",
                 ShowBalance = true,

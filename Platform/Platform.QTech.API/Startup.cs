@@ -1,20 +1,15 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Platform.QTech.API.Repository;
+using Platform.Shared.Data.CasinoBetting;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Platform.QTech.API
 {
@@ -63,6 +58,7 @@ namespace Platform.QTech.API
             });
 
             services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Platform"]));
+            services.AddDbContext<CasinoBettingContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:CasinoBetting"]));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

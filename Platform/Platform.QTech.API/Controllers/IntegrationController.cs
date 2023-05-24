@@ -89,6 +89,15 @@ namespace Platform.QTech.API.Controllers
             var walletSession = HttpContext.Request.Headers["Wallet-Session"].FirstOrDefault();
             var passKey = HttpContext.Request.Headers["Pass-Key"].FirstOrDefault();
 
+            var initial = new Dictionary<string, string>
+                            {
+                                { "Wallet-Session", walletSession },
+                                { "Pass-Key", passKey },
+                                { "request", JsonSerializer.Serialize(request) }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/transactions/initial", initial);
+
             if (request.TxnType.ToUpper() == "DEBIT")
             {
                 var withdrawResponse = await _casinoRepository.Withdraw(new WithdrawRequest

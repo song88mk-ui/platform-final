@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Cors;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Platform.QTech.API.Models;
 using Platform.QTech.API.Repository;
 using Platform.Shared.Models;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Platform.QTech.API.Controllers
@@ -12,10 +15,12 @@ namespace Platform.QTech.API.Controllers
     public class IntegrationController : ControllerBase
     {
         private readonly ICasinoRepository _casinoRepository;
+        private readonly TelemetryClient _telemetryClient;
 
-        public IntegrationController(ICasinoRepository casinoRepository)
+        public IntegrationController(ICasinoRepository casinoRepository, TelemetryClient telemetryClient)
         {
             _casinoRepository = casinoRepository;
+            _telemetryClient = telemetryClient;
         }
 
         [HttpGet("v1/accounts/{playerId}/session")]
@@ -29,6 +34,15 @@ namespace Platform.QTech.API.Controllers
                 WalletSession = walletSession,
                 PassKey = passKey
             });
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "Wallet-Session", walletSession },
+                                { "Pass-Key", passKey },
+                                { "response", JsonSerializer.Serialize(result.Item2) }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/accounts/{playerId}/session", properties);
 
             switch (result.Item1)
             {
@@ -50,6 +64,15 @@ namespace Platform.QTech.API.Controllers
                 WalletSession = walletSession,
                 PassKey = passKey
             });
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "Wallet-Session", walletSession },
+                                { "Pass-Key", passKey },
+                                { "response", JsonSerializer.Serialize(result.Item2) }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/accounts/{playerId}/balance", properties);
 
             switch (result.Item1)
             {
@@ -93,6 +116,16 @@ namespace Platform.QTech.API.Controllers
                     TableId = request.TableId
                 });
 
+                var properties = new Dictionary<string, string>
+                            {
+                                { "Wallet-Session", walletSession },
+                                { "Pass-Key", passKey },
+                                { "request", JsonSerializer.Serialize(request) },
+                                { "response", JsonSerializer.Serialize(withdrawResponse.Item2) }
+                            };
+
+                _telemetryClient.TrackEvent("e:v1/transactions", properties);
+
                 switch (withdrawResponse.Item1)
                 {
                     case Enums.WithdrawCode.OK:
@@ -127,6 +160,16 @@ namespace Platform.QTech.API.Controllers
                     TableId = request.TableId
                 });
 
+                var properties = new Dictionary<string, string>
+                            {
+                                { "Wallet-Session", walletSession },
+                                { "Pass-Key", passKey },
+                                { "request", JsonSerializer.Serialize(request) },
+                                { "response", JsonSerializer.Serialize(depositResponse.Item2) }
+                            };
+
+                _telemetryClient.TrackEvent("e:v1/transactions", properties);
+
                 switch (depositResponse.Item1)
                 {
                     case Enums.DepositCode.OK:
@@ -148,6 +191,16 @@ namespace Platform.QTech.API.Controllers
 
             var result = await _casinoRepository.Rollback(request);
 
+            var properties = new Dictionary<string, string>
+                            {
+                                { "Wallet-Session", walletSession },
+                                { "Pass-Key", passKey },
+                                { "request", JsonSerializer.Serialize(request) },
+                                { "response", JsonSerializer.Serialize(result.Item2) }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/transactions/rollback", properties);
+
             switch (result.Item1)
             {
                 case Enums.RollbackCode.OK:
@@ -165,6 +218,15 @@ namespace Platform.QTech.API.Controllers
             request.PassKey = passKey;
 
             var result = await _casinoRepository.ProcessBonusStatus(request);
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "Pass-Key", passKey },
+                                { "request", JsonSerializer.Serialize(request) },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/bonus/status", properties);
 
             switch (result)
             {
@@ -185,6 +247,15 @@ namespace Platform.QTech.API.Controllers
             request.ContentType = contentType;
 
             var result = await _casinoRepository.ProcessBonusReward(request);
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "Pass-Key", passKey },
+                                { "request", JsonSerializer.Serialize(request) },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/bonus/rewards", properties);
 
             switch (result.Item1)
             {

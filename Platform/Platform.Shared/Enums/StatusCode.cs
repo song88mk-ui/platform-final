@@ -47,6 +47,7 @@
         Cannot_Have_Duplicate_Top_League_Entries = 135,
         Cannot_Have_Duplicate_Sort_Order_Entries = 136,
         Top_Fixture_Entries_Must_Be_Equal_Or_Lower_Than_50 = 137,
+        Top_Fixture_Entries_Must_Be_Equal_Or_Lower_Than_100 = 205,
         Top_League_Entries_Must_Be_Equal_Or_Lower_Than_50 = 138,
 
         //Bet_Status_Must_Be_Running = 139,

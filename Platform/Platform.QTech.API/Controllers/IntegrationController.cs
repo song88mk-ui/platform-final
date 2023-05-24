@@ -98,6 +98,18 @@ namespace Platform.QTech.API.Controllers
 
             _telemetryClient.TrackEvent("e:v1/transactions/initial", initial);
 
+            if (request.BonusType == null)
+                request.BonusType = string.Empty;
+
+            if (request.BonusPromoCode == null)
+                request.BonusPromoCode = string.Empty;
+
+            if (request.TableId == null)
+                request.TableId = string.Empty;
+
+            if (request.JpContributions == null)
+                request.JpContributions =  new JackpotContribution[] { };
+
             if (request.TxnType.ToUpper() == "DEBIT")
             {
                 var withdrawResponse = await _casinoRepository.Withdraw(new WithdrawRequest

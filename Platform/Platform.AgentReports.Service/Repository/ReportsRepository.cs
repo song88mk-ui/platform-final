@@ -54,7 +54,7 @@ namespace Platform.AgentReports.Service.Repository
                             bet.StatusId = message.Bet.BetStatusId;
                             bet.StatusName = message.Bet.BetStatusName;
                             bet.Reason = message.Bet.Reason;
-                            bet.ReceivePositionTaking = GetReceivePTFinal(message, agent);
+                            bet.ReceivePositionTaking = GetReceivePTFinal(message.Bet.Stake, message.Bet.Payout, message.Bet.BetStatusId, agent);
                             context.Bet.Update(bet);
                         }
 
@@ -79,7 +79,7 @@ namespace Platform.AgentReports.Service.Repository
                             context.BetSelectionTransaction.Add(ConvertToBetSelectionTransactionEntityInsertFinal(selection, agent));
                         }
 
-                        AddOrUpdateRunningBalanceFinal(context, message, agent, 0, agents);
+                        AddOrUpdateRunningBalanceFinal(context, message.Bet.TrueStake, message.Bet.CurrencyCode, message.Bet.BetId, message.Bet.BetStatusId, message.Bet.BetStatusName, message.Bet.BetDate, agent, 0, agents);
                     }
                     context.SaveChanges();
                 }
@@ -264,7 +264,90 @@ namespace Platform.AgentReports.Service.Repository
             }
         }
 
+        public void ProcessCasinoBetPlacement(OnCasinoBetPlacement message)
+        {
+            var agents = GetCasinoAgentSettingsFinal(message.Category, message.UserId, message.TransactionDate).OrderBy(o => o.Hierarchy).ToList();
 
+            if (agents.Count == 0)
+                return;
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<AgentReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Reports"]);
+
+                using (var context = new AgentReportsContext(optionsBuilder.Options))
+                {
+                    foreach (var agent in agents)
+                    {
+                        var bet = context.CasinoBet.Find(agent.AgentId, message.TransactionId);
+
+                        if (bet == null)
+                            bet = context.CasinoBet.Add(ConvertToCasinoBetEntityInsertFinal(message, agent, agents)).Entity;
+                        else
+                        {
+                            bet.Payout = message.Payout;
+                            bet.WinLoss = message.WinLoss;
+                            bet.BetStatusId = message.BetStatusId;
+                            bet.BetStatusName = message.BetStatusName;
+                            bet.ReceivePositionTaking = GetReceivePTFinal(message.Stake, message.Payout, message.BetStatusId, agent);
+                            context.CasinoBet.Update(bet);
+                        }
+
+                        //context.BetTransaction.Add(ConvertToBetTransactionEntityInsertFinal(message, agent));
+
+                        AddOrUpdateRunningBalanceFinal(context, message.Stake, message.CurrencyCode, message.TransactionId, message.BetStatusId, message.BetStatusName, message.TransactionDate, agent, 0, agents);
+                    }
+                    context.SaveChanges();
+                }
+                scope.Complete();
+            }
+        }
+        public void ProcessCasinoBetSettlement(OnCasinoBetSettlement message)
+        {
+            var agents = GetCasinoAgentSettingsFinal(message.Category, message.UserId, message.TransactionDate).OrderBy(o => o.Hierarchy).ToList();
+
+            if (agents.Count == 0)
+                return;
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<AgentReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Reports"]);
+
+                using (var context = new AgentReportsContext(optionsBuilder.Options))
+                {
+                    foreach (var agent in agents)
+                    {
+                        var bet = context.CasinoBet.Find(agent.AgentId, message.TransactionId);
+ 
+                        if (bet == null)
+                            bet = context.CasinoBet.Add(ConvertToCasinoBetEntityInsertFinal(message, agent, agents)).Entity;
+                        else
+                        {
+                            var currentStatusId = bet.BetStatusId;
+
+                            bet.Payout = message.Payout;
+                            bet.WinLoss = message.WinLoss;
+                            bet.BetStatusId = message.BetStatusId;
+                            bet.BetStatusName = message.BetStatusName;
+                            bet.ReceivePositionTaking = GetReceivePTFinal(message.Stake, message.Payout, message.BetStatusId, agent);
+                            context.CasinoBet.Update(bet);
+
+                            //context.BetTransaction.Add(ConvertToBetTransactionEntityInsertFinal(message, agent));
+
+                            var validBetStatusId = new int[] { (int)BetStatus.Running };
+
+                            //TODO: check how to update winloss
+                            //if (validBetStatusId.Contains(currentStatusId))
+                            //    AddOrUpdateWinLossFinal(context, message, agent, agents, bet);
+
+                        }
+                    }
+
+                    context.SaveChanges();
+                }
+                scope.Complete();
+            }
+        }
         private List<AgentSettings> GetAgentSettingsFinal(OnBetPlacement message)
         {
             var agents = new List<AgentSettings>();
@@ -334,6 +417,55 @@ namespace Platform.AgentReports.Service.Repository
 
             return agents;
         }
+
+        private List<AgentSettings> GetCasinoAgentSettingsFinal(string category, string userId, DateTime transactionDate)
+        {
+            var agents = new List<AgentSettings>();
+            var categoryId = 0;
+            var subCategoryId = 0;
+            var betSelectionCount = 1;
+
+            if (category == "CASINO/SLOT/6REEL")
+            {
+                categoryId = (int)Category.LiveCasino;
+                subCategoryId = 2;
+            }
+
+
+            var url = $"{_agentUrl}/api/v3/ptc2/{userId}/{categoryId}/{subCategoryId}/{betSelectionCount}?transactionDate={transactionDate.ToString("s")}";
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.BaseAddress = new Uri(url);
+
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                var response = httpClient.SendAsync(request).Result;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultList = System.Text.Json.JsonSerializer.Deserialize<BaseResponse<List<AgentSettingsResponse>>>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    foreach (var result in resultList.Result)
+                    {
+                        agents.Add(new AgentSettings
+                        {
+                            AgentId = result.AgentId,
+                            AgentUsername = result.AgentUsername,
+                            Username = result.Username,
+                            PositionTaking = result.PositionTaking,
+                            Commission = result.Commission,
+                            UserType = GetUserType(result.UserType),
+                            UplineUserId = result.UplineUserId,
+                            IsCashMarket = result.IsCashMarket,
+                            CurrencyCode = result.CurrencyCode,
+                            Hierarchy = result.Hierarchy
+                        });
+                    }
+                }
+            }
+
+            return agents;
+        }
+
         private Shared.Data.Reports.Entities.Bet ConvertToBetEntityInsertFinal(OnBetPlacement message, AgentSettings agent, List<AgentSettings> agents)
         {
             var agentId = agents.Where(c => c.UserType == Shared.Enums.UserType.Player).Select(s => s.UplineUserId).FirstOrDefault();
@@ -386,7 +518,7 @@ namespace Platform.AgentReports.Service.Repository
                 SelectionName = message.BetSelections.First().SelectionName,
                 ProductId = (int)Shared.Enums.Product.Sportsbook,
                 ProductName = Shared.Enums.Product.Sportsbook.ToString(),
-                ReceivePositionTaking = GetReceivePTFinal(message, agent),
+                ReceivePositionTaking = GetReceivePTFinal(message.Bet.Stake, message.Bet.Payout, message.Bet.BetStatusId, agent),
                 CasinoDetails = string.Empty,
                 GameProvider = 0,
                 TransactionDate = message.Bet.BetDate,
@@ -399,27 +531,115 @@ namespace Platform.AgentReports.Service.Repository
                 MarketGroupId = string.Empty
             };
         }
-        private decimal GetReceivePTFinal(OnBetPlacement message, AgentSettings agent)
+
+        private Shared.Data.Reports.Entities.CasinoBet ConvertToCasinoBetEntityInsertFinal(OnCasinoBetPlacement message, AgentSettings agent, List<AgentSettings> agents)
+        {
+            var agentId = agents.Where(c => c.UserType == Shared.Enums.UserType.Player).Select(s => s.UplineUserId).FirstOrDefault();
+
+            return new Shared.Data.Reports.Entities.CasinoBet
+            {
+                ParentUserId = agent.AgentId,
+                AgentId = agentId,
+                AgentUsername = agents.Where(c => c.AgentId == agentId).Select(s => s.AgentUsername).FirstOrDefault(),
+                TransactionId = message.TransactionId,
+                ProviderTransactionId = message.ProviderTransactionId,
+                TransactionType = message.TransactionType,
+                ClientId = message.ClientId,
+                UserId = message.UserId,
+                PositionTaking = agent.PositionTaking,
+                Commission = agent.Commission,
+                Stake = message.Stake,
+                Payout = message.Payout,
+                WinLoss = message.WinLoss,
+                BetStatusId = message.BetStatusId,
+                BetStatusName = message.BetStatusName,
+                CurrencyCode = message.CurrencyCode,
+                GameId = message.GameId,
+                Device = message.Device,
+                ClientType = message.ClientType,
+                ClientRoundId = message.ClientRoundId,
+                Category = message.Category,
+                IsComplete = message.IsComplete,
+                ExchangeRate = message.ExchangeRate,
+                ReceivePositionTaking = GetReceivePTFinal(message.Stake, message.Payout, message.BetStatusId, agent),
+                JackpotContributions = message.JackpotContributions,
+                ConversionRate = message.ConversionRate,
+                BonusType = message.BonusType,
+                BonusPromoCode = message.BonusPromoCode,
+                JackpotPayout = message.JackpotPayout,
+                TableId = message.TableId,
+                TransactionIds = message.TransactionIds,
+                ProviderTransactionDate = message.ProviderTransactionDate,
+                TransactionDate = message.TransactionDate,
+                TransactionDateOffset = message.TransactionDate.AddHours(-4)
+
+            };
+        }
+        private Shared.Data.Reports.Entities.CasinoBet ConvertToCasinoBetEntityInsertFinal(OnCasinoBetSettlement message, AgentSettings agent, List<AgentSettings> agents)
+        {
+            var agentId = agents.Where(c => c.UserType == Shared.Enums.UserType.Player).Select(s => s.UplineUserId).FirstOrDefault();
+
+            return new Shared.Data.Reports.Entities.CasinoBet
+            {
+                ParentUserId = agent.AgentId,
+                AgentId = agentId,
+                AgentUsername = agents.Where(c => c.AgentId == agentId).Select(s => s.AgentUsername).FirstOrDefault(),
+                TransactionId = message.TransactionId,
+                ProviderTransactionId = message.ProviderTransactionId,
+                TransactionType = message.TransactionType,
+                ClientId = message.ClientId,
+                UserId = message.UserId,
+                PositionTaking = agent.PositionTaking,
+                Commission = agent.Commission,
+                Stake = message.Stake,
+                Payout = message.Payout,
+                WinLoss = message.WinLoss,
+                BetStatusId = message.BetStatusId,
+                BetStatusName = message.BetStatusName,
+                CurrencyCode = message.CurrencyCode,
+                GameId = message.GameId,
+                Device = message.Device,
+                ClientType = message.ClientType,
+                ClientRoundId = message.ClientRoundId,
+                Category = message.Category,
+                IsComplete = message.IsComplete,
+                ExchangeRate = message.ExchangeRate,
+                ReceivePositionTaking = GetReceivePTFinal(message.Stake, message.Payout, message.BetStatusId, agent),
+                JackpotContributions = message.JackpotContributions,
+                ConversionRate = message.ConversionRate,
+                BonusType = message.BonusType,
+                BonusPromoCode = message.BonusPromoCode,
+                JackpotPayout = message.JackpotPayout,
+                TableId = message.TableId,
+                TransactionIds = message.TransactionIds,
+                ProviderTransactionDate = message.ProviderTransactionDate,
+                TransactionDate = message.TransactionDate,
+                TransactionDateOffset = message.TransactionDate.AddHours(-4)
+
+            };
+        }
+
+        private decimal GetReceivePTFinal(decimal stake, decimal payout,  int betStatusId, AgentSettings agent)
         {
             var result = 0m;
 
-            var ptStake = agent.PositionTaking * message.Bet.Stake;
-            var ptPayout = agent.PositionTaking * message.Bet.Payout;
+            var ptStake = agent.PositionTaking * stake;
+            var ptPayout = agent.PositionTaking * payout;
 
-            switch ((BetStatus)message.Bet.BetStatusId)
+            switch ((BetStatus)betStatusId)
             {
                 case BetStatus.Won:
                 case BetStatus.HalfWon:
                 case BetStatus.HalfLost:
                 case BetStatus.CashedOut:
                     if (agent.UserType == Shared.Enums.UserType.Player)
-                        result = message.Bet.Payout > message.Bet.Stake ? message.Bet.Payout : message.Bet.Payout * -1;
+                        result = payout > stake ? payout : payout * -1;
                     else
                         result = ptPayout > ptStake ? ptPayout * -1 : ptPayout;
                     break;
                 case BetStatus.Lost:
                     if (agent.UserType == Shared.Enums.UserType.Player)
-                        result = message.Bet.Stake * -1;
+                        result = stake * -1;
                     else
                         result = ptStake;
                     break;
@@ -540,9 +760,9 @@ namespace Platform.AgentReports.Service.Repository
                 IsBinary = betSelection.IsBinary
             };
         }
-        private void AddOrUpdateRunningBalanceFinal(AgentReportsContext context, OnBetPlacement message, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents)
+        private void AddOrUpdateRunningBalanceFinal(AgentReportsContext context, decimal trueStake, string currencyCode, Guid betId, int betStatusId, string betStatusName, DateTime betDate, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents)
         {
-            if (message.Bet.BetStatusId != (int)BetStatus.Running) return;
+            if (betStatusId != (int)BetStatus.Running) return;
             if (agent.UserType == Shared.Enums.UserType.Company) return;
 
             var runningBalanceEntity = new RunningBalance();
@@ -561,12 +781,12 @@ namespace Platform.AgentReports.Service.Repository
 
             if (runningBalance == null)
             {
-                outstandingBalance = agent.UserType == Shared.Enums.UserType.Player ? message.Bet.TrueStake : message.Bet.TrueStake * uplinePT;
+                outstandingBalance = agent.UserType == Shared.Enums.UserType.Player ? trueStake : trueStake * uplinePT;
 
                 runningBalanceEntity = context.RunningBalance.Add(new RunningBalance
                 {
                     ParentUserId = agent.UplineUserId,
-                    CurrencyCode = message.Bet.CurrencyCode,
+                    CurrencyCode = currencyCode,
                     UserId = agent.AgentId,
                     Username = agent.AgentUsername,
                     UserTypeId = (int)agent.UserType,
@@ -588,7 +808,7 @@ namespace Platform.AgentReports.Service.Repository
                 {
                     if ((runningBalance.TrueCashBalance * -1) > 0)
                     {
-                        var stake = message.Bet.TrueStake * agent.PositionTaking;
+                        var stake = trueStake * agent.PositionTaking;
 
                         if ((runningBalance.TrueCashBalance * -1) >= stake)
                             stakeDeducted = stake;
@@ -599,12 +819,12 @@ namespace Platform.AgentReports.Service.Repository
                         {
                             ParentUserId = agent.UplineUserId,
                             UserId = agent.AgentId,
-                            BetId = message.Bet.BetId,
+                            BetId = betId,
                             UserTypeId = (int)agent.UserType,
                             Amount = stakeDeducted,
-                            StatusId = message.Bet.BetStatusId,
-                            StatusName = message.Bet.BetStatusName,
-                            TransactionDate = message.Bet.BetDate
+                            StatusId = betStatusId,
+                            StatusName = betStatusName,
+                            TransactionDate = betDate
                         });
 
                         runningBalance.TrueCashBalance += stakeDeducted;
@@ -613,7 +833,7 @@ namespace Platform.AgentReports.Service.Repository
                     }
                 }
 
-                outstandingBalance = agent.UserType == Shared.Enums.UserType.Player ? message.Bet.TrueStake : message.Bet.TrueStake * uplinePT;
+                outstandingBalance = agent.UserType == Shared.Enums.UserType.Player ? trueStake : trueStake * uplinePT;
                 runningBalance.OutstandingBalance += outstandingBalance;
 
                 runningBalanceEntity = context.RunningBalance.Update(runningBalance).Entity;
@@ -640,10 +860,10 @@ namespace Platform.AgentReports.Service.Repository
                 PostOutstandingBalance = runningBalanceEntity.OutstandingBalance,
 
                 IsCashPlayer = runningBalanceEntity.IsCashPlayer,
-                ReferenceId = message.Bet.BetId.ToString().ToUpper(),
-                StatusId = message.Bet.BetStatusId,
-                StatusName = message.Bet.BetStatusName,
-                TransactionDate = message.Bet.BetDate
+                ReferenceId = betId.ToString().ToUpper(),
+                StatusId = betStatusId,
+                StatusName = betStatusName,
+                TransactionDate = betDate
             });
         }
 
@@ -1010,6 +1230,7 @@ namespace Platform.AgentReports.Service.Repository
                     });
             }
         }
+
         private bool HasHalfSettlementFinal(List<Shared.Data.Betting.Entities.BetSelection> selections)
         {
             var halfSettlements = new List<int> { (int)BetStatus.HalfWon, (int)BetStatus.HalfLost };

@@ -179,7 +179,7 @@ namespace Platform.QTech.API.Repository
                 //TODO: get afer balance from response of debit call to operator api
                 return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse
                 {
-                    ReferenceId = round.TransactionId.ToString().ToUpper(),
+                    ReferenceId = transactionEntity.TransactionId.ToString().ToUpper(),
                     Balance = authenticationResponse.Result.Balance
                 });
             }
@@ -254,7 +254,7 @@ namespace Platform.QTech.API.Repository
                 //TODO: get afer balance from response of debit call to operator api
                 return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse
                 {
-                    ReferenceId = round.TransactionId.ToString().ToUpper(),
+                    ReferenceId = transactionEntity.TransactionId.ToString().ToUpper(),
                     Balance = authenticationResponse.Result.Balance
                 });
             }
@@ -334,10 +334,15 @@ namespace Platform.QTech.API.Repository
 
                 _casinoBettingContext.SaveChanges();
                 scope.Complete();
+
+                //TODO: get afer balance from response of credit call to operator api
+                return new Tuple<DepositCode, DepositResponse>(DepositCode.OK, new DepositResponse
+                {
+                    ReferenceId = transactionEntity.TransactionId.ToString().ToUpper()
+                });
             }
 
-            //TODO: get afer balance from response of credit call to operator api
-            return new Tuple<DepositCode, DepositResponse>(DepositCode.OK, new DepositResponse { ReferenceId = round.TransactionId.ToString().ToUpper() });
+            return new Tuple<DepositCode, DepositResponse>(DepositCode.REQUEST_DECLINED, new DepositResponse());
         }
         public async Task<Tuple<RollbackCode, RollbackResponse>> Rollback(RollbackRequest request)
         {
@@ -420,10 +425,15 @@ namespace Platform.QTech.API.Repository
 
                 _casinoBettingContext.SaveChanges();
                 scope.Complete();
+
+                //TODO: get afer balance from response of credit call to operator api
+                return new Tuple<RollbackCode, RollbackResponse>(RollbackCode.OK, new RollbackResponse 
+                {
+                    ReferenceId = transactionEntity.TransactionId.ToString().ToUpper()
+                });
             }
 
-            //TODO: get afer balance from response of credit call to operator api
-            return new Tuple<RollbackCode, RollbackResponse>(RollbackCode.OK, new RollbackResponse());
+            return new Tuple<RollbackCode, RollbackResponse>(RollbackCode.REQUEST_DECLINED, new RollbackResponse());
         }
         public async Task<BonusStatusCode> ProcessBonusStatus(BonusStatusRequest request)
         {

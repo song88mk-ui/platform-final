@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Platform.QTech.API.ActionFilters;
 using Platform.QTech.API.Repository;
 using Platform.Shared.Data.CasinoBetting;
 using Platform.Shared.Data.Platform;
@@ -37,6 +38,8 @@ namespace Platform.QTech.API
                        .AllowAnyHeader();
                     });
             });
+
+            services.AddScoped<PassKeyFilter>();
 
             services.Configure<ForwardedHeadersOptions>(options =>
             {

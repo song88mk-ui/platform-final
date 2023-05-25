@@ -1,6 +1,7 @@
 ﻿using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Platform.QTech.API.ActionFilters;
 using Platform.QTech.API.Models;
 using Platform.QTech.API.Repository;
 using Platform.Shared.Models;
@@ -23,7 +24,7 @@ namespace Platform.QTech.API.Controllers
             _telemetryClient = telemetryClient;
         }
 
-        [HttpGet("v1/accounts/{playerId}/session")]
+        [HttpGet("v1/accounts/{playerId}/session"), ServiceFilter(typeof(PassKeyFilter))]
         public async Task<IActionResult> GetSession(string playerId, [FromQuery] string gameId)
         {
             var walletSession = HttpContext.Request.Headers["Wallet-Session"].FirstOrDefault();
@@ -53,7 +54,7 @@ namespace Platform.QTech.API.Controllers
             }
         }
 
-        [HttpGet("v1/accounts/{playerId}/balance")]
+        [HttpGet("v1/accounts/{playerId}/balance"), ServiceFilter(typeof(PassKeyFilter))]
         public async Task<IActionResult> GetBalance(string playerId, [FromQuery] string gameId)
         {
             var walletSession = HttpContext.Request.Headers["Wallet-Session"].FirstOrDefault();
@@ -83,7 +84,7 @@ namespace Platform.QTech.API.Controllers
             }
         }
 
-        [HttpPost("v1/transactions")]
+        [HttpPost("v1/transactions"), ServiceFilter(typeof(PassKeyFilter))]
         public async Task<IActionResult> ProcessTransaction([FromBody] TransactionRequest request)
         {
             var walletSession = HttpContext.Request.Headers["Wallet-Session"].FirstOrDefault();
@@ -201,7 +202,7 @@ namespace Platform.QTech.API.Controllers
             }
         }
 
-        [HttpPost("v1/transactions/rollback")]
+        [HttpPost("v1/transactions/rollback"), ServiceFilter(typeof(PassKeyFilter))]
         public async Task<IActionResult> ProcessRollback([FromBody] RollbackRequest request)
         {
             var walletSession = HttpContext.Request.Headers["Wallet-Session"].FirstOrDefault();
@@ -231,7 +232,7 @@ namespace Platform.QTech.API.Controllers
             }
         }
 
-        [HttpPost("v1/bonus/status")]
+        [HttpPost("v1/bonus/status"), ServiceFilter(typeof(PassKeyFilter))]
         public async Task<IActionResult> ProcessBonusStatus([FromBody] BonusStatusRequest request)
         {
             var passKey = HttpContext.Request.Headers["Pass-Key"].FirstOrDefault();
@@ -258,7 +259,7 @@ namespace Platform.QTech.API.Controllers
             }
         }
 
-        [HttpPost("v1/bonus/rewards")]
+        [HttpPost("v1/bonus/rewards"), ServiceFilter(typeof(PassKeyFilter))]
         public async Task<IActionResult> ProcessBonusReward([FromBody] BonusRewardRequest request)
         {
             var passKey = HttpContext.Request.Headers["Pass-Key"].FirstOrDefault();

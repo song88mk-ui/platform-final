@@ -343,7 +343,7 @@ namespace Platform.QTech.API.Repository
                 });
             }
 
-            return new Tuple<DepositCode, DepositResponse>(DepositCode.REQUEST_DECLINED, new DepositResponse());
+            return new Tuple<DepositCode, DepositResponse>(DepositCode.OK, new DepositResponse());
         }
         public async Task<Tuple<RollbackCode, RollbackResponse>> Rollback(RollbackRequest request)
         {
@@ -435,7 +435,7 @@ namespace Platform.QTech.API.Repository
                 });
             }
 
-            return new Tuple<RollbackCode, RollbackResponse>(RollbackCode.REQUEST_DECLINED, new RollbackResponse());
+            return new Tuple<RollbackCode, RollbackResponse>(RollbackCode.OK, new RollbackResponse());
         }
         public async Task<BonusStatusCode> ProcessBonusStatus(BonusStatusRequest request)
         {
@@ -443,6 +443,7 @@ namespace Platform.QTech.API.Repository
         }
         public async Task<Tuple<BonusRewardCode, BonusRewardResponse>> ProcessBonusReward(BonusRewardRequest request)
         {
+
             //connect to platform database to validate clientid
             //call platform.operator.api to debit
             //once successful/failed, store credit transaction in CasinoBetting database

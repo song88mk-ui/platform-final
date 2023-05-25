@@ -153,18 +153,12 @@ namespace Platform.Operator.API.Repository
                         };
                     }
 
-                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, 0, request.Stake, request.BetStatus);
-
-                    result.Balance = operatorAudit.PostBalance;
-                    _platformContext.Operator.Update(result);
-
-                    _platformContext.SaveChanges();
-
                     var testConfig = _platformContext.TestConfig.Find(id);
+
+
                     if (request.IsBetBuilder == false && testConfig != null && testConfig.ClientId == id)
                     {
-                        scope.Complete();
-
+                        
                         if (request.IsBetBuilder == true && (testConfig.StakeBonusPercent > 0 || testConfig.IsFreeBet))
                         {
                             return new OperatorBetResponseDTO
@@ -189,6 +183,15 @@ namespace Platform.Operator.API.Repository
                             };
                         }
 
+                        var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, 0, request.Stake, request.BetStatus, testConfig.IsFreeBet);
+
+                        result.Balance = operatorAudit.PostBalance;
+                        _platformContext.Operator.Update(result);
+
+                        _platformContext.SaveChanges();
+
+                        scope.Complete();
+
                         return new OperatorBetResponseDTO
                         {
                             StatusId = 1000,
@@ -200,6 +203,14 @@ namespace Platform.Operator.API.Repository
                     }
                     else
                     {
+
+                        var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, 0, request.Stake, request.BetStatus);
+
+                        result.Balance = operatorAudit.PostBalance;
+                        _platformContext.Operator.Update(result);
+
+                        _platformContext.SaveChanges();
+
                         scope.Complete();
 
                         return new OperatorBetResponseDTO
@@ -488,11 +499,16 @@ namespace Platform.Operator.API.Repository
         }
 
         #region Private Method
-        private OperatorAudit AddOrUpdateOperatorAudit(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal payout, decimal stake, string betStatus)
+        private OperatorAudit AddOrUpdateOperatorAudit(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal payout, decimal stake, string betStatus, bool isFreebet = false)
         {
             var amount = payout;
             if ((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Running)
-                amount = stake * -1;
+            {
+                if (isFreebet)
+                    amount = 0;
+                else
+                    amount = stake * -1;
+            }
 
             var postBalance = _operator.Balance;
             var prevOperatorAudit = _platformContext.OperatorAudit.AsNoTracking().Where(o => o.UserId == _operator.UserId && o.BetId == Guid.Parse(betId)).FirstOrDefault();

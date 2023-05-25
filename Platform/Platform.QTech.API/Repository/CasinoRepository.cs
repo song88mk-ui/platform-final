@@ -285,6 +285,7 @@ namespace Platform.QTech.API.Repository
                 using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
 
                 round.ProviderTransactionId = request.TxnId;
+                round.TransactionType = request.TxnType;
                 round.Payout += request.Amount;
                 round.IsComplete = isComplete;
                 round.BetStatusId = isComplete ? round.Payout > 0 ? (int)BetStatus.Won : (int)BetStatus.Lost : (int)BetStatus.Running;
@@ -370,6 +371,7 @@ namespace Platform.QTech.API.Repository
                 using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
 
                 round.ProviderTransactionId = request.TxnId;
+                round.TransactionType = "ROLLBACK";
 
                 if (isComplete)
                 {

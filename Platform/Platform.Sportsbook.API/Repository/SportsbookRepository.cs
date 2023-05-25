@@ -5291,33 +5291,8 @@ namespace Platform.Sportsbook.API.Repository
                     var result = new List<MarketDTO>();
                     var marketTemplateGroupPlayerProps = GetMarketTemplatePlayerProps();
 
-                    var fthdp = 2;
-                    var ftou = 2;
-                    var fhhdp = 2;
-                    var fhou = 2;
-
                     foreach (var market in filteredMarkets)
                     {
-                        if (market.MaTeId == "16" && fthdp == 0)
-                            continue;
-                        else if (market.MaTeId == "16")
-                            fthdp--;
-
-                        if (market.MaTeId == "18" && ftou == 0)
-                            continue;
-                        else if (market.MaTeId == "18")
-                            ftou--;
-
-                        if (market.MaTeId == "66" && fhhdp == 0)
-                            continue;
-                        else if (market.MaTeId == "66")
-                            fhhdp--;
-
-                        if (market.MaTeId == "68" && fhou == 0)
-                            continue;
-                        else if (market.MaTeId == "68")
-                            fhou--;
-
                         var clientOdds = new List<ClientOdds>();
 
                         var tempSelections = selections.Where(c => c.MaId == market.MaId).ToList();

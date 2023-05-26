@@ -16,6 +16,7 @@ using Microsoft.Extensions.Configuration;
 using Platform.AgentReports.Service.Enums;
 using Platform.Shared.Models;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace Platform.AgentReports.Service.Repository
 {
@@ -293,7 +294,7 @@ namespace Platform.AgentReports.Service.Repository
                             context.CasinoBet.Update(bet);
                         }
 
-                        //context.BetTransaction.Add(ConvertToBetTransactionEntityInsertFinal(message, agent));
+                        context.CasinoBetTransaction.Add(ConvertToCasinoBetTransactionEntityInsertFinal(message, agent));
 
                         AddOrUpdateRunningBalanceFinal(context, message.Stake, message.CurrencyCode, message.TransactionId, message.BetStatusId, message.BetStatusName, message.TransactionDate, agent, 0, agents);
                     }
@@ -332,7 +333,7 @@ namespace Platform.AgentReports.Service.Repository
                             bet.ReceivePositionTaking = GetReceivePTFinal(message.Stake, message.Payout, message.BetStatusId, agent);
                             context.CasinoBet.Update(bet);
 
-                            //context.BetTransaction.Add(ConvertToBetTransactionEntityInsertFinal(message, agent));
+                            context.CasinoBetTransaction.Add(ConvertToCasinoBetTransactionEntityInsertFinal(message, agent));
 
                             var validBetStatusId = new int[] { (int)BetStatus.Running };
 
@@ -682,6 +683,86 @@ namespace Platform.AgentReports.Service.Repository
                 ExchangeRate = message.Bet.ExchangeRate,
                 TransactionDate = message.Bet.BetDate,
                 TransactionDateOffset = message.Bet.BetDate.AddHours(-4)
+            };
+        }
+        private CasinoBetTransaction ConvertToCasinoBetTransactionEntityInsertFinal(OnCasinoBetPlacement message, AgentSettings agent)
+        {
+            return new CasinoBetTransaction
+            {
+                ParentUserId = agent.AgentId,
+                AgentId = agent.AgentId,
+                AgentUsername = agent.AgentUsername,
+                TransactionId = message.TransactionId,
+                ProviderTransactionId = message.ProviderTransactionId,
+                TransactionType = message.TransactionType,
+                ClientId = message.ClientId,
+                UserId = message.UserId,
+                PositionTaking = agent.PositionTaking,
+                Commission = agent.Commission,
+                Stake = message.Stake,
+                Payout = message.Payout,
+                WinLoss = message.WinLoss,
+                BetStatusId = message.BetStatusId,
+                BetStatusName = message.BetStatusName,
+                CurrencyCode = message.CurrencyCode,
+                GameId = message.GameId,
+                Device = message.Device,
+                ClientType = message.ClientType,
+                ClientRoundId = message.ClientRoundId,
+                Category = message.Category,
+                IsComplete = message.IsComplete,
+                ExchangeRate = message.ExchangeRate,
+                ReceivePositionTaking = GetReceivePTFinal(message.Stake, message.Payout, message.BetStatusId, agent),
+                JackpotContributions = message.JackpotContributions,
+                ConversionRate = message.ConversionRate,
+                BonusType = message.BonusType,
+                BonusPromoCode = message.BonusPromoCode,
+                JackpotPayout = message.JackpotPayout,
+                TableId = message.TableId,
+                TransactionIds = message.TransactionIds,
+                ProviderTransactionDate = message.ProviderTransactionDate,
+                TransactionDate = message.TransactionDate,
+                TransactionDateOffset = message.TransactionDate.AddHours(-4)
+            };
+        }
+        private CasinoBetTransaction ConvertToCasinoBetTransactionEntityInsertFinal(OnCasinoBetSettlement message, AgentSettings agent)
+        {
+            return new CasinoBetTransaction
+            {
+                ParentUserId = agent.AgentId,
+                AgentId = agent.AgentId,
+                AgentUsername = agent.AgentUsername,
+                TransactionId = message.TransactionId,
+                ProviderTransactionId = message.ProviderTransactionId,
+                TransactionType = message.TransactionType,
+                ClientId = message.ClientId,
+                UserId = message.UserId,
+                PositionTaking = agent.PositionTaking,
+                Commission = agent.Commission,
+                Stake = message.Stake,
+                Payout = message.Payout,
+                WinLoss = message.WinLoss,
+                BetStatusId = message.BetStatusId,
+                BetStatusName = message.BetStatusName,
+                CurrencyCode = message.CurrencyCode,
+                GameId = message.GameId,
+                Device = message.Device,
+                ClientType = message.ClientType,
+                ClientRoundId = message.ClientRoundId,
+                Category = message.Category,
+                IsComplete = message.IsComplete,
+                ExchangeRate = message.ExchangeRate,
+                ReceivePositionTaking = GetReceivePTFinal(message.Stake, message.Payout, message.BetStatusId, agent),
+                JackpotContributions = message.JackpotContributions,
+                ConversionRate = message.ConversionRate,
+                BonusType = message.BonusType,
+                BonusPromoCode = message.BonusPromoCode,
+                JackpotPayout = message.JackpotPayout,
+                TableId = message.TableId,
+                TransactionIds = message.TransactionIds,
+                ProviderTransactionDate = message.ProviderTransactionDate,
+                TransactionDate = message.TransactionDate,
+                TransactionDateOffset = message.TransactionDate.AddHours(-4)
             };
         }
         private Shared.Data.Reports.Entities.BetSelection ConvertToBetSelectionEntityInsertFinal(Shared.Data.Betting.Entities.BetSelection betSelection, AgentSettings agent)

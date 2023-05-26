@@ -77,7 +77,7 @@ namespace Platform.AgentReports.Service
                         break;
                     case "OnCasinoBetSettlement":
                         var onCasinoBetSettlement = JsonSerializer.Deserialize<OnCasinoBetSettlement>(payload);
-                        _reportsRepository.ProcessBetSettlement(onCasinoBetSettlement);
+                        _reportsRepository.ProcessCasinoBetSettlement(onCasinoBetSettlement);
                         break;
                 }
 

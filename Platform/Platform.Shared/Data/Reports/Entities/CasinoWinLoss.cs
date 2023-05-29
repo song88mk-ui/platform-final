@@ -73,6 +73,9 @@ namespace Platform.Shared.Data.Reports.Entities
         [Column(TypeName = "decimal(26,12)")]
         public decimal Stake { get; set; }
 
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal StakeBonus { get; set; }
+
         public int BetStatusId { get; set; }
 
         public string BetStatusName { get; set; }

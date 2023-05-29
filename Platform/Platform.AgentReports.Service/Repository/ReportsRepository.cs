@@ -329,7 +329,8 @@ namespace Platform.AgentReports.Service.Repository
                             bet.BetStatusId = message.BetStatusId;
                             bet.BetStatusName = message.BetStatusName;
                             bet.ReceivePositionTaking = GetReceivePTFinal(message.Stake, message.Payout, message.BetStatusId, agent);
-                            
+                            bet.SettlementDate = message.SettlementDate;
+
                             context.CasinoBet.Update(bet);
                         }
 
@@ -545,6 +546,7 @@ namespace Platform.AgentReports.Service.Repository
                 PositionTaking = agent.PositionTaking,
                 Commission = agent.Commission,
                 Stake = message.Stake,
+                StakeBonus = message.StakeBonus,
                 Payout = message.Payout,
                 WinLoss = message.WinLoss,
                 BetStatusId = message.BetStatusId,
@@ -567,8 +569,8 @@ namespace Platform.AgentReports.Service.Repository
                 TransactionIds = message.TransactionIds,
                 ProviderTransactionDate = message.ProviderTransactionDate,
                 TransactionDate = message.TransactionDate,
-                TransactionDateOffset = message.TransactionDate.AddHours(-4)
-
+                TransactionDateOffset = message.TransactionDate.AddHours(-4),
+                SettlementDate = message.TransactionDate,
             };
         }
         private Shared.Data.Reports.Entities.CasinoBet ConvertToCasinoBetEntityInsertFinal(OnCasinoBetSettlement message, AgentSettings agent, List<AgentSettings> agents)
@@ -588,6 +590,7 @@ namespace Platform.AgentReports.Service.Repository
                 PositionTaking = agent.PositionTaking,
                 Commission = agent.Commission,
                 Stake = message.Stake,
+                StakeBonus = message.Stake,
                 Payout = message.Payout,
                 WinLoss = message.WinLoss,
                 BetStatusId = message.BetStatusId,
@@ -610,8 +613,8 @@ namespace Platform.AgentReports.Service.Repository
                 TransactionIds = message.TransactionIds,
                 ProviderTransactionDate = message.ProviderTransactionDate,
                 TransactionDate = message.TransactionDate,
-                TransactionDateOffset = message.TransactionDate.AddHours(-4)
-
+                TransactionDateOffset = message.TransactionDate.AddHours(-4),
+                SettlementDate = message.SettlementDate
             };
         }
 
@@ -695,6 +698,7 @@ namespace Platform.AgentReports.Service.Repository
                 PositionTaking = agent.PositionTaking,
                 Commission = agent.Commission,
                 Stake = message.Stake,
+                StakeBonus = message.StakeBonus,
                 Payout = message.Payout,
                 WinLoss = message.WinLoss,
                 BetStatusId = message.BetStatusId,
@@ -717,7 +721,8 @@ namespace Platform.AgentReports.Service.Repository
                 TransactionIds = message.TransactionIds,
                 ProviderTransactionDate = message.ProviderTransactionDate,
                 TransactionDate = message.TransactionDate,
-                TransactionDateOffset = message.TransactionDate.AddHours(-4)
+                TransactionDateOffset = message.TransactionDate.AddHours(-4),
+                SettlementDate = message.TransactionDate
             };
         }
         private CasinoBetTransaction ConvertToCasinoBetTransactionEntityInsertFinal(OnCasinoBetSettlement message, AgentSettings agent)
@@ -735,6 +740,7 @@ namespace Platform.AgentReports.Service.Repository
                 PositionTaking = agent.PositionTaking,
                 Commission = agent.Commission,
                 Stake = message.Stake,
+                StakeBonus = message.StakeBonus,
                 Payout = message.Payout,
                 WinLoss = message.WinLoss,
                 BetStatusId = message.BetStatusId,
@@ -757,7 +763,8 @@ namespace Platform.AgentReports.Service.Repository
                 TransactionIds = message.TransactionIds,
                 ProviderTransactionDate = message.ProviderTransactionDate,
                 TransactionDate = message.TransactionDate,
-                TransactionDateOffset = message.TransactionDate.AddHours(-4)
+                TransactionDateOffset = message.TransactionDate.AddHours(-4),
+                SettlementDate = message.SettlementDate
             };
         }
         private Shared.Data.Reports.Entities.BetSelection ConvertToBetSelectionEntityInsertFinal(Shared.Data.Betting.Entities.BetSelection betSelection, AgentSettings agent)

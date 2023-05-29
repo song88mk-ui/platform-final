@@ -18,6 +18,9 @@ namespace Platform.Shared.MessageModels
         public decimal Stake { get; set; }
 
         [Column(TypeName = "decimal(26,12)")]
+        public decimal StakeBonus { get; set; }
+
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Payout { get; set; }
 
         [Column(TypeName = "decimal(26,12)")]

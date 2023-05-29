@@ -34,6 +34,9 @@ namespace Platform.Shared.Data.Reports.Entities
         public decimal Stake { get; set; }
 
         [Column(TypeName = "decimal(26,12)")]
+        public decimal StakeBonus { get; set; }
+
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Payout { get; set; }
 
         [Column(TypeName = "decimal(26,12)")]
@@ -83,5 +86,7 @@ namespace Platform.Shared.Data.Reports.Entities
         public DateTime TransactionDate { get; set; }
 
         public DateTime TransactionDateOffset { get; set; }
+
+        public DateTime SettlementDate { get; set; }
     }
 }

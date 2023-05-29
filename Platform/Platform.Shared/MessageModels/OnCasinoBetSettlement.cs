@@ -17,6 +17,9 @@ namespace Platform.Shared.MessageModels
         public decimal Stake { get; set; }
 
         [Column(TypeName = "decimal(26,12)")]
+        public decimal StakeBonus { get; set; }
+
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Payout { get; set; }
 
         [Column(TypeName = "decimal(26,12)")]
@@ -44,6 +47,7 @@ namespace Platform.Shared.MessageModels
         public string TransactionIds { get; set; }
         public DateTime ProviderTransactionDate { get; set; }
         public DateTime TransactionDate { get; set; }
+        public DateTime SettlementDate { get; set; }
     }
 
 }

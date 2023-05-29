@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
@@ -10,7 +11,10 @@ using Platform.Shared.Helpers;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
+using Platform.Settlement.Service.Telemetry;
 using System;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -22,10 +26,35 @@ namespace Platform.Settlement.Service.Repository
     public class BettingRepository : IBettingRepository
     {
         private readonly IConfiguration _configuration;
-        public BettingRepository(IConfiguration configuration)
+        private readonly ILogger<BettingRepository> _logger;
+
+        // counters
+        private readonly Counter<long> _betSettlementCounter;
+        private readonly Counter<long> _betCancellationCounter;
+        private readonly Counter<long> _betBoCancellationCounter;
+        private readonly Counter<long> _betBoManualSettlementCounter;
+
+        private readonly Histogram<double> _betSettlementDurationHistogram;
+        private readonly Histogram<double> _betCancellationDurationHistogram;
+        private readonly Histogram<double> _betBoCancellationDurationHistogram;
+        private readonly Histogram<double> _betBoManualSettlementDurationHistogram;
+
+        public BettingRepository(IConfiguration configuration, ILogger<BettingRepository> logger, Instrumentation instrumentation)
         {
             _configuration = configuration;
+            _logger = logger;
+
+            _betSettlementCounter = instrumentation.OnBetSettlementCounter;
+            _betCancellationCounter = instrumentation.OnBetCancellationCounter;
+            _betBoCancellationCounter = instrumentation.OnBetBackOfficeCancellationCounter;
+            _betBoManualSettlementCounter = instrumentation.OnBetBackOfficeManualSettlementCounter;
+
+            _betSettlementDurationHistogram = instrumentation.OnBetSettlementDurationHistogram;
+            _betCancellationDurationHistogram = instrumentation.OnBetCancellationDurationHistogram;
+            _betBoCancellationDurationHistogram = instrumentation.OnBetBackOfficeCancellationDurationHistogram;
+            _betBoManualSettlementDurationHistogram = instrumentation.OnBetBackOfficeManualSettlementDurationHistogram;
         }
+
         private List<BetSelection> GetBetSelectionsByMarketId(long marketId)
         {
             var result = new List<BetSelection>();
@@ -307,8 +336,10 @@ namespace Platform.Settlement.Service.Repository
             return BetStatus.Lost;
         }
 
-        public void ProcesssBetSettlement(OnUOFBetSettlement message, IMessageBroker messageBroker, string correlationId)
+        public void ProcessBetSettlement(OnUOFBetSettlement message, IMessageBroker messageBroker, string correlationId)
         {
+            Stopwatch? duration = _betSettlementDurationHistogram.Enabled ? Stopwatch.StartNew() : null;
+
             var betSelections = GetBetSelections(message.SelectionId);
 
             foreach (var betSelection in betSelections)
@@ -378,10 +409,13 @@ namespace Platform.Settlement.Service.Repository
                                     }, "OnBetStatus", "r.bet.betstatus", correlationId);
                                 }
                             }
+                            _betSettlementCounter.Add(1);
+                            if (duration !=null)
+                              _betSettlementDurationHistogram.Record(duration.Elapsed.TotalMilliseconds);
                         }
                         catch (Exception ex)
                         {
-
+                          _logger.LogError(ex.ToString());
                         }
                     }
                 }
@@ -392,8 +426,10 @@ namespace Platform.Settlement.Service.Repository
             DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
             return dtDateTime.AddMilliseconds(timestamp).ToUniversalTime();
         }
-        public void ProcesssBetSettlementForCancellation(OnUOFBetSettlement message, IMessageBroker messageBroker, string correlationId)
+        public void ProcessBetSettlementForCancellation(OnUOFBetSettlement message, IMessageBroker messageBroker, string correlationId)
         {
+            Stopwatch? duration = _betCancellationDurationHistogram.Enabled ? Stopwatch.StartNew() : null;
+
             var betSelections = GetBetSelectionsForCancellation(message.SelectionId);
 
             foreach (var betSelection in betSelections)
@@ -515,6 +551,9 @@ namespace Platform.Settlement.Service.Repository
                                     }, "OnBetStatus", "r.bet.betstatus", correlationId);
                                 }
                             }
+                            _betCancellationCounter.Add(1);
+                            if (duration != null)
+                              _betCancellationDurationHistogram.Record(duration.Elapsed.TotalMilliseconds);
                         }
                         catch (Exception ex)
                         {
@@ -1135,12 +1174,15 @@ namespace Platform.Settlement.Service.Repository
                     EndTime = message.EndTime
                 };
 
-                ProcesssBetSettlementForCancellation(cancellation, messageBroker, correlationId);
+                ProcessBetSettlementForCancellation(cancellation, messageBroker, correlationId);
             }
         }
 
         public void ProcessBackOfficeBetCancellation(OnBOBetCancellaton message, IMessageBroker messageBroker, string correlationId)
         {
+
+            Stopwatch? duration = _betBoCancellationDurationHistogram.Enabled ? Stopwatch.StartNew() : null;
+
             foreach (var betItem in message.Bets)
             {
                 var betData = new Bet();
@@ -1333,6 +1375,10 @@ namespace Platform.Settlement.Service.Repository
                                 BetId = betData.BetId.ToString().ToUpper(),
                                 BetStatus = (BetStatus)betData.BetStatusId
                             }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                            _betBoCancellationCounter.Add(1);
+                            if (duration != null)
+                              _betBoCancellationDurationHistogram.Record(duration.Elapsed.TotalMilliseconds);
                         }
                         catch (Exception ex)
                         {
@@ -1342,8 +1388,9 @@ namespace Platform.Settlement.Service.Repository
                 }
             }
         }
-        public void ProcesssBackOfficeManualSettlement(OnBOBetManualSettlement message, IMessageBroker messageBroker, string correlationId)
+        public void ProcessBackOfficeManualSettlement(OnBOBetManualSettlement message, IMessageBroker messageBroker, string correlationId)
         {
+            Stopwatch? duration = _betBoManualSettlementDurationHistogram.Enabled ? Stopwatch.StartNew() : null;
             foreach (var betItem in message.Bets)
             {
                 var finalResult = new Tuple<bool, bool>(false, false);
@@ -1420,6 +1467,10 @@ namespace Platform.Settlement.Service.Repository
                                     }, "OnBetStatus", "r.bet.betstatus", correlationId);
                                 }
                             }
+
+                            _betBoManualSettlementCounter.Add(1);
+                            if (duration != null)
+                              _betBoManualSettlementDurationHistogram.Record(duration.Elapsed.TotalMilliseconds);
                         }
                         catch (Exception ex)
                         {

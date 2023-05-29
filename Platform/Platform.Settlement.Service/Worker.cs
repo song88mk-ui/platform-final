@@ -3,11 +3,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text.Json;
 using System.Text;
 using Platform.Shared.Utility;
 using Platform.Settlement.Service.Repository;
+using Platform.Settlement.Service.Telemetry;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Enums;
 
@@ -19,11 +26,15 @@ namespace Platform.Settlement.Service
         private readonly IMessageBroker _messageBroker;
         private readonly IBettingRepository _bettingRepository;
 
-        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository)
+        private readonly ActivitySource _activitySource;
+        private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
+
+        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository, Instrumentation instrumentation)
         {
             _logger = logger;
             _messageBroker = messageBroker;
             _bettingRepository = bettingRepository;
+            _activitySource = instrumentation.ActivitySource;
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
@@ -46,19 +57,47 @@ namespace Platform.Settlement.Service
             return Task.CompletedTask;
         }
 
+        private IEnumerable<string> ExtractTraceFromBasicProperties(IBasicProperties props, string key)
+        {
+          try
+          {
+            if (props.Headers.TryGetValue(key, out var value))
+            {
+              var bytes = value as byte[];
+              return new[] { Encoding.UTF8.GetString(bytes) };
+            }
+          } catch (Exception)
+          {
+            // trace not available
+          }
+          return Enumerable.Empty<string>();
+        }
+
         private void MessageReceivedEvent(object sender, BasicDeliverEventArgs e)
         {
             var payload = Encoding.UTF8.GetString(e.Body);
             var messageType = e.BasicProperties.Type;
             var correlationId = e.BasicProperties.CorrelationId;
 
+            var parentContext = Propagator.Extract(default, e.BasicProperties, this.ExtractTraceFromBasicProperties);
+            Baggage.Current = parentContext.Baggage;
+
+            var activityName = $"{e.RoutingKey} receive";
+
+            using var activity = _activitySource.StartActivity(activityName, ActivityKind.Consumer, parentContext.ActivityContext);
+
             try
             {
+                activity?.SetTag("messaging.system", "rabbitmq");
+                activity?.SetTag("messaging.destination_kind", "queue");
+                activity?.SetTag("messaging.rabbitmq.routing_key", e.RoutingKey);
+                activity?.SetTag("messaging.rabbitmq.type", messageType);
+
                 switch (messageType)
                 {
                     case "OnBetSettlement":
                         var onBetSettlement = JsonSerializer.Deserialize<OnUOFBetSettlement>(payload);
-                        _bettingRepository.ProcesssBetSettlement(onBetSettlement, _messageBroker, correlationId);
+                        _bettingRepository.ProcessBetSettlement(onBetSettlement, _messageBroker, correlationId);
                         break;
 
                     case "OnBetCancellation":
@@ -73,12 +112,18 @@ namespace Platform.Settlement.Service
 
                     case "OnBetBackOfficeManualSettlement":
                         var onBOBetManualSettlement = JsonSerializer.Deserialize<OnBOBetManualSettlement>(payload);
-                        _bettingRepository.ProcesssBackOfficeManualSettlement(onBOBetManualSettlement, _messageBroker, correlationId);
+                        _bettingRepository.ProcessBackOfficeManualSettlement(onBOBetManualSettlement, _messageBroker, correlationId);
                         break;
                 }
+                activity?.SetStatus(ActivityStatusCode.Ok);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+              activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            }
+            finally
+            {
+              activity?.Stop();
             }
         }
     }

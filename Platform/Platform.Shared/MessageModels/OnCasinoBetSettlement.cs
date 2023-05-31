@@ -6,7 +6,7 @@ namespace Platform.Shared.MessageModels
     public class OnCasinoBetSettlement
     {
 
-        public Guid TransactionId { get; set; }
+        public Guid BetId { get; set; }
         public string ProviderTransactionId { get; set; }
         public string TransactionType { get; set; }
         public string ClientId { get; set; }
@@ -30,7 +30,7 @@ namespace Platform.Shared.MessageModels
         public string GameId { get; set; }
         public string Device { get; set; }
         public string ClientType { get; set; }
-        public string ClientRoundId { get; set; }
+        public string ProviderBetId { get; set; }
         public string Category { get; set; }
         public bool IsComplete { get; set; }
 
@@ -46,7 +46,7 @@ namespace Platform.Shared.MessageModels
         public string TableId { get; set; }
         public string TransactionIds { get; set; }
         public DateTime ProviderTransactionDate { get; set; }
-        public DateTime TransactionDate { get; set; }
+        public DateTime BetDate { get; set; }
         public DateTime SettlementDate { get; set; }
     }
 

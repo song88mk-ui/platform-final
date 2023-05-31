@@ -267,7 +267,7 @@ namespace Platform.AgentReports.Service.Repository
 
         public void ProcessCasinoBetSettlement(OnCasinoBetSettlement message)
         {
-            var agents = GetCasinoAgentSettingsFinal(message.Category, message.UserId, message.TransactionDate).OrderBy(o => o.Hierarchy).ToList();
+            var agents = GetCasinoAgentSettingsFinal(message.Category, message.UserId, message.BetDate).OrderBy(o => o.Hierarchy).ToList();
 
             if (agents.Count == 0)
                 return;
@@ -1168,7 +1168,7 @@ namespace Platform.AgentReports.Service.Repository
                 }
 
                 var winloss = context.CasinoWinLoss.Where(x => x.ParentUserId == parentUserId && x.DirectUserId == directUserId
-                && x.IndirectUserId == indirectUserId && x.TransactionId == message.TransactionId && x.TransactionDate == message.TransactionDate).SingleOrDefault();
+                && x.IndirectUserId == indirectUserId && x.BetId == message.BetId && x.BetDate == message.BetDate).SingleOrDefault();
 
                 if (winloss != null)
                 {
@@ -1196,7 +1196,7 @@ namespace Platform.AgentReports.Service.Repository
                     winloss.GameId = message.GameId;
                     winloss.Device = message.Device;
                     winloss.ClientType = message.ClientType;
-                    winloss.ClientRoundId = message.ClientRoundId;
+                    winloss.ProviderBetId = message.ProviderBetId;
                     winloss.Category = message.Category;
                     winloss.IsComplete = message.IsComplete;
                     winloss.ReceivePositionTaking = GetReceivePTFinal(message.Stake, message.Payout, message.BetStatusId, agent);
@@ -1221,9 +1221,9 @@ namespace Platform.AgentReports.Service.Repository
                         ParentUserId = parentUserId,
                         DirectUserId = directUserId,
                         IndirectUserId = indirectUserId,
-                        TransactionId = message.TransactionId,
-                        TransactionDate = message.TransactionDate,
-                        TransactionDateOffset = message.TransactionDate.AddHours(-4),
+                        BetId = message.BetId,
+                        BetDate = message.BetDate,
+                        TransactionDateOffset = message.BetDate.AddHours(-4),
                         ProviderTransactionId = message.ProviderTransactionId,
                         ExchangeRate = message.ExchangeRate,
                         AgentId = agent.AgentId,
@@ -1252,7 +1252,7 @@ namespace Platform.AgentReports.Service.Repository
                         GameId = message.GameId,
                         Device = message.Device,
                         ClientType = message.ClientType,
-                        ClientRoundId = message.ClientRoundId,
+                        ProviderBetId = message.ProviderBetId,
                         Category = message.Category,
                         IsComplete = message.IsComplete,
                         ReceivePositionTaking = GetReceivePTFinal(message.Stake, message.Payout, message.BetStatusId, agent),
@@ -1469,7 +1469,7 @@ namespace Platform.AgentReports.Service.Repository
                 preTrueCashBalance = runningBalance.TrueCashBalance;
                 preOutstandingBalance = runningBalance.OutstandingBalance;
 
-                var tracker = context.CashBalanceTracker.Find(agent.UplineUserId, agent.AgentId, message.TransactionId);
+                var tracker = context.CashBalanceTracker.Find(agent.UplineUserId, agent.AgentId, message.BetId);
 
                 var amount = 0m;
 
@@ -1555,7 +1555,7 @@ namespace Platform.AgentReports.Service.Repository
                     PostOutstandingBalance = entity.OutstandingBalance,
 
                     IsCashPlayer = entity.IsCashPlayer,
-                    ReferenceId = message.TransactionId.ToString().ToUpper(),
+                    ReferenceId = message.BetId.ToString().ToUpper(),
                     StatusId = message.BetStatusId,
                     StatusName = message.BetStatusName,
                     TransactionDate = DateTime.UtcNow

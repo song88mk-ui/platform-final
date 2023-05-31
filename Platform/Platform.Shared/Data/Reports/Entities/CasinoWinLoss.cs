@@ -12,9 +12,9 @@ namespace Platform.Shared.Data.Reports.Entities
 
         public long IndirectUserId { get; set; }
 
-        public Guid TransactionId { get; set; }
+        public Guid BetId { get; set; }
 
-        public DateTime TransactionDate { get; set; }
+        public DateTime BetDate { get; set; }
 
         public string ProviderTransactionId { get; set; }
 
@@ -88,7 +88,7 @@ namespace Platform.Shared.Data.Reports.Entities
 
         public string ClientType { get; set; }
 
-        public string ClientRoundId { get; set; }
+        public string ProviderBetId { get; set; }
 
         public string Category { get; set; }
 

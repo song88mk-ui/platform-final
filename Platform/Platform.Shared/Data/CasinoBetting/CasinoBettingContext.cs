@@ -14,7 +14,7 @@ namespace Platform.Shared.Data.CasinoBetting
             modelBuilder.Entity<CasinoBetAudit>().HasKey(k => new { k.Id });
         }
 
-        public DbSet<CasinoBet> Transaction { get; set; }
-        public DbSet<CasinoBetAudit> TransactionAudit { get; set; }
+        public DbSet<CasinoBet> CasinoBet { get; set; }
+        public DbSet<CasinoBetAudit> CasinoBetAudit { get; set; }
     }
 }

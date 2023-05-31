@@ -97,7 +97,7 @@ namespace Platform.QTech.API.Repository
             if (authenticationResponse.Result.Balance < request.Amount)
                 return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.INSUFFICIENT_FUNDS, new WithdrawResponse());
 
-            var round = _casinoBettingContext.Transaction.Where(c => c.RoundId == request.RoundId).FirstOrDefault();
+            var round = _casinoBettingContext.CasinoBet.Where(c => c.RoundId == request.RoundId).FirstOrDefault();
 
             var dateNow = DateTime.UtcNow;
 
@@ -111,7 +111,7 @@ namespace Platform.QTech.API.Repository
 
                 using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
 
-                var transactionEntity = _casinoBettingContext.Transaction.Update(new Shared.Data.CasinoBetting.Entities.CasinoBet
+                var transactionEntity = _casinoBettingContext.CasinoBet.Update(new Shared.Data.CasinoBetting.Entities.CasinoBet
                 {
                     ProviderTransactionId = request.TxnId,
                     TransactionType = request.TxnType,
@@ -144,7 +144,7 @@ namespace Platform.QTech.API.Repository
                     SettlementDate = dateNow
                 }).Entity;
 
-                _casinoBettingContext.TransactionAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
+                _casinoBettingContext.CasinoBetAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
                 {
                     BetId = transactionEntity.BetId,
                     ProviderTransactionId = transactionEntity.ProviderTransactionId,
@@ -236,9 +236,9 @@ namespace Platform.QTech.API.Repository
                     round.TransactionIds = JsonSerializer.Serialize(transactionIds);
                 }
 
-                var transactionEntity = _casinoBettingContext.Transaction.Update(round).Entity;
+                var transactionEntity = _casinoBettingContext.CasinoBet.Update(round).Entity;
 
-                _casinoBettingContext.TransactionAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
+                _casinoBettingContext.CasinoBetAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
                 {
                     BetId = transactionEntity.BetId,
                     ProviderTransactionId = transactionEntity.ProviderTransactionId,
@@ -286,7 +286,7 @@ namespace Platform.QTech.API.Repository
         }
         public async Task<Tuple<DepositCode, DepositResponse>> Deposit(DepositRequest request)
         {
-            var round = _casinoBettingContext.Transaction.Where(c => c.RoundId == request.RoundId).FirstOrDefault();
+            var round = _casinoBettingContext.CasinoBet.Where(c => c.RoundId == request.RoundId).FirstOrDefault();
 
             var isComplete = request.Completed.ToLower() == "true" ? true : false;
 
@@ -330,9 +330,9 @@ namespace Platform.QTech.API.Repository
                     round.TransactionIds = JsonSerializer.Serialize(transactionIds);
                 }
 
-                var transactionEntity = _casinoBettingContext.Transaction.Update(round).Entity;
+                var transactionEntity = _casinoBettingContext.CasinoBet.Update(round).Entity;
 
-                _casinoBettingContext.TransactionAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
+                _casinoBettingContext.CasinoBetAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
                 {
                     BetId = transactionEntity.BetId,
                     ProviderTransactionId = transactionEntity.ProviderTransactionId,
@@ -381,7 +381,7 @@ namespace Platform.QTech.API.Repository
         }
         public async Task<Tuple<RollbackCode, RollbackResponse>> Rollback(RollbackRequest request)
         {
-            var round = _casinoBettingContext.Transaction.Where(c => c.RoundId == request.RoundId).FirstOrDefault();
+            var round = _casinoBettingContext.CasinoBet.Where(c => c.RoundId == request.RoundId).FirstOrDefault();
 
             var isComplete = request.Completed.ToLower() == "true" ? true : false;
 
@@ -427,9 +427,9 @@ namespace Platform.QTech.API.Repository
                     round.TransactionIds = JsonSerializer.Serialize(transactionIds);
                 }
 
-                var transactionEntity = _casinoBettingContext.Transaction.Update(round).Entity;
+                var transactionEntity = _casinoBettingContext.CasinoBet.Update(round).Entity;
 
-                _casinoBettingContext.TransactionAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
+                _casinoBettingContext.CasinoBetAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
                 {
                     BetId = transactionEntity.BetId,
                     ProviderTransactionId = transactionEntity.ProviderTransactionId,

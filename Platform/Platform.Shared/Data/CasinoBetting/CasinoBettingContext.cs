@@ -10,11 +10,11 @@ namespace Platform.Shared.Data.CasinoBetting
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Transaction>().HasKey(k => new { k.TransactionId });
-            modelBuilder.Entity<TransactionAudit>().HasKey(k => new { k.Id });
+            modelBuilder.Entity<CasinoBet>().HasKey(k => new { k.BetId });
+            modelBuilder.Entity<CasinoBetAudit>().HasKey(k => new { k.Id });
         }
 
-        public DbSet<Transaction> Transaction { get; set; }
-        public DbSet<TransactionAudit> TransactionAudit { get; set; }
+        public DbSet<CasinoBet> Transaction { get; set; }
+        public DbSet<CasinoBetAudit> TransactionAudit { get; set; }
     }
 }

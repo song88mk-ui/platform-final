@@ -4,9 +4,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Platform.Shared.Data.CasinoBetting.Entities
 {
-    public class Transaction
+    public class CasinoBetAudit
     {
-        public Guid TransactionId { get; set; }
+        public long Id { get; set; }
+        public Guid BetId { get; set; }
         public string ProviderTransactionId { get; set; }
         public string TransactionType { get; set; }
         public string ClientId { get; set; }
@@ -17,6 +18,12 @@ namespace Platform.Shared.Data.CasinoBetting.Entities
         public decimal Stake { get; set; }
 
         [Column(TypeName = "decimal(26,12)")]
+        public decimal StakeBonus { get; set; }
+
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal WinLoss { get; set; }
+
+        [Column(TypeName = "decimal(26,12)")]
         public decimal Payout { get; set; }
         public int BetStatusId { get; set; }
         public string BetStatusName { get; set; }
@@ -24,7 +31,7 @@ namespace Platform.Shared.Data.CasinoBetting.Entities
         public string GameId { get; set; }
         public string Device { get; set; }
         public string ClientType { get; set; }
-        public string ClientRoundId { get; set; }
+        public string ProviderBetId { get; set; }
         public string Category { get; set; }
         public bool IsComplete { get; set; }
 
@@ -40,6 +47,8 @@ namespace Platform.Shared.Data.CasinoBetting.Entities
         public string TableId { get; set; }
         public string TransactionIds { get; set; }
         public DateTime ProviderTransactionDate { get; set; }
-        public DateTime TransactionDate { get; set; }
+        public DateTime BetDate { get; set; }
+        public DateTime SettlementDate { get; set; }
+        public string Payload { get; set; }
     }
 }

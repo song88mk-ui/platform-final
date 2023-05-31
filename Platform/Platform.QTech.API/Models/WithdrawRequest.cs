@@ -9,8 +9,8 @@
         public string PlayerId { get; set; }
         public string RoundId { get; set; }
         public decimal Amount { get; set; }
-        public string Currency { get; set; }
         public decimal BonusBetAmount { get; set; }
+        public string Currency { get; set; }
         public string BonusType { get; set; }
         public string BonusPromoCode { get; set; }
         public JackpotContribution[] JpContributions { get; set; }

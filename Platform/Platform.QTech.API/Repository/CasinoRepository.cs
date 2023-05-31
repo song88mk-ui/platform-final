@@ -111,7 +111,7 @@ namespace Platform.QTech.API.Repository
 
                 using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
 
-                var transactionEntity = _casinoBettingContext.Transaction.Update(new Shared.Data.CasinoBetting.Entities.Transaction
+                var transactionEntity = _casinoBettingContext.Transaction.Update(new Shared.Data.CasinoBetting.Entities.CasinoBet
                 {
                     ProviderTransactionId = request.TxnId,
                     TransactionType = request.TxnType,
@@ -119,6 +119,8 @@ namespace Platform.QTech.API.Repository
                     UserId = authenticationResponse.Result.UserId,
                     RoundId = request.RoundId,
                     Stake = request.Amount,
+                    StakeBonus = request.BonusBetAmount,
+                    WinLoss = isComplete ? request.Amount * -1 : 0,
                     Payout = 0,
                     BetStatusId = isComplete ? (int)BetStatus.Lost : (int)BetStatus.Running,
                     BetStatusName = isComplete ? BetStatus.Lost.ToString() : BetStatus.Running.ToString(),
@@ -126,7 +128,7 @@ namespace Platform.QTech.API.Repository
                     GameId = request.GameId,
                     Device = request.Device,
                     ClientType = request.ClientType,
-                    ClientRoundId = request.ClientRoundId,
+                    ProviderBetId = request.ClientRoundId,
                     Category = request.Category,
                     IsComplete = isComplete,
                     ExchangeRate = rate.ExchangeRate,
@@ -138,18 +140,21 @@ namespace Platform.QTech.API.Repository
                     TableId = request.TableId,
                     TransactionIds = JsonSerializer.Serialize(new List<string> { request.TxnId }),
                     ProviderTransactionDate = DateTime.Parse(request.Created.Split('[').First()).ToUniversalTime(),
-                    TransactionDate = dateNow
+                    BetDate = dateNow,
+                    SettlementDate = dateNow
                 }).Entity;
 
-                _casinoBettingContext.TransactionAudit.Add(new Shared.Data.CasinoBetting.Entities.TransactionAudit
+                _casinoBettingContext.TransactionAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
                 {
-                    TransactionId = transactionEntity.TransactionId,
+                    BetId = transactionEntity.BetId,
                     ProviderTransactionId = transactionEntity.ProviderTransactionId,
                     TransactionType = transactionEntity.TransactionType,
                     ClientId = transactionEntity.ClientId,
                     UserId = transactionEntity.UserId,
                     RoundId = transactionEntity.RoundId,
                     Stake = transactionEntity.Stake,
+                    StakeBonus = transactionEntity.StakeBonus,
+                    WinLoss = transactionEntity.WinLoss,
                     Payout = transactionEntity.Payout,
                     BetStatusId = transactionEntity.BetStatusId,
                     BetStatusName = transactionEntity.BetStatusName,
@@ -157,7 +162,7 @@ namespace Platform.QTech.API.Repository
                     GameId = transactionEntity.GameId,
                     Device = transactionEntity.Device,
                     ClientType = transactionEntity.ClientType,
-                    ClientRoundId = transactionEntity.ClientRoundId,
+                    ProviderBetId = transactionEntity.ProviderBetId,
                     Category = transactionEntity.Category,
                     IsComplete = transactionEntity.IsComplete,
                     ExchangeRate = transactionEntity.ExchangeRate,
@@ -169,7 +174,8 @@ namespace Platform.QTech.API.Repository
                     TableId = transactionEntity.TableId,
                     TransactionIds = transactionEntity.TransactionIds,
                     ProviderTransactionDate = transactionEntity.ProviderTransactionDate,
-                    TransactionDate = transactionEntity.TransactionDate,
+                    BetDate = transactionEntity.BetDate,
+                    SettlementDate = transactionEntity.SettlementDate,
                     Payload = JsonSerializer.Serialize(request)
                 });
 
@@ -179,7 +185,7 @@ namespace Platform.QTech.API.Repository
                 //TODO: get afer balance from response of debit call to operator api
                 return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse
                 {
-                    ReferenceId = transactionEntity.TransactionId.ToString().ToUpper(),
+                    ReferenceId = transactionEntity.BetId.ToString().ToUpper(),
                     Balance = authenticationResponse.Result.Balance
                 });
             }
@@ -191,8 +197,17 @@ namespace Platform.QTech.API.Repository
                 {
                     return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse 
                     { 
-                        ReferenceId = round.TransactionId.ToString().ToUpper(), 
+                        ReferenceId = round.BetId.ToString().ToUpper(), 
                         Balance = authenticationResponse.Result.Balance 
+                    });
+                }
+
+                if (request.Amount == 0 && request.BonusBetAmount > 0)
+                {
+                    return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.REQUEST_DECLINED, new WithdrawResponse
+                    {
+                        ReferenceId = round.BetId.ToString().ToUpper(),
+                        Balance = authenticationResponse.Result.Balance
                     });
                 }
 
@@ -207,6 +222,13 @@ namespace Platform.QTech.API.Repository
                 round.BetStatusName = isComplete ? BetStatus.Lost.ToString() : BetStatus.Running.ToString();
                 round.ProviderTransactionDate = DateTime.Parse(request.Created.Split('[').First()).ToUniversalTime();
 
+                if (isComplete)
+                {
+                    round.WinLoss = round.Stake * -1;
+                    round.SettlementDate = dateNow;
+                }
+
+
                 if (transactionIds.Contains(request.TxnId) == false)
                 {
                     transactionIds.Add(request.TxnId);
@@ -216,15 +238,17 @@ namespace Platform.QTech.API.Repository
 
                 var transactionEntity = _casinoBettingContext.Transaction.Update(round).Entity;
 
-                _casinoBettingContext.TransactionAudit.Add(new Shared.Data.CasinoBetting.Entities.TransactionAudit
+                _casinoBettingContext.TransactionAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
                 {
-                    TransactionId = transactionEntity.TransactionId,
+                    BetId = transactionEntity.BetId,
                     ProviderTransactionId = transactionEntity.ProviderTransactionId,
                     TransactionType = transactionEntity.TransactionType,
                     ClientId = transactionEntity.ClientId,
                     UserId = transactionEntity.UserId,
                     RoundId = transactionEntity.RoundId,
                     Stake = transactionEntity.Stake,
+                    StakeBonus = transactionEntity.StakeBonus,
+                    WinLoss = transactionEntity.WinLoss,
                     Payout = transactionEntity.Payout,
                     BetStatusId = transactionEntity.BetStatusId,
                     BetStatusName = transactionEntity.BetStatusName,
@@ -232,7 +256,7 @@ namespace Platform.QTech.API.Repository
                     GameId = transactionEntity.GameId,
                     Device = transactionEntity.Device,
                     ClientType = transactionEntity.ClientType,
-                    ClientRoundId = transactionEntity.ClientRoundId,
+                    ProviderBetId = transactionEntity.ProviderBetId,
                     Category = transactionEntity.Category,
                     IsComplete = transactionEntity.IsComplete,
                     ExchangeRate = transactionEntity.ExchangeRate,
@@ -244,7 +268,8 @@ namespace Platform.QTech.API.Repository
                     TableId = transactionEntity.TableId,
                     TransactionIds = transactionEntity.TransactionIds,
                     ProviderTransactionDate = transactionEntity.ProviderTransactionDate,
-                    TransactionDate = dateNow,
+                    BetDate = transactionEntity.BetDate,
+                    SettlementDate = transactionEntity.SettlementDate,
                     Payload = JsonSerializer.Serialize(request)
                 });
 
@@ -254,7 +279,7 @@ namespace Platform.QTech.API.Repository
                 //TODO: get afer balance from response of debit call to operator api
                 return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse
                 {
-                    ReferenceId = transactionEntity.TransactionId.ToString().ToUpper(),
+                    ReferenceId = transactionEntity.BetId.ToString().ToUpper(),
                     Balance = authenticationResponse.Result.Balance
                 });
             }
@@ -275,7 +300,7 @@ namespace Platform.QTech.API.Repository
                 {
                     return new Tuple<DepositCode, DepositResponse>(DepositCode.OK, new DepositResponse
                     {
-                        ReferenceId = round.TransactionId.ToString().ToUpper(),
+                        ReferenceId = round.BetId.ToString().ToUpper(),
                         Balance = 0m
                     });
                 }
@@ -292,6 +317,12 @@ namespace Platform.QTech.API.Repository
                 round.BetStatusName = isComplete ? round.Payout > 0 ? BetStatus.Won.ToString() : BetStatus.Lost.ToString() : BetStatus.Running.ToString();
                 round.ProviderTransactionDate = DateTime.Parse(request.Created.Split('[').First()).ToUniversalTime();
 
+                if (isComplete)
+                {
+                    round.WinLoss = round.Payout - round.Stake;
+                    round.SettlementDate = dateNow;
+                }
+
                 if (transactionIds.Contains(request.TxnId) == false)
                 {
                     transactionIds.Add(request.TxnId);
@@ -301,15 +332,17 @@ namespace Platform.QTech.API.Repository
 
                 var transactionEntity = _casinoBettingContext.Transaction.Update(round).Entity;
 
-                _casinoBettingContext.TransactionAudit.Add(new Shared.Data.CasinoBetting.Entities.TransactionAudit
+                _casinoBettingContext.TransactionAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
                 {
-                    TransactionId = transactionEntity.TransactionId,
+                    BetId = transactionEntity.BetId,
                     ProviderTransactionId = transactionEntity.ProviderTransactionId,
                     TransactionType = transactionEntity.TransactionType,
                     ClientId = transactionEntity.ClientId,
                     UserId = transactionEntity.UserId,
                     RoundId = transactionEntity.RoundId,
                     Stake = transactionEntity.Stake,
+                    StakeBonus = transactionEntity.StakeBonus,
+                    WinLoss = transactionEntity.WinLoss,
                     Payout = transactionEntity.Payout,
                     BetStatusId = transactionEntity.BetStatusId,
                     BetStatusName = transactionEntity.BetStatusName,
@@ -317,7 +350,7 @@ namespace Platform.QTech.API.Repository
                     GameId = transactionEntity.GameId,
                     Device = transactionEntity.Device,
                     ClientType = transactionEntity.ClientType,
-                    ClientRoundId = transactionEntity.ClientRoundId,
+                    ProviderBetId = transactionEntity.ProviderBetId,
                     Category = transactionEntity.Category,
                     IsComplete = transactionEntity.IsComplete,
                     ExchangeRate = transactionEntity.ExchangeRate,
@@ -329,7 +362,8 @@ namespace Platform.QTech.API.Repository
                     TableId = transactionEntity.TableId,
                     TransactionIds = transactionEntity.TransactionIds,
                     ProviderTransactionDate = transactionEntity.ProviderTransactionDate,
-                    TransactionDate = dateNow,
+                    BetDate = transactionEntity.BetDate,
+                    SettlementDate = transactionEntity.SettlementDate,
                     Payload = JsonSerializer.Serialize(request)
                 });
 
@@ -339,7 +373,7 @@ namespace Platform.QTech.API.Repository
                 //TODO: get afer balance from response of credit call to operator api
                 return new Tuple<DepositCode, DepositResponse>(DepositCode.OK, new DepositResponse
                 {
-                    ReferenceId = transactionEntity.TransactionId.ToString().ToUpper()
+                    ReferenceId = transactionEntity.BetId.ToString().ToUpper()
                 });
             }
 
@@ -361,7 +395,7 @@ namespace Platform.QTech.API.Repository
                 {
                     return new Tuple<RollbackCode, RollbackResponse>(RollbackCode.OK, new RollbackResponse
                     {
-                        ReferenceId = round.TransactionId.ToString().ToUpper(),
+                        ReferenceId = round.BetId.ToString().ToUpper(),
                         Balance = 0m
                     });
                 }
@@ -375,11 +409,13 @@ namespace Platform.QTech.API.Repository
 
                 if (isComplete)
                 {
-                    round.Stake -= request.Amount;
+                    round.Stake -= round.Stake == 0 ? 0 : request.Amount;
                     round.Payout = request.Amount;
+                    round.WinLoss = 0;
                     round.BetStatusId = (int)BetStatus.Void;
                     round.BetStatusName = BetStatus.Void.ToString();
                     round.IsComplete = isComplete;
+                    round.SettlementDate = dateNow;
                 }
 
                 round.ProviderTransactionDate = DateTime.Parse(request.Created.Split('[').First()).ToUniversalTime();
@@ -393,15 +429,17 @@ namespace Platform.QTech.API.Repository
 
                 var transactionEntity = _casinoBettingContext.Transaction.Update(round).Entity;
 
-                _casinoBettingContext.TransactionAudit.Add(new Shared.Data.CasinoBetting.Entities.TransactionAudit
+                _casinoBettingContext.TransactionAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
                 {
-                    TransactionId = transactionEntity.TransactionId,
+                    BetId = transactionEntity.BetId,
                     ProviderTransactionId = transactionEntity.ProviderTransactionId,
                     TransactionType = transactionEntity.TransactionType,
                     ClientId = transactionEntity.ClientId,
                     UserId = transactionEntity.UserId,
                     RoundId = transactionEntity.RoundId,
                     Stake = transactionEntity.Stake,
+                    StakeBonus = transactionEntity.StakeBonus,
+                    WinLoss = transactionEntity.WinLoss,
                     Payout = transactionEntity.Payout,
                     BetStatusId = transactionEntity.BetStatusId,
                     BetStatusName = transactionEntity.BetStatusName,
@@ -409,7 +447,7 @@ namespace Platform.QTech.API.Repository
                     GameId = transactionEntity.GameId,
                     Device = transactionEntity.Device,
                     ClientType = transactionEntity.ClientType,
-                    ClientRoundId = transactionEntity.ClientRoundId,
+                    ProviderBetId = transactionEntity.ProviderBetId,
                     Category = transactionEntity.Category,
                     IsComplete = transactionEntity.IsComplete,
                     ExchangeRate = transactionEntity.ExchangeRate,
@@ -421,7 +459,8 @@ namespace Platform.QTech.API.Repository
                     TableId = transactionEntity.TableId,
                     TransactionIds = transactionEntity.TransactionIds,
                     ProviderTransactionDate = transactionEntity.ProviderTransactionDate,
-                    TransactionDate = dateNow,
+                    BetDate = transactionEntity.BetDate,
+                    SettlementDate = transactionEntity.SettlementDate,
                     Payload = JsonSerializer.Serialize(request)
                 });
 
@@ -431,7 +470,7 @@ namespace Platform.QTech.API.Repository
                 //TODO: get afer balance from response of credit call to operator api
                 return new Tuple<RollbackCode, RollbackResponse>(RollbackCode.OK, new RollbackResponse 
                 {
-                    ReferenceId = transactionEntity.TransactionId.ToString().ToUpper()
+                    ReferenceId = transactionEntity.BetId.ToString().ToUpper()
                 });
             }
 
@@ -495,20 +534,6 @@ namespace Platform.QTech.API.Repository
             {
                 return new Tuple<GameLobbyCode, GameLobbyResponseDTO>(result.Item1, new GameLobbyResponseDTO { Url = result.Item2.Url });
             }
-        }
-
-        private async Task<ForexEURResponse> GetExchangeRate(string currencyCode)
-        {
-            var result = await _platformContext.ForexEUR.FindAsync(currencyCode);
-
-            if (result == null)
-                return new ForexEURResponse();
-
-            return new ForexEURResponse
-            {
-                CurrencyCode = result.CurrencyCode,
-                ExchangeRate = result.ExchangeRate
-            };
         }
 
         private async Task<BaseResponseDTO<ClientResponse>> GetClient(string clientId)

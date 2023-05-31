@@ -121,8 +121,6 @@ namespace Platform.Shared.Data.Reports.Entities
 
         public DateTime SettledDate { get; set; }
 
-        public DateTime SettledDateOffset { get; set; }
-
         [Column(TypeName = "decimal(26,12)")]
         public decimal MaxLiability { get; set; }
 

@@ -8,7 +8,6 @@ namespace Platform.AgentReports.Service.Repository
         void ProcessBetFullCashOut(OnBetSettlement message);
         void ProcessBetSettlement(OnBetSettlement onBetSettlement);
         void ProcessBetCancellation(OnBetSettlement onBetCancellation);
-        void ProcessCasinoBetPlacement(OnCasinoBetPlacement message);
         void ProcessCasinoBetSettlement(OnCasinoBetSettlement message);
     }
 }

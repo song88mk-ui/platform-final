@@ -71,10 +71,6 @@ namespace Platform.AgentReports.Service
                         var onBetCancellation = JsonSerializer.Deserialize<OnBetSettlement>(payload);
                         _reportsRepository.ProcessBetCancellation(onBetCancellation);
                         break;
-                    case "OnCasinoBetPlacement":
-                        var onCasinoBetPlacement = JsonSerializer.Deserialize<OnCasinoBetPlacement>(payload);
-                        _reportsRepository.ProcessCasinoBetPlacement(onCasinoBetPlacement);
-                        break;
                     case "OnCasinoBetSettlement":
                         var onCasinoBetSettlement = JsonSerializer.Deserialize<OnCasinoBetSettlement>(payload);
                         _reportsRepository.ProcessCasinoBetSettlement(onCasinoBetSettlement);

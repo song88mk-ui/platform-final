@@ -284,6 +284,58 @@ namespace Platform.Operator.API.Repository
             };
         }
 
+        public async Task<BetPlacementResponseDTO> BetPlacementCasino(OperatorCasinoBetPlacementRequestDTO request, string clientId, string operatorToken, string isAgent)
+        {
+            var authResponse = await _authRepository.Authenticate(operatorToken, isAgent);
+
+            if (authResponse.StatusCode != Enums.AuthStatusCode.Success)
+            {
+                return new BetPlacementResponseDTO
+                {
+                    StatusId = 1002
+                };
+            }
+
+            var betResponse = await _walletRepository.PlaceBet(new CreditOrDebitRequest
+            {
+                ClientId = Guid.Parse(clientId),
+                UserId = authResponse.Result.UserId,
+                Amount = request.Stake,
+                CurrencyCode = request.CurrencyCode,
+                TransactionTypeId = GetTransactionTypeId("Running"),
+                TransactionTypeName = "BetPlacement",
+                ReferenceId = request.BetId
+            });
+
+            return new BetPlacementResponseDTO
+            {
+                StatusId = betResponse.StatusCode,
+                Balance = betResponse.Balance,
+                StakeReal = request.Stake,
+                StakeBonus = 0,
+                IsFreeBet = false
+            };
+        }
+        public async Task<BetSettlementResponseDTO> BetSettlementCasino(OperatorCasinoBetSettlementRequestDTO request, string clientId)
+        {
+            var betResponse = await _walletRepository.SettleBet(new CreditOrDebitRequest
+            {
+                ClientId = Guid.Parse(clientId),
+                UserId = request.UserId,
+                Amount = request.Payout,
+                CurrencyCode = request.CurrencyCode,
+                TransactionTypeId = GetTransactionTypeId(request.BetStatus),
+                TransactionTypeName = $"{request.BetStatus}Settlement",
+                ReferenceId = request.BetId
+            });
+
+            return new BetSettlementResponseDTO
+            {
+                StatusId = betResponse.StatusCode,
+                Balance = betResponse.Balance
+            };
+        }
+
         private static int GetTransactionTypeId(string betStatus)
         {
             switch (betStatus)

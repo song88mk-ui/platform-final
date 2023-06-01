@@ -54,6 +54,7 @@ namespace Platform.QTech.API
             services.AddScoped<ICasinoRepository, CasinoRepository>();
             services.AddHttpClient<IProviderRepository, ProviderRepository>();
             services.AddHttpClient<IOperatorRepository, OperatorRepository>();
+            services.AddHttpClient<IRabbitMQRepository, RabbitMQRepository>();
 
             services.AddSwaggerGen(c =>
             {

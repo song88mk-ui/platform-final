@@ -21,17 +21,19 @@ namespace Platform.QTech.API.Repository
     {
         private readonly IProviderRepository _providerRepository;
         private readonly IOperatorRepository _operatorRepository;
+        private readonly IRabbitMQRepository _rabbitMQRepository;
         private readonly IMemCache _memCache;
         private readonly PlatformContext _platformContext;
         private readonly CasinoBettingContext _casinoBettingContext;
 
-        public CasinoRepository(IProviderRepository providerRepository, IMemCache memCache, PlatformContext platformContext, CasinoBettingContext casinoBettingContext, IOperatorRepository operatorRepository)
+        public CasinoRepository(IProviderRepository providerRepository, IMemCache memCache, PlatformContext platformContext, CasinoBettingContext casinoBettingContext, IOperatorRepository operatorRepository, IRabbitMQRepository rabbitMQRepository)
         {
             _providerRepository = providerRepository;
             _memCache = memCache;
             _platformContext = platformContext;
             _casinoBettingContext = casinoBettingContext;
             _operatorRepository = operatorRepository;
+            _rabbitMQRepository = rabbitMQRepository;
         }
         public async Task<Tuple<SessionCode, GameSessionResponse>> GetSession(GameSessionRequest request)
         {
@@ -130,7 +132,7 @@ namespace Platform.QTech.API.Repository
 
                     using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
 
-                    var transactionEntity = _casinoBettingContext.CasinoBet.Update(new Shared.Data.CasinoBetting.Entities.CasinoBet
+                    var transactionEntity = _casinoBettingContext.CasinoBet.Add(new Shared.Data.CasinoBetting.Entities.CasinoBet
                     {
                         BetId = betId,
                         ProviderTransactionId = request.TxnId,

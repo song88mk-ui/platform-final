@@ -216,7 +216,7 @@ namespace Platform.QTech.API.Repository
                     _casinoBettingContext.SaveChanges();
                     scope.Complete();
 
-                    return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.INSUFFICIENT_FUNDS, new WithdrawResponse 
+                    return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse 
                     {
                         ReferenceId = betId.ToString().ToUpper(),
                         Balance = walletResponse.Result.Balance

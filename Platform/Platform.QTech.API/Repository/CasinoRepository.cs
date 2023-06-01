@@ -1,4 +1,5 @@
-﻿using Platform.QTech.API.Enums;
+﻿using Microsoft.AspNetCore.Mvc;
+using Platform.QTech.API.Enums;
 using Platform.QTech.API.Models;
 using Platform.Shared.Data.CasinoBetting;
 using Platform.Shared.Data.Platform;
@@ -103,202 +104,237 @@ namespace Platform.QTech.API.Repository
 
             if (round == null)
             {
-                //call platform.operator.api for debit
+                var betId = Guid.NewGuid();
 
-                var rate = _platformContext.ForexEUR.Find(request.Currency);
+                //var walletResponse = await _operatorRepository.PlaceBet(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, new OperatorCasinoBetPlacementRequestDTO
+                //{
+                //    BetId = betId.ToString().ToUpper(),
+                //    Stake = request.Amount,
+                //    CurrencyCode = authenticationResponse.Result.CurrencyCode
+                //});
 
-                using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
-
-                var transactionEntity = _casinoBettingContext.CasinoBet.Update(new Shared.Data.CasinoBetting.Entities.CasinoBet
+                var walletResponse = new BaseResponseDTO<OperatorBetResponseDTO>
                 {
-                    ProviderTransactionId = request.TxnId,
-                    TransactionType = request.TxnType,
-                    ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
-                    ClientCode = clientResponse.Result.ClientCode.ToUpper(),
-                    ClientName = clientResponse.Result.ClientName,
-                    Endpoint = clientResponse.Result.Endpoint,
-                    UserId = authenticationResponse.Result.UserId,
-                    OperatorToken = operatorToken,
-                    IsAgent = clientResponse.Result.IsAgent,
-                    RoundId = request.RoundId,
-                    Stake = request.Amount,
-                    StakeBonus = request.BonusBetAmount,
-                    WinLoss = isComplete ? request.Amount * -1 : 0,
-                    Payout = 0,
-                    BetStatusId = isComplete ? (int)BetStatus.Lost : (int)BetStatus.Running,
-                    BetStatusName = isComplete ? BetStatus.Lost.ToString() : BetStatus.Running.ToString(),
-                    Reason = string.Empty,
-                    CurrencyCode = request.Currency.ToUpper(),
-                    GameId = request.GameId,
-                    Device = request.Device,
-                    ClientType = request.ClientType,
-                    ProviderBetId = request.ClientRoundId,
-                    Category = request.Category,
-                    IsComplete = isComplete,
-                    ExchangeRate = rate.ExchangeRate,
-                    JackpotContributions = JsonSerializer.Serialize(request.JpContributions),
-                    ConversionRate = JsonSerializer.Serialize(request.ConversionRate),
-                    BonusType = request.BonusType,
-                    BonusPromoCode = request.BonusPromoCode,
-                    JackpotPayout = 0,
-                    TableId = request.TableId,
-                    TransactionIds = JsonSerializer.Serialize(new List<string> { request.TxnId }),
-                    ProviderTransactionDate = DateTime.Parse(request.Created.Split('[').First()).ToUniversalTime(),
-                    BetDate = dateNow,
-                    SettlementDate = dateNow
-                }).Entity;
-
-                _casinoBettingContext.CasinoBetAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
-                {
-                    BetId = transactionEntity.BetId,
-                    ProviderTransactionId = transactionEntity.ProviderTransactionId,
-                    TransactionType = transactionEntity.TransactionType,
-                    ClientId = transactionEntity.ClientId,
-                    ClientCode = transactionEntity.ClientCode,
-                    ClientName = transactionEntity.ClientName,
-                    Endpoint = transactionEntity.Endpoint,
-                    UserId = transactionEntity.UserId,
-                    OperatorToken = transactionEntity.OperatorToken,
-                    IsAgent = transactionEntity.IsAgent,
-                    RoundId = transactionEntity.RoundId,
-                    Stake = transactionEntity.Stake,
-                    StakeBonus = transactionEntity.StakeBonus,
-                    WinLoss = transactionEntity.WinLoss,
-                    Payout = transactionEntity.Payout,
-                    BetStatusId = transactionEntity.BetStatusId,
-                    BetStatusName = transactionEntity.BetStatusName,
-                    Reason = transactionEntity.Reason,
-                    CurrencyCode = transactionEntity.CurrencyCode,
-                    GameId = transactionEntity.GameId,
-                    Device = transactionEntity.Device,
-                    ClientType = transactionEntity.ClientType,
-                    ProviderBetId = transactionEntity.ProviderBetId,
-                    Category = transactionEntity.Category,
-                    IsComplete = transactionEntity.IsComplete,
-                    ExchangeRate = transactionEntity.ExchangeRate,
-                    JackpotContributions = transactionEntity.JackpotContributions,
-                    ConversionRate = transactionEntity.ConversionRate,
-                    BonusType = transactionEntity.BonusType,
-                    BonusPromoCode = transactionEntity.BonusPromoCode,
-                    JackpotPayout = transactionEntity.JackpotPayout,
-                    TableId = transactionEntity.TableId,
-                    TransactionIds = transactionEntity.TransactionIds,
-                    ProviderTransactionDate = transactionEntity.ProviderTransactionDate,
-                    BetDate = transactionEntity.BetDate,
-                    SettlementDate = transactionEntity.SettlementDate,
-                    Payload = JsonSerializer.Serialize(request)
-                });
-
-                _casinoBettingContext.SaveChanges();
-                scope.Complete();
-
-                //TODO: get afer balance from response of debit call to operator api
-                return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse
-                {
-                    ReferenceId = transactionEntity.BetId.ToString().ToUpper(),
-                    Balance = authenticationResponse.Result.Balance
-                });
-            }
-            else
-            {
-                var transactionIds = JsonSerializer.Deserialize<List<string>>(round.TransactionIds);
-
-                if (transactionIds.Contains(request.TxnId))
-                {
-                    return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse 
-                    { 
-                        ReferenceId = round.BetId.ToString().ToUpper(), 
-                        Balance = authenticationResponse.Result.Balance 
-                    });
-                }
-
-                if (request.Amount == 0 && request.BonusBetAmount > 0)
-                {
-                    return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.REQUEST_DECLINED, new WithdrawResponse
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new OperatorBetResponseDTO
                     {
-                        ReferenceId = round.BetId.ToString().ToUpper(),
-                        Balance = authenticationResponse.Result.Balance
+                        Balance = authenticationResponse.Result.Balance,
+                        StatusId = 1000
+                    }
+                };
+
+                if (walletResponse.StatusCode == StatusCode.Success)
+                {
+                    var rate = _platformContext.ForexEUR.Find(authenticationResponse.Result.CurrencyCode);
+
+                    using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
+
+                    var transactionEntity = _casinoBettingContext.CasinoBet.Update(new Shared.Data.CasinoBetting.Entities.CasinoBet
+                    {
+                        BetId = betId,
+                        ProviderTransactionId = request.TxnId,
+                        TransactionType = request.TxnType,
+                        ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
+                        ClientCode = clientResponse.Result.ClientCode.ToUpper(),
+                        ClientName = clientResponse.Result.ClientName,
+                        Endpoint = clientResponse.Result.Endpoint,
+                        UserId = authenticationResponse.Result.UserId,
+                        OperatorToken = operatorToken,
+                        IsAgent = clientResponse.Result.IsAgent,
+                        RoundId = request.RoundId,
+                        Stake = request.Amount,
+                        StakeBonus = request.BonusBetAmount,
+                        WinLoss = isComplete ? request.Amount * -1 : 0,
+                        Payout = 0,
+                        BetStatusId = isComplete ? (int)BetStatus.Lost : (int)BetStatus.Running,
+                        BetStatusName = isComplete ? BetStatus.Lost.ToString() : BetStatus.Running.ToString(),
+                        Reason = string.Empty,
+                        CurrencyCode = authenticationResponse.Result.CurrencyCode,
+                        GameId = request.GameId,
+                        Device = request.Device,
+                        ClientType = request.ClientType,
+                        ProviderBetId = request.ClientRoundId,
+                        Category = request.Category,
+                        IsComplete = isComplete,
+                        ExchangeRate = rate.ExchangeRate,
+                        JackpotContributions = JsonSerializer.Serialize(request.JpContributions),
+                        ConversionRate = JsonSerializer.Serialize(request.ConversionRate),
+                        BonusType = request.BonusType,
+                        BonusPromoCode = request.BonusPromoCode,
+                        JackpotPayout = 0,
+                        TableId = request.TableId,
+                        TransactionIds = JsonSerializer.Serialize(new List<string> { request.TxnId }),
+                        ProviderTransactionDate = DateTime.Parse(request.Created.Split('[').First()).ToUniversalTime(),
+                        BetDate = dateNow,
+                        SettlementDate = dateNow
+                    }).Entity;
+
+                    _casinoBettingContext.CasinoBetAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
+                    {
+                        BetId = transactionEntity.BetId,
+                        ProviderTransactionId = transactionEntity.ProviderTransactionId,
+                        TransactionType = transactionEntity.TransactionType,
+                        ClientId = transactionEntity.ClientId,
+                        ClientCode = transactionEntity.ClientCode,
+                        ClientName = transactionEntity.ClientName,
+                        Endpoint = transactionEntity.Endpoint,
+                        UserId = transactionEntity.UserId,
+                        OperatorToken = transactionEntity.OperatorToken,
+                        IsAgent = transactionEntity.IsAgent,
+                        RoundId = transactionEntity.RoundId,
+                        Stake = transactionEntity.Stake,
+                        StakeBonus = transactionEntity.StakeBonus,
+                        WinLoss = transactionEntity.WinLoss,
+                        Payout = transactionEntity.Payout,
+                        BetStatusId = transactionEntity.BetStatusId,
+                        BetStatusName = transactionEntity.BetStatusName,
+                        Reason = transactionEntity.Reason,
+                        CurrencyCode = transactionEntity.CurrencyCode,
+                        GameId = transactionEntity.GameId,
+                        Device = transactionEntity.Device,
+                        ClientType = transactionEntity.ClientType,
+                        ProviderBetId = transactionEntity.ProviderBetId,
+                        Category = transactionEntity.Category,
+                        IsComplete = transactionEntity.IsComplete,
+                        ExchangeRate = transactionEntity.ExchangeRate,
+                        JackpotContributions = transactionEntity.JackpotContributions,
+                        ConversionRate = transactionEntity.ConversionRate,
+                        BonusType = transactionEntity.BonusType,
+                        BonusPromoCode = transactionEntity.BonusPromoCode,
+                        JackpotPayout = transactionEntity.JackpotPayout,
+                        TableId = transactionEntity.TableId,
+                        TransactionIds = transactionEntity.TransactionIds,
+                        ProviderTransactionDate = transactionEntity.ProviderTransactionDate,
+                        BetDate = transactionEntity.BetDate,
+                        SettlementDate = transactionEntity.SettlementDate,
+                        Payload = JsonSerializer.Serialize(request)
+                    });
+
+                    _casinoBettingContext.SaveChanges();
+                    scope.Complete();
+
+                    return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.INSUFFICIENT_FUNDS, new WithdrawResponse 
+                    {
+                        ReferenceId = betId.ToString().ToUpper(),
+                        Balance = walletResponse.Result.Balance
                     });
                 }
-
-                //call platform.operator.api for debit
-
-                using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
-
-                round.ProviderTransactionId = request.TxnId;
-                round.Stake += request.Amount;
-                round.IsComplete = isComplete;
-                round.BetStatusId = isComplete ? (int)BetStatus.Lost : (int)BetStatus.Running;
-                round.BetStatusName = isComplete ? BetStatus.Lost.ToString() : BetStatus.Running.ToString();
-                round.ProviderTransactionDate = DateTime.Parse(request.Created.Split('[').First()).ToUniversalTime();
-
-                if (isComplete)
+                else
                 {
-                    round.WinLoss = round.Stake * -1;
-                    round.SettlementDate = dateNow;
+                    switch (walletResponse.StatusCode)
+                    {
+                        case StatusCode.Insufficient_Funds:
+                            return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.INSUFFICIENT_FUNDS, new WithdrawResponse());
+                        case StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers:
+                            return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.INVALID_TOKEN, new WithdrawResponse());
+                        default:
+                            return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.REQUEST_DECLINED, new WithdrawResponse());
+                    }
                 }
-
-
-                if (transactionIds.Contains(request.TxnId) == false)
-                {
-                    transactionIds.Add(request.TxnId);
-
-                    round.TransactionIds = JsonSerializer.Serialize(transactionIds);
-                }
-
-                var transactionEntity = _casinoBettingContext.CasinoBet.Update(round).Entity;
-
-                _casinoBettingContext.CasinoBetAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
-                {
-                    BetId = transactionEntity.BetId,
-                    ProviderTransactionId = transactionEntity.ProviderTransactionId,
-                    TransactionType = transactionEntity.TransactionType,
-                    ClientId = transactionEntity.ClientId,
-                    ClientCode = transactionEntity.ClientCode,
-                    ClientName = transactionEntity.ClientName,
-                    Endpoint = transactionEntity.Endpoint,
-                    UserId = transactionEntity.UserId,
-                    OperatorToken = transactionEntity.OperatorToken,
-                    IsAgent = transactionEntity.IsAgent,
-                    RoundId = transactionEntity.RoundId,
-                    Stake = transactionEntity.Stake,
-                    StakeBonus = transactionEntity.StakeBonus,
-                    WinLoss = transactionEntity.WinLoss,
-                    Payout = transactionEntity.Payout,
-                    BetStatusId = transactionEntity.BetStatusId,
-                    BetStatusName = transactionEntity.BetStatusName,
-                    Reason = transactionEntity.Reason,
-                    CurrencyCode = transactionEntity.CurrencyCode,
-                    GameId = transactionEntity.GameId,
-                    Device = transactionEntity.Device,
-                    ClientType = transactionEntity.ClientType,
-                    ProviderBetId = transactionEntity.ProviderBetId,
-                    Category = transactionEntity.Category,
-                    IsComplete = transactionEntity.IsComplete,
-                    ExchangeRate = transactionEntity.ExchangeRate,
-                    JackpotContributions = transactionEntity.JackpotContributions,
-                    ConversionRate = transactionEntity.ConversionRate,
-                    BonusType = transactionEntity.BonusType,
-                    BonusPromoCode = transactionEntity.BonusPromoCode,
-                    JackpotPayout = transactionEntity.JackpotPayout,
-                    TableId = transactionEntity.TableId,
-                    TransactionIds = transactionEntity.TransactionIds,
-                    ProviderTransactionDate = transactionEntity.ProviderTransactionDate,
-                    BetDate = transactionEntity.BetDate,
-                    SettlementDate = transactionEntity.SettlementDate,
-                    Payload = JsonSerializer.Serialize(request)
-                });
-
-                _casinoBettingContext.SaveChanges();
-                scope.Complete();
-
-                //TODO: get afer balance from response of debit call to operator api
-                return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse
-                {
-                    ReferenceId = transactionEntity.BetId.ToString().ToUpper(),
-                    Balance = authenticationResponse.Result.Balance
-                });
             }
+
+            return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.REQUEST_DECLINED, new WithdrawResponse());
+            //else
+            //{
+            //    var transactionIds = JsonSerializer.Deserialize<List<string>>(round.TransactionIds);
+
+            //    if (transactionIds.Contains(request.TxnId))
+            //    {
+            //        return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse 
+            //        { 
+            //            ReferenceId = round.BetId.ToString().ToUpper(), 
+            //            Balance = authenticationResponse.Result.Balance 
+            //        });
+            //    }
+
+            //    if (request.Amount == 0 && request.BonusBetAmount > 0)
+            //    {
+            //        return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.REQUEST_DECLINED, new WithdrawResponse
+            //        {
+            //            ReferenceId = round.BetId.ToString().ToUpper(),
+            //            Balance = authenticationResponse.Result.Balance
+            //        });
+            //    }
+
+            //    //call platform.operator.api for debit
+
+            //    using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
+
+            //    round.ProviderTransactionId = request.TxnId;
+            //    round.Stake += request.Amount;
+            //    round.IsComplete = isComplete;
+            //    round.BetStatusId = isComplete ? (int)BetStatus.Lost : (int)BetStatus.Running;
+            //    round.BetStatusName = isComplete ? BetStatus.Lost.ToString() : BetStatus.Running.ToString();
+            //    round.ProviderTransactionDate = DateTime.Parse(request.Created.Split('[').First()).ToUniversalTime();
+
+            //    if (isComplete)
+            //    {
+            //        round.WinLoss = round.Stake * -1;
+            //        round.SettlementDate = dateNow;
+            //    }
+
+
+            //    if (transactionIds.Contains(request.TxnId) == false)
+            //    {
+            //        transactionIds.Add(request.TxnId);
+
+            //        round.TransactionIds = JsonSerializer.Serialize(transactionIds);
+            //    }
+
+            //    var transactionEntity = _casinoBettingContext.CasinoBet.Update(round).Entity;
+
+            //    _casinoBettingContext.CasinoBetAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
+            //    {
+            //        BetId = transactionEntity.BetId,
+            //        ProviderTransactionId = transactionEntity.ProviderTransactionId,
+            //        TransactionType = transactionEntity.TransactionType,
+            //        ClientId = transactionEntity.ClientId,
+            //        ClientCode = transactionEntity.ClientCode,
+            //        ClientName = transactionEntity.ClientName,
+            //        Endpoint = transactionEntity.Endpoint,
+            //        UserId = transactionEntity.UserId,
+            //        OperatorToken = transactionEntity.OperatorToken,
+            //        IsAgent = transactionEntity.IsAgent,
+            //        RoundId = transactionEntity.RoundId,
+            //        Stake = transactionEntity.Stake,
+            //        StakeBonus = transactionEntity.StakeBonus,
+            //        WinLoss = transactionEntity.WinLoss,
+            //        Payout = transactionEntity.Payout,
+            //        BetStatusId = transactionEntity.BetStatusId,
+            //        BetStatusName = transactionEntity.BetStatusName,
+            //        Reason = transactionEntity.Reason,
+            //        CurrencyCode = transactionEntity.CurrencyCode,
+            //        GameId = transactionEntity.GameId,
+            //        Device = transactionEntity.Device,
+            //        ClientType = transactionEntity.ClientType,
+            //        ProviderBetId = transactionEntity.ProviderBetId,
+            //        Category = transactionEntity.Category,
+            //        IsComplete = transactionEntity.IsComplete,
+            //        ExchangeRate = transactionEntity.ExchangeRate,
+            //        JackpotContributions = transactionEntity.JackpotContributions,
+            //        ConversionRate = transactionEntity.ConversionRate,
+            //        BonusType = transactionEntity.BonusType,
+            //        BonusPromoCode = transactionEntity.BonusPromoCode,
+            //        JackpotPayout = transactionEntity.JackpotPayout,
+            //        TableId = transactionEntity.TableId,
+            //        TransactionIds = transactionEntity.TransactionIds,
+            //        ProviderTransactionDate = transactionEntity.ProviderTransactionDate,
+            //        BetDate = transactionEntity.BetDate,
+            //        SettlementDate = transactionEntity.SettlementDate,
+            //        Payload = JsonSerializer.Serialize(request)
+            //    });
+
+            //    _casinoBettingContext.SaveChanges();
+            //    scope.Complete();
+
+            //    //TODO: get afer balance from response of debit call to operator api
+            //    return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse
+            //    {
+            //        ReferenceId = transactionEntity.BetId.ToString().ToUpper(),
+            //        Balance = authenticationResponse.Result.Balance
+            //    });
+            //}
         }
         public async Task<Tuple<DepositCode, DepositResponse>> Deposit(DepositRequest request)
         {

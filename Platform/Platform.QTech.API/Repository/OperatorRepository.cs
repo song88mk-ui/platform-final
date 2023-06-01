@@ -57,7 +57,7 @@ namespace Platform.QTech.API.Repository
 
             try
             {
-                var response = await _httpClient.PostAsync($"{endpoint}/operator/v1/authentication", new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.PostAsync($"{endpoint}/v1/authentication", new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -164,7 +164,7 @@ namespace Platform.QTech.API.Repository
 
         //    try
         //    {
-        //        var response = await _httpClient.PostAsync($"{endpoint}/operator/v1/casino/bet/placement", new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json"));
+        //        var response = await _httpClient.PostAsync($"{endpoint}/v1/casino/bet/placement", new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json"));
 
         //        if (response.IsSuccessStatusCode)
         //        {

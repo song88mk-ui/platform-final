@@ -10,6 +10,7 @@ namespace Platform.AgentReports.API.Models.Request
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
         public CurrencyCode Currency { get; set; } = CurrencyCode.ALL;
+        public int ProductId { get; set; }
         public string Product { get; set; }
         public string Status { get; set; }
         public string DateFilter { get; set; } = "transactiondate";

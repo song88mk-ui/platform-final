@@ -252,6 +252,106 @@ namespace Platform.AgentReports.API.Repository
 
             #endregion
         }
+
+        public async Task<BaseResponseDTO<WinLossResponse>> GetWinLoss2(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request)
+        {
+
+            #region W/O BACK AND LAY
+
+            var currencyCode = request.Currency.ToString();
+            if (request.Currency == CurrencyCode.ALL && parentAgentId > 0)
+                currencyCode = Enum.Parse<CurrencyCode>((await _agentRepository.GetUserDetails(parentAgentId)).Result.Currency).ToString();
+            else if (request.Currency == CurrencyCode.ALL)
+                currencyCode = string.Empty;
+
+            var productTypes = request.Product;
+
+            var accounts = request.Accounts;
+
+            var betIds = request.BetIds;
+
+            var status = request.Status;
+
+            var agentUserTypeId = isAgents ? (int)UserType.Agent : (int)UserType.Company;
+            
+            var sqlRaw = $"GetWinLossSummary {parentAgentId}, {directUserId}, {isAgents}, {agentUserTypeId}, {request.ProductId}, '{productTypes}', '{accounts}', '{betIds}', '{status}', '{request.FromDate.ToString("yyyy-MM-dd")}', '{request.ToDate.ToString("yyyy-MM-dd 23:59:59")}', '{currencyCode}', {request.Page}, {request.PageSize}";
+            var response = await _context.ReadWinLossSummary.FromSqlRaw(sqlRaw).ToListAsync();
+            var totalResponse = response.FirstOrDefault();
+
+            if(totalResponse == null)
+            {
+                return new BaseResponseDTO<WinLossResponse>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new WinLossResponse()
+                };
+            }
+
+            return new BaseResponseDTO<WinLossResponse>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new WinLossResponse
+                {
+                    CurrentPage = totalResponse.CurrentPage,
+                    PageCount = totalResponse.PageCount,
+                    PageSize = totalResponse.PageSize,
+                    RowCount = totalResponse.RowCount,
+                    TotalStakeAmount = totalResponse.TotalStakeAmount,
+                    TotalValidStakeAmount = totalResponse.TotalValidStakeAmount,
+                    TotalStakeCount = totalResponse.TotalStakeCount,
+                    TotalCommission = totalResponse.TotalCommission,
+                    TotalMemberWinLoss = totalResponse.TotalMemberWinLoss,
+                    TotalMemberCommission = totalResponse.TotalMemberCommission,
+                    TotalMemberWLC = totalResponse.TotalMemberWLC,
+                    TotalDownlineWinLoss = totalResponse.TotalDownlineWinLoss,
+                    TotalDownlineCommission = totalResponse.TotalDownlineCommission,
+                    TotalDownlineWLC = totalResponse.TotalDownlineWLC,
+                    TotalAgentWinLoss = totalResponse.TotalAgentWinLoss,
+                    TotalAgentCommission = totalResponse.TotalAgentCommission,
+                    TotalAgentWLC = totalResponse.TotalAgentWLC,
+                    TotalUplineWinLoss = totalResponse.TotalUplineWinLoss,
+                    TotalUplineCommission = totalResponse.TotalUplineCommission,
+                    TotalUplineWLC = totalResponse.TotalUplineWLC,
+                    TotalTransfer = totalResponse.TotalTransfer,
+                    Bets = response.Select(b => new WinLossModel
+                    {
+                        AgentCommission = b.AgentCommission,
+                        AgentWinLoss = b.AgentWinLoss,
+                        UplineCommission = b.UplineCommission,
+                        UplineWinLoss = b.UplineWinLoss,
+                        Commission = b.Commission,
+                        AgentWLC = b.AgentWLC,
+                        CurrencyCode = b.CurrencyCode,
+                        DownlineCommission = b.DownlineCommission,
+                        DownlineWLC = b.DownlineWLC,
+                        DownlineWinLoss = b.DownlineWinLoss,
+                        MemberCommission = b.MemberCommission,
+                        MemberCount = b.MemberCount,
+                        MemberWLC = b.MemberWLC,
+                        MemberWinLoss = b.MemberWinLoss,
+                        ProductId = b.ProductId,
+                        ProductName = b.ProductName,
+                        StakeAmount = b.StakeAmount,
+                        StakeCount = b.StakeCount,
+                        StatusId = b.StatusId,
+                        StatusName = b.StatusName,
+                        Transfer = b.Transfer,
+                        UplineWLC = b.UplineWLC,
+                        UserId = b.UserId,
+                        Username = b.Username,
+                        UserTypeId = b.UserTypeId,
+                        ValidStakeAmount = b.ValidStakeAmount,
+                    }).ToList(),
+                    TotalMemberCount = totalResponse.TotalMemberCount
+                }
+            };
+
+
+            #endregion
+        }
+
         public async Task<BaseResponseDTO<WinLossDetailsResponse>> GetWinLossDetails(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request)
         {
 
@@ -3507,6 +3607,7 @@ namespace Platform.AgentReports.API.Repository
                       w.SettledDateOffset >= request.FromDate.Date &&
                       w.SettledDateOffset < request.ToDate.AddDays(1).Date &&
                       currencies.Contains(w.CurrencyCode)).AsNoTracking();
+
                 }
                 else
                 {
@@ -4541,6 +4642,21 @@ namespace Platform.AgentReports.API.Repository
             }
         }
 
+        private string GetListAsString(string value)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                var newStr = string.Empty;
+                var list = value.Split(',').ToList();
+                foreach(var str in list)
+                {
+                    newStr = string.IsNullOrEmpty(newStr) ? $"\"{str}\"" :  $"{newStr},\"{str}\""; 
+                }
+                return newStr;
+            }
+            else
+                return string.Empty;
+        }
         #endregion
     }
 }

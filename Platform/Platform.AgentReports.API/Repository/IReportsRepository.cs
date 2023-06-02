@@ -13,6 +13,7 @@ namespace Platform.AgentReports.API.Repository
     {   
         Task<BaseResponseDTO<WinLossResponse>> GetWinLoss(long parentAgentId, bool isAgents, WinLossAccountRequest request);
         Task<BaseResponseDTO<WinLossResponse>> GetWinLoss(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request);
+        Task<BaseResponseDTO<WinLossResponse>> GetWinLoss2(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request);
         Task<BaseResponseDTO<WinLossDetailsResponse>> GetWinLossDetails(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request);
         Task<BaseResponseDTO<TotalBetOtherResponse>> GetTotalBetsOthers(TotalBetsRequest request);
         Task<BaseResponseDTO<OutstandingBetResponse>> GetAllBets(SearchBetRequest request);

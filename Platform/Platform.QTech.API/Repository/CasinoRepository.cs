@@ -119,17 +119,6 @@ namespace Platform.QTech.API.Repository
                     CurrencyCode = authenticationResponse.Result.CurrencyCode
                 });
 
-                //var walletResponse = new BaseResponseDTO<OperatorBetResponseDTO>
-                //{
-                //    StatusCode = StatusCode.Success,
-                //    Message = StatusCode.Success.ToString(),
-                //    Result = new OperatorBetResponseDTO
-                //    {
-                //        Balance = authenticationResponse.Result.Balance,
-                //        StatusId = 1000
-                //    }
-                //};
-
                 if (walletResponse.StatusCode == StatusCode.Success)
                 {
                     var rate = _platformContext.ForexEUR.Find(authenticationResponse.Result.CurrencyCode);
@@ -281,17 +270,6 @@ namespace Platform.QTech.API.Repository
                     CurrencyCode = authenticationResponse.Result.CurrencyCode
                 });
 
-                //var walletResponse = new BaseResponseDTO<OperatorBetResponseDTO>
-                //{
-                //    StatusCode = StatusCode.Success,
-                //    Message = StatusCode.Success.ToString(),
-                //    Result = new OperatorBetResponseDTO
-                //    {
-                //        Balance = authenticationResponse.Result.Balance,
-                //        StatusId = 1000
-                //    }
-                //};
-
                 if (walletResponse.StatusCode == StatusCode.Success)
                 {
                     using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
@@ -426,16 +404,6 @@ namespace Platform.QTech.API.Repository
                     BetStatus = isComplete ? request.Amount > 0 || round.Payout > 0 ? BetStatus.Won.ToString() : BetStatus.Lost.ToString() : BetStatus.Running.ToString(),
                     CurrencyCode = round.CurrencyCode
                 });
-
-                //var walletResponse = new BaseResponseDTO<OperatorBetResponseDTO>
-                //{
-                //    StatusCode = StatusCode.Success,
-                //    Message = StatusCode.Success.ToString(),
-                //    Result = new OperatorBetResponseDTO
-                //    {
-                //        StatusId = 1000
-                //    }
-                //};
 
                 if (walletResponse.StatusCode == StatusCode.Success)
                 {
@@ -575,16 +543,6 @@ namespace Platform.QTech.API.Repository
                     BetStatus = isComplete ? BetStatus.Void.ToString() : BetStatus.Running.ToString(),
                     CurrencyCode = round.CurrencyCode
                 });
-
-                //var walletResponse = new BaseResponseDTO<OperatorBetResponseDTO>
-                //{
-                //    StatusCode = StatusCode.Success,
-                //    Message = StatusCode.Success.ToString(),
-                //    Result = new OperatorBetResponseDTO
-                //    {
-                //        StatusId = 1000
-                //    }
-                //};
 
                 if (walletResponse.StatusCode == StatusCode.Success)
                 {

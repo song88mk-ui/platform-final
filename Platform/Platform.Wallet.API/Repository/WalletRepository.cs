@@ -79,7 +79,7 @@ namespace Platform.Wallet.API.Repository
                 {
                     ParameterName = "@ReferenceId",
                     SqlDbType = System.Data.SqlDbType.NVarChar,
-                    Size = 50,
+                    Size = 100,
                     Direction = System.Data.ParameterDirection.Input,
                     Value = request.ReferenceId
                 },
@@ -176,7 +176,7 @@ namespace Platform.Wallet.API.Repository
                 {
                     ParameterName = "@ReferenceId",
                     SqlDbType = System.Data.SqlDbType.NVarChar,
-                    Size = 50,
+                    Size = 100,
                     Direction = System.Data.ParameterDirection.Input,
                     Value = request.ReferenceId
                 },
@@ -274,7 +274,7 @@ namespace Platform.Wallet.API.Repository
                 {
                     ParameterName = "@ReferenceId",
                     SqlDbType = System.Data.SqlDbType.NVarChar,
-                    Size = 50,
+                    Size = 100,
                     Direction = System.Data.ParameterDirection.Input,
                     Value = request.ReferenceId
                 },

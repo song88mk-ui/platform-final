@@ -4,6 +4,7 @@ using Platform.QTech.API.Models;
 using Platform.Shared.Data.CasinoBetting;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
+using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
@@ -88,6 +89,9 @@ namespace Platform.QTech.API.Repository
             var clientResponse = await GetClient(clientId);
 
             if (clientResponse.StatusCode != StatusCode.Success)
+                return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.REQUEST_DECLINED, new WithdrawResponse());
+
+            if (request.Amount < 0)
                 return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.REQUEST_DECLINED, new WithdrawResponse());
 
             var authenticationResponse = await _operatorRepository.Authenticate(clientId, operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
@@ -215,6 +219,19 @@ namespace Platform.QTech.API.Repository
 
                     _casinoBettingContext.SaveChanges();
                     scope.Complete();
+
+                    _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                    {
+                        Payload = JsonSerializer.Serialize(new OnWalletChange
+                        {
+                            ClientId = transactionEntity.ClientId.ToString().ToUpper(),
+                            UserId = transactionEntity.UserId,
+                            Balance = walletResponse.Result.Balance
+                        }),
+                        CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                        MessageType = "OnWalletChange",
+                        RoutingKey = $"r.wallet.{transactionEntity.ClientCode.ToLower()}"
+                    });
 
                     return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse 
                     {
@@ -346,6 +363,19 @@ namespace Platform.QTech.API.Repository
 
                     _casinoBettingContext.SaveChanges();
                     scope.Complete();
+
+                    _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                    {
+                        Payload = JsonSerializer.Serialize(new OnWalletChange
+                        {
+                            ClientId = transactionEntity.ClientId.ToString().ToUpper(),
+                            UserId = transactionEntity.UserId,
+                            Balance = walletResponse.Result.Balance
+                        }),
+                        CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                        MessageType = "OnWalletChange",
+                        RoutingKey = $"r.wallet.{transactionEntity.ClientCode.ToLower()}"
+                    });
 
                     return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse
                     {
@@ -487,6 +517,19 @@ namespace Platform.QTech.API.Repository
                             MessageType = "OnCasinoBetSettlement",
                             RoutingKey = "r.bet.reports.agent"
                         });
+
+                        _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                        {
+                            Payload = JsonSerializer.Serialize(new OnWalletChange
+                            {
+                                ClientId = transactionEntity.ClientId.ToString().ToUpper(),
+                                UserId = transactionEntity.UserId,
+                                Balance = walletResponse.Result.Balance
+                            }),
+                            CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                            MessageType = "OnWalletChange",
+                            RoutingKey = $"r.wallet.{transactionEntity.ClientCode.ToLower()}"
+                        });
                     }
 
                     return new Tuple<DepositCode, DepositResponse>(DepositCode.OK, new DepositResponse
@@ -624,6 +667,19 @@ namespace Platform.QTech.API.Repository
                             CorrelationId = Guid.NewGuid().ToString().ToUpper(),
                             MessageType = "OnCasinoBetSettlement",
                             RoutingKey = "r.bet.reports.agent"
+                        });
+
+                        _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                        {
+                            Payload = JsonSerializer.Serialize(new OnWalletChange
+                            {
+                                ClientId = transactionEntity.ClientId.ToString().ToUpper(),
+                                UserId = transactionEntity.UserId,
+                                Balance = walletResponse.Result.Balance
+                            }),
+                            CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                            MessageType = "OnWalletChange",
+                            RoutingKey = $"r.wallet.{transactionEntity.ClientCode.ToLower()}"
                         });
                     }
 

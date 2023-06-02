@@ -111,6 +111,9 @@ namespace Platform.QTech.API.Controllers
             if (request.JpContributions == null)
                 request.JpContributions =  new JackpotContribution[] { };
 
+            if (request.ClientRoundId == null)
+                request.ClientRoundId = string.Empty;
+
             if (request.TxnType.ToUpper() == "DEBIT")
             {
                 var withdrawResponse = await _casinoRepository.Withdraw(new WithdrawRequest

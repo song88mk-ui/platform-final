@@ -393,7 +393,7 @@ namespace Platform.QTech.API.Repository
                     BetId = $"{round.BetId.ToString().ToUpper()}|{request.TxnId}",
                     UserId = round.UserId,
                     Payout = request.Amount,
-                    BetStatus = isComplete ? request.Amount > 0 ? BetStatus.Won.ToString() : BetStatus.Lost.ToString() : BetStatus.Running.ToString(),
+                    BetStatus = isComplete ? request.Amount > 0 || round.Payout > 0 ? BetStatus.Won.ToString() : BetStatus.Lost.ToString() : BetStatus.Running.ToString(),
                     CurrencyCode = round.CurrencyCode
                 });
 

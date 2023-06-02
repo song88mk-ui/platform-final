@@ -325,7 +325,7 @@ namespace Platform.Operator.API.Repository
                 Amount = request.Payout,
                 CurrencyCode = request.CurrencyCode,
                 TransactionTypeId = GetTransactionTypeId(request.BetStatus),
-                TransactionTypeName = $"{request.BetStatus}Settlement",
+                TransactionTypeName = request.BetStatus == "Running" ? "BetPlacement" : $"{request.BetStatus}Settlement",
                 ReferenceId = request.BetId
             });
 

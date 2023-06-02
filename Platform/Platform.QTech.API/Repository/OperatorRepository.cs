@@ -15,7 +15,7 @@ namespace Platform.QTech.API.Repository
         public OperatorRepository(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _httpClient.Timeout = TimeSpan.FromSeconds(2);
+            //_httpClient.Timeout = TimeSpan.FromSeconds(2);
         }
         public async Task<BaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string clientId, string operatorToken, string endpoint, bool isAgent)
         {
@@ -27,8 +27,6 @@ namespace Platform.QTech.API.Repository
                     Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
                 };
             }
-
-            _httpClient.BaseAddress = new Uri(endpoint);
 
             if (_httpClient.DefaultRequestHeaders.Contains("x-is-agent"))
             {
@@ -54,6 +52,8 @@ namespace Platform.QTech.API.Repository
             }
             else
                 _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
+
+            _httpClient.BaseAddress = new Uri(endpoint);
 
             try
             {
@@ -134,8 +134,6 @@ namespace Platform.QTech.API.Repository
                     Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
                 };
             }
-
-            _httpClient.BaseAddress = new Uri(endpoint);
 
             if (_httpClient.DefaultRequestHeaders.Contains("x-is-agent"))
             {
@@ -239,8 +237,6 @@ namespace Platform.QTech.API.Repository
         }
         public async Task<BaseResponseDTO<OperatorBetResponseDTO>> SettleBet(string clientId, string endpoint, OperatorCasinoBetSettlementRequestDTO request)
         {
-            _httpClient.BaseAddress = new Uri(endpoint);
-
             if (_httpClient.DefaultRequestHeaders.Contains("x-client-id"))
             {
                 _httpClient.DefaultRequestHeaders.Remove("x-client-id");

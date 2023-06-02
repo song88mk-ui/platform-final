@@ -10,9 +10,14 @@ namespace Platform.Shared.MessageModels
         public string ProviderTransactionId { get; set; }
         public string TransactionType { get; set; }
         public string ClientId { get; set; }
+        public string ClientCode { get; set; }
+        public string ClientName { get; set; }
         public string UserId { get; set; }
         public string RoundId { get; set; }
-
+        public string Reason { get; set; }
+        public string Endpoint { get; set; }
+        public string OperatorToken { get; set; }
+        public bool IsAgent { get; set; }
         [Column(TypeName = "decimal(26,12)")]
         public decimal Stake { get; set; }
 

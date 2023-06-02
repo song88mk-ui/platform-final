@@ -361,14 +361,17 @@ namespace Platform.AgentReports.Service.Repository
         private List<AgentSettings> GetCasinoAgentSettingsFinal(string category, string userId, DateTime transactionDate)
         {
             var agents = new List<AgentSettings>();
-            var categoryId = 0;
+            var categoryId = (int)Category.Casino;
             var subCategoryId = 0;
             var betSelectionCount = 1;
 
-            if (category == "CASINO/SLOT/6REEL")
+            if (category.ToLower().Contains("virtual"))
+            {
+                categoryId = (int)Category.VirtualGames;
+            }
+            else if (category.ToLower().Contains("live"))
             {
                 categoryId = (int)Category.LiveCasino;
-                subCategoryId = 2;
             }
 
 

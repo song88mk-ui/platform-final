@@ -478,6 +478,17 @@ namespace Platform.QTech.API.Repository
                     _casinoBettingContext.SaveChanges();
                     scope.Complete();
 
+                    if (isComplete)
+                    {
+                        _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                        {
+                            Payload = JsonSerializer.Serialize(transactionEntity),
+                            CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                            MessageType = "OnCasinoBetSettlement",
+                            RoutingKey = "r.bet.reports.agent"
+                        });
+                    }
+
                     return new Tuple<DepositCode, DepositResponse>(DepositCode.OK, new DepositResponse
                     {
                         ReferenceId = transactionEntity.BetId.ToString().ToUpper(),
@@ -604,6 +615,17 @@ namespace Platform.QTech.API.Repository
 
                     _casinoBettingContext.SaveChanges();
                     scope.Complete();
+
+                    if (isComplete)
+                    {
+                        _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                        {
+                            Payload = JsonSerializer.Serialize(transactionEntity),
+                            CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                            MessageType = "OnCasinoBetSettlement",
+                            RoutingKey = "r.bet.reports.agent"
+                        });
+                    }
 
                     return new Tuple<RollbackCode, RollbackResponse>(RollbackCode.OK, new RollbackResponse
                     {

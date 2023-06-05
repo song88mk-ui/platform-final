@@ -2146,7 +2146,7 @@ namespace Platform.Sportsbook.API.Repository
                     SortOrder = item.SortOrder
                 });
 
-                if (finalResult.Count == 10) break;
+                if (finalResult.Count == 100) break;
             }
 
             var returnResult = new BaseResponseDTO<TWResponseDTO>

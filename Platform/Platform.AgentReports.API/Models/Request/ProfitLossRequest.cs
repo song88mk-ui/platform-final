@@ -1,5 +1,4 @@
-﻿using Platform.Shared.Enums;
-using System;
+﻿using System;
 
 namespace Platform.AgentReports.API.Models.Request
 {
@@ -10,6 +9,7 @@ namespace Platform.AgentReports.API.Models.Request
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
         public long? SelectedUserId { get; set; }
+        public int ProductId { get; set; } = (int)Shared.Enums.Product.All;
         public string Product { get; set; }
         public string Currency { get; set; }
         public string Status { get; set; }

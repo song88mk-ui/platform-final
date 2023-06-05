@@ -41,6 +41,7 @@ namespace Platform.AgentReports.API.Repository
         Task<BaseResponseDTO<OutstandingBetResponse>> GetOutstandingBets(OutstandingBetRequest request);
         Task<BaseResponseDTO<BetModelResponse>> GetBetHistory(long agentId, Guid betId);
         Task<BaseResponseDTO<BetModelResponse>> GetBetHistoryProfitLoss(long agentId, Guid betId);
+        Task<BaseResponseDTO<ProductResponse>> GetProducts();
 
     }
 }

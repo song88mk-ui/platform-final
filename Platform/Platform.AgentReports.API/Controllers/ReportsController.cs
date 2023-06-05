@@ -365,5 +365,21 @@ namespace Platform.AgentReports.API.Controllers
                     return BadRequest(result);
             }
         }
+
+
+        [HttpGet("v1/reports/products")]
+        public async Task<IActionResult> GetProducts()
+        {
+            var result = await _reportsRepository.GetProducts();
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
     }
 }

@@ -403,7 +403,7 @@ namespace Platform.AgentReports.API.Repository
             if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
             {
                 profitLossDetails = profitLossDetails.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Games && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
+               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId))).AsNoTracking();
             }
@@ -1562,7 +1562,7 @@ namespace Platform.AgentReports.API.Repository
             if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
             {
                 profitLossDetails = profitLossDetails.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Games && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
+               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId))).AsNoTracking();
             }
@@ -2015,7 +2015,7 @@ namespace Platform.AgentReports.API.Repository
             if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
             {
                 profitLossDetails = profitLossDetails.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Games && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
+               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId))).AsNoTracking();
             }
@@ -2325,7 +2325,7 @@ namespace Platform.AgentReports.API.Repository
             if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
             {
                 profitLossDetails = profitLossDetails.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Games && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
+               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId)));
             }
@@ -3499,6 +3499,218 @@ namespace Platform.AgentReports.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<ProductResponse>> GetProducts()
+        {
+
+            var productTypes = new List<ProductType>();
+
+            var productType = new ProductType
+            {
+                ProductTypeId = (int)Product.Sportsbook,
+                ProductTypeName = Product.Sportsbook.ToString(),
+                Products = new List<ProductModel>()
+                {
+                    new ProductModel
+                    {
+                        ProductId = 1,
+                        ProductName = "Soccer"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 2,
+                        ProductName = "Basketball"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 3,
+                        ProductName = "Baseball"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 5,
+                        ProductName = "Tennis"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 12,
+                        ProductName = "Rugby"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 12,
+                        ProductName = "Rugby"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 13,
+                        ProductName = "Aussie Rules"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 16,
+                        ProductName = "American Football"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 20,
+                        ProductName = "Table Tennis"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 21,
+                        ProductName = "Cricket"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 22,
+                        ProductName = "Darts"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 23,
+                        ProductName = "Volleyball"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 1001,
+                        ProductName = "Virtual Soccker"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 1002,
+                        ProductName = "Virtual Basketball"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 1005,
+                        ProductName = "Virtual Tennis"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 1021,
+                        ProductName = "Virtual Cricket"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 1058,
+                        ProductName = "Virtual Dog Racing"
+                    }
+                }
+            };
+
+
+            productTypes.Add(productType);
+
+            productType = new ProductType
+            {
+                ProductTypeId = (int)Product.Casino,
+                ProductTypeName = Product.Casino.ToString(),
+                Products = new List<ProductModel>()
+                {
+                    new ProductModel
+                    {
+                        ProductId = 1,
+                        ProductName = "Blueprint Gaming"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 2,
+                        ProductName = "No Limit City"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 3,
+                        ProductName = "Hacksaw Gaming"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 4,
+                        ProductName = "Evoplay"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 5,
+                        ProductName = "Quickspin"
+                    }
+                }
+            };
+
+            productTypes.Add(productType);
+
+            productType = new ProductType
+            {
+                ProductTypeId = (int)Product.LiveCasino,
+                ProductTypeName = Product.LiveCasino.ToString(),
+                Products = new List<ProductModel>(){
+                    new ProductModel
+                    {
+                        ProductId = 1,
+                        ProductName = "Ezugi"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 2,
+                        ProductName = "101 Bet Games"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 3,
+                        ProductName = "Evolution"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 4,
+                        ProductName = "Better Live"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 5,
+                        ProductName = "Skywind Live"
+                    }
+                }
+            };
+
+            productTypes.Add(productType);
+
+
+            productType = new ProductType
+            {
+                ProductTypeId = (int)Product.VirtualGames,
+                ProductTypeName = Product.VirtualGames.ToString(),
+                Products = new List<ProductModel>(){
+                    new ProductModel
+                    {
+                        ProductId = 1,
+                        ProductName = "1x2 Gaming"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 2,
+                        ProductName = "101 Bet Games"
+                    },
+                    new ProductModel
+                    {
+                        ProductId = 3,
+                        ProductName = "Kiron"
+                    }
+                }
+            };
+
+            productTypes.Add(productType);
+
+            var products = new ProductResponse
+            {
+                ProductTypes = productTypes
+            };
+
+            return new BaseResponseDTO<ProductResponse>()
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = products
+            };
+        }
+
         #endregion
 
         #region Utilities
@@ -3624,7 +3836,7 @@ namespace Platform.AgentReports.API.Repository
             if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
             {
                 result = result.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Games && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
+               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId)));
             }
@@ -3770,7 +3982,7 @@ namespace Platform.AgentReports.API.Repository
             if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
             {
                 result = result.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Games && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
+               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId)));
             }
@@ -3867,7 +4079,7 @@ namespace Platform.AgentReports.API.Repository
             if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
             {
                 result = result.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Games && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
+               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId)));
             }
@@ -3940,7 +4152,7 @@ namespace Platform.AgentReports.API.Repository
             if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
             {
                 result = result.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Games && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
+               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId)));
             }
@@ -4034,7 +4246,7 @@ namespace Platform.AgentReports.API.Repository
             if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
             {
                 winLossRaw = winLossRaw.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Games && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
+               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId)));
             }
@@ -4099,7 +4311,7 @@ namespace Platform.AgentReports.API.Repository
             if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
             {
                 winLossRaw = winLossRaw.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Games && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
+               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId)));
             }
@@ -4180,7 +4392,7 @@ namespace Platform.AgentReports.API.Repository
             if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
             {
                 winLossRaw = winLossRaw.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Games && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
+               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId)));
             }
@@ -4241,7 +4453,7 @@ namespace Platform.AgentReports.API.Repository
             if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
             {
                 result = result.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Games && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
+               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId)));
             }
@@ -4311,7 +4523,7 @@ namespace Platform.AgentReports.API.Repository
             if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
             {
                 result = result.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Games && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
+               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId)));
             }
@@ -4483,7 +4695,7 @@ namespace Platform.AgentReports.API.Repository
             if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
             {
                 result = result.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Games && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
+               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
                (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId)));
             }

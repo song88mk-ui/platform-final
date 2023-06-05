@@ -91,7 +91,7 @@ namespace Platform.QTech.API.Repository
             if (clientResponse.StatusCode != StatusCode.Success)
                 return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.REQUEST_DECLINED, new WithdrawResponse());
 
-            if (request.Amount < 0)
+            if (request.Amount <= 0)
                 return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.REQUEST_DECLINED, new WithdrawResponse());
 
             var authenticationResponse = await _operatorRepository.Authenticate(clientId, operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);

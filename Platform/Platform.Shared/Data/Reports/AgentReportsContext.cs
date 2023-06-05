@@ -17,6 +17,7 @@ namespace Platform.Shared.Data.Reports
             modelBuilder.Entity<WinLoss>().HasKey(k => new { k.ParentUserId, k.DirectUserId, k.IndirectUserId, k.TransactionDate, k.BetId });
             modelBuilder.Entity<CasinoWinLoss>().HasKey(k => new { k.ParentUserId, k.DirectUserId, k.IndirectUserId, k.BetDate, k.BetId });
             modelBuilder.Entity<WinLossSummary>().HasNoKey();
+            modelBuilder.Entity<WinLossDetails>().HasNoKey();
 
             modelBuilder.Entity<BetTransaction>().HasKey(k => new { k.Id });
             modelBuilder.Entity<RunningBalance>().HasKey(k => new { k.ParentUserId, k.UserId });
@@ -42,5 +43,6 @@ namespace Platform.Shared.Data.Reports
 
         // Stored Procedure
         public DbSet<WinLossSummary> ReadWinLossSummary { get; set; }
+        public DbSet<WinLossDetails> ReadWinLossDetails { get; set; }
     }
 }

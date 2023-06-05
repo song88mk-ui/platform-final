@@ -23,7 +23,20 @@ namespace Platform.AgentReports.API.Controllers
         [HttpPost("v1/reports/winloss/{agentId}/{isAgent}")]
         public async Task<IActionResult> GetWinLoss(long agentId, bool isAgent, [FromBody] WinLossAccountRequest request)
         {
-            var result = await _reportsRepository.GetWinLoss(agentId, isAgent, request);
+            var result = await _reportsRepository.GetWinLoss2(agentId, agentId, isAgent, new WinLossAccountRequestExtended
+            {
+                Accounts = request.Accounts,
+                Page = request.Page,
+                PageSize = request.PageSize,
+                FromDate = request.FromDate,
+                ToDate = request.ToDate,
+                DateFilter = request.DateFilter,
+                BetIds = request.BetIds,
+                Currency = request.Currency,
+                ProductId = request.ProductId,
+                Product = request.Product,
+                Status = request.Status
+            });
 
             switch (result.StatusCode)
             {
@@ -36,21 +49,6 @@ namespace Platform.AgentReports.API.Controllers
 
         [HttpPost("v1/reports/winloss/{agentId}/{directUserId}/{isAgent}")]
         public async Task<IActionResult> GetWinLoss(long agentId, long directUserId, bool isAgent, [FromBody] WinLossAccountRequestExtended request)
-        {
-            var result = await _reportsRepository.GetWinLoss(agentId, directUserId, isAgent, request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
-
-        [HttpPost("v2/reports/winloss/{agentId}/{directUserId}/{isAgent}")]
-        public async Task<IActionResult> GetWinLoss2(long agentId, long directUserId, bool isAgent, [FromBody] WinLossAccountRequestExtended request)
         {
             var result = await _reportsRepository.GetWinLoss2(agentId, directUserId, isAgent, request);
 

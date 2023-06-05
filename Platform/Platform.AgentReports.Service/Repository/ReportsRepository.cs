@@ -1175,9 +1175,11 @@ namespace Platform.AgentReports.Service.Repository
 
                 if (winloss != null)
                 {
+                    winloss.Reason = message.Reason;
                     winloss.ExchangeRate = message.ExchangeRate;
                     winloss.AgentUsername = agents.Where(c => c.AgentId == data.UplineUserId).Select(s => s.AgentUsername).FirstOrDefault();
                     winloss.UserId = message.UserId;
+                    winloss.UserTypeId = (int)agents.Where(c => c.AgentId == indirectUserId).Select(c => c.UserType).FirstOrDefault();
                     winloss.TransactionType = message.TransactionType;
                     winloss.Commission = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : memberCommission;
                     winloss.MemberWinLoss = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : memberWinLoss;
@@ -1216,7 +1218,6 @@ namespace Platform.AgentReports.Service.Repository
                     winloss.GGR = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : (message.Stake - message.Payout);
                     winloss.Payout = message.BetStatusId == (int)BetStatus.Cancelled ? 0 : message.Payout;
                     winloss.IsGGREnabled = isGGREnabled;
-
                 }
                 else
                     context.CasinoWinLoss.Add(new CasinoWinLoss
@@ -1232,6 +1233,14 @@ namespace Platform.AgentReports.Service.Repository
                         AgentId = agent.AgentId,
                         AgentUsername = agents.Where(c => c.AgentId == data.UplineUserId).Select(s => s.AgentUsername).FirstOrDefault(),
                         ClientId = message.ClientId,
+                        ClientCode = message.ClientCode,
+                        ClientName = message.ClientName,
+                        Endpoint = message.Endpoint,
+                        OperatorToken = message.OperatorToken,
+                        Reason = message.Reason,
+                        IsAgent = message.IsAgent,
+                        StakeBonus = message.StakeBonus,
+                        UserTypeId = (int)agents.Where(c => c.AgentId == indirectUserId).Select(c => c.UserType).FirstOrDefault(),
                         PositionTaking = GetReceivePTFinal(message.Stake, message.Payout, message.BetStatusId, agent),
                         UserId = message.UserId,
                         TransactionType = message.TransactionType,

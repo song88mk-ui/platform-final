@@ -5,7 +5,7 @@
         All          = 0,
         Sportsbook   = 1,
         VirtualGames = 2,
-        Games        = 3,
+        Casino        = 3,
         LiveCasino   = 4
     }
 }

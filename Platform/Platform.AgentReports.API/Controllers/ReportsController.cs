@@ -48,6 +48,21 @@ namespace Platform.AgentReports.API.Controllers
             }
         }
 
+
+        [HttpPost("v2/reports/winloss/{agentId}/{directUserId}/{isAgent}")]
+        public async Task<IActionResult> GetWinLoss2(long agentId, long directUserId, bool isAgent, [FromBody] WinLossAccountRequestExtended request)
+        {
+            var result = await _reportsRepository.GetWinLoss2(agentId, directUserId, isAgent, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/reports/winloss/details/{agentId}/{directUserId}/{isAgent}")]
         public async Task<IActionResult> GetWinLossDetails(long agentId, long directUserId, bool isAgent, [FromBody] WinLossAccountRequestExtended request)
         {
@@ -350,5 +365,21 @@ namespace Platform.AgentReports.API.Controllers
                     return BadRequest(result);
             }
         }
+
+
+        [HttpGet("v1/reports/products")]
+        public async Task<IActionResult> GetProducts()
+        {
+            var result = await _reportsRepository.GetProducts();
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
     }
 }

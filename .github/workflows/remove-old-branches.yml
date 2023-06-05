@@ -20,5 +20,5 @@ jobs:
           date: '1 month ago'
           dry_run: false
           delete_tags: false
-          extra_protected_branch_regex: 'main|master|^release.*'
+          extra_protected_branch_regex: 'main|master|^release.*|excl-.*'
           exclude_open_pr_branches: true

@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.Extensions.Configuration;
+using MongoDB.Driver;
 using Platform.QTech.API.Enums;
 using Platform.QTech.API.Models;
 using Platform.Shared.Data.CasinoBetting;
+using Platform.Shared.Data.CasinoBetting.Entities;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
@@ -15,11 +17,17 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
 using IsolationLevel = System.Transactions.IsolationLevel;
+using TransactionOptions = System.Transactions.TransactionOptions;
 
 namespace Platform.QTech.API.Repository
 {
     public class CasinoRepository : ICasinoRepository
     {
+        private readonly IConfiguration _configuration;
+
+        private static IMongoDatabase _db;
+        private static IMongoCollection<BettingStatus> bettingStatusCollection;
+
         private readonly IProviderRepository _providerRepository;
         private readonly IOperatorRepository _operatorRepository;
         private readonly IRabbitMQRepository _rabbitMQRepository;
@@ -27,14 +35,23 @@ namespace Platform.QTech.API.Repository
         private readonly PlatformContext _platformContext;
         private readonly CasinoBettingContext _casinoBettingContext;
 
-        public CasinoRepository(IProviderRepository providerRepository, IMemCache memCache, PlatformContext platformContext, CasinoBettingContext casinoBettingContext, IOperatorRepository operatorRepository, IRabbitMQRepository rabbitMQRepository)
+        public CasinoRepository(IConfiguration configuration, IProviderRepository providerRepository, IMemCache memCache, PlatformContext platformContext, CasinoBettingContext casinoBettingContext, IOperatorRepository operatorRepository, IRabbitMQRepository rabbitMQRepository)
         {
+            _configuration = configuration;
             _providerRepository = providerRepository;
             _memCache = memCache;
             _platformContext = platformContext;
             _casinoBettingContext = casinoBettingContext;
             _operatorRepository = operatorRepository;
             _rabbitMQRepository = rabbitMQRepository;
+
+            if (_db == null)
+            {
+                var client = new MongoClient(_configuration["ConnectionStrings:MongoDB-Casino"]);
+                _db = client.GetDatabase("Casino");
+
+                bettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
+            }
         }
         public async Task<Tuple<SessionCode, GameSessionResponse>> GetSession(GameSessionRequest request)
         {
@@ -92,6 +109,12 @@ namespace Platform.QTech.API.Repository
                 return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.REQUEST_DECLINED, new WithdrawResponse());
 
             if (request.Amount <= 0)
+                return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.REQUEST_DECLINED, new WithdrawResponse());
+
+            var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSt == "betstop");
+            var tempBettingStatus = await bettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
+
+            if (tempBettingStatus.IsBeSt)
                 return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.REQUEST_DECLINED, new WithdrawResponse());
 
             var authenticationResponse = await _operatorRepository.Authenticate(clientId, operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);

@@ -18,7 +18,7 @@ jobs:
         with:
           repo_token: ${{ github.token }}
           date: '1 month ago'
-          dry_run: true #false
+          dry_run: false
           delete_tags: false
           extra_protected_branch_regex: 'main|master|^release.*'
           exclude_open_pr_branches: true

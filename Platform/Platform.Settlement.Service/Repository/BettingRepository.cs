@@ -831,6 +831,11 @@ namespace Platform.Settlement.Service.Repository
 
             if (betStatus == (BetStatus)bet.BetStatusId)
                 isInsertToBetAudit = false;
+            else
+            {
+                bet.SettlementDate = settledDate;
+                bet.SettlementDateOffset = settledDate.AddHours(-4);
+            }
 
             payload.NonTaxedPayout = payout;
 
@@ -839,8 +844,6 @@ namespace Platform.Settlement.Service.Repository
             bet.BetStatusName = betStatus.ToString();
 
             bet.Payout = payout;
-            bet.SettlementDate = settledDate;
-            bet.SettlementDateOffset = settledDate.AddHours(-4);
 
             var finalStake = bet.TrueStake - bet.StakeBonus;
 
@@ -977,13 +980,16 @@ namespace Platform.Settlement.Service.Repository
 
             if (betStatus == (BetStatus)bet.BetStatusId && totalPayout == bet.Payout)
                 isInsertToBetAudit = false;
+            else
+            {
+                bet.SettlementDate = settledDate;
+                bet.SettlementDateOffset = settledDate.AddHours(-4);
+            }
             
             bet.WinLoss = totalPayout == 0 ? -bet.TrueStake : totalPayout - stake;
             bet.BetStatusId = (int)betStatus;
             bet.BetStatusName = betStatus.ToString();
             bet.Payout = totalPayout;
-            bet.SettlementDate = settledDate;
-            bet.SettlementDateOffset = settledDate.AddHours(-4);
             bet.TaxedStake = betStatus == BetStatus.Cancelled ? 0 : taxedStake;
             bet.TaxedWinnings = taxedWinnings;
             bet.ParlayBonus = parlayBonus;

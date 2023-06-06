@@ -20,6 +20,8 @@ namespace Platform.Shared.Data.Reports
             modelBuilder.Entity<WinLossDetails>().HasNoKey();
             modelBuilder.Entity<ProfitLossSummary>().HasNoKey();
             modelBuilder.Entity<ProfitLossDetails>().HasNoKey();
+            modelBuilder.Entity<GGRSummary>().HasNoKey();
+            modelBuilder.Entity<GGRDetails>().HasNoKey();
 
             modelBuilder.Entity<BetTransaction>().HasKey(k => new { k.Id });
             modelBuilder.Entity<RunningBalance>().HasKey(k => new { k.ParentUserId, k.UserId });
@@ -48,5 +50,7 @@ namespace Platform.Shared.Data.Reports
         public DbSet<WinLossDetails> ReadWinLossDetails { get; set; }
         public DbSet<ProfitLossSummary> ReadProfitLossSummary { get; set; }
         public DbSet<ProfitLossDetails> ReadProfitLossDetails { get; set; }
+        public DbSet<GGRSummary> ReadGGRSummary { get; set; }
+        public DbSet<GGRDetails> ReadGGRDetails { get; set; }
     }
 }

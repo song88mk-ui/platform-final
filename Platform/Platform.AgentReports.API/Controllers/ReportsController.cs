@@ -227,13 +227,13 @@ namespace Platform.AgentReports.API.Controllers
         [HttpPost("v1/reports/ggr/{agentId}/{directAgentId}")]
         public async Task<IActionResult> GetGGR(long agentId, long directAgentId, [FromBody] WinLossAccountRequestExtendedDTO request)
         {
-            return Ok(await _reportsRepository.GetGGR(agentId, directAgentId, request));
+            return Ok(await _reportsRepository.GetGGR2(agentId, directAgentId, request));
         }
 
         [HttpPost("v1/reports/ggr/details/{agentId}/{playerId}")]
         public async Task<IActionResult> GetGGRDetails(long agentId, long playerId, [FromBody] WinLossAccountRequestExtendedDTO request)
         {
-            return Ok(await _reportsRepository.GetGGRDetails(agentId, playerId, request));
+            return Ok(await _reportsRepository.GetGGRDetails2(agentId, playerId, request));
         }
 
         [HttpPost("v1/reports/payment/transferhistory")]

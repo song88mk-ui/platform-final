@@ -1193,66 +1193,52 @@ namespace Platform.AgentReports.API.Repository
             #endregion
         }
 
-        public async Task<BaseResponseDTO<GGRResponse>> GetGGR(long parentAgentId, long directUserId, WinLossAccountRequestExtendedDTO request)
+        
+        public async Task<BaseResponseDTO<GGRResponse>> GetGGR2(long parentAgentId, long directUserId, WinLossAccountRequestExtendedDTO request)
         {
-            var skip = (request.Page - 1) * request.PageSize;
-            double rowCount = 0;
 
-            //var states = new int[] { (int)StatusType.Won, (int)StatusType.Lost, (int)StatusType.HalfWon, (int)StatusType.HalfLost, (int)StatusType.Void };
-
+            var currencyCode = request.Currency.ToString();
             if (request.Currency == CurrencyCode.ALL && parentAgentId > 0)
-                request.Currency = Enum.Parse<CurrencyCode>((await _agentRepository.GetUserDetails(parentAgentId)).Result.Currency);
+                currencyCode = Enum.Parse<CurrencyCode>((await _agentRepository.GetUserDetails(parentAgentId)).Result.Currency).ToString();
+            else if (request.Currency == CurrencyCode.ALL)
+                currencyCode = string.Empty;
 
-            var iQueryableData = GetWinLossAggregateQueryableParentAndAgentId2(parentAgentId, directUserId, true, request).AsNoTracking();
-            var membersCount = GetDistinctMembers2(request);
+            var productTypes = request.Product;
 
-            var data = iQueryableData.Select(s => new
+            var accounts = request.Accounts;
+
+            var betIds = request.BetIds;
+
+            var status = request.Status;
+
+            var agentUserTypeId = (int)UserType.Agent;
+
+            var sqlRaw = $"GetGGRSummary {parentAgentId}, {directUserId}, {true}, {agentUserTypeId}, {request.ProductId}, '{productTypes}', '{accounts}', '{betIds}', '{status}', '{request.FromDate.ToString("yyyy-MM-dd")}', '{request.ToDate.ToString("yyyy-MM-dd 23:59:59")}', '{currencyCode}', {request.Page}, {request.PageSize}";
+            var response = await _context.ReadGGRSummary.FromSqlRaw(sqlRaw).ToListAsync();
+            var totalResponse = response.FirstOrDefault();
+
+            if (totalResponse == null)
             {
-                IndirectUserId = s.IndirectUserId,
-                Username = s.Username,
-                UserTypeId = s.UserTypeId,
-                CurrencyCode = s.CurrencyCode,
-                BetId = s.BetId,
-                ReferenceId = s.ReferenceId,
-                TrueStake = s.TrueStake,
-                Payout = s.Payout.Value,
-                GGR = s.GGR.Value,
-                ExchangeRate = s.ExchangeRate,
-                StatusId = s.StatusId,
-                SettledDate = s.SettledDate
-            }).ToList();
-
-            var excludestates = new int[] { (int)StatusType.Rejected, (int)StatusType.Cancelled };
-            var settledBets = data.Where(w => string.IsNullOrEmpty(w.ReferenceId) && !excludestates.Contains(w.StatusId)).ToList();
-            var reSettledBets = data.Where(w => !string.IsNullOrEmpty(w.ReferenceId)).ToList();
-            if (reSettledBets.Count() > 0)
-            {
-                var resettledIds = reSettledBets.Select(r => Guid.Parse(r.ReferenceId)).ToList();
-                var origResettledBets = settledBets.Where(s => resettledIds.Contains(s.BetId)).ToList();
-                settledBets = settledBets.Where(s => !resettledIds.Contains(s.BetId)).ToList();
-                //settledBets = settledBets.Where(r => states.Contains(r.StatusId)).ToList();
-                settledBets.AddRange(origResettledBets);
+                return new BaseResponseDTO<GGRResponse>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new GGRResponse()
+                };
             }
 
-            var betData = settledBets.ToList();
-
-            betData.AddRange(reSettledBets);
-
-            var bets = betData.GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new GGRModelResponse()
+            var bets = response.Select(d => new GGRModelResponse()
             {
-                UserId = d.Key.IndirectUserId,
-                Username = d.Key.Username,
-                IsAgent = d.FirstOrDefault().UserTypeId == (int)UserType.Agent ? true : false,
-                CurrencyCode = d.Key.CurrencyCode,
-                StakeCount = d.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper() }).ToList().Distinct().Count(),
-                StakeAmount = d.Sum(x => x.TrueStake),
-                Payout = d.Sum(s => s.Payout),
-                GGR = d.Sum(ss => ss.GGR),
-                MemberCount = d.First().UserTypeId == (int)UserType.Player ? 1 : membersCount.First(m => m.Item1 == d.Key.IndirectUserId).Item2
-            });
-
-            rowCount = bets.Count();
-            var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
+                UserId = d.UserId,
+                Username = d.Username,
+                IsAgent = d.IsAgent,
+                CurrencyCode = d.CurrencyCode,
+                StakeCount = d.StakeCount,
+                StakeAmount = d.StakeAmount,
+                Payout = d.Payout,
+                GGR = d.GGR,
+                MemberCount = d.MemberCount
+            }).ToList();
 
             return new BaseResponseDTO<GGRResponse>
             {
@@ -1260,203 +1246,71 @@ namespace Platform.AgentReports.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new GGRResponse
                 {
-                    CurrentPage = request.Page,
-                    PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
-                    PageSize = request.PageSize,
-                    RowCount = (int)rowCount,
-                    TotalStakeAmount = bets.Sum(s => s.StakeAmount),
-                    TotalStakeCount = bets.Sum(s => s.StakeCount),
-                    TotalPayout = bets.Sum(s => s.Payout),
-                    TotalGGR = bets.Sum(s => s.GGR),
-                    Bets = bets.Skip(skip).Take(request.PageSize).ToList(),
-                    TotalMemberCount = totalMemberCount
+                    CurrentPage = totalResponse.CurrentPage,
+                    PageCount = totalResponse.PageCount,
+                    PageSize = totalResponse.PageSize,
+                    RowCount = totalResponse.RowCount,
+                    TotalStakeAmount = totalResponse.TotalStakeAmount,
+                    TotalStakeCount = totalResponse.TotalStakeCount,
+                    TotalPayout = totalResponse.TotalPayout,
+                    TotalGGR = totalResponse.TotalGGR,
+                    Bets = bets,
+                    TotalMemberCount = totalResponse.TotalMemberCount
                 }
             };
         }
-        public async Task<BaseResponseDTO<GGRDetailsResponse>> GetGGRDetails(long agentId, long playerId, WinLossAccountRequestExtendedDTO request)
+
+        public async Task<BaseResponseDTO<GGRDetailsResponse>> GetGGRDetails2(long agentId, long playerId, WinLossAccountRequestExtendedDTO request)
         {
-            var skip = (request.Page - 1) * request.PageSize;
-            var productTypes = request.Product.Split(',').Select(int.Parse).ToList();
-            var gameProvidersFilter = productTypes.Where(p => p > 300 && p < 400).Select(pp => pp - 300).ToList();
-            var liveCasinoProvidersFilter = productTypes.Where(p => p > 400 && p < 500).Select(pp => pp - 400).ToList();
-            var virtualProvidersFilter = productTypes.Where(p => p > 200 && p < 300).Select(pp => pp - 200).ToList();
-            var sportsProductFilter = productTypes.Where(p => p < 300).ToList();
 
-            IQueryable<WinLoss> profitLossDetails;
-            var currencies = new List<string>() { request.Currency.ToString() };
-            //var states = new int[] { (int)StatusType.Won, (int)StatusType.Lost, (int)StatusType.HalfWon, (int)StatusType.HalfLost, (int)StatusType.Void };
+            var currencyCode = request.Currency.ToString();
+            if (request.Currency == CurrencyCode.ALL)
+                currencyCode = string.Empty;
 
-            var accounts = new List<string>();
-            if (!string.IsNullOrEmpty(request.Accounts))
-            {
-                accounts = request.Accounts.Split(',').ToList();
-            }
+            var productTypes = request.Product;
 
-            var betIds = new List<string>();
-            if (!string.IsNullOrEmpty(request.BetIds))
-            {
-                betIds = request.BetIds.Split(',').ToList();
-            }
+            var accounts = request.Accounts;
 
-            var status = new List<string>();
-            if (!string.IsNullOrEmpty(request.Status))
-            {
-                status = request.Status.Split(',').Select(s => s.ToUpper().Replace("-", "")).ToList();
-            }
+            var betIds = request.BetIds;
 
-            if (request.DateFilter == "transactiondate")
-            {
-                profitLossDetails = _context.WinLoss.Where(w =>
-                    w.ParentUserId == agentId &&
-                    w.IndirectUserId == playerId &&
-                    w.TransactionDateOffset >= request.FromDate &&
-                    w.TransactionDateOffset < request.ToDate.AddDays(1)).AsNoTracking();
-            }
-            else
-            {
-                profitLossDetails = _context.WinLoss.Where(w =>
-                    w.ParentUserId == agentId &&
-                    w.IndirectUserId == playerId &&
-                    w.SettledDateOffset >= request.FromDate &&
-                    w.SettledDateOffset < request.ToDate.AddDays(1)).AsNoTracking();
-            }
+            var status = request.Status;
 
-            if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
-            {
-                profitLossDetails = profitLossDetails.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
-               (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
-               (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId)));
-            }
-            else
-            {
-                profitLossDetails = profitLossDetails.Where(r => sportsProductFilter.Contains(r.ProductId));
-            }
+            var sqlRaw = $"GetGGRDetails {agentId}, {playerId}, {request.ProductId}, '{productTypes}', '{accounts}', '{betIds}', '{status}', '{request.FromDate.ToString("yyyy-MM-dd")}', '{request.ToDate.ToString("yyyy-MM-dd 23:59:59")}', '{currencyCode}', {request.Page}, {request.PageSize}";
+            var response = await _context.ReadGGRDetails.FromSqlRaw(sqlRaw).ToListAsync();
+            var totalResponse = response.FirstOrDefault();
 
-            if (accounts.Any())
+            if (totalResponse == null)
             {
-                profitLossDetails = profitLossDetails.Where(r => accounts.Contains(r.Username));
-            }
-
-            if (status.Any())
-            {
-                profitLossDetails = profitLossDetails.Where(p => status.Contains(p.StatusName.ToUpper()));
-            }
-
-            if (betIds.Any())
-            {
-                //profitLossDetails = profitLossDetails.Where(p => betIds.Select(s => s.ToUpper()).Contains(string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString().ToUpper() : p.ReferenceId.ToUpper()));                
-                profitLossDetails = profitLossDetails.ToList().Where(p => betIds.Any(p2 => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(p2.Trim().ToUpper()))).AsQueryable();
-            }
-
-            double rowCount = profitLossDetails.AsNoTracking().Count();
-
-            if (rowCount == 0)
-            {
-                return new BaseResponseDTO<GGRDetailsResponse>()
+                return new BaseResponseDTO<GGRDetailsResponse>
                 {
-                    Result = new GGRDetailsResponse()
-                    {
-                        Bets = new List<GGRDetailsModelResponse>(),
-                        CurrentPage = request.PageSize,
-                        PageCount = 0,
-                        PageSize = request.PageSize,
-                        RowCount = (int)rowCount,
-                        TotalStakeAmount = 0,
-                        TotalStakeCount = 0,
-                        TotalPayout = 0,
-                        TotalGGR = 0
-                    },
                     StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString()
+                    Message = StatusCode.Success.ToString(),
+                    Result = new GGRDetailsResponse()
                 };
             }
 
-            var data = profitLossDetails.Select(s => new
+
+            var result = response.Select(s => new GGRDetailsModelResponse()
             {
-                IndirectUserId = s.IndirectUserId,
+                UserId = s.UserId,
                 BetId = s.BetId,
-                ReferenceId = s.ReferenceId,
                 TransactionDate = s.TransactionDate,
+                SettlementDate = s.SettlementDate,
                 Username = s.Username,
                 UserTypeId = s.UserTypeId,
                 CurrencyCode = s.CurrencyCode,
+                StakeAmount = s.StakeAmount,
                 IsParlay = s.IsParlay,
                 Odds = s.Odds,
                 OddsTypeId = s.OddsTypeId,
                 OddsTypeName = s.OddsTypeName,
                 StatusId = s.StatusId,
                 StatusName = s.StatusName,
+                VirtualSportName = s.VirtualSportName,
                 ProductId = s.ProductId,
                 ProductName = s.ProductName,
                 LeagueId = s.LeagueId,
-                FixtureId = s.FixtureId,
-                FixtureName = s.FixtureName,
-                FixtureStartDate = s.FixtureStartDate,
-                MarketTemplateId = s.MarketTemplateId,
-                MarketName = s.MarketName,
-                SelectionTemplateId = s.SelectionTemplateId,
-                SelectionName = s.SelectionName,
-                Score = s.Score,
-                FixtureStatusId = s.FixtureStatusId,
-                FixtureStatusName = s.FixtureStatusName,
-                MarketTemplateGroupId = s.MarketTemplateGroupId,
-                MarketTemplateGroupName = s.MarketTemplateGroupName,
-                MarketTypeId = s.MarketTypeId,
-                Payout = s.Payout.Value,
-                GGR = s.GGR.Value,
-                SettledDate = s.SettledDate,
-                ExchangeRate = s.ExchangeRate,
-                TrueStake = s.TrueStake,
-                SegmentName = s.SegmentName,
                 LeagueName = s.LeagueName,
-                Line = s.Line,
-                CasinoDetails = s.CasinoDetails
-            }).ToList();
-
-            var excludestates = new int[] { (int)StatusType.Rejected, (int)StatusType.Cancelled };
-            var settledBets = data.Where(w => string.IsNullOrEmpty(w.ReferenceId) && !excludestates.Contains(w.StatusId)).ToList();
-            var reSettledBets = data.Where(w => !string.IsNullOrEmpty(w.ReferenceId)).ToList();
-            if (reSettledBets.Count() > 0)
-            {
-                var resettledIds = reSettledBets.Select(r => Guid.Parse(r.ReferenceId)).ToList();
-                var origResettledBets = settledBets.Where(s => resettledIds.Contains(s.BetId)).ToList();
-                settledBets = settledBets.Where(s => !resettledIds.Contains(s.BetId)).ToList();
-                //settledBets = settledBets.Where(r => states.Contains(r.StatusId)).ToList();
-                settledBets.AddRange(origResettledBets);
-            }
-
-            var betData = settledBets.ToList();
-
-            betData.AddRange(reSettledBets);
-
-            betData = betData.OrderBy(b => b.SettledDate).ToList();
-
-            var totalStakeAmount = betData.Sum(s => s.TrueStake);
-            var totalPayout = betData.Sum(s => s.Payout);
-            var totalGGR = betData.Sum(s => s.GGR);
-
-            var result = betData.OrderBy(b => b.SettledDate).Skip(skip).Take(request.PageSize).Select(s => new GGRDetailsModelResponse()
-            {
-                UserId = s.IndirectUserId,
-                BetId = string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId),
-                TransactionDate = s.TransactionDate,
-                SettlementDate = s.SettledDate,
-                Username = s.Username,
-                UserTypeId = s.UserTypeId,
-                CurrencyCode = s.CurrencyCode,
-                StakeAmount = s.TrueStake,
-                IsParlay = s.IsParlay,
-                Odds = s.Odds,
-                OddsTypeId = s.OddsTypeId,
-                OddsTypeName = s.OddsTypeName,
-                StatusId = s.StatusId,
-                StatusName = s.StatusName,
-                VirtualSportName = s.ProductId == 2 ? s.SegmentName : string.Empty,
-                ProductId = s.ProductId,
-                ProductName = s.ProductName,
-                LeagueId = s.LeagueId,
-                LeagueName = string.IsNullOrEmpty(s.LeagueName) ? s.SegmentName : s.LeagueName,
                 FixtureId = s.FixtureId,
                 FixtureName = s.FixtureName,
                 FixtureStartDate = s.FixtureStartDate,
@@ -1471,10 +1325,10 @@ namespace Platform.AgentReports.API.Repository
                 MarketTemplateGroupId = s.MarketTemplateGroupId,
                 MarketTemplateGroupName = s.MarketTemplateGroupName,
                 CasinoDetails = JsonConvert.DeserializeObject<CasinoDetailDTO>(s.CasinoDetails),
-                Reason = string.IsNullOrEmpty(s.ReferenceId) ? string.Empty : $"ADJUSTMENT - {s.StatusName}",
-                BetScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(1, string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId)) : "",
-                FinalScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(2, string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId)) : "",
-                HalftimeScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(3, string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId)) : "",
+                Reason = s.Reason,
+                BetScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(1, s.BetId) : "",
+                FinalScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(2, s.BetId) : "",
+                HalftimeScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(3, s.BetId) : "",
                 MarketTypeId = s.MarketTypeId,
                 Payout = s.Payout,
                 GGR = s.GGR
@@ -1486,14 +1340,14 @@ namespace Platform.AgentReports.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new GGRDetailsResponse
                 {
-                    CurrentPage = request.Page,
-                    PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
-                    PageSize = request.PageSize,
-                    RowCount = (int)rowCount,
-                    TotalStakeAmount = totalStakeAmount,
-                    TotalStakeCount = (int)rowCount,
-                    TotalPayout = totalPayout,
-                    TotalGGR = totalGGR,
+                    CurrentPage = totalResponse.CurrentPage,
+                    PageCount = totalResponse.PageCount,
+                    PageSize = totalResponse.PageSize,
+                    RowCount = totalResponse.RowCount,
+                    TotalStakeAmount = totalResponse.TotalStakeAmount,
+                    TotalStakeCount = totalResponse.RowCount,
+                    TotalPayout = totalResponse.TotalPayout,
+                    TotalGGR = totalResponse.TotalGGR,
                     Bets = result
                 }
             };
@@ -2752,88 +2606,6 @@ namespace Platform.AgentReports.API.Repository
         }
 
 
-        private List<Tuple<long, int>> GetDistinctMembers2(WinLossAccountRequest request)
-        {
-            var result = new List<Tuple<long, int>>();
-            IQueryable<WinLoss> winLossRaw;
-
-            var productTypes = new List<int>();
-            if (!string.IsNullOrEmpty(request.Product))
-            {
-                productTypes = request.Product.Split(',').Select(int.Parse).ToList();
-            }
-
-            var betIds = new List<string>();
-            if (!string.IsNullOrEmpty(request.BetIds))
-            {
-                betIds = request.BetIds.Split(',').ToList();
-            }
-
-            var playerNames = new List<string>();
-            if (!string.IsNullOrEmpty(request.Accounts))
-            {
-                playerNames = request.Accounts.Split(',').ToList();
-            }
-
-            var currencies = new List<string>() { request.Currency.ToString() };
-
-            var gameProvidersFilter = productTypes.Where(p => p > 300 && p < 400).Select(pp => pp - 300).ToList();
-            var liveCasinoProvidersFilter = productTypes.Where(p => p > 400 && p < 500).Select(pp => pp - 400).ToList();
-            var virtualProvidersFilter = productTypes.Where(p => p > 200 && p < 300).Select(pp => pp - 200).ToList();
-            var sportsProductFilter = productTypes.Where(p => p < 300).ToList();
-
-            if (request.DateFilter == "transactiondate")
-            {
-                winLossRaw = _context.WinLoss.Where(w =>
-                   w.TransactionDateOffset >= request.FromDate.Date &&
-                   w.TransactionDateOffset < request.ToDate.AddDays(1).Date &&
-                   currencies.Contains(w.CurrencyCode) &&
-                   w.UserTypeId == (int)UserType.Player).AsNoTracking();
-            }
-            else
-            {
-                winLossRaw = _context.WinLoss.Where(w =>
-                       w.SettledDateOffset >= request.FromDate.Date &&
-                       w.SettledDateOffset < request.ToDate.AddDays(1).Date &&
-                       currencies.Contains(w.CurrencyCode) &&
-                       w.UserTypeId == (int)UserType.Player).AsNoTracking();
-            }
-
-            if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
-            {
-                winLossRaw = winLossRaw.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
-               (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
-               (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId)));
-            }
-            else
-            {
-                winLossRaw = winLossRaw.Where(r => sportsProductFilter.Contains(r.ProductId));
-            }
-
-            if (betIds.Any())
-            {
-                //winLossRaw = winLossRaw.Where(p => betIds.Select(s => s.ToUpper()).Contains(string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString().ToUpper() : p.ReferenceId.ToUpper()));
-                //winLossRaw = winLossRaw.Where(p => betIds.Any(p2 => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(p2.Trim().ToUpper())));
-                winLossRaw = winLossRaw.Where(p => betIds.Contains(p.BetId.ToString()));
-            }
-
-            if (playerNames.Any())
-            {
-                foreach (var player in playerNames)
-                {
-                    if (winLossRaw.Any(p => p.Username == player))
-                        winLossRaw = winLossRaw.Where(p => p.Username == player);
-                }
-            }
-
-
-            result = winLossRaw.Select(w => new { w.ParentUserId, w.IndirectUserId }).ToList()
-                .GroupBy(g => g.ParentUserId).Select(d => new Tuple<long, int>(d.Key, d.Select(dd => dd.IndirectUserId).Distinct().Count())).ToList();
-
-            return result;
-        }
-
         private CasinoDetailDTO GetCasinoDetailForPL(string details, decimal exchangeRate)
         {
             if (string.IsNullOrEmpty(details))
@@ -2863,148 +2635,7 @@ namespace Platform.AgentReports.API.Repository
             return score;
         }
 
-        private IQueryable<WinLoss> GetWinLossAggregateQueryableParentAndAgentId2(long parentUserId, long directUserId, bool isAgent, WinLossAccountRequestExtendedDTO request)
-        {
-            IQueryable<WinLoss> result;
-            IQueryable<Tuple<long, string, string>> accountsResult;
-
-            var productTypes = request.Product.Split(',').Select(int.Parse).ToList();
-
-            var accounts = new List<string>();
-            if (!string.IsNullOrEmpty(request.Accounts))
-            {
-                accounts = request.Accounts.Split(',').ToList();
-            }
-
-            var betIds = new List<string>();
-            if (!string.IsNullOrEmpty(request.BetIds))
-            {
-                betIds = request.BetIds.Split(',').ToList();
-            }
-
-            var status = new List<string>();
-            if (!string.IsNullOrEmpty(request.Status))
-            {
-                status = request.Status.Split(',').Select(s => s.ToUpper().Replace("-", "")).ToList();
-            }
-
-            var gameProvidersFilter = productTypes.Where(p => p > 300 && p < 400).Select(pp => pp - 300).ToList();
-            var liveCasinoProvidersFilter = productTypes.Where(p => p > 400 && p < 500).Select(pp => pp - 400).ToList();
-            var virtualProvidersFilter = productTypes.Where(p => p > 200 && p < 300).Select(pp => pp - 200).ToList();
-            var sportsProductFilter = productTypes.Where(p => p < 300).ToList();
-
-            if (request.DateFilter == "transactiondate")
-            {
-                if (isAgent)
-                {
-                    result = _context.WinLoss.Where(w =>
-                       w.ParentUserId == parentUserId &&
-                       w.DirectUserId == directUserId &&
-                       w.TransactionDateOffset >= request.FromDate.Date &&
-                       w.TransactionDateOffset < request.ToDate.AddDays(1).Date &&
-                       w.CurrencyCode == request.Currency.ToString()).AsNoTracking();
-                }
-                else
-                {
-                    result = _context.WinLoss.Where(w =>
-                         w.ParentUserId == parentUserId &&
-                         w.DirectUserId == directUserId &&
-                         w.TransactionDateOffset >= request.FromDate.Date &&
-                         w.TransactionDateOffset < request.ToDate.AddDays(1).Date &&
-                         w.CurrencyCode == request.Currency.ToString() &&
-                         w.UserTypeId == (int)UserType.Agent).AsNoTracking();
-                }
-            }
-            else
-            {
-                if (isAgent)
-                {
-                    result = _context.WinLoss.Where(w =>
-                         w.ParentUserId == parentUserId &&
-                         w.DirectUserId == directUserId &&
-                         w.SettledDateOffset >= request.FromDate.Date &&
-                         w.SettledDateOffset < request.ToDate.AddDays(1).Date &&
-                         w.CurrencyCode == request.Currency.ToString()).AsNoTracking();
-                }
-                else
-                {
-                    result = _context.WinLoss.Where(w =>
-                         w.ParentUserId == parentUserId &&
-                         w.DirectUserId == directUserId &&
-                         w.SettledDateOffset >= request.FromDate.Date &&
-                         w.SettledDateOffset < request.ToDate.AddDays(1).Date &&
-                         w.CurrencyCode == request.Currency.ToString() &&
-                         w.UserTypeId == (int)UserType.Agent).AsNoTracking();
-                }
-            }
-
-            if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
-            {
-                result = result.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
-               (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
-               (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId)));
-            }
-            else
-            {
-                result = result.Where(r => sportsProductFilter.Contains(r.ProductId));
-            }
-
-            if (accounts.Any())
-            {
-                if (request.DateFilter == "transactiondate")
-                {
-                    accountsResult = _context.WinLoss.AsNoTracking().Where(w =>
-                           w.TransactionDateOffset >= request.FromDate.Date &&
-                           w.TransactionDateOffset < request.ToDate.AddDays(1).Date &&
-                           w.CurrencyCode == request.Currency.ToString()).AsNoTracking()
-                            .Select(s => new Tuple<long, string, string>(s.IndirectUserId, s.Username, s.BetId.ToString())).Distinct();
-                }
-                else
-                {
-                    accountsResult = _context.WinLoss.AsNoTracking().Where(w =>
-                           w.SettledDateOffset >= request.FromDate.Date &&
-                           w.SettledDateOffset < request.ToDate.AddDays(1).Date &&
-                           w.CurrencyCode == request.Currency.ToString()).AsNoTracking()
-                            .Select(s => new Tuple<long, string, string>(s.IndirectUserId, s.Username, s.BetId.ToString())).Distinct();
-                }
-
-                var indirectUserIds = new List<long>();
-                foreach (var account in accounts)
-                {
-                    //var indirectUserId = accountsResult.Where(a => account == a.Item2).FirstOrDefault();                 
-                    //if (indirectUserId != null)
-                    //{
-                    //    indirectUserIds.AddRange(accountsResult.Where(a => a.Item1 <= indirectUserId.Item1 && a.Item3 == indirectUserId.Item3).Select(s => s.Item1).Distinct().ToList());
-                    //}
-                    var indirectUserId = accountsResult.ToList().Where(a => a.Item2.ToLower().Contains(account.Trim().ToLower())).ToList();
-                    if (indirectUserId.Count > 0)
-                    {
-                        foreach (var item in indirectUserId)
-                        {
-                            indirectUserIds.AddRange(accountsResult.ToList().Where(a => a.Item1 <= item.Item1 && a.Item3 == item.Item3).Select(s => s.Item1).Distinct().ToList());
-                        }
-                    }
-                }
-
-
-                result = result.Where(r => indirectUserIds.Contains(r.IndirectUserId));
-            }
-
-            if (betIds.Any())
-            {
-                //result = result.Where(p => betIds.Select(s => s.ToUpper()).Contains(string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString().ToUpper() : p.ReferenceId.ToUpper()));
-                result = result.ToList().Where(p => betIds.Any(p2 => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(p2.Trim().ToUpper()))).AsQueryable();
-            }
-
-            if (status.Any())
-            {
-                result = result.Where(p => status.Contains(p.StatusName.ToUpper()));
-            }
-
-            return result;
-        }
-
+        
         private DateTime GetStartDate()
         {
             var startDate = new DateTime();

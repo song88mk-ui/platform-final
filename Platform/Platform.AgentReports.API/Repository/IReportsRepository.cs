@@ -19,8 +19,8 @@ namespace Platform.AgentReports.API.Repository
         Task<BaseResponseDTO<TotalBetResponse>> GetTotalBets(TotalBetsRequest request);
         Task<BaseResponseDTO<WinLossResponse>> GetProfitLoss2(long parentAgentId, long directUserId, ProfitLossRequest request);
         Task<BaseResponseDTO<WinLossDetailsResponse>> GetProfitLossDetails2(long parentAgentId, long directUserId, ProfitLossRequest request);
-        Task<BaseResponseDTO<GGRResponse>> GetGGR(long parentAgentId, long directUserId, WinLossAccountRequestExtendedDTO request);
-        Task<BaseResponseDTO<GGRDetailsResponse>> GetGGRDetails(long agentId, long playerId, WinLossAccountRequestExtendedDTO request);
+        Task<BaseResponseDTO<GGRResponse>> GetGGR2(long parentAgentId, long directUserId, WinLossAccountRequestExtendedDTO request);
+        Task<BaseResponseDTO<GGRDetailsResponse>> GetGGRDetails2(long agentId, long playerId, WinLossAccountRequestExtendedDTO request);
         Task<BaseResponseDTO<OutstandingBetFixtureResponse>> GetOutstandingBetFixtures(long agentId, int page, int pageSize, CurrencyCode currency);
         Task<BaseResponseDTO<List<MonthlyGrossGamingRevenueResponse>>> GetPartnerMonthlyGGR(long userId, int year, string currencyCode);
         Task<BaseResponseDTO<TransferHistoryResponse>> GetPaymentTransferHistory(TransferHistoryRequest request);

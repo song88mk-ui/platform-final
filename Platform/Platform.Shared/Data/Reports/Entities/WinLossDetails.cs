@@ -58,7 +58,7 @@ namespace Platform.Shared.Data.Reports.Entities
         public DateTime TransactionDate { get; set; }
 
         public DateTime SettlementDate { get; set; }
-        //public int StakeCount { get; set; }
+
         public decimal StakeAmount { get; set; }
 
         public decimal ValidStakeAmount { get; set; }

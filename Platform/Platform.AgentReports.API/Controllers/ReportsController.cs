@@ -220,7 +220,7 @@ namespace Platform.AgentReports.API.Controllers
         [HttpPost("v1/reports/profitloss/details/{agentId}/{directUserId}")]
         public async Task<IActionResult> GetProfitLossDetails(long agentId, long directUserId, [FromBody] ProfitLossRequest request)
         {
-            var result = await _reportsRepository.GetProfitLossDetails(agentId, directUserId, request);
+            var result = await _reportsRepository.GetProfitLossDetails2(agentId, directUserId, request);
             return Ok(result);
         }
 

@@ -205,14 +205,14 @@ namespace Platform.AgentReports.API.Controllers
         [HttpPost("v1/reports/profitloss/{agentId}")]
         public async Task<IActionResult> GetProfitLoss(long agentId, [FromBody] ProfitLossRequest request)
         {
-            var result = await _reportsRepository.GetProfitLoss(agentId, request);
+            var result = await _reportsRepository.GetProfitLoss2(agentId, agentId, request);
             return Ok(result);
         }
 
         [HttpPost("v1/reports/profitloss/{agentId}/{directUserId}")]
         public async Task<IActionResult> GetProfitLoss(long agentId, long directUserId, [FromBody] ProfitLossRequest request)
         {
-            var result = await _reportsRepository.GetProfitLoss(agentId, directUserId, request);
+            var result = await _reportsRepository.GetProfitLoss2(agentId, directUserId, request);
 
             return Ok(result);
         }

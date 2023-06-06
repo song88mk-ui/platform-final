@@ -15,6 +15,8 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using static Platform.AgentReports.API.Models.Response.OutstandingBetFixtureResponse;
+using CommissionDetails = Platform.AgentReports.API.Models.Response.CommissionDetails;
+using PositionTakingDetails = Platform.AgentReports.API.Models.Response.PositionTakingDetails;
 
 namespace Platform.AgentReports.API.Repository
 {
@@ -41,217 +43,217 @@ namespace Platform.AgentReports.API.Repository
 
         #region Methods
 
-        public async Task<BaseResponseDTO<WinLossResponse>> GetWinLoss(long parentAgentId, bool isAgents, WinLossAccountRequest request)
-        {
+        //public async Task<BaseResponseDTO<WinLossResponse>> GetWinLoss(long parentAgentId, bool isAgents, WinLossAccountRequest request)
+        //{
 
-            #region W/O BACK AND LAY
+        //    #region W/O BACK AND LAY
 
-            var skip = (request.Page - 1) * request.PageSize;
-            double rowCount = 0;
+        //    var skip = (request.Page - 1) * request.PageSize;
+        //    double rowCount = 0;
 
-            var states = new int[] { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost };
+        //    var states = new int[] { (int)BetStatus.Won, (int)BetStatus.Lost, (int)BetStatus.HalfWon, (int)BetStatus.HalfLost };
 
-            if (request.Currency == CurrencyCode.ALL && parentAgentId > 0)
-                request.Currency = Enum.Parse<CurrencyCode>((await _agentRepository.GetUserDetails(parentAgentId)).Result.Currency);
+        //    if (request.Currency == CurrencyCode.ALL && parentAgentId > 0)
+        //        request.Currency = Enum.Parse<CurrencyCode>((await _agentRepository.GetUserDetails(parentAgentId)).Result.Currency);
 
-            var iQueryableData = GetWinLossAggregateQueryable2(parentAgentId, isAgents, request).AsNoTracking();
-            var membersCount = GetDistinctMembers2(request);
+        //    var iQueryableData = GetWinLossAggregateQueryable2(parentAgentId, isAgents, request).AsNoTracking();
+        //    var membersCount = GetDistinctMembers2(request);
 
-            var tempbets = iQueryableData.Select(s => new
-            {
-                IndirectUserId = s.IndirectUserId,
-                Username = s.Username,
-                UserTypeId = s.UserTypeId,
-                CurrencyCode = s.CurrencyCode,
-                BetId = s.BetId,
-                ReferenceId = s.ReferenceId,
-                Stake = s.Stake,
-                TrueStake = s.TrueStake,
-                StatusId = s.StatusId,
-                Commission = s.Commission,
-                MemberWinLoss = s.MemberWinLoss,
-                MemberCommission = s.MemberCommission,
-                MemberWLC = s.MemberWLC,
-                AgentWinLoss = s.AgentWinLoss,
-                AgentCommission = s.AgentCommission,
-                AgentWLC = s.AgentWLC,
-                DownlineWinLoss = s.DownlineWinLoss,
-                DownlineCommission = s.DownlineCommission,
-                DownlineWLC = s.DownlineWLC,
-                UplineWinLoss = s.UplineWinLoss,
-                UplineCommission = s.UplineCommission,
-                UplineWLC = s.UplineWLC
-            }).ToList();
+        //    var tempbets = iQueryableData.Select(s => new
+        //    {
+        //        IndirectUserId = s.IndirectUserId,
+        //        Username = s.Username,
+        //        UserTypeId = s.UserTypeId,
+        //        CurrencyCode = s.CurrencyCode,
+        //        BetId = s.BetId,
+        //        ReferenceId = s.ReferenceId,
+        //        Stake = s.Stake,
+        //        TrueStake = s.TrueStake,
+        //        StatusId = s.StatusId,
+        //        Commission = s.Commission,
+        //        MemberWinLoss = s.MemberWinLoss,
+        //        MemberCommission = s.MemberCommission,
+        //        MemberWLC = s.MemberWLC,
+        //        AgentWinLoss = s.AgentWinLoss,
+        //        AgentCommission = s.AgentCommission,
+        //        AgentWLC = s.AgentWLC,
+        //        DownlineWinLoss = s.DownlineWinLoss,
+        //        DownlineCommission = s.DownlineCommission,
+        //        DownlineWLC = s.DownlineWLC,
+        //        UplineWinLoss = s.UplineWinLoss,
+        //        UplineCommission = s.UplineCommission,
+        //        UplineWLC = s.UplineWLC
+        //    }).ToList();
             
-            var bets = tempbets.GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModel()
-            {
-                UserId = d.Key.IndirectUserId,
-                Username = d.Key.Username,
-                UserTypeId = d.Key.UserTypeId,
-                CurrencyCode = d.Key.CurrencyCode,
-                StakeCount = d.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper() }).ToList().Distinct().Count(),
-                StakeAmount = d.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper(), ss.Stake }).ToList().Distinct().Sum(x => x.Stake),
-                //ValidStakeAmount = d.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper(), ss.TrueStake, ss.StatusId }).Where(ss => states.ToArray().Contains(ss.StatusId)).ToList().Distinct().Sum(x => x.TrueStake),
-                ValidStakeAmount = d.Sum(x => x.TrueStake),
-                Commission = d.Sum(s => s.Commission),
-                MemberWinLoss = d.Sum(s => s.MemberWinLoss),
-                MemberCommission = d.Sum(s => s.MemberCommission),
-                MemberWLC = d.Sum(s => s.MemberWLC),
-                AgentWinLoss = d.Sum(s => s.AgentWinLoss),
-                AgentCommission = d.Sum(s => s.AgentCommission),
-                AgentWLC = d.Sum(s => s.AgentWLC),
-                DownlineWinLoss = d.Sum(s => s.DownlineWinLoss),
-                DownlineCommission = d.Sum(s => s.DownlineCommission),
-                DownlineWLC = d.Sum(s => s.DownlineWLC),
-                UplineWinLoss = d.Sum(s => s.UplineWinLoss),
-                UplineCommission = d.Sum(s => s.UplineCommission),
-                UplineWLC = d.Sum(s => s.UplineWLC),
-                Transfer = d.Sum(ss => ss.AgentWLC + ss.UplineWLC) * -1,
-                MemberCount = d.First().UserTypeId == (int)UserType.Player ? 1 : membersCount.First(m => m.Item1 == d.Key.IndirectUserId).Item2
-            }).ToList();
+        //    var bets = tempbets.GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModel()
+        //    {
+        //        UserId = d.Key.IndirectUserId,
+        //        Username = d.Key.Username,
+        //        UserTypeId = d.Key.UserTypeId,
+        //        CurrencyCode = d.Key.CurrencyCode,
+        //        StakeCount = d.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper() }).ToList().Distinct().Count(),
+        //        StakeAmount = d.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper(), ss.Stake }).ToList().Distinct().Sum(x => x.Stake),
+        //        //ValidStakeAmount = d.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper(), ss.TrueStake, ss.StatusId }).Where(ss => states.ToArray().Contains(ss.StatusId)).ToList().Distinct().Sum(x => x.TrueStake),
+        //        ValidStakeAmount = d.Sum(x => x.TrueStake),
+        //        Commission = d.Sum(s => s.Commission),
+        //        MemberWinLoss = d.Sum(s => s.MemberWinLoss),
+        //        MemberCommission = d.Sum(s => s.MemberCommission),
+        //        MemberWLC = d.Sum(s => s.MemberWLC),
+        //        AgentWinLoss = d.Sum(s => s.AgentWinLoss),
+        //        AgentCommission = d.Sum(s => s.AgentCommission),
+        //        AgentWLC = d.Sum(s => s.AgentWLC),
+        //        DownlineWinLoss = d.Sum(s => s.DownlineWinLoss),
+        //        DownlineCommission = d.Sum(s => s.DownlineCommission),
+        //        DownlineWLC = d.Sum(s => s.DownlineWLC),
+        //        UplineWinLoss = d.Sum(s => s.UplineWinLoss),
+        //        UplineCommission = d.Sum(s => s.UplineCommission),
+        //        UplineWLC = d.Sum(s => s.UplineWLC),
+        //        Transfer = d.Sum(ss => ss.AgentWLC + ss.UplineWLC) * -1,
+        //        MemberCount = d.First().UserTypeId == (int)UserType.Player ? 1 : membersCount.First(m => m.Item1 == d.Key.IndirectUserId).Item2
+        //    }).ToList();
 
-            rowCount = bets.Count();
-            var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
+        //    rowCount = bets.Count();
+        //    var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
 
-            return new BaseResponseDTO<WinLossResponse>
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = new WinLossResponse
-                {
-                    CurrentPage = request.Page,
-                    PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
-                    PageSize = request.PageSize,
-                    RowCount = (int)rowCount,
-                    TotalStakeAmount = bets.Sum(s => s.StakeAmount),
-                    TotalValidStakeAmount = bets.Sum(s => s.ValidStakeAmount),
-                    TotalStakeCount = (int)bets.Sum(s => s.StakeCount),
-                    TotalCommission = bets.Sum(s => s.Commission),
-                    TotalMemberWinLoss = bets.Sum(s => s.MemberWinLoss),
-                    TotalMemberCommission = bets.Sum(s => s.MemberCommission),
-                    TotalMemberWLC = bets.Sum(s => s.MemberWLC),
-                    TotalDownlineWinLoss = bets.Sum(s => s.DownlineWinLoss),
-                    TotalDownlineCommission = bets.Sum(s => s.DownlineCommission),
-                    TotalDownlineWLC = bets.Sum(s => s.DownlineWLC),
-                    TotalAgentWinLoss = bets.Sum(s => s.AgentWinLoss),
-                    TotalAgentCommission = bets.Sum(s => s.AgentCommission),
-                    TotalAgentWLC = bets.Sum(s => s.AgentWLC),
-                    TotalUplineWinLoss = bets.Sum(s => s.UplineWinLoss),
-                    TotalUplineCommission = bets.Sum(s => s.UplineCommission),
-                    TotalUplineWLC = bets.Sum(s => s.UplineWLC),
-                    TotalTransfer = bets.Sum(s => s.AgentWLC + s.UplineWLC) * -1,
-                    Bets = bets.Skip(skip).Take(request.PageSize).ToList(),
-                    TotalMemberCount = totalMemberCount
-                }
-            };
+        //    return new BaseResponseDTO<WinLossResponse>
+        //    {
+        //        StatusCode = StatusCode.Success,
+        //        Message = StatusCode.Success.ToString(),
+        //        Result = new WinLossResponse
+        //        {
+        //            CurrentPage = request.Page,
+        //            PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
+        //            PageSize = request.PageSize,
+        //            RowCount = (int)rowCount,
+        //            TotalStakeAmount = bets.Sum(s => s.StakeAmount),
+        //            TotalValidStakeAmount = bets.Sum(s => s.ValidStakeAmount),
+        //            TotalStakeCount = (int)bets.Sum(s => s.StakeCount),
+        //            TotalCommission = bets.Sum(s => s.Commission),
+        //            TotalMemberWinLoss = bets.Sum(s => s.MemberWinLoss),
+        //            TotalMemberCommission = bets.Sum(s => s.MemberCommission),
+        //            TotalMemberWLC = bets.Sum(s => s.MemberWLC),
+        //            TotalDownlineWinLoss = bets.Sum(s => s.DownlineWinLoss),
+        //            TotalDownlineCommission = bets.Sum(s => s.DownlineCommission),
+        //            TotalDownlineWLC = bets.Sum(s => s.DownlineWLC),
+        //            TotalAgentWinLoss = bets.Sum(s => s.AgentWinLoss),
+        //            TotalAgentCommission = bets.Sum(s => s.AgentCommission),
+        //            TotalAgentWLC = bets.Sum(s => s.AgentWLC),
+        //            TotalUplineWinLoss = bets.Sum(s => s.UplineWinLoss),
+        //            TotalUplineCommission = bets.Sum(s => s.UplineCommission),
+        //            TotalUplineWLC = bets.Sum(s => s.UplineWLC),
+        //            TotalTransfer = bets.Sum(s => s.AgentWLC + s.UplineWLC) * -1,
+        //            Bets = bets.Skip(skip).Take(request.PageSize).ToList(),
+        //            TotalMemberCount = totalMemberCount
+        //        }
+        //    };
 
-            #endregion
-        }
+        //    #endregion
+        //}
 
-        public async Task<BaseResponseDTO<WinLossResponse>> GetWinLoss(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request)
-        {
+        //public async Task<BaseResponseDTO<WinLossResponse>> GetWinLoss(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request)
+        //{
 
-            #region W/O BACK AND LAY
+        //    #region W/O BACK AND LAY
 
-            var skip = (request.Page - 1) * request.PageSize;
-            double rowCount = 0;
+        //    var skip = (request.Page - 1) * request.PageSize;
+        //    double rowCount = 0;
 
-            //var states = new int[] { (int)StatusType.Won, (int)StatusType.Lost, (int)StatusType.HalfWon, (int)StatusType.HalfLost };
+        //    //var states = new int[] { (int)StatusType.Won, (int)StatusType.Lost, (int)StatusType.HalfWon, (int)StatusType.HalfLost };
 
-            if (request.Currency == CurrencyCode.ALL && parentAgentId > 0)
-                request.Currency = Enum.Parse<CurrencyCode>((await _agentRepository.GetUserDetails(parentAgentId)).Result.Currency);
+        //    if (request.Currency == CurrencyCode.ALL && parentAgentId > 0)
+        //        request.Currency = Enum.Parse<CurrencyCode>((await _agentRepository.GetUserDetails(parentAgentId)).Result.Currency);
 
-            var iQueryableData = GetWinLossAggregateQueryableParentAndAgentId2(parentAgentId, directUserId, isAgents, request).AsNoTracking();
-            var membersCount = GetDistinctMembers2(request);
+        //    var iQueryableData = GetWinLossAggregateQueryableParentAndAgentId2(parentAgentId, directUserId, isAgents, request).AsNoTracking();
+        //    var membersCount = GetDistinctMembers2(request);
 
-            var bets = iQueryableData.Select(s => new
-            {
-                IndirectUserId = s.IndirectUserId,
-                Username = s.Username,
-                UserTypeId = s.UserTypeId,
-                CurrencyCode = s.CurrencyCode,
-                BetId = s.BetId,
-                ReferenceId = s.ReferenceId,
-                Stake = s.Stake,
-                TrueStake = s.TrueStake,
-                StatusId = s.StatusId,
-                Commission = s.Commission,
-                MemberWinLoss = s.MemberWinLoss,
-                MemberCommission = s.MemberCommission,
-                MemberWLC = s.MemberWLC,
-                AgentWinLoss = s.AgentWinLoss,
-                AgentCommission = s.AgentCommission,
-                AgentWLC = s.AgentWLC,
-                DownlineWinLoss = s.DownlineWinLoss,
-                DownlineCommission = s.DownlineCommission,
-                DownlineWLC = s.DownlineWLC,
-                UplineWinLoss = s.UplineWinLoss,
-                UplineCommission = s.UplineCommission,
-                UplineWLC = s.UplineWLC
-            }).ToList().GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModel()
-            {
-                UserId = d.Key.IndirectUserId,
-                Username = d.Key.Username,
-                UserTypeId = d.Key.UserTypeId,
-                CurrencyCode = d.Key.CurrencyCode,
-                StakeCount = d.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper() }).ToList().Distinct().Count(),
-                StakeAmount = d.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper(), ss.Stake }).ToList().Distinct().Sum(x => x.Stake),
-                //ValidStakeAmount = d.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper(), ss.TrueStake, ss.StatusId }).Where(ss => states.ToArray().Contains(ss.StatusId)).ToList().Distinct().Sum(x => x.TrueStake),
-                ValidStakeAmount = d.Sum(x => x.TrueStake),
-                Commission = d.Sum(s => s.Commission),
-                MemberWinLoss = d.Sum(s => s.MemberWinLoss),
-                MemberCommission = d.Sum(s => s.MemberCommission),
-                MemberWLC = d.Sum(s => s.MemberWLC),
-                AgentWinLoss = d.Sum(s => s.AgentWinLoss),
-                AgentCommission = d.Sum(s => s.AgentCommission),
-                AgentWLC = d.Sum(s => s.AgentWLC),
-                DownlineWinLoss = d.Sum(s => s.DownlineWinLoss),
-                DownlineCommission = d.Sum(s => s.DownlineCommission),
-                DownlineWLC = d.Sum(s => s.DownlineWLC),
-                UplineWinLoss = d.Sum(s => s.UplineWinLoss),
-                UplineCommission = d.Sum(s => s.UplineCommission),
-                UplineWLC = d.Sum(s => s.UplineWLC),
-                Transfer = d.Sum(ss => ss.AgentWLC + ss.UplineWLC) * -1,
-                MemberCount = d.First().UserTypeId == (int)UserType.Player ? 1 : membersCount.First(m => m.Item1 == d.Key.IndirectUserId).Item2
-            }).ToList();
+        //    var bets = iQueryableData.Select(s => new
+        //    {
+        //        IndirectUserId = s.IndirectUserId,
+        //        Username = s.Username,
+        //        UserTypeId = s.UserTypeId,
+        //        CurrencyCode = s.CurrencyCode,
+        //        BetId = s.BetId,
+        //        ReferenceId = s.ReferenceId,
+        //        Stake = s.Stake,
+        //        TrueStake = s.TrueStake,
+        //        StatusId = s.StatusId,
+        //        Commission = s.Commission,
+        //        MemberWinLoss = s.MemberWinLoss,
+        //        MemberCommission = s.MemberCommission,
+        //        MemberWLC = s.MemberWLC,
+        //        AgentWinLoss = s.AgentWinLoss,
+        //        AgentCommission = s.AgentCommission,
+        //        AgentWLC = s.AgentWLC,
+        //        DownlineWinLoss = s.DownlineWinLoss,
+        //        DownlineCommission = s.DownlineCommission,
+        //        DownlineWLC = s.DownlineWLC,
+        //        UplineWinLoss = s.UplineWinLoss,
+        //        UplineCommission = s.UplineCommission,
+        //        UplineWLC = s.UplineWLC
+        //    }).ToList().GroupBy(g => new { g.IndirectUserId, g.Username, g.CurrencyCode, g.UserTypeId }).Select(d => new WinLossModel()
+        //    {
+        //        UserId = d.Key.IndirectUserId,
+        //        Username = d.Key.Username,
+        //        UserTypeId = d.Key.UserTypeId,
+        //        CurrencyCode = d.Key.CurrencyCode,
+        //        StakeCount = d.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper() }).ToList().Distinct().Count(),
+        //        StakeAmount = d.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper(), ss.Stake }).ToList().Distinct().Sum(x => x.Stake),
+        //        //ValidStakeAmount = d.Select(ss => new { BetId = string.IsNullOrEmpty(ss.ReferenceId) ? ss.BetId.ToString().ToUpper() : ss.ReferenceId.ToUpper(), ss.TrueStake, ss.StatusId }).Where(ss => states.ToArray().Contains(ss.StatusId)).ToList().Distinct().Sum(x => x.TrueStake),
+        //        ValidStakeAmount = d.Sum(x => x.TrueStake),
+        //        Commission = d.Sum(s => s.Commission),
+        //        MemberWinLoss = d.Sum(s => s.MemberWinLoss),
+        //        MemberCommission = d.Sum(s => s.MemberCommission),
+        //        MemberWLC = d.Sum(s => s.MemberWLC),
+        //        AgentWinLoss = d.Sum(s => s.AgentWinLoss),
+        //        AgentCommission = d.Sum(s => s.AgentCommission),
+        //        AgentWLC = d.Sum(s => s.AgentWLC),
+        //        DownlineWinLoss = d.Sum(s => s.DownlineWinLoss),
+        //        DownlineCommission = d.Sum(s => s.DownlineCommission),
+        //        DownlineWLC = d.Sum(s => s.DownlineWLC),
+        //        UplineWinLoss = d.Sum(s => s.UplineWinLoss),
+        //        UplineCommission = d.Sum(s => s.UplineCommission),
+        //        UplineWLC = d.Sum(s => s.UplineWLC),
+        //        Transfer = d.Sum(ss => ss.AgentWLC + ss.UplineWLC) * -1,
+        //        MemberCount = d.First().UserTypeId == (int)UserType.Player ? 1 : membersCount.First(m => m.Item1 == d.Key.IndirectUserId).Item2
+        //    }).ToList();
 
-            rowCount = bets.Count();
-            var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
+        //    rowCount = bets.Count();
+        //    var totalMemberCount = bets.Select(b => b.MemberCount).Sum();
 
-            return new BaseResponseDTO<WinLossResponse>
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = new WinLossResponse
-                {
-                    CurrentPage = request.Page,
-                    PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
-                    PageSize = request.PageSize,
-                    RowCount = (int)rowCount,
-                    TotalStakeAmount = bets.Sum(s => s.StakeAmount),
-                    TotalValidStakeAmount = bets.Sum(s => s.ValidStakeAmount),
-                    TotalStakeCount = (int)bets.Sum(s => s.StakeCount),
-                    TotalCommission = bets.Sum(s => s.Commission),
-                    TotalMemberWinLoss = bets.Sum(s => s.MemberWinLoss),
-                    TotalMemberCommission = bets.Sum(s => s.MemberCommission),
-                    TotalMemberWLC = bets.Sum(s => s.MemberWLC),
-                    TotalDownlineWinLoss = bets.Sum(s => s.DownlineWinLoss),
-                    TotalDownlineCommission = bets.Sum(s => s.DownlineCommission),
-                    TotalDownlineWLC = bets.Sum(s => s.DownlineWLC),
-                    TotalAgentWinLoss = bets.Sum(s => s.AgentWinLoss),
-                    TotalAgentCommission = bets.Sum(s => s.AgentCommission),
-                    TotalAgentWLC = bets.Sum(s => s.AgentWLC),
-                    TotalUplineWinLoss = bets.Sum(s => s.UplineWinLoss),
-                    TotalUplineCommission = bets.Sum(s => s.UplineCommission),
-                    TotalUplineWLC = bets.Sum(s => s.UplineWLC),
-                    TotalTransfer = bets.Sum(s => s.AgentWLC + s.UplineWLC) * -1,
-                    Bets = bets.Skip(skip).Take(request.PageSize).ToList(),
-                    TotalMemberCount = totalMemberCount
-                }
-            };
+        //    return new BaseResponseDTO<WinLossResponse>
+        //    {
+        //        StatusCode = StatusCode.Success,
+        //        Message = StatusCode.Success.ToString(),
+        //        Result = new WinLossResponse
+        //        {
+        //            CurrentPage = request.Page,
+        //            PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
+        //            PageSize = request.PageSize,
+        //            RowCount = (int)rowCount,
+        //            TotalStakeAmount = bets.Sum(s => s.StakeAmount),
+        //            TotalValidStakeAmount = bets.Sum(s => s.ValidStakeAmount),
+        //            TotalStakeCount = (int)bets.Sum(s => s.StakeCount),
+        //            TotalCommission = bets.Sum(s => s.Commission),
+        //            TotalMemberWinLoss = bets.Sum(s => s.MemberWinLoss),
+        //            TotalMemberCommission = bets.Sum(s => s.MemberCommission),
+        //            TotalMemberWLC = bets.Sum(s => s.MemberWLC),
+        //            TotalDownlineWinLoss = bets.Sum(s => s.DownlineWinLoss),
+        //            TotalDownlineCommission = bets.Sum(s => s.DownlineCommission),
+        //            TotalDownlineWLC = bets.Sum(s => s.DownlineWLC),
+        //            TotalAgentWinLoss = bets.Sum(s => s.AgentWinLoss),
+        //            TotalAgentCommission = bets.Sum(s => s.AgentCommission),
+        //            TotalAgentWLC = bets.Sum(s => s.AgentWLC),
+        //            TotalUplineWinLoss = bets.Sum(s => s.UplineWinLoss),
+        //            TotalUplineCommission = bets.Sum(s => s.UplineCommission),
+        //            TotalUplineWLC = bets.Sum(s => s.UplineWLC),
+        //            TotalTransfer = bets.Sum(s => s.AgentWLC + s.UplineWLC) * -1,
+        //            Bets = bets.Skip(skip).Take(request.PageSize).ToList(),
+        //            TotalMemberCount = totalMemberCount
+        //        }
+        //    };
 
-            #endregion
-        }
+        //    #endregion
+        //}
 
         public async Task<BaseResponseDTO<WinLossResponse>> GetWinLoss2(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request)
         {
@@ -352,252 +354,252 @@ namespace Platform.AgentReports.API.Repository
             #endregion
         }
 
-        public async Task<BaseResponseDTO<WinLossDetailsResponse>> GetWinLossDetails(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request)
-        {
+        //public async Task<BaseResponseDTO<WinLossDetailsResponse>> GetWinLossDetails(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request)
+        //{
 
-            #region W/O BACK AND LAY
+        //    #region W/O BACK AND LAY
 
-            var skip = (request.Page - 1) * request.PageSize;
+        //    var skip = (request.Page - 1) * request.PageSize;
 
-            var status = new List<string>();
-            if (!string.IsNullOrEmpty(request.Status))
-            {
-                status = request.Status.Split(',').Select(s => s.ToUpper().Replace("-", "")).ToList();
-            }
+        //    var status = new List<string>();
+        //    if (!string.IsNullOrEmpty(request.Status))
+        //    {
+        //        status = request.Status.Split(',').Select(s => s.ToUpper().Replace("-", "")).ToList();
+        //    }
 
-            var productTypes = new List<int>();
-            if (!string.IsNullOrEmpty(request.Product))
-            {
-                productTypes = request.Product.Split(',').Select(int.Parse).ToList();
-            }
-            var gameProvidersFilter = productTypes.Where(p => p > 300 && p < 400).Select(pp => pp - 300).ToList();
-            var liveCasinoProvidersFilter = productTypes.Where(p => p > 400 && p < 500).Select(pp => pp - 400).ToList();
-            var sportsProductFilter = productTypes.Where(p => p < 300).ToList();
-            var virtualProvidersFilter = productTypes.Where(p => p > 200 && p < 300).Select(pp => pp - 200).ToList();
+        //    var productTypes = new List<int>();
+        //    if (!string.IsNullOrEmpty(request.Product))
+        //    {
+        //        productTypes = request.Product.Split(',').Select(int.Parse).ToList();
+        //    }
+        //    var gameProvidersFilter = productTypes.Where(p => p > 300 && p < 400).Select(pp => pp - 300).ToList();
+        //    var liveCasinoProvidersFilter = productTypes.Where(p => p > 400 && p < 500).Select(pp => pp - 400).ToList();
+        //    var sportsProductFilter = productTypes.Where(p => p < 300).ToList();
+        //    var virtualProvidersFilter = productTypes.Where(p => p > 200 && p < 300).Select(pp => pp - 200).ToList();
 
-            IQueryable<WinLoss> profitLossDetails;
+        //    IQueryable<WinLoss> profitLossDetails;
 
-            var accounts = new List<string>();
-            if (!string.IsNullOrEmpty(request.Accounts))
-            {
-                accounts = request.Accounts.Split(',').ToList();
-            }
+        //    var accounts = new List<string>();
+        //    if (!string.IsNullOrEmpty(request.Accounts))
+        //    {
+        //        accounts = request.Accounts.Split(',').ToList();
+        //    }
 
-            if (request.DateFilter == "transactiondate")
-            {
-                profitLossDetails = _context.WinLoss.Where(w =>
-                    w.ParentUserId == parentAgentId &&
-                    w.IndirectUserId == directUserId &&
-                    w.TransactionDateOffset >= request.FromDate &&
-                    w.TransactionDateOffset < request.ToDate.AddDays(1)).AsNoTracking();
-            }
-            else
-            {
-                profitLossDetails = _context.WinLoss.Where(w =>
-                    w.ParentUserId == parentAgentId &&
-                    w.IndirectUserId == directUserId &&
-                    w.SettledDateOffset >= request.FromDate &&
-                    w.SettledDateOffset < request.ToDate.AddDays(1)).AsNoTracking();
-            }
+        //    if (request.DateFilter == "transactiondate")
+        //    {
+        //        profitLossDetails = _context.WinLoss.Where(w =>
+        //            w.ParentUserId == parentAgentId &&
+        //            w.IndirectUserId == directUserId &&
+        //            w.TransactionDateOffset >= request.FromDate &&
+        //            w.TransactionDateOffset < request.ToDate.AddDays(1)).AsNoTracking();
+        //    }
+        //    else
+        //    {
+        //        profitLossDetails = _context.WinLoss.Where(w =>
+        //            w.ParentUserId == parentAgentId &&
+        //            w.IndirectUserId == directUserId &&
+        //            w.SettledDateOffset >= request.FromDate &&
+        //            w.SettledDateOffset < request.ToDate.AddDays(1)).AsNoTracking();
+        //    }
 
-            if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
-            {
-                profitLossDetails = profitLossDetails.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-               (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
-               (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
-               (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId))).AsNoTracking();
-            }
-            else
-            {
-                profitLossDetails = profitLossDetails.Where(r => sportsProductFilter.Contains(r.ProductId)).AsNoTracking();
-            }
+        //    if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
+        //    {
+        //        profitLossDetails = profitLossDetails.Where(r => sportsProductFilter.Contains(r.ProductId) ||
+        //       (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
+        //       (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
+        //       (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId))).AsNoTracking();
+        //    }
+        //    else
+        //    {
+        //        profitLossDetails = profitLossDetails.Where(r => sportsProductFilter.Contains(r.ProductId)).AsNoTracking();
+        //    }
 
-            if (accounts.Any())
-            {
-                profitLossDetails = profitLossDetails.Where(r => accounts.Contains(r.Username));
-            }
+        //    if (accounts.Any())
+        //    {
+        //        profitLossDetails = profitLossDetails.Where(r => accounts.Contains(r.Username));
+        //    }
 
-            if (status.Any())
-            {
-                profitLossDetails = profitLossDetails.Where(p => status.Contains(p.StatusName.ToUpper()));
-            }
+        //    if (status.Any())
+        //    {
+        //        profitLossDetails = profitLossDetails.Where(p => status.Contains(p.StatusName.ToUpper()));
+        //    }
 
-            if (!string.IsNullOrEmpty(request.BetIds))
-            {
-                //profitLossDetails = profitLossDetails.Where(p => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper() == request.BetIds.ToUpper());
-                profitLossDetails = profitLossDetails.Where(p => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(request.BetIds.Trim().ToUpper()));
-            }
+        //    if (!string.IsNullOrEmpty(request.BetIds))
+        //    {
+        //        //profitLossDetails = profitLossDetails.Where(p => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper() == request.BetIds.ToUpper());
+        //        profitLossDetails = profitLossDetails.Where(p => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(request.BetIds.Trim().ToUpper()));
+        //    }
 
-            var betsRaw = profitLossDetails.Select(ss => new
-            {
-                ss.SettledDate,
-                ss.IndirectUserId,
-                ss.ReferenceId,
-                ss.BetId,
-                ss.TrueStake,
-                ss.TransactionDate,
-                ss.Username,
-                ss.UserTypeId,
-                ss.CurrencyCode,
-                ss.Stake,
-                ss.Commission,
-                ss.MemberCommission,
-                ss.MemberWinLoss,
-                ss.MemberWLC,
-                ss.DownlineCommission,
-                ss.DownlineWLC,
-                ss.DownlineWinLoss,
-                ss.AgentWinLoss,
-                ss.AgentCommission,
-                ss.AgentWLC,
-                ss.UplineCommission,
-                ss.UplineWinLoss,
-                ss.UplineWLC,
-                ss.IsParlay,
-                ss.Odds,
-                ss.OddsTypeId,
-                ss.OddsTypeName,
-                ss.StatusId,
-                ss.StatusName,
-                ss.ProductId,
-                ss.SegmentName,
-                ss.ProductName,
-                ss.LeagueId,
-                ss.LeagueName,
-                ss.FixtureId,
-                ss.FixtureName,
-                ss.FixtureStartDate,
-                ss.MarketTemplateId,
-                ss.MarketName,
-                ss.SelectionTemplateId,
-                ss.SelectionName,
-                ss.Score,
-                ss.FixtureStatusId,
-                ss.FixtureStatusName,
-                ss.Line,
-                ss.MarketTemplateGroupId,
-                ss.MarketTemplateGroupName,
-                ss.PositionTakingDetails,
-                ss.CommissionDetails,
-                ss.CasinoDetails,
-                ss.MarketTypeId,
-                ss.MarketGroupId
-            }).ToList();
+        //    var betsRaw = profitLossDetails.Select(ss => new
+        //    {
+        //        ss.SettledDate,
+        //        ss.IndirectUserId,
+        //        ss.ReferenceId,
+        //        ss.BetId,
+        //        ss.TrueStake,
+        //        ss.TransactionDate,
+        //        ss.Username,
+        //        ss.UserTypeId,
+        //        ss.CurrencyCode,
+        //        ss.Stake,
+        //        ss.Commission,
+        //        ss.MemberCommission,
+        //        ss.MemberWinLoss,
+        //        ss.MemberWLC,
+        //        ss.DownlineCommission,
+        //        ss.DownlineWLC,
+        //        ss.DownlineWinLoss,
+        //        ss.AgentWinLoss,
+        //        ss.AgentCommission,
+        //        ss.AgentWLC,
+        //        ss.UplineCommission,
+        //        ss.UplineWinLoss,
+        //        ss.UplineWLC,
+        //        ss.IsParlay,
+        //        ss.Odds,
+        //        ss.OddsTypeId,
+        //        ss.OddsTypeName,
+        //        ss.StatusId,
+        //        ss.StatusName,
+        //        ss.ProductId,
+        //        ss.SegmentName,
+        //        ss.ProductName,
+        //        ss.LeagueId,
+        //        ss.LeagueName,
+        //        ss.FixtureId,
+        //        ss.FixtureName,
+        //        ss.FixtureStartDate,
+        //        ss.MarketTemplateId,
+        //        ss.MarketName,
+        //        ss.SelectionTemplateId,
+        //        ss.SelectionName,
+        //        ss.Score,
+        //        ss.FixtureStatusId,
+        //        ss.FixtureStatusName,
+        //        ss.Line,
+        //        ss.MarketTemplateGroupId,
+        //        ss.MarketTemplateGroupName,
+        //        ss.PositionTakingDetails,
+        //        ss.CommissionDetails,
+        //        ss.CasinoDetails,
+        //        ss.MarketTypeId,
+        //        ss.MarketGroupId
+        //    }).ToList();
 
-            double rowCount = betsRaw.Count();
+        //    double rowCount = betsRaw.Count();
 
-            if (rowCount == 0)
-            {
-                return new BaseResponseDTO<WinLossDetailsResponse>()
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new WinLossDetailsResponse()
-                    {
-                        Bets = new List<WinLossDetailsModel>(),
-                        CurrentPage = request.PageSize,
-                        PageCount = 0,
-                        PageSize = request.PageSize
-                    }
-                };
-            }
+        //    if (rowCount == 0)
+        //    {
+        //        return new BaseResponseDTO<WinLossDetailsResponse>()
+        //        {
+        //            StatusCode = StatusCode.Success,
+        //            Message = StatusCode.Success.ToString(),
+        //            Result = new WinLossDetailsResponse()
+        //            {
+        //                Bets = new List<WinLossDetailsModel>(),
+        //                CurrentPage = request.PageSize,
+        //                PageCount = 0,
+        //                PageSize = request.PageSize
+        //            }
+        //        };
+        //    }
 
-            var totalStakeAmount = betsRaw.Sum(s => s.Stake);
-            var totalValidStakeAmount = betsRaw.Sum(s => s.TrueStake);
+        //    var totalStakeAmount = betsRaw.Sum(s => s.Stake);
+        //    var totalValidStakeAmount = betsRaw.Sum(s => s.TrueStake);
 
-            var betIds = betsRaw.Select(m => string.IsNullOrEmpty(m.ReferenceId) ? m.BetId : Guid.Parse(m.ReferenceId)).ToList();
+        //    var betIds = betsRaw.Select(m => string.IsNullOrEmpty(m.ReferenceId) ? m.BetId : Guid.Parse(m.ReferenceId)).ToList();
 
-            var bets = betsRaw.OrderBy(p => p.SettledDate).Skip(skip).Take(request.PageSize).Select(s => new WinLossDetailsModel()
-            {
-                UserId = s.IndirectUserId,
-                BetId = string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId),
-                TransactionDate = s.TransactionDate,
-                SettlementDate = s.SettledDate,
-                Username = s.Username,
-                UserTypeId = s.UserTypeId,
-                CurrencyCode = s.CurrencyCode,
-                StakeAmount = s.Stake,
-                ValidStakeAmount = s.TrueStake,
-                Commission = s.Commission,
-                MemberWinLoss = s.MemberWinLoss,
-                MemberCommission = s.MemberCommission,
-                MemberWLC = s.MemberWLC,
-                DownlineWinLoss = s.DownlineWinLoss,
-                DownlineCommission = s.DownlineCommission,
-                DownlineWLC = s.DownlineWLC,
-                AgentWinLoss = s.AgentWinLoss,
-                AgentCommission = s.AgentCommission,
-                AgentWLC = s.AgentWLC,
-                UplineCommission = s.UplineCommission,
-                UplineWinLoss = s.UplineWinLoss,
-                UplineWLC = s.UplineWLC,
-                IsParlay = s.IsParlay,
-                Stake = s.Stake,
-                TrueStake = s.TrueStake,
-                Odds = s.Odds,
-                OddsTypeId = s.OddsTypeId,
-                OddsTypeName = s.OddsTypeName,
-                StatusId = s.StatusId,
-                StatusName = s.StatusName,
-                VirtualSportName = s.ProductId == 2 ? s.SegmentName : string.Empty,
-                ProductId = s.ProductId,
-                ProductName = s.ProductName,
-                LeagueId = s.LeagueId,
-                LeagueName = string.IsNullOrEmpty(s.LeagueName) ? s.SegmentName : s.LeagueName,
-                FixtureId = s.FixtureId,
-                FixtureName = s.FixtureName,
-                FixtureStartDate = s.FixtureStartDate,
-                MarketTemplateId = s.MarketTemplateId,
-                MarketName = s.MarketName,
-                SelectionTemplateId = s.SelectionTemplateId,
-                SelectionName = s.SelectionName,
-                Score = s.Score,
-                FixtureStatusId = s.FixtureStatusId,
-                FixtureStatusName = s.FixtureStatusName,
-                Line = MarketLine(s.Line, s.MarketTemplateId, s.SelectionName),
-                MarketTemplateGroupId = s.MarketTemplateGroupId,
-                MarketTemplateGroupName = s.MarketTemplateGroupName,
-                PositionTakingDetails = JsonConvert.DeserializeObject<PositionTakingDetails>(s.PositionTakingDetails),
-                CommissionDetails = JsonConvert.DeserializeObject<List<CommissionDetails>>(s.CommissionDetails), //CasinoDetails = JsonConvert.DeserializeObject<CasinoDetail>(s.CasinoDetails),
-                Reason = string.IsNullOrEmpty(s.ReferenceId) ? string.Empty : $"ADJUSTMENT - {s.StatusName}",
-                BetScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(1, string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId)) : "",
-                FinalScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(2, string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId)) : "",
-                HalftimeScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(3, string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId)) : "",
-                MarketTypeId = s.MarketTypeId,
-                MarketGroupId = s.MarketGroupId
-            }).ToList();
+        //    var bets = betsRaw.OrderBy(p => p.SettledDate).Skip(skip).Take(request.PageSize).Select(s => new WinLossDetailsModel()
+        //    {
+        //        UserId = s.IndirectUserId,
+        //        BetId = string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId),
+        //        TransactionDate = s.TransactionDate,
+        //        SettlementDate = s.SettledDate,
+        //        Username = s.Username,
+        //        UserTypeId = s.UserTypeId,
+        //        CurrencyCode = s.CurrencyCode,
+        //        StakeAmount = s.Stake,
+        //        ValidStakeAmount = s.TrueStake,
+        //        Commission = s.Commission,
+        //        MemberWinLoss = s.MemberWinLoss,
+        //        MemberCommission = s.MemberCommission,
+        //        MemberWLC = s.MemberWLC,
+        //        DownlineWinLoss = s.DownlineWinLoss,
+        //        DownlineCommission = s.DownlineCommission,
+        //        DownlineWLC = s.DownlineWLC,
+        //        AgentWinLoss = s.AgentWinLoss,
+        //        AgentCommission = s.AgentCommission,
+        //        AgentWLC = s.AgentWLC,
+        //        UplineCommission = s.UplineCommission,
+        //        UplineWinLoss = s.UplineWinLoss,
+        //        UplineWLC = s.UplineWLC,
+        //        IsParlay = s.IsParlay,
+        //        Stake = s.Stake,
+        //        TrueStake = s.TrueStake,
+        //        Odds = s.Odds,
+        //        OddsTypeId = s.OddsTypeId,
+        //        OddsTypeName = s.OddsTypeName,
+        //        StatusId = s.StatusId,
+        //        StatusName = s.StatusName,
+        //        VirtualSportName = s.ProductId == 2 ? s.SegmentName : string.Empty,
+        //        ProductId = s.ProductId,
+        //        ProductName = s.ProductName,
+        //        LeagueId = s.LeagueId,
+        //        LeagueName = string.IsNullOrEmpty(s.LeagueName) ? s.SegmentName : s.LeagueName,
+        //        FixtureId = s.FixtureId,
+        //        FixtureName = s.FixtureName,
+        //        FixtureStartDate = s.FixtureStartDate,
+        //        MarketTemplateId = s.MarketTemplateId,
+        //        MarketName = s.MarketName,
+        //        SelectionTemplateId = s.SelectionTemplateId,
+        //        SelectionName = s.SelectionName,
+        //        Score = s.Score,
+        //        FixtureStatusId = s.FixtureStatusId,
+        //        FixtureStatusName = s.FixtureStatusName,
+        //        Line = MarketLine(s.Line, s.MarketTemplateId, s.SelectionName),
+        //        MarketTemplateGroupId = s.MarketTemplateGroupId,
+        //        MarketTemplateGroupName = s.MarketTemplateGroupName,
+        //        PositionTakingDetails = JsonConvert.DeserializeObject<PositionTakingDetails>(s.PositionTakingDetails),
+        //        CommissionDetails = JsonConvert.DeserializeObject<List<CommissionDetails>>(s.CommissionDetails), //CasinoDetails = JsonConvert.DeserializeObject<CasinoDetail>(s.CasinoDetails),
+        //        Reason = string.IsNullOrEmpty(s.ReferenceId) ? string.Empty : $"ADJUSTMENT - {s.StatusName}",
+        //        BetScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(1, string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId)) : "",
+        //        FinalScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(2, string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId)) : "",
+        //        HalftimeScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(3, string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId)) : "",
+        //        MarketTypeId = s.MarketTypeId,
+        //        MarketGroupId = s.MarketGroupId
+        //    }).ToList();
 
-            return new BaseResponseDTO<WinLossDetailsResponse>
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = new WinLossDetailsResponse
-                {
-                    CurrentPage = request.Page,
-                    PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
-                    PageSize = request.PageSize,
-                    RowCount = (int)rowCount,
-                    TotalStakeAmount = totalStakeAmount,
-                    TotalValidStakeAmount = totalValidStakeAmount,
-                    TotalCommission = betsRaw.Sum(s => s.Commission),
-                    TotalMemberWinLoss = betsRaw.Sum(s => s.MemberWinLoss),
-                    TotalMemberCommission = betsRaw.Sum(s => s.MemberCommission),
-                    TotalMemberWLC = betsRaw.Sum(s => s.MemberWLC),
-                    TotalDownlineWinLoss = betsRaw.Sum(s => s.DownlineWinLoss),
-                    TotalDownlineCommission = betsRaw.Sum(s => s.DownlineCommission),
-                    TotalDownlineWLC = betsRaw.Sum(s => s.DownlineWLC),
-                    TotalAgentWinLoss = betsRaw.Sum(s => s.AgentWinLoss),
-                    TotalAgentCommission = betsRaw.Sum(s => s.AgentCommission),
-                    TotalAgentWLC = betsRaw.Sum(s => s.AgentWLC),
-                    TotalUplineWinLoss = betsRaw.Sum(s => s.UplineWinLoss),
-                    TotalUplineCommission = betsRaw.Sum(s => s.UplineCommission),
-                    TotalUplineWLC = betsRaw.Sum(s => s.UplineWLC),
-                    Bets = bets.OrderBy(s => s.TransactionDate).ToList()
-                }
-            };
+        //    return new BaseResponseDTO<WinLossDetailsResponse>
+        //    {
+        //        StatusCode = StatusCode.Success,
+        //        Message = StatusCode.Success.ToString(),
+        //        Result = new WinLossDetailsResponse
+        //        {
+        //            CurrentPage = request.Page,
+        //            PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
+        //            PageSize = request.PageSize,
+        //            RowCount = (int)rowCount,
+        //            TotalStakeAmount = totalStakeAmount,
+        //            TotalValidStakeAmount = totalValidStakeAmount,
+        //            TotalCommission = betsRaw.Sum(s => s.Commission),
+        //            TotalMemberWinLoss = betsRaw.Sum(s => s.MemberWinLoss),
+        //            TotalMemberCommission = betsRaw.Sum(s => s.MemberCommission),
+        //            TotalMemberWLC = betsRaw.Sum(s => s.MemberWLC),
+        //            TotalDownlineWinLoss = betsRaw.Sum(s => s.DownlineWinLoss),
+        //            TotalDownlineCommission = betsRaw.Sum(s => s.DownlineCommission),
+        //            TotalDownlineWLC = betsRaw.Sum(s => s.DownlineWLC),
+        //            TotalAgentWinLoss = betsRaw.Sum(s => s.AgentWinLoss),
+        //            TotalAgentCommission = betsRaw.Sum(s => s.AgentCommission),
+        //            TotalAgentWLC = betsRaw.Sum(s => s.AgentWLC),
+        //            TotalUplineWinLoss = betsRaw.Sum(s => s.UplineWinLoss),
+        //            TotalUplineCommission = betsRaw.Sum(s => s.UplineCommission),
+        //            TotalUplineWLC = betsRaw.Sum(s => s.UplineWLC),
+        //            Bets = bets.OrderBy(s => s.TransactionDate).ToList()
+        //        }
+        //    };
 
-            #endregion
-        }
+        //    #endregion
+        //}
 
         public async Task<BaseResponseDTO<WinLossDetailsResponse>> GetWinLossDetails2(long parentAgentId, long directUserId, bool isAgents, WinLossAccountRequestExtended request)
         {
@@ -634,214 +636,64 @@ namespace Platform.AgentReports.API.Repository
                 };
             }
             
-            //var skip = (request.Page - 1) * request.PageSize;
-
-            //var status = new List<string>();
-            //if (!string.IsNullOrEmpty(request.Status))
-            //{
-            //    status = request.Status.Split(',').Select(s => s.ToUpper().Replace("-", "")).ToList();
-            //}
-
-            //var productTypes = new List<int>();
-            //if (!string.IsNullOrEmpty(request.Product))
-            //{
-            //    productTypes = request.Product.Split(',').Select(int.Parse).ToList();
-            //}
-            //var gameProvidersFilter = productTypes.Where(p => p > 300 && p < 400).Select(pp => pp - 300).ToList();
-            //var liveCasinoProvidersFilter = productTypes.Where(p => p > 400 && p < 500).Select(pp => pp - 400).ToList();
-            //var sportsProductFilter = productTypes.Where(p => p < 300).ToList();
-            //var virtualProvidersFilter = productTypes.Where(p => p > 200 && p < 300).Select(pp => pp - 200).ToList();
-
-            //IQueryable<WinLoss> profitLossDetails;
-
-            //var accounts = new List<string>();
-            //if (!string.IsNullOrEmpty(request.Accounts))
-            //{
-            //    accounts = request.Accounts.Split(',').ToList();
-            //}
-
-            //if (request.DateFilter == "transactiondate")
-            //{
-            //profitLossDetails = _context.WinLoss.Where(w =>
-            //    w.ParentUserId == parentAgentId &&
-            //    w.IndirectUserId == directUserId &&
-            //    w.TransactionDateOffset >= request.FromDate &&
-            //    w.TransactionDateOffset < request.ToDate.AddDays(1)).AsNoTracking();
-            //}
-            //else
-            //{
-            //    profitLossDetails = _context.WinLoss.Where(w =>
-            //        w.ParentUserId == parentAgentId &&
-            //        w.IndirectUserId == directUserId &&
-            //        w.SettledDateOffset >= request.FromDate &&
-            //        w.SettledDateOffset < request.ToDate.AddDays(1)).AsNoTracking();
-            //}
-
-            //if (gameProvidersFilter.Any() || liveCasinoProvidersFilter.Any() || virtualProvidersFilter.Any())
-            //{
-            //    profitLossDetails = profitLossDetails.Where(r => sportsProductFilter.Contains(r.ProductId) ||
-            //   (r.ProductId == (int)Product.Casino && gameProvidersFilter.Contains(r.ProviderBrandId)) ||
-            //   (r.ProductId == (int)Product.LiveCasino && liveCasinoProvidersFilter.Contains(r.ProviderBrandId)) ||
-            //   (r.ProductId == (int)Product.VirtualGames && virtualProvidersFilter.Contains(r.ProviderBrandId))).AsNoTracking();
-            //}
-            //else
-            //{
-            //    profitLossDetails = profitLossDetails.Where(r => sportsProductFilter.Contains(r.ProductId)).AsNoTracking();
-            //}
-
-            //if (accounts.Any())
-            //{
-            //    profitLossDetails = profitLossDetails.Where(r => accounts.Contains(r.Username));
-            //}
-
-            //if (status.Any())
-            //{
-            //    profitLossDetails = profitLossDetails.Where(p => status.Contains(p.StatusName.ToUpper()));
-            //}
-
-            //if (!string.IsNullOrEmpty(request.BetIds))
-            //{
-            //    //profitLossDetails = profitLossDetails.Where(p => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper() == request.BetIds.ToUpper());
-            //    profitLossDetails = profitLossDetails.Where(p => (string.IsNullOrEmpty(p.ReferenceId) ? p.BetId.ToString() : p.ReferenceId).ToUpper().Contains(request.BetIds.Trim().ToUpper()));
-            //}
-
-            //var betsRaw = profitLossDetails.Select(ss => new
-            //{
-            //    ss.SettledDate,
-            //    ss.IndirectUserId,
-            //    ss.ReferenceId,
-            //    ss.BetId,
-            //    ss.TrueStake,
-            //    ss.TransactionDate,
-            //    ss.Username,
-            //    ss.UserTypeId,
-            //    ss.CurrencyCode,
-            //    ss.Stake,
-            //    ss.Commission,
-            //    ss.MemberCommission,
-            //    ss.MemberWinLoss,
-            //    ss.MemberWLC,
-            //    ss.DownlineCommission,
-            //    ss.DownlineWLC,
-            //    ss.DownlineWinLoss,
-            //    ss.AgentWinLoss,
-            //    ss.AgentCommission,
-            //    ss.AgentWLC,
-            //    ss.UplineCommission,
-            //    ss.UplineWinLoss,
-            //    ss.UplineWLC,
-            //    ss.IsParlay,
-            //    ss.Odds,
-            //    ss.OddsTypeId,
-            //    ss.OddsTypeName,
-            //    ss.StatusId,
-            //    ss.StatusName,
-            //    ss.ProductId,
-            //    ss.SegmentName,
-            //    ss.ProductName,
-            //    ss.LeagueId,
-            //    ss.LeagueName,
-            //    ss.FixtureId,
-            //    ss.FixtureName,
-            //    ss.FixtureStartDate,
-            //    ss.MarketTemplateId,
-            //    ss.MarketName,
-            //    ss.SelectionTemplateId,
-            //    ss.SelectionName,
-            //    ss.Score,
-            //    ss.FixtureStatusId,
-            //    ss.FixtureStatusName,
-            //    ss.Line,
-            //    ss.MarketTemplateGroupId,
-            //    ss.MarketTemplateGroupName,
-            //    ss.PositionTakingDetails,
-            //    ss.CommissionDetails,
-            //    ss.CasinoDetails,
-            //    ss.MarketTypeId,
-            //    ss.MarketGroupId
-            //}).ToList();
-
-            //double rowCount = betsRaw.Count();
-
-            //if (rowCount == 0)
-            //{
-            //    return new BaseResponseDTO<WinLossDetailsResponse>()
-            //    {
-            //        StatusCode = StatusCode.Success,
-            //        Message = StatusCode.Success.ToString(),
-            //        Result = new WinLossDetailsResponse()
-            //        {
-            //            Bets = new List<WinLossDetailsModel>(),
-            //            CurrentPage = request.PageSize,
-            //            PageCount = 0,
-            //            PageSize = request.PageSize
-            //        }
-            //    };
-            //}
-
-            //var totalStakeAmount = betsRaw.Sum(s => s.Stake);
-            //var totalValidStakeAmount = betsRaw.Sum(s => s.TrueStake);
-
-            //var betIds = betsRaw.Select(m => string.IsNullOrEmpty(m.ReferenceId) ? m.BetId : Guid.Parse(m.ReferenceId)).ToList();
-
-            var bets = response.OrderBy(p => p.SettlementDate).Select(s => new WinLossDetailsModel()
+            var bets = response.Select(s => new WinLossDetailsModel()
             {
-            //    UserId = s.IndirectUserId,
-            //    BetId = string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId),
-            //    TransactionDate = s.TransactionDate,
-            //    SettlementDate = s.SettledDate,
-            //    Username = s.Username,
-            //    UserTypeId = s.UserTypeId,
-            //    CurrencyCode = s.CurrencyCode,
-            //    StakeAmount = s.Stake,
-            //    ValidStakeAmount = s.TrueStake,
-            //    Commission = s.Commission,
-            //    MemberWinLoss = s.MemberWinLoss,
-            //    MemberCommission = s.MemberCommission,
-            //    MemberWLC = s.MemberWLC,
-            //    DownlineWinLoss = s.DownlineWinLoss,
-            //    DownlineCommission = s.DownlineCommission,
-            //    DownlineWLC = s.DownlineWLC,
-            //    AgentWinLoss = s.AgentWinLoss,
-            //    AgentCommission = s.AgentCommission,
-            //    AgentWLC = s.AgentWLC,
-            //    UplineCommission = s.UplineCommission,
-            //    UplineWinLoss = s.UplineWinLoss,
-            //    UplineWLC = s.UplineWLC,
-            //    IsParlay = s.IsParlay,
-            //    Stake = s.Stake,
-            //    TrueStake = s.TrueStake,
-            //    Odds = s.Odds,
-            //    OddsTypeId = s.OddsTypeId,
-            //    OddsTypeName = s.OddsTypeName,
-            //    StatusId = s.StatusId,
-            //    StatusName = s.StatusName,
-            //    VirtualSportName = s.ProductId == 2 ? s.SegmentName : string.Empty,
-            //    ProductId = s.ProductId,
-            //    ProductName = s.ProductName,
-            //    LeagueId = s.LeagueId,
-            //    LeagueName = string.IsNullOrEmpty(s.LeagueName) ? s.SegmentName : s.LeagueName,
-            //    FixtureId = s.FixtureId,
-            //    FixtureName = s.FixtureName,
-            //    FixtureStartDate = s.FixtureStartDate,
-            //    MarketTemplateId = s.MarketTemplateId,
-            //    MarketName = s.MarketName,
-            //    SelectionTemplateId = s.SelectionTemplateId,
-            //    SelectionName = s.SelectionName,
-            //    Score = s.Score,
-            //    FixtureStatusId = s.FixtureStatusId,
-            //    FixtureStatusName = s.FixtureStatusName,
-            //    Line = MarketLine(s.Line, s.MarketTemplateId, s.SelectionName),
-            //    MarketTemplateGroupId = s.MarketTemplateGroupId,
-            //    MarketTemplateGroupName = s.MarketTemplateGroupName,
-            //    PositionTakingDetails = JsonConvert.DeserializeObject<PositionTakingDetails>(s.PositionTakingDetails),
-            //    CommissionDetails = JsonConvert.DeserializeObject<List<CommissionDetails>>(s.CommissionDetails), //CasinoDetails = JsonConvert.DeserializeObject<CasinoDetail>(s.CasinoDetails),
-            //    Reason = string.IsNullOrEmpty(s.ReferenceId) ? string.Empty : $"ADJUSTMENT - {s.StatusName}",
-            //    BetScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(1, string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId)) : "",
-            //    FinalScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(2, string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId)) : "",
-            //    HalftimeScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(3, string.IsNullOrEmpty(s.ReferenceId) ? s.BetId : Guid.Parse(s.ReferenceId)) : "",
-            //    MarketTypeId = s.MarketTypeId,
-            //    MarketGroupId = s.MarketGroupId
+                UserId = s.UserId,
+                BetId = s.BetId,
+                TransactionDate = s.TransactionDate,
+                SettlementDate = s.SettlementDate,
+                Username = s.Username,
+                UserTypeId = s.UserTypeId,
+                CurrencyCode = s.CurrencyCode,
+                StakeAmount = s.StakeAmount,
+                ValidStakeAmount = s.ValidStakeAmount,
+                Commission = s.Commission,
+                MemberWinLoss = s.MemberWinLoss,
+                MemberCommission = s.MemberCommission,
+                MemberWLC = s.MemberWLC,
+                DownlineWinLoss = s.DownlineWinLoss,
+                DownlineCommission = s.DownlineCommission,
+                DownlineWLC = s.DownlineWLC,
+                AgentWinLoss = s.AgentWinLoss,
+                AgentCommission = s.AgentCommission,
+                AgentWLC = s.AgentWLC,
+                UplineCommission = s.UplineCommission,
+                UplineWinLoss = s.UplineWinLoss,
+                UplineWLC = s.UplineWLC,
+                IsParlay = s.IsParlay,
+                Stake = s.StakeAmount,
+                TrueStake = s.ValidStakeAmount,
+                Odds = s.Odds,
+                OddsTypeId = s.OddsTypeId,
+                OddsTypeName = s.OddsTypeName,
+                StatusId = s.StatusId,
+                StatusName = s.StatusName,
+                VirtualSportName = s.VirtualSportName,
+                ProductId = s.ProductId,
+                ProductName = s.ProductName,
+                LeagueId = s.LeagueId,
+                LeagueName = s.LeagueName,
+                FixtureId = s.FixtureId,
+                FixtureName = s.FixtureName,
+                FixtureStartDate = s.FixtureStartDate,
+                MarketTemplateId = s.MarketTemplateId,
+                MarketName = s.MarketName,
+                SelectionTemplateId = s.SelectionTemplateId,
+                SelectionName = s.SelectionName,
+                Score = s.Score,
+                FixtureStatusId = s.FixtureStatusId,
+                FixtureStatusName = s.FixtureStatusName,
+                Line = MarketLine(s.Line, s.MarketTemplateId, s.SelectionName),
+                MarketTemplateGroupId = s.MarketTemplateGroupId,
+                MarketTemplateGroupName = s.MarketTemplateGroupName,
+                PositionTakingDetails = JsonConvert.DeserializeObject<PositionTakingDetails>(s.PositionTakingDetails),
+                CommissionDetails = JsonConvert.DeserializeObject<List<CommissionDetails>>(s.CommissionDetails), //CasinoDetails = JsonConvert.DeserializeObject<CasinoDetail>(s.CasinoDetails),
+                Reason = s.Reason,
+                BetScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(1, s.BetId) : "",
+                FinalScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(2, s.BetId) : "",
+                HalftimeScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(3, s.BetId) : "",
+                MarketTypeId = s.MarketTypeId,
+                MarketGroupId = s.MarketGroupId
             }).ToList();
 
             return new BaseResponseDTO<WinLossDetailsResponse>

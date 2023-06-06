@@ -64,7 +64,7 @@ namespace Platform.AgentReports.API.Controllers
         [HttpPost("v1/reports/winloss/details/{agentId}/{directUserId}/{isAgent}")]
         public async Task<IActionResult> GetWinLossDetails(long agentId, long directUserId, bool isAgent, [FromBody] WinLossAccountRequestExtended request)
         {
-            var result = await _reportsRepository.GetWinLossDetails(agentId, directUserId, isAgent, request);
+            var result = await _reportsRepository.GetWinLossDetails2(agentId, directUserId, isAgent, request);
 
             switch (result.StatusCode)
             {

@@ -24,7 +24,7 @@ namespace Platform.AgentReports.API.Models.Response
 
     public class ProductModel
     {
-        public int ProductId { get; set; }
+        public string ProductId { get; set; }
 
         public string ProductName { get; set; }
 

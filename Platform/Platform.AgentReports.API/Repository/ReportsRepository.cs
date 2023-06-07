@@ -2365,87 +2365,82 @@ namespace Platform.AgentReports.API.Repository
                 {
                     new ProductModel
                     {
-                        ProductId = 1,
+                        ProductId = "1",
                         ProductName = "Soccer"
                     },
                     new ProductModel
                     {
-                        ProductId = 2,
+                        ProductId = "2",
                         ProductName = "Basketball"
                     },
                     new ProductModel
                     {
-                        ProductId = 3,
+                        ProductId = "3",
                         ProductName = "Baseball"
                     },
                     new ProductModel
                     {
-                        ProductId = 5,
+                        ProductId = "5",
                         ProductName = "Tennis"
                     },
                     new ProductModel
                     {
-                        ProductId = 12,
+                        ProductId = "12",
                         ProductName = "Rugby"
                     },
                     new ProductModel
                     {
-                        ProductId = 12,
-                        ProductName = "Rugby"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = 13,
+                        ProductId = "13",
                         ProductName = "Aussie Rules"
                     },
                     new ProductModel
                     {
-                        ProductId = 16,
+                        ProductId = "16",
                         ProductName = "American Football"
                     },
                     new ProductModel
                     {
-                        ProductId = 20,
+                        ProductId = "20",
                         ProductName = "Table Tennis"
                     },
                     new ProductModel
                     {
-                        ProductId = 21,
+                        ProductId = "21",
                         ProductName = "Cricket"
                     },
                     new ProductModel
                     {
-                        ProductId = 22,
+                        ProductId = "22",
                         ProductName = "Darts"
                     },
                     new ProductModel
                     {
-                        ProductId = 23,
+                        ProductId = "23",
                         ProductName = "Volleyball"
                     },
                     new ProductModel
                     {
-                        ProductId = 1001,
+                        ProductId = "1001",
                         ProductName = "Virtual Soccker"
                     },
                     new ProductModel
                     {
-                        ProductId = 1002,
+                        ProductId = "1002",
                         ProductName = "Virtual Basketball"
                     },
                     new ProductModel
                     {
-                        ProductId = 1005,
+                        ProductId = "1005",
                         ProductName = "Virtual Tennis"
                     },
                     new ProductModel
                     {
-                        ProductId = 1021,
+                        ProductId = "1021",
                         ProductName = "Virtual Cricket"
                     },
                     new ProductModel
                     {
-                        ProductId = 1058,
+                        ProductId = "1058",
                         ProductName = "Virtual Dog Racing"
                     }
                 }
@@ -2462,7 +2457,7 @@ namespace Platform.AgentReports.API.Repository
                     ProductTypeName = s.FirstOrDefault().ProductTypeName,
                     Products = s.Select(p => new ProductModel
                     {
-                        ProductId = 0,
+                        ProductId = p.ProviderName,
                         ProductName = p.ProviderName
                     }).ToList()
                 }).ToList();

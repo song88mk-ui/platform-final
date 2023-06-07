@@ -16,7 +16,7 @@ namespace Platform.Shared.Data.Reports
             modelBuilder.Entity<BetSelectionTransaction>().HasKey(k => new { k.Id });
             modelBuilder.Entity<WinLoss>().HasKey(k => new { k.ParentUserId, k.DirectUserId, k.IndirectUserId, k.TransactionDate, k.BetId });
             modelBuilder.Entity<CasinoWinLoss>().HasKey(k => new { k.ParentUserId, k.DirectUserId, k.IndirectUserId, k.BetDate, k.BetId });
-            modelBuilder.Entity<ProductLookup>().HasKey(k => new { k.ProductTypeId, k.GameType, k.ProviderName, k.ProductName });
+            modelBuilder.Entity<ProductLookup>().HasKey(k => new { k.ProductId });
             modelBuilder.Entity<WinLossSummary>().HasNoKey();
             modelBuilder.Entity<WinLossDetails>().HasNoKey();
             modelBuilder.Entity<ProfitLossSummary>().HasNoKey();

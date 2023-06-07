@@ -139,5 +139,17 @@ namespace Platform.Shared.Data.Reports.Entities
 
         [Column(TypeName = "decimal(26,12)")]
         public decimal Payout { get; set; }
+
+        public int ProductTypeId { get; set; }
+
+        public string ProductTypeName { get; set; }
+
+        public string GameType { get; set; }
+
+        public string ProviderName { get; set; }
+
+        public int ProductId { get; set; }
+
+        public string ProductName { get; set; }
     }
 }

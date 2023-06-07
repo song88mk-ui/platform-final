@@ -278,12 +278,13 @@ namespace Platform.AgentReports.Service.Repository
 
                 using (var context = new AgentReportsContext(optionsBuilder.Options))
                 {
+                    var product = UpdateProductLookup(context, message.Category, message.GameId);
+
                     foreach (var agent in agents)
                     {
-                        AddOrUpdateCasinoWinLossFinal(context, message, agent, agents);
+                        AddOrUpdateCasinoWinLossFinal(context, message, agent, agents, product);
                     }
 
-                    UpdateProductLookup(context, message.Category, message.GameId);
 
                     context.SaveChanges();
                 }
@@ -1083,7 +1084,7 @@ namespace Platform.AgentReports.Service.Repository
             }
         }
 
-        private void AddOrUpdateCasinoWinLossFinal(AgentReportsContext context, OnCasinoBetSettlement message, AgentSettings agent, List<AgentSettings> agents)
+        private void AddOrUpdateCasinoWinLossFinal(AgentReportsContext context, OnCasinoBetSettlement message, AgentSettings agent, List<AgentSettings> agents, ProductLookup product)
         {
             if (message.BetStatusId == (int)BetStatus.Running) return;
 
@@ -1275,13 +1276,17 @@ namespace Platform.AgentReports.Service.Repository
                         GGR = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : (message.Stake - message.Payout),
                         Payout = message.BetStatusId == (int)BetStatus.Cancelled ? 0 : message.Payout,
                         IsGGREnabled = isGGREnabled,
-
-
+                        ProductTypeId = product.ProductTypeId,
+                        ProductTypeName = product.ProductTypeName,
+                        GameType = product.GameType,
+                        ProductId = product.ProductId,
+                        ProductName = product.ProductName,
+                        ProviderName = product.ProviderName
                     });
             }
         }
 
-        private void UpdateProductLookup(AgentReportsContext context, string category, string gameId)
+        private ProductLookup UpdateProductLookup(AgentReportsContext context, string category, string gameId)
         {
             var categoryType = GetCategory(category);
             var gameType = category.Replace("CASINO/LIVECASINO/","").Replace("CASINO/VIRTUAL_SPORTS/", "").Replace("CASINO/", "");
@@ -1290,14 +1295,16 @@ namespace Platform.AgentReports.Service.Repository
 
             var product = context.ProductLookup.FirstOrDefault(p => p.ProductTypeId == (int)categoryType && p.GameType == gameType && p.ProviderName == provider && p.ProductName == productName);
             if (product == null)
-                context.ProductLookup.Add(new ProductLookup
+                product = context.ProductLookup.Add(new ProductLookup
                 {
                     ProductTypeId = (int)categoryType,
                     ProductTypeName = categoryType.ToString(),
                     GameType = gameType,
                     ProviderName = provider,
                     ProductName = productName
-                });
+                }).Entity;
+
+            return product;
         }
 
         private bool HasHalfSettlementFinal(List<Shared.Data.Betting.Entities.BetSelection> selections)

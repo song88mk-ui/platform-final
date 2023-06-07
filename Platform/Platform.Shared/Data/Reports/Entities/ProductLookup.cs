@@ -13,6 +13,8 @@ namespace Platform.Shared.Data.Reports.Entities
 
         public string ProviderName { get; set; }
 
+        public int ProductId { get; set; }
+
         public string ProductName { get; set; }
     }
 }

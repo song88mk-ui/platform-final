@@ -2357,99 +2357,8 @@ namespace Platform.AgentReports.API.Repository
 
             var productTypes = new List<ProductType>();
 
-            var productType = new ProductType
-            {
-                ProductTypeId = (int)Product.Sportsbook,
-                ProductTypeName = Product.Sportsbook.ToString(),
-                Products = new List<ProductModel>()
-                {
-                    new ProductModel
-                    {
-                        ProductId = "1",
-                        ProductName = "Soccer"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = "2",
-                        ProductName = "Basketball"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = "3",
-                        ProductName = "Baseball"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = "5",
-                        ProductName = "Tennis"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = "12",
-                        ProductName = "Rugby"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = "13",
-                        ProductName = "Aussie Rules"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = "16",
-                        ProductName = "American Football"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = "20",
-                        ProductName = "Table Tennis"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = "21",
-                        ProductName = "Cricket"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = "22",
-                        ProductName = "Darts"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = "23",
-                        ProductName = "Volleyball"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = "1001",
-                        ProductName = "Virtual Soccker"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = "1002",
-                        ProductName = "Virtual Basketball"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = "1005",
-                        ProductName = "Virtual Tennis"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = "1021",
-                        ProductName = "Virtual Cricket"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = "1058",
-                        ProductName = "Virtual Dog Racing"
-                    }
-                }
-            };
-
-            productTypes.Add(productType);
-
             var productLookup = _context.ProductLookup.AsNoTracking()
-                .Select(s => new { s.ProductTypeId, s.ProductTypeName, s.ProviderName }).Distinct().ToList()
+                .Select(s => new { s.ProductTypeId, s.ProductTypeName, s.GameType, s.ProviderName }).Distinct().ToList()
                 .GroupBy(g => g.ProductTypeId)
                 .Select(s => new ProductType
                 {
@@ -2457,10 +2366,10 @@ namespace Platform.AgentReports.API.Repository
                     ProductTypeName = s.FirstOrDefault().ProductTypeName,
                     Products = s.Select(p => new ProductModel
                     {
-                        ProductId = p.ProviderName,
+                        ProductId = s.Key == (int)Product.Sportsbook ? p.GameType : p.ProviderName,
                         ProductName = p.ProviderName
-                    }).ToList()
-                }).ToList();
+                    }).OrderBy(o => o.ProductId).ToList()
+                }).OrderBy(o => o.ProductTypeId).ToList();
 
             productTypes.AddRange(productLookup);
 

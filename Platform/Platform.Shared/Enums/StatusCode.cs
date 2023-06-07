@@ -18,9 +18,9 @@
         CurrencyCode_Mismatch = 111,
         Odds_Must_Be_Greater_Or_Higher_To_1 = 112,
         Stake_Must_Be_Greater_Than_Zero = 113,
-        Stake_Must_Be_Higher_Or_Equal_To_Min_Stake = 114, //Stake_Must_Be_Equal_Or_Higher_To_Min_Stake 
+        Stake_Must_Be_Higher_Or_Equal_To_Min_Stake = 114, //Stake_Must_Be_Equal_Or_Higher_To_Min_Stake
         Stake_Must_Be_Lower_Or_Equal_To_Max_Stake = 115, //Stake_Must_Be_Equal_Or_Lower_To_Max_Stake
-        Maximum_Bet_Amount_For_The_Game_Has_Been_Reached = 116, //Maximum_Bet_Limit_On_Fixture_Reached 
+        Maximum_Bet_Amount_For_The_Game_Has_Been_Reached = 116, //Maximum_Bet_Limit_On_Fixture_Reached
         Maximum_Payout_Must_Be_Equal_Or_Lower = 117,
         Betting_Restricted = 118,
         Sport_Betting_Restricted = 119,
@@ -46,7 +46,7 @@
         Cannot_Have_Duplicate_Top_Fixture_Entries = 134,
         Cannot_Have_Duplicate_Top_League_Entries = 135,
         Cannot_Have_Duplicate_Sort_Order_Entries = 136,
-        Top_Fixture_Entries_Must_Be_Equal_Or_Lower_Than_50 = 137,        
+        Top_Fixture_Entries_Must_Be_Equal_Or_Lower_Than_50 = 137,
         Top_League_Entries_Must_Be_Equal_Or_Lower_Than_50 = 138,
 
         //Bet_Status_Must_Be_Running = 139,
@@ -84,7 +84,7 @@
         Bet_Builder_Must_Be_On_The_Same_Fixture = 157,
 
         Total_Odds_Must_Be_Greater_Or_Higher_To_1 = 158,
-        Bet_Builder_Selections_Cannot_Be_Combined = 159,   
+        Bet_Builder_Selections_Cannot_Be_Combined = 159,
 
         Boosted_Odds_Is_Only_Applicable_With_Decimal_Odds_Type_Format = 160,
 

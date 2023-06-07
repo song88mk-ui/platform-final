@@ -18,12 +18,7 @@ resources:
       type: github
       name: FlyingCockatoo/BuildTemplates
       endpoint: FlyingCockatoo
-      ref: refs/tags/v1.6.0
-    - repository: nuget-helper
-      type: github
-      name: FlyingCockatoo/infra-build-nuget-helper
-      endpoint: FlyingCockatoo
-      ref: refs/heads/main
+      ref: refs/tags/v1.8.0
 
 extends:
   template: dotnetservice.yml@templates

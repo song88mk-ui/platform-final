@@ -62,7 +62,7 @@ namespace Platform.AgentReports.API.Repository
 
             var status = request.Status;
 
-            var agentUserTypeId = isAgents ? (int)UserType.Agent : (int)UserType.Company;
+            var agentUserTypeId = (int)UserType.Agent;
             
             var sqlRaw = $"GetWinLossSummary {parentAgentId}, {directUserId}, {isAgents}, {agentUserTypeId}, {request.ProductId}, '{productTypes}', '{accounts}', '{betIds}', '{status}', '{request.FromDate.ToString("yyyy-MM-dd")}', '{request.ToDate.ToString("yyyy-MM-dd 23:59:59")}', '{currencyCode}', {request.Page}, {request.PageSize}";
             var response = await _context.ReadWinLossSummary.FromSqlRaw(sqlRaw).ToListAsync();
@@ -161,7 +161,7 @@ namespace Platform.AgentReports.API.Repository
 
             var status = request.Status;
 
-            var agentUserTypeId = isAgents ? (int)UserType.Agent : (int)UserType.Company;
+            var agentUserTypeId = (int)UserType.Agent;
 
             var sqlRaw = $"GetWinLossDetails {parentAgentId}, {directUserId}, {isAgents}, {agentUserTypeId}, {request.ProductId}, '{productTypes}', '{accounts}', '{betIds}', '{status}', '{request.FromDate.ToString("yyyy-MM-dd")}', '{request.ToDate.ToString("yyyy-MM-dd 23:59:59")}', '{currencyCode}', {request.Page}, {request.PageSize}";
             var response = await _context.ReadWinLossDetails.FromSqlRaw(sqlRaw).ToListAsync();

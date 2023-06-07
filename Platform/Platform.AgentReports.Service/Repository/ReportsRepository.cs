@@ -282,7 +282,8 @@ namespace Platform.AgentReports.Service.Repository
                     {
                         AddOrUpdateCasinoWinLossFinal(context, message, agent, agents);
                     }
-
+                    //Update ProductLookup
+                    UpdateProductLookup(context, message.Category, message.GameId);
                     context.SaveChanges();
                 }
                 scope.Complete();
@@ -361,18 +362,10 @@ namespace Platform.AgentReports.Service.Repository
         private List<AgentSettings> GetCasinoAgentSettingsFinal(string category, string userId, DateTime transactionDate)
         {
             var agents = new List<AgentSettings>();
-            var categoryId = (int)Category.Casino;
+            var categoryType = GetCategory(category);
+            var categoryId = (int)categoryType;
             var subCategoryId = 0;
             var betSelectionCount = 1;
-
-            if (category.ToLower().Contains("virtual"))
-            {
-                categoryId = (int)Category.VirtualGames;
-            }
-            else if (category.ToLower().Contains("live"))
-            {
-                categoryId = (int)Category.LiveCasino;
-            }
 
 
             var url = $"{_agentUrl}/api/v3/ptc2/{userId}/{categoryId}/{subCategoryId}/{betSelectionCount}?transactionDate={transactionDate.ToString("s")}";
@@ -475,8 +468,8 @@ namespace Platform.AgentReports.Service.Repository
             };
         }
 
-        
-        private decimal GetReceivePTFinal(decimal stake, decimal payout,  int betStatusId, AgentSettings agent)
+
+        private decimal GetReceivePTFinal(decimal stake, decimal payout, int betStatusId, AgentSettings agent)
         {
             var result = 0m;
 
@@ -541,7 +534,7 @@ namespace Platform.AgentReports.Service.Repository
                 TransactionDateOffset = message.Bet.BetDate.AddHours(-4)
             };
         }
-        
+
         private Shared.Data.Reports.Entities.BetSelection ConvertToBetSelectionEntityInsertFinal(Shared.Data.Betting.Entities.BetSelection betSelection, AgentSettings agent)
         {
             return new Shared.Data.Reports.Entities.BetSelection
@@ -1281,10 +1274,29 @@ namespace Platform.AgentReports.Service.Repository
                         GGR = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : (message.Stake - message.Payout),
                         Payout = message.BetStatusId == (int)BetStatus.Cancelled ? 0 : message.Payout,
                         IsGGREnabled = isGGREnabled,
-                        
 
-            });
+
+                    });
             }
+        }
+
+        private void UpdateProductLookup(AgentReportsContext context, string category, string gameId)
+        {
+            var categoryType = GetCategory(category);
+            var gameType = category.Replace("CASINO/LIVECASINO/","").Replace("CASINO/VIRTUAL_SPORTS/", "").Replace("CASINO/", "");
+            var provider = !string.IsNullOrEmpty(gameId) ? gameId.Split("-").FirstOrDefault() : string.Empty;
+            var productName = !string.IsNullOrEmpty(gameId) ? gameId.Split("-").LastOrDefault() : string.Empty;
+
+            var product = context.ProductLookup.FirstOrDefault(p => p.ProductTypeId == (int)categoryType && p.GameType == gameType && p.ProviderName == provider && p.ProductName == productName);
+            if (product == null)
+                context.ProductLookup.Add(new ProductLookup
+                {
+                    ProductTypeId = (int)categoryType,
+                    ProductTypeName = categoryType.ToString(),
+                    GameType = gameType,
+                    ProviderName = provider,
+                    ProductName = productName
+                });
         }
 
         private bool HasHalfSettlementFinal(List<Shared.Data.Betting.Entities.BetSelection> selections)
@@ -1295,6 +1307,7 @@ namespace Platform.AgentReports.Service.Repository
 
             return count == 0 ? false : true;
         }
+
         private Tuple<decimal, decimal> GetUplineAgentWinLossCommission2Final(decimal stake, bool hasHalfSettlement, AgentSettings agent, List<AgentSettings> agents, decimal playerWinLoss)
         {
             var filtered = agents.Where(c => c.UserType != Shared.Enums.UserType.Player && c.AgentId < agent.AgentId).ToList();
@@ -1319,7 +1332,7 @@ namespace Platform.AgentReports.Service.Repository
                 return hasHalfSettlement ? playerCommission / 2 : playerCommission;
             }
             else
-                
+
                 return GetAgentReceiveCommissionFinal(stake, hasHalfSettlement, agent, agents);
         }
 
@@ -1632,6 +1645,21 @@ namespace Platform.AgentReports.Service.Repository
             //    default:
             //        return agent.PositionTaking * playerWinLoss;
             //}
+        }
+
+        private Category GetCategory(string category)
+        {
+            var newCategory = Category.Casino;
+
+            if (category.ToLower().Contains("virtual"))
+            {
+                newCategory = Category.VirtualGames;
+            }
+            else if (category.ToLower().Contains("live"))
+            {
+                newCategory = Category.LiveCasino;
+            }
+            return newCategory;
         }
     }
 }

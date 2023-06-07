@@ -2454,12 +2454,12 @@ namespace Platform.AgentReports.API.Repository
             productTypes.Add(productType);
 
             var productLookup = _context.ProductLookup.AsNoTracking()
-                .Select(s => new { s.ProductTypeId, s.ProductTypeName, s.ProviderName })
-                .GroupBy(g => new { g.ProductTypeId, g.ProductTypeName })
+                .Select(s => new { s.ProductTypeId, s.ProductTypeName, s.ProviderName }).Distinct().ToList()
+                .GroupBy(g => g.ProductTypeId)
                 .Select(s => new ProductType
                 {
-                    ProductTypeId = s.Key.ProductTypeId,
-                    ProductTypeName = s.Key.ProductTypeName,
+                    ProductTypeId = s.Key,
+                    ProductTypeName = s.FirstOrDefault().ProductTypeName,
                     Products = s.Select(p => new ProductModel
                     {
                         ProductId = 0,

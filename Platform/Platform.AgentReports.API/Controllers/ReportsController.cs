@@ -23,7 +23,20 @@ namespace Platform.AgentReports.API.Controllers
         [HttpPost("v1/reports/winloss/{agentId}/{isAgent}")]
         public async Task<IActionResult> GetWinLoss(long agentId, bool isAgent, [FromBody] WinLossAccountRequest request)
         {
-            var result = await _reportsRepository.GetWinLoss(agentId, isAgent, request);
+            var result = await _reportsRepository.GetWinLoss2(agentId, agentId, isAgent, new WinLossAccountRequestExtended
+            {
+                Accounts = request.Accounts,
+                Page = request.Page,
+                PageSize = request.PageSize,
+                FromDate = request.FromDate,
+                ToDate = request.ToDate,
+                DateFilter = request.DateFilter,
+                BetIds = request.BetIds,
+                Currency = request.Currency,
+                ProductId = request.ProductId,
+                Product = request.Product,
+                Status = request.Status
+            });
 
             switch (result.StatusCode)
             {
@@ -36,21 +49,6 @@ namespace Platform.AgentReports.API.Controllers
 
         [HttpPost("v1/reports/winloss/{agentId}/{directUserId}/{isAgent}")]
         public async Task<IActionResult> GetWinLoss(long agentId, long directUserId, bool isAgent, [FromBody] WinLossAccountRequestExtended request)
-        {
-            var result = await _reportsRepository.GetWinLoss(agentId, directUserId, isAgent, request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
-
-        [HttpPost("v2/reports/winloss/{agentId}/{directUserId}/{isAgent}")]
-        public async Task<IActionResult> GetWinLoss2(long agentId, long directUserId, bool isAgent, [FromBody] WinLossAccountRequestExtended request)
         {
             var result = await _reportsRepository.GetWinLoss2(agentId, directUserId, isAgent, request);
 
@@ -66,7 +64,7 @@ namespace Platform.AgentReports.API.Controllers
         [HttpPost("v1/reports/winloss/details/{agentId}/{directUserId}/{isAgent}")]
         public async Task<IActionResult> GetWinLossDetails(long agentId, long directUserId, bool isAgent, [FromBody] WinLossAccountRequestExtended request)
         {
-            var result = await _reportsRepository.GetWinLossDetails(agentId, directUserId, isAgent, request);
+            var result = await _reportsRepository.GetWinLossDetails2(agentId, directUserId, isAgent, request);
 
             switch (result.StatusCode)
             {
@@ -207,14 +205,14 @@ namespace Platform.AgentReports.API.Controllers
         [HttpPost("v1/reports/profitloss/{agentId}")]
         public async Task<IActionResult> GetProfitLoss(long agentId, [FromBody] ProfitLossRequest request)
         {
-            var result = await _reportsRepository.GetProfitLoss(agentId, request);
+            var result = await _reportsRepository.GetProfitLoss2(agentId, agentId, request);
             return Ok(result);
         }
 
         [HttpPost("v1/reports/profitloss/{agentId}/{directUserId}")]
         public async Task<IActionResult> GetProfitLoss(long agentId, long directUserId, [FromBody] ProfitLossRequest request)
         {
-            var result = await _reportsRepository.GetProfitLoss(agentId, directUserId, request);
+            var result = await _reportsRepository.GetProfitLoss2(agentId, directUserId, request);
 
             return Ok(result);
         }
@@ -222,20 +220,20 @@ namespace Platform.AgentReports.API.Controllers
         [HttpPost("v1/reports/profitloss/details/{agentId}/{directUserId}")]
         public async Task<IActionResult> GetProfitLossDetails(long agentId, long directUserId, [FromBody] ProfitLossRequest request)
         {
-            var result = await _reportsRepository.GetProfitLossDetails(agentId, directUserId, request);
+            var result = await _reportsRepository.GetProfitLossDetails2(agentId, directUserId, request);
             return Ok(result);
         }
 
         [HttpPost("v1/reports/ggr/{agentId}/{directAgentId}")]
         public async Task<IActionResult> GetGGR(long agentId, long directAgentId, [FromBody] WinLossAccountRequestExtendedDTO request)
         {
-            return Ok(await _reportsRepository.GetGGR(agentId, directAgentId, request));
+            return Ok(await _reportsRepository.GetGGR2(agentId, directAgentId, request));
         }
 
         [HttpPost("v1/reports/ggr/details/{agentId}/{playerId}")]
         public async Task<IActionResult> GetGGRDetails(long agentId, long playerId, [FromBody] WinLossAccountRequestExtendedDTO request)
         {
-            return Ok(await _reportsRepository.GetGGRDetails(agentId, playerId, request));
+            return Ok(await _reportsRepository.GetGGRDetails2(agentId, playerId, request));
         }
 
         [HttpPost("v1/reports/payment/transferhistory")]

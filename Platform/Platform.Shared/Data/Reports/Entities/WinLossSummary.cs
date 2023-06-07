@@ -1,8 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-
+﻿
 namespace Platform.Shared.Data.Reports.Entities
 {
     public class WinLossSummary

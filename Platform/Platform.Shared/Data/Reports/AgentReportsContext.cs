@@ -17,6 +17,11 @@ namespace Platform.Shared.Data.Reports
             modelBuilder.Entity<WinLoss>().HasKey(k => new { k.ParentUserId, k.DirectUserId, k.IndirectUserId, k.TransactionDate, k.BetId });
             modelBuilder.Entity<CasinoWinLoss>().HasKey(k => new { k.ParentUserId, k.DirectUserId, k.IndirectUserId, k.BetDate, k.BetId });
             modelBuilder.Entity<WinLossSummary>().HasNoKey();
+            modelBuilder.Entity<WinLossDetails>().HasNoKey();
+            modelBuilder.Entity<ProfitLossSummary>().HasNoKey();
+            modelBuilder.Entity<ProfitLossDetails>().HasNoKey();
+            modelBuilder.Entity<GGRSummary>().HasNoKey();
+            modelBuilder.Entity<GGRDetails>().HasNoKey();
 
             modelBuilder.Entity<BetTransaction>().HasKey(k => new { k.Id });
             modelBuilder.Entity<RunningBalance>().HasKey(k => new { k.ParentUserId, k.UserId });
@@ -42,5 +47,10 @@ namespace Platform.Shared.Data.Reports
 
         // Stored Procedure
         public DbSet<WinLossSummary> ReadWinLossSummary { get; set; }
+        public DbSet<WinLossDetails> ReadWinLossDetails { get; set; }
+        public DbSet<ProfitLossSummary> ReadProfitLossSummary { get; set; }
+        public DbSet<ProfitLossDetails> ReadProfitLossDetails { get; set; }
+        public DbSet<GGRSummary> ReadGGRSummary { get; set; }
+        public DbSet<GGRDetails> ReadGGRDetails { get; set; }
     }
 }

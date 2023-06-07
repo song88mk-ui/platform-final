@@ -2451,116 +2451,32 @@ namespace Platform.AgentReports.API.Repository
                 }
             };
 
-
             productTypes.Add(productType);
 
-            productType = new ProductType
-            {
-                ProductTypeId = (int)Product.Casino,
-                ProductTypeName = Product.Casino.ToString(),
-                Products = new List<ProductModel>()
+            var productLookup = _context.ProductLookup.AsNoTracking()
+                .Select(s => new { s.ProductTypeId, s.ProductTypeName, s.ProviderName })
+                .GroupBy(g => new { g.ProductTypeId, g.ProductTypeName })
+                .Select(s => new ProductType
                 {
-                    new ProductModel
+                    ProductTypeId = s.Key.ProductTypeId,
+                    ProductTypeName = s.Key.ProductTypeName,
+                    Products = s.Select(p => new ProductModel
                     {
-                        ProductId = 1,
-                        ProductName = "Blueprint Gaming"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = 2,
-                        ProductName = "No Limit City"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = 3,
-                        ProductName = "Hacksaw Gaming"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = 4,
-                        ProductName = "Evoplay"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = 5,
-                        ProductName = "Quickspin"
-                    }
-                }
-            };
+                        ProductId = 0,
+                        ProductName = p.ProviderName
+                    }).ToList()
+                }).ToList();
 
-            productTypes.Add(productType);
-
-            productType = new ProductType
-            {
-                ProductTypeId = (int)Product.LiveCasino,
-                ProductTypeName = Product.LiveCasino.ToString(),
-                Products = new List<ProductModel>(){
-                    new ProductModel
-                    {
-                        ProductId = 1,
-                        ProductName = "Ezugi"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = 2,
-                        ProductName = "101 Bet Games"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = 3,
-                        ProductName = "Evolution"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = 4,
-                        ProductName = "Better Live"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = 5,
-                        ProductName = "Skywind Live"
-                    }
-                }
-            };
-
-            productTypes.Add(productType);
-
-
-            productType = new ProductType
-            {
-                ProductTypeId = (int)Product.VirtualGames,
-                ProductTypeName = Product.VirtualGames.ToString(),
-                Products = new List<ProductModel>(){
-                    new ProductModel
-                    {
-                        ProductId = 1,
-                        ProductName = "1x2 Gaming"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = 2,
-                        ProductName = "101 Bet Games"
-                    },
-                    new ProductModel
-                    {
-                        ProductId = 3,
-                        ProductName = "Kiron"
-                    }
-                }
-            };
-
-            productTypes.Add(productType);
-
-            var products = new ProductResponse
-            {
-                ProductTypes = productTypes
-            };
+            productTypes.AddRange(productLookup);
 
             return new BaseResponseDTO<ProductResponse>()
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = products
+                Result = new ProductResponse
+                {
+                    ProductTypes = productTypes
+                }
             };
         }
 

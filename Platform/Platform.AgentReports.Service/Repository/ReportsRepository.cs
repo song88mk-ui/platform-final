@@ -1648,17 +1648,17 @@ namespace Platform.AgentReports.Service.Repository
             //}
         }
 
-        private Category GetCategory(string category)
+        private Product GetCategory(string category)
         {
-            var newCategory = Category.Casino;
+            var newCategory = Product.Casino;
 
             if (category.ToLower().Contains("virtual"))
             {
-                newCategory = Category.VirtualGames;
+                newCategory = Product.VirtualGames;
             }
             else if (category.ToLower().Contains("live"))
             {
-                newCategory = Category.LiveCasino;
+                newCategory = Product.LiveCasino;
             }
             return newCategory;
         }

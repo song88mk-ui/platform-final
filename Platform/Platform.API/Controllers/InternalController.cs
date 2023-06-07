@@ -106,41 +106,10 @@ namespace Platform.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Update top fixtures of a client that supports up to 100.
-        /// </summary>
-        [HttpPost("v2/client/topfixtures")]
-        public async Task<IActionResult> PostClientTopFixtures2([FromBody] ClientTopFixtureRequest request)
-        {
-            var result = await _platformRepository.PostClientTopFixtures2(request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
         [HttpPost("v1/client/topfixtures/copy")]
         public async Task<IActionResult> CopyClientTopFixtures([FromBody] CopyClientTopFixtureRequest request)
         {
             var result = await _platformRepository.CopyClientTopFixtures(request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
-        [HttpPost("v2/client/topfixtures/copy")]
-        public async Task<IActionResult> CopyClientTopFixtures2([FromBody] CopyClientTopFixtureRequest request)
-        {
-            var result = await _platformRepository.CopyClientTopFixtures2(request);
 
             switch (result.StatusCode)
             {

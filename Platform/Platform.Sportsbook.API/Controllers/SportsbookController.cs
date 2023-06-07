@@ -806,41 +806,11 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Update top fixtures of a client up to 100.
-        /// </summary>
-        [HttpPost("v2/sportsbook/client/topfixtures/post")]
-        public async Task<IActionResult> PostClientTopFixtures2([FromBody] PostClientTopFixtureRequestDTO request)
-        {
-            var result = await _sportsbookRepository.PostClientTopFixtures2(request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
 
         [HttpPost("v1/sportsbook/client/topfixtures/copy")]
         public async Task<IActionResult> CopyClientTopFixtures([FromBody] CopyClientTopFixtureRequestDTO request)
         {
             var result = await _sportsbookRepository.CopyClientTopFixtures(request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
-        [HttpPost("v2/sportsbook/client/topfixtures/copy")]
-        public async Task<IActionResult> CopyClientTopFixtures2([FromBody] CopyClientTopFixtureRequestDTO request)
-        {
-            var result = await _sportsbookRepository.CopyClientTopFixtures2(request);
 
             switch (result.StatusCode)
             {

@@ -2062,7 +2062,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var initialResult = new List<TempFixtureDTO>();
 
-            var limit = 100;
+            var limit = 10;
 
             foreach (var item in result)
             {
@@ -2146,7 +2146,7 @@ namespace Platform.Sportsbook.API.Repository
                     SortOrder = item.SortOrder
                 });
 
-                if (finalResult.Count == 100) break;
+                if (finalResult.Count == 10) break;
             }
 
             var returnResult = new BaseResponseDTO<TWResponseDTO>
@@ -7510,82 +7510,6 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
-        public async Task<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>> PostClientTopFixtures2(PostClientTopFixtureRequestDTO request)
-        {
-            // validate requests
-
-            // check if fixtures requests are duplicate
-            var duplicateFixtures = request.TopFixtures.GroupBy(g => g.FixtureId).Where(c => c.Count() > 1).ToList();
-
-            if (duplicateFixtures.Count > 0)
-            {
-                return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
-                {
-                    StatusCode = StatusCode.Success,
-                    Result = new ClientTopFixtureMessageResponseDTO()
-                    {
-                        StatusCode = StatusCode.Cannot_Have_Duplicate_Top_Fixture_Entries,
-                        Message = StatusCode.Cannot_Have_Duplicate_Top_Fixture_Entries.ToString().Replace('_', ' ')
-                    }
-                };
-            }
-
-            // check if sort order requests are duplicate
-            var duplicateSortOrders = request.TopFixtures.GroupBy(g => g.SortOrder).Where(c => c.Count() > 1).ToList();
-
-            if (duplicateSortOrders.Count > 0)
-            {
-                return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
-                {
-                    StatusCode = StatusCode.Success,
-                    Result = new ClientTopFixtureMessageResponseDTO()
-                    {
-                        StatusCode = StatusCode.Cannot_Have_Duplicate_Sort_Order_Entries,
-                        Message = StatusCode.Cannot_Have_Duplicate_Sort_Order_Entries.ToString().Replace('_', ' ')
-                    }
-                };
-            }
-
-            if (request.TopFixtures.Count > 100)
-            {
-                return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
-                {
-                    StatusCode = StatusCode.Success,
-                    Result = new ClientTopFixtureMessageResponseDTO()
-                    {
-                        StatusCode = StatusCode.Top_Fixture_Entries_Must_Be_Equal_Or_Lower_Than_100,
-                        Message = StatusCode.Top_Fixture_Entries_Must_Be_Equal_Or_Lower_Than_100.ToString().ToString().Replace('_', ' ')
-                    }
-                };
-            }
-
-            // delete existing records
-            var currentTopFixtures = _sportsbookContext.ClientTopFixture.Where(c => c.ClientId == request.ClientId).ToList();
-
-            if (currentTopFixtures.Count > 0)
-            {
-                _sportsbookContext.ClientTopFixture.RemoveRange(currentTopFixtures);
-            }
-
-            // insert new records
-            var newTopFixtures = request.TopFixtures.Select(s => new ClientTopFixture
-            {
-                ClientId = request.ClientId,
-                FixtureId = s.FixtureId,
-                SortOrder = s.SortOrder
-            });
-
-            _sportsbookContext.ClientTopFixture.AddRange(newTopFixtures);
-
-            await _sportsbookContext.SaveChangesAsync();
-
-            return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString()
-            };
-        }
-
         public async Task<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>> CopyClientTopFixtures(CopyClientTopFixtureRequestDTO request)
         {
             try
@@ -7674,95 +7598,7 @@ namespace Platform.Sportsbook.API.Repository
             }
 
         }
-
-        public async Task<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>> CopyClientTopFixtures2(CopyClientTopFixtureRequestDTO request)
-        {
-            try
-            {
-                // check if fixtures requests are duplicate
-                var duplicateFixtures = request.TopFixtures.GroupBy(g => g.FixtureId).Where(c => c.Count() > 1).ToList();
-
-                if (duplicateFixtures.Count > 0)
-                {
-                    return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
-                    {
-                        StatusCode = StatusCode.Success,
-                        Result = new ClientTopFixtureMessageResponseDTO()
-                        {
-                            StatusCode = StatusCode.Cannot_Have_Duplicate_Top_Fixture_Entries,
-                            Message = StatusCode.Cannot_Have_Duplicate_Top_Fixture_Entries.ToString().Replace('_', ' ')
-                        }
-                    };
-                }
-
-                // check if sort order requests are duplicate
-                var duplicateSortOrders = request.TopFixtures.GroupBy(g => g.SortOrder).Where(c => c.Count() > 1).ToList();
-
-                if (duplicateSortOrders.Count > 0)
-                {
-                    return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
-                    {
-                        StatusCode = StatusCode.Success,
-                        Result = new ClientTopFixtureMessageResponseDTO()
-                        {
-                            StatusCode = StatusCode.Cannot_Have_Duplicate_Sort_Order_Entries,
-                            Message = StatusCode.Cannot_Have_Duplicate_Sort_Order_Entries.ToString().Replace('_', ' ')
-                        }
-                    };
-                }
-
-                if (request.TopFixtures.Count > 100)
-                {
-                    return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
-                    {
-                        StatusCode = StatusCode.Success,
-                        Result = new ClientTopFixtureMessageResponseDTO()
-                        {
-                            StatusCode = StatusCode.Top_Fixture_Entries_Must_Be_Equal_Or_Lower_Than_100,
-                            Message = StatusCode.Top_Fixture_Entries_Must_Be_Equal_Or_Lower_Than_100.ToString().ToString().Replace('_', ' ')
-                        }
-                    };
-                }
-
-                foreach (var clientId in request.ClientIds)
-                {
-                    // delete existing records
-                    var currentTopFixtures = _sportsbookContext.ClientTopFixture.Where(c => c.ClientId == clientId).ToList();
-
-                    if (currentTopFixtures.Count > 0)
-                    {
-                        _sportsbookContext.ClientTopFixture.RemoveRange(currentTopFixtures);
-                    }
-
-                    // insert new records
-                    var newTopFixtures = request.TopFixtures.Select(s => new ClientTopFixture
-                    {
-                        ClientId = clientId,
-                        FixtureId = s.FixtureId,
-                        SortOrder = s.SortOrder
-                    });
-
-                    _sportsbookContext.ClientTopFixture.AddRange(newTopFixtures);
-                }
-
-                await _sportsbookContext.SaveChangesAsync();
-
-                return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString()
-                };
-            }
-            catch (Exception ex)
-            {
-                return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
-                {
-                    StatusCode = StatusCode.Error,
-                    Message = StatusCode.Error.ToString()
-                };
-            }
-        }
-
+        
         public async Task<BaseResponseDTO<ClientTopLeaguesResponseDTO>> GetClientIdsTopLeagues(ClientTopLeaguesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);

@@ -282,8 +282,9 @@ namespace Platform.AgentReports.Service.Repository
                     {
                         AddOrUpdateCasinoWinLossFinal(context, message, agent, agents);
                     }
-                    //Update ProductLookup
+
                     UpdateProductLookup(context, message.Category, message.GameId);
+
                     context.SaveChanges();
                 }
                 scope.Complete();

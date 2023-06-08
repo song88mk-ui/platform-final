@@ -33,7 +33,7 @@ namespace Platform.AgentReports.API.Controllers
                 DateFilter = request.DateFilter,
                 BetIds = request.BetIds,
                 Currency = request.Currency,
-                ProductId = request.ProductId,
+                ProductTypeId = request.ProductTypeId,
                 Product = request.Product,
                 Status = request.Status
             });

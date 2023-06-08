@@ -996,7 +996,7 @@ namespace Platform.AgentReports.Service.Repository
                     winloss.SettledDateOffset = dateNow.AddHours(-4);
                     winloss.ProductId = (int)Shared.Enums.Product.Sportsbook;
                     winloss.ProductName = Shared.Enums.Product.Sportsbook.ToString();
-                    winloss.PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(message, agent, agents));
+                    winloss.PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(agent, agents));
                     winloss.CommissionDetails = JsonConvert.SerializeObject(agents.Where(c => c.AgentId >= agent.AgentId).Select(s => new { Username = s.AgentUsername, Commission = s.Commission * 100 }).ToList());
                     winloss.MarketTypeId = string.Empty;
                     winloss.MarketGroupId = string.Empty;
@@ -1067,7 +1067,7 @@ namespace Platform.AgentReports.Service.Repository
                         ProductName = Shared.Enums.Product.Sportsbook.ToString(),
                         CasinoDetails = string.Empty,
                         GameProvider = 0,
-                        PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(message, agent, agents)),
+                        PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(agent, agents)),
                         CommissionDetails = JsonConvert.SerializeObject(agents.Where(c => c.AgentId >= agent.AgentId).Select(s => new { Username = s.AgentUsername, Commission = s.Commission * 100 }).ToList()),
                         ProviderBrandId = 0,
                         ProviderBrandName = string.Empty,
@@ -1213,6 +1213,7 @@ namespace Platform.AgentReports.Service.Repository
                     winloss.GGR = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : (message.Stake - message.Payout);
                     winloss.Payout = message.BetStatusId == (int)BetStatus.Cancelled ? 0 : message.Payout;
                     winloss.IsGGREnabled = isGGREnabled;
+                    winloss.PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(agent, agents));
                 }
                 else
                     context.CasinoWinLoss.Add(new CasinoWinLoss
@@ -1281,8 +1282,9 @@ namespace Platform.AgentReports.Service.Repository
                         GameType = product.GameType,
                         ProductId = product.ProductId,
                         ProductName = product.ProductName,
-                        ProviderName = product.ProviderName
-                    });
+                        ProviderName = product.ProviderName,
+                        PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(agent, agents))
+            });
             }
         }
 
@@ -1613,7 +1615,7 @@ namespace Platform.AgentReports.Service.Repository
 
             return new Tuple<decimal, decimal>(winLoss, commission);
         }
-        private object GetPTFinal(OnBetSettlement bet, AgentSettings agent, List<AgentSettings> agents)
+        private object GetPTFinal(AgentSettings agent, List<AgentSettings> agents)
         {
             var uplineResult = agents.Where(c => c.AgentId < agent.AgentId).Sum(s => s.PositionTaking) * 100;
             var selfResult = agents.Where(c => c.AgentId == agent.AgentId).Sum(s => s.PositionTaking) * 100;
@@ -1626,8 +1628,6 @@ namespace Platform.AgentReports.Service.Repository
                 Downline = downlineResult
             };
         }
-
-
 
 
         private Shared.Enums.UserType GetUserType(int userTypeId)

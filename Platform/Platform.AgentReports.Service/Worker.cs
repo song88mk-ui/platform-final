@@ -54,7 +54,7 @@ namespace Platform.AgentReports.Service
             try
             {
                 switch (messageType)
-                {
+                {//
                     case "OnBetPlacement":
                         var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
                         _reportsRepository.ProcessBetPlacement(onBetPlacement);

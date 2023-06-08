@@ -63,12 +63,12 @@ namespace Platform.AgentReports.API.Repository
             var status = request.Status;
 
             var agentUserTypeId = (int)UserType.Agent;
-            
+
             var sqlRaw = $"GetWinLossSummary {parentAgentId}, {directUserId}, {isAgents}, {agentUserTypeId}, {request.ProductId}, '{productTypes}', '{accounts}', '{betIds}', '{status}', '{request.FromDate.ToString("yyyy-MM-dd")}', '{request.ToDate.ToString("yyyy-MM-dd 23:59:59")}', '{currencyCode}', {request.Page}, {request.PageSize}";
             var response = await _context.ReadWinLossSummary.FromSqlRaw(sqlRaw).ToListAsync();
             var totalResponse = response.FirstOrDefault();
 
-            if(totalResponse == null)
+            if (totalResponse == null)
             {
                 return new BaseResponseDTO<WinLossResponse>
                 {
@@ -176,7 +176,7 @@ namespace Platform.AgentReports.API.Repository
                     Result = new WinLossDetailsResponse()
                 };
             }
-            
+
             var bets = response.Select(s => new WinLossDetailsModel()
             {
                 UserId = s.UserId,
@@ -267,8 +267,8 @@ namespace Platform.AgentReports.API.Repository
             };
 
 
-            
-            
+
+
             #endregion
         }
 
@@ -1193,7 +1193,7 @@ namespace Platform.AgentReports.API.Repository
             #endregion
         }
 
-        
+
         public async Task<BaseResponseDTO<GGRResponse>> GetGGR2(long parentAgentId, long directUserId, WinLossAccountRequestExtendedDTO request)
         {
 
@@ -2023,7 +2023,7 @@ namespace Platform.AgentReports.API.Repository
                 Result = true
             };
         }
-        
+
         public async Task<BaseResponseDTO<List<long>>> GetActiveMembers(long agentId, CurrencyCode currency, DateTime? fromDate, DateTime? toDate)
         {
             var currentBets = _context.Bet.Where(c => c.ParentUserId == agentId && (currency == CurrencyCode.ALL ? c.CurrencyCode == c.CurrencyCode : c.CurrencyCode == currency.ToString()))
@@ -2358,20 +2358,31 @@ namespace Platform.AgentReports.API.Repository
             var productTypes = new List<ProductType>();
 
             var productLookup = _context.ProductLookup.AsNoTracking()
-                .Select(s => new { s.ProductTypeId, s.ProductTypeName, s.GameType, s.ProviderName }).Distinct().ToList()
-                .GroupBy(g => g.ProductTypeId)
-                .Select(s => new ProductType
-                {
-                    ProductTypeId = s.Key,
-                    ProductTypeName = s.FirstOrDefault().ProductTypeName,
-                    Products = s.Select(p => new ProductModel
-                    {
-                        ProductId = s.Key == (int)Product.Sportsbook ? p.GameType : p.ProviderName,
-                        ProductName = p.ProviderName
-                    }).OrderBy(o => o.ProductId).ToList()
-                }).OrderBy(o => o.ProductTypeId).ToList();
+                .Select(s => new { s.ProductTypeId, s.ProductTypeName, s.GameType, s.ProviderName }).ToList();
 
-            productTypes.AddRange(productLookup);
+            var productType = productLookup.GroupBy(g => new { g.ProductTypeId, g.ProductTypeName }).ToList().OrderBy(o => o.Key.ProductTypeId);
+
+            foreach (var pt in productType)
+            {
+                var products = pt.Select(s => new  
+                    { 
+                        ProductId = pt.Key.ProductTypeId == (int)Product.Sportsbook ? s.GameType : s.ProviderName, 
+                        ProductName = s.ProviderName 
+                    }).GroupBy(g => g.ProductName).OrderBy(o => pt.Key.ProductTypeId == (int)Product.Sportsbook ? $"Z{o.Key.PadLeft(5, '0')}" : o.Key).ToList();
+
+                var newPt = new ProductType
+                {
+                    ProductTypeId = pt.Key.ProductTypeId,
+                    ProductTypeName = pt.Key.ProductTypeName.Trim(),
+                    Products = products.Select(p => new ProductModel
+                    {
+                        ProductId = p.FirstOrDefault().ProductId.Trim(),
+                        ProductName = p.Key.Trim()
+                    }).ToList()
+                };
+                productTypes.Add(newPt);
+            }
+
 
             return new BaseResponseDTO<ProductResponse>()
             {
@@ -2455,7 +2466,7 @@ namespace Platform.AgentReports.API.Repository
             return score;
         }
 
-        
+
         private DateTime GetStartDate()
         {
             var startDate = new DateTime();
@@ -2557,9 +2568,9 @@ namespace Platform.AgentReports.API.Repository
             {
                 var newStr = string.Empty;
                 var list = value.Split(',').ToList();
-                foreach(var str in list)
+                foreach (var str in list)
                 {
-                    newStr = string.IsNullOrEmpty(newStr) ? $"\"{str}\"" :  $"{newStr},\"{str}\""; 
+                    newStr = string.IsNullOrEmpty(newStr) ? $"\"{str}\"" : $"{newStr},\"{str}\"";
                 }
                 return newStr;
             }

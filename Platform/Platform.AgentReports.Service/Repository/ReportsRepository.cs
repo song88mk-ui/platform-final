@@ -1239,6 +1239,7 @@ namespace Platform.AgentReports.Service.Repository
                         UserTypeId = (int)agents.Where(c => c.AgentId == indirectUserId).Select(c => c.UserType).FirstOrDefault(),
                         PositionTaking = GetReceivePTFinal(message.Stake, message.Payout, message.BetStatusId, agent),
                         UserId = message.UserId,
+                        Username = data.UserType == Shared.Enums.UserType.Player ? data.Username : data.AgentUsername,
                         TransactionType = message.TransactionType,
                         Commission = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : memberCommission,
                         MemberWinLoss = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : memberWinLoss,

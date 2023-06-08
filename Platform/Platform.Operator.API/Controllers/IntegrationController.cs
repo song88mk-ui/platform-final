@@ -216,39 +216,38 @@ namespace Platform.Operator.API.Controllers
             return Ok(result);
         }
 
-        //[HttpPost("operator/v1/casino/bet/placement")]
-        //public async Task<IActionResult> CasinoBetPlacement([FromBody] OperatorCasinoBetPlacementRequestDTO request)
-        //{
-        //    var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-        //    var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
-        //    var isAgent = HttpContext.Request.Headers["x-is-agent"].FirstOrDefault();
+        [HttpPost("operator/v1/casino/bet/placement")]
+        public async Task<IActionResult> CasinoBetPlacement([FromBody] OperatorCasinoBetPlacementRequestDTO request)
+        {
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
-        //    var result = await _platformRepository.BetPlacementCasino(request, clientId, operatorToken, isAgent);
+            var result = await _platformRepository.BetPlacementCasino(request, clientId, operatorToken);
 
-        //    switch (result.StatusId)
-        //    {
-        //        case 1000:
-        //            return Ok(result);
-        //        default:
-        //            return BadRequest(result);
-        //    }
-        //}
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
 
-        //[HttpPost("operator/v1/casino/bet/settlement")]
-        //public async Task<IActionResult> CasinoBetSettlement([FromBody] OperatorCasinoBetSettlementRequestDTO request)
-        //{
-        //    var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+        [HttpPost("operator/v1/casino/bet/settlement")]
+        public async Task<IActionResult> CasinoBetSettlement([FromBody] OperatorCasinoBetSettlementRequestDTO request)
+        {
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-        //    var result = await _platformRepository.BetSettlementCasino(request, clientId);
+            var result = await _platformRepository.BetSettlementCasino(request, clientId);
 
-        //    switch (result.StatusId)
-        //    {
-        //        case 1000:
-        //            return Ok(result);
-        //        default:
-        //            return BadRequest(result);
-        //    }
-        //}
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
 
     }
 }

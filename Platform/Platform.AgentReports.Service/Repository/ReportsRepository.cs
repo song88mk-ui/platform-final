@@ -1293,7 +1293,7 @@ namespace Platform.AgentReports.Service.Repository
 
         private ProductLookup UpdateProductLookup(AgentReportsContext context, string category, string gameId)
         {
-            var categoryType = GetCategory(category);
+            var categoryType = GetProduct(category);
             var gameType = category.Replace("CASINO/LIVECASINO/","").Replace("CASINO/VIRTUAL_SPORTS/", "").Replace("CASINO/", "");
             var provider = !string.IsNullOrEmpty(gameId) ? gameId.Split("-").FirstOrDefault() : string.Empty;
             var productName = !string.IsNullOrEmpty(gameId) ? gameId.Split("-").LastOrDefault() : string.Empty;
@@ -1676,7 +1676,7 @@ namespace Platform.AgentReports.Service.Repository
             //}
         }
 
-        private Product GetCategory(string category)
+        private Product GetProduct(string category)
         {
             var newCategory = Product.Casino;
 
@@ -1687,6 +1687,21 @@ namespace Platform.AgentReports.Service.Repository
             else if (category.ToLower().Contains("live"))
             {
                 newCategory = Product.LiveCasino;
+            }
+            return newCategory;
+        }
+
+        private Category GetCategory(string category)
+        {
+            var newCategory = Category.Casino;
+
+            if (category.ToLower().Contains("virtual"))
+            {
+                newCategory = Category.VirtualGames;
+            }
+            else if (category.ToLower().Contains("live"))
+            {
+                newCategory = Category.LiveCasino;
             }
             return newCategory;
         }

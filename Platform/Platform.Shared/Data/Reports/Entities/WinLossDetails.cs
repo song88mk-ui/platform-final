@@ -141,6 +141,8 @@ namespace Platform.Shared.Data.Reports.Entities
         public string PositionTakingDetails { get; set; }
 
         public string CommissionDetails { get; set; }
+        
+        public string CasinoDetails { get; set; }
 
         public string Reason { get; set; }
 

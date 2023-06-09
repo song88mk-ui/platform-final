@@ -229,6 +229,7 @@ namespace Platform.AgentReports.API.Repository
                 MarketTemplateGroupName = s.MarketTemplateGroupName,
                 PositionTakingDetails = string.IsNullOrEmpty(s.PositionTakingDetails) ? new PositionTakingDetails() : JsonConvert.DeserializeObject<PositionTakingDetails>(s.PositionTakingDetails),
                 CommissionDetails = string.IsNullOrEmpty(s.CommissionDetails) ? new List<CommissionDetails>() : JsonConvert.DeserializeObject<List<CommissionDetails>>(s.CommissionDetails), 
+                CasinoDetails = string.IsNullOrEmpty(s.CommissionDetails) ? null : JsonConvert.DeserializeObject<CasinoDetailDTO>(s.CasinoDetails),
                 Reason = s.Reason,
                 BetScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(1, s.BetId) : "",
                 FinalScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(2, s.BetId) : "",

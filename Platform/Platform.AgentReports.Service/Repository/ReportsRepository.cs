@@ -1214,6 +1214,7 @@ namespace Platform.AgentReports.Service.Repository
                     winloss.Payout = message.BetStatusId == (int)BetStatus.Cancelled ? 0 : message.Payout;
                     winloss.IsGGREnabled = isGGREnabled;
                     winloss.PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(agent, agents));
+                    winloss.CasinoDetails = JsonConvert.SerializeObject(GetCasinoDetails(message, product));
                 }
                 else
                     context.CasinoWinLoss.Add(new CasinoWinLoss
@@ -1284,7 +1285,8 @@ namespace Platform.AgentReports.Service.Repository
                         ProductId = product.ProductId,
                         ProductName = product.ProductName,
                         ProviderName = product.ProviderName,
-                        PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(agent, agents))
+                        PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(agent, agents)),
+                        CasinoDetails = JsonConvert.SerializeObject(GetCasinoDetails(message, product))
             });
             }
         }
@@ -1630,6 +1632,24 @@ namespace Platform.AgentReports.Service.Repository
             };
         }
 
+        private CasinoDetailDTO GetCasinoDetails(OnCasinoBetSettlement message, ProductLookup product)
+        {
+            return new CasinoDetailDTO
+            {
+                ProviderTransactionId = message.ProviderTransactionId,
+                ProviderTransactionDate = message.ProviderTransactionDate,
+                GameTypeId = 0,
+                GameTypeName = product.GameType,
+                GameId = product.ProductId,
+                GameName = product.ProductName,
+                GameTransactionId = message.BetId.ToString(),
+                ProviderBrandId = product.ProductTypeId,
+                ProviderBrandName = product.ProductTypeName,
+                ProviderId = 0,
+                ProviderName = product.ProviderName,
+                Payout = message.Payout
+            };
+        }
 
         private Shared.Enums.UserType GetUserType(int userTypeId)
         {

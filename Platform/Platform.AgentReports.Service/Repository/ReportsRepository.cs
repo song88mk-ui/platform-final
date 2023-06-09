@@ -1636,7 +1636,7 @@ namespace Platform.AgentReports.Service.Repository
         {
             return new CasinoDetailDTO
             {
-                ProviderTransactionId = message.ProviderTransactionId,
+                ProviderTransactionId = message.ProviderBetId,
                 ProviderTransactionDate = message.ProviderTransactionDate,
                 GameTypeId = string.Empty,
                 GameTypeName = product.GameType,

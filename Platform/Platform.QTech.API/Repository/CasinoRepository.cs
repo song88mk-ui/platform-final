@@ -55,6 +55,9 @@ namespace Platform.QTech.API.Repository
         }
         public async Task<Tuple<SessionCode, GameSessionResponse>> GetSession(GameSessionRequest request)
         {
+            if (string.IsNullOrEmpty(request.WalletSession))
+                return new Tuple<SessionCode, GameSessionResponse>(SessionCode.INVALID_TOKEN, new GameSessionResponse());
+
             var split = request.WalletSession.Split('|');
             var clientId = split.First();
             var operatorToken = split.Last();
@@ -77,6 +80,9 @@ namespace Platform.QTech.API.Repository
         }
         public async Task<Tuple<BalanceCode, BalanceResponse>> GetBalance(BalanceRequest request)
         {
+            if (string.IsNullOrEmpty(request.WalletSession))
+                return new Tuple<BalanceCode, BalanceResponse>(BalanceCode.REQUEST_DECLINED, new BalanceResponse());
+
             var split = request.WalletSession.Split('|');
             var clientId = split.First();
             var operatorToken = split.Last();
@@ -99,6 +105,9 @@ namespace Platform.QTech.API.Repository
         }
         public async Task<Tuple<WithdrawCode, WithdrawResponse>> Withdraw(WithdrawRequest request)
         {
+            if (string.IsNullOrEmpty(request.WalletSession))
+                return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.INVALID_TOKEN, new WithdrawResponse());
+
             var split = request.WalletSession.Split('|');
             var clientId = split.First();
             var operatorToken = split.Last();

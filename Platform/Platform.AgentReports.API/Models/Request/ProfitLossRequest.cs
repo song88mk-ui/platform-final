@@ -9,7 +9,7 @@ namespace Platform.AgentReports.API.Models.Request
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
         public long? SelectedUserId { get; set; }
-        public int ProductId { get; set; } = (int)Shared.Enums.Product.All;
+        public int ProductTypeId { get; set; } = (int)Shared.Enums.Product.All;
         public string Product { get; set; }
         public string Currency { get; set; }
         public string Status { get; set; }

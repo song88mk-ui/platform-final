@@ -994,8 +994,8 @@ namespace Platform.AgentReports.API.Repository
             var agentUserTypeId = (int)UserType.Agent;
 
             var isAgent = !(parentAgentId == 0 && directUserId == 0);
-
-            var sqlRaw = $"GetProfitLossSummary {parentAgentId}, {directUserId}, {isAgent}, {agentUserTypeId}, {request.ProductId}, '{productTypes}', '{accounts}', '{betIds}', '{status}', '{request.FromDate.ToString("yyyy-MM-dd")}', '{request.ToDate.ToString("yyyy-MM-dd 23:59:59")}', '{currencyCode}', {request.Page}, {request.PageSize}";
+            
+            var sqlRaw = $"GetProfitLossSummary {parentAgentId}, {directUserId}, {isAgent}, {agentUserTypeId}, {request.ProductTypeId}, '{productTypes}', '{accounts}', '{betIds}', '{status}', '{request.FromDate.ToString("yyyy-MM-dd")}', '{request.ToDate.ToString("yyyy-MM-dd 23:59:59")}', '{currencyCode}', {request.Page}, {request.PageSize}";
             var response = await _context.ReadProfitLossSummary.FromSqlRaw(sqlRaw).ToListAsync();
             var totalResponse = response.FirstOrDefault();
 
@@ -1087,7 +1087,7 @@ namespace Platform.AgentReports.API.Repository
 
             var status = request.Status;
 
-            var sqlRaw = $"GetProfitLossDetails {parentAgentId}, {directUserId}, {request.ProductId}, '{productTypes}', '{accounts}', '{betIds}', '{status}', '{request.FromDate.ToString("yyyy-MM-dd")}', '{request.ToDate.ToString("yyyy-MM-dd 23:59:59")}', '{currencyCode}', {request.Page}, {request.PageSize}";
+            var sqlRaw = $"GetProfitLossDetails {parentAgentId}, {directUserId}, {request.ProductTypeId}, '{productTypes}', '{accounts}', '{betIds}', '{status}', '{request.FromDate.ToString("yyyy-MM-dd")}', '{request.ToDate.ToString("yyyy-MM-dd 23:59:59")}', '{currencyCode}', {request.Page}, {request.PageSize}";
             var response = await _context.ReadProfitLossDetails.FromSqlRaw(sqlRaw).ToListAsync();
             var totalResponse = response.FirstOrDefault();
 

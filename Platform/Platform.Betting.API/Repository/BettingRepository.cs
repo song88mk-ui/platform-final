@@ -1,4 +1,5 @@
 ﻿using Microsoft.ApplicationInsights;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting;
@@ -104,7 +105,70 @@ namespace Platform.Betting.API.Repository
             }
 
             var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == Guid.Parse(request.ClientId) && x.CurrencyCode == request.CurrencyCode.ToString()).FirstOrDefault();
+            if (request.IsAgent)
+            {
+                var userBetConfig = await GetUserBetConfig(new UserBetConfigDetailsRequestDTO() { ClientId = request.ClientId, UserId = request.UserId });
 
+                if (userBetConfig.StatusCode != StatusCode.Success)
+                {
+                    return new BaseResponseDTO<BetResponseDTO>()
+                    {
+                        StatusCode = userBetConfig.StatusCode,
+                        Message = userBetConfig.Message
+                    };
+                }
+
+                var message = "You are currently not allowed to place a bet. Please contact your agent for more information";
+                if (request.Selections.Count() > 1)
+                {
+                    if(!userBetConfig.Result.IsParlayEnabled)
+                    {
+                        return new BaseResponseDTO<BetResponseDTO>()
+                        {
+                            StatusCode = StatusCode.Not_Authorized,
+                            Message = message
+                        };
+                    }
+                }
+                else
+                {
+                    if (!userBetConfig.Result.IsCricketEnabled)
+                    {
+                        if (request.Selections.Any(x => x.SportId == 21))
+                        {
+                            return new BaseResponseDTO<BetResponseDTO>()
+                            {
+                                StatusCode = StatusCode.Not_Authorized,
+                                Message = message
+                            };
+                        }
+                    }
+                    if (!userBetConfig.Result.IsSoccerEnabled)
+                    {
+                        if (request.Selections.Any(x => x.SportId == 1))
+                        {
+                            return new BaseResponseDTO<BetResponseDTO>()
+                            {
+                                StatusCode = StatusCode.Not_Authorized,
+                                Message = message
+                            };
+                        }
+                    }
+
+                    if (!userBetConfig.Result.IsSportsEnabled)
+                    {
+                        var excludedSports = new List<int>() { 21, 1 };
+                        if (request.Selections.Any(x => x.SportId != 21 && x.SportId != 1))
+                        {
+                            return new BaseResponseDTO<BetResponseDTO>()
+                            {
+                                StatusCode = StatusCode.Not_Authorized,
+                                Message = message
+                            };
+                        }
+                    }
+                }
+            }
             decimal minStake = 0;
             decimal maxStake = 0;
             decimal maxPerGame = 0;
@@ -1816,7 +1880,6 @@ namespace Platform.Betting.API.Repository
         {
             try
             {
-
                 var result = new BetConfigFEResponseDTO();
                 var clientId = new Guid(request.ClientId);
                 var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == clientId && x.CurrencyCode == request.CurrencyCode).FirstOrDefault();
@@ -1882,6 +1945,36 @@ namespace Platform.Betting.API.Repository
             {
 
                 throw;
+            }
+        }
+        public async Task<BaseResponseDTO<VerticalConfig>> GetUserBetConfig(UserBetConfigDetailsRequestDTO request)
+        {
+            try
+            {
+                var result = new VerticalConfig(true);
+                var clientId = new Guid(request.ClientId);
+                var userBetConfig = _bettingContext.UserBetConfig.FirstOrDefault(x => x.ClientId == clientId && x.UserId == request.UserId);
+
+                if (userBetConfig != null)
+                {
+                    result = JsonSerializer.Deserialize<VerticalConfig>(userBetConfig.VerticalConfig);
+                }
+
+                return new BaseResponseDTO<VerticalConfig>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = result
+                };
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<VerticalConfig>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = ex.Message,
+                    Result = null
+                };
             }
         }
         public async Task<BaseResponseDTO<BetModifyResponseDTO>> CancelBets(BetModifyRequestDTO request)

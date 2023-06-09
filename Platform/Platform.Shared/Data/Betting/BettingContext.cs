@@ -20,6 +20,7 @@ namespace Platform.Shared.Data.Betting
             modelBuilder.Entity<StakeLimitFixture>().HasKey(k => new { k.UserId, k.FixtureId });
             modelBuilder.Entity<Tier>().HasKey(k => new { k.TierId });
             modelBuilder.Entity<League>().HasKey(k => new { k.Id });
+            modelBuilder.Entity<UserBetConfig>().HasKey(k => new { k.UserId });
         }
 
         public DbSet<Bet> Bet { get; set; }
@@ -32,5 +33,6 @@ namespace Platform.Shared.Data.Betting
         public DbSet<StakeLimitFixture> StakeLimitFixture { get; set; }
         public DbSet<League> League { get; set; }
         public DbSet<Tier> Tier { get; set; }
+        public DbSet<UserBetConfig> UserBetConfig { get; set; }
     }
 }

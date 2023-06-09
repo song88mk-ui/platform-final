@@ -52,7 +52,7 @@ namespace Platform.AgentReports.Service
             var correlationId = e.BasicProperties.CorrelationId;
 
             try
-            {
+            {//
                 switch (messageType)
                 {
                     case "OnBetPlacement":

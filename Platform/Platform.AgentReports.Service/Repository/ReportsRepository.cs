@@ -1638,7 +1638,7 @@ namespace Platform.AgentReports.Service.Repository
             {
                 ProviderTransactionId = message.ProviderTransactionId,
                 ProviderTransactionDate = message.ProviderTransactionDate,
-                GameTypeId = 0,
+                GameTypeId = string.Empty,
                 GameTypeName = product.GameType,
                 GameId = product.ProductId,
                 GameName = product.ProductName,

@@ -13,7 +13,7 @@ namespace Platform.Shared.Models
         public string ProviderBrandName { get; set; }
         public int GameId { get; set; } = 0;
         public string GameName { get; set; }
-        public int GameTypeId { get; set; } = 0;
+        public string GameTypeId { get; set; }
         public string GameTypeName { get; set; }
         public decimal Payout { get; set; } = 0m;
     }

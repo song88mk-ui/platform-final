@@ -1845,6 +1845,10 @@ namespace Platform.AgentReports.API.Repository
             //need to refactor this. need to get the userTypeId from agentApi (Internal)
             var winLoss = _context.WinLoss.FirstOrDefault(c => c.ParentUserId == 0 && c.IndirectUserId == userId);
 
+            // Add Casino Win loss
+
+            var casinoWinLoss = _context.CasinoWinLoss.FirstOrDefault(c => c.ParentUserId == 0 && c.IndirectUserId == userId);
+
             var userType = (int)UserType.Agent;
 
             if (winLoss != null)
@@ -1862,14 +1866,30 @@ namespace Platform.AgentReports.API.Repository
                     .Where(c => c.ParentUserId == 0 && c.IndirectUserId == userId &&
                                 c.TransactionDateOffset.Date == DateTime.UtcNow.AddHours(-4).Date)
                     .AsNoTracking().Sum(s => s.MemberWLC);
+
+                wlcToday += _context.CasinoWinLoss
+                    .Where(c => c.ParentUserId == 0 && c.IndirectUserId == userId &&
+                                c.TransactionDateOffset.Date == DateTime.UtcNow.AddHours(-4).Date)
+                    .AsNoTracking().Sum(s => s.MemberWLC);
+
                 wlcYesterday = _context.WinLoss
                     .Where(c => c.ParentUserId == 0 && c.IndirectUserId == userId &&
                                 c.TransactionDateOffset.Date == DateTime.UtcNow.AddHours(-4).AddDays(-1).Date)
                     .AsNoTracking().Sum(s => s.MemberWLC);
+                wlcYesterday += _context.CasinoWinLoss
+                    .Where(c => c.ParentUserId == 0 && c.IndirectUserId == userId &&
+                                c.TransactionDateOffset.Date == DateTime.UtcNow.AddHours(-4).AddDays(-1).Date)
+                    .AsNoTracking().Sum(s => s.MemberWLC);
+
                 wlcLastWeek = _context.WinLoss
                     .Where(c => c.ParentUserId == 0 && c.IndirectUserId == userId &&
                                 c.TransactionDateOffset >= startDateLastWeek &&
                                 c.TransactionDateOffset <= endDateLastWeek).AsNoTracking().Sum(s => s.MemberWLC);
+                wlcLastWeek += _context.CasinoWinLoss
+                    .Where(c => c.ParentUserId == 0 && c.IndirectUserId == userId &&
+                                c.TransactionDateOffset >= startDateLastWeek &&
+                                c.TransactionDateOffset <= endDateLastWeek).AsNoTracking().Sum(s => s.MemberWLC);
+
                 cashBalance = _context.RunningBalance.First(r => r.UserId == userId).CashBalance * -1;
             }
             else if (userType == (int)UserType.Agent)
@@ -1880,14 +1900,28 @@ namespace Platform.AgentReports.API.Repository
                     .Where(c => c.ParentUserId == userId && c.DirectUserId == userId &&
                                 c.SettledDateOffset.Date == DateTime.UtcNow.AddHours(-4).Date).AsNoTracking()
                     .Sum(s => s.AgentWLC);
+                wlcToday += _context.CasinoWinLoss
+                    .Where(c => c.ParentUserId == userId && c.DirectUserId == userId &&
+                                c.SettledDate.Date == DateTime.UtcNow.AddHours(-4).Date).AsNoTracking()
+                    .Sum(s => s.AgentWLC);
+
                 wlcYesterday = _context.WinLoss
                     .Where(c => c.ParentUserId == userId && c.DirectUserId == userId &&
                                 c.SettledDateOffset.Date == DateTime.UtcNow.AddHours(-4).AddDays(-1).Date)
                     .AsNoTracking().Sum(s => s.AgentWLC);
+                wlcYesterday += _context.CasinoWinLoss
+                    .Where(c => c.ParentUserId == userId && c.DirectUserId == userId &&
+                                c.SettledDate.Date == DateTime.UtcNow.AddHours(-4).AddDays(-1).Date)
+                    .AsNoTracking().Sum(s => s.AgentWLC);
+
                 wlcLastWeek = _context.WinLoss
                     .Where(c => c.ParentUserId == userId && c.DirectUserId == userId &&
                                 c.SettledDateOffset.Date >= startDateLastWeek.Date &&
                                 c.SettledDateOffset.Date <= endDateLastWeek.Date).AsNoTracking().Sum(s => s.AgentWLC);
+                wlcLastWeek += _context.CasinoWinLoss
+                    .Where(c => c.ParentUserId == userId && c.DirectUserId == userId &&
+                                c.SettledDate.Date >= startDateLastWeek.Date &&
+                                c.SettledDate.Date <= endDateLastWeek.Date).AsNoTracking().Sum(s => s.AgentWLC);
             }
 
             return new BaseResponseDTO<ProfileResponse>

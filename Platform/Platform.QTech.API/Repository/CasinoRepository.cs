@@ -87,7 +87,7 @@ namespace Platform.QTech.API.Repository
                 return new Tuple<BalanceCode, BalanceResponse>(BalanceCode.OK, new BalanceResponse());
 
             if (request.WalletSession.Contains('|') == false)
-                return new Tuple<BalanceCode, BalanceResponse>(BalanceCode.REQUEST_DECLINED, new BalanceResponse());
+                return new Tuple<BalanceCode, BalanceResponse>(BalanceCode.OK, new BalanceResponse());
 
             var split = request.WalletSession.Split('|');
             var clientId = split.First();
@@ -101,7 +101,7 @@ namespace Platform.QTech.API.Repository
             var authenticationResponse = await _operatorRepository.Authenticate(clientId, operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
-                return new Tuple<BalanceCode, BalanceResponse>(BalanceCode.REQUEST_DECLINED, new BalanceResponse());
+                return new Tuple<BalanceCode, BalanceResponse>(BalanceCode.OK, new BalanceResponse());
 
             return new Tuple<BalanceCode, BalanceResponse>(BalanceCode.OK, new BalanceResponse
             {

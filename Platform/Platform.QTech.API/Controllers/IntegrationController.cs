@@ -285,7 +285,7 @@ namespace Platform.QTech.API.Controllers
             switch (result.Item1)
             {
                 case Enums.BonusRewardCode.OK:
-                    return NoContent();
+                    return Created("", result.Item2);
                 default:
                     return BadRequest(new { code = result.ToString() });
             }

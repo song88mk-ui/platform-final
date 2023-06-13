@@ -20,7 +20,7 @@ namespace Platform.QTech.API.ActionFilters
 
             if (string.IsNullOrEmpty(passKey) || string.IsNullOrWhiteSpace(passKey) || _configuration["Custom:PassKey"] != passKey)
             {
-                context.Result = new BadRequestObjectResult(new
+                context.Result = new UnauthorizedObjectResult(new
                 {
                     Code = "LOGIN_FAILED",
                     Message = "Incorrect Pass-Key in request headers"

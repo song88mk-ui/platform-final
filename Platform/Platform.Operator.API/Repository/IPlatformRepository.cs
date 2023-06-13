@@ -1,4 +1,5 @@
-﻿using Platform.Shared.Data.Platform.Entities;
+﻿using Platform.Operator.API.Models;
+using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -23,5 +24,8 @@ namespace Platform.Operator.API.Repository
         bool AddTestConfig(string clientId, bool isFreeBet, decimal stakeRealPercent, decimal stakeBonusPercent);
         bool RemoveTestConfig(string clientId);
         List<TestConfig> GetTestConfig();
+        Task<BetPlacementResponseDTO> BetPlacementCasino(OperatorCasinoBetPlacementRequestDTO request, string clientId, string operatorToken);
+        Task<BetSettlementResponseDTO> BetSettlementCasino(OperatorCasinoBetSettlementRequestDTO request, string clientId);
+
     }
 }

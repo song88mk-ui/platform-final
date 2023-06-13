@@ -138,7 +138,7 @@ namespace Platform.QTech.API.Repository
             var authenticationResponse = await _operatorRepository.Authenticate(clientId, operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
-                return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.LOGIN_FAILED, new WithdrawResponse());
+                return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.INVALID_TOKEN, new WithdrawResponse());
 
             if (authenticationResponse.Result.Balance < request.Amount)
                 return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.INSUFFICIENT_FUNDS, new WithdrawResponse());

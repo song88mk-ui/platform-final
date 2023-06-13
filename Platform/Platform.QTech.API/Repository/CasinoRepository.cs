@@ -166,7 +166,7 @@ namespace Platform.QTech.API.Repository
 
                     using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
 
-                    var transactionEntity = _casinoBettingContext.CasinoBet.Add(new Shared.Data.CasinoBetting.Entities.CasinoBet
+                    var transactionEntity = _casinoBettingContext.CasinoBet.Add(new CasinoBet
                     {
                         BetId = betId,
                         ProviderTransactionId = request.TxnId,
@@ -200,13 +200,13 @@ namespace Platform.QTech.API.Repository
                         BonusPromoCode = request.BonusPromoCode,
                         JackpotPayout = 0,
                         TableId = request.TableId,
-                        TransactionIds = JsonSerializer.Serialize(new List<string> { request.TxnId }),
+                        TransactionIds = JsonSerializer.Serialize(new List<string> { $"{request.TxnId}|{walletResponse.Result.Balance}" }),
                         ProviderTransactionDate = DateTime.Parse(request.Created.Split('[').First()).ToUniversalTime(),
                         BetDate = dateNow,
                         SettlementDate = dateNow
                     }).Entity;
 
-                    _casinoBettingContext.CasinoBetAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
+                    _casinoBettingContext.CasinoBetAudit.Add(new CasinoBetAudit
                     {
                         BetId = transactionEntity.BetId,
                         ProviderTransactionId = transactionEntity.ProviderTransactionId,
@@ -286,12 +286,14 @@ namespace Platform.QTech.API.Repository
             {
                 var transactionIds = JsonSerializer.Deserialize<List<string>>(round.TransactionIds);
 
-                if (transactionIds.Contains(request.TxnId))
+                var transactionId = transactionIds.Where(c => c.Contains(request.TxnId)).FirstOrDefault();
+
+                if (transactionId != null)
                 {
                     return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse
                     {
                         ReferenceId = round.BetId.ToString().ToUpper(),
-                        Balance = authenticationResponse.Result.Balance
+                        Balance = Convert.ToDecimal(transactionId.Split('|').Last()) 
                     });
                 }
 
@@ -329,17 +331,16 @@ namespace Platform.QTech.API.Repository
                         round.SettlementDate = dateNow;
                     }
 
-
                     if (transactionIds.Contains(request.TxnId) == false)
                     {
-                        transactionIds.Add(request.TxnId);
+                        transactionIds.Add($"{request.TxnId}|{walletResponse.Result.Balance}" );
 
                         round.TransactionIds = JsonSerializer.Serialize(transactionIds);
                     }
 
                     var transactionEntity = _casinoBettingContext.CasinoBet.Update(round).Entity;
 
-                    _casinoBettingContext.CasinoBetAudit.Add(new Shared.Data.CasinoBetting.Entities.CasinoBetAudit
+                    _casinoBettingContext.CasinoBetAudit.Add(new CasinoBetAudit
                     {
                         BetId = transactionEntity.BetId,
                         ProviderTransactionId = transactionEntity.ProviderTransactionId,
@@ -428,12 +429,14 @@ namespace Platform.QTech.API.Repository
 
                 var transactionIds = JsonSerializer.Deserialize<List<string>>(round.TransactionIds);
 
-                if (transactionIds.Contains(request.TxnId))
+                var transactionId = transactionIds.Where(c => c.Contains(request.TxnId)).FirstOrDefault();
+
+                if (transactionId != null)
                 {
                     return new Tuple<DepositCode, DepositResponse>(DepositCode.OK, new DepositResponse
                     {
                         ReferenceId = round.BetId.ToString().ToUpper(),
-                        Balance = 0m
+                        Balance = Convert.ToDecimal(transactionId.Split('|').Last())
                     });
                 }
 
@@ -466,7 +469,7 @@ namespace Platform.QTech.API.Repository
 
                     if (transactionIds.Contains(request.TxnId) == false)
                     {
-                        transactionIds.Add(request.TxnId);
+                        transactionIds.Add($"{request.TxnId}|{walletResponse.Result.Balance}" );
 
                         round.TransactionIds = JsonSerializer.Serialize(transactionIds);
                     }
@@ -567,12 +570,14 @@ namespace Platform.QTech.API.Repository
 
                 var transactionIds = JsonSerializer.Deserialize<List<string>>(round.TransactionIds);
 
-                if (transactionIds.Contains(request.TxnId))
+                var transactionId = transactionIds.Where(c => c.Contains(request.TxnId)).FirstOrDefault();
+
+                if (transactionId != null)
                 {
                     return new Tuple<RollbackCode, RollbackResponse>(RollbackCode.OK, new RollbackResponse
                     {
                         ReferenceId = round.BetId.ToString().ToUpper(),
-                        Balance = 0m
+                        Balance = Convert.ToDecimal(transactionId.Split('|').Last())
                     });
                 }
 
@@ -607,7 +612,7 @@ namespace Platform.QTech.API.Repository
 
                     if (transactionIds.Contains(request.TxnId) == false)
                     {
-                        transactionIds.Add(request.TxnId);
+                        transactionIds.Add($"{request.TxnId}|{walletResponse.Result.Balance}" );
 
                         round.TransactionIds = JsonSerializer.Serialize(transactionIds);
                     }
@@ -818,5 +823,10 @@ namespace Platform.QTech.API.Repository
     {
         public string CurrencyCode { get; set; }
         public decimal ExchangeRate { get; set; }
+    }
+    public class Idempotence
+    {
+        public string TI { get; set; }
+        public string B { get; set; }
     }
 }

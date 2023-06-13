@@ -34,6 +34,8 @@ namespace Platform.Shared.Data.Reports.Entities
 
         public string UserId { get; set; }
 
+        public string Username { get; set; }
+
         public int UserTypeId { get; set; }
 
         [Column(TypeName = "decimal(26,12)")]
@@ -151,5 +153,9 @@ namespace Platform.Shared.Data.Reports.Entities
         public int ProductId { get; set; }
 
         public string ProductName { get; set; }
+
+        public string PositionTakingDetails { get; set; }
+
+        public string CasinoDetails { get; set; }
     }
 }

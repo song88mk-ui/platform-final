@@ -996,7 +996,7 @@ namespace Platform.AgentReports.Service.Repository
                     winloss.SettledDateOffset = dateNow.AddHours(-4);
                     winloss.ProductId = (int)Shared.Enums.Product.Sportsbook;
                     winloss.ProductName = Shared.Enums.Product.Sportsbook.ToString();
-                    winloss.PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(message, agent, agents));
+                    winloss.PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(agent, agents));
                     winloss.CommissionDetails = JsonConvert.SerializeObject(agents.Where(c => c.AgentId >= agent.AgentId).Select(s => new { Username = s.AgentUsername, Commission = s.Commission * 100 }).ToList());
                     winloss.MarketTypeId = string.Empty;
                     winloss.MarketGroupId = string.Empty;
@@ -1067,7 +1067,7 @@ namespace Platform.AgentReports.Service.Repository
                         ProductName = Shared.Enums.Product.Sportsbook.ToString(),
                         CasinoDetails = string.Empty,
                         GameProvider = 0,
-                        PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(message, agent, agents)),
+                        PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(agent, agents)),
                         CommissionDetails = JsonConvert.SerializeObject(agents.Where(c => c.AgentId >= agent.AgentId).Select(s => new { Username = s.AgentUsername, Commission = s.Commission * 100 }).ToList()),
                         ProviderBrandId = 0,
                         ProviderBrandName = string.Empty,
@@ -1213,6 +1213,8 @@ namespace Platform.AgentReports.Service.Repository
                     winloss.GGR = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : (message.Stake - message.Payout);
                     winloss.Payout = message.BetStatusId == (int)BetStatus.Cancelled ? 0 : message.Payout;
                     winloss.IsGGREnabled = isGGREnabled;
+                    winloss.PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(agent, agents));
+                    winloss.CasinoDetails = JsonConvert.SerializeObject(GetCasinoDetails(message, product));
                 }
                 else
                     context.CasinoWinLoss.Add(new CasinoWinLoss
@@ -1238,6 +1240,7 @@ namespace Platform.AgentReports.Service.Repository
                         UserTypeId = (int)agents.Where(c => c.AgentId == indirectUserId).Select(c => c.UserType).FirstOrDefault(),
                         PositionTaking = GetReceivePTFinal(message.Stake, message.Payout, message.BetStatusId, agent),
                         UserId = message.UserId,
+                        Username = data.UserType == Shared.Enums.UserType.Player ? data.Username : data.AgentUsername,
                         TransactionType = message.TransactionType,
                         Commission = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : memberCommission,
                         MemberWinLoss = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : memberWinLoss,
@@ -1281,14 +1284,16 @@ namespace Platform.AgentReports.Service.Repository
                         GameType = product.GameType,
                         ProductId = product.ProductId,
                         ProductName = product.ProductName,
-                        ProviderName = product.ProviderName
-                    });
+                        ProviderName = product.ProviderName,
+                        PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(agent, agents)),
+                        CasinoDetails = JsonConvert.SerializeObject(GetCasinoDetails(message, product))
+            });
             }
         }
 
         private ProductLookup UpdateProductLookup(AgentReportsContext context, string category, string gameId)
         {
-            var categoryType = GetCategory(category);
+            var categoryType = GetProduct(category);
             var gameType = category.Replace("CASINO/LIVECASINO/","").Replace("CASINO/VIRTUAL_SPORTS/", "").Replace("CASINO/", "");
             var provider = !string.IsNullOrEmpty(gameId) ? gameId.Split("-").FirstOrDefault() : string.Empty;
             var productName = !string.IsNullOrEmpty(gameId) ? gameId.Split("-").LastOrDefault() : string.Empty;
@@ -1613,7 +1618,7 @@ namespace Platform.AgentReports.Service.Repository
 
             return new Tuple<decimal, decimal>(winLoss, commission);
         }
-        private object GetPTFinal(OnBetSettlement bet, AgentSettings agent, List<AgentSettings> agents)
+        private object GetPTFinal(AgentSettings agent, List<AgentSettings> agents)
         {
             var uplineResult = agents.Where(c => c.AgentId < agent.AgentId).Sum(s => s.PositionTaking) * 100;
             var selfResult = agents.Where(c => c.AgentId == agent.AgentId).Sum(s => s.PositionTaking) * 100;
@@ -1627,8 +1632,24 @@ namespace Platform.AgentReports.Service.Repository
             };
         }
 
-
-
+        private CasinoDetailDTO GetCasinoDetails(OnCasinoBetSettlement message, ProductLookup product)
+        {
+            return new CasinoDetailDTO
+            {
+                ProviderTransactionId = message.ProviderBetId,
+                ProviderTransactionDate = message.ProviderTransactionDate,
+                GameTypeId = string.Empty,
+                GameTypeName = product.GameType,
+                GameId = product.ProductId,
+                GameName = product.ProductName,
+                GameTransactionId = message.BetId.ToString(),
+                ProviderBrandId = product.ProductTypeId,
+                ProviderBrandName = product.ProductTypeName,
+                ProviderId = 0,
+                ProviderName = product.ProviderName,
+                Payout = message.Payout
+            };
+        }
 
         private Shared.Enums.UserType GetUserType(int userTypeId)
         {
@@ -1655,7 +1676,7 @@ namespace Platform.AgentReports.Service.Repository
             //}
         }
 
-        private Product GetCategory(string category)
+        private Product GetProduct(string category)
         {
             var newCategory = Product.Casino;
 
@@ -1666,6 +1687,21 @@ namespace Platform.AgentReports.Service.Repository
             else if (category.ToLower().Contains("live"))
             {
                 newCategory = Product.LiveCasino;
+            }
+            return newCategory;
+        }
+
+        private Category GetCategory(string category)
+        {
+            var newCategory = Category.Casino;
+
+            if (category.ToLower().Contains("virtual"))
+            {
+                newCategory = Category.VirtualGames;
+            }
+            else if (category.ToLower().Contains("live"))
+            {
+                newCategory = Category.LiveCasino;
             }
             return newCategory;
         }

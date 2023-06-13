@@ -16,7 +16,7 @@ namespace Platform.AgentReports.API.Controllers
         private readonly IReportsRepository _reportsRepository;
 
         public ReportsController(IReportsRepository reportsRepository)
-        {//
+        {
             _reportsRepository = reportsRepository;
         }
 
@@ -33,7 +33,7 @@ namespace Platform.AgentReports.API.Controllers
                 DateFilter = request.DateFilter,
                 BetIds = request.BetIds,
                 Currency = request.Currency,
-                ProductId = request.ProductId,
+                ProductTypeId = request.ProductTypeId,
                 Product = request.Product,
                 Status = request.Status
             });
@@ -367,7 +367,7 @@ namespace Platform.AgentReports.API.Controllers
 
         [HttpGet("v1/reports/products")]
         public async Task<IActionResult> GetProducts()
-        {
+        {//
             var result = await _reportsRepository.GetProducts();
 
             switch (result.StatusCode)

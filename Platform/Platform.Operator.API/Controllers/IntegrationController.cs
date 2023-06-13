@@ -218,7 +218,7 @@ namespace Platform.Operator.API.Controllers
 
         [HttpPost("operator/v1/casino/bet/placement")]
         public async Task<IActionResult> CasinoBetPlacement([FromBody] OperatorCasinoBetPlacementRequestDTO request)
-        {
+        {//
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 

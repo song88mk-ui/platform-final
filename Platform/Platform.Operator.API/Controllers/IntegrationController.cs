@@ -216,7 +216,7 @@ namespace Platform.Operator.API.Controllers
             return Ok(result);
         }
 
-        [HttpPost("operator/v1/casino/bet/placement")]
+        [HttpPost("v1/casino/bet/placement")]
         public async Task<IActionResult> CasinoBetPlacement([FromBody] OperatorCasinoBetPlacementRequestDTO request)
         {//
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
@@ -233,7 +233,7 @@ namespace Platform.Operator.API.Controllers
             }
         }
 
-        [HttpPost("operator/v1/casino/bet/settlement")]
+        [HttpPost("v1/casino/bet/settlement")]
         public async Task<IActionResult> CasinoBetSettlement([FromBody] OperatorCasinoBetSettlementRequestDTO request)
         {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();

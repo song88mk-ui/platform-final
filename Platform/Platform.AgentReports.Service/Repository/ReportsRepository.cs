@@ -920,7 +920,7 @@ namespace Platform.AgentReports.Service.Repository
                 var uplineCommission = upline.Item2;
                 var uplineWLC = uplineWinLoss + uplineCommission;
 
-                var downline = GetUplineAgentWinLossCommissionFinal(message.Bet.Stake, hasHalfSettlement, agent, agents, memberWinLoss * -1);
+                var downline = GetDownlineAgentWinLossCommissionFinal(message.Bet.Stake, hasHalfSettlement, agent, agents, memberWinLoss * -1);
 
                 var downlineWinLoss = downline.Item1;
                 var downlineCommission = downline.Item2;
@@ -1145,7 +1145,7 @@ namespace Platform.AgentReports.Service.Repository
                 var uplineCommission = upline.Item2;
                 var uplineWLC = uplineWinLoss + uplineCommission;
 
-                var downline = GetUplineAgentWinLossCommissionFinal(message.Stake, false, agent, agents, memberWinLoss * -1);
+                var downline = GetDownlineAgentWinLossCommissionFinal(message.Stake, false, agent, agents, memberWinLoss * -1);
 
                 var downlineWinLoss = downline.Item1;
                 var downlineCommission = downline.Item2;
@@ -1618,6 +1618,25 @@ namespace Platform.AgentReports.Service.Repository
 
             return new Tuple<decimal, decimal>(winLoss, commission);
         }
+
+        private Tuple<decimal, decimal> GetDownlineAgentWinLossCommissionFinal(decimal stake, bool hasHalfSettlement, AgentSettings agent, List<AgentSettings> agents, decimal playerWinLoss)
+        {
+            var filtered = agents.Where(c => c.UserType != Shared.Enums.UserType.Player && c.AgentId > agent.AgentId).ToList();
+
+            if (filtered.Count == 0 || agent.UserType == Shared.Enums.UserType.Player) return new Tuple<decimal, decimal>(0, 0);
+
+            var winLoss = 0m;
+            var commission = 0m;
+
+            foreach (var item in filtered)
+            {
+                winLoss += GetAgentWinLoss(playerWinLoss, item);
+                commission += GetReceiveCommissionFinal(stake, hasHalfSettlement, item, agents);
+            }
+
+            return new Tuple<decimal, decimal>(winLoss, commission);
+        }
+
         private object GetPTFinal(AgentSettings agent, List<AgentSettings> agents)
         {
             var uplineResult = agents.Where(c => c.AgentId < agent.AgentId).Sum(s => s.PositionTaking) * 100;

@@ -1116,47 +1116,47 @@ namespace Platform.API.Repository
 
             return await _bettingRepository.BetConfig(payload);
         }
-        public async Task<BaseResponseDTO<VerticalConfig>> GetUserBetConfig(string apiKey, string clientId, UserBetConfigDetailsRequest request, string operatorToken)
-        {
-            var clientResponse = await GetClient(clientId);
+        //public async Task<BaseResponseDTO<VerticalConfig>> GetUserBetConfig(string apiKey, string clientId, UserBetConfigDetailsRequest request, string operatorToken)
+        //{
+        //    var clientResponse = await GetClient(clientId);
 
-            if (clientResponse.StatusCode != StatusCode.Success)
-            {
-                return new BaseResponseDTO<VerticalConfig>
-                {
-                    StatusCode = clientResponse.StatusCode,
-                    Message = clientResponse.Message
-                };
-            }
+        //    if (clientResponse.StatusCode != StatusCode.Success)
+        //    {
+        //        return new BaseResponseDTO<VerticalConfig>
+        //        {
+        //            StatusCode = clientResponse.StatusCode,
+        //            Message = clientResponse.Message
+        //        };
+        //    }
 
-            if (!clientResponse.Result.IsAgent)
-            {
-                return new BaseResponseDTO<VerticalConfig>()
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new VerticalConfig(false)
-                };
-            }
-            var authenticationResponse = await _operatorRepository.Authenticate(clientId, operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+        //    if (!clientResponse.Result.IsAgent)
+        //    {
+        //        return new BaseResponseDTO<VerticalConfig>()
+        //        {
+        //            StatusCode = StatusCode.Success,
+        //            Message = StatusCode.Success.ToString(),
+        //            Result = new VerticalConfig(false)
+        //        };
+        //    }
+        //    var authenticationResponse = await _operatorRepository.Authenticate(clientId, operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
 
-            if (authenticationResponse.StatusCode != StatusCode.Success)
-            {
-                return new BaseResponseDTO<VerticalConfig>
-                {
-                    StatusCode = authenticationResponse.StatusCode,
-                    Message = authenticationResponse.Message,
-                };
-            }
+        //    if (authenticationResponse.StatusCode != StatusCode.Success)
+        //    {
+        //        return new BaseResponseDTO<VerticalConfig>
+        //        {
+        //            StatusCode = authenticationResponse.StatusCode,
+        //            Message = authenticationResponse.Message,
+        //        };
+        //    }
 
-            var payload = new UserBetConfigDetailsRequestDTO()
-            {
-                ClientId = clientResponse.Result.ClientId.ToString(),
-                UserId = request.UserId
-            };
+        //    var payload = new UserBetConfigDetailsRequestDTO()
+        //    {
+        //        ClientId = clientResponse.Result.ClientId.ToString(),
+        //        UserId = request.UserId
+        //    };
 
-            return await _bettingRepository.UserBetConfig(payload);
-        }
+        //    return await _bettingRepository.UserBetConfig(payload);
+        //}
 
         public async Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(string apiKey, string clientId, string operatorToken, string IPCountryCode, LivestreamRequest request)
         {
@@ -3158,10 +3158,10 @@ namespace Platform.API.Repository
         {
             return await _bettingRepository.ProcessBetConfig(request);
         }
-        public async Task<BaseResponseDTO<StatusCode>> ProcessUserBetConfig(UserBetConfigRequestDTO request)
-        {
-            return await _bettingRepository.ProcessBetConfig(request);
-        }
+        //public async Task<BaseResponseDTO<StatusCode>> ProcessUserBetConfig(UserBetConfigRequestDTO request)
+        //{
+        //    return await _bettingRepository.ProcessBetConfig(request);
+        //}
 
         public async Task<BaseResponseDTO<BetModifyResponseDTO>> CancelBets(BetModifyRequestDTO request)
         {

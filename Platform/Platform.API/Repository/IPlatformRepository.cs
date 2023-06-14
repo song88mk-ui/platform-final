@@ -17,6 +17,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistorySettled(string apiKey, string clientId, string langCode, BetHistorySettledRequest request);
         Task<BaseResponseDTO<BetHistoryRunningFilteredResponseDTO>> GetBetHistoryRunning(string clientId, string langCode, string operatorToken);
         Task<BaseResponseDTO<BetConfigFEResponseDTO>> GetBetConfig(string apiKey, string clientId, BetConfigRequest request);
+        Task<BaseResponseDTO<VerticalConfig>> GetUserBetConfig(string apiKey, string clientId, UserBetConfigDetailsRequest request, string operatorToken);
         Task<BaseResponseDTO<ClientResponseDTO>> AddOrUpdateClient(ClientRequestDTO request);
         Task<BaseResponseDTO<bool>> ProcessStatusUpdate(ClientStatusRequestDTO request);
         Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(string apiKey, string clientId, string operatorToken, string IPCountryCode, LivestreamRequest request);
@@ -63,6 +64,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<BetCashOutResponseDTO>> CashoutBet(string apiKey, string clientId, string operatorToken, CashoutBetRequest request);
         Task<BaseResponseDTO<ExchangeRateResponseDTO>> GetCurrentExchangeRate(string currencyCode);
         Task<BaseResponseDTO<StatusCode>> ProcessBetConfig(BackOfficeBetConfigPayloadDTO request);
+        Task<BaseResponseDTO<StatusCode>> ProcessUserBetConfig(UserBetConfigRequestDTO request);
         Task<BaseResponseDTO<BetModifyResponseDTO>> CancelBets(BetModifyRequestDTO request);
         Task<BaseResponseDTO<ManualSettlementResponseDTO>> ManualSettlement(ManualBetSettlementRequest request);
         Task<BaseResponseDTO<ManualBetDetailsResponseDTO>> GetManualBetDetails(ManualBetDetailsRequest request);

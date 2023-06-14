@@ -17,6 +17,7 @@ using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
+using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace Platform.API.Repository
 {
@@ -40,7 +41,7 @@ namespace Platform.API.Repository
             _memCache = memCache;
             _configuration = configuration;
         }
-        
+
         public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string clientId, LoginRequest request, Dictionary<string, string> headers = null)
         {
             var clientResponse = await GetClient(clientId);
@@ -1114,6 +1115,47 @@ namespace Platform.API.Repository
             };
 
             return await _bettingRepository.BetConfig(payload);
+        }
+        public async Task<BaseResponseDTO<VerticalConfig>> GetUserBetConfig(string apiKey, string clientId, UserBetConfigDetailsRequest request, string operatorToken)
+        {
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<VerticalConfig>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            if (!clientResponse.Result.IsAgent)
+            {
+                return new BaseResponseDTO<VerticalConfig>()
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new VerticalConfig(false)
+                };
+            }
+            var authenticationResponse = await _operatorRepository.Authenticate(clientId, operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+
+            if (authenticationResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<VerticalConfig>
+                {
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
+                };
+            }
+
+            var payload = new UserBetConfigDetailsRequestDTO()
+            {
+                ClientId = clientResponse.Result.ClientId.ToString(),
+                UserId = request.UserId
+            };
+
+            return await _bettingRepository.UserBetConfig(payload);
         }
 
         public async Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(string apiKey, string clientId, string operatorToken, string IPCountryCode, LivestreamRequest request)
@@ -2815,7 +2857,7 @@ namespace Platform.API.Repository
             };
 
             return await _sportsbookRepository.PostClientTopFixtures(sportsbookRequest);
-        }        
+        }
 
         public async Task<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>> CopyClientTopFixtures(CopyClientTopFixtureRequest request)
         {
@@ -2846,7 +2888,7 @@ namespace Platform.API.Repository
             };
 
             return await _sportsbookRepository.CopyClientTopFixtures(sportsbookRequest);
-        }       
+        }
 
         public async Task<BaseResponseDTO<BackOfficeTopLeaguesResponseDTO>> GetClientTopLeagues(BackOfficeTopLeaguesRequestDTO request)
         {
@@ -3113,6 +3155,10 @@ namespace Platform.API.Repository
         }
 
         public async Task<BaseResponseDTO<StatusCode>> ProcessBetConfig(BackOfficeBetConfigPayloadDTO request)
+        {
+            return await _bettingRepository.ProcessBetConfig(request);
+        }
+        public async Task<BaseResponseDTO<StatusCode>> ProcessUserBetConfig(UserBetConfigRequestDTO request)
         {
             return await _bettingRepository.ProcessBetConfig(request);
         }
@@ -3755,7 +3801,7 @@ namespace Platform.API.Repository
                 OperatorToken = $"{clientResponse.Result.ClientId}|{operatorToken}",
                 ShowBalance = true,
                 ShowBetHistory = true,
-                GameTypes = new string[] { "SLOT_GAMES", "TABLE_GAMES", "INSTANT_WIN", "BINGO_GAMES", "SCRATCH_CARDS", "SHOOTING_GAMES", "CASUAL_GAMES", "LOTTERY" } 
+                GameTypes = new string[] { "SLOT_GAMES", "TABLE_GAMES", "INSTANT_WIN", "BINGO_GAMES", "SCRATCH_CARDS", "SHOOTING_GAMES", "CASUAL_GAMES", "LOTTERY" }
             };
 
             var result = await _casinoRepository.GetLobbyURL(demo);

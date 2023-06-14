@@ -158,7 +158,7 @@ namespace Platform.Betting.API.Repository
                     if (!userBetConfig.Result.IsSportsEnabled)
                     {
                         var excludedSports = new List<int>() { 21, 1 };
-                        if (request.Selections.Any(x => x.SportId != 21 && x.SportId != 1))
+                        if (request.Selections.Any(x => excludedSports.Contains(x.SportId)))
                         {
                             return new BaseResponseDTO<BetResponseDTO>()
                             {

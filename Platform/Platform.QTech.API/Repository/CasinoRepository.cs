@@ -156,7 +156,6 @@ namespace Platform.QTech.API.Repository
                 var walletResponse = await _operatorRepository.PlaceBet(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, new OperatorCasinoBetPlacementRequestDTO
                 {
                     BetId = $"{betId.ToString().ToUpper()}|{request.TxnId}",
-                    BetStatus = isComplete ? BetStatus.Lost.ToString() : BetStatus.Running.ToString(),
                     Stake = request.Amount,
                     CurrencyCode = authenticationResponse.Result.CurrencyCode
                 });
@@ -310,7 +309,6 @@ namespace Platform.QTech.API.Repository
                 var walletResponse = await _operatorRepository.PlaceBet(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, new OperatorCasinoBetPlacementRequestDTO
                 {
                     BetId = $"{round.BetId.ToString().ToUpper()}|{request.TxnId}",
-                    BetStatus = isComplete ? BetStatus.Lost.ToString() : BetStatus.Running.ToString(),
                     Stake = request.Amount,
                     CurrencyCode = authenticationResponse.Result.CurrencyCode
                 });

@@ -551,7 +551,7 @@ namespace Platform.Operator.API.Repository
                     if (testConfig != null && testConfig.ClientId == id)
                     {
 
-                        var operatorAudit = AddOrUpdateOperatorAudit(result, betId, 0, request.Stake, request.BetStatus, testConfig.IsFreeBet);
+                        var operatorAudit = AddOrUpdateOperatorAudit(result, betId, 0, request.Stake, BetStatus.Running.ToString(), testConfig.IsFreeBet);
 
                         result.Balance = operatorAudit.PostBalance;
                         _platformContext.Operator.Update(result);
@@ -572,7 +572,7 @@ namespace Platform.Operator.API.Repository
                     else
                     {
 
-                        var operatorAudit = AddOrUpdateOperatorAudit(result, betId, 0, request.Stake, request.BetStatus);
+                        var operatorAudit = AddOrUpdateOperatorAudit(result, betId, 0, request.Stake, BetStatus.Running.ToString());
 
                         result.Balance = operatorAudit.PostBalance;
                         _platformContext.Operator.Update(result);

@@ -105,70 +105,72 @@ namespace Platform.Betting.API.Repository
             }
 
             var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == Guid.Parse(request.ClientId) && x.CurrencyCode == request.CurrencyCode.ToString()).FirstOrDefault();
-            if (request.IsAgent)
-            {
-                var userBetConfig = await GetUserBetConfig(new UserBetConfigDetailsRequestDTO() { ClientId = request.ClientId, UserId = request.UserId });
+            #region Vertical Setting
+            //if (request.IsAgent)
+            //{
+            //    var userBetConfig = await GetUserBetConfig(new UserBetConfigDetailsRequestDTO() { ClientId = request.ClientId, UserId = request.UserId });
 
-                if (userBetConfig.StatusCode != StatusCode.Success)
-                {
-                    return new BaseResponseDTO<BetResponseDTO>()
-                    {
-                        StatusCode = userBetConfig.StatusCode,
-                        Message = userBetConfig.Message
-                    };
-                }
+            //    if (userBetConfig.StatusCode != StatusCode.Success)
+            //    {
+            //        return new BaseResponseDTO<BetResponseDTO>()
+            //        {
+            //            StatusCode = userBetConfig.StatusCode,
+            //            Message = userBetConfig.Message
+            //        };
+            //    }
 
-                var message = "You are currently not allowed to place a bet. Please contact your agent for more information";
-                if (request.Selections.Count() > 1)
-                {
-                    if(!userBetConfig.Result.IsParlayEnabled)
-                    {
-                        return new BaseResponseDTO<BetResponseDTO>()
-                        {
-                            StatusCode = StatusCode.Not_Authorized,
-                            Message = message
-                        };
-                    }
-                }
-                else
-                {
-                    if (!userBetConfig.Result.IsCricketEnabled)
-                    {
-                        if (request.Selections.Any(x => x.SportId == 21))
-                        {
-                            return new BaseResponseDTO<BetResponseDTO>()
-                            {
-                                StatusCode = StatusCode.Not_Authorized,
-                                Message = message
-                            };
-                        }
-                    }
-                    if (!userBetConfig.Result.IsSoccerEnabled)
-                    {
-                        if (request.Selections.Any(x => x.SportId == 1))
-                        {
-                            return new BaseResponseDTO<BetResponseDTO>()
-                            {
-                                StatusCode = StatusCode.Not_Authorized,
-                                Message = message
-                            };
-                        }
-                    }
+            //    var message = "You are currently not allowed to place a bet. Please contact your agent for more information";
+            //    if (request.Selections.Count() > 1)
+            //    {
+            //        if (!userBetConfig.Result.IsParlayEnabled)
+            //        {
+            //            return new BaseResponseDTO<BetResponseDTO>()
+            //            {
+            //                StatusCode = StatusCode.Not_Authorized,
+            //                Message = message
+            //            };
+            //        }
+            //    }
+            //    else
+            //    {
+            //        if (!userBetConfig.Result.IsCricketEnabled)
+            //        {
+            //            if (request.Selections.Any(x => x.SportId == 21))
+            //            {
+            //                return new BaseResponseDTO<BetResponseDTO>()
+            //                {
+            //                    StatusCode = StatusCode.Not_Authorized,
+            //                    Message = message
+            //                };
+            //            }
+            //        }
+            //        if (!userBetConfig.Result.IsSoccerEnabled)
+            //        {
+            //            if (request.Selections.Any(x => x.SportId == 1))
+            //            {
+            //                return new BaseResponseDTO<BetResponseDTO>()
+            //                {
+            //                    StatusCode = StatusCode.Not_Authorized,
+            //                    Message = message
+            //                };
+            //            }
+            //        }
 
-                    if (!userBetConfig.Result.IsSportsEnabled)
-                    {
-                        var excludedSports = new List<int>() { 21, 1 };
-                        if (request.Selections.Any(x => excludedSports.Contains(x.SportId)))
-                        {
-                            return new BaseResponseDTO<BetResponseDTO>()
-                            {
-                                StatusCode = StatusCode.Not_Authorized,
-                                Message = message
-                            };
-                        }
-                    }
-                }
-            }
+            //        if (!userBetConfig.Result.IsSportsEnabled)
+            //        {
+            //            var excludedSports = new List<int>() { 21, 1 };
+            //            if (request.Selections.Any(x => excludedSports.Contains(x.SportId)))
+            //            {
+            //                return new BaseResponseDTO<BetResponseDTO>()
+            //                {
+            //                    StatusCode = StatusCode.Not_Authorized,
+            //                    Message = message
+            //                };
+            //            }
+            //        }
+            //    }
+            //}
+            #endregion
             decimal minStake = 0;
             decimal maxStake = 0;
             decimal maxPerGame = 0;
@@ -744,7 +746,72 @@ namespace Platform.Betting.API.Repository
                 return await PlaceBetWithoutMTS(request);
 
             var betConfig = _bettingContext.BetConfig.Where(x => x.ClientId == Guid.Parse(request.ClientId) && x.CurrencyCode == request.CurrencyCode.ToString()).FirstOrDefault();
+            #region Vertical Setting
+            //if (request.IsAgent)
+            //{
+            //    var userBetConfig = await GetUserBetConfig(new UserBetConfigDetailsRequestDTO() { ClientId = request.ClientId, UserId = request.UserId });
 
+            //    if (userBetConfig.StatusCode != StatusCode.Success)
+            //    {
+            //        return new BaseResponseDTO<BetResponseDTO>()
+            //        {
+            //            StatusCode = userBetConfig.StatusCode,
+            //            Message = userBetConfig.Message
+            //        };
+            //    }
+
+            //    var message = "You are currently not allowed to place a bet. Please contact your agent for more information";
+            //    if (request.Selections.Count() > 1)
+            //    {
+            //        if (!userBetConfig.Result.IsParlayEnabled)
+            //        {
+            //            return new BaseResponseDTO<BetResponseDTO>()
+            //            {
+            //                StatusCode = StatusCode.Not_Authorized,
+            //                Message = message
+            //            };
+            //        }
+            //    }
+            //    else
+            //    {
+            //        if (!userBetConfig.Result.IsCricketEnabled)
+            //        {
+            //            if (request.Selections.Any(x => x.SportId == 21))
+            //            {
+            //                return new BaseResponseDTO<BetResponseDTO>()
+            //                {
+            //                    StatusCode = StatusCode.Not_Authorized,
+            //                    Message = message
+            //                };
+            //            }
+            //        }
+            //        if (!userBetConfig.Result.IsSoccerEnabled)
+            //        {
+            //            if (request.Selections.Any(x => x.SportId == 1))
+            //            {
+            //                return new BaseResponseDTO<BetResponseDTO>()
+            //                {
+            //                    StatusCode = StatusCode.Not_Authorized,
+            //                    Message = message
+            //                };
+            //            }
+            //        }
+
+            //        if (!userBetConfig.Result.IsSportsEnabled)
+            //        {
+            //            var excludedSports = new List<int>() { 21, 1 };
+            //            if (request.Selections.Any(x => excludedSports.Contains(x.SportId)))
+            //            {
+            //                return new BaseResponseDTO<BetResponseDTO>()
+            //                {
+            //                    StatusCode = StatusCode.Not_Authorized,
+            //                    Message = message
+            //                };
+            //            }
+            //        }
+            //    }
+            //}
+            #endregion
             decimal minStake = 0;
             decimal maxStake = 0;
             decimal maxPerGame = 0;

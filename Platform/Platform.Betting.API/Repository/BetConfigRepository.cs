@@ -150,59 +150,59 @@ namespace Platform.Betting.API.Repository
                 Message = StatusCode.Success.ToString()
             };
         }
-        //public async Task<BaseResponseDTO<StatusCode>> ProcessUserBetConfig(UserBetConfigRequestDTO payload)
-        //{
-        //    using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
-        //    {
-        //        try
-        //        {
-        //            var clientID = new Guid(payload.ClientId);
-        //            var dateCreated = DateTime.UtcNow;
-        //            var userBetConfig = _bettingContext.UserBetConfig.FirstOrDefault(x => x.ClientId == clientID && x.UserId == payload.UserId);
+        public async Task<BaseResponseDTO<StatusCode>> ProcessUserBetConfig(UserBetConfigRequestDTO payload)
+        {
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
+            {
+                try
+                {
+                    var clientID = new Guid(payload.ClientId);
+                    var dateCreated = DateTime.UtcNow;
+                    var userBetConfig = _bettingContext.UserBetConfig.FirstOrDefault(x => x.ClientId == clientID && x.UserId == payload.UserId);
 
-        //            if (userBetConfig != null)
-        //            {
-        //                _bettingContext.UserBetConfig.Update(new UserBetConfig()
-        //                {
-        //                    UserId = userBetConfig.UserId,
-        //                    ClientId = clientID,
-        //                    CurrencyCode = payload.CurrencyCode,
-        //                    VerticalConfig = payload.VerticalConfig,
-        //                    CreatedDate = userBetConfig.CreatedDate == DateTime.MinValue ? DateTime.UtcNow : userBetConfig.CreatedDate
-        //                });
-        //            }
-        //            else
-        //            {
-        //                _bettingContext.UserBetConfig.Add(new UserBetConfig()
-        //                {
-        //                    UserId = payload.UserId,
-        //                    ClientId = clientID,
-        //                    CurrencyCode = payload.CurrencyCode,
-        //                    VerticalConfig = payload.VerticalConfig,
-        //                    CreatedDate = payload.CreatedDate == DateTime.MinValue ? DateTime.UtcNow : payload.CreatedDate
-        //                });
-        //            }
+                    if (userBetConfig != null)
+                    {
+                        _bettingContext.UserBetConfig.Update(new UserBetConfig()
+                        {
+                            UserId = userBetConfig.UserId,
+                            ClientId = clientID,
+                            CurrencyCode = payload.CurrencyCode,
+                            VerticalConfig = payload.VerticalConfig,
+                            CreatedDate = userBetConfig.CreatedDate == DateTime.MinValue ? DateTime.UtcNow : userBetConfig.CreatedDate
+                        });
+                    }
+                    else
+                    {
+                        _bettingContext.UserBetConfig.Add(new UserBetConfig()
+                        {
+                            UserId = payload.UserId,
+                            ClientId = clientID,
+                            CurrencyCode = payload.CurrencyCode,
+                            VerticalConfig = payload.VerticalConfig,
+                            CreatedDate = payload.CreatedDate == DateTime.MinValue ? DateTime.UtcNow : payload.CreatedDate
+                        });
+                    }
 
-        //            await _bettingContext.SaveChangesAsync();
+                    await _bettingContext.SaveChangesAsync();
 
-        //            scope.Complete();
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            scope.Dispose();
-        //            return new BaseResponseDTO<StatusCode>
-        //            {
-        //                StatusCode = StatusCode.Error,
-        //                Message = ex.Message
-        //            };
-        //        }
-        //    }
-        //    return new BaseResponseDTO<StatusCode>
-        //    {
-        //        StatusCode = StatusCode.Success,
-        //        Message = StatusCode.Success.ToString()
-        //    };
-        //}
+                    scope.Complete();
+                }
+                catch (Exception ex)
+                {
+                    scope.Dispose();
+                    return new BaseResponseDTO<StatusCode>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = ex.Message
+                    };
+                }
+            }
+            return new BaseResponseDTO<StatusCode>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString()
+            };
+        }
 
         public async Task<BaseResponseDTO<StatusCode>> ProcessParlayBonus(ParlayBonusRequestDTO payload)
         {

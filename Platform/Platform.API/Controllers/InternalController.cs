@@ -261,19 +261,19 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
-        //[HttpPost("v1/config/user")]
-        //public async Task<IActionResult> ProcessBackOfficeUserBetConfig([FromBody] UserBetConfigRequestDTO payload)
-        //{
-        //    var result = await _platformRepository.ProcessUserBetConfig(payload);
+        [HttpPost("v1/config/user")]
+        public async Task<IActionResult> ProcessBackOfficeUserBetConfig([FromBody] UserBetConfigRequestDTO payload)
+        {
+            var result = await _platformRepository.ProcessUserBetConfig(payload);
 
-        //    switch (result.StatusCode)
-        //    {
-        //        case Shared.Enums.StatusCode.Success:
-        //            return Ok(result);
-        //        default:
-        //            return BadRequest(result);
-        //    }
-        //}
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
 
         [HttpPost("v1/bet/cancel")]
         public async Task<IActionResult> CancelBets([FromBody] BetModifyRequestDTO request)

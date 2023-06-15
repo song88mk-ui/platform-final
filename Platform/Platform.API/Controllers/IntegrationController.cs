@@ -148,6 +148,7 @@ namespace Platform.API.Controllers
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var connectionId = HttpContext.Request.Headers["x-connection-id"].FirstOrDefault();
             var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
 
             request.IPAddress = String.IsNullOrEmpty(request.IPAddress) ? ipAddress : request.IPAddress;
@@ -162,6 +163,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
+                                { "x-connection-id", connectionId },
                                 { "user-agent", userAgent },
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },

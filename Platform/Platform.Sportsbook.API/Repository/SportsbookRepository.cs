@@ -1485,10 +1485,6 @@ namespace Platform.Sportsbook.API.Repository
                     var fixtureIds = leagueResult.Select(s => Convert.ToInt64(s.FiId)).ToList();
                     var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-                    var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-                    var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
-                    var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
-
                     var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
                     var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
                     var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
@@ -1497,7 +1493,7 @@ namespace Platform.Sportsbook.API.Repository
                     var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
                     var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
-                    await Task.WhenAll(marketCount, markets, selections);
+                    await Task.WhenAll(markets, selections);
 
                     foreach (var item in leagueResult)
                     {
@@ -1550,7 +1546,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsLiveStream = IsLiveStream(item.LiId, item.GeAl, request.IpCountryCode),
                             FixtureStatusId = item.SpId > 1000 || item.FiTyId == (int)FixtureType.Outright ? item.FiStId : !IsOEEnable(request.ClientCode) || item.ClCo.Contains(request.ClientCode) ? item.FiStId : (int)FixtureStatus.Closed,
                             FixtureStatusName = item.SpId > 1000 || item.FiTyId == (int)FixtureType.Outright ? item.FiStNa : !IsOEEnable(request.ClientCode) || item.ClCo.Contains(request.ClientCode) ? item.FiStNa : FixtureStatus.Closed.ToString(),
-                            MarketCount = marketCount.Result.Where(c => c.FiId == item.FiId).Count(),
+                            MarketCount = GetMainMarketsCount(item.SpId, item.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), request.ClientCode, request.ClientId),
                             SMSCode = string.Empty,
                             StatisticsURL = GetStatisticsURL(request.ClientId, item.StUr, request.LanguageCode),
                             Score = item.SpId == 138 ? string.Empty : item.Sc,
@@ -1589,10 +1585,6 @@ namespace Platform.Sportsbook.API.Repository
                     var fixtureIds = fixtureResult.Select(s => Convert.ToInt64(s.FiId)).ToList();
                     var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-                    var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-                    var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
-                    var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
-
                     var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
                     var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
                     var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
@@ -1601,7 +1593,7 @@ namespace Platform.Sportsbook.API.Repository
                     var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
                     var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
-                    await Task.WhenAll(marketCount, markets, selections);
+                    await Task.WhenAll(markets, selections);
 
                     foreach (var item in fixtureResult)
                     {
@@ -1648,7 +1640,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsLiveStream = IsLiveStream(item.LiId, item.GeAl, request.IpCountryCode),
                             FixtureStatusId = item.SpId > 1000 || item.FiTyId == (int)FixtureType.Outright ? item.FiStId : !IsOEEnable(request.ClientCode) || item.ClCo.Contains(request.ClientCode) ? item.FiStId : (int)FixtureStatus.Closed,
                             FixtureStatusName = item.SpId > 1000 || item.FiTyId == (int)FixtureType.Outright ? item.FiStNa : !IsOEEnable(request.ClientCode) || item.ClCo.Contains(request.ClientCode) ? item.FiStNa : FixtureStatus.Closed.ToString(),
-                            MarketCount = marketCount.Result.Where(c => c.FiId == item.FiId).Count(),
+                            MarketCount = GetMainMarketsCount(item.SpId, item.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), request.ClientCode, request.ClientId),
                             SMSCode = string.Empty,
                             StatisticsURL = GetStatisticsURL(request.ClientId, item.StUr, request.LanguageCode),
                             Score = item.SpId == 138 ? string.Empty : item.Sc,
@@ -2090,10 +2082,6 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
-            var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
-
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
@@ -2102,7 +2090,7 @@ namespace Platform.Sportsbook.API.Repository
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
-            await Task.WhenAll(marketCount, markets, selections);
+            await Task.WhenAll(markets, selections);
 
             foreach (var item in initialResult)
             {
@@ -2132,7 +2120,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsLiveStream = item.IsLiveStream,
                     FixtureStatusId = item.FixtureStatusId,
                     FixtureStatusName = item.FixtureStatusName,
-                    MarketCount = marketCount.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).Count(),
+                    MarketCount = GetMainMarketsCount(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.ClientCode, request.ClientId),
                     SMSCode = string.Empty,
                     StatisticsURL = item.StatisticsURL,
                     Score = item.SportId == 138 ? string.Empty : item.Score,
@@ -2405,10 +2393,6 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
-            var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
-
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
@@ -2417,7 +2401,7 @@ namespace Platform.Sportsbook.API.Repository
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
-            await Task.WhenAll(marketCount, markets, selections);
+            await Task.WhenAll(markets, selections);
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
@@ -2443,7 +2427,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsLiveStream = item.IsLiveStream,
                     FixtureStatusId = item.FixtureStatusId,
                     FixtureStatusName = item.FixtureStatusName,
-                    MarketCount = marketCount.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).Count(),
+                    MarketCount = GetMainMarketsCount(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.ClientCode, request.ClientId),
                     SMSCode = string.Empty,
                     StatisticsURL = item.StatisticsURL,
                     Score = item.SportId == 138 ? string.Empty : item.Score,
@@ -2560,10 +2544,6 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
-            var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
-
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
@@ -2572,7 +2552,7 @@ namespace Platform.Sportsbook.API.Repository
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
-            await Task.WhenAll(marketCount, markets, selections);
+            await Task.WhenAll(markets, selections);
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
@@ -2598,7 +2578,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsLiveStream = item.IsLiveStream,
                     FixtureStatusId = item.FixtureStatusId,
                     FixtureStatusName = item.FixtureStatusName,
-                    MarketCount = marketCount.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).Count(),
+                    MarketCount = GetMainMarketsCount(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.ClientCode, request.ClientId),
                     SMSCode = string.Empty,
                     StatisticsURL = item.StatisticsURL,
                     Score = item.SportId == 138 ? string.Empty : item.Score,
@@ -2771,10 +2751,6 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
-            var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
-
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
@@ -2783,7 +2759,7 @@ namespace Platform.Sportsbook.API.Repository
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
-            await Task.WhenAll(marketCount, markets, selections);
+            await Task.WhenAll(markets, selections);
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
@@ -2809,7 +2785,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsLiveStream = item.IsLiveStream,
                     FixtureStatusId = item.FixtureStatusId,
                     FixtureStatusName = item.FixtureStatusName,
-                    MarketCount = marketCount.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).Count(),
+                    MarketCount = GetMainMarketsCount(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.ClientCode, request.ClientId),
                     SMSCode = string.Empty,
                     StatisticsURL = item.StatisticsURL,
                     Score = item.SportId == 138 ? string.Empty : item.Score,
@@ -2980,10 +2956,6 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
-            var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
-
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
@@ -2992,7 +2964,7 @@ namespace Platform.Sportsbook.API.Repository
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
-            await Task.WhenAll(marketCount, markets, selections);
+            await Task.WhenAll(markets, selections);
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
@@ -3018,7 +2990,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsLiveStream = item.IsLiveStream,
                     FixtureStatusId = item.FixtureStatusId,
                     FixtureStatusName = item.FixtureStatusName,
-                    MarketCount = marketCount.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).Count(),
+                    MarketCount = GetMainMarketsCount(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.ClientCode, request.ClientId),
                     SMSCode = string.Empty,
                     StatisticsURL = item.StatisticsURL,
                     Score = item.SportId == 138 ? string.Empty : item.Score,
@@ -3191,10 +3163,6 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
-            var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
-
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
@@ -3203,7 +3171,7 @@ namespace Platform.Sportsbook.API.Repository
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
-            await Task.WhenAll(marketCount, markets, selections);
+            await Task.WhenAll(markets, selections);
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
@@ -3229,7 +3197,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsLiveStream = item.IsLiveStream,
                     FixtureStatusId = item.FixtureStatusId,
                     FixtureStatusName = item.FixtureStatusName,
-                    MarketCount = marketCount.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).Count(),
+                    MarketCount = GetMainMarketsCount(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.ClientCode, request.ClientId),
                     SMSCode = string.Empty,
                     StatisticsURL = item.StatisticsURL,
                     Score = item.SportId == 138 ? string.Empty : item.Score,
@@ -3401,10 +3369,6 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
-            var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
-
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
@@ -3413,7 +3377,7 @@ namespace Platform.Sportsbook.API.Repository
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
-            await Task.WhenAll(marketCount, markets, selections);
+            await Task.WhenAll(markets, selections);
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
@@ -3439,7 +3403,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsLiveStream = item.IsLiveStream,
                     FixtureStatusId = item.FixtureStatusId,
                     FixtureStatusName = item.FixtureStatusName,
-                    MarketCount = marketCount.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).Count(),
+                    MarketCount = GetMainMarketsCount(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.ClientCode, request.ClientId),
                     SMSCode = string.Empty,
                     StatisticsURL = item.StatisticsURL,
                     Score = item.SportId == 138 ? string.Empty : item.Score,
@@ -3563,10 +3527,6 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
-            var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
-
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
@@ -3575,7 +3535,7 @@ namespace Platform.Sportsbook.API.Repository
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
-            await Task.WhenAll(marketCount, markets, selections);
+            await Task.WhenAll(markets, selections);
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
@@ -3601,7 +3561,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsLiveStream = item.IsLiveStream,
                     FixtureStatusId = item.FixtureStatusId,
                     FixtureStatusName = item.FixtureStatusName,
-                    MarketCount = marketCount.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).Count(),
+                    MarketCount = GetMainMarketsCount(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.ClientCode, request.ClientId),
                     SMSCode = string.Empty,
                     StatisticsURL = item.StatisticsURL,
                     Score = item.SportId == 138 ? string.Empty : item.Score,
@@ -3729,10 +3689,6 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
-            var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
-
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
@@ -3741,7 +3697,7 @@ namespace Platform.Sportsbook.API.Repository
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
-            await Task.WhenAll(marketCount, markets, selections);
+            await Task.WhenAll(markets, selections);
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
@@ -3767,7 +3723,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsLiveStream = item.IsLiveStream,
                     FixtureStatusId = item.FixtureStatusId,
                     FixtureStatusName = item.FixtureStatusName,
-                    MarketCount = marketCount.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).Count(),
+                    MarketCount = GetMainMarketsCount(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.ClientCode, request.ClientId),
                     SMSCode = string.Empty,
                     StatisticsURL = item.StatisticsURL,
                     Score = item.SportId == 138 ? string.Empty : item.Score,
@@ -4188,10 +4144,6 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
-            var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
-
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
@@ -4200,7 +4152,7 @@ namespace Platform.Sportsbook.API.Repository
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
-            await Task.WhenAll(marketCount, markets, selections);
+            await Task.WhenAll(markets, selections);
 
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
             var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
@@ -4226,7 +4178,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsLiveStream = IsLiveStream(s.LiId, s.GeAl, request.IpCountryCode),
                 FixtureStatusId = s.SpId > 1000 || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId > 1000 || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
-                MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
+                MarketCount = GetMainMarketsCount(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.ClientCode, request.ClientId),
                 SMSCode = string.Empty,
                 StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
                 Score = s.SpId == 138 ? string.Empty : s.Sc, /*don't display score for kabbadi sport*/
@@ -4298,10 +4250,6 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
-            var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
-
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
@@ -4310,7 +4258,7 @@ namespace Platform.Sportsbook.API.Repository
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
-            await Task.WhenAll(marketCount, markets, selections);
+            await Task.WhenAll(markets, selections);
 
             var result = fixtures.Select(s => new FixtureDTO
             {
@@ -4332,7 +4280,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsLiveStream = IsLiveStream(s.LiId, s.GeAl, request.IpCountryCode),
                 FixtureStatusId = s.SpId > 1000 || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId > 1000 || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
-                MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
+                MarketCount = GetMainMarketsCount(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.ClientCode, request.ClientId),
                 SMSCode = string.Empty,
                 StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
                 Score = s.SpId == 138 ? string.Empty : s.Sc,
@@ -4411,10 +4359,6 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
-            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
-            var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
-
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
@@ -4423,7 +4367,7 @@ namespace Platform.Sportsbook.API.Repository
             var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
-            await Task.WhenAll(marketCount, markets, selections);
+            await Task.WhenAll(markets, selections);
 
             var result = fixtures.Select(s => new FixtureDTO
             {
@@ -4445,7 +4389,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsLiveStream = IsLiveStream(s.LiId, s.GeAl, request.IpCountryCode),
                 FixtureStatusId = s.SpId > 1000 || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId > 1000 || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
-                MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
+                MarketCount = GetMainMarketsCount(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.ClientCode, request.ClientId),
                 SMSCode = string.Empty,
                 StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
                 Score = s.SpId == 138 ? string.Empty : s.Sc,
@@ -5418,6 +5362,16 @@ namespace Platform.Sportsbook.API.Repository
             }
 
         }
+        private int GetMainMarketsCount(int sportId, int fixtureTypeId, List<MarketFilter> markets,  string clientCode, Guid clientId)
+        {
+            var marketTemplates = GetMainMarketTemplates(sportId, clientId);
+
+            if (sportId > 1000 || fixtureTypeId == (int)FixtureType.Outright)
+                return markets.Where(c => marketTemplates.Contains(c.MaTeId)).Count();
+            else
+                return markets.Where(c => marketTemplates.Contains(c.MaTeId) && c.ClCo != null && c.ClCo.Contains(clientCode)).Count();
+        }
+
         private List<BoostedMarketDTO> GetBoostedMarkets(int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, bool isBoosted, int fixtureStatusId, List<ClientMarketTemplateGroup> clientMarketTemplateGroups)
         {
             if (IsOEEnable(clientCode))

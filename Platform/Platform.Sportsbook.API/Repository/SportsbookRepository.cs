@@ -4371,25 +4371,13 @@ namespace Platform.Sportsbook.API.Repository
                 }
                 else
                 {
-                    if (league.LeNaTr.Where(c => c.LaCo == request.LanguageCode.ToString()).Select(s => s.LeNa).FirstOrDefault().ToLower().StartsWith(request.SearchText.ToLower()))
+                    var leagueNameTranslation = league.LeNaTr.FirstOrDefault(c => c.LaCo == request.LanguageCode.ToString())?.LeNa.ToLower();
+
+                    if (leagueNameTranslation != null)
                     {
-                        leagueListStartsWith.Add(new SearchResponse
+                        if (leagueNameTranslation.StartsWith(request.SearchText.ToLower()))
                         {
-                            SportId = league.SpId,
-                            SportName = GetSportName(league.SpNa, league.SpNaTr, request.LanguageCode),
-                            SegmentId = league.SegId,
-                            SegmentName = GetSegmentName(league.SegNa, league.SegNaTr, request.LanguageCode),
-                            LeagueId = league.LeId,
-                            LeagueName = GetLeagueName(league.LeNa, league.LeNaTr, request.LanguageCode),
-                            FixtureId = string.Empty,
-                            FixtureName = string.Empty
-                        });
-                    }
-                    else
-                    {
-                        if (league.LeNaTr.Where(c => c.LaCo == request.LanguageCode.ToString()).Select(s => s.LeNa).FirstOrDefault().ToLower().Contains(request.SearchText.ToLower()))
-                        {
-                            leagueListNotStartsWith.Add(new SearchResponse
+                            leagueListStartsWith.Add(new SearchResponse
                             {
                                 SportId = league.SpId,
                                 SportName = GetSportName(league.SpNa, league.SpNaTr, request.LanguageCode),
@@ -4401,6 +4389,59 @@ namespace Platform.Sportsbook.API.Repository
                                 FixtureName = string.Empty
                             });
                         }
+                        else
+                        {
+                            if (leagueNameTranslation.Contains(request.SearchText.ToLower()))
+                            {
+                                leagueListNotStartsWith.Add(new SearchResponse
+                                {
+                                    SportId = league.SpId,
+                                    SportName = GetSportName(league.SpNa, league.SpNaTr, request.LanguageCode),
+                                    SegmentId = league.SegId,
+                                    SegmentName = GetSegmentName(league.SegNa, league.SegNaTr, request.LanguageCode),
+                                    LeagueId = league.LeId,
+                                    LeagueName = GetLeagueName(league.LeNa, league.LeNaTr, request.LanguageCode),
+                                    FixtureId = string.Empty,
+                                    FixtureName = string.Empty
+                                });
+                            }
+                        }
+
+                        #region Old Code
+
+                        //if (league.LeNaTr.Where(c => c.LaCo == request.LanguageCode.ToString()).Select(s => s.LeNa).FirstOrDefault().ToLower().StartsWith(request.SearchText.ToLower()))
+                        //{
+                        //    leagueListStartsWith.Add(new SearchResponse
+                        //    {
+                        //        SportId = league.SpId,
+                        //        SportName = GetSportName(league.SpNa, league.SpNaTr, request.LanguageCode),
+                        //        SegmentId = league.SegId,
+                        //        SegmentName = GetSegmentName(league.SegNa, league.SegNaTr, request.LanguageCode),
+                        //        LeagueId = league.LeId,
+                        //        LeagueName = GetLeagueName(league.LeNa, league.LeNaTr, request.LanguageCode),
+                        //        FixtureId = string.Empty,
+                        //        FixtureName = string.Empty
+                        //    });
+                        //}
+                        //else
+                        //{
+                        //    if (league.LeNaTr.Where(c => c.LaCo == request.LanguageCode.ToString()).Select(s => s.LeNa).FirstOrDefault().ToLower().Contains(request.SearchText.ToLower()))
+                        //    {
+                        //        leagueListNotStartsWith.Add(new SearchResponse
+                        //        {
+                        //            SportId = league.SpId,
+                        //            SportName = GetSportName(league.SpNa, league.SpNaTr, request.LanguageCode),
+                        //            SegmentId = league.SegId,
+                        //            SegmentName = GetSegmentName(league.SegNa, league.SegNaTr, request.LanguageCode),
+                        //            LeagueId = league.LeId,
+                        //            LeagueName = GetLeagueName(league.LeNa, league.LeNaTr, request.LanguageCode),
+                        //            FixtureId = string.Empty,
+                        //            FixtureName = string.Empty
+                        //        });
+                        //    }
+                        //}
+
+                        #endregion
                     }
                 }
 

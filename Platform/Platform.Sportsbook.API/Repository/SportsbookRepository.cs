@@ -4810,7 +4810,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsLiveStream = IsLiveStream(fixture.LiId, fixture.GeAl, request.IpCountryCode),
                     FixtureStatusId = fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStId : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStId : (int)FixtureStatus.Closed,
                     FixtureStatusName = fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStNa : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
-                    MarketCount = markets.Result.Where(c => c.FiId == fixture.FiId).Count(),
+                    MarketCount = finalMarkets.Count(),
                     SMSCode = string.Empty,
                     StatisticsURL = GetStatisticsURL(request.ClientId, fixture.StUr, request.LanguageCode),
                     Score = fixture.SpId == 138 ? string.Empty : fixture.Sc, /*empty score for kabaddi sport*/
@@ -4995,7 +4995,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsLiveStream = IsLiveStream(fixture.LiId, fixture.GeAl, request.IpCountryCode),
                     FixtureStatusId = fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStId : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStId : (int)FixtureStatus.Closed,
                     FixtureStatusName = fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStNa : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
-                    MarketCount = markets.Result.Where(c => c.FiId == fixture.FiId).Count(),
+                    MarketCount = finalMarkets.Count(),
                     SMSCode = string.Empty,
                     StatisticsURL = GetStatisticsURL(request.ClientId, fixture.StUr, request.LanguageCode),
                     Score = fixture.SpId == 138 ? string.Empty : fixture.Sc,
@@ -5527,6 +5527,21 @@ namespace Platform.Sportsbook.API.Repository
             }
 
         }
+
+        private int GetBoostedMarketsCount(List<MarketFilter> markets, List<SelectionFilter> selections, string clientCode)
+        {
+            var filteredMarkets = markets.Where(c => c.IsBo == true).ToList();
+            var count = 0;
+
+            foreach (var market in filteredMarkets)
+            {
+                if (selections.Any(c => c.MaId == market.MaId && !string.IsNullOrEmpty(c.ClBoOd) && c.ClBoOd.Contains(clientCode)))
+                    count++;
+            }
+
+            return count;
+        }
+
         private List<MarketDTO> GetMarkets(List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, int sportId, int fixtureTypeId, int fixtureStatusId, List<ClientMarketTemplateGroup> clientMarketTemplateGroups, List<BetBuilderMarketTemplates> betBuilderMarketTemplates)
         {
             if (IsOEEnable(clientCode))
@@ -6398,10 +6413,6 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active };
 
-            var marketCountFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && c.ClBo.Contains(request.ClientCode));
-            var marketCountProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaId);
-            var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
-
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && c.ClBo.Contains(request.ClientCode));
             var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.IsBo).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
@@ -6433,7 +6444,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsLiveStream = IsLiveStream(s.LiId, s.GeAl, request.IPCountryCode),
                 FixtureStatusId = s.SpId > 1000 || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId > 1000 || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
-                MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
+                MarketCount = GetBoostedMarketsCount(markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.ClientCode),
                 SMSCode = string.Empty,
                 StatisticsURL = GetStatisticsURL(request.ClientId, s.StUr, request.LanguageCode),
                 Score = s.Sc,

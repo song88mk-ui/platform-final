@@ -1165,6 +1165,8 @@ namespace Platform.Settlement.Service.Repository
 
         public void ProcessBetCancellation(OnUOFBetCancellation message, IMessageBroker messageBroker, string correlationId)
         {
+            Stopwatch? duration = _betCancellationDurationHistogram.Enabled ? Stopwatch.StartNew() : null;
+
             var betSelections = GetBetSelectionsByMarketId(message.MarketId);
 
             var selectionIds = betSelections.Select(s => s.SelectionId).Distinct().ToList();
@@ -1182,6 +1184,9 @@ namespace Platform.Settlement.Service.Repository
 
                 ProcessBetSettlementForCancellation(cancellation, messageBroker, correlationId);
             }
+            _betCancellationCounter.Add(1);
+            if (duration != null)
+              _betCancellationDurationHistogram.Record(duration.Elapsed.TotalMilliseconds);
         }
 
         public void ProcessBackOfficeBetCancellation(OnBOBetCancellaton message, IMessageBroker messageBroker, string correlationId)

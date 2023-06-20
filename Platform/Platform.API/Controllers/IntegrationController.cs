@@ -250,24 +250,24 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
-        [HttpGet("v1/bet/config/user")]
-        public async Task<IActionResult> GetUserBetConfig([FromQuery] UserBetConfigDetailsRequest request)
-        {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+        //[HttpGet("v1/bet/config/user")]
+        //public async Task<IActionResult> GetUserBetConfig([FromQuery] UserBetConfigDetailsRequest request)
+        //{
+        //    var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        //    var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+        //    var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+        //    var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
-            var result = await _platformRepository.GetUserBetConfig(apiKey, clientId, request, operatorToken);
+        //    var result = await _platformRepository.GetUserBetConfig(apiKey, clientId, request, operatorToken);
 
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
+        //    switch (result.StatusCode)
+        //    {
+        //        case Shared.Enums.StatusCode.Success:
+        //            return Ok(result);
+        //        default:
+        //            return BadRequest(result);
+        //    }
+        //}
 
         [HttpGet("v1/bet/history")]
         public async Task<IActionResult> GetBetHistory([FromQuery] BetHistoryRequest request)

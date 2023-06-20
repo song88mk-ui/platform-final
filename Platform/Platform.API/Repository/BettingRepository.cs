@@ -313,7 +313,7 @@ namespace Platform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<StatusCode>> ProcessBetConfig(UserBetConfigRequestDTO request)
+        public async Task<BaseResponseDTO<StatusCode>> ProcessUserBetConfig(UserBetConfigRequestDTO request)
         {
             try
             {

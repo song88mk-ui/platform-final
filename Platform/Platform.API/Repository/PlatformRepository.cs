@@ -3160,7 +3160,7 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<StatusCode>> ProcessUserBetConfig(UserBetConfigRequestDTO request)
         {
-            return await _bettingRepository.ProcessBetConfig(request);
+            return await _bettingRepository.ProcessUserBetConfig(request);
         }
 
         public async Task<BaseResponseDTO<BetModifyResponseDTO>> CancelBets(BetModifyRequestDTO request)

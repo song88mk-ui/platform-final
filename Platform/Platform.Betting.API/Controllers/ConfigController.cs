@@ -31,19 +31,19 @@ namespace Platform.Betting.API.Controllers
             }
         }
 
-        [HttpPost("v1/config/user")]
-        public async Task<IActionResult> ProcessBackOfficeUserBetConfig([FromBody] UserBetConfigRequestDTO payload)
-        {
-            var result = await _clientbetconfigRepository.ProcessUserBetConfig(payload);
+        //[HttpPost("v1/config/user")]
+        //public async Task<IActionResult> ProcessBackOfficeUserBetConfig([FromBody] UserBetConfigRequestDTO payload)
+        //{
+        //    var result = await _clientbetconfigRepository.ProcessUserBetConfig(payload);
 
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
+        //    switch (result.StatusCode)
+        //    {
+        //        case Shared.Enums.StatusCode.Success:
+        //            return Ok(result);
+        //        default:
+        //            return BadRequest(result);
+        //    }
+        //}
 
         [HttpPost("v1/config/parlaybonus")]
         public async Task<IActionResult> ProcessBackOfficeClientParlayBonus([FromBody] ParlayBonusRequestDTO payload)

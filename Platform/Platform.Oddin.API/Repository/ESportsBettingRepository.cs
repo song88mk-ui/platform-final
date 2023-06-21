@@ -1,24 +1,19 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Platform.Oddin.API.Enums;
 using Platform.Oddin.API.Models;
-using Platform.Shared.Data.CasinoBetting.Entities;
-using Platform.Shared.Data.CasinoBetting;
+using Platform.Shared.Data.ESportBetting;
+using Platform.Shared.Data.ESportBetting.SQLEntities;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
-using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
-using System.Text.Json;
 using IsolationLevel = System.Transactions.IsolationLevel;
 using TransactionType = Platform.Oddin.API.Enums.TransactionType;
-using Platform.Shared.Data.ESportBetting;
-using Platform.Shared.Data.ESportBetting.SQLEntities;
 
 namespace Platform.Oddin.API.Repository
 {
@@ -77,15 +72,23 @@ namespace Platform.Oddin.API.Repository
 
                 var authenticationResponse = await _operatorRepository.Authenticate(clientId, operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
 
+                if (authenticationResponse.StatusCode != StatusCode.Success)
+                {
+                    return new UserDetailsResponse()
+                    {
+                        ErrorCode = (int)SessionCode.InvalidToken
+                    };
+                }
+
                 return new UserDetailsResponse()
                 {
-                    UserId = authenticationResponse.Result.UserId,
+                    UserId = $"{clientResponse.Result.ClientCode}-{authenticationResponse.Result.UserId}",
                     Currency = authenticationResponse.Result.CurrencyCode,
                     Language = authenticationResponse.Result.LanguageCode,
                     ErrorCode = (int)SessionCode.OK
                 };
             }
-            catch (Exception ex)
+            catch
             {
                 return new UserDetailsResponse()
                 {
@@ -99,10 +102,10 @@ namespace Platform.Oddin.API.Repository
             try
             {
                 if (string.IsNullOrEmpty(request.Token))
-                    return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
+                    return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
 
                 if (request.Token.Contains('|') == false)
-                    return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
+                    return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
 
                 var split = request.Token.Split('|');
                 var clientId = split.First();
@@ -111,12 +114,12 @@ namespace Platform.Oddin.API.Repository
                 var clientResponse = await GetClient(clientId);
 
                 if (clientResponse.StatusCode != StatusCode.Success)
-                    return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
+                    return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
 
                 var authenticationResponse = await _operatorRepository.Authenticate(clientId, request.Token, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
 
                 if (authenticationResponse.StatusCode != StatusCode.Success)
-                    return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
+                    return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
 
                 // Wallet Increase
                 var dateNow = DateTime.UtcNow;
@@ -232,11 +235,11 @@ namespace Platform.Oddin.API.Repository
                     switch (walletResponse.StatusCode)
                     {
                         case StatusCode.Insufficient_Funds:
-                            return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INSUFFICIENT_FUNDS };
+                            return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InsufficientFunds };
                         case StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers:
-                            return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
+                            return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
                         default:
-                            return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.OTHER_ERROR };
+                            return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.OtherError };
                     }
                 }
             }
@@ -386,11 +389,11 @@ namespace Platform.Oddin.API.Repository
                         switch (walletResponse.StatusCode)
                         {
                             case StatusCode.Insufficient_Funds:
-                                return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INSUFFICIENT_FUNDS };
+                                return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InsufficientFunds };
                             case StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers:
-                                return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
+                                return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
                             default:
-                                return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.OTHER_ERROR };
+                                return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.OtherError };
                         }
                     }
                 }

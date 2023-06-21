@@ -15,6 +15,7 @@ namespace Platform.Oddin.API.Controllers
     public class IntegrationController : ControllerBase
     {
         private readonly IESportsBettingRepository _eSportsBettingRepository;
+
         public IntegrationController(IESportsBettingRepository eSportsBettingRepository)
         {
             _eSportsBettingRepository = eSportsBettingRepository;

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Platform.Oddin.API.Repository;
 
 namespace Platform.Oddin.API
 {
@@ -41,6 +42,10 @@ namespace Platform.Oddin.API
             });
 
             services.AddControllers();
+
+            services.AddHttpClient<IOperatorRepository, OperatorRepository>();
+            services.AddHttpClient<IProviderRepository, ProviderRepository>();
+            services.AddScoped<IESportsBettingRepository, ESportsBettingRepository>();
 
             services.AddSwaggerGen(c =>
             {

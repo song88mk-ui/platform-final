@@ -12,7 +12,7 @@ namespace Platform.Oddin.API.Controllers
     {
         [HttpPost("v1/userdetails")]
         public async Task<IActionResult> UserDetails([FromBody] UserDetailsRequest request)
-        {
+        {            
             var result = new UserDetailsResponse
             {
                 UserId = "2712cc4b-f158-404b-9aa9-10d01522b669",

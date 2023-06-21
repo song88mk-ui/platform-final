@@ -665,7 +665,172 @@ namespace Platform.Operator.API.Repository
                 }
             }
         }
+        public async Task<BetPlacementResponseDTO> BetPlacementESports(OperatorESportsBetPlacementRequestDTO request, string clientId, string operatorToken)
+        {
+            Guid.TryParse(clientId, out Guid id);
 
+            var res = _platformContext.NegativeTest.Find(id);
+
+            if (res != null && res.ClientId == id)
+            {
+                return new BetPlacementResponseDTO
+                {
+                    StatusId = 1002
+                };
+            }
+
+            var isGuid = Guid.TryParse(operatorToken, out Guid guid);
+
+            if (!isGuid)
+            {
+                return new BetPlacementResponseDTO
+                {
+                    StatusId = 1002
+                };
+            }
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                try
+                {
+                    var result = _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefault();
+
+                    if (result == null)
+                    {
+                        return new BetPlacementResponseDTO
+                        {
+                            StatusId = 1002
+                        };
+                    }
+
+                    if (result.Balance < request.Stake)
+                    {
+                        return new BetPlacementResponseDTO
+                        {
+                            StatusId = 1001
+                        };
+                    }
+
+                    var testConfig = _platformContext.TestConfig.Find(id);
+
+                    var betId = request.BetId.Split('|').FirstOrDefault();
+
+                    if (testConfig != null && testConfig.ClientId == id)
+                    {
+
+                        var operatorAudit = AddOrUpdateOperatorAudit(result, betId, 0, request.Stake, BetStatus.Running.ToString(), testConfig.IsFreeBet);
+
+                        result.Balance = operatorAudit.PostBalance;
+                        _platformContext.Operator.Update(result);
+
+                        _platformContext.SaveChanges();
+
+                        scope.Complete();
+
+                        return new BetPlacementResponseDTO
+                        {
+                            StatusId = 1000,
+                            Balance = result.Balance,
+                            IsFreeBet = testConfig.IsFreeBet,
+                            StakeReal = (request.Stake * (testConfig.StakeRealPercent / 100)),
+                            StakeBonus = (request.Stake * (testConfig.StakeBonusPercent / 100))
+                        };
+                    }
+                    else
+                    {
+
+                        var operatorAudit = AddOrUpdateOperatorAudit(result, betId, 0, request.Stake, BetStatus.Running.ToString());
+
+                        result.Balance = operatorAudit.PostBalance;
+                        _platformContext.Operator.Update(result);
+
+                        _platformContext.SaveChanges();
+
+                        scope.Complete();
+
+                        return new BetPlacementResponseDTO
+                        {
+                            StatusId = 1000,
+                            Balance = result.Balance,
+                            IsFreeBet = false,
+                            StakeReal = request.Stake,
+                            StakeBonus = 0m
+                        };
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return new BetPlacementResponseDTO
+                    {
+                        StatusId = 1003
+                    };
+                }
+            }
+
+        }
+        public async Task<BetSettlementResponseDTO> BetSettlementESports(OperatorESportsBetSettlementRequestDTO request, string clientId)
+        {
+            Guid.TryParse(clientId, out Guid id);
+
+            var res = _platformContext.NegativeTest.Find(id);
+
+            if (res != null && res.ClientId == id)
+            {
+                return new BetSettlementResponseDTO
+                {
+                    StatusId = 1003
+                };
+            }
+
+            var isGuid = Guid.TryParse(request.UserId, out Guid guid);
+
+            if (!isGuid)
+            {
+                return new BetSettlementResponseDTO
+                {
+                    StatusId = 1003
+                };
+            }
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                try
+                {
+                    var result = _platformContext.Operator.Where(c => c.UserId == guid).FirstOrDefault();
+
+                    if (result == null)
+                    {
+                        return new BetSettlementResponseDTO
+                        {
+                            StatusId = 1003
+                        };
+                    }
+
+                    var betId = request.BetId.Split('|').FirstOrDefault();
+
+                    var operatorAudit = AddOrUpdateOperatorAudit(result, betId, request.Payout, request.Stake, request.BetStatus);
+
+                    result.Balance = operatorAudit.PostBalance;
+                    _platformContext.Operator.Update(result);
+
+                    _platformContext.SaveChanges();
+                    scope.Complete();
+
+                    return new BetSettlementResponseDTO
+                    {
+                        StatusId = 1000,
+                        Balance = result.Balance
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new BetSettlementResponseDTO
+                    {
+                        StatusId = 1003
+                    };
+                }
+            }
+        }
         #region Private Method
         private OperatorAudit AddOrUpdateOperatorAudit(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal payout, decimal stake, string betStatus, bool isFreebet = false)
         {

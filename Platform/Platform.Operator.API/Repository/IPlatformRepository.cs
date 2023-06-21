@@ -26,6 +26,8 @@ namespace Platform.Operator.API.Repository
         List<TestConfig> GetTestConfig();
         Task<BetPlacementResponseDTO> BetPlacementCasino(OperatorCasinoBetPlacementRequestDTO request, string clientId, string operatorToken);
         Task<BetSettlementResponseDTO> BetSettlementCasino(OperatorCasinoBetSettlementRequestDTO request, string clientId);
+        Task<BetPlacementResponseDTO> BetPlacementESports(OperatorESportsBetPlacementRequestDTO request, string clientId, string operatorToken);
+        Task<BetSettlementResponseDTO> BetSettlementESports(OperatorESportsBetPlacementRequestDTO request, string clientId);
 
     }
 }

@@ -17,6 +17,6 @@
         public string DebitTransactionId { get; set; }
         public string TicketId { get; set; }
         public int TransactionType { get; set; }
-        public Ticket Ticket { get; set; }
+        public Ticket Ticket { get; set; } = new Ticket();
     }
 }

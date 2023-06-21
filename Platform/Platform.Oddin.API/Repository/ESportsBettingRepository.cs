@@ -5,6 +5,7 @@ using Platform.Shared.Data.ESportBetting;
 using Platform.Shared.Data.ESportBetting.SQLEntities;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
+using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
@@ -21,16 +22,18 @@ namespace Platform.Oddin.API.Repository
     {
         private readonly IConfiguration _configuration;
         private readonly IMemCache _memCache;
+        private readonly IRabbitMQRepository _rabbitMQRepository;
 
         private readonly IOperatorRepository _operatorRepository;
         private readonly ESportBettingContext _eSportsBettingContext;
         private readonly PlatformContext _platformContext;
 
-        public ESportsBettingRepository(IConfiguration configuration, IOperatorRepository operatorRepository, ESportBettingContext eSportsBettingContext, PlatformContext platformContext, IMemCache memCache)
+        public ESportsBettingRepository(IConfiguration configuration, IOperatorRepository operatorRepository, IRabbitMQRepository rabbitMqRepository, ESportBettingContext eSportsBettingContext, PlatformContext platformContext, IMemCache memCache)
         {
             _configuration = configuration;
             _memCache = memCache;
             _operatorRepository = operatorRepository;
+            _rabbitMQRepository = rabbitMqRepository;
 
             _eSportsBettingContext = eSportsBettingContext;
             _platformContext = platformContext;
@@ -207,21 +210,21 @@ namespace Platform.Oddin.API.Repository
                         //    Payload = JsonSerializer.Serialize(transactionEntity),
                         //    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
                         //    MessageType = "OnCasinoBetSettlement",
-                        //    RoutingKey = "r.bet.reports.agent"
+                        //    RoutingKey = "r.bet.reports.esports"
                         //});
 
-                        //_rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
-                        //{
-                        //    Payload = JsonSerializer.Serialize(new OnWalletChange
-                        //    {
-                        //        ClientId = transactionEntity.ClientId.ToString().ToUpper(),
-                        //        UserId = transactionEntity.UserId,
-                        //        Balance = walletResponse.Result.Balance
-                        //    }),
-                        //    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
-                        //    MessageType = "OnWalletChange",
-                        //    RoutingKey = $"r.wallet.{transactionEntity.ClientCode.ToLower()}"
-                        //});
+                        _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                        {
+                            Payload = JsonSerializer.Serialize(new OnWalletChange
+                            {
+                                ClientId = transactionEntity.ClientId.ToString().ToUpper(),
+                                UserId = transactionEntity.UserId,
+                                Balance = walletResponse.Result.Balance
+                            }),
+                            CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                            MessageType = "OnWalletChange",
+                            RoutingKey = $"r.wallet.{transactionEntity.ClientCode.ToLower()}"
+                        });
                     }
 
                     return new CreditUserResponse()
@@ -365,18 +368,18 @@ namespace Platform.Oddin.API.Repository
                         _eSportsBettingContext.SaveChanges();
                         scope.Complete();
 
-                        //_rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
-                        //{
-                        //    Payload = JsonSerializer.Serialize(new OnWalletChange
-                        //    {
-                        //        ClientId = transactionEntity.ClientId.ToString().ToUpper(),
-                        //        UserId = transactionEntity.UserId,
-                        //        Balance = walletResponse.Result.Balance
-                        //    }),
-                        //    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
-                        //    MessageType = "OnWalletChange",
-                        //    RoutingKey = $"r.wallet.{transactionEntity.ClientCode.ToLower()}"
-                        //});
+                        _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                        {
+                            Payload = JsonSerializer.Serialize(new OnWalletChange
+                            {
+                                ClientId = transactionEntity.ClientId.ToString().ToUpper(),
+                                UserId = transactionEntity.UserId,
+                                Balance = walletResponse.Result.Balance
+                            }),
+                            CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                            MessageType = "OnWalletChange",
+                            RoutingKey = $"r.wallet.{transactionEntity.ClientCode.ToLower()}"
+                        });
 
                         return new DebitUserResponse()
                         {

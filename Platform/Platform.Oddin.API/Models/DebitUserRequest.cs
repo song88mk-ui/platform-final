@@ -18,9 +18,9 @@ namespace Platform.Oddin.API.Models
         public string TransactionId { get; set; }
         public string TicketId { get; set; }
         public int TransactionType { get; set; }
-        public string CreditOperatorTransactionId { get; set; }
-        public string CreditTransactionId { get; set; }
-        public Ticket Ticket { get; set; }
+        public string CreditOperatorTransactionId { get; set; } = "";
+        public string CreditTransactionId { get; set; } = null;
+        public Ticket Ticket { get; set; } = new Ticket();
     }
     public class Ticket
     {
@@ -29,6 +29,9 @@ namespace Platform.Oddin.API.Models
             Stake = new TicketAmount();
             WonAmount = new TicketAmount();
             PossibleWinAmount = new TicketAmount();
+            Bets = new List<TicketBet>();
+            Date = DateTime.UtcNow;
+            Status = "";
             Bets = new List<TicketBet>();
         }
         public TicketAmount Stake { get; set; }
@@ -41,7 +44,7 @@ namespace Platform.Oddin.API.Models
     public class TicketAmount
     {
         public decimal Amount { get; set; }
-        public decimal Tax { get; set; }
+        public decimal Tax { get; set; } = 0;
         public decimal TotalAmount { get; set; }
     }
     public class TicketBet

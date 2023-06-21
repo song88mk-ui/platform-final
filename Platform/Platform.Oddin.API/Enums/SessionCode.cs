@@ -1,6 +1,6 @@
 ﻿namespace Platform.Oddin.API.Enums
 {
-    public enum ErrorCodes
+    public enum SessionCode
     {
         OK = 0,
         INVALID_TOKEN = 1,

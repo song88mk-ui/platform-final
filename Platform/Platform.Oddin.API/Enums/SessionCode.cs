@@ -3,14 +3,14 @@
     public enum SessionCode
     {
         OK = 0,
-        INVALID_TOKEN = 1,
-        USER_ACCOUNT = 2,
-        INVALID_CURRENCY = 3,
-        INSUFFICIENT_FUNDS = 4,
-        TRANSACTION_ALREADY_PROCESSED = 5,
-        ORIGINAL_TRANSACTION_NOT_FOUND = 6,
-        LIMIT_EXCEEDED = 7,
-        CUSTOMER_ERROR = 8,
-        OTHER_ERROR = -1
+        InvalidToken = 1,
+        UserAccount = 2,
+        InvalidCurrency = 3,
+        InsufficientFunds = 4,
+        TransactionAlreadyProcessed = 5,
+        OriginalTransactionNotFound = 6,
+        LimitExceeded = 7,
+        CustomerError = 8,
+        OtherError = -1
     }
 }

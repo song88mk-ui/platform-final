@@ -283,6 +283,11 @@ namespace Platform.Oddin.API.Repository
                 // Wallet Reduce
                 var dateNow = DateTime.UtcNow;
 
+                if (authenticationResponse.Result.Balance < request.Amount.Amount)
+                {
+                    return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InsufficientFunds };
+                }
+
                 var isComplete = request.TransactionType == -2;
                 var bet = _eSportsBettingContext.ESportBet.FirstOrDefault(c => c.ProviderTransactionId == request.TransactionId);
 

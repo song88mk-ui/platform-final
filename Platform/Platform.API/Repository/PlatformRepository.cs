@@ -4079,7 +4079,7 @@ namespace Platform.API.Repository
             var config = new ESportConfigResponseDTO
             {
                 Token = $"{clientResponse.Result.ClientId.ToString().ToUpper()}|{operatorToken}",
-                LanguageCode = langCode.ToLower(),
+                LanguageCode = langCode.ToUpper(),
                 CurrencyCode = authenticationResponse.Result.CurrencyCode.ToUpper(),
                 BrandToken = _configuration["Custom:Oddin:BrandToken"],
                 BaseUrl = _configuration["Custom:Oddin:BaseUrl"]

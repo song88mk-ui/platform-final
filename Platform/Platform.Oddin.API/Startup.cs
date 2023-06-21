@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.Oddin.API.Repository;
 using Platform.Shared.Data.Platform;
+using Platform.Shared.Utility;
 
 namespace Platform.Oddin.API
 {
@@ -48,6 +49,7 @@ namespace Platform.Oddin.API
             services.AddHttpClient<IOperatorRepository, OperatorRepository>();
             services.AddHttpClient<IProviderRepository, ProviderRepository>();
             services.AddScoped<IESportsBettingRepository, ESportsBettingRepository>();
+            services.AddScoped<IMemCache, MemCache>();
 
             services.AddSwaggerGen(c =>
             {

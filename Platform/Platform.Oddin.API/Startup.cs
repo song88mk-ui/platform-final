@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Platform.Oddin.API.Repository;
+using Platform.Shared.Data.Platform;
 
 namespace Platform.Oddin.API
 {
@@ -42,10 +45,16 @@ namespace Platform.Oddin.API
 
             services.AddControllers();
 
+            services.AddHttpClient<IOperatorRepository, OperatorRepository>();
+            services.AddHttpClient<IProviderRepository, ProviderRepository>();
+            services.AddScoped<IESportsBettingRepository, ESportsBettingRepository>();
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Platform Oddin API", Version = "v1" });
             });
+
+            services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Platform"]));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

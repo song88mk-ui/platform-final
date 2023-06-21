@@ -41,38 +41,57 @@ namespace Platform.Oddin.API.Repository
             _platformContext = platformContext;
         }
 
-        public async Task<Tuple<SessionCode, UserDetailsResponse>> GetUserDetails(UserDetailsRequest request)
+        public async Task<UserDetailsResponse> GetUserDetails(UserDetailsRequest request)
         {
-            if (string.IsNullOrEmpty(request.Token))
+            try
             {
-                return new Tuple<SessionCode, UserDetailsResponse>(SessionCode.INVALID_TOKEN, new UserDetailsResponse());
+                if (string.IsNullOrEmpty(request.Token))
+                {
+                    return new UserDetailsResponse()
+                    {                        
+                        ErrorCode = (int)SessionCode.InvalidToken
+                    };
+                }
+
+                if (request.Token.Contains('|') == false)
+                {
+                    return new UserDetailsResponse()
+                    {
+                        ErrorCode = (int)SessionCode.InvalidToken
+                    };
+                }
+
+                var split = request.Token.Split('|');
+                var clientId = split.First();
+                var operatorToken = split.Last();
+
+                var clientResponse = await GetClient(clientId);
+
+                if (clientResponse.StatusCode != StatusCode.Success)
+                {
+                    return new UserDetailsResponse()
+                    {
+                        ErrorCode = (int)SessionCode.InvalidToken
+                    };
+                }
+
+                var authenticationResponse = await _operatorRepository.Authenticate(clientId, operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+
+                return new UserDetailsResponse()
+                {
+                    UserId = authenticationResponse.Result.UserId,
+                    Currency = authenticationResponse.Result.CurrencyCode,
+                    Language = authenticationResponse.Result.LanguageCode,
+                    ErrorCode = (int)SessionCode.OK
+                };
             }
-
-            if (request.Token.Contains('|') == false)
+            catch (Exception ex)
             {
-                return new Tuple<SessionCode, UserDetailsResponse>(SessionCode.INVALID_TOKEN, new UserDetailsResponse());
+                return new UserDetailsResponse()
+                {
+                    ErrorCode = (int)SessionCode.OtherError
+                };
             }
-
-            var split = request.Token.Split('|');
-            var clientId = split.First();
-            var operatorToken = split.Last();
-
-            var clientResponse = await GetClient(clientId);
-
-            if (clientResponse.StatusCode != StatusCode.Success)
-            {
-                return new Tuple<SessionCode, UserDetailsResponse>(SessionCode.INVALID_TOKEN, new UserDetailsResponse());
-            }
-
-            var authenticationResponse = await _operatorRepository.Authenticate(clientId, operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
-
-            return new Tuple<SessionCode, UserDetailsResponse>(SessionCode.OK, new UserDetailsResponse
-            {
-                UserId = authenticationResponse.Result.UserId,
-                Currency = authenticationResponse.Result.CurrencyCode,
-                ErrorCode = (int)SessionCode.OK,
-                Language = authenticationResponse.Result.LanguageCode
-            });
         }
 
         public async Task<CreditUserResponse> Deposit(CreditUserRequest request)
@@ -226,7 +245,7 @@ namespace Platform.Oddin.API.Repository
                 return new CreditUserResponse()
                 {
                     OperatorTransactionId = request.TransactionId,
-                    ErrorCode = (int)SessionCode.OTHER_ERROR
+                    ErrorCode = (int)SessionCode.OtherError
                 };
             }
         }
@@ -236,10 +255,10 @@ namespace Platform.Oddin.API.Repository
             try
             {
                 if (string.IsNullOrEmpty(request.Token))
-                    return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
+                    return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
 
                 if (request.Token.Contains('|') == false)
-                    return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
+                    return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
 
                 var split = request.Token.Split('|');
                 var clientId = split.First();
@@ -248,12 +267,12 @@ namespace Platform.Oddin.API.Repository
                 var clientResponse = await GetClient(clientId);
 
                 if (clientResponse.StatusCode != StatusCode.Success)
-                    return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
+                    return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
 
                 var authenticationResponse = await _operatorRepository.Authenticate(clientId, request.Token, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
 
                 if (authenticationResponse.StatusCode != StatusCode.Success)
-                    return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
+                    return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
 
                 // Wallet Reduce
                 var dateNow = DateTime.UtcNow;
@@ -390,7 +409,7 @@ namespace Platform.Oddin.API.Repository
                 return new DebitUserResponse()
                 {
                     OperatorTransactionId = request.TransactionId,
-                    ErrorCode = (int)SessionCode.OTHER_ERROR
+                    ErrorCode = (int)SessionCode.OtherError
                 };
             }
         }

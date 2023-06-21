@@ -22,16 +22,16 @@ namespace Platform.Oddin.API.Controllers
         }
         [HttpPost("v1/userdetails")]
         public async Task<IActionResult> UserDetails([FromBody] UserDetailsRequest request)
-        {
-            var result = new UserDetailsResponse
-            {
-                UserId = "2712cc4b-f158-404b-9aa9-10d01522b669",
-                Currency = CurrencyCode.EUR.ToString(),
-                Language = LanguageCode.EN.ToString(),
-                ErrorCode = 0
-            };
+        {                        
+            var result = await _eSportsBettingRepository.GetUserDetails(request);
 
-            return Ok(result);
+            switch (result.ErrorCode)
+            {
+                case (int)SessionCode.OK:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
         }
 
         [HttpPost("v1/debituser")]

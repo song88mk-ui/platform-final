@@ -12,7 +12,7 @@ namespace Platform.Oddin.API.Repository
         {
             _configuration = configuration;
             _httpClient = httpClient;
-            _httpClient.BaseAddress = new Uri(_configuration["API:QTechAPI"]);
+            _httpClient.BaseAddress = new Uri(_configuration["API:OddinAPI"]);
         }
     }
 }

@@ -232,6 +232,21 @@ namespace Platform.Operator.API.Controllers
                     return BadRequest(result);
             }
         }
+        [HttpPost("v1/casino/bet/settlement")]
+        public async Task<IActionResult> CasinoBetSettlement([FromBody] OperatorCasinoBetSettlementRequestDTO request)
+        {
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.BetSettlementCasino(request, clientId);
+
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
         [HttpPost("v1/esports/bet/placement")]
         public async Task<IActionResult> ESportsBetPlacement([FromBody] OperatorESportsBetPlacementRequestDTO request)
         {
@@ -250,7 +265,7 @@ namespace Platform.Operator.API.Controllers
         }
 
         [HttpPost("v1/esports/bet/settlement")]
-        public async Task<IActionResult> CasinoBetSettlement([FromBody] OperatorESportsBetSettlementRequestDTO request)
+        public async Task<IActionResult> ESportsBetSettlement([FromBody] OperatorESportsBetSettlementRequestDTO request)
         {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 

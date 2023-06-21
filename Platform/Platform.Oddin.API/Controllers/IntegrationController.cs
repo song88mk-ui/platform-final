@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Platform.Oddin.API.Enums;
 using Platform.Oddin.API.Models;
 using Platform.Oddin.API.Repository;
 using Platform.Shared.Enums;
+using RabbitMQ.Client.Impl;
 using System;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Platform.Oddin.API.Controllers
@@ -18,7 +21,7 @@ namespace Platform.Oddin.API.Controllers
         }
         [HttpPost("v1/userdetails")]
         public async Task<IActionResult> UserDetails([FromBody] UserDetailsRequest request)
-        {            
+        {
             var result = new UserDetailsResponse
             {
                 UserId = "2712cc4b-f158-404b-9aa9-10d01522b669",
@@ -33,27 +36,29 @@ namespace Platform.Oddin.API.Controllers
         [HttpPost("v1/debituser")]
         public async Task<IActionResult> DebitUser([FromBody] DebitUserRequest request)
         {
-            var result = new DebitUserResponse
+            var result = await _eSportsBettingRepository.Withdraw(request);
+
+            switch ((SessionCode)result.ErrorCode)
             {
-                OperatorTransactionId = Guid.NewGuid().ToString(),
-                ErrorCode = 0
-            };
-
-            result = await _eSportsBettingRepository.DebitUser(request);
-
-            return Ok(result);
+                case SessionCode.OK:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
         }
 
         [HttpPost("v1/credituser")]
         public async Task<IActionResult> CreditUser([FromBody] CreditUserRequest request)
         {
-            var result = new CreditUserResponse
-            {
-                OperatorTransactionId = Guid.NewGuid().ToString(),
-                ErrorCode = 0
-            };
+            var result = await _eSportsBettingRepository.Deposit(request);
 
-            return Ok(result);
+            switch ((SessionCode)result.ErrorCode)
+            {
+                case SessionCode.OK:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            };
         }
     }
 }

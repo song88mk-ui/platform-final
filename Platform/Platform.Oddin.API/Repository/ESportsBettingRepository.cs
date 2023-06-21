@@ -1,13 +1,24 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Platform.Oddin.API.Enums;
 using Platform.Oddin.API.Models;
+using Platform.Shared.Data.CasinoBetting.Entities;
+using Platform.Shared.Data.CasinoBetting;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
+using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Transactions;
+using System.Text.Json;
+using IsolationLevel = System.Transactions.IsolationLevel;
+using TransactionType = Platform.Oddin.API.Enums.TransactionType;
+using Platform.Shared.Data.ESportBetting;
+using Platform.Shared.Data.ESportBetting.SQLEntities;
 
 namespace Platform.Oddin.API.Repository
 {
@@ -17,14 +28,16 @@ namespace Platform.Oddin.API.Repository
         private readonly IMemCache _memCache;
 
         private readonly IOperatorRepository _operatorRepository;
+        private readonly ESportBettingContext _eSportsBettingContext;
         private readonly PlatformContext _platformContext;
 
-        public ESportsBettingRepository(IConfiguration configuration, IOperatorRepository operatorRepository, PlatformContext platformContext, IMemCache memCache)
+        public ESportsBettingRepository(IConfiguration configuration, IOperatorRepository operatorRepository, ESportBettingContext eSportsBettingContext, PlatformContext platformContext, IMemCache memCache)
         {
             _configuration = configuration;
             _memCache = memCache;
             _operatorRepository = operatorRepository;
 
+            _eSportsBettingContext = eSportsBettingContext;
             _platformContext = platformContext;
         }
 
@@ -62,43 +75,166 @@ namespace Platform.Oddin.API.Repository
             });
         }
 
-        public async Task<CreditUserResponse> CreditUser(CreditUserRequest request)
+        public async Task<CreditUserResponse> Deposit(CreditUserRequest request)
         {
             try
             {
-                // Validate Request
-                var clientId = "";
-                var endpoint = "";
-                var operatorResponse = _operatorRepository.Authenticate(clientId, request.Token, endpoint, false);
+                if (string.IsNullOrEmpty(request.Token))
+                    return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
 
-                // Wallet Reduce
+                if (request.Token.Contains('|') == false)
+                    return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
 
-                // Validations
+                var split = request.Token.Split('|');
+                var clientId = split.First();
+                var operatorToken = split.Last();
 
-                // Response
+                var clientResponse = await GetClient(clientId);
 
-                return new CreditUserResponse()
+                if (clientResponse.StatusCode != StatusCode.Success)
+                    return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
+
+                var authenticationResponse = await _operatorRepository.Authenticate(clientId, request.Token, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+
+                if (authenticationResponse.StatusCode != StatusCode.Success)
+                    return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
+
+                // Wallet Increase
+                var dateNow = DateTime.UtcNow;
+
+                var isComplete = request.TransactionType == -2;
+                var bet = new ESportBet();
+
+                if (bet == null)
                 {
-                    OperatorTransactionId = request.TransactionId,
-                    ErrorCode = (int)SessionCode.OK
-                };
+                    return new CreditUserResponse()
+                    {
+                        OperatorTransactionId = request.TransactionId,
+                        ErrorCode = (int)SessionCode.OK
+                    };
+                }
+
+                var walletResponse = await _operatorRepository.SettleBet(bet.ClientId.ToString().ToUpper(), bet.Endpoint, new OperatorCasinoBetSettlementRequestDTO
+                {
+                    BetId = $"{bet.BetId.ToString().ToUpper()}|{request.TransactionId}",
+                    UserId = bet.UserId,
+                    Payout = request.Amount.Amount,
+                    BetStatus = isComplete ? request.Amount.Amount > 0 || bet.Payout > 0 ? BetStatus.Won.ToString() : BetStatus.Lost.ToString() : BetStatus.Running.ToString(),
+                    CurrencyCode = bet.CurrencyCode
+                });
+
+                if (walletResponse.StatusCode == StatusCode.Success)
+                {
+                    var rate = _platformContext.ForexEUR.Find(authenticationResponse.Result.CurrencyCode);
+
+                    using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
+
+                    bet.ProviderTransactionId = request.TransactionId;
+                    bet.TransactionType = Enum.GetName(typeof(TransactionType), request.TransactionType);
+                    bet.Payout += request.Amount.Amount;
+                    bet.BetStatusId = isComplete ? bet.Payout > 0 ? (int)BetStatus.Won : (int)BetStatus.Lost : (int)BetStatus.Running;
+                    bet.BetStatusName = isComplete ? bet.Payout > 0 ? BetStatus.Won.ToString() : BetStatus.Lost.ToString() : BetStatus.Running.ToString();
+                    bet.ProviderTransactionDate = JsonSerializer.Deserialize<Ticket>(bet.Ticket).Date;
+
+                    if (isComplete)
+                    {
+                        bet.WinLoss = bet.Payout - bet.Stake;
+                        bet.SettlementDate = dateNow;
+                    }
+
+                    var transactionEntity = _eSportsBettingContext.ESportBet.Update(bet).Entity;
+
+                    _eSportsBettingContext.ESportBetAudit.Add(new ESportBetAudit
+                    {
+                        BetId = transactionEntity.BetId,
+                        ProviderTransactionId = transactionEntity.ProviderTransactionId,
+                        TransactionType = transactionEntity.TransactionType,
+                        ClientId = transactionEntity.ClientId,
+                        ClientCode = transactionEntity.ClientCode,
+                        ClientName = transactionEntity.ClientName,
+                        Endpoint = transactionEntity.Endpoint,
+                        UserId = transactionEntity.UserId,
+                        OperatorToken = transactionEntity.OperatorToken,
+                        IsAgent = transactionEntity.IsAgent,
+                        Stake = transactionEntity.Stake,
+                        WinLoss = transactionEntity.WinLoss,
+                        Payout = transactionEntity.Payout,
+                        BetStatusId = transactionEntity.BetStatusId,
+                        BetStatusName = transactionEntity.BetStatusName,
+                        Reason = transactionEntity.Reason,
+                        CurrencyCode = transactionEntity.CurrencyCode,
+                        ProviderBetId = transactionEntity.ProviderBetId,
+                        ReferenceBetId = transactionEntity.ReferenceBetId,
+                        ReferenceTransactionId = transactionEntity.ReferenceTransactionId,
+                        Ticket = transactionEntity.Ticket,
+                        Description = transactionEntity.Description,
+                        Amount = transactionEntity.Amount,
+                        ProviderTransactionDate = transactionEntity.ProviderTransactionDate,
+                        BetDate = transactionEntity.BetDate,
+                        SettlementDate = transactionEntity.SettlementDate,
+                        Payload = JsonSerializer.Serialize(request)
+                    });
+
+                    _eSportsBettingContext.SaveChanges();
+                    scope.Complete();
+
+                    if (isComplete)
+                    {
+                        //_rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                        //{
+                        //    Payload = JsonSerializer.Serialize(transactionEntity),
+                        //    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                        //    MessageType = "OnCasinoBetSettlement",
+                        //    RoutingKey = "r.bet.reports.agent"
+                        //});
+
+                        //_rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                        //{
+                        //    Payload = JsonSerializer.Serialize(new OnWalletChange
+                        //    {
+                        //        ClientId = transactionEntity.ClientId.ToString().ToUpper(),
+                        //        UserId = transactionEntity.UserId,
+                        //        Balance = walletResponse.Result.Balance
+                        //    }),
+                        //    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                        //    MessageType = "OnWalletChange",
+                        //    RoutingKey = $"r.wallet.{transactionEntity.ClientCode.ToLower()}"
+                        //});
+                    }
+
+                    return new CreditUserResponse()
+                    {
+                        OperatorTransactionId = request.TransactionId,
+                        ErrorCode = (int)SessionCode.OK
+                    };
+                }
+                else
+                {
+                    switch (walletResponse.StatusCode)
+                    {
+                        case StatusCode.Insufficient_Funds:
+                            return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INSUFFICIENT_FUNDS };
+                        case StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers:
+                            return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
+                        default:
+                            return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.OTHER_ERROR };
+                    }
+                }
             }
             catch (Exception)
             {
                 return new CreditUserResponse()
                 {
                     OperatorTransactionId = request.TransactionId,
-                    ErrorCode = (int)SessionCode.CUSTOMER_ERROR
+                    ErrorCode = (int)SessionCode.OTHER_ERROR
                 };
             }
         }
 
-        public async Task<DebitUserResponse> DebitUser(DebitUserRequest request)
+        public async Task<DebitUserResponse> Withdraw(DebitUserRequest request)
         {
             try
             {
-                // Check Transaction in database
-
                 if (string.IsNullOrEmpty(request.Token))
                     return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
 
@@ -120,30 +256,141 @@ namespace Platform.Oddin.API.Repository
                     return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
 
                 // Wallet Reduce
+                var dateNow = DateTime.UtcNow;
 
-                var isBetExist = false;
+                var isComplete = request.TransactionType == -2;
+                var bet = _eSportsBettingContext.ESportBet.FirstOrDefault(c => c.ProviderTransactionId == request.TransactionId);
 
-                if (isBetExist)
+                if (bet == null)
                 {
+                    var betId = Guid.NewGuid();
+                    // Placebet
+                    var walletResponse = await _operatorRepository.PlaceBet(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, new OperatorCasinoBetPlacementRequestDTO
+                    {
+                        BetId = $"{betId.ToString().ToUpper()}|{request.TransactionId}",
+                        Stake = request.Amount.Amount,
+                        CurrencyCode = authenticationResponse.Result.CurrencyCode
+                    });
+
+                    if (walletResponse.StatusCode == StatusCode.Success)
+                    {
+                        var rate = _platformContext.ForexEUR.Find(authenticationResponse.Result.CurrencyCode);
+
+                        using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
+
+                        // ESports Betting Context
+                        var transactionEntity = _eSportsBettingContext.ESportBet.Add(new ESportBet
+                        {
+                            BetId = betId,
+                            ProviderTransactionId = request.TransactionId,
+                            TransactionType = Enum.GetName(typeof(TransactionType), request.TransactionType),
+                            ClientId = clientId,
+                            ClientCode = clientResponse.Result.ClientCode,
+                            ClientName = clientResponse.Result.ClientName,
+                            Endpoint = clientResponse.Result.Endpoint,
+                            UserId = authenticationResponse.Result.UserId,
+                            OperatorToken = operatorToken,
+                            IsAgent = clientResponse.Result.IsAgent,
+                            Stake = request.Amount.Amount,
+                            WinLoss = isComplete ? request.Amount.Amount * -1 : 0,
+                            Payout = 0,
+                            BetStatusId = isComplete ? (int)BetStatus.Lost : (int)BetStatus.Running,
+                            BetStatusName = isComplete ? BetStatus.Lost.ToString() : BetStatus.Running.ToString(),
+                            Reason = string.Empty,
+                            CurrencyCode = authenticationResponse.Result.CurrencyCode,
+                            ProviderBetId = request.TicketId,
+                            ReferenceBetId = request.CreditOperatorTransactionId,
+                            ReferenceTransactionId = request.CreditTransactionId,
+                            Ticket = JsonSerializer.Serialize(request.Ticket),
+                            Description = request.Description,
+                            Amount = request.Amount.Amount.ToString(),
+                            ProviderTransactionDate = request.Ticket.Date,
+                            BetDate = dateNow,
+                            SettlementDate = dateNow
+                        }).Entity;
+
+                        _eSportsBettingContext.ESportBetAudit.Add(new ESportBetAudit
+                        {
+                            BetId = transactionEntity.BetId,
+                            ProviderTransactionId = transactionEntity.ProviderTransactionId,
+                            TransactionType = transactionEntity.TransactionType,
+                            ClientId = transactionEntity.ClientId,
+                            ClientCode = transactionEntity.ClientCode,
+                            ClientName = transactionEntity.ClientName,
+                            Endpoint = transactionEntity.Endpoint,
+                            UserId = transactionEntity.UserId,
+                            OperatorToken = transactionEntity.OperatorToken,
+                            IsAgent = transactionEntity.IsAgent,
+                            Stake = transactionEntity.Stake,
+                            WinLoss = transactionEntity.WinLoss,
+                            Payout = transactionEntity.Payout,
+                            BetStatusId = transactionEntity.BetStatusId,
+                            BetStatusName = transactionEntity.BetStatusName,
+                            Reason = transactionEntity.Reason,
+                            CurrencyCode = transactionEntity.CurrencyCode,
+                            ProviderBetId = transactionEntity.ProviderBetId,
+                            ReferenceBetId = transactionEntity.ReferenceBetId,
+                            ReferenceTransactionId = transactionEntity.ReferenceTransactionId,
+                            Ticket = transactionEntity.Ticket,
+                            Description = transactionEntity.Description,
+                            Amount = transactionEntity.Amount,
+                            ProviderTransactionDate = transactionEntity.ProviderTransactionDate,
+                            BetDate = transactionEntity.BetDate,
+                            SettlementDate = transactionEntity.SettlementDate,
+                            Payload = JsonSerializer.Serialize(request)
+                        });
+
+                        _eSportsBettingContext.SaveChanges();
+                        scope.Complete();
+
+                        //_rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                        //{
+                        //    Payload = JsonSerializer.Serialize(new OnWalletChange
+                        //    {
+                        //        ClientId = transactionEntity.ClientId.ToString().ToUpper(),
+                        //        UserId = transactionEntity.UserId,
+                        //        Balance = walletResponse.Result.Balance
+                        //    }),
+                        //    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                        //    MessageType = "OnWalletChange",
+                        //    RoutingKey = $"r.wallet.{transactionEntity.ClientCode.ToLower()}"
+                        //});
+
+                        return new DebitUserResponse()
+                        {
+                            OperatorTransactionId = request.TransactionId,
+                            ErrorCode = (int)SessionCode.OK
+                        };
+                    }
+                    else
+                    {
+                        switch (walletResponse.StatusCode)
+                        {
+                            case StatusCode.Insufficient_Funds:
+                                return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INSUFFICIENT_FUNDS };
+                            case StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers:
+                                return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.INVALID_TOKEN };
+                            default:
+                                return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.OTHER_ERROR };
+                        }
+                    }
                 }
-
-
-                // Validations
-
-                // Response
-
-                return new DebitUserResponse()
+                else
                 {
-                    OperatorTransactionId = request.TransactionId,
-                    ErrorCode = (int)SessionCode.OK
-                };
+
+                    return new DebitUserResponse()
+                    {
+                        OperatorTransactionId = request.TransactionId,
+                        ErrorCode = (int)SessionCode.OK
+                    };
+                }
             }
             catch (Exception)
             {
                 return new DebitUserResponse()
                 {
                     OperatorTransactionId = request.TransactionId,
-                    ErrorCode = (int)SessionCode.CUSTOMER_ERROR
+                    ErrorCode = (int)SessionCode.OTHER_ERROR
                 };
             }
         }

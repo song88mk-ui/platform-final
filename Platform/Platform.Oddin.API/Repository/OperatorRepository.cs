@@ -114,5 +114,185 @@ namespace Platform.Oddin.API.Repository
                 };
             }
         }
+
+        public async Task<BaseResponseDTO<OperatorBetResponseDTO>> PlaceBet(string clientId, string operatorToken, string endpoint, bool isAgent, OperatorCasinoBetPlacementRequestDTO request)
+        {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<OperatorBetResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (_httpClient.DefaultRequestHeaders.Contains("x-is-agent"))
+            {
+                _httpClient.DefaultRequestHeaders.Remove("x-is-agent");
+
+                _httpClient.DefaultRequestHeaders.Add("x-is-agent", isAgent.ToString());
+            }
+            else
+                _httpClient.DefaultRequestHeaders.Add("x-is-agent", isAgent.ToString());
+
+            if (_httpClient.DefaultRequestHeaders.Contains("x-operator-token"))
+            {
+                _httpClient.DefaultRequestHeaders.Remove("x-operator-token");
+                _httpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+            }
+            else
+                _httpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+
+            if (_httpClient.DefaultRequestHeaders.Contains("x-client-id"))
+            {
+                _httpClient.DefaultRequestHeaders.Remove("x-client-id");
+                _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
+            }
+            else
+                _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
+
+            try
+            {
+                var response = await _httpClient.PostAsync($"{endpoint}/v1/esports/bet/placement", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return new BaseResponseDTO<OperatorBetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString(),
+                        Result = result
+                    };
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        try
+                        {
+                            var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                            switch (result.StatusId)
+                            {
+                                case 1001:
+                                    return new BaseResponseDTO<OperatorBetResponseDTO>
+                                    {
+                                        StatusCode = StatusCode.Insufficient_Funds,
+                                        Message = StatusCode.Insufficient_Funds.ToString().Replace('_', ' '),
+                                    };
+
+                                case 1002:
+                                    return new BaseResponseDTO<OperatorBetResponseDTO>
+                                    {
+                                        StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                                        Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                                    };
+
+                                default:
+                                    return new BaseResponseDTO<OperatorBetResponseDTO>
+                                    {
+                                        StatusCode = StatusCode.Operator_Error,
+                                        Message = StatusCode.Operator_Error.ToString().Replace('_', ' '),
+                                    };
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            return new BaseResponseDTO<OperatorBetResponseDTO>
+                            {
+                                StatusCode = StatusCode.Operator_Error,
+                                Message = StatusCode.Operator_Error.ToString().Replace('_', ' '),
+                            };
+                        }
+                    }
+                    else
+                    {
+                        return new BaseResponseDTO<OperatorBetResponseDTO>
+                        {
+                            StatusCode = StatusCode.Operator_Error,
+                            Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})",
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<OperatorBetResponseDTO>
+                {
+                    StatusCode = StatusCode.Operator_Error,
+                    Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({ex.Message})",
+                };
+            }
+        }
+
+        public async Task<BaseResponseDTO<OperatorBetResponseDTO>> SettleBet(string clientId, string endpoint, OperatorCasinoBetSettlementRequestDTO request)
+        {
+            if (_httpClient.DefaultRequestHeaders.Contains("x-client-id"))
+            {
+                _httpClient.DefaultRequestHeaders.Remove("x-client-id");
+                _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
+            }
+            else
+                _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
+
+            try
+            {
+                var response = await _httpClient.PostAsync($"{endpoint}/v1/esports/bet/settlement", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return new BaseResponseDTO<OperatorBetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString(),
+                        Result = result
+                    };
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        try
+                        {
+                            var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                            return new BaseResponseDTO<OperatorBetResponseDTO>
+                            {
+                                StatusCode = StatusCode.Operator_Error,
+                                Message = StatusCode.Operator_Error.ToString().Replace('_', ' '),
+                            };
+                        }
+                        catch (Exception)
+                        {
+                            return new BaseResponseDTO<OperatorBetResponseDTO>
+                            {
+                                StatusCode = StatusCode.Operator_Error,
+                                Message = StatusCode.Operator_Error.ToString().Replace('_', ' '),
+                            };
+                        }
+                    }
+                    else
+                    {
+                        return new BaseResponseDTO<OperatorBetResponseDTO>
+                        {
+                            StatusCode = StatusCode.Operator_Error,
+                            Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})",
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<OperatorBetResponseDTO>
+                {
+                    StatusCode = StatusCode.Operator_Error,
+                    Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({ex.Message})",
+                };
+            }
+        }
     }
 }

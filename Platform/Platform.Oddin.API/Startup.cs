@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.Oddin.API.Repository;
+using Platform.Shared.Data.ESportBetting;
 using Platform.Shared.Data.Platform;
 
 namespace Platform.Oddin.API
@@ -55,6 +56,7 @@ namespace Platform.Oddin.API
             });
 
             services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Platform"]));
+            services.AddDbContext<ESportBettingContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:ESportBetting"]));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

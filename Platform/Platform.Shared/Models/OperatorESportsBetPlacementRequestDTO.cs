@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Platform.Shared.Models
+﻿namespace Platform.Shared.Models
 {
     public class OperatorESportsBetPlacementRequestDTO
     {

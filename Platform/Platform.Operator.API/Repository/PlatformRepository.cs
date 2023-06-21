@@ -713,12 +713,10 @@ namespace Platform.Operator.API.Repository
 
                     var testConfig = _platformContext.TestConfig.Find(id);
 
-                    var betId = request.BetId.Split('|').FirstOrDefault();
-
                     if (testConfig != null && testConfig.ClientId == id)
                     {
 
-                        var operatorAudit = AddOrUpdateOperatorAudit(result, betId, 0, request.Stake, BetStatus.Running.ToString(), testConfig.IsFreeBet);
+                        var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, 0, request.Stake, BetStatus.Running.ToString(), testConfig.IsFreeBet);
 
                         result.Balance = operatorAudit.PostBalance;
                         _platformContext.Operator.Update(result);
@@ -739,7 +737,7 @@ namespace Platform.Operator.API.Repository
                     else
                     {
 
-                        var operatorAudit = AddOrUpdateOperatorAudit(result, betId, 0, request.Stake, BetStatus.Running.ToString());
+                        var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, 0, request.Stake, BetStatus.Running.ToString());
 
                         result.Balance = operatorAudit.PostBalance;
                         _platformContext.Operator.Update(result);
@@ -806,9 +804,7 @@ namespace Platform.Operator.API.Repository
                         };
                     }
 
-                    var betId = request.BetId.Split('|').FirstOrDefault();
-
-                    var operatorAudit = AddOrUpdateOperatorAudit(result, betId, request.Payout, request.Stake, request.BetStatus);
+                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, request.Payout, request.Stake, request.BetStatus);
 
                     result.Balance = operatorAudit.PostBalance;
                     _platformContext.Operator.Update(result);

@@ -141,7 +141,7 @@ namespace Platform.Oddin.API.Repository
 
                 var walletResponse = await _operatorRepository.SettleBet(bet.ClientId.ToString().ToUpper(), bet.Endpoint, new OperatorESportsBetSettlementRequestDTO
                 {
-                    BetId = $"{bet.BetId.ToString().ToUpper()}|{request.TransactionId}",
+                    BetId = $"{bet.BetId.ToString().ToUpper()}",
                     UserId = bet.UserId,
                     Payout = request.Amount.Amount,
                     BetStatus = isComplete ? request.Amount.Amount > 0 || bet.Payout > 0 ? BetStatus.Won.ToString() : BetStatus.Lost.ToString() : BetStatus.Running.ToString(),
@@ -297,7 +297,7 @@ namespace Platform.Oddin.API.Repository
                     // Placebet
                     var walletResponse = await _operatorRepository.PlaceBet(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, new OperatorESportsBetPlacementRequestDTO
                     {
-                        BetId = $"{betId.ToString().ToUpper()}|{request.TransactionId}",
+                        BetId = $"{betId.ToString().ToUpper()}",
                         Stake = request.Amount.Amount,
                         CurrencyCode = authenticationResponse.Result.CurrencyCode
                     });

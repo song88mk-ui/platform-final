@@ -139,7 +139,7 @@ namespace Platform.Oddin.API.Repository
                     };
                 }
 
-                var walletResponse = await _operatorRepository.SettleBet(bet.ClientId.ToString().ToUpper(), bet.Endpoint, new OperatorCasinoBetSettlementRequestDTO
+                var walletResponse = await _operatorRepository.SettleBet(bet.ClientId.ToString().ToUpper(), bet.Endpoint, new OperatorESportsBetSettlementRequestDTO
                 {
                     BetId = $"{bet.BetId.ToString().ToUpper()}|{request.TransactionId}",
                     UserId = bet.UserId,
@@ -290,7 +290,7 @@ namespace Platform.Oddin.API.Repository
                 {
                     var betId = Guid.NewGuid();
                     // Placebet
-                    var walletResponse = await _operatorRepository.PlaceBet(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, new OperatorCasinoBetPlacementRequestDTO
+                    var walletResponse = await _operatorRepository.PlaceBet(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, new OperatorESportsBetPlacementRequestDTO
                     {
                         BetId = $"{betId.ToString().ToUpper()}|{request.TransactionId}",
                         Stake = request.Amount.Amount,

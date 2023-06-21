@@ -115,7 +115,7 @@ namespace Platform.Oddin.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<OperatorBetResponseDTO>> PlaceBet(string clientId, string operatorToken, string endpoint, bool isAgent, OperatorCasinoBetPlacementRequestDTO request)
+        public async Task<BaseResponseDTO<OperatorBetResponseDTO>> PlaceBet(string clientId, string operatorToken, string endpoint, bool isAgent, OperatorESportsBetPlacementRequestDTO request)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
@@ -227,7 +227,7 @@ namespace Platform.Oddin.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<OperatorBetResponseDTO>> SettleBet(string clientId, string endpoint, OperatorCasinoBetSettlementRequestDTO request)
+        public async Task<BaseResponseDTO<OperatorBetResponseDTO>> SettleBet(string clientId, string endpoint, OperatorESportsBetSettlementRequestDTO request)
         {
             if (_httpClient.DefaultRequestHeaders.Contains("x-client-id"))
             {

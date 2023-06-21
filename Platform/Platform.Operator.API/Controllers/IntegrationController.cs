@@ -233,12 +233,12 @@ namespace Platform.Operator.API.Controllers
             }
         }
         [HttpPost("v1/esports/bet/placement")]
-        public async Task<IActionResult> ESportsBetPlacement([FromBody] OperatorCasinoBetPlacementRequestDTO request)
+        public async Task<IActionResult> ESportsBetPlacement([FromBody] OperatorESportsBetPlacementRequestDTO request)
         {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
-            var result = await _platformRepository.BetPlacementCasino(request, clientId, operatorToken);
+            var result = await _platformRepository.BetPlacementESports(request, clientId, operatorToken);
 
             switch (result.StatusId)
             {
@@ -250,11 +250,11 @@ namespace Platform.Operator.API.Controllers
         }
 
         [HttpPost("v1/esports/bet/settlement")]
-        public async Task<IActionResult> CasinoBetSettlement([FromBody] OperatorCasinoBetSettlementRequestDTO request)
+        public async Task<IActionResult> CasinoBetSettlement([FromBody] OperatorESportsBetSettlementRequestDTO request)
         {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-            var result = await _platformRepository.BetSettlementCasino(request, clientId);
+            var result = await _platformRepository.BetSettlementESports(request, clientId);
 
             switch (result.StatusId)
             {

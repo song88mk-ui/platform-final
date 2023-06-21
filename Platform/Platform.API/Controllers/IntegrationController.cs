@@ -1889,5 +1889,35 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpGet("v1/esport/config")]
+        public async Task<IActionResult> GetESportConfig()
+        {
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var languageCode = HttpContext.Request.Headers["x-language-code"].FirstOrDefault();
+
+            var result = await _platformRepository.GetESportConfig(clientId, operatorToken, languageCode);
+
+            var properties = new Dictionary<string, string>
+            {
+                                { "x-client-id", clientId },
+                                { "x-operator-token", operatorToken },
+                                { "x-language-code", languageCode },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/esport/config", properties);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

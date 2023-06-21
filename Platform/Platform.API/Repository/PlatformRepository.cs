@@ -4032,6 +4032,67 @@ namespace Platform.API.Repository
             }
         }
 
+        public async Task<BaseResponseDTO<ESportConfigResponseDTO>> GetESportConfig(string clientId, string operatorToken, string langCode)
+        {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<ESportConfigResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<ESportConfigResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<ESportConfigResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+
+            if (authenticationResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<ESportConfigResponseDTO>
+                {
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
+                };
+            }
+
+            var config = new ESportConfigResponseDTO
+            {
+                Token = $"{clientResponse.Result.ClientId.ToString().ToUpper()}|{operatorToken}",
+                LanguageCode = langCode.ToLower(),
+                CurrencyCode = authenticationResponse.Result.CurrencyCode.ToUpper(),
+                BrandToken = _configuration["Custom:Oddin:BrandToken"],
+                BaseUrl = _configuration["Custom:Oddin:BaseUrl"]
+            };
+
+            return new BaseResponseDTO<ESportConfigResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = config
+            };
+        }
+
         private DateTime GetFirstDayOfNextMonth()
         {
             DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);

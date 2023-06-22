@@ -12,6 +12,7 @@ namespace Platform.Shared.Models
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
         public BetStatusFilter BetStatusFilter { get; set; }
+        public ProductFilter ProductFilter { get; set; }
         public int Page { get; set; }
         public int PageSize { get; set; }
         public bool IsCurrent { get; set; }

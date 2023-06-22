@@ -9,6 +9,7 @@ using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -46,7 +47,7 @@ namespace Platform.Oddin.API.Repository
                 if (string.IsNullOrEmpty(request.Token))
                 {
                     return new UserDetailsResponse()
-                    {                        
+                    {
                         ErrorCode = (int)SessionCode.InvalidToken
                     };
                 }
@@ -126,7 +127,7 @@ namespace Platform.Oddin.API.Repository
 
                 var dateNow = DateTime.UtcNow;
 
-                var isComplete = request.TransactionType == -2;
+                var isComplete = request.TransactionType != 0;
                 var bet = _eSportsBettingContext.ESportBet.FirstOrDefault(c => c.ProviderTransactionId == request.TransactionId);
 
                 if (bet == null)
@@ -286,7 +287,7 @@ namespace Platform.Oddin.API.Repository
                     return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InsufficientFunds };
                 }
 
-                var isComplete = request.TransactionType == -2;
+                var isComplete = request.TransactionType != 0;
                 var bet = _eSportsBettingContext.ESportBet.FirstOrDefault(c => c.ProviderTransactionId == request.TransactionId);
 
                 if (bet == null)

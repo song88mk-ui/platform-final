@@ -124,11 +124,10 @@ namespace Platform.Oddin.API.Repository
                 if (authenticationResponse.StatusCode != StatusCode.Success)
                     return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
 
-                // Wallet Increase
                 var dateNow = DateTime.UtcNow;
 
                 var isComplete = request.TransactionType == -2;
-                var bet = new ESportBet();
+                var bet = _eSportsBettingContext.ESportBet.FirstOrDefault(c => c.ProviderTransactionId == request.TransactionId);
 
                 if (bet == null)
                 {
@@ -280,7 +279,6 @@ namespace Platform.Oddin.API.Repository
                 if (authenticationResponse.StatusCode != StatusCode.Success)
                     return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
 
-                // Wallet Reduce
                 var dateNow = DateTime.UtcNow;
 
                 if (authenticationResponse.Result.Balance < request.Amount.Amount)
@@ -294,7 +292,7 @@ namespace Platform.Oddin.API.Repository
                 if (bet == null)
                 {
                     var betId = Guid.NewGuid();
-                    // Placebet
+
                     var walletResponse = await _operatorRepository.PlaceBet(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, new OperatorESportsBetPlacementRequestDTO
                     {
                         BetId = $"{betId.ToString().ToUpper()}",
@@ -308,7 +306,6 @@ namespace Platform.Oddin.API.Repository
 
                         using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
 
-                        // ESports Betting Context
                         var transactionEntity = _eSportsBettingContext.ESportBet.Add(new ESportBet
                         {
                             BetId = betId,

@@ -49,7 +49,7 @@ namespace Platform.Oddin.API.Controllers
         [HttpPost("v1/debituser")]
         public async Task<IActionResult> DebitUser([FromBody] DebitUserRequest request)
         {
-            var result = await _eSportsBettingRepository.Withdraw(request);
+            var result = await _eSportsBettingRepository.Debit(request);
 
             var parameters = request;
 
@@ -74,7 +74,7 @@ namespace Platform.Oddin.API.Controllers
         [HttpPost("v1/credituser")]
         public async Task<IActionResult> CreditUser([FromBody] CreditUserRequest request)
         {
-            var result = await _eSportsBettingRepository.Deposit(request);
+            var result = await _eSportsBettingRepository.Credit(request);
 
             var parameters = request;
 

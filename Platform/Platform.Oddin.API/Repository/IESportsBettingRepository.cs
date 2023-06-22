@@ -12,7 +12,7 @@ namespace Platform.Oddin.API.Repository
     public interface IESportsBettingRepository
     {
         Task<UserDetailsResponse> GetUserDetails(UserDetailsRequest request);
-        Task<CreditUserResponse> Deposit(CreditUserRequest request);
-        Task<DebitUserResponse> Withdraw(DebitUserRequest request);
+        Task<CreditUserResponse> Credit(CreditUserRequest request);
+        Task<DebitUserResponse> Debit(DebitUserRequest request);
     }
 }

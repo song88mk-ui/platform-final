@@ -11,7 +11,9 @@ using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Security.Permissions;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -102,7 +104,7 @@ namespace Platform.Oddin.API.Repository
             }
         }
 
-        public async Task<CreditUserResponse> Deposit(CreditUserRequest request)
+        public async Task<CreditUserResponse> Credit(CreditUserRequest request)
         {
             try
             {
@@ -128,7 +130,7 @@ namespace Platform.Oddin.API.Repository
 
                 var dateNow = DateTime.UtcNow;
 
-                var bet = _eSportsBettingContext.ESportBet.FirstOrDefault(c => c.ProviderTransactionId == request.TransactionId);
+                var bet = _eSportsBettingContext.ESportBet.FirstOrDefault(c => c.ProviderBetId == request.TicketId);
 
                 if (bet == null)
                 {
@@ -285,10 +287,12 @@ namespace Platform.Oddin.API.Repository
             }
         }
 
-        public async Task<DebitUserResponse> Withdraw(DebitUserRequest request)
+        public async Task<DebitUserResponse> Debit(DebitUserRequest request)
         {
+            //var stopwatch = new Stopwatch();
             try
             {
+                //stopwatch.Start();
                 if (string.IsNullOrEmpty(request.Token))
                     return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
 
@@ -304,6 +308,7 @@ namespace Platform.Oddin.API.Repository
                 if (clientResponse.StatusCode != StatusCode.Success)
                     return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
 
+                //stopwatch.RecordLap("Initial Validation");
                 var authenticationResponse = await _operatorRepository.Authenticate(clientId, operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
 
                 if (authenticationResponse.StatusCode != StatusCode.Success)
@@ -311,12 +316,13 @@ namespace Platform.Oddin.API.Repository
 
                 var dateNow = DateTime.UtcNow;
 
+                //stopwatch.RecordLap("Authentication Response");
                 if (authenticationResponse.Result.Balance < request.Amount.Amount)
                 {
                     return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InsufficientFunds };
                 }
 
-                var bet = _eSportsBettingContext.ESportBet.FirstOrDefault(c => c.ProviderTransactionId == request.TransactionId);
+                var bet = _eSportsBettingContext.ESportBet.FirstOrDefault(c => c.ProviderBetId == request.TicketId);
 
                 if (bet == null)
                 {
@@ -329,6 +335,7 @@ namespace Platform.Oddin.API.Repository
                         CurrencyCode = authenticationResponse.Result.CurrencyCode
                     });
 
+                    //stopwatch.RecordLap("Wallet Response");
                     if (walletResponse.StatusCode == StatusCode.Success)
                     {
                         var rate = _platformContext.ForexEUR.Find(authenticationResponse.Result.CurrencyCode);
@@ -440,6 +447,7 @@ namespace Platform.Oddin.API.Repository
                         ErrorCode = (int)SessionCode.OK
                     };
                 }
+
             }
             catch (Exception)
             {
@@ -448,6 +456,11 @@ namespace Platform.Oddin.API.Repository
                     OperatorTransactionId = request.TransactionId,
                     ErrorCode = (int)SessionCode.OtherError
                 };
+            }
+            finally
+            {
+                //stopwatch.Stop();
+                //stopwatch.DisplayLapTimes();
             }
         }
 
@@ -498,4 +511,88 @@ namespace Platform.Oddin.API.Repository
         }
         #endregion
     }
+    #region Stopwwatch
+    public class Stopwatch
+    {
+        private DateTime startTime;
+        private DateTime endTime;
+        private bool isRunning;
+        private List<TimeSpan> lapTimes;
+        private List<string> lapRecords;
+
+        public Stopwatch()
+        {
+            lapTimes = new List<TimeSpan>();
+            lapRecords = new List<string>();
+        }
+
+        public void Start()
+        {
+            if (!isRunning)
+            {
+                startTime = DateTime.Now;
+                isRunning = true;
+            }
+            else
+            {
+                Debug.WriteLine("The stopwatch is already running.");
+            }
+        }
+
+        public void Stop(bool isRecordDisplay = false)
+        {
+            if (isRunning)
+            {
+                endTime = DateTime.Now;
+                isRunning = false;
+                TimeSpan elapsed = endTime - startTime;
+                lapTimes.Add(elapsed);
+                lapRecords.Add($"Lap end: {elapsed.TotalSeconds} seconds");
+
+                if (isRecordDisplay)
+                    this.DisplayLapTimes();
+            }
+            else
+            {
+                Console.WriteLine("The stopwatch is not currently running.");
+            }
+        }
+
+        public void RecordLap(string title = "")
+        {
+            if (isRunning)
+            {
+                title = string.IsNullOrEmpty(title) ? (lapRecords.Count() + 1).ToString() : title;
+
+                TimeSpan elapsed = DateTime.Now - startTime;
+                lapTimes.Add(elapsed);
+                //lapRecords.Add($"Lap {title}: {elapsed.TotalSeconds} seconds {lapRecords.Count() > 0 ? elapsed.TotalSeconds - lapTimes.Last().TotalSeconds : ''}");
+            }
+            else
+            {
+                Debug.WriteLine("The stopwatch is not currently running.");
+            }
+        }
+
+        public void DisplayLapTimes()
+        {
+            Console.WriteLine("Lap Times:");
+            //for (int i = 0; i < lapTimes.Count; i++)
+            //{
+            //    Debug.WriteLine($"Lap {i + 1}: {lapTimes[i].TotalSeconds} seconds");
+            //}
+            foreach (var item in lapRecords)
+            {
+                Debug.WriteLine(item);
+            }
+        }
+
+        public void Reset()
+        {
+            lapTimes.Clear();
+            lapRecords.Clear();
+            isRunning = false;
+        }
+    }
+    #endregion
 }

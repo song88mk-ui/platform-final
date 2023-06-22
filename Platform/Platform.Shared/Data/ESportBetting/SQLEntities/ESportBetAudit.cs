@@ -17,18 +17,24 @@ namespace Platform.Shared.Data.ESportBetting.SQLEntities
         public string UserId { get; set; }
         public string OperatorToken { get; set; }
         public bool IsAgent { get; set; }
+
         [Column(TypeName = "decimal(26,12)")]
         public decimal Stake { get; set; }
+
         [Column(TypeName = "decimal(26,12)")]
         public decimal WinLoss { get; set; }
+
         [Column(TypeName = "decimal(26,12)")]
         public decimal Payout { get; set; }
+
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal Odds { get; set; }
+
         public int BetStatusId { get; set; }
         public string BetStatusName { get; set; }
         public string Reason { get; set; }
         public string CurrencyCode { get; set; }
         public string Ticket { get; set; }
-        public string Description { get; set; }
         public string Amount { get; set; }
         public string TransactionIds { get; set; }
         public DateTime ProviderTransactionDate { get; set; }

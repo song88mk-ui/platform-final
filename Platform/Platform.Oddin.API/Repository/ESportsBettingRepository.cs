@@ -179,7 +179,6 @@ namespace Platform.Oddin.API.Repository
                     bet.BetStatusName = betStatus.ToString();
                     bet.ProviderTransactionDate = JsonSerializer.Deserialize<Ticket>(bet.Ticket).Date;
                     bet.Reason = request.Description;
-                    bet.Description = request.Description;
 
                     if (betStatus != BetStatus.Running)
                     {
@@ -209,12 +208,12 @@ namespace Platform.Oddin.API.Repository
                         Stake = transactionEntity.Stake,
                         WinLoss = transactionEntity.WinLoss,
                         Payout = transactionEntity.Payout,
+                        Odds = transactionEntity.Odds,
                         BetStatusId = transactionEntity.BetStatusId,
                         BetStatusName = transactionEntity.BetStatusName,
                         Reason = transactionEntity.Reason,
                         CurrencyCode = transactionEntity.CurrencyCode,
                         Ticket = transactionEntity.Ticket,
-                        Description = transactionEntity.Description,
                         Amount = transactionEntity.Amount,
                         TransactionIds = transactionEntity.TransactionIds,
                         ProviderTransactionDate = transactionEntity.ProviderTransactionDate,
@@ -334,12 +333,12 @@ namespace Platform.Oddin.API.Repository
                             Stake = request.Ticket.Stake.Amount,
                             WinLoss = 0,
                             Payout = request.Ticket.PossibleWinAmount.Amount,
+                            Odds = request.Ticket.Bets.FirstOrDefault()?.TotalOdds ?? 0m,
                             BetStatusId = (int)betStatus,
                             BetStatusName = betStatus.ToString(),
                             Reason = request.Description,
                             CurrencyCode = authenticationResponse.Result.CurrencyCode,
                             Ticket = JsonSerializer.Serialize(request.Ticket),
-                            Description = request.Description,
                             Amount = request.Amount.Amount.ToString(),
                             TransactionIds = JsonSerializer.Serialize(new List<string> { $"{request.TransactionId}|{walletResponse.Result.Balance}" }),
                             ProviderTransactionDate = request.Ticket.Date,
@@ -363,12 +362,12 @@ namespace Platform.Oddin.API.Repository
                             Stake = transactionEntity.Stake,
                             WinLoss = transactionEntity.WinLoss,
                             Payout = transactionEntity.Payout,
+                            Odds = transactionEntity.Odds,
                             BetStatusId = transactionEntity.BetStatusId,
                             BetStatusName = transactionEntity.BetStatusName,
                             Reason = transactionEntity.Reason,
                             CurrencyCode = transactionEntity.CurrencyCode,
                             Ticket = transactionEntity.Ticket,
-                            Description = transactionEntity.Description,
                             Amount = transactionEntity.Amount,
                             TransactionIds = transactionEntity.TransactionIds,
                             ProviderTransactionDate = transactionEntity.ProviderTransactionDate,

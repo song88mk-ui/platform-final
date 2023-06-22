@@ -147,7 +147,8 @@ namespace Platform.Oddin.API.Repository
                     UserId = bet.UserId,
                     Payout = request.Amount.Amount,
                     BetStatus = request.Amount.Amount > 0 || bet.Payout > 0 ? BetStatus.Won.ToString() : BetStatus.Lost.ToString(),
-                    CurrencyCode = bet.CurrencyCode
+                    CurrencyCode = bet.CurrencyCode,
+                    TransactionId = bet.ProviderTransactionId
                 });
 
                 if (walletResponse.StatusCode == StatusCode.Success)

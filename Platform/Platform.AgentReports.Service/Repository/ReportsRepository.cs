@@ -282,6 +282,8 @@ namespace Platform.AgentReports.Service.Repository
 
                     foreach (var agent in agents)
                     {
+                        AddOrUpdateRunningBalanceFinal(context, message.Stake, message.CurrencyCode, message.BetId, message.BetStatusId, message.BetStatusName, message.BetDate, agent, 0, agents, true);
+
                         AddOrUpdateCasinoWinLossFinal(context, message, agent, agents, product);
                     }
 
@@ -613,9 +615,9 @@ namespace Platform.AgentReports.Service.Repository
                 IsBinary = betSelection.IsBinary
             };
         }
-        private void AddOrUpdateRunningBalanceFinal(AgentReportsContext context, decimal trueStake, string currencyCode, Guid betId, int betStatusId, string betStatusName, DateTime betDate, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents)
+        private void AddOrUpdateRunningBalanceFinal(AgentReportsContext context, decimal trueStake, string currencyCode, Guid betId, int betStatusId, string betStatusName, DateTime betDate, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents, bool isCasino = false)
         {
-            if (betStatusId != (int)BetStatus.Running) return;
+            if (isCasino == false && betStatusId != (int)BetStatus.Running) return;
             if (agent.UserType == Shared.Enums.UserType.Company) return;
 
             var runningBalanceEntity = new RunningBalance();
@@ -649,7 +651,7 @@ namespace Platform.AgentReports.Service.Repository
                     IsCashPlayer = agent.IsCashMarket
                 }).Entity;
             }
-            else
+            else if(isCasino == false)
             {
                 preCashBalance = runningBalance.CashBalance;
                 preTrueCashBalance = runningBalance.TrueCashBalance;
@@ -692,34 +694,36 @@ namespace Platform.AgentReports.Service.Repository
                 runningBalanceEntity = context.RunningBalance.Update(runningBalance).Entity;
             }
 
-            context.RunningBalanceTransaction.Add(new RunningBalanceTransaction
+            if(isCasino == false)
             {
-                ParentUserId = runningBalanceEntity.ParentUserId,
-                UserId = runningBalanceEntity.UserId,
-                Username = runningBalanceEntity.Username,
-                UserTypeId = runningBalanceEntity.UserTypeId,
-                CurrencyCode = runningBalanceEntity.CurrencyCode,
+                context.RunningBalanceTransaction.Add(new RunningBalanceTransaction
+                {
+                    ParentUserId = runningBalanceEntity.ParentUserId,
+                    UserId = runningBalanceEntity.UserId,
+                    Username = runningBalanceEntity.Username,
+                    UserTypeId = runningBalanceEntity.UserTypeId,
+                    CurrencyCode = runningBalanceEntity.CurrencyCode,
 
-                PreCashBalance = preCashBalance,
-                CashBalance = cashBalance,
-                PostCashBalance = runningBalanceEntity.CashBalance,
+                    PreCashBalance = preCashBalance,
+                    CashBalance = cashBalance,
+                    PostCashBalance = runningBalanceEntity.CashBalance,
 
-                PreTrueCashBalance = preTrueCashBalance,
-                TrueCashBalance = trueCashBalance,
-                PostTrueCashBalance = runningBalanceEntity.TrueCashBalance,
+                    PreTrueCashBalance = preTrueCashBalance,
+                    TrueCashBalance = trueCashBalance,
+                    PostTrueCashBalance = runningBalanceEntity.TrueCashBalance,
 
-                PreOutstandingBalance = preOutstandingBalance,
-                OutstandingBalance = outstandingBalance,
-                PostOutstandingBalance = runningBalanceEntity.OutstandingBalance,
+                    PreOutstandingBalance = preOutstandingBalance,
+                    OutstandingBalance = outstandingBalance,
+                    PostOutstandingBalance = runningBalanceEntity.OutstandingBalance,
 
-                IsCashPlayer = runningBalanceEntity.IsCashPlayer,
-                ReferenceId = betId.ToString().ToUpper(),
-                StatusId = betStatusId,
-                StatusName = betStatusName,
-                TransactionDate = betDate
-            });
+                    IsCashPlayer = runningBalanceEntity.IsCashPlayer,
+                    ReferenceId = betId.ToString().ToUpper(),
+                    StatusId = betStatusId,
+                    StatusName = betStatusName,
+                    TransactionDate = betDate
+                });
+            }
         }
-
 
         private List<AgentSettings> GetAgentSettingsFinal(OnBetSettlement message)
         {

@@ -8,6 +8,7 @@ namespace Platform.Shared.Data.ESportBetting.SQLEntities
         public long Id { get; set; }
         public Guid BetId { get; set; }
         public string ProviderTransactionId { get; set; }
+        public string ProviderBetId { get; set; }
         public string TransactionType { get; set; }
         public string ClientId { get; set; }
         public string ClientCode { get; set; }
@@ -26,12 +27,10 @@ namespace Platform.Shared.Data.ESportBetting.SQLEntities
         public string BetStatusName { get; set; }
         public string Reason { get; set; }
         public string CurrencyCode { get; set; }
-        public string ProviderBetId { get; set; }
-        public string ReferenceBetId { get; set; }
-        public string ReferenceTransactionId { get; set; }
         public string Ticket { get; set; }
         public string Description { get; set; }
         public string Amount { get; set; }
+        public string TransactionIds { get; set; }
         public DateTime ProviderTransactionDate { get; set; }
         public DateTime BetDate { get; set; }
         public DateTime SettlementDate { get; set; }

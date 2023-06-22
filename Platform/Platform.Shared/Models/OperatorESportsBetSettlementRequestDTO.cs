@@ -8,5 +8,6 @@
         public decimal Payout { get; set; }
         public string BetStatus { get; set; }
         public string CurrencyCode { get; set; }
+        public string TransactionId { get; set; }
     }
 }

@@ -1,10 +1,4 @@
-﻿using Platform.Oddin.API.Enums;
-using Platform.Oddin.API.Models;
-using Platform.Shared.Models;
-using System;
-using System.Threading.Tasks;
-
-using Platform.Oddin.API.Models;
+﻿using Platform.Oddin.API.Models;
 using System.Threading.Tasks;
 
 namespace Platform.Oddin.API.Repository
@@ -12,7 +6,7 @@ namespace Platform.Oddin.API.Repository
     public interface IESportsBettingRepository
     {
         Task<UserDetailsResponse> GetUserDetails(UserDetailsRequest request);
-        Task<CreditUserResponse> Deposit(CreditUserRequest request);
-        Task<DebitUserResponse> Withdraw(DebitUserRequest request);
+        Task<CreditUserResponse> CreditUser(CreditUserRequest request);
+        Task<DebitUserResponse> DebitUser(DebitUserRequest request);
     }
 }

@@ -149,12 +149,14 @@ namespace Platform.Oddin.API.Repository
                     };
                 }
 
+                var betStatus = GetBetStatus(request.TransactionType);
+
                 var walletResponse = await _operatorRepository.SettleBet(bet.ClientId.ToString().ToUpper(), bet.Endpoint, new OperatorESportsBetSettlementRequestDTO
                 {
                     BetId = $"{bet.BetId.ToString().ToUpper()}",
                     UserId = bet.UserId,
                     Payout = request.Amount.Amount,
-                    BetStatus = request.Amount.Amount > 0 || bet.Payout > 0 ? BetStatus.Won.ToString() : BetStatus.Lost.ToString(),
+                    BetStatus = betStatus.ToString(),
                     CurrencyCode = bet.CurrencyCode,
                     TransactionId = bet.ProviderTransactionId
                 });
@@ -167,8 +169,6 @@ namespace Platform.Oddin.API.Repository
                     // Lost
 
                     var rate = _platformContext.ForexEUR.Find(authenticationResponse.Result.CurrencyCode);
-
-                    var betStatus = GetBetStatus(request.TransactionType);
 
                     using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
 
@@ -291,7 +291,6 @@ namespace Platform.Oddin.API.Repository
 
                 if (authenticationResponse.StatusCode != StatusCode.Success)
                     return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
-
 
                 if (authenticationResponse.Result.Balance < request.Amount.Amount)
                     return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InsufficientFunds };

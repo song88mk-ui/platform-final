@@ -16,5 +16,6 @@ namespace Platform.QTech.API.Repository
         Task<BonusStatusCode> ProcessBonusStatus(BonusStatusRequest request);
         Task<Tuple<BonusRewardCode, BonusRewardResponse>> ProcessBonusReward(BonusRewardRequest request);
         Task<Tuple<GameLobbyCode, GameLobbyResponseDTO>> GetLobbyURL(GameLobbyRequestDTO request);
+        Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(BetHistoryRequestDTO request);
     }
 }

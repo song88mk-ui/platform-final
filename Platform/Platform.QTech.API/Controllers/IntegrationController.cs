@@ -313,5 +313,19 @@ namespace Platform.QTech.API.Controllers
                     });
             }
         }
+
+        [HttpPost("v1/bet/history")]
+        public async Task<IActionResult> GetBetHistory([FromBody] BetHistoryRequestDTO request)
+        {
+            var result = await _casinoRepository.GetBetHistory(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

@@ -1,10 +1,13 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using Platform.QTech.API.Enums;
 using Platform.QTech.API.Models;
+using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.CasinoBetting;
 using Platform.Shared.Data.CasinoBetting.Entities;
 using Platform.Shared.Data.Platform;
+using Platform.Shared.Data.Reports.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
@@ -760,6 +763,150 @@ namespace Platform.QTech.API.Repository
                 return new Tuple<GameLobbyCode, GameLobbyResponseDTO>(result.Item1, new GameLobbyResponseDTO { Url = result.Item2.Url });
             }
         }
+        public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(BetHistoryRequestDTO request)
+        {
+            try
+            {
+                request.Page = request.Page <= 0 ? 1 : request.Page;
+                request.PageSize = request.PageSize <= 0 ? 10 : request.PageSize;
+                request.PageSize = request.PageSize > 50 ? 50 : request.PageSize;
+
+                var skip = (request.Page - 1) * request.PageSize;
+                double rowCount = 0;
+                decimal winLoss = 0m;
+                var result = new List<BetHistoryDTO>();
+                var transactions = new List<CasinoBet>();
+
+                if (request.IsCurrent)
+                {
+                    var openBets = new List<int> { (int)BetStatus.Running };
+                    var openBetsResponse = _casinoBettingContext.CasinoBet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && openBets.Contains(c.BetStatusId)).ToList();
+
+                    if (openBetsResponse.Count > 0)
+                        transactions.AddRange(openBetsResponse);
+
+                    rowCount = Convert.ToDouble(transactions.Count());
+                }
+                else
+                {
+                    if ((request.ToDate - request.FromDate).TotalDays > 30)
+                        request.FromDate = request.ToDate.AddDays(-30);
+
+                    if (request.BetStatusFilter == BetStatusFilter.All)
+                    {
+                        var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Rejected };
+                        var rawAll = _casinoBettingContext.CasinoBet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
+
+                        rowCount = rawAll.Count();
+                        //winLoss = rawAll.Sum(c => c.WinLoss);
+                        transactions = rawAll.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
+                    }
+
+                    if (request.BetStatusFilter == BetStatusFilter.Open)
+                    {
+                        var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running };
+                        var rawOpen = _casinoBettingContext.CasinoBet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
+
+                        rowCount = rawOpen.Count();
+                        //winLoss = rawOpen.Sum(c => c.WinLoss);
+                        transactions = rawOpen.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
+                    }
+
+                    if (request.BetStatusFilter == BetStatusFilter.Settled)
+                    {
+                        var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running, (int)BetStatus.Rejected };
+                        var rawSettled = _casinoBettingContext.CasinoBet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
+
+                        rowCount = rawSettled.Count();
+                        //winLoss = rawSettled.Sum(c => c.WinLoss);
+                        transactions = rawSettled.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
+                    }
+                }
+
+                if (transactions.Count == 0)
+                {
+                    return new BaseResponseDTO<BetHistoryResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString(),
+                        Result = new BetHistoryResponseDTO
+                        {
+                            CurrentPage = 1,
+                            PageCount = 1,
+                            PageSize = 1,
+                            RowCount = 0,
+                            TotalCommission = 0,
+                            TotalWinLoss = 0,
+                            TotalWLC = 0,
+                            Bets = new List<BetHistoryDTO>()
+                        }
+                    };
+                }                
+
+                foreach (var bet in transactions)
+                {
+                    ProductLookup productLookup = GetProductLookUp(bet.Category, bet.GameId);
+
+                    result.Add(new BetHistoryDTO
+                    {
+                        BetId = bet.BetId.ToString(),
+                        Stake = bet.Stake,
+                        Odds = "0",
+                        Payout = bet.Payout,
+                        WinLoss = bet.WinLoss,
+                        BetStatusId = bet.BetStatusId,
+                        BetStatusName = bet.BetStatusName,
+                        TransactionDate = bet.BetDate,
+                        Commission = 0,
+                        CurrencyCode = bet.CurrencyCode,
+                        OddsTypeId = 0,
+                        OddsType = string.Empty,
+                        CashOutStake = 0m,
+                        CashOutStatusId = (int)CashOutStatus.Unavailable,
+                        CashOutStatusName = CashOutStatus.Unavailable.ToString(),
+                        StakeTax = 0m,
+                        WinningsTax = 0m,
+                        TaxedStake = 0m,
+                        TaxedWinnings = 0m,
+                        ParlayBonus = 0m,
+                        ParlayBonusWinnings = 0m,
+                        StakeReal = bet.Stake,
+                        StakeRealPayout = bet.Payout,
+                        StakeBonus = bet.StakeBonus,
+                        StakeBonusPayout = 0m,
+                        IsFreeBet = false,
+                        IsBoosted = false,
+                        IsBetBuilder = false,
+                        GameName = productLookup.ProductTypeName,
+                        GameType = productLookup.GameType,
+                        ProviderName = productLookup.ProviderName,
+                        ProviderBetId = bet.ProviderBetId,
+                        Selections = new List<BetSelectionHistoryDTO>()
+                    });
+                }
+
+                return new BaseResponseDTO<BetHistoryResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new BetHistoryResponseDTO
+                    {
+                        CurrentPage = request.Page,
+                        PageCount = (int)Math.Ceiling(rowCount / request.PageSize),
+                        PageSize = request.PageSize,
+                        RowCount = Convert.ToInt32(rowCount),
+                        TotalCommission = 0,
+                        TotalWinLoss = winLoss,
+                        TotalWLC = winLoss,
+                        Bets = result.OrderByDescending(o => o.TransactionDate).ToList()
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
 
         private async Task<BaseResponseDTO<ClientResponse>> GetClient(string clientId)
         {
@@ -804,6 +951,38 @@ namespace Platform.QTech.API.Repository
 
                 return finalResult;
             }
+        }
+
+        private ProductLookup GetProductLookUp(string category, string gameId)
+        {
+            var categoryType = GetProduct(category);
+            var gameType = category.Replace("CASINO/LIVECASINO/", "").Replace("CASINO/VIRTUAL_SPORTS/", "").Replace("CASINO/", "");
+            var provider = !string.IsNullOrEmpty(gameId) ? gameId.Split("-").FirstOrDefault() : string.Empty;
+            var productName = !string.IsNullOrEmpty(gameId) ? gameId.Split("-").LastOrDefault() : string.Empty;
+
+            return new ProductLookup()
+            {
+                ProductId = (int)categoryType,
+                ProductTypeName = categoryType.ToString(),
+                GameType = gameType,
+                ProviderName = provider,
+                ProductName = productName
+            };
+        }
+
+        private Product GetProduct(string category)
+        {
+            var newCategory = Product.Casino;
+
+            if (category.ToLower().Contains("virtual"))
+            {
+                newCategory = Product.VirtualGames;
+            }
+            else if (category.ToLower().Contains("live"))
+            {
+                newCategory = Product.LiveCasino;
+            }
+            return newCategory;
         }
     }
 

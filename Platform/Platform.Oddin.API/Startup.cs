@@ -60,6 +60,7 @@ namespace Platform.Oddin.API
 
             services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Platform"]));
             services.AddDbContext<ESportBettingContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:ESportBetting"]));
+            services.AddApplicationInsightsTelemetry();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

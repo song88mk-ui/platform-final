@@ -19,7 +19,7 @@ namespace Platform.Oddin.API.Models
         public string TicketId { get; set; }
         public int TransactionType { get; set; }
         public string CreditOperatorTransactionId { get; set; } = "";
-        public string CreditTransactionId { get; set; } = null;
+        public string CreditTransactionId { get; set; } = "";
         public Ticket Ticket { get; set; } = new Ticket();
     }
     public class Ticket

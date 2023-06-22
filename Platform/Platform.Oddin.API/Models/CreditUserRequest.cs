@@ -13,7 +13,7 @@
         public TicketAmount Amount { get; set; }
         public string Description { get; set; }
         public string TransactionId { get; set; }
-        public string DebitOperatorTransactionId { get; set; }
+        public string DebitOperatorTransactionId { get; set; } = "";
         public string DebitTransactionId { get; set; }
         public string TicketId { get; set; }
         public int TransactionType { get; set; }

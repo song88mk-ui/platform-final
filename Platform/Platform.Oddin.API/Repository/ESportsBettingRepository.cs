@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.OpenApi.Validations;
 using Platform.Oddin.API.Enums;
 using Platform.Oddin.API.Models;
 using Platform.Shared.Data.ESportBetting;
@@ -120,14 +121,13 @@ namespace Platform.Oddin.API.Repository
                 if (clientResponse.StatusCode != StatusCode.Success)
                     return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
 
-                var authenticationResponse = await _operatorRepository.Authenticate(clientId, request.Token, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+                var authenticationResponse = await _operatorRepository.Authenticate(clientId, operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
 
                 if (authenticationResponse.StatusCode != StatusCode.Success)
                     return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
 
                 var dateNow = DateTime.UtcNow;
 
-                var isComplete = request.TransactionType != 0;
                 var bet = _eSportsBettingContext.ESportBet.FirstOrDefault(c => c.ProviderTransactionId == request.TransactionId);
 
                 if (bet == null)
@@ -144,7 +144,7 @@ namespace Platform.Oddin.API.Repository
                     BetId = $"{bet.BetId.ToString().ToUpper()}",
                     UserId = bet.UserId,
                     Payout = request.Amount.Amount,
-                    BetStatus = isComplete ? request.Amount.Amount > 0 || bet.Payout > 0 ? BetStatus.Won.ToString() : BetStatus.Lost.ToString() : BetStatus.Running.ToString(),
+                    BetStatus = request.Amount.Amount > 0 || bet.Payout > 0 ? BetStatus.Won.ToString() : BetStatus.Lost.ToString(),
                     CurrencyCode = bet.CurrencyCode
                 });
 
@@ -152,16 +152,45 @@ namespace Platform.Oddin.API.Repository
                 {
                     var rate = _platformContext.ForexEUR.Find(authenticationResponse.Result.CurrencyCode);
 
+                    var betStatus = BetStatus.Waiting;
+                    switch ((TransactionType)request.TransactionType)
+                    {
+                        case TransactionType.DebitAfterCredit:
+                            betStatus = BetStatus.Cancelled;
+                            break;
+                        case TransactionType.Block:
+                        case TransactionType.DebitWithUpdatedPossibleWin:
+                            betStatus = BetStatus.Running;
+                            break;
+                        case TransactionType.Refund:
+                            betStatus = BetStatus.Rejected;
+                            break;
+                        case TransactionType.Credit:
+                            betStatus = BetStatus.Won;
+                            break;
+                        case TransactionType.Void:
+                            betStatus = BetStatus.Void;
+                            break;
+                        case TransactionType.Lost:
+                            betStatus = BetStatus.Lost;
+                            break;
+                        default:
+                            betStatus = BetStatus.Running;
+                            break;
+                    }
+
                     using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
 
                     bet.ProviderTransactionId = request.TransactionId;
                     bet.TransactionType = Enum.GetName(typeof(TransactionType), request.TransactionType);
                     bet.Payout += request.Amount.Amount;
-                    bet.BetStatusId = isComplete ? bet.Payout > 0 ? (int)BetStatus.Won : (int)BetStatus.Lost : (int)BetStatus.Running;
-                    bet.BetStatusName = isComplete ? bet.Payout > 0 ? BetStatus.Won.ToString() : BetStatus.Lost.ToString() : BetStatus.Running.ToString();
+                    //bet.BetStatusId = bet.Payout > 0 ? (int)BetStatus.Won : (int)BetStatus.Lost;
+                    //bet.BetStatusName = bet.Payout > 0 ? BetStatus.Won.ToString() : BetStatus.Lost.ToString();
+                    bet.BetStatusId = (int)betStatus;
+                    bet.BetStatusName = betStatus.ToString();
                     bet.ProviderTransactionDate = JsonSerializer.Deserialize<Ticket>(bet.Ticket).Date;
 
-                    if (isComplete)
+                    if (betStatus != BetStatus.Running)
                     {
                         bet.WinLoss = bet.Payout - bet.Stake;
                         bet.SettlementDate = dateNow;
@@ -203,7 +232,7 @@ namespace Platform.Oddin.API.Repository
                     _eSportsBettingContext.SaveChanges();
                     scope.Complete();
 
-                    if (isComplete)
+                    if (bet.BetStatusId != (int)BetStatus.Running)
                     {
                         //_rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
                         //{
@@ -275,7 +304,7 @@ namespace Platform.Oddin.API.Repository
                 if (clientResponse.StatusCode != StatusCode.Success)
                     return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
 
-                var authenticationResponse = await _operatorRepository.Authenticate(clientId, request.Token, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+                var authenticationResponse = await _operatorRepository.Authenticate(clientId, operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
 
                 if (authenticationResponse.StatusCode != StatusCode.Success)
                     return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
@@ -287,7 +316,6 @@ namespace Platform.Oddin.API.Repository
                     return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InsufficientFunds };
                 }
 
-                var isComplete = request.TransactionType != 0;
                 var bet = _eSportsBettingContext.ESportBet.FirstOrDefault(c => c.ProviderTransactionId == request.TransactionId);
 
                 if (bet == null)
@@ -320,10 +348,10 @@ namespace Platform.Oddin.API.Repository
                             OperatorToken = operatorToken,
                             IsAgent = clientResponse.Result.IsAgent,
                             Stake = request.Amount.Amount,
-                            WinLoss = isComplete ? request.Amount.Amount * -1 : 0,
+                            WinLoss = 0,
                             Payout = 0,
-                            BetStatusId = isComplete ? (int)BetStatus.Lost : (int)BetStatus.Running,
-                            BetStatusName = isComplete ? BetStatus.Lost.ToString() : BetStatus.Running.ToString(),
+                            BetStatusId = (int)BetStatus.Running,
+                            BetStatusName = BetStatus.Running.ToString(),
                             Reason = string.Empty,
                             CurrencyCode = authenticationResponse.Result.CurrencyCode,
                             ProviderBetId = request.TicketId,

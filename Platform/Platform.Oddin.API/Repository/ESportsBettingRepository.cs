@@ -168,41 +168,17 @@ namespace Platform.Oddin.API.Repository
 
                     var rate = _platformContext.ForexEUR.Find(authenticationResponse.Result.CurrencyCode);
 
-                    var betStatus = BetStatus.Waiting;
-                    switch ((TransactionType)request.TransactionType)
-                    {
-                        case TransactionType.DebitAfterCredit:
-                            betStatus = BetStatus.Cancelled;
-                            break;
-                        case TransactionType.Block:
-                        case TransactionType.DebitWithUpdatedPossibleWin:
-                            betStatus = BetStatus.Running;
-                            break;
-                        case TransactionType.Refund:
-                            betStatus = BetStatus.Rejected;
-                            break;
-                        case TransactionType.Credit:
-                            betStatus = BetStatus.Won;
-                            break;
-                        case TransactionType.Void:
-                            betStatus = BetStatus.Void;
-                            break;
-                        case TransactionType.Lost:
-                            betStatus = BetStatus.Lost;
-                            break;
-                        default:
-                            betStatus = BetStatus.Running;
-                            break;
-                    }
+                    var betStatus = GetBetStatus(request.TransactionType);
 
                     using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
 
                     bet.ProviderTransactionId = request.TransactionId;
                     bet.TransactionType = Enum.GetName(typeof(TransactionType), request.TransactionType);
-                    bet.Payout += request.Amount.Amount;
+                    bet.Payout = request.Amount.Amount;
                     bet.BetStatusId = (int)betStatus;
                     bet.BetStatusName = betStatus.ToString();
                     bet.ProviderTransactionDate = JsonSerializer.Deserialize<Ticket>(bet.Ticket).Date;
+                    bet.Reason = request.Description;
                     bet.Description = request.Description;
 
                     if (betStatus != BetStatus.Running)
@@ -341,6 +317,8 @@ namespace Platform.Oddin.API.Repository
 
                         using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
 
+                        var betStatus = GetBetStatus(request.TransactionType);
+
                         var transactionEntity = _eSportsBettingContext.ESportBet.Add(new ESportBet
                         {
                             BetId = betId,
@@ -357,9 +335,9 @@ namespace Platform.Oddin.API.Repository
                             Stake = request.Ticket.Stake.Amount,
                             WinLoss = 0,
                             Payout = request.Ticket.PossibleWinAmount.Amount,
-                            BetStatusId = (int)BetStatus.Running,
-                            BetStatusName = BetStatus.Running.ToString(),
-                            Reason = string.Empty,
+                            BetStatusId = (int)betStatus,
+                            BetStatusName = betStatus.ToString(),
+                            Reason = request.Description,
                             CurrencyCode = authenticationResponse.Result.CurrencyCode,
                             Ticket = JsonSerializer.Serialize(request.Ticket),
                             Description = request.Description,
@@ -554,6 +532,39 @@ namespace Platform.Oddin.API.Repository
 
                 return finalResult;
             }
+        }
+
+        private BetStatus GetBetStatus(int transactionType)
+        {
+            var retval = BetStatus.Waiting;
+
+            switch ((TransactionType)transactionType)
+            {
+                case TransactionType.DebitAfterCredit:
+                    retval = BetStatus.Cancelled;
+                    break;
+                case TransactionType.Block:
+                case TransactionType.DebitWithUpdatedPossibleWin:
+                    retval = BetStatus.Running;
+                    break;
+                case TransactionType.Refund:
+                    retval = BetStatus.Rejected;
+                    break;
+                case TransactionType.Credit:
+                    retval = BetStatus.Won;
+                    break;
+                case TransactionType.Void:
+                    retval = BetStatus.Void;
+                    break;
+                case TransactionType.Lost:
+                    retval = BetStatus.Lost;
+                    break;
+                default:
+                    retval = BetStatus.Running;
+                    break;
+            }
+
+            return retval;
         }
 
         #endregion

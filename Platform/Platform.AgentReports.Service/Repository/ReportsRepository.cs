@@ -650,6 +650,8 @@ namespace Platform.AgentReports.Service.Repository
                     OutstandingBalance = outstandingBalance,
                     IsCashPlayer = agent.IsCashMarket
                 }).Entity;
+
+                context.SaveChanges();
             }
             else if(isCasino == false)
             {

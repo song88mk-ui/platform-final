@@ -24,6 +24,7 @@ namespace Platform.Shared.Models
     {
         public string BetId { get; set; }
         public DateTime TransactionDate { get; set; }
+        public string ProductName { get; set; }
         public string GameName { get; set; }
         public string GameType { get; set; }
         public string ProviderName { get; set; }

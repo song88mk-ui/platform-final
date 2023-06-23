@@ -1845,12 +1845,20 @@ namespace Platform.AgentReports.API.Repository
             //check if the userId is player
             //need to refactor this. need to get the userTypeId from agentApi (Internal)
             var winLoss = _context.WinLoss.FirstOrDefault(c => c.ParentUserId == 0 && c.IndirectUserId == userId);
-
+            
             var userType = (int)UserType.Agent;
 
             if (winLoss != null)
             {
                 userType = winLoss.UserTypeId;
+            }
+            else
+            {
+                var casinoWinLoss = _context.CasinoWinLoss.FirstOrDefault(c => c.ParentUserId == 0 && c.IndirectUserId == userId);
+                if (casinoWinLoss != null)
+                {
+                    userType = casinoWinLoss.UserTypeId;
+                }
             }
 
             var wlcToday = 0.0m;

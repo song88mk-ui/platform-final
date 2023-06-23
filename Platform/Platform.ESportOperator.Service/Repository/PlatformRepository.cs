@@ -20,7 +20,7 @@ namespace Platform.ESportOperator.Service.Repository
 
         public void ProcessESportBetPlacementRequest(OnESportBetPlacementRequest message, string correlationId)
         {
-            AddOperatorLog(new ESportOperatorLog
+            AddESportOperatorLog(new ESportOperatorLog
             {
                 Direction = "REQUEST",
                 ClientId = message.ClientId,
@@ -36,7 +36,7 @@ namespace Platform.ESportOperator.Service.Repository
 
         public void ProcessESportBetPlacementResponse(OnESportBetPlacementResponse message, string correlationId)
         {
-            AddOperatorLog(new ESportOperatorLog
+            AddESportOperatorLog(new ESportOperatorLog
             {
                 Direction = "RESPONSE",
                 ClientId = message.ClientId,
@@ -52,7 +52,7 @@ namespace Platform.ESportOperator.Service.Repository
 
         public void ProcessESportBetSettlementRequest(OnESportBetSettlementRequest message, string correlationId)
         {
-            AddOperatorLog(new ESportOperatorLog
+            AddESportOperatorLog(new ESportOperatorLog
             {
                 Direction = "REQUEST",
                 ClientId = message.ClientId,
@@ -68,7 +68,7 @@ namespace Platform.ESportOperator.Service.Repository
 
         public void ProcessESportBetSettlementResponse(OnESportBetSettlementResponse message, string correlationId)
         {
-            AddOperatorLog(new ESportOperatorLog
+            AddESportOperatorLog(new ESportOperatorLog
             {
                 Direction = "RESPONSE",
                 ClientId = message.ClientId,
@@ -84,7 +84,7 @@ namespace Platform.ESportOperator.Service.Repository
 
         #region Utilities
 
-        private void AddOperatorLog(ESportOperatorLog entity)
+        private void AddESportOperatorLog(ESportOperatorLog entity)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {

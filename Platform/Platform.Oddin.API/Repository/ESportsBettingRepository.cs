@@ -122,6 +122,9 @@ namespace Platform.Oddin.API.Repository
                 if (authenticationResponse.Result.Balance < request.Amount.Amount)
                     return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InsufficientFunds };
 
+                if (authenticationResponse.Result.CurrencyCode != request.Currency)
+                    return new DebitUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidCurrency };
+
                 var bet = _eSportsBettingContext.ESportBet.FirstOrDefault(c => c.ProviderBetId == request.TicketId);
 
                 if (bet == null)
@@ -201,11 +204,9 @@ namespace Platform.Oddin.API.Repository
                             UserId = authenticationResponse.Result.UserId,
                             OperatorToken = operatorToken,
                             IsAgent = clientResponse.Result.IsAgent,
-                            //Stake = request.Ticket.Stake.Amount,
-                            Stake = request.Amount.Amount,
+                            Stake = request.Ticket.Stake.Amount,
                             WinLoss = 0,
-                            //Payout = request.Ticket.PossibleWinAmount.Amount,
-                            Payout = 0,
+                            Payout = request.Ticket.PossibleWinAmount.Amount,
                             Odds = request.Ticket.Bets.FirstOrDefault()?.TotalOdds ?? 0m,
                             BetStatusId = (int)betStatus,
                             BetStatusName = betStatus.ToString(),
@@ -308,10 +309,13 @@ namespace Platform.Oddin.API.Repository
 
                     using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
 
+                    var odds = request.Ticket.Bets.FirstOrDefault()?.TotalOdds ?? 0m;
+
                     bet.ProviderTransactionId = request.TransactionId;
                     bet.TransactionType = Enum.GetName(typeof(TransactionType), request.TransactionType);
-                    bet.Payout = request.Amount.Amount;
+                    bet.Payout = request.Ticket.PossibleWinAmount.Amount;
                     bet.ProviderTransactionDate = request.Ticket.Date;
+                    bet.Odds = odds;
                     bet.Reason = request.Description;
 
                     //transactionIds.Add($"{request.TransactionId}|{authenticationResponse.Result.Balance}");
@@ -389,6 +393,9 @@ namespace Platform.Oddin.API.Repository
 
                 if (authenticationResponse.StatusCode != StatusCode.Success)
                     return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidToken };
+
+                if (authenticationResponse.Result.CurrencyCode != request.Currency)
+                    return new CreditUserResponse() { OperatorTransactionId = request.TransactionId, ErrorCode = (int)SessionCode.InvalidCurrency };
 
                 var dateNow = DateTime.UtcNow;
                 var bet = _eSportsBettingContext.ESportBet.FirstOrDefault(c => c.ProviderBetId == request.TicketId);

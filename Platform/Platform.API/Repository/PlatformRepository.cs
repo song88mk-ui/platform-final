@@ -4110,6 +4110,7 @@ namespace Platform.API.Repository
                 IsCurrent = request.IsCurrent,
                 Page = request.Page,
                 PageSize = request.PageSize,
+                CasinoBetStatusFilter = request.CasinoBetStatusFilter,
                 IsOddsString = !string.IsNullOrEmpty(_configuration["Custom:IsOddsString"]) && Convert.ToBoolean(_configuration["Custom:IsOddsString"]) == true
             };
 

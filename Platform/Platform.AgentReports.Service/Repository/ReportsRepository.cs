@@ -1544,7 +1544,7 @@ namespace Platform.AgentReports.Service.Repository
                 {
                     cashBalance = winLossCommission;
 
-                    trueCashBalance = 0;
+                    trueCashBalance = winLossCommission - amount;
                     outstandingBalance = 0;
 
                     if (agent.IsCashMarket == false)

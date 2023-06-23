@@ -855,7 +855,7 @@ namespace Platform.QTech.API.Repository
                         BetStatusId = bet.BetStatusId,
                         BetStatusName = bet.BetStatusName,
                         TransactionDate = bet.BetDate,
-                        GameName = productLookup.ProductTypeName,
+                        GameName = productLookup.ProductName,
                         GameType = productLookup.GameType,
                         ProviderName = productLookup.ProviderName,
                         ProviderBetId = bet.ProviderBetId                        

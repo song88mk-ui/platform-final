@@ -24,7 +24,8 @@ namespace Platform.Oddin.API.Controllers
 
         [HttpPost("v1/userdetails")]
         public async Task<IActionResult> UserDetails([FromBody] UserDetailsRequest request)
-        {                        
+        {
+            //
             var result = await _eSportsBettingRepository.GetUserDetails(request);
 
             var parameters = request;

@@ -290,16 +290,20 @@ namespace Platform.Oddin.API.Repository
                     }
 
                     var transactionIds = JsonSerializer.Deserialize<List<string>>(bet.TransactionIds).ToList();
-                    var transactionId = transactionIds.Select(s => s.Split('|').First()).Where(c => c.Contains(request.TransactionId)).FirstOrDefault();
-                    var validTransactionIds = new string[] { ((int)TransactionType.Block).ToString(), ((int)TransactionType.DebitWithUpdatedPossibleWin).ToString() };
-
-                    if (transactionId != null && !validTransactionIds.Contains(request.TransactionId))
+                    var validTransactionTypeId = new int[] { (int)TransactionType.Block, (int)TransactionType.DebitWithUpdatedPossibleWin };
+                    
+                    if (!validTransactionTypeId.Contains(request.TransactionType))
                     {
-                        return new DebitUserResponse()
+                        var transactionId = transactionIds.Select(s => s.Split('|').First()).Where(c => c.Contains(request.TransactionId)).FirstOrDefault();
+
+                        if (transactionId != null)
                         {
-                            OperatorTransactionId = request.TransactionId,
-                            ErrorCode = (int)SessionCode.OK
-                        };
+                            return new DebitUserResponse()
+                            {
+                                OperatorTransactionId = request.TransactionId,
+                                ErrorCode = (int)SessionCode.OK
+                            };
+                        }
                     }
 
                     using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });

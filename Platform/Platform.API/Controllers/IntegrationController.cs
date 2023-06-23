@@ -278,7 +278,17 @@ namespace Platform.API.Controllers
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetBetHistory(apiKey, clientId, languageCode, operatorToken, request);
+            var result = new object();
+
+            switch (request.ProductFilter)
+            {
+                case ProductFilter.Casino:
+                    result = await _platformRepository.GetCasinoBetHistory(apiKey, clientId, languageCode, operatorToken, request);
+                    break;
+                default:
+                    result = await _platformRepository.GetBetHistory(apiKey, clientId, languageCode, operatorToken, request);
+                    break;
+            }            
 
             var parameters = request;
 
@@ -289,13 +299,13 @@ namespace Platform.API.Controllers
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", ((dynamic)result).StatusCode.ToString() },
+                                { "message", ((dynamic)result).Message.ToString() }
                             };
 
             _telemetryClient.TrackEvent("e:v1/bet/history", properties);
 
-            switch (result.StatusCode)
+            switch (((dynamic)result).StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
                     return Ok(result);

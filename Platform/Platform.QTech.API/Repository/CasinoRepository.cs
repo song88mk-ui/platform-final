@@ -763,7 +763,7 @@ namespace Platform.QTech.API.Repository
                 return new Tuple<GameLobbyCode, GameLobbyResponseDTO>(result.Item1, new GameLobbyResponseDTO { Url = result.Item2.Url });
             }
         }
-        public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(BetHistoryRequestDTO request)
+        public async Task<BaseResponseDTO<CasinoBetHistoryResponseDTO>> GetBetHistory(BetHistoryRequestDTO request)
         {
             try
             {
@@ -774,7 +774,7 @@ namespace Platform.QTech.API.Repository
                 var skip = (request.Page - 1) * request.PageSize;
                 double rowCount = 0;
                 decimal winLoss = 0m;
-                var result = new List<BetHistoryDTO>();
+                var result = new List<CasinoBetHistoryDTO>();
                 var transactions = new List<CasinoBet>();
 
                 if (request.IsCurrent)
@@ -825,11 +825,11 @@ namespace Platform.QTech.API.Repository
 
                 if (transactions.Count == 0)
                 {
-                    return new BaseResponseDTO<BetHistoryResponseDTO>
+                    return new BaseResponseDTO<CasinoBetHistoryResponseDTO>
                     {
                         StatusCode = StatusCode.Success,
                         Message = StatusCode.Success.ToString(),
-                        Result = new BetHistoryResponseDTO
+                        Result = new CasinoBetHistoryResponseDTO
                         {
                             CurrentPage = 1,
                             PageCount = 1,
@@ -838,7 +838,7 @@ namespace Platform.QTech.API.Repository
                             TotalCommission = 0,
                             TotalWinLoss = 0,
                             TotalWLC = 0,
-                            Bets = new List<BetHistoryDTO>()
+                            Bets = new List<CasinoBetHistoryDTO>()
                         }
                     };
                 }                
@@ -847,49 +847,26 @@ namespace Platform.QTech.API.Repository
                 {
                     ProductLookup productLookup = GetProductLookUp(bet.Category, bet.GameId);
 
-                    result.Add(new BetHistoryDTO
+                    result.Add(new CasinoBetHistoryDTO
                     {
                         BetId = bet.BetId.ToString(),
-                        Stake = bet.Stake,
-                        Odds = "0",
-                        Payout = bet.Payout,
-                        WinLoss = bet.WinLoss,
+                        Stake = bet.Stake,                        
+                        Payout = bet.Payout,                        
                         BetStatusId = bet.BetStatusId,
                         BetStatusName = bet.BetStatusName,
                         TransactionDate = bet.BetDate,
-                        Commission = 0,
-                        CurrencyCode = bet.CurrencyCode,
-                        OddsTypeId = 0,
-                        OddsType = string.Empty,
-                        CashOutStake = 0m,
-                        CashOutStatusId = (int)CashOutStatus.Unavailable,
-                        CashOutStatusName = CashOutStatus.Unavailable.ToString(),
-                        StakeTax = 0m,
-                        WinningsTax = 0m,
-                        TaxedStake = 0m,
-                        TaxedWinnings = 0m,
-                        ParlayBonus = 0m,
-                        ParlayBonusWinnings = 0m,
-                        StakeReal = bet.Stake,
-                        StakeRealPayout = bet.Payout,
-                        StakeBonus = bet.StakeBonus,
-                        StakeBonusPayout = 0m,
-                        IsFreeBet = false,
-                        IsBoosted = false,
-                        IsBetBuilder = false,
                         GameName = productLookup.ProductTypeName,
                         GameType = productLookup.GameType,
                         ProviderName = productLookup.ProviderName,
-                        ProviderBetId = bet.ProviderBetId,
-                        Selections = new List<BetSelectionHistoryDTO>()
+                        ProviderBetId = bet.ProviderBetId                        
                     });
                 }
 
-                return new BaseResponseDTO<BetHistoryResponseDTO>
+                return new BaseResponseDTO<CasinoBetHistoryResponseDTO>
                 {
                     StatusCode = StatusCode.Success,
                     Message = StatusCode.Success.ToString(),
-                    Result = new BetHistoryResponseDTO
+                    Result = new CasinoBetHistoryResponseDTO
                     {
                         CurrentPage = request.Page,
                         PageCount = (int)Math.Ceiling(rowCount / request.PageSize),

@@ -83,6 +83,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<CasinoURLResponseDTO>> GetLiveCasinoURL(string clientId, string operatorToken, string countryCode, string langCode, bool isMobile);
         Task<BaseResponseDTO<CasinoURLResponseDTO>> GetVirtualGames(string clientId, string operatorToken, string countryCode, string langCode, bool isMobile);
         Task<BaseResponseDTO<ESportConfigResponseDTO>> GetESportConfig(string clientId, string operatorToken, string langCode);
+        Task<BaseResponseDTO<CasinoBetHistoryResponseDTO>> GetCasinoBetHistory(string apiKey, string clientId, string langCode, string operatorToken, BetHistoryRequest request);
 
     }
 }

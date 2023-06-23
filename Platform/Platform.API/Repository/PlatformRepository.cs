@@ -4031,6 +4031,90 @@ namespace Platform.API.Repository
                 };
             }
         }
+        public async Task<BaseResponseDTO<CasinoBetHistoryResponseDTO>> GetCasinoBetHistory(string apiKey, string clientId, string langCode, string operatorToken, BetHistoryRequest request)
+        {
+            if (request.IsCurrent == false)
+            {
+                if (request.FromDate > request.ToDate)
+                {
+                    return new BaseResponseDTO<CasinoBetHistoryResponseDTO>
+                    {
+                        StatusCode = StatusCode.FromDate_Must_Be_Earlier_Than_ToDate,
+                        Message = StatusCode.FromDate_Must_Be_Earlier_Than_ToDate.ToString().Replace('_', ' ')
+                    };
+                }
+            }
+
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<CasinoBetHistoryResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<CasinoBetHistoryResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<CasinoBetHistoryResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<CasinoBetHistoryResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+
+            if (authenticationResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<CasinoBetHistoryResponseDTO>
+                {
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
+                };
+            }
+
+            var payload = new BetHistoryRequestDTO
+            {
+                APIKey = apiKey,
+                OperatorToken = operatorToken,
+                ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
+                UserId = authenticationResponse.Result.UserId,
+                FromDate = request.FromDate,
+                ToDate = request.ToDate,
+                BetStatusFilter = request.BetStatusFilter,
+                IsCurrent = request.IsCurrent,
+                Page = request.Page,
+                PageSize = request.PageSize,
+                IsOddsString = !string.IsNullOrEmpty(_configuration["Custom:IsOddsString"]) && Convert.ToBoolean(_configuration["Custom:IsOddsString"]) == true
+            };
+
+            return await _casinoRepository.GetBetHistory(payload);           
+        }
 
         public async Task<BaseResponseDTO<ESportConfigResponseDTO>> GetESportConfig(string clientId, string operatorToken, string langCode)
         {

@@ -6,5 +6,6 @@ namespace Platform.API.Repository
     public interface ICasinoRepository
     {
         Task<BaseResponseDTO<GameLobbyResponseDTO>> GetLobbyURL(GameLobbyRequestDTO request);
+        Task<BaseResponseDTO<CasinoBetHistoryResponseDTO>> GetBetHistory(BetHistoryRequestDTO request);
     }
 }

@@ -48,7 +48,6 @@ namespace Platform.Oddin.API
             services.AddControllers();
 
             services.AddHttpClient<IOperatorRepository, OperatorRepository>();
-            services.AddHttpClient<IProviderRepository, ProviderRepository>();
             services.AddHttpClient<IRabbitMQRepository, RabbitMQRepository>();
             services.AddScoped<IESportsBettingRepository, ESportsBettingRepository>();
             services.AddScoped<IMemCache, MemCache>();

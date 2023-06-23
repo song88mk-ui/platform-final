@@ -693,6 +693,15 @@ namespace Platform.Operator.API.Repository
             {
                 try
                 {
+                    // idempotency check
+                    if (!string.IsNullOrEmpty(request.TransactionId) && _platformContext.OperatorAudit.FirstOrDefault(c => c.TransactionId == request.TransactionId) != null)
+                    {
+                        return new BetPlacementResponseDTO
+                        {
+                            StatusId = 1000
+                        };
+                    }
+
                     var result = _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefault();
 
                     if (result == null)
@@ -716,7 +725,7 @@ namespace Platform.Operator.API.Repository
                     if (testConfig != null && testConfig.ClientId == id)
                     {
 
-                        var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, 0, request.Stake, BetStatus.Running.ToString(), testConfig.IsFreeBet);
+                        var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, 0, request.Stake, BetStatus.Running.ToString(), testConfig.IsFreeBet, request.TransactionId);
 
                         result.Balance = operatorAudit.PostBalance;
                         _platformContext.Operator.Update(result);
@@ -736,8 +745,7 @@ namespace Platform.Operator.API.Repository
                     }
                     else
                     {
-
-                        var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, 0, request.Stake, BetStatus.Running.ToString());
+                        var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, 0, request.Stake, BetStatus.Running.ToString(), transactionId: request.TransactionId);
 
                         result.Balance = operatorAudit.PostBalance;
                         _platformContext.Operator.Update(result);
@@ -828,7 +836,7 @@ namespace Platform.Operator.API.Repository
             }
         }
         #region Private Method
-        private OperatorAudit AddOrUpdateOperatorAudit(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal payout, decimal stake, string betStatus, bool isFreebet = false)
+        private OperatorAudit AddOrUpdateOperatorAudit(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal payout, decimal stake, string betStatus, bool isFreebet = false, string transactionId = null)
         {
             var amount = payout;
             if ((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Running)
@@ -844,7 +852,6 @@ namespace Platform.Operator.API.Repository
 
             if (prevOperatorAudit != null)
             {
-
                 if (prevOperatorAudit.TransactionTypeId != (int)Enum.Parse(typeof(BetStatus), betStatus))
                 {
                     switch (prevOperatorAudit.TransactionTypeId)
@@ -896,6 +903,7 @@ namespace Platform.Operator.API.Repository
                 PreBalance = postBalance,
                 Amount = amount,
                 PostBalance = postBalance + amount,
+                TransactionId = !string.IsNullOrEmpty(transactionId) ? transactionId : string.Empty,
             }).Entity;
 
             _platformContext.SaveChanges();

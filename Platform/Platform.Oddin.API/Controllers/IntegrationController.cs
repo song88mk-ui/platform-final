@@ -21,6 +21,7 @@ namespace Platform.Oddin.API.Controllers
             _eSportsBettingRepository = eSportsBettingRepository;
             _telemetryClient = telemetryClient;
         }
+
         [HttpPost("v1/userdetails")]
         public async Task<IActionResult> UserDetails([FromBody] UserDetailsRequest request)
         {                        
@@ -49,7 +50,6 @@ namespace Platform.Oddin.API.Controllers
         [HttpPost("v1/debituser")]
         public async Task<IActionResult> DebitUser([FromBody] DebitUserRequest request)
         {
-            //
             var result = await _eSportsBettingRepository.DebitUser(request);
 
             var parameters = request;

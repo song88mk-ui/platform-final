@@ -20,5 +20,6 @@ namespace Platform.Shared.Data.Platform.Entities
         public decimal PostBalance { get; set; }
         public string CurrencyCode { get; set; }
         public DateTime CreatedDate { get; set; }
+        public string TransactionId { get; set; }
     }
 }

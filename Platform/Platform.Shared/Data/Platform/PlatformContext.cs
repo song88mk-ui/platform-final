@@ -21,6 +21,7 @@ namespace Platform.Shared.Data.Platform
             modelBuilder.Entity<OperatorSettlementRetry>().HasKey(k => new { k.BetId });
             modelBuilder.Entity<NegativeTest>().HasKey(k => new { k.ClientId });
             modelBuilder.Entity<TestConfig>().HasKey(k => new { k.ClientId });
+            modelBuilder.Entity<ESportOperatorLog>().HasKey(k => new { k.Id });
         }
 
         public DbSet<Client> Client { get; set; }
@@ -32,5 +33,6 @@ namespace Platform.Shared.Data.Platform
         public DbSet<OperatorSettlementRetry> OperatorSettlementRetry { get; set; }
         public DbSet<NegativeTest> NegativeTest { get; set; }
         public DbSet<TestConfig> TestConfig { get; set; }
+        public DbSet<ESportOperatorLog> ESportOperatorLog { get; set; }
     }
 }

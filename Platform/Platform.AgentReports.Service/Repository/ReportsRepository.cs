@@ -647,7 +647,7 @@ namespace Platform.AgentReports.Service.Repository
                     UserTypeId = (int)agent.UserType,
                     CashBalance = 0m,
                     TrueCashBalance = 0m,
-                    OutstandingBalance = outstandingBalance,
+                    OutstandingBalance = isCasino ? 0m : outstandingBalance,
                     IsCashPlayer = agent.IsCashMarket
                 }).Entity;
 

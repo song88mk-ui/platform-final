@@ -8,6 +8,7 @@ namespace Platform.API.Models
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
         public BetStatusFilter BetStatusFilter { get; set; }
+        public CasinoBetStatusFilter CasinoBetStatusFilter { get; set; } = CasinoBetStatusFilter.All;
         public ProductFilter ProductFilter { get; set; } = ProductFilter.Sportbook;
         public int Page { get; set; }
         public int PageSize { get; set; }

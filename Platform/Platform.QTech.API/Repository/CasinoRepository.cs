@@ -792,7 +792,7 @@ namespace Platform.QTech.API.Repository
                     if ((request.ToDate - request.FromDate).TotalDays > 30)
                         request.FromDate = request.ToDate.AddDays(-30);
 
-                    if (request.BetStatusFilter == BetStatusFilter.All)
+                    if (request.CasinoBetStatusFilter == CasinoBetStatusFilter.All)
                     {
                         var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Rejected };
                         var rawAll = _casinoBettingContext.CasinoBet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
@@ -802,19 +802,19 @@ namespace Platform.QTech.API.Repository
                         transactions = rawAll.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
                     }
 
-                    if (request.BetStatusFilter == BetStatusFilter.Open)
+                    if (request.CasinoBetStatusFilter == CasinoBetStatusFilter.Won)
                     {
-                        var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running };
-                        var rawOpen = _casinoBettingContext.CasinoBet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
+                        var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running, (int)BetStatus.Lost };
+                        var rawOpen = _casinoBettingContext.CasinoBet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
 
                         rowCount = rawOpen.Count();
                         //winLoss = rawOpen.Sum(c => c.WinLoss);
                         transactions = rawOpen.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
                     }
 
-                    if (request.BetStatusFilter == BetStatusFilter.Settled)
+                    if (request.CasinoBetStatusFilter == CasinoBetStatusFilter.Lost)
                     {
-                        var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running, (int)BetStatus.Rejected };
+                        var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running, (int)BetStatus.Rejected, (int)BetStatus.Won };
                         var rawSettled = _casinoBettingContext.CasinoBet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
 
                         rowCount = rawSettled.Count();
@@ -855,6 +855,7 @@ namespace Platform.QTech.API.Repository
                         BetStatusId = bet.BetStatusId,
                         BetStatusName = bet.BetStatusName,
                         TransactionDate = bet.BetDate,
+                        ProductName = productLookup.ProductTypeName,
                         GameName = productLookup.ProductName,
                         GameType = productLookup.GameType,
                         ProviderName = productLookup.ProviderName,

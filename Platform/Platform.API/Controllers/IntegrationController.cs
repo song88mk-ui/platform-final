@@ -1476,14 +1476,14 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/sports")]
-        public async Task<IActionResult> GetSports([FromQuery] SportGroup sportGroup, FixtureScope? fixtureScope)
+        public async Task<IActionResult> GetSports([FromQuery] SportGroup sportGroup, FixtureScope? fixtureScope, DateTime? dateUTC, int? minuteUTCOffset)
         {
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetSports(apiKey, clientId, languageCode, sportGroup, fixtureScope);
+            var result = await _platformRepository.GetSports(apiKey, clientId, languageCode, sportGroup, fixtureScope, dateUTC, minuteUTCOffset);
 
             var parameters = new
             {

@@ -10,5 +10,7 @@ namespace Platform.Shared.Models
         public string ClientCode { get; set; }
         public SportGroup SportGroup { get; set; }
         public FixtureScope? FixtureScope { get; set; }
+        public DateTime? DateUTC { get; set; }
+        public int? MinuteUTCOffset { get; set; }
     }
 }

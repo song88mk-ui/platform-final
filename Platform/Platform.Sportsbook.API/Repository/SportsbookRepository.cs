@@ -693,10 +693,15 @@ namespace Platform.Sportsbook.API.Repository
             {
                 switch (request.FixtureScope.Value)
                 {
-
                     case FixtureScope.Early:
+                        var earlyDateUTC = GetDateTimeRange(request.DateUTC.Value, request.MinuteUTCOffset.Value);
+
+                        fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 0 && c.FiStDa > earlyDateUTC.Item1 && c.FiStDa < earlyDateUTC.Item2);
+                        break;
                     case FixtureScope.Today:
-                        fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 0);
+                        var todayDateUTC = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset.Value);
+
+                        fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 0 && c.FiStDa > todayDateUTC.Item1 && c.FiStDa < todayDateUTC.Item2);
                         break;
                     default:
                         fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 1);

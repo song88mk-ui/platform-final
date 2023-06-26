@@ -685,7 +685,24 @@ namespace Platform.Sportsbook.API.Repository
             if (mCache != null)
                 return mCache;
 
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
+            FilterDefinition<Fixture> fixtureFilter;
+
+            if (request.FixtureScope == null)
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
+            else
+            {
+                switch (request.FixtureScope.Value)
+                {
+
+                    case FixtureScope.Early:
+                    case FixtureScope.Today:
+                        fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 0);
+                        break;
+                    default:
+                        fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 1);
+                        break;
+                }
+            }
 
             if (request.SportGroup != Shared.Enums.SportGroup.All)
             {

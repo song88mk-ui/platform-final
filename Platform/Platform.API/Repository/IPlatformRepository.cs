@@ -46,7 +46,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<TWResponseDTO>> GetTopLeagueFixtures(string apiKey, string clientId, string langCode, TopLeagueFixtureRequest request, string ipCountryCode);
         Task<BaseResponseDTO<TWResponseDTO>> GetSegmentFixtures(string apiKey, string clientId, string langCode, SegmentFixtureRequest request, string ipCountryCode);
         Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(string apiKey, string clientId, string langCode, LeagueFixtureRequest request, string ipCountryCode);
-        Task<BaseResponseDTO<SportsResponseDTO>> GetSports(string apiKey, string clientId, string langCode, SportGroup sportGroup);
+        Task<BaseResponseDTO<SportsResponseDTO>> GetSports(string apiKey, string clientId, string langCode, SportGroup sportGroup, FixtureScope? fixtureScope);
         Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(string apiKey, string clientId, string langCode, FixtureDetailsRequest request, string ipCountryCode);
         Task<BaseResponseDTO<TWResponseDTO>> GetSelectionDetails(string apiKey, string clientId, string langCode, FixtureMarketSelectionDetailsRequest request, string ipCountryCode);
         Task<BaseResponseDTO<TWResponseDTO>> GetOutrightFixtures(string apiKey, string clientId, string langCode, OutrightFixtureRequest request, string ipCountryCode);

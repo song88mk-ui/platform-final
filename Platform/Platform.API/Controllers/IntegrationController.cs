@@ -1483,7 +1483,7 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetSports(apiKey, clientId, languageCode, sportGroup);
+            var result = await _platformRepository.GetSports(apiKey, clientId, languageCode, sportGroup, fixtureScope);
 
             var parameters = new
             {

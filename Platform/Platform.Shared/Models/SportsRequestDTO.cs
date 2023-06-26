@@ -9,5 +9,6 @@ namespace Platform.Shared.Models
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
         public SportGroup SportGroup { get; set; }
+        public FixtureScope? FixtureScope { get; set; }
     }
 }

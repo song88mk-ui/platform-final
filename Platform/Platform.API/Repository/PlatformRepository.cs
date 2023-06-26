@@ -2128,7 +2128,7 @@ namespace Platform.API.Repository
                 IpCountryCode = ipCountryCode,
             });
         }
-        public async Task<BaseResponseDTO<SportsResponseDTO>> GetSports(string apiKey, string clientId, string langCode, SportGroup sportGroup)
+        public async Task<BaseResponseDTO<SportsResponseDTO>> GetSports(string apiKey, string clientId, string langCode, SportGroup sportGroup, FixtureScope? fixtureScope)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -2168,7 +2168,8 @@ namespace Platform.API.Repository
                 ClientId = clientResponse.Result.ClientId,
                 LanguageCode = languageCode,
                 ClientCode = clientResponse.Result.ClientCode,
-                SportGroup = sportGroup
+                SportGroup = sportGroup,
+                FixtureScope = fixtureScope
             });
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(string apiKey, string clientId, string langCode, FixtureDetailsRequest request, string ipCountryCode)

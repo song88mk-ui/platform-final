@@ -1476,7 +1476,7 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/sports")]
-        public async Task<IActionResult> GetSports([FromQuery] SportGroup sportGroup)
+        public async Task<IActionResult> GetSports([FromQuery] SportGroup sportGroup, FixtureScope? fixtureScope)
         {
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();

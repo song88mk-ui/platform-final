@@ -6,7 +6,7 @@ namespace Platform.Oddin.API.Repository
     public interface IOperatorRepository
     {
         Task<BaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string clientId, string operatorToken, string endpoint, bool isAgent);
-        Task<BaseResponseDTO<OperatorBetResponseDTO>> PlaceBet(string clientId, string operatorToken, string endpoint, bool isAgent, OperatorESportsBetPlacementRequestDTO request);
-        Task<BaseResponseDTO<OperatorBetResponseDTO>> SettleBet(string clientId, string endpoint, OperatorESportsBetSettlementRequestDTO request);
+        Task<BaseResponseDTO<OperatorBetResponseDTO>> Debit(string clientId, string operatorToken, string endpoint, bool isAgent, OperatorESportsDebitRequestDTO request);
+        Task<BaseResponseDTO<OperatorBetResponseDTO>> Credit(string clientId, string endpoint, OperatorESportsCreditRequestDTO request);
     }
 }

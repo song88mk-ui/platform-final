@@ -248,13 +248,13 @@ namespace Platform.Operator.API.Controllers
                     return BadRequest(result);
             }
         }
-        [HttpPost("v1/esports/bet/placement")]
-        public async Task<IActionResult> ESportsBetPlacement([FromBody] OperatorESportsBetPlacementRequestDTO request)
+        [HttpPost("v1/esports/debit")]
+        public async Task<IActionResult> ESportsDebit([FromBody] OperatorESportsDebitRequestDTO request)
         {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
-            var result = await _platformRepository.BetPlacementESports(request, clientId, operatorToken);
+            var result = await _platformRepository.DebitESports(request, clientId, operatorToken);
 
             switch (result.StatusId)
             {
@@ -265,12 +265,12 @@ namespace Platform.Operator.API.Controllers
             }
         }
 
-        [HttpPost("v1/esports/bet/settlement")]
-        public async Task<IActionResult> ESportsBetSettlement([FromBody] OperatorESportsBetSettlementRequestDTO request)
+        [HttpPost("v1/esports/credit")]
+        public async Task<IActionResult> ESportsCredit([FromBody] OperatorESportsCreditRequestDTO request)
         {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-            var result = await _platformRepository.BetSettlementESports(request, clientId);
+            var result = await _platformRepository.CreditESports(request, clientId);
 
             switch (result.StatusId)
             {

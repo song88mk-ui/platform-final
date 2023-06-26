@@ -3,7 +3,7 @@ using System;
 
 namespace Platform.Shared.MessageModels
 {
-    public class OnESportBetPlacementResponse
+    public class OnESportDebitRequest
     {
         public string TransactionId { get; set; }
         public Guid BetId { get; set; }
@@ -11,6 +11,6 @@ namespace Platform.Shared.MessageModels
         public string ClientCode { get; set; }
         public string Endpoint { get; set; }
         public string OperatorToken { get; set; }
-        public OperatorBetResponseDTO Payload { get; set; }
+        public OperatorESportsDebitRequestDTO Payload { get; set; }
     }
 }

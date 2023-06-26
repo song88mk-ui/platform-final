@@ -11,7 +11,7 @@ namespace Platform.Oddin.API.Repository
     public class OperatorRepository : IOperatorRepository
     {
         private readonly HttpClient _httpClient;
-        public OperatorRepository(HttpClient httpClient)
+        public OperatorRepository(HttpClient httpClient, IRabbitMQRepository rabbitMqRepository)
         {
             _httpClient = httpClient;            
         }
@@ -115,7 +115,7 @@ namespace Platform.Oddin.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<OperatorBetResponseDTO>> PlaceBet(string clientId, string operatorToken, string endpoint, bool isAgent, OperatorESportsBetPlacementRequestDTO request)
+        public async Task<BaseResponseDTO<OperatorBetResponseDTO>> Debit(string clientId, string operatorToken, string endpoint, bool isAgent, OperatorESportsDebitRequestDTO request)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
@@ -153,7 +153,7 @@ namespace Platform.Oddin.API.Repository
 
             try
             {
-                var response = await _httpClient.PostAsync($"{endpoint}/v1/esports/bet/placement", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.PostAsync($"{endpoint}/v1/esports/debit", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -227,7 +227,7 @@ namespace Platform.Oddin.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<OperatorBetResponseDTO>> SettleBet(string clientId, string endpoint, OperatorESportsBetSettlementRequestDTO request)
+        public async Task<BaseResponseDTO<OperatorBetResponseDTO>> Credit(string clientId, string endpoint, OperatorESportsCreditRequestDTO request)
         {
             if (_httpClient.DefaultRequestHeaders.Contains("x-client-id"))
             {
@@ -239,7 +239,7 @@ namespace Platform.Oddin.API.Repository
 
             try
             {
-                var response = await _httpClient.PostAsync($"{endpoint}/v1/esports/bet/settlement", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.PostAsync($"{endpoint}/v1/esports/credit", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
                 {

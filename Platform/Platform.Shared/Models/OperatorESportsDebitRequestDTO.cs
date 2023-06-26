@@ -2,7 +2,7 @@
 
 namespace Platform.Shared.Models
 {
-    public class OperatorESportsBetSettlementRequestDTO
+    public class OperatorESportsDebitRequestDTO
     {
         [JsonPropertyName("transactionId")]
         public string TransactionId { get; set; }
@@ -30,9 +30,6 @@ namespace Platform.Shared.Models
 
         [JsonPropertyName("winningsTax")]
         public decimal WinningsTax { get; set; }
-
-        [JsonPropertyName("payout")]
-        public decimal Payout { get; set; }
 
         [JsonPropertyName("transactionDate")]
         public string TransactionDate { get; set; }

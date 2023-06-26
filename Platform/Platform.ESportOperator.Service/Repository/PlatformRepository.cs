@@ -18,7 +18,7 @@ namespace Platform.ESportOperator.Service.Repository
             _configuration = configuration;
         }
 
-        public void ProcessESportBetPlacementRequest(OnESportBetPlacementRequest message, string correlationId)
+        public void ProcessESportDebitRequest(OnESportDebitRequest message, string correlationId)
         {
             AddESportOperatorLog(new ESportOperatorLog
             {
@@ -34,7 +34,7 @@ namespace Platform.ESportOperator.Service.Repository
             });
         }
 
-        public void ProcessESportBetPlacementResponse(OnESportBetPlacementResponse message, string correlationId)
+        public void ProcessESportDebitResponse(OnESportDebitResponse message, string correlationId)
         {
             AddESportOperatorLog(new ESportOperatorLog
             {
@@ -50,7 +50,7 @@ namespace Platform.ESportOperator.Service.Repository
             });
         }
 
-        public void ProcessESportBetSettlementRequest(OnESportBetSettlementRequest message, string correlationId)
+        public void ProcessESportCreditRequest(OnESportCreditRequest message, string correlationId)
         {
             AddESportOperatorLog(new ESportOperatorLog
             {
@@ -66,7 +66,7 @@ namespace Platform.ESportOperator.Service.Repository
             });
         }
 
-        public void ProcessESportBetSettlementResponse(OnESportBetSettlementResponse message, string correlationId)
+        public void ProcessESportCreditResponse(OnESportCreditResponse message, string correlationId)
         {
             AddESportOperatorLog(new ESportOperatorLog
             {

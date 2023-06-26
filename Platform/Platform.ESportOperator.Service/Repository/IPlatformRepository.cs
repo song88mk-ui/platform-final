@@ -4,9 +4,9 @@ namespace Platform.ESportOperator.Service.Repository
 {
     public interface IPlatformRepository
     {
-        void ProcessESportBetPlacementRequest(OnESportBetPlacementRequest message, string correlationId);
-        void ProcessESportBetPlacementResponse(OnESportBetPlacementResponse message, string correlationId);
-        void ProcessESportBetSettlementRequest(OnESportBetSettlementRequest message, string correlationId);
-        void ProcessESportBetSettlementResponse(OnESportBetSettlementResponse message, string correlationId);
+        void ProcessESportDebitRequest(OnESportDebitRequest message, string correlationId);
+        void ProcessESportDebitResponse(OnESportDebitResponse message, string correlationId);
+        void ProcessESportCreditRequest(OnESportCreditRequest message, string correlationId);
+        void ProcessESportCreditResponse(OnESportCreditResponse message, string correlationId);
     }
 }

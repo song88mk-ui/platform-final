@@ -69,21 +69,21 @@ namespace Platform.ESportOperator.Service
             {
                 switch (messageType)
                 {
-                    case "OnESportBetPlacementRequest":
-                        var placementRequest = JsonSerializer.Deserialize<OnESportBetPlacementRequest>(payload);
-                        _platformRepository.ProcessESportBetPlacementRequest(placementRequest, correlationId);
+                    case "OnESportDebitRequest":
+                        var placementRequest = JsonSerializer.Deserialize<OnESportDebitRequest>(payload);
+                        _platformRepository.ProcessESportDebitRequest(placementRequest, correlationId);
                         break;
-                    case "OnESportBetPlacementResponse":
-                        var placementResponse = JsonSerializer.Deserialize<OnESportBetPlacementResponse>(payload);
-                        _platformRepository.ProcessESportBetPlacementResponse(placementResponse, correlationId);
+                    case "OnESportDebitResponse":
+                        var placementResponse = JsonSerializer.Deserialize<OnESportDebitResponse>(payload);
+                        _platformRepository.ProcessESportDebitResponse(placementResponse, correlationId);
                         break;
-                    case "OnESportBetSettlementRequest":
-                        var settlementRequest = JsonSerializer.Deserialize<OnESportBetSettlementRequest>(payload);
-                        _platformRepository.ProcessESportBetSettlementRequest(settlementRequest, correlationId);
+                    case "OnESportCreditRequest":
+                        var settlementRequest = JsonSerializer.Deserialize<OnESportCreditRequest>(payload);
+                        _platformRepository.ProcessESportCreditRequest(settlementRequest, correlationId);
                         break;
-                    case "OnESportBetSettlementResponse":
-                        var settlementResponse = JsonSerializer.Deserialize<OnESportBetSettlementResponse>(payload);
-                        _platformRepository.ProcessESportBetSettlementResponse(settlementResponse, correlationId);
+                    case "OnESportCreditResponse":
+                        var settlementResponse = JsonSerializer.Deserialize<OnESportCreditResponse>(payload);
+                        _platformRepository.ProcessESportCreditResponse(settlementResponse, correlationId);
                         break;
                 }
 

@@ -665,7 +665,7 @@ namespace Platform.Operator.API.Repository
                 }
             }
         }
-        public async Task<BetPlacementResponseDTO> BetPlacementESports(OperatorESportsBetPlacementRequestDTO request, string clientId, string operatorToken)
+        public async Task<BetPlacementResponseDTO> DebitESports(OperatorESportsDebitRequestDTO request, string clientId, string operatorToken)
         {
             Guid.TryParse(clientId, out Guid id);
 
@@ -774,7 +774,7 @@ namespace Platform.Operator.API.Repository
             }
 
         }
-        public async Task<BetSettlementResponseDTO> BetSettlementESports(OperatorESportsBetSettlementRequestDTO request, string clientId)
+        public async Task<BetSettlementResponseDTO> CreditESports(OperatorESportsCreditRequestDTO request, string clientId)
         {
             Guid.TryParse(clientId, out Guid id);
 

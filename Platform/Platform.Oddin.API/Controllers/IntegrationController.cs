@@ -18,6 +18,7 @@ namespace Platform.Oddin.API.Controllers
 
         public IntegrationController(IESportsBettingRepository eSportsBettingRepository, TelemetryClient telemetryClient)
         {
+            //
             _eSportsBettingRepository = eSportsBettingRepository;
             _telemetryClient = telemetryClient;
         }

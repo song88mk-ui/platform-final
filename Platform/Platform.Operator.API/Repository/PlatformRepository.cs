@@ -725,7 +725,7 @@ namespace Platform.Operator.API.Repository
                     if (testConfig != null && testConfig.ClientId == id)
                     {
 
-                        var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, 0, request.Stake, BetStatus.Running.ToString(), testConfig.IsFreeBet, request.TransactionId);
+                        var operatorAudit = AddOrUpdateOperatorAuditForESports(result, request.BetId, 0, request.Stake, BetStatus.Running.ToString(), testConfig.IsFreeBet, request.TransactionId);
 
                         result.Balance = operatorAudit.PostBalance;
                         _platformContext.Operator.Update(result);
@@ -745,7 +745,7 @@ namespace Platform.Operator.API.Repository
                     }
                     else
                     {
-                        var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, 0, request.Stake, BetStatus.Running.ToString(), transactionId: request.TransactionId);
+                        var operatorAudit = AddOrUpdateOperatorAuditForESports(result, request.BetId, 0, request.Stake, BetStatus.Running.ToString(), transactionId: request.TransactionId);
 
                         result.Balance = operatorAudit.PostBalance;
                         _platformContext.Operator.Update(result);
@@ -812,7 +812,7 @@ namespace Platform.Operator.API.Repository
                         };
                     }
 
-                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, request.Payout, request.Stake, request.BetStatus);
+                    var operatorAudit = AddOrUpdateOperatorAuditForESports(result, request.BetId, request.Payout, request.Stake, request.BetStatus, transactionId: request.TransactionId);
 
                     result.Balance = operatorAudit.PostBalance;
                     _platformContext.Operator.Update(result);
@@ -836,7 +836,8 @@ namespace Platform.Operator.API.Repository
             }
         }
         #region Private Method
-        private OperatorAudit AddOrUpdateOperatorAudit(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal payout, decimal stake, string betStatus, bool isFreebet = false, string transactionId = null)
+
+        private OperatorAudit AddOrUpdateOperatorAudit(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal payout, decimal stake, string betStatus, bool isFreebet = false)
         {
             var amount = payout;
             if ((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Running)
@@ -889,6 +890,40 @@ namespace Platform.Operator.API.Repository
                     }
                 }
             }
+
+            var operatorAuditEntity = _platformContext.OperatorAudit.Update(new OperatorAudit()
+            {
+                BetId = Guid.Parse(betId),
+                UserId = _operator.UserId,
+                ClientId = _operator.ClientId,
+                OperatorToken = _operator.OperatorToken,
+                CreatedDate = DateTime.UtcNow,
+                CurrencyCode = _operator.CurrencyCode,
+                TransactionTypeId = (int)Enum.Parse(typeof(BetStatus), betStatus),
+                TransactionTypeName = betStatus,
+                PreBalance = postBalance,
+                Amount = amount,
+                PostBalance = postBalance + amount,
+                TransactionId = string.Empty,
+            }).Entity;
+
+            _platformContext.SaveChanges();
+
+            return operatorAuditEntity;
+        }
+
+        private OperatorAudit AddOrUpdateOperatorAuditForESports(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal payout, decimal stake, string betStatus, bool isFreebet = false, string transactionId = null)
+        {
+            var amount = payout;
+            if ((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Running)
+            {
+                if (isFreebet)
+                    amount = 0;
+                else
+                    amount = stake * -1;
+            }
+
+            var postBalance = _operator.Balance;
 
             var operatorAuditEntity = _platformContext.OperatorAudit.Update(new OperatorAudit()
             {

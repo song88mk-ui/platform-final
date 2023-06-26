@@ -278,7 +278,7 @@ namespace Platform.AgentReports.API.Repository
                     .ToList()
                     .Sum(s => item.UserTypeId == (int)UserType.Player ? s.MemberWLC : (s.AgentWLC + s.UplineWLC) * -1);
                 //Casino Winloss
-                yesterdayWinLoss = _context.CasinoWinLoss.AsNoTracking()
+                yesterdayWinLoss += _context.CasinoWinLoss.AsNoTracking()
                     .Where(c => c.ParentUserId == request.ParentAgentId && c.DirectUserId == request.ParentAgentId && c.IndirectUserId == item.UserId && c.SettledDate > lastFullTransferDate && c.SettledDate.Date <= DateTime.UtcNow.AddHours(-4).AddDays(-1).Date)
                     .Select(s => new
                     {

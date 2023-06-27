@@ -678,7 +678,13 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<SportsResponseDTO>> GetSports(SportsRequestDTO request)
         {
-            var mKey = $"ns:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportGroup.ToString().ToUpper()}";
+            var mKey = string.Empty;
+
+            if (request.FixtureScope == null)
+                mKey = $"ns:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportGroup.ToString().ToUpper()}";
+
+            if (request.FixtureScope != null)
+                mKey = $"ns:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportGroup.ToString().ToUpper()}:{request.FixtureScope.Value}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<SportsResponseDTO>>(mKey);
 

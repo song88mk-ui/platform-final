@@ -682,8 +682,14 @@ namespace Platform.Sportsbook.API.Repository
             if (request.FixtureScope == null)
                 mKey = $"ns:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportGroup.ToString().ToUpper()}";
 
-            if (request.FixtureScope != null)
+            if (request.FixtureScope != null && request.DateUTC == null && request.MinuteUTCOffset == null)
                 mKey = $"ns:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportGroup.ToString().ToUpper()}:{request.FixtureScope.Value}";
+
+            if (request.FixtureScope != null && request.DateUTC == null && request.MinuteUTCOffset != null)
+                mKey = $"ns:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportGroup.ToString().ToUpper()}:{request.FixtureScope.Value}:{request.MinuteUTCOffset.Value}";
+
+            if (request.FixtureScope != null && request.DateUTC != null && request.MinuteUTCOffset != null)
+                mKey = $"ns:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportGroup.ToString().ToUpper()}:{request.FixtureScope.Value}:{request.DateUTC.Value}:{request.MinuteUTCOffset.Value}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<SportsResponseDTO>>(mKey);
 

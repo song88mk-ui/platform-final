@@ -706,7 +706,8 @@ namespace Platform.Sportsbook.API.Repository
                     case FixtureScope.Today:
                         var todayDateUTC = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset.Value);
 
-                        fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 0 && c.FiStDa > todayDateUTC.Item1 && c.FiStDa < todayDateUTC.Item2);
+                        //fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 0 && c.FiStDa > todayDateUTC.Item1 && c.FiStDa < todayDateUTC.Item2);
+                        fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 0 && c.FiStDa < todayDateUTC.Item2);
                         break;
                     default:
                         fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 1);

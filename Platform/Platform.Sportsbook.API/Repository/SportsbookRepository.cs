@@ -689,7 +689,7 @@ namespace Platform.Sportsbook.API.Repository
                 mKey = $"ns:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportGroup.ToString().ToUpper()}:{request.FixtureScope.Value}:{request.MinuteUTCOffset.Value}";
 
             if (request.FixtureScope != null && request.DateUTC != null && request.MinuteUTCOffset != null)
-                mKey = $"ns:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportGroup.ToString().ToUpper()}:{request.FixtureScope.Value}:{request.DateUTC.Value}:{request.MinuteUTCOffset.Value}";
+                mKey = $"ns:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportGroup.ToString().ToUpper()}:{request.FixtureScope.Value}:{request.DateUTC.Value.Date}:{request.MinuteUTCOffset.Value}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<SportsResponseDTO>>(mKey);
 

@@ -23,5 +23,6 @@ resources:
 extends:
   template: dotnetservice.yml@bt
   parameters:
+    dotnetVersion: '7.0.304'
     projects:
       - Platform/Platform.Operator.API

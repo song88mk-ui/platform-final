@@ -398,7 +398,7 @@ namespace Platform.Operator.Servicev2.Repository
                             UserId = payload.Bet.UserId,
                             Balance = operatorResponse.Balance
                         }, "OnWalletChange", "r.bet.betstatus", correlationId);
-
+                        //
                         messageBroker.Publish(new OnWalletChange
                         {
                             ClientId = payload.Bet.ClientId.ToString().ToUpper(),

@@ -211,6 +211,7 @@ namespace Platform.Operator.API.Repository
             {
                 StatusId = betResponse.StatusCode,
                 Balance = betResponse.Balance,
+                Payable = null,
                 StakeReal = request.Stake,
                 StakeBonus = 0,
                 IsFreeBet = false
@@ -258,10 +259,19 @@ namespace Platform.Operator.API.Repository
                 ReferenceId = request.BetId
             });
 
+            var reportResponse = await _reportsRepository.GetRunningBalance(request.UserId);
+            var payable = 0m;
+
+            if (reportResponse.StatusCode == 1000)
+            {
+                payable = reportResponse.CashBalance;
+            }
+
             return new BetSettlementResponseDTO
             {
                 StatusId = betResponse.StatusCode,
-                Balance = betResponse.Balance
+                Balance = betResponse.Balance,
+                Payable = payable
             };
         }
         public async Task<BetSettlementResponseDTO> BetCancellation(OperatorBetCancellationRequestDTO request, string clientId)
@@ -277,10 +287,19 @@ namespace Platform.Operator.API.Repository
                 ReferenceId = request.BetId
             });
 
+            var reportResponse = await _reportsRepository.GetRunningBalance(request.UserId);
+            var payable = 0m;
+
+            if (reportResponse.StatusCode == 1000)
+            {
+                payable = reportResponse.CashBalance;
+            }
+
             return new BetSettlementResponseDTO
             {
                 StatusId = betResponse.StatusCode,
-                Balance = betResponse.Balance
+                Balance = betResponse.Balance,
+                Payable = payable
             };
         }
 
@@ -307,10 +326,19 @@ namespace Platform.Operator.API.Repository
                 ReferenceId = request.BetId
             });
 
+            var reportResponse = await _reportsRepository.GetRunningBalance(authResponse.Result.UserId);
+            var payable = 0m;
+
+            if (reportResponse.StatusCode == 1000)
+            {
+                payable = reportResponse.CashBalance;
+            }
+
             return new BetPlacementResponseDTO
             {
                 StatusId = betResponse.StatusCode,
                 Balance = betResponse.Balance,
+                Payable = payable,
                 StakeReal = request.Stake,
                 StakeBonus = 0,
                 IsFreeBet = false
@@ -329,10 +357,19 @@ namespace Platform.Operator.API.Repository
                 ReferenceId = request.BetId
             });
 
+            var reportResponse = await _reportsRepository.GetRunningBalance(request.UserId);
+            var payable = 0m;
+
+            if (reportResponse.StatusCode == 1000)
+            {
+                payable = reportResponse.CashBalance;
+            }
+
             return new BetSettlementResponseDTO
             {
                 StatusId = betResponse.StatusCode,
-                Balance = betResponse.Balance
+                Balance = betResponse.Balance,
+                Payable = payable
             };
         }
 

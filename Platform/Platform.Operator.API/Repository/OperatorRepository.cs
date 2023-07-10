@@ -207,11 +207,19 @@ namespace Platform.Operator.API.Repository
                 ReferenceId = request.BetId
             });
 
+            var reportResponse = await _reportsRepository.GetRunningBalance(authResponse.Result.UserId);
+            var payable = 0m;
+
+            if (reportResponse.StatusCode == 1000)
+            {
+                payable = reportResponse.CashBalance;
+            }
+
             return new BetPlacementResponseDTO
             {
                 StatusId = betResponse.StatusCode,
                 Balance = betResponse.Balance,
-                Payable = null,
+                Payable = payable,
                 StakeReal = request.Stake,
                 StakeBonus = 0,
                 IsFreeBet = false
@@ -230,10 +238,19 @@ namespace Platform.Operator.API.Repository
                 ReferenceId = request.BetId
             });
 
+            var reportResponse = await _reportsRepository.GetRunningBalance(request.UserId);
+            var payable = 0m;
+
+            if (reportResponse.StatusCode == 1000)
+            {
+                payable = reportResponse.CashBalance;
+            }
+
             return new BetSettlementResponseDTO
             {
                 StatusId = betResponse.StatusCode,
-                Balance = betResponse.Balance
+                Balance = betResponse.Balance,
+                Payable = payable
             };
         }
         public async Task<BetSettlementResponseDTO> CashOutBet(OperatorBetSettlementRequestDTO request, string clientId, string operatorToken, string isAgent)

@@ -259,7 +259,8 @@ namespace Platform.QTech.API.Repository
                         {
                             ClientId = transactionEntity.ClientId.ToString().ToUpper(),
                             UserId = transactionEntity.UserId,
-                            Balance = walletResponse.Result.Balance
+                            Balance = walletResponse.Result.Balance,
+                            Payable = walletResponse.Result.Payable ?? 0m
                         }),
                         CorrelationId = Guid.NewGuid().ToString().ToUpper(),
                         MessageType = "OnWalletChange",
@@ -393,7 +394,8 @@ namespace Platform.QTech.API.Repository
                         {
                             ClientId = transactionEntity.ClientId.ToString().ToUpper(),
                             UserId = transactionEntity.UserId,
-                            Balance = walletResponse.Result.Balance
+                            Balance = walletResponse.Result.Balance,
+                            Payable = walletResponse.Result.Payable ?? 0m
                         }),
                         CorrelationId = Guid.NewGuid().ToString().ToUpper(),
                         MessageType = "OnWalletChange",
@@ -539,7 +541,8 @@ namespace Platform.QTech.API.Repository
                             {
                                 ClientId = transactionEntity.ClientId.ToString().ToUpper(),
                                 UserId = transactionEntity.UserId,
-                                Balance = walletResponse.Result.Balance
+                                Balance = walletResponse.Result.Balance,
+                                Payable = walletResponse.Result.Payable ?? 0m
                             }),
                             CorrelationId = Guid.NewGuid().ToString().ToUpper(),
                             MessageType = "OnWalletChange",
@@ -682,7 +685,8 @@ namespace Platform.QTech.API.Repository
                             {
                                 ClientId = transactionEntity.ClientId.ToString().ToUpper(),
                                 UserId = transactionEntity.UserId,
-                                Balance = walletResponse.Result.Balance
+                                Balance = walletResponse.Result.Balance,
+                                Payable = walletResponse.Result.Payable ?? 0m
                             }),
                             CorrelationId = Guid.NewGuid().ToString().ToUpper(),
                             MessageType = "OnWalletChange",

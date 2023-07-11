@@ -435,7 +435,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TopLeaguesResponseDTO>>(mKey);
 
-            var fixtures = new List<Fixture>();                        
+            var fixtures = new List<Fixture>();
 
             if (mCache != null)
                 return mCache;
@@ -2197,7 +2197,7 @@ namespace Platform.Sportsbook.API.Repository
             //    _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddSeconds(5));
 
             return returnResult;
-        }        
+        }
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(TWFLiveFixtureCountRequestDTO request)
         {
             var mKey = $"nlfc:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportGroupId}";
@@ -3082,7 +3082,7 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new TWResponseDTO
                 {
-                    Fixtures =  finalResult
+                    Fixtures = finalResult
                 }
             };
 
@@ -5416,7 +5416,7 @@ namespace Platform.Sportsbook.API.Repository
                         var isBetBuilder = false;
                         var betBuilderMarketTemplate = betBuilderMarketTemplates.FirstOrDefault(c => c.SportId == sportId && c.MarketTemplateId == market.MaTeId);
 
-                        if (betBuilderMarketTemplate != null )
+                        if (betBuilderMarketTemplate != null)
                         {
                             var isQuarterMarket = Convert.ToDecimal(market.Li).ToString("0.00").Contains(".25") || Convert.ToDecimal(market.Li).ToString("0.00").Contains(".75") ? true : false;
                             if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == true)
@@ -5713,7 +5713,7 @@ namespace Platform.Sportsbook.API.Repository
                     }
 
                     var filteredMarkets = markets.Where(c => c.ClCo != null && c.ClCo.Contains(clientCode)).ToList();
-                    var result = new List<MarketDTO>(); 
+                    var result = new List<MarketDTO>();
                     var marketTemplateGroupPlayerProps = GetMarketTemplatePlayerProps();
 
                     foreach (var market in filteredMarkets)
@@ -6771,7 +6771,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
                 else
                 {
-                    if(response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                    if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
                     {
                         var result = await response.Content.ReadAsStringAsync();
 
@@ -7685,7 +7685,7 @@ namespace Platform.Sportsbook.API.Repository
             }
 
         }
-        
+
         public async Task<BaseResponseDTO<ClientTopLeaguesResponseDTO>> GetClientIdsTopLeagues(ClientTopLeaguesRequestDTO request)
         {
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
@@ -8109,51 +8109,59 @@ namespace Platform.Sportsbook.API.Repository
                     Name = s.Name,
                     MarketTemplateIds = s.MarketTemplateIds.Split(',').ToList()
                 })
-                .Where(c => c.Name.ToLower() != "all markets")
                 .ToList();
 
+            var allMarketTemplate = marketTemplateGroups.FirstOrDefault(c => c.Name.ToLower() == "all markets")?.MarketTemplateIds;
             var order = 1000;
             foreach (var marketTemplate in request.MarketTemplates)
             {
                 // get marketTemplateGroup
                 var filteredMarketTemplateGroup = marketTemplateGroups.Where(c => c.MarketTemplateIds.Contains(marketTemplate.MarketTemplateId)).ToList();
 
-                marketTemplate.MarketTemplateGroupNames = filteredMarketTemplateGroup.Any() ? filteredMarketTemplateGroup.Select(s => s.Name).ToList() : new List<string>();
+                marketTemplate.MarketTemplateGroupNames = filteredMarketTemplateGroup.Where(c => c.Name.ToLower() != "all markets").Select(s => s.Name).ToList() ?? new List<string>();
 
-                marketTemplate.SortOrder = order;
-                order++;
+                if (allMarketTemplate != null)
+                {
+                    marketTemplate.SortOrder = allMarketTemplate.IndexOf(marketTemplate.MarketTemplateId);
+                }
+                else
+                {
+                    marketTemplate.SortOrder = order;
+                    order++;
+                }
+
             }
 
             // get client market templates sort order
-            var clientMarketTemplates = await _sportsbookContext.ClientMarketTemplateOrder.AsNoTracking()
-                .Where(c => c.ClientId == request.ClientId && c.SportId == request.SportId)
-                .OrderBy(o => o.SortOrder).ToListAsync();
+            //var clientMarketTemplates = await _sportsbookContext.ClientMarketTemplateOrder.AsNoTracking()
+            //    .Where(c => c.ClientId == request.ClientId && c.SportId == request.SportId)
+            //    .OrderBy(o => o.SortOrder).ToListAsync();
 
-            var filteredClientMarketTemplates = clientMarketTemplates.Join(request.MarketTemplates,
-                cmt => cmt.MarketTemplateId,
-                rmt => rmt.MarketTemplateId,
-                (cmt, rmt) => new ClientMarketTemplateModel
-                {
-                    MarketTemplateGroupNames = rmt.MarketTemplateGroupNames,
-                    MarketTemplateId = cmt.MarketTemplateId,
-                    MarketTemplateName = rmt.MarketTemplateName,
-                    SortOrder = rmt.SortOrder
-                }).ToList();
+            //var filteredClientMarketTemplates = clientMarketTemplates.Join(request.MarketTemplates,
+            //    cmt => cmt.MarketTemplateId,
+            //    rmt => rmt.MarketTemplateId,
+            //    (cmt, rmt) => new ClientMarketTemplateModel
+            //    {
+            //        MarketTemplateGroupNames = rmt.MarketTemplateGroupNames,
+            //        MarketTemplateId = cmt.MarketTemplateId,
+            //        MarketTemplateName = rmt.MarketTemplateName,
+            //        SortOrder = rmt.SortOrder
+            //    }).ToList();
 
-            // join the 2 results to produce an output 
-            var marketTemplates = new List<ClientMarketTemplateModel>();
+            //// join the 2 results to produce an output 
+            //var marketTemplates = new List<ClientMarketTemplateModel>();
 
-            if (filteredClientMarketTemplates.Any())
-                marketTemplates.AddRange(filteredClientMarketTemplates);
+            //if (filteredClientMarketTemplates.Any())
+            //    marketTemplates.AddRange(filteredClientMarketTemplates);
 
-            if (request.MarketTemplates.Any())
-            {
-                // remove from rawMarketTemplates the records that are already existing in clientMarketTemplates
-                var marketTemplateIds = clientMarketTemplates.Select(s => s.MarketTemplateId).ToList();
-                request.MarketTemplates = request.MarketTemplates.Where(c => !marketTemplateIds.Contains(c.MarketTemplateId)).ToList();
+            //if (request.MarketTemplates.Any())
+            //{
+            //    // remove from rawMarketTemplates the records that are already existing in clientMarketTemplates
+            //    var marketTemplateIds = clientMarketTemplates.Select(s => s.MarketTemplateId).ToList();
+            //    request.MarketTemplates = request.MarketTemplates.Where(c => !marketTemplateIds.Contains(c.MarketTemplateId)).ToList();
 
-                marketTemplates.AddRange(request.MarketTemplates);
-            }
+            //    marketTemplates.AddRange(request.MarketTemplates);
+            //}
 
             return new BaseResponseDTO<ClientMarketTemplateResponseDTO>()
             {
@@ -8164,7 +8172,7 @@ namespace Platform.Sportsbook.API.Repository
                     ClientId = request.ClientId,
                     SportId = request.SportId,
                     FixtureStatusId = request.FixtureStatusId,
-                    MarketTemplates = marketTemplates
+                    MarketTemplates = request.MarketTemplates
                 }
             };
         }
@@ -8722,7 +8730,7 @@ namespace Platform.Sportsbook.API.Repository
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
                 Result = result.Select(s => new MarketTemplatePlayerPropsResponseDTO
-                { 
+                {
                     SportId = s.SportId,
                     FixtureStatusId = s.FixtureStatusId,
                     MarketTemplates = s.MarketTemplates

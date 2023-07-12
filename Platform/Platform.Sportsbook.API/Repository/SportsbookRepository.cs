@@ -8122,14 +8122,10 @@ namespace Platform.Sportsbook.API.Repository
 
                 if (allMarketTemplate != null)
                 {
-                    marketTemplate.SortOrder = allMarketTemplate.IndexOf(marketTemplate.MarketTemplateId);
-                }
-                else
-                {
-                    marketTemplate.SortOrder = order;
-                    order++;
+                    order = order + allMarketTemplate.IndexOf(marketTemplate.MarketTemplateId);
                 }
 
+                marketTemplate.SortOrder = order;
             }
 
             // get client market templates sort order
@@ -8172,7 +8168,7 @@ namespace Platform.Sportsbook.API.Repository
                     ClientId = request.ClientId,
                     SportId = request.SportId,
                     FixtureStatusId = request.FixtureStatusId,
-                    MarketTemplates = request.MarketTemplates
+                    MarketTemplates = request.MarketTemplates.OrderBy(x => x.SortOrder).ToList()
                 }
             };
         }
@@ -8234,7 +8230,7 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     marketTemplateGroupNames.Add("All Markets");
                 }
-                else if (marketTemplateGroupNames.Any(c => c.ToLower() != "all markets"))
+                else if (!marketTemplateGroupNames.Any(c => c.ToLower() == "all markets"))
                 {
                     marketTemplateGroupNames.Insert(0, "All Markets");
                 }

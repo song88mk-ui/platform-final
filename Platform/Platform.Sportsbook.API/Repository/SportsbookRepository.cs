@@ -8009,7 +8009,8 @@ namespace Platform.Sportsbook.API.Repository
                     Name = s.Name,
                     MarketTemplateIds = s.MarketTemplates,
                     SortOrder = s.SortOrder,
-                    IsActive = s.IsActive
+                    IsActive = s.IsActive,
+                    FixtureStatusId = s.FixtureStatusId
                 })
                 .OrderBy(s => s.SortOrder)
                 .ToListAsync();
@@ -8115,6 +8116,10 @@ namespace Platform.Sportsbook.API.Repository
             var order = 1000;
             foreach (var marketTemplate in request.MarketTemplates)
             {
+                if(marketTemplate.MarketTemplateId == "590")
+                {
+
+                }
                 // get marketTemplateGroup
                 var filteredMarketTemplateGroup = marketTemplateGroups.Where(c => c.MarketTemplateIds.Contains(marketTemplate.MarketTemplateId)).ToList();
 
@@ -8122,10 +8127,8 @@ namespace Platform.Sportsbook.API.Repository
 
                 if (allMarketTemplate != null)
                 {
-                    order = order + allMarketTemplate.IndexOf(marketTemplate.MarketTemplateId);
+                    marketTemplate.SortOrder = order + allMarketTemplate.IndexOf(marketTemplate.MarketTemplateId);
                 }
-
-                marketTemplate.SortOrder = order;
             }
 
             // get client market templates sort order
@@ -8222,7 +8225,7 @@ namespace Platform.Sportsbook.API.Repository
 
                 // get raw data
                 var marketTemplateGroupNames = _sportsbookContext.MarketTemplateGroup.AsNoTracking()
-                    .Where(c => c.SportId == sportId)
+                    .Where(c => c.SportId == sportId && c.FixtureStatusId == request.FixtureStatusId)
                     .Select(s => s.Name)
                     .ToList();
 

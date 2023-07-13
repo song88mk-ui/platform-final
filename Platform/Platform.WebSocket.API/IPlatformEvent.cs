@@ -13,5 +13,6 @@ namespace Platform.WebSocket.API
         Task OnBetStatus(OutgoingBetStatus message);
         Task OnCashOutChange(OutgoingCashOutChange message);
         Task OnWalletChange(OutgoingWalletChange message);
+        Task OnPayableChange(OutgoingPayableChange message);
     }
 }

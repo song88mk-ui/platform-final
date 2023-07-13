@@ -17,6 +17,7 @@ using Platform.AgentReports.Service.Enums;
 using Platform.Shared.Models;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Platform.Shared.Utility;
 
 namespace Platform.AgentReports.Service.Repository
 {
@@ -88,7 +89,7 @@ namespace Platform.AgentReports.Service.Repository
             }
         }
 
-        public void ProcessBetFullCashOut(OnBetSettlement message)
+        public void ProcessBetFullCashOut(OnBetSettlement message, IMessageBroker messageBroker)
         {
             var agents = GetAgentSettingsFinal(message).OrderBy(o => o.Hierarchy).ToList();
 
@@ -136,7 +137,7 @@ namespace Platform.AgentReports.Service.Repository
                                 context.BetSelectionTransaction.Add(ConvertToBetSelectionTransactionEntityInsertFinal(selection, agent));
                             }
 
-                            AddOrUpdateWinLossFinal(context, message, agent, agents, bet);
+                            AddOrUpdateWinLossFinal(context, message, agent, agents, bet, messageBroker);
                         }
                     }
                     context.SaveChanges();
@@ -145,7 +146,7 @@ namespace Platform.AgentReports.Service.Repository
             }
         }
 
-        public void ProcessBetSettlement(OnBetSettlement message)
+        public void ProcessBetSettlement(OnBetSettlement message, IMessageBroker messageBroker)
         {
             var agents = GetAgentSettingsFinal(message).OrderBy(o => o.Hierarchy).ToList();
 
@@ -198,7 +199,7 @@ namespace Platform.AgentReports.Service.Repository
                             var validBetStatusId = new int[] { (int)BetStatus.Running };
 
                             if (validBetStatusId.Contains(currentStatusId))
-                                AddOrUpdateWinLossFinal(context, message, agent, agents, bet);
+                                AddOrUpdateWinLossFinal(context, message, agent, agents, bet, messageBroker);
                         }
                     }
 
@@ -208,7 +209,7 @@ namespace Platform.AgentReports.Service.Repository
             }
         }
 
-        public void ProcessBetCancellation(OnBetSettlement message)
+        public void ProcessBetCancellation(OnBetSettlement message, IMessageBroker messageBroker)
         {
             var agents = GetAgentSettingsFinal(message).OrderBy(o => o.Hierarchy).ToList();
 
@@ -256,7 +257,7 @@ namespace Platform.AgentReports.Service.Repository
                                 context.BetSelectionTransaction.Add(ConvertToBetSelectionTransactionEntityInsertFinal(selection, agent));
                             }
 
-                            AddOrUpdateWinLossFinal(context, message, agent, agents, bet);
+                            AddOrUpdateWinLossFinal(context, message, agent, agents, bet, messageBroker);
                         }
                     }
                     context.SaveChanges();
@@ -265,7 +266,7 @@ namespace Platform.AgentReports.Service.Repository
             }
         }
 
-        public void ProcessCasinoBetSettlement(OnCasinoBetSettlement message)
+        public void ProcessCasinoBetSettlement(OnCasinoBetSettlement message, IMessageBroker messageBroker)
         {
             var agents = GetCasinoAgentSettingsFinal(message.Category, message.UserId, message.BetDate).OrderBy(o => o.Hierarchy).ToList();
 
@@ -284,7 +285,7 @@ namespace Platform.AgentReports.Service.Repository
                     {
                         AddOrUpdateRunningBalanceFinal(context, message.Stake, message.CurrencyCode, message.BetId, message.BetStatusId, message.BetStatusName, message.BetDate, agent, 0, agents, true);
 
-                        AddOrUpdateCasinoWinLossFinal(context, message, agent, agents, product);
+                        AddOrUpdateCasinoWinLossFinal(context, message, agent, agents, product, messageBroker);
                     }
 
 
@@ -861,7 +862,7 @@ namespace Platform.AgentReports.Service.Repository
                 TransactionDateOffset = message.Bet.BetDate.AddHours(-4)
             };
         }
-        private void AddOrUpdateWinLossFinal(AgentReportsContext context, OnBetSettlement message, AgentSettings agent, List<AgentSettings> agents, Shared.Data.Reports.Entities.Bet betEntity)
+        private void AddOrUpdateWinLossFinal(AgentReportsContext context, OnBetSettlement message, AgentSettings agent, List<AgentSettings> agents, Shared.Data.Reports.Entities.Bet betEntity, IMessageBroker messageBroker)
         {
             if (message.Bet.BetStatusId == (int)BetStatus.Running) return;
 
@@ -893,7 +894,7 @@ namespace Platform.AgentReports.Service.Repository
 
             var res = GetUplineAgentWinLossCommission2Final(message.Bet.Stake, hasHalfSettlement, agent, agents, memberWinLoss * -1);
 
-            AddOrUpdateSettledBalanceFinal(context, message, agent, res.Item1 + res.Item2, agents);
+            AddOrUpdateSettledBalanceFinal(context, message, agent, res.Item1 + res.Item2, agents, messageBroker);
 
             var tempDownlineWinLoss = 0m;
             var tempDownlineCommission = 0m;
@@ -1090,7 +1091,7 @@ namespace Platform.AgentReports.Service.Repository
             }
         }
 
-        private void AddOrUpdateCasinoWinLossFinal(AgentReportsContext context, OnCasinoBetSettlement message, AgentSettings agent, List<AgentSettings> agents, ProductLookup product)
+        private void AddOrUpdateCasinoWinLossFinal(AgentReportsContext context, OnCasinoBetSettlement message, AgentSettings agent, List<AgentSettings> agents, ProductLookup product, IMessageBroker messageBroker)
         {
             if (message.BetStatusId == (int)BetStatus.Running) return;
 
@@ -1119,7 +1120,7 @@ namespace Platform.AgentReports.Service.Repository
 
             var res = GetUplineAgentWinLossCommission2Final(message.Stake, false, agent, agents, memberWinLoss * -1);
 
-            AddOrUpdateCasinoSettledBalanceFinal(context, message, agent, res.Item1 + res.Item2, agents);
+            AddOrUpdateCasinoSettledBalanceFinal(context, message, agent, res.Item1 + res.Item2, agents, messageBroker);
 
             var tempDownlineWinLoss = 0m;
             var tempDownlineCommission = 0m;
@@ -1371,7 +1372,7 @@ namespace Platform.AgentReports.Service.Repository
             return hasHalfSettlement ? commission / 2 : commission;
         }
 
-        private void AddOrUpdateSettledBalanceFinal(AgentReportsContext context, OnBetSettlement message, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents)
+        private void AddOrUpdateSettledBalanceFinal(AgentReportsContext context, OnBetSettlement message, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents, IMessageBroker messageBroker)
         {
             if (message.Bet.BetStatusId == (int)BetStatus.Running) return;
             if (agent.UserType == Shared.Enums.UserType.Company) return;
@@ -1488,9 +1489,19 @@ namespace Platform.AgentReports.Service.Repository
                     StatusName = message.Bet.BetStatusName,
                     TransactionDate = DateTime.UtcNow
                 });
+
+                if(agent.UserType == Shared.Enums.UserType.Player)
+                {
+                    messageBroker.Publish(new OnPayableChange
+                    {
+                        ClientId = message.Bet.ClientId.ToUpper(),
+                        UserId = message.Bet.UserId,
+                        Payable = entity.CashBalance
+                    }, "OnPayableChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", Guid.NewGuid().ToString(), 10);
+                }
             }
         }
-        private void AddOrUpdateCasinoSettledBalanceFinal(AgentReportsContext context, OnCasinoBetSettlement message, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents)
+        private void AddOrUpdateCasinoSettledBalanceFinal(AgentReportsContext context, OnCasinoBetSettlement message, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents, IMessageBroker messageBroker)
         {
             if (message.BetStatusId == (int)BetStatus.Running) return;
             if (agent.UserType == Shared.Enums.UserType.Company) return;
@@ -1604,6 +1615,16 @@ namespace Platform.AgentReports.Service.Repository
                     StatusName = message.BetStatusName,
                     TransactionDate = DateTime.UtcNow
                 });
+
+                if (agent.UserType == Shared.Enums.UserType.Player)
+                {
+                    messageBroker.Publish(new OnPayableChange
+                    {
+                        ClientId = message.ClientId.ToUpper(),
+                        UserId = message.UserId,
+                        Payable = entity.CashBalance
+                    }, "OnPayableChange", $"r.wallet.{message.ClientCode.ToString().ToLower()}", Guid.NewGuid().ToString(), 10);
+                }
             }
         }
 

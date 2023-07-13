@@ -214,6 +214,20 @@ namespace Platform.WebSocket.API.Repository
             if (client.Item1 == true)
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onwalletchange:{client.Item2}:{request.UserId.ToLower()}");
         }
+        public async Task SubscribeToPayableChange(PayableChangeRequest request)
+        {
+            var client = await GetClient(request.ClientId);
+
+            if (client.Item1 == true)
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"onpayablechange:{client.Item2}:{request.UserId.ToLower()}");
+        }
+        public async Task UnsubscribeToPayableChange(PayableChangeRequest request)
+        {
+            var client = await GetClient(request.ClientId);
+
+            if (client.Item1 == true)
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onpayablechange:{client.Item2}:{request.UserId.ToLower()}");
+        }
         public async Task SubscribeToFavorites(FavoritesRequest request)
         {
             var client = await GetClient(request.ClientId);
@@ -257,6 +271,10 @@ namespace Platform.WebSocket.API.Repository
         public async Task PublishWalletChange(string clientCode, OutgoingWalletChange message)
         {
             await Clients.Group($"onwalletchange:{clientCode}:{message.UsId.ToLower()}").OnWalletChange(message);
+        }
+        public async Task PublishPayableChange(string clientCode, OutgoingPayableChange message)
+        {
+            await Clients.Group($"onpayablechange:{clientCode}:{message.UsId.ToLower()}").OnPayableChange(message);
         }
         private async Task<Tuple<bool, string>> GetClient(string clientId)
         {
@@ -316,6 +334,11 @@ namespace Platform.WebSocket.API.Repository
         public string UserId { get; set; }
     }
     public class FavoritesRequest
+    {
+        public string ClientId { get; set; }
+        public string UserId { get; set; }
+    }
+    public class PayableChangeRequest
     {
         public string ClientId { get; set; }
         public string UserId { get; set; }

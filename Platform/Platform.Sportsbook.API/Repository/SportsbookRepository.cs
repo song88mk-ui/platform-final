@@ -7070,15 +7070,31 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<ClientFixtureSortOrderResponseDTO>> GetClientFixtureSortOrder(FixtureSortOrderRequestDTO request)
         {
-            var initialResult = GetTierLeagueOrder();
+            var clientLeagueOrder = GetLeagueOrder();
 
-            var result = initialResult.Select(s => new ClientFixtureSortOrderDTO
+            var result = clientLeagueOrder == null ? new List<ClientFixtureSortOrderDTO>() : clientLeagueOrder.Where(c => c.ClientId == request.ClientId).Select(s => new ClientFixtureSortOrderDTO
             {
                 SportId = s.SportId,
                 SegmentId = s.SegmentId,
                 LeagueId = s.LeagueId,
                 SortOrder = s.SortOrder
             }).ToList();
+
+            var tierLeagueOrder = GetTierLeagueOrder();
+
+            if (tierLeagueOrder != null)
+            {
+                var tierResult = tierLeagueOrder.Where(t => !result.Any(r => r.SportId == t.SportId && r.SegmentId == t.SegmentId && r.LeagueId == t.LeagueId)).Select(s => new ClientFixtureSortOrderDTO
+                {
+                    SportId = s.SportId,
+                    SegmentId = s.SegmentId,
+                    LeagueId = s.LeagueId,
+                    SortOrder = s.SortOrder + 1000
+                }).ToList();
+
+                if(tierResult.Any())
+                    result.AddRange(tierResult);
+            }
 
             return new BaseResponseDTO<ClientFixtureSortOrderResponseDTO>
             {

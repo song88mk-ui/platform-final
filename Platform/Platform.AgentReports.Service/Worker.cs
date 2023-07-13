@@ -61,19 +61,19 @@ namespace Platform.AgentReports.Service
                         break;
                     case "OnBetFullCashOut":
                         var onBetFullCashOut = JsonSerializer.Deserialize<OnBetSettlement>(payload);
-                        _reportsRepository.ProcessBetFullCashOut(onBetFullCashOut);
+                        _reportsRepository.ProcessBetFullCashOut(onBetFullCashOut, _messageBroker);
                         break;
                     case "OnBetSettlement":
                         var onBetSettlement = JsonSerializer.Deserialize<OnBetSettlement>(payload);
-                        _reportsRepository.ProcessBetSettlement(onBetSettlement);
+                        _reportsRepository.ProcessBetSettlement(onBetSettlement, _messageBroker);
                         break;
                     case "OnBetCancellation":
                         var onBetCancellation = JsonSerializer.Deserialize<OnBetSettlement>(payload);
-                        _reportsRepository.ProcessBetCancellation(onBetCancellation);
+                        _reportsRepository.ProcessBetCancellation(onBetCancellation, _messageBroker);
                         break;
                     case "OnCasinoBetSettlement":
                         var onCasinoBetSettlement = JsonSerializer.Deserialize<OnCasinoBetSettlement>(payload);
-                        _reportsRepository.ProcessCasinoBetSettlement(onCasinoBetSettlement);
+                        _reportsRepository.ProcessCasinoBetSettlement(onCasinoBetSettlement, _messageBroker);
                         break;
                 }
 

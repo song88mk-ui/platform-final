@@ -8,7 +8,7 @@ namespace Platform.WebSocket.API.Controllers
     {
         [HttpGet("v1/heartbeat")]
         public IActionResult Get()
-        {
+        {//
             return Ok();
         }
     }

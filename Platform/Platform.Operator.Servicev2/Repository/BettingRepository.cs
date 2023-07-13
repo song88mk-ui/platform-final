@@ -398,15 +398,13 @@ namespace Platform.Operator.Servicev2.Repository
                             UserId = payload.Bet.UserId,
                             Balance = operatorResponse.Balance
                         }, "OnWalletChange", "r.bet.betstatus", correlationId);
-                        //
+
                         messageBroker.Publish(new OnWalletChange
                         {
                             ClientId = payload.Bet.ClientId.ToString().ToUpper(),
                             UserId = payload.Bet.UserId,
-                            Balance = operatorResponse.Balance,
-                            Payable = operatorResponse.Payable
+                            Balance = operatorResponse.Balance
                         }, "OnWalletChange", $"r.wallet.{payload.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
-
                     }
                     catch (Exception ex)
                     {
@@ -830,8 +828,7 @@ namespace Platform.Operator.Servicev2.Repository
                     {
                         ClientId = message.Bet.ClientId.ToUpper(),
                         UserId = message.Bet.UserId,
-                        Balance = result.Balance,
-                        Payable = result.Payable
+                        Balance = result.Balance
                     }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
                     AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetFullCashOut", correlationId, response.IsSuccessStatusCode);
@@ -1026,8 +1023,7 @@ namespace Platform.Operator.Servicev2.Repository
                         {
                             ClientId = message.Bet.ClientId.ToUpper(),
                             UserId = message.Bet.UserId,
-                            Balance = result.Balance,
-                            Payable = result.Payable
+                            Balance = result.Balance
                         }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
                         AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetSettlement", correlationId, response.IsSuccessStatusCode);
@@ -1231,8 +1227,7 @@ namespace Platform.Operator.Servicev2.Repository
                     {
                         ClientId = message.Bet.ClientId.ToUpper(),
                         UserId = message.Bet.UserId,
-                        Balance = result.Balance,
-                        Payable = result.Payable
+                        Balance = result.Balance
                     }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
                     AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetCancellation", correlationId, response.IsSuccessStatusCode);

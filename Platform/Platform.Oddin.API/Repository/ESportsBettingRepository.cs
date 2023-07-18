@@ -461,6 +461,15 @@ namespace Platform.Oddin.API.Repository
 
                 var betStatus = GetBetStatus(request.TransactionType);
 
+                if(betStatus != BetStatus.Running)
+                {
+                    return new CreditUserResponse()
+                    {
+                        OperatorTransactionId = request.TransactionId,
+                        ErrorCode = (int)SessionCode.TransactionAlreadyProcessed
+                    };
+                }
+
                 var creditRequest = new OperatorESportsCreditRequestDTO
                 {
                     TransactionId = bet.ProviderTransactionId,

@@ -179,6 +179,39 @@ namespace Platform.Operator.API.Controllers
                     return BadRequest(result);
             }
         }
+        [HttpPost("operator/v1/esports/debit")]
+        public async Task<IActionResult> ESportsDebit([FromBody] OperatorESportsDebitRequestDTO request)
+        {
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var isAgent = HttpContext.Request.Headers["x-is-agent"].FirstOrDefault();
+
+            var result = await _operatorRepository.DebitESports(request, clientId, operatorToken, isAgent);
+
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("operator/v1/esports/credit")]
+        public async Task<IActionResult> ESportsCredit([FromBody] OperatorESportsCreditRequestDTO request)
+        {
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _operatorRepository.CreditESports(request, clientId);
+
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
 
         #region Utilities
         private string GetIpCountry()

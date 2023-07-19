@@ -484,7 +484,7 @@ namespace Platform.Oddin.API.Repository
 
                 var betStatus = GetBetStatus(request.TransactionType);
 
-                if(betStatus != BetStatus.Running)
+                if(bet.BetStatusId != (int)BetStatus.Running)
                 {
                     return new CreditUserResponse()
                     {

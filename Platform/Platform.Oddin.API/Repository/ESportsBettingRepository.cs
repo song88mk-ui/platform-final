@@ -545,11 +545,13 @@ namespace Platform.Oddin.API.Repository
                     bet.BetStatusName = betStatus.ToString();
                     bet.ProviderTransactionDate = request.Ticket.Date;
                     bet.Reason = request.Description;
+                    bet.Ticket = JsonSerializer.Serialize(request.Ticket);
 
                     if (betStatus != BetStatus.Running)
                     {
                         bet.WinLoss = bet.Payout - bet.Stake;
                         bet.SettlementDate = dateNow;
+                        bet.IsSettled = true;
                     }
 
                     transactionIds.Add($"{request.TransactionId}|{walletResponse.Result.Balance}");

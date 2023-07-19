@@ -39,5 +39,6 @@ namespace Platform.Shared.Data.ESportBetting.SQLEntities
         public DateTime ProviderTransactionDate { get; set; }
         public DateTime BetDate { get; set; }
         public DateTime SettlementDate { get; set; }
+        public bool IsSettled { get; set; }
     }
 }

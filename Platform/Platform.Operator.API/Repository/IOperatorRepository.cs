@@ -19,5 +19,7 @@ namespace Platform.Operator.API.Repository
 
         Task<BetPlacementResponseDTO> BetPlacementCasino(OperatorCasinoBetPlacementRequestDTO request, string clientId, string operatorToken, string isAgent);
         Task<BetSettlementResponseDTO> BetSettlementCasino(OperatorCasinoBetSettlementRequestDTO request, string clientId);
+        Task<BetPlacementResponseDTO> DebitESports(OperatorESportsDebitRequestDTO request, string clientId, string operatorToken, string isAgent);
+        Task<BetSettlementResponseDTO> CreditESports(OperatorESportsCreditRequestDTO request, string clientId);
     }
 }

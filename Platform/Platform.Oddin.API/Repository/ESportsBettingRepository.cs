@@ -186,7 +186,7 @@ namespace Platform.Oddin.API.Repository
                         }
                     }
 
-                    var rate = _platformContext.ForexEUR.Find(authenticationResponse.Result.CurrencyCode);
+                    //var rate = _platformContext.ForexEUR.Find(authenticationResponse.Result.CurrencyCode);
 
                     using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
 
@@ -258,6 +258,17 @@ namespace Platform.Oddin.API.Repository
                         UserId = transactionEntity.UserId,
                         Balance = walletResponse.Result.Balance
                     }, "OnWalletChange", $"r.wallet.{transactionEntity.ClientCode.ToLower()}", Guid.NewGuid().ToString().ToUpper());
+
+                    if (transactionEntity.BetStatusId != (int)BetStatus.Running)
+                    {
+                        _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                        {
+                            Payload = JsonSerializer.Serialize(transactionEntity),
+                            CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                            MessageType = "OnESportsBetSettlement",
+                            RoutingKey = "r.bet.reports.agent"
+                        });
+                    }
                 }
                 else
                 {
@@ -348,6 +359,18 @@ namespace Platform.Oddin.API.Repository
                             UserId = bet.UserId,
                             Balance = walletResponse.Result.Balance
                         }, "OnWalletChange", $"r.wallet.{bet.ClientCode.ToLower()}", Guid.NewGuid().ToString().ToUpper());
+
+
+                        if (bet.BetStatusId != (int)BetStatus.Running)
+                        {
+                            _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                            {
+                                Payload = JsonSerializer.Serialize(bet),
+                                CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                                MessageType = "OnESportsBetSettlement",
+                                RoutingKey = "r.bet.reports.agent"
+                            });
+                        }
                     }
                     else
                     {
@@ -461,6 +484,15 @@ namespace Platform.Oddin.API.Repository
 
                 var betStatus = GetBetStatus(request.TransactionType);
 
+                if(betStatus != BetStatus.Running)
+                {
+                    return new CreditUserResponse()
+                    {
+                        OperatorTransactionId = request.TransactionId,
+                        ErrorCode = (int)SessionCode.TransactionAlreadyProcessed
+                    };
+                }
+
                 var creditRequest = new OperatorESportsCreditRequestDTO
                 {
                     TransactionId = bet.ProviderTransactionId,
@@ -502,7 +534,7 @@ namespace Platform.Oddin.API.Repository
 
                 if (walletResponse.StatusCode == StatusCode.Success)
                 {
-                    var rate = _platformContext.ForexEUR.Find(authenticationResponse.Result.CurrencyCode);
+                    //var rate = _platformContext.ForexEUR.Find(authenticationResponse.Result.CurrencyCode);
 
                     using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
 
@@ -572,6 +604,14 @@ namespace Platform.Oddin.API.Repository
                             CorrelationId = Guid.NewGuid().ToString().ToUpper(),
                             MessageType = "OnWalletChange",
                             RoutingKey = $"r.wallet.{transactionEntity.ClientCode.ToLower()}"
+                        });
+
+                        _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                        {
+                            Payload = JsonSerializer.Serialize(transactionEntity),
+                            CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                            MessageType = "OnESportsBetSettlement",
+                            RoutingKey = "r.bet.reports.agent"
                         });
                     }
 

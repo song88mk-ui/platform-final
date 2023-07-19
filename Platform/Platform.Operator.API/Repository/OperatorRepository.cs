@@ -1,9 +1,13 @@
 ﻿using Platform.Operator.API.Models;
+using Platform.Shared.Data.Platform;
+using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Transactions;
 using LoginResponseDTO = Platform.Operator.API.Models.LoginResponseDTO;
 using LogoutResponseDTO = Platform.Operator.API.Models.LogoutResponseDTO;
 
@@ -335,6 +339,70 @@ namespace Platform.Operator.API.Repository
                 Balance = betResponse.Balance
             };
         }
+        
+        public async Task<BetPlacementResponseDTO> DebitESports(OperatorESportsDebitRequestDTO request, string clientId, string operatorToken, string isAgent)
+        {
+
+            var isGuid = Guid.TryParse(clientId, out Guid guid);
+
+            if (!isGuid)
+            {
+                return new BetPlacementResponseDTO
+                {
+                    StatusId = 1002
+                };
+            }
+
+            var authResponse = await _authRepository.Authenticate(operatorToken, isAgent);
+
+            if (authResponse.StatusCode != Enums.AuthStatusCode.Success)
+            {
+                return new BetPlacementResponseDTO
+                {
+                    StatusId = 1002
+                };
+            }
+
+            var betResponse = await _walletRepository.PlaceBet(new CreditOrDebitRequest
+            {
+                ClientId = guid,
+                UserId = authResponse.Result.UserId,
+                Amount = request.Stake,
+                CurrencyCode = request.CurrencyCode,
+                TransactionTypeId = GetTransactionTypeId("Running"),
+                TransactionTypeName = "BetPlacement",
+                ReferenceId = request.BetId
+            });
+
+            return new BetPlacementResponseDTO
+            {
+                StatusId = betResponse.StatusCode,
+                Balance = betResponse.Balance,
+                StakeReal = request.Stake,
+                StakeBonus = 0,
+                IsFreeBet = false
+            };
+
+        }
+        public async Task<BetSettlementResponseDTO> CreditESports(OperatorESportsCreditRequestDTO request, string clientId)
+        {
+            var betResponse = await _walletRepository.SettleBet(new CreditOrDebitRequest
+            {
+                ClientId = Guid.Parse(clientId),
+                UserId = request.UserId,
+                Amount = request.Payout,
+                CurrencyCode = request.CurrencyCode,
+                TransactionTypeId = GetTransactionTypeId(request.BetStatus),
+                TransactionTypeName = request.BetStatus == "Running" ? "BetPlacement" : $"{request.BetStatus}Settlement",
+                ReferenceId = request.BetId
+            });
+
+            return new BetSettlementResponseDTO
+            {
+                StatusId = betResponse.StatusCode,
+                Balance = betResponse.Balance
+            };
+        }
 
         private static int GetTransactionTypeId(string betStatus)
         {
@@ -358,5 +426,7 @@ namespace Platform.Operator.API.Repository
                     return 2000;
             }
         }
+
+
     }
 }

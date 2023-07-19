@@ -268,7 +268,7 @@ namespace Platform.AgentReports.Service.Repository
 
         public void ProcessCasinoBetSettlement(OnCasinoBetSettlement message, IMessageBroker messageBroker)
         {
-            var agents = GetCasinoAgentSettingsFinal(message.Category, message.UserId, message.BetDate).OrderBy(o => o.Hierarchy).ToList();
+            var agents = GetExtendedAgentSettingsFinal(message.Category, message.UserId, message.BetDate).OrderBy(o => o.Hierarchy).ToList();
 
             if (agents.Count == 0)
                 return;
@@ -294,6 +294,36 @@ namespace Platform.AgentReports.Service.Repository
                 scope.Complete();
             }
         }
+
+        public void ProcessESportBetSettlement(OnESportBetSettlement message, IMessageBroker messageBroker)
+        {
+            var agents = GetExtendedAgentSettingsFinal(Category.ESports.ToString(), message.UserId, message.BetDate).OrderBy(o => o.Hierarchy).ToList();
+
+            if (agents.Count == 0)
+                return;
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<AgentReportsContext>().UseSqlServer(_configuration["ConnectionStrings:Reports"]);
+
+                using (var context = new AgentReportsContext(optionsBuilder.Options))
+                {
+                    var product = new ProductLookup();
+
+                    foreach (var agent in agents)
+                    {
+                        AddOrUpdateRunningBalanceFinal(context, message.Stake, message.CurrencyCode, message.BetId, message.BetStatusId, message.BetStatusName, message.BetDate, agent, 0, agents, true);
+
+                        AddOrUpdateESportWinLossFinal(context, message, agent, agents, product, messageBroker);
+                    }
+
+
+                    context.SaveChanges();
+                }
+                scope.Complete();
+            }
+        }
+
         private List<AgentSettings> GetAgentSettingsFinal(OnBetPlacement message)
         {
             var agents = new List<AgentSettings>();
@@ -364,7 +394,7 @@ namespace Platform.AgentReports.Service.Repository
             return agents;
         }
 
-        private List<AgentSettings> GetCasinoAgentSettingsFinal(string category, string userId, DateTime transactionDate)
+        private List<AgentSettings> GetExtendedAgentSettingsFinal(string category, string userId, DateTime transactionDate)
         {
             var agents = new List<AgentSettings>();
             var categoryType = GetCategory(category);
@@ -616,9 +646,9 @@ namespace Platform.AgentReports.Service.Repository
                 IsBinary = betSelection.IsBinary
             };
         }
-        private void AddOrUpdateRunningBalanceFinal(AgentReportsContext context, decimal trueStake, string currencyCode, Guid betId, int betStatusId, string betStatusName, DateTime betDate, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents, bool isCasino = false)
+        private void AddOrUpdateRunningBalanceFinal(AgentReportsContext context, decimal trueStake, string currencyCode, Guid betId, int betStatusId, string betStatusName, DateTime betDate, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents, bool isExtended = false)
         {
-            if (isCasino == false && betStatusId != (int)BetStatus.Running) return;
+            if (isExtended == false && betStatusId != (int)BetStatus.Running) return;
             if (agent.UserType == Shared.Enums.UserType.Company) return;
 
             var runningBalanceEntity = new RunningBalance();
@@ -648,13 +678,13 @@ namespace Platform.AgentReports.Service.Repository
                     UserTypeId = (int)agent.UserType,
                     CashBalance = 0m,
                     TrueCashBalance = 0m,
-                    OutstandingBalance = isCasino ? 0m : outstandingBalance,
+                    OutstandingBalance = isExtended ? 0m : outstandingBalance,
                     IsCashPlayer = agent.IsCashMarket
                 }).Entity;
 
                 context.SaveChanges();
             }
-            else if(isCasino == false)
+            else if(isExtended == false)
             {
                 preCashBalance = runningBalance.CashBalance;
                 preTrueCashBalance = runningBalance.TrueCashBalance;
@@ -697,7 +727,7 @@ namespace Platform.AgentReports.Service.Repository
                 runningBalanceEntity = context.RunningBalance.Update(runningBalance).Entity;
             }
 
-            if(isCasino == false)
+            if(isExtended == false)
             {
                 context.RunningBalanceTransaction.Add(new RunningBalanceTransaction
                 {
@@ -1298,6 +1328,180 @@ namespace Platform.AgentReports.Service.Repository
             }
         }
 
+        private void AddOrUpdateESportWinLossFinal(AgentReportsContext context, OnESportBetSettlement message, AgentSettings agent, List<AgentSettings> agents, ProductLookup product, IMessageBroker messageBroker)
+        {
+            if (message.BetStatusId == (int)BetStatus.Running) return;
+
+            var dateNow = DateTime.UtcNow;
+
+            agents = agents.OrderBy(o => o.Hierarchy).ToList();
+
+            var receivableComm = agent.Commission;
+            var payableComm = agents.Where(c => c.AgentId > agent.AgentId).Select(s => s.Commission).FirstOrDefault();
+
+            var uplineReceivablePT = agents.Where(c => c.AgentId < agent.AgentId).Sum(s => s.PositionTaking);
+            var uplinePayablePT = agents.Where(c => c.AgentId <= agent.AgentId).Sum(s => s.PositionTaking);
+
+            var ptReceivableComm = message.Stake * uplineReceivablePT * receivableComm;
+            var ptPayableComm = message.Stake * uplinePayablePT * payableComm;
+
+            var commission = ptReceivableComm - ptPayableComm;
+
+            var memberWinLoss = message.WinLoss;
+            var memberCommission = message.Stake * agents.Where(c => c.UserType == Shared.Enums.UserType.Player).Select(s => s.Commission).FirstOrDefault();
+            var memberWLC = memberWinLoss + memberCommission;
+
+            var agentWinLoss = Shared.Enums.UserType.Player == agent.UserType ? agent.PositionTaking * message.WinLoss : agent.PositionTaking * message.WinLoss * -1;
+            var agentCommission = commission;
+            var agentWLC = agentWinLoss + agentCommission;
+
+            var res = GetUplineAgentWinLossCommission2Final(message.Stake, false, agent, agents, memberWinLoss * -1);
+
+            AddOrUpdateESportSettledBalanceFinal(context, message, agent, res.Item1 + res.Item2, agents, messageBroker);
+
+            var tempDownlineWinLoss = 0m;
+            var tempDownlineCommission = 0m;
+            var tempDownlineWLC = 0m;
+
+            var isGGREnabled = false;
+            var agentId = agents.FirstOrDefault(a => a.Hierarchy == 1)?.AgentId ?? 0;
+            var partnerRevShare = context.PartnerRevenueShare.FirstOrDefault(p => p.UserId == agentId);
+            if (partnerRevShare != null)
+                isGGREnabled = partnerRevShare.IsGGREnabled;
+
+            foreach (var data in agents.Where(c => c.AgentId > agent.AgentId).ToList())
+            {
+                var parentUserId = agent.AgentId;
+                var directUserId = data.UplineUserId;
+                var indirectUserId = data.AgentId;
+
+                memberWinLoss = message.WinLoss;
+                memberCommission = message.Stake * agents.Where(c => c.UserType == Shared.Enums.UserType.Player).Select(s => s.Commission).FirstOrDefault();
+                memberWLC = memberWinLoss + memberCommission;
+
+                agentWinLoss = agent.PositionTaking * memberWinLoss * -1;
+                agentCommission = commission;
+                agentWLC = agentWinLoss + agentCommission;
+
+                var upline = GetUplineAgentWinLossCommissionFinal(message.Stake, false, agent, agents, memberWinLoss * -1);
+
+                var uplineWinLoss = upline.Item1;
+                var uplineCommission = upline.Item2;
+                var uplineWLC = uplineWinLoss + uplineCommission;
+
+                var downline = GetDownlineAgentWinLossCommissionFinal(message.Stake, false, agent, agents, memberWinLoss * -1);
+
+                var downlineWinLoss = downline.Item1;
+                var downlineCommission = downline.Item2;
+                var downlineWLC = downlineWinLoss + downlineCommission;
+
+                if (data.UserType == Shared.Enums.UserType.Agent)
+                {
+                    tempDownlineWinLoss = downlineWinLoss;
+                    tempDownlineCommission = downlineCommission;
+                    tempDownlineWLC = downlineWLC;
+                }
+
+                if (data.UserType == Shared.Enums.UserType.Player)
+                {
+                    downlineWinLoss = tempDownlineWinLoss;
+                    downlineCommission = tempDownlineCommission;
+                    downlineWLC = tempDownlineWLC;
+                }
+
+                var winloss = context.ESportWinLoss.Where(x => x.ParentUserId == parentUserId && x.DirectUserId == directUserId
+                && x.IndirectUserId == indirectUserId && x.BetId == message.BetId && x.BetDate == message.BetDate).SingleOrDefault();
+
+                if (winloss != null)
+                {
+                    winloss.Reason = message.Reason;
+                    winloss.AgentUsername = agents.Where(c => c.AgentId == data.UplineUserId).Select(s => s.AgentUsername).FirstOrDefault();
+                    winloss.UserId = message.UserId;
+                    winloss.UserTypeId = (int)agents.Where(c => c.AgentId == indirectUserId).Select(c => c.UserType).FirstOrDefault();
+                    winloss.TransactionType = message.TransactionType;
+                    winloss.Commission = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : memberCommission;
+                    winloss.MemberWinLoss = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : memberWinLoss;
+                    winloss.MemberCommission = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : memberCommission;
+                    winloss.MemberWLC = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : memberWLC;
+                    winloss.AgentWinLoss = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : agentWinLoss;
+                    winloss.AgentCommission = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : agentCommission;
+                    winloss.AgentWLC = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : agentWLC;
+                    winloss.UplineWinLoss = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : uplineWinLoss;
+                    winloss.UplineCommission = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : uplineCommission;
+                    winloss.UplineWLC = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : uplineWLC;
+                    winloss.DownlineWinLoss = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : downlineWinLoss;
+                    winloss.DownlineCommission = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : downlineCommission;
+                    winloss.DownlineWLC = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : downlineWLC;
+                    winloss.Stake = message.Stake;
+                    winloss.BetStatusId = message.BetStatusId;
+                    winloss.BetStatusName = message.BetStatusName;
+                    winloss.CurrencyCode = message.CurrencyCode;
+                    winloss.ReceivePositionTaking = GetReceivePTFinal(message.Stake, message.Payout, message.BetStatusId, agent);
+                    winloss.TransactionIds = message.TransactionIds;
+                    winloss.ProviderTransactionDate = message.ProviderTransactionDate;
+                    winloss.SettlementDate = dateNow;
+                    winloss.MaxLiability = 0;
+                    winloss.GGR = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : (message.Stake - message.Payout);
+                    winloss.Payout = message.BetStatusId == (int)BetStatus.Cancelled ? 0 : message.Payout;
+                    winloss.IsGGREnabled = isGGREnabled;
+                    winloss.PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(agent, agents));
+                    winloss.Odds = message.Odds;
+                }
+                else
+                    context.ESportWinLoss.Add(new ESportWinLoss
+                    {
+                        ParentUserId = parentUserId,
+                        DirectUserId = directUserId,
+                        IndirectUserId = indirectUserId,
+                        BetId = message.BetId,
+                        BetDate = message.BetDate,
+                        TransactionDateOffset = message.BetDate.AddHours(-4),
+                        ProviderTransactionId = message.ProviderTransactionId,
+                        AgentId = agent.AgentId,
+                        AgentUsername = agents.Where(c => c.AgentId == data.UplineUserId).Select(s => s.AgentUsername).FirstOrDefault(),
+                        ClientId = message.ClientId,
+                        ClientCode = message.ClientCode,
+                        ClientName = message.ClientName,
+                        Endpoint = message.Endpoint,
+                        OperatorToken = message.OperatorToken,
+                        Reason = message.Reason,
+                        IsAgent = message.IsAgent,
+                        UserTypeId = (int)agents.Where(c => c.AgentId == indirectUserId).Select(c => c.UserType).FirstOrDefault(),
+                        PositionTaking = GetReceivePTFinal(message.Stake, message.Payout, message.BetStatusId, agent),
+                        UserId = message.UserId,
+                        Username = data.UserType == Shared.Enums.UserType.Player ? data.Username : data.AgentUsername,
+                        TransactionType = message.TransactionType,
+                        Commission = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : memberCommission,
+                        MemberWinLoss = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : memberWinLoss,
+                        MemberCommission = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : memberCommission,
+                        MemberWLC = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : memberWLC,
+                        AgentWinLoss = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : agentWinLoss,
+                        AgentCommission = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : agentCommission,
+                        AgentWLC = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : agentWLC,
+                        UplineWinLoss = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : uplineWinLoss,
+                        UplineCommission = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : uplineCommission,
+                        UplineWLC = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : uplineWLC,
+                        DownlineWinLoss = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : downlineWinLoss,
+                        DownlineCommission = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : downlineCommission,
+                        DownlineWLC = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : downlineWLC,
+                        Stake = message.Stake,
+                        BetStatusId = message.BetStatusId,
+                        BetStatusName = message.BetStatusName,
+                        CurrencyCode = message.CurrencyCode,
+                        ProviderBetId = message.ProviderBetId,
+                        ReceivePositionTaking = GetReceivePTFinal(message.Stake, message.Payout, message.BetStatusId, agent),
+                        TransactionIds = message.TransactionIds,
+                        ProviderTransactionDate = message.ProviderTransactionDate,
+                        SettlementDate = dateNow,
+                        MaxLiability = 0,
+                        GGR = message.BetStatusId == (int)BetStatus.Cancelled || message.BetStatusId == (int)BetStatus.Void ? 0 : (message.Stake - message.Payout),
+                        Payout = message.BetStatusId == (int)BetStatus.Cancelled ? 0 : message.Payout,
+                        IsGGREnabled = isGGREnabled,
+                        PositionTakingDetails = JsonConvert.SerializeObject(GetPTFinal(agent, agents))
+                    });
+            }
+        }
+
         private ProductLookup UpdateProductLookup(AgentReportsContext context, string category, string gameId)
         {
             var categoryType = GetProduct(category);
@@ -1628,6 +1832,133 @@ namespace Platform.AgentReports.Service.Repository
             }
         }
 
+        private void AddOrUpdateESportSettledBalanceFinal(AgentReportsContext context, OnESportBetSettlement message, AgentSettings agent, decimal winLossCommission, List<AgentSettings> agents, IMessageBroker messageBroker)
+        {
+            if (message.BetStatusId == (int)BetStatus.Running) return;
+            if (agent.UserType == Shared.Enums.UserType.Company) return;
+
+            var dateUTCNow = DateTime.UtcNow;
+
+            var runningBalance = context.RunningBalance.Find(agent.UplineUserId, agent.AgentId);
+
+            var preCashBalance = 0m;
+            var preTrueCashBalance = 0m;
+            var preOutstandingBalance = 0m;
+
+            var cashBalance = 0m;
+            var trueCashBalance = 0m;
+            var outstandingBalance = 0m;
+
+            if (runningBalance != null)
+            {
+                preCashBalance = runningBalance.CashBalance;
+                preTrueCashBalance = runningBalance.TrueCashBalance;
+                preOutstandingBalance = runningBalance.OutstandingBalance;
+
+                var tracker = context.CashBalanceTracker.Find(agent.UplineUserId, agent.AgentId, message.BetId);
+
+                var amount = 0m;
+
+                if (tracker != null)
+                {
+                    amount = tracker.Amount;
+
+                    tracker.StatusId = message.BetStatusId;
+                    tracker.StatusName = message.BetStatusName;
+
+                    context.CashBalanceTracker.Update(tracker);
+                }
+
+                var uplinePT = agents.Where(c => c.AgentId == agent.UplineUserId).Select(s => s.PositionTaking).FirstOrDefault();
+
+                var BetStatuss = new List<BetStatus> { BetStatus.Void, BetStatus.Rejected };
+
+                if (BetStatuss.Contains((BetStatus)message.BetStatusId))
+                {
+                    outstandingBalance = 0;
+                    runningBalance.OutstandingBalance -= outstandingBalance;
+
+                    trueCashBalance = 0;
+
+                    runningBalance.TrueCashBalance -= trueCashBalance;
+                }
+                else
+                {
+                    cashBalance = winLossCommission;
+
+                    trueCashBalance = winLossCommission - amount;
+                    outstandingBalance = 0;
+
+                    if (agent.IsCashMarket == false)
+                    {
+                        runningBalance.CashBalance += cashBalance;
+                        runningBalance.TrueCashBalance += trueCashBalance;
+                    }
+                    else
+                    {
+                        var cashBalanceTotal = runningBalance.CashBalance + cashBalance;
+
+                        if (cashBalanceTotal > 0)
+                        {
+                            var tempCashBalance = runningBalance.CashBalance;
+
+                            runningBalance.CashBalance -= tempCashBalance;
+                            runningBalance.TrueCashBalance -= tempCashBalance;
+
+                            cashBalance = tempCashBalance;
+                            trueCashBalance = tempCashBalance;
+                        }
+                        else
+                        {
+                            runningBalance.CashBalance += cashBalance;
+                            runningBalance.TrueCashBalance += trueCashBalance;
+                        }
+                    }
+
+                    runningBalance.OutstandingBalance -= outstandingBalance;
+                }
+
+                var entity = context.RunningBalance.Update(runningBalance).Entity;
+
+                context.RunningBalanceTransaction.Add(new RunningBalanceTransaction
+                {
+                    ParentUserId = entity.ParentUserId,
+                    UserId = entity.UserId,
+                    Username = entity.Username,
+                    UserTypeId = entity.UserTypeId,
+                    CurrencyCode = entity.CurrencyCode,
+
+                    PreCashBalance = preCashBalance,
+                    CashBalance = cashBalance,
+                    PostCashBalance = entity.CashBalance,
+
+                    PreTrueCashBalance = preTrueCashBalance,
+                    TrueCashBalance = trueCashBalance,
+                    PostTrueCashBalance = entity.TrueCashBalance,
+
+                    PreOutstandingBalance = preOutstandingBalance,
+                    OutstandingBalance = outstandingBalance,
+                    PostOutstandingBalance = entity.OutstandingBalance,
+
+                    IsCashPlayer = entity.IsCashPlayer,
+                    ReferenceId = message.BetId.ToString().ToUpper(),
+                    StatusId = message.BetStatusId,
+                    StatusName = message.BetStatusName,
+                    TransactionDate = DateTime.UtcNow
+                });
+
+                if (agent.UserType == Shared.Enums.UserType.Player)
+                {
+                    messageBroker.Publish(new OnPayableChange
+                    {
+                        ClientId = message.ClientId.ToUpper(),
+                        UserId = message.UserId,
+                        Payable = entity.CashBalance
+                    }, "OnPayableChange", $"r.wallet.{message.ClientCode.ToString().ToLower()}", Guid.NewGuid().ToString(), 10);
+                }
+            }
+        }
+
         private Tuple<decimal, decimal> GetUplineAgentWinLossCommissionFinal(decimal stake, bool hasHalfSettlement, AgentSettings agent, List<AgentSettings> agents, decimal playerWinLoss)
         {
             var filtered = agents.Where(c => c.UserType != Shared.Enums.UserType.Player && c.AgentId < agent.AgentId).ToList();
@@ -1748,6 +2079,10 @@ namespace Platform.AgentReports.Service.Repository
             else if (category.ToLower().Contains("live"))
             {
                 newCategory = Category.LiveCasino;
+            }
+            else if (category.ToLower().Contains("esports"))
+            {
+                newCategory = Category.ESports;
             }
             return newCategory;
         }

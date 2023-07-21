@@ -297,7 +297,9 @@ namespace Platform.AgentReports.Service.Repository
 
         public void ProcessESportBetSettlement(OnESportBetSettlement message, IMessageBroker messageBroker)
         {
-            var agents = GetExtendedAgentSettingsFinal(Category.ESports.ToString(), message.UserId, message.BetDate).OrderBy(o => o.Hierarchy).ToList();
+            //todo: uncomment to pass correct category
+            //var agents = GetExtendedAgentSettingsFinal(Category.ESports.ToString(), message.UserId, message.BetDate).OrderBy(o => o.Hierarchy).ToList();
+            var agents = GetExtendedAgentSettingsFinal(Category.LiveCasino.ToString(), message.UserId, message.BetDate).OrderBy(o => o.Hierarchy).ToList();
 
             if (agents.Count == 0)
                 return;

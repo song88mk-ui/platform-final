@@ -367,7 +367,7 @@ namespace Platform.Oddin.API.Repository
                             {
                                 Payload = JsonSerializer.Serialize(bet),
                                 CorrelationId = Guid.NewGuid().ToString().ToUpper(),
-                                MessageType = "OnESportsBetSettlement",
+                                MessageType = "OnESportBetSettlement",
                                 RoutingKey = "r.bet.reports.agent"
                             });
                         }
@@ -612,7 +612,7 @@ namespace Platform.Oddin.API.Repository
                         {
                             Payload = JsonSerializer.Serialize(transactionEntity),
                             CorrelationId = Guid.NewGuid().ToString().ToUpper(),
-                            MessageType = "OnESportsBetSettlement",
+                            MessageType = "OnESportBetSettlement",
                             RoutingKey = "r.bet.reports.agent"
                         });
                     }

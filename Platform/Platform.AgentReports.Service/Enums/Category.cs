@@ -8,6 +8,7 @@
         Casino = 4,
         VirtualGames = 5,
         LiveCasino = 6,
-        Cricket = 8
+        Cricket = 8,
+        ESports = 9
     }
 }

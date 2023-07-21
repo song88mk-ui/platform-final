@@ -10,5 +10,6 @@ namespace Platform.AgentReports.Service.Repository
         void ProcessBetSettlement(OnBetSettlement onBetSettlement, IMessageBroker messageBroker);
         void ProcessBetCancellation(OnBetSettlement onBetCancellation, IMessageBroker messageBroker);
         void ProcessCasinoBetSettlement(OnCasinoBetSettlement message, IMessageBroker messageBroker);
+        void ProcessESportBetSettlement(OnESportBetSettlement message, IMessageBroker messageBroker);
     }
 }

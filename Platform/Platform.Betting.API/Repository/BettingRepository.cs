@@ -1586,7 +1586,7 @@ namespace Platform.Betting.API.Repository
 
                     var parlayBonusWinnings = 0m;
                     var parlayBonus = 0m;
-                    if (hasVirtualSport == false && wonOrRunningSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
+                    if (isBetBuilder == false && hasVirtualSport == false && wonOrRunningSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
                     {
                         var parlayConfig = GetParlayBetConfig(_bettingContext, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, filteredSelections, bet.Payout, ref parlayBonusWinnings);
 
@@ -1896,7 +1896,7 @@ namespace Platform.Betting.API.Repository
 
                 var parlayBonusWinnings = 0m;
                 var parlayBonus = 0m;
-                if (hasVirtualSport == false && wonOrRunningSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
+                if (isBetBuilder == false && hasVirtualSport == false && wonOrRunningSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
                 {
                     var parlayConfig = GetParlayBetConfig(_bettingContext, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, filteredSelections, runningPayout, ref parlayBonusWinnings);
 

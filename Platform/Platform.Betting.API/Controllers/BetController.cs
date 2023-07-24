@@ -74,7 +74,7 @@ namespace Platform.Betting.API.Controllers
 
         [HttpPost("v1/bet/history/running")]
         public async Task<IActionResult> GetBetHistoryRunning([FromBody] BetHistoryRunningRequestDTO request)
-        {
+        {//
             var result = await _bettingRepository.GetBetHistoryRunning(request);
 
             switch (result.StatusCode)

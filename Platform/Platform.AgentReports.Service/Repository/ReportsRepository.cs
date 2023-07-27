@@ -1702,7 +1702,7 @@ namespace Platform.AgentReports.Service.Repository
                     {
                         ClientId = message.Bet.ClientId.ToUpper(),
                         UserId = message.Bet.UserId,
-                        Payable = entity.CashBalance
+                        Payable = entity.CashBalance * -1
                     }, "OnPayableChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", Guid.NewGuid().ToString(), 10);
                 }
             }

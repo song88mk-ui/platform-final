@@ -1828,7 +1828,7 @@ namespace Platform.AgentReports.Service.Repository
                     {
                         ClientId = message.ClientId.ToUpper(),
                         UserId = message.UserId,
-                        Payable = entity.CashBalance
+                        Payable = entity.CashBalance * -1
                     }, "OnPayableChange", $"r.wallet.{message.ClientCode.ToString().ToLower()}", Guid.NewGuid().ToString(), 10);
                 }
             }
@@ -1955,7 +1955,7 @@ namespace Platform.AgentReports.Service.Repository
                     {
                         ClientId = message.ClientId.ToUpper(),
                         UserId = message.UserId,
-                        Payable = entity.CashBalance
+                        Payable = entity.CashBalance * -1
                     }, "OnPayableChange", $"r.wallet.{message.ClientCode.ToString().ToLower()}", Guid.NewGuid().ToString(), 10);
                 }
             }

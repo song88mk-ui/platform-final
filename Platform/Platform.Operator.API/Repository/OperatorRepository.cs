@@ -367,7 +367,7 @@ namespace Platform.Operator.API.Repository
             {
                 ClientId = guid,
                 UserId = authResponse.Result.UserId,
-                Amount = request.Stake,
+                Amount = request.Amount,
                 CurrencyCode = request.CurrencyCode,
                 TransactionTypeId = GetTransactionTypeId("Running"),
                 TransactionTypeName = "BetPlacement",
@@ -378,7 +378,7 @@ namespace Platform.Operator.API.Repository
             {
                 StatusId = betResponse.StatusCode,
                 Balance = betResponse.Balance,
-                StakeReal = request.Stake,
+                StakeReal = request.Amount,
                 StakeBonus = 0,
                 IsFreeBet = false
             };
@@ -390,7 +390,7 @@ namespace Platform.Operator.API.Repository
             {
                 ClientId = Guid.Parse(clientId),
                 UserId = request.UserId,
-                Amount = request.Payout,
+                Amount = request.Amount,
                 CurrencyCode = request.CurrencyCode,
                 TransactionTypeId = GetTransactionTypeId(request.BetStatus),
                 TransactionTypeName = request.BetStatus == "Running" ? "BetPlacement" : $"{request.BetStatus}Settlement",

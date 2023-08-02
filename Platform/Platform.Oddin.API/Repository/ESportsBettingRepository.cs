@@ -141,11 +141,8 @@ namespace Platform.Oddin.API.Repository
                         BetId = $"{betId.ToString().ToUpper()}",
                         UserId = authenticationResponse.Result.UserId,
                         CurrencyCode = authenticationResponse.Result.CurrencyCode,
-                        Stake = request.Amount.Amount,
-                        Odds = odds,
+                        Amount = request.Amount.Amount,
                         BetStatus = betStatus.ToString(),
-                        StakeTax = 0,
-                        WinningsTax = 0,
                         TransactionDate = dateNow.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff")
                     };
 
@@ -303,11 +300,8 @@ namespace Platform.Oddin.API.Repository
                             BetId = $"{bet.BetId.ToString().ToUpper()}",
                             UserId = authenticationResponse.Result.UserId,
                             CurrencyCode = authenticationResponse.Result.CurrencyCode,
-                            Stake = request.Amount.Amount,
-                            Odds = odds,
+                            Amount = request.Amount.Amount,
                             BetStatus = GetBetStatus(request.TransactionType).ToString(),
-                            StakeTax = 0,
-                            WinningsTax = 0,
                             TransactionDate = dateNow.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff")
                         };
 
@@ -499,12 +493,8 @@ namespace Platform.Oddin.API.Repository
                     BetId = $"{bet.BetId.ToString().ToUpper()}",
                     UserId = bet.UserId,
                     CurrencyCode = bet.CurrencyCode,
-                    Stake = bet.Stake,
-                    Odds = bet.Odds,
+                    Amount = request.Amount.Amount,
                     BetStatus = betStatus.ToString(),
-                    StakeTax = 0,
-                    WinningsTax = 0,
-                    Payout = request.Amount.Amount,
                     TransactionDate = dateNow.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff")
                 };
 

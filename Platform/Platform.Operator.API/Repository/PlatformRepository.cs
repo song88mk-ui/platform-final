@@ -712,7 +712,7 @@ namespace Platform.Operator.API.Repository
                         };
                     }
 
-                    if (result.Balance < request.Stake)
+                    if (result.Balance < request.Amount)
                     {
                         return new BetPlacementResponseDTO
                         {
@@ -725,7 +725,7 @@ namespace Platform.Operator.API.Repository
                     if (testConfig != null && testConfig.ClientId == id)
                     {
 
-                        var operatorAudit = AddOrUpdateOperatorAuditForESports(result, request.BetId, 0, request.Stake, BetStatus.Running.ToString(), testConfig.IsFreeBet, request.TransactionId);
+                        var operatorAudit = AddOrUpdateOperatorAuditForESports(result, request.BetId, 0, request.Amount, BetStatus.Running.ToString(), testConfig.IsFreeBet, request.TransactionId);
 
                         result.Balance = operatorAudit.PostBalance;
                         _platformContext.Operator.Update(result);
@@ -739,13 +739,13 @@ namespace Platform.Operator.API.Repository
                             StatusId = 1000,
                             Balance = result.Balance,
                             IsFreeBet = testConfig.IsFreeBet,
-                            StakeReal = (request.Stake * (testConfig.StakeRealPercent / 100)),
-                            StakeBonus = (request.Stake * (testConfig.StakeBonusPercent / 100))
+                            StakeReal = (request.Amount * (testConfig.StakeRealPercent / 100)),
+                            StakeBonus = (request.Amount * (testConfig.StakeBonusPercent / 100))
                         };
                     }
                     else
                     {
-                        var operatorAudit = AddOrUpdateOperatorAuditForESports(result, request.BetId, 0, request.Stake, BetStatus.Running.ToString(), transactionId: request.TransactionId);
+                        var operatorAudit = AddOrUpdateOperatorAuditForESports(result, request.BetId, 0, request.Amount, BetStatus.Running.ToString(), transactionId: request.TransactionId);
 
                         result.Balance = operatorAudit.PostBalance;
                         _platformContext.Operator.Update(result);
@@ -759,7 +759,7 @@ namespace Platform.Operator.API.Repository
                             StatusId = 1000,
                             Balance = result.Balance,
                             IsFreeBet = false,
-                            StakeReal = request.Stake,
+                            StakeReal = request.Amount,
                             StakeBonus = 0m
                         };
                     }
@@ -812,7 +812,7 @@ namespace Platform.Operator.API.Repository
                         };
                     }
 
-                    var operatorAudit = AddOrUpdateOperatorAuditForESports(result, request.BetId, request.Payout, request.Stake, request.BetStatus, transactionId: request.TransactionId);
+                    var operatorAudit = AddOrUpdateOperatorAuditForESports(result, request.BetId, request.Amount, 0, request.BetStatus, transactionId: request.TransactionId);
 
                     result.Balance = operatorAudit.PostBalance;
                     _platformContext.Operator.Update(result);
@@ -915,12 +915,10 @@ namespace Platform.Operator.API.Repository
         private OperatorAudit AddOrUpdateOperatorAuditForESports(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal payout, decimal stake, string betStatus, bool isFreebet = false, string transactionId = null)
         {
             var amount = payout;
+
             if ((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Running)
             {
-                if (isFreebet)
-                    amount = 0;
-                else
-                    amount = stake * -1;
+                amount = stake * -1;
             }
 
             var postBalance = _operator.Balance;

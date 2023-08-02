@@ -26,6 +26,7 @@ namespace Platform.ESportOperator.Service
 
         public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IPlatformRepository platformRepository)
         {
+            //
             _logger = logger;
             _messageBroker = messageBroker;
             _platformRepository = platformRepository;

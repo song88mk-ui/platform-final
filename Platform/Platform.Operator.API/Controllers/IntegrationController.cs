@@ -16,6 +16,7 @@ namespace Platform.Operator.API.Controllers
 
         public IntegrationController(IPlatformRepository platformRepository)
         {
+            //
             _platformRepository = platformRepository;
         }
 

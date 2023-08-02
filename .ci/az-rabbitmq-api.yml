@@ -23,5 +23,6 @@ resources:
 extends:
   template: dotnetservice.yml@bt
   parameters:
+    authToFeeds: false
     projects:
       - Platform/Platform.RabbitMQ.API

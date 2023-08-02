@@ -25,5 +25,6 @@ extends:
   template: dotnetservice.yml@bt
   parameters:
     runtime: win-x64
+    authToFeeds: false
     projects:
       - Platform/Platform.ESportOperator.Service

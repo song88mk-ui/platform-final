@@ -19,17 +19,8 @@ namespace Platform.Shared.Models
         [JsonPropertyName("amount")]
         public decimal Amount { get; set; }
 
-        //[JsonPropertyName("odds")]
-        //public decimal Odds { get; set; }
-
         [JsonPropertyName("betStatus")]
         public string BetStatus { get; set; }
-
-        //[JsonPropertyName("stakeTax")]
-        //public decimal StakeTax { get; set; }
-
-        //[JsonPropertyName("winningsTax")]
-        //public decimal WinningsTax { get; set; }
 
         [JsonPropertyName("transactionDate")]
         public string TransactionDate { get; set; }

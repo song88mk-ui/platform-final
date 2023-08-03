@@ -478,7 +478,7 @@ namespace Platform.Oddin.API.Repository
 
                 var betStatus = GetBetStatus(request.TransactionType);
 
-                if(bet.BetStatusId != (int)BetStatus.Running)
+                if (clientResponse.Result.IsAgent == true && bet.BetStatusId != (int)BetStatus.Running)
                 {
                     return new CreditUserResponse()
                     {

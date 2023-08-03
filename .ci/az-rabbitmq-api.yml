@@ -10,7 +10,6 @@ trigger:
   paths:
     include:
       - Platform/Platform.RabbitMQ.API
-      - Platform/Platform.Shared
 
 resources:
   repositories:

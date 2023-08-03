@@ -10,7 +10,6 @@ trigger:
   paths:
     include:
       - Platform/Platform.CashOutStake.Servicev2
-      - Platform/Platform.Shared
 
 
 resources:

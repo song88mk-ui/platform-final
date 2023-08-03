@@ -10,7 +10,6 @@ trigger:
   paths:
     include:
       - Platform/Platform.Job.Resettlement
-      - Platform/Platform.Shared
 
 
 resources:

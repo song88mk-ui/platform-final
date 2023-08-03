@@ -24,5 +24,6 @@ extends:
   template: dotnetservice.yml@bt
   parameters:
     runtime: win-x64
+    authToFeeds: false
     projects:
       - Platform/Platform.Placement.Servicev2

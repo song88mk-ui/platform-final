@@ -23,6 +23,7 @@ resources:
 extends:
   template: dotnetservice.yml@templates
   parameters:
+    authToFeeds: false
     projects:
       - Platform/Platform.Wallet.API
 

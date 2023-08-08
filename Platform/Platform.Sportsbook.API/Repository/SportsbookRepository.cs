@@ -9087,6 +9087,22 @@ namespace Platform.Sportsbook.API.Repository
             {
                 foreach (var selection in selections)
                 {
+                    if (marketTemplateId == "16" || marketTemplateId == "18" || marketTemplateId == "66" || marketTemplateId == "68")
+                    {
+                        result.Add(new ClientOdds
+                        {
+                            ClientCode = client.Item1,
+                            DecimalOdds = selection.Od,
+                            MalaysianOdds = GetMalayOdds(selection.Od, isBinary),
+                            HongkongOdds = GetHongkongOdds(selection.Od, isBinary),
+                            IndonesianOdds = GetIndoOdds(selection.Od, isBinary),
+                            SelectionTemplateId = selection.SeTeId,
+                            SelectionId = selection.SeId
+                        });
+
+                        continue;
+                    }
+
                     if (selection.IsAc == true && selection.Od > 0m)
                     {
                         var targetMargin = client.Item2;
@@ -9255,6 +9271,22 @@ namespace Platform.Sportsbook.API.Repository
             {
                 foreach (var selection in selections)
                 {
+                    if (marketTemplateId == "16" || marketTemplateId == "18" || marketTemplateId == "66" || marketTemplateId == "68")
+                    {
+                        result.Add(new ClientOdds
+                        {
+                            ClientCode = client.Item1,
+                            DecimalOdds = selection.Od,
+                            MalaysianOdds = GetMalayOdds(selection.Od, isBinary),
+                            HongkongOdds = GetHongkongOdds(selection.Od, isBinary),
+                            IndonesianOdds = GetIndoOdds(selection.Od, isBinary),
+                            SelectionTemplateId = selection.SeTeId,
+                            SelectionId = selection.SeId
+                        });
+
+                        continue;
+                    }
+
                     if (selection.IsAc == true && selection.Od > 0m)
                     {
                         var targetMargin = client.Item2;

@@ -42,7 +42,7 @@ namespace Platform.Sportsbook.API.Repository
         private readonly IBetBuilderRepository _betBuilderRepository;
         private readonly List<string> _africaClientCodes = new List<string>();
         private readonly List<string> _countryWhiteList = new List<string>();
-        private static List<string> _asianClientCodes = new List<string> { "W88", "SET", "S88", "EKI", "EKT" };
+        private static List<string> _asianClientCodes = new List<string> { "A88", "BE8", "B88", "ID8", "W88", "V88", "SET", "S88", "EKI", "EKT" };
         private static List<string> _marketTemplateIds = new List<string> { "16", "18", "66", "68" };
 
         public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMemCache memCache, IConfiguration configuration, IRabbitMQRepository rabbitMQRepository, IBetBuilderRepository betBuilderRepository)

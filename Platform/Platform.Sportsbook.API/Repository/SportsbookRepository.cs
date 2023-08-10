@@ -8134,10 +8134,6 @@ namespace Platform.Sportsbook.API.Repository
             var order = 1000;
             foreach (var marketTemplate in request.MarketTemplates)
             {
-                if(marketTemplate.MarketTemplateId == "590")
-                {
-
-                }
                 // get marketTemplateGroup
                 var filteredMarketTemplateGroup = marketTemplateGroups.Where(c => c.MarketTemplateIds.Contains(marketTemplate.MarketTemplateId)).ToList();
 

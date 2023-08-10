@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Platform.Operator.API.ActionFilters;
 using Platform.Operator.API.Models;
 using Platform.Operator.API.Repository;
 using Platform.Shared.Models;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Platform.Operator.API.Controllers
 {
-    [ApiController, EnableCors("AllowAllOrigins")]
+    [ApiController, ApiExplorerSettings(IgnoreApi = true), EnableCors("AllowAllOrigins"), ServiceFilter(typeof(InternalAPIKeyFilter))]
     public class OperatorController : Controller
     {
         private readonly IOperatorRepository _operatorRepository;

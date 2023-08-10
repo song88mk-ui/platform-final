@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Platform.Operator.API.Controllers
 {
-    [ApiController, ApiExplorerSettings(IgnoreApi = true), EnableCors("AllowAllOrigins"), ServiceFilter(typeof(InternalAPIKeyFilter))]
+    [ApiController, ApiExplorerSettings(IgnoreApi = true), EnableCors("AllowAllOrigins")]
     public class OperatorController : Controller
     {
         private readonly IOperatorRepository _operatorRepository;

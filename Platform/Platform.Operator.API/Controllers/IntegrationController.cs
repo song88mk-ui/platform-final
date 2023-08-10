@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Platform.Operator.API.Controllers
 {
-    [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(InternalAPIKeyFilter))]
+    [ApiController, EnableCors("AllowAllOrigins")]
     public class IntegrationController : ControllerBase
     {
         private readonly IPlatformRepository _platformRepository;

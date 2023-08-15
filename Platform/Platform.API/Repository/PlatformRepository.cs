@@ -3730,14 +3730,14 @@ namespace Platform.API.Repository
 
         public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetCasinoURL(string clientId, string operatorToken, string countryCode, string langCode, bool isMobile)
         {
-            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
-            {
-                return new BaseResponseDTO<CasinoURLResponseDTO>
-                {
-                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
-                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
-                };
-            }
+            //if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            //{
+            //    return new BaseResponseDTO<CasinoURLResponseDTO>
+            //    {
+            //        StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+            //        Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+            //    };
+            //}
 
             if (string.IsNullOrEmpty(countryCode) || string.IsNullOrWhiteSpace(countryCode))
             {
@@ -3781,34 +3781,56 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            BaseResponseDTO<GameLobbyResponseDTO> result;
 
-            if (authenticationResponse.StatusCode != StatusCode.Success)
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
-                return new BaseResponseDTO<CasinoURLResponseDTO>
+                var payload = new GameLobbyRequestDTO
                 {
-                    StatusCode = authenticationResponse.StatusCode,
-                    Message = authenticationResponse.Message,
+                    UserId = Guid.NewGuid().ToString().ToUpper(),
+                    CurrencyCode = "USD",
+                    CountryCode = countryCode,
+                    LanguageCode = languageCode.ToString(),
+                    IsDemo = true,
+                    IsMobile = isMobile,
+                    OperatorToken = $"{clientResponse.Result.ClientId}|{operatorToken}",
+                    ShowBalance = true,
+                    ShowBetHistory = true,
+                    GameTypes = new string[] { "SLOT_GAMES", "TABLE_GAMES", "INSTANT_WIN", "BINGO_GAMES", "SCRATCH_CARDS", "SHOOTING_GAMES", "CASUAL_GAMES", "LOTTERY" }
                 };
+
+                result = await _casinoRepository.GetLobbyURL(payload);
             }
-
-            var demo = new GameLobbyRequestDTO
+            else
             {
-                UserId = authenticationResponse.Result.UserId,
-                CurrencyCode = authenticationResponse.Result.CurrencyCode,
-                CountryCode = countryCode,
-                LanguageCode = languageCode.ToString(),
-                //IsDemo = authenticationResponse.Result.UserId.ToLower() == "100586" ? false : true,
-                IsDemo = false,
-                IsMobile = isMobile,
-                OperatorToken = $"{clientResponse.Result.ClientId}|{operatorToken}",
-                ShowBalance = true,
-                ShowBetHistory = true,
-                GameTypes = new string[] { "SLOT_GAMES", "TABLE_GAMES", "INSTANT_WIN", "BINGO_GAMES", "SCRATCH_CARDS", "SHOOTING_GAMES", "CASUAL_GAMES", "LOTTERY" }
-            };
+                var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
 
-            var result = await _casinoRepository.GetLobbyURL(demo);
+                if (authenticationResponse.StatusCode != StatusCode.Success)
+                {
+                    return new BaseResponseDTO<CasinoURLResponseDTO>
+                    {
+                        StatusCode = authenticationResponse.StatusCode,
+                        Message = authenticationResponse.Message,
+                    };
+                }
 
+                var payload = new GameLobbyRequestDTO
+                {
+                    UserId = authenticationResponse.Result.UserId,
+                    CurrencyCode = authenticationResponse.Result.CurrencyCode,
+                    CountryCode = countryCode,
+                    LanguageCode = languageCode.ToString(),
+                    IsDemo = false,
+                    IsMobile = isMobile,
+                    OperatorToken = $"{clientResponse.Result.ClientId}|{operatorToken}",
+                    ShowBalance = true,
+                    ShowBetHistory = true,
+                    GameTypes = new string[] { "SLOT_GAMES", "TABLE_GAMES", "INSTANT_WIN", "BINGO_GAMES", "SCRATCH_CARDS", "SHOOTING_GAMES", "CASUAL_GAMES", "LOTTERY" }
+                };
+
+                result = await _casinoRepository.GetLobbyURL(payload);
+            }
+            
             if (result.StatusCode == StatusCode.Success)
             {
                 return new BaseResponseDTO<CasinoURLResponseDTO>
@@ -3832,14 +3854,14 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetLiveCasinoURL(string clientId, string operatorToken, string countryCode, string langCode, bool isMobile)
         {
-            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
-            {
-                return new BaseResponseDTO<CasinoURLResponseDTO>
-                {
-                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
-                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
-                };
-            }
+            //if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            //{
+            //    return new BaseResponseDTO<CasinoURLResponseDTO>
+            //    {
+            //        StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+            //        Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+            //    };
+            //}
 
             if (string.IsNullOrEmpty(countryCode) || string.IsNullOrWhiteSpace(countryCode))
             {
@@ -3883,33 +3905,55 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            BaseResponseDTO<GameLobbyResponseDTO> result;
 
-            if (authenticationResponse.StatusCode != StatusCode.Success)
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
-                return new BaseResponseDTO<CasinoURLResponseDTO>
+                var payload = new GameLobbyRequestDTO
                 {
-                    StatusCode = authenticationResponse.StatusCode,
-                    Message = authenticationResponse.Message,
+                    UserId = Guid.NewGuid().ToString().ToUpper(),
+                    CurrencyCode = "USD",
+                    CountryCode = countryCode,
+                    LanguageCode = languageCode.ToString(),
+                    IsDemo = true,
+                    IsMobile = isMobile,
+                    OperatorToken = $"{clientResponse.Result.ClientId}|{operatorToken}",
+                    ShowBalance = true,
+                    ShowBetHistory = true,
+                    GameTypes = new string[] { "LIVE_CASINO" }
                 };
+
+                result = await _casinoRepository.GetLobbyURL(payload);
             }
-
-            var demo = new GameLobbyRequestDTO
+            else
             {
-                UserId = authenticationResponse.Result.UserId,
-                CurrencyCode = authenticationResponse.Result.CurrencyCode,
-                CountryCode = countryCode,
-                LanguageCode = languageCode.ToString(),
-                //IsDemo = authenticationResponse.Result.UserId.ToLower() == "100586" ? false : true,
-                IsDemo = false,
-                IsMobile = isMobile,
-                OperatorToken = $"{clientResponse.Result.ClientId}|{operatorToken}",
-                ShowBalance = true,
-                ShowBetHistory = true,
-                GameTypes = new string[] { "LIVE_CASINO" }
-            };
+                var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
 
-            var result = await _casinoRepository.GetLobbyURL(demo);
+                if (authenticationResponse.StatusCode != StatusCode.Success)
+                {
+                    return new BaseResponseDTO<CasinoURLResponseDTO>
+                    {
+                        StatusCode = authenticationResponse.StatusCode,
+                        Message = authenticationResponse.Message,
+                    };
+                }
+
+                var payload = new GameLobbyRequestDTO
+                {
+                    UserId = authenticationResponse.Result.UserId,
+                    CurrencyCode = authenticationResponse.Result.CurrencyCode,
+                    CountryCode = countryCode,
+                    LanguageCode = languageCode.ToString(),
+                    IsDemo = false,
+                    IsMobile = isMobile,
+                    OperatorToken = $"{clientResponse.Result.ClientId}|{operatorToken}",
+                    ShowBalance = true,
+                    ShowBetHistory = true,
+                    GameTypes = new string[] { "LIVE_CASINO" }
+                };
+
+                result = await _casinoRepository.GetLobbyURL(payload);
+            }
 
             if (result.StatusCode == StatusCode.Success)
             {
@@ -3934,14 +3978,14 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetVirtualGames(string clientId, string operatorToken, string countryCode, string langCode, bool isMobile)
         {
-            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
-            {
-                return new BaseResponseDTO<CasinoURLResponseDTO>
-                {
-                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
-                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
-                };
-            }
+            //if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            //{
+            //    return new BaseResponseDTO<CasinoURLResponseDTO>
+            //    {
+            //        StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+            //        Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+            //    };
+            //}
 
             if (string.IsNullOrEmpty(countryCode) || string.IsNullOrWhiteSpace(countryCode))
             {
@@ -3985,33 +4029,55 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            BaseResponseDTO<GameLobbyResponseDTO> result;
 
-            if (authenticationResponse.StatusCode != StatusCode.Success)
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
-                return new BaseResponseDTO<CasinoURLResponseDTO>
+                var payload = new GameLobbyRequestDTO
                 {
-                    StatusCode = authenticationResponse.StatusCode,
-                    Message = authenticationResponse.Message,
+                    UserId = Guid.NewGuid().ToString().ToUpper(),
+                    CurrencyCode = "USD",
+                    CountryCode = countryCode,
+                    LanguageCode = languageCode.ToString(),
+                    IsDemo = true,
+                    IsMobile = isMobile,
+                    OperatorToken = $"{clientResponse.Result.ClientId}|{operatorToken}",
+                    ShowBalance = true,
+                    ShowBetHistory = true,
+                    GameTypes = new string[] { "VIRTUAL_SPORTS", "VIRTUAL_GAMES", "ESPORTS" }
                 };
+
+                result = await _casinoRepository.GetLobbyURL(payload);
             }
-
-            var demo = new GameLobbyRequestDTO
+            else
             {
-                UserId = authenticationResponse.Result.UserId,
-                CurrencyCode = authenticationResponse.Result.CurrencyCode,
-                CountryCode = countryCode,
-                LanguageCode = languageCode.ToString(),
-                //IsDemo = authenticationResponse.Result.UserId.ToLower() == "100586" ? false : true,
-                IsDemo = false,
-                IsMobile = isMobile,
-                OperatorToken = $"{clientResponse.Result.ClientId}|{operatorToken}",
-                ShowBalance = true,
-                ShowBetHistory = true,
-                GameTypes = new string[] { "VIRTUAL_SPORTS", "VIRTUAL_GAMES", "ESPORTS" }
-            };
+                var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
 
-            var result = await _casinoRepository.GetLobbyURL(demo);
+                if (authenticationResponse.StatusCode != StatusCode.Success)
+                {
+                    return new BaseResponseDTO<CasinoURLResponseDTO>
+                    {
+                        StatusCode = authenticationResponse.StatusCode,
+                        Message = authenticationResponse.Message,
+                    };
+                }
+
+                var payload = new GameLobbyRequestDTO
+                {
+                    UserId = authenticationResponse.Result.UserId,
+                    CurrencyCode = authenticationResponse.Result.CurrencyCode,
+                    CountryCode = countryCode,
+                    LanguageCode = languageCode.ToString(),
+                    IsDemo = false,
+                    IsMobile = isMobile,
+                    OperatorToken = $"{clientResponse.Result.ClientId}|{operatorToken}",
+                    ShowBalance = true,
+                    ShowBetHistory = true,
+                    GameTypes = new string[] { "VIRTUAL_SPORTS", "VIRTUAL_GAMES", "ESPORTS" }
+                };
+
+                result = await _casinoRepository.GetLobbyURL(payload);
+            }
 
             if (result.StatusCode == StatusCode.Success)
             {

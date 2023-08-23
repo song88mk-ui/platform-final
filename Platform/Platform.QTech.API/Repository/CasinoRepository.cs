@@ -748,7 +748,7 @@ namespace Platform.QTech.API.Repository
                 Balance = request.ShowBalance,
                 GameHistory = request.ShowBetHistory,
                 GameTypes = request.GameTypes,
-                GameLaunchTarget = "TOP"
+                GameLaunchTarget = "SELF"
             };
 
             var result = await _providerRepository.GetGameLobbyURL(payload);

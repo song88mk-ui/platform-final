@@ -52,8 +52,12 @@ namespace Platform.CacheSync.Service
                 switch (messageType)
                 {
                     case "OnMarketSortOrderChange":
-                        var message = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
-                        _cacheSyncRepository.ProcessMarketSortOrderChange(message);
+                        var marketSortOrderMessage = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
+                        _cacheSyncRepository.ProcessMarketSortOrderChange(marketSortOrderMessage);
+                        break;
+                    case "OnSportSortOrderChange":
+                        var sportSortOrderMessage = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
+                        _cacheSyncRepository.ProcessSportSortOrderChange(sportSortOrderMessage);
                         break;
                 }
             }

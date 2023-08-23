@@ -5,6 +5,7 @@ using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Platform.CacheSync.Service.Repository
 {
@@ -28,6 +29,26 @@ namespace Platform.CacheSync.Service.Repository
                 CacheType = CacheType.MarketSortOrder
             };
 
+            var publishMessage = await DeleteCachePreload(request);
+
+            if (publishMessage)
+            {
+                _messageBroker.Publish(true, "OnMarketSortOrderChange", $"r.oe.sb.engine.onmarketsortorderchange.{message.ClientCode.ToLower()}", Guid.NewGuid().ToString().ToUpper());
+            }
+        }
+
+        public async void ProcessSportSortOrderChange(OnDeleteCacheMessage message)
+        {
+            var request = new CachePreloadRequestDTO
+            {
+                CacheType = CacheType.SportSortOrder
+            };
+
+            var publishMessage = await DeleteCachePreload(request);
+        }
+
+        private async Task<bool> DeleteCachePreload(CachePreloadRequestDTO request)
+        {
             var apis = bool.Parse(_configuration["IsProduction"]) ? _configuration.GetSection("API:Production:PlatformSportsbookAPI").Get<List<string>>() : _configuration.GetSection("API:Staging:PlatformSportsbookAPI").Get<List<string>>();
             var publishMessage = true;
 
@@ -42,10 +63,7 @@ namespace Platform.CacheSync.Service.Repository
                 }
             }
 
-            if (publishMessage)
-            {
-                _messageBroker.Publish(true, "OnMarketSortOrderChange", $"r.oe.sb.engine.onmarketsortorderchange.{message.ClientCode.ToLower()}", Guid.NewGuid().ToString().ToUpper());
-            }
+            return publishMessage;
         }
     }
 }

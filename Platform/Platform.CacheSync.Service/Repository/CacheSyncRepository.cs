@@ -44,7 +44,7 @@ namespace Platform.CacheSync.Service.Repository
 
             if (publishMessage)
             {
-                _messageBroker.Publish(true, "OnMarketSortOrderChange", "r.oe.sb.engine.onmarketsortorderchange.tso", Guid.NewGuid().ToString().ToUpper());
+                _messageBroker.Publish(true, "OnMarketSortOrderChange", $"r.oe.sb.engine.onmarketsortorderchange.{message.ClientCode.ToLower()}", Guid.NewGuid().ToString().ToUpper());
             }
         }
     }

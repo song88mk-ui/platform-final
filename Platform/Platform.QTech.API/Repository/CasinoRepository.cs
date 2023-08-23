@@ -747,7 +747,8 @@ namespace Platform.QTech.API.Repository
                 WalletSessionId = request.OperatorToken,
                 Balance = request.ShowBalance,
                 GameHistory = request.ShowBetHistory,
-                GameTypes = request.GameTypes
+                GameTypes = request.GameTypes,
+                GameLaunchTarget = "SELF"
             };
 
             var result = await _providerRepository.GetGameLobbyURL(payload);

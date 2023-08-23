@@ -1,0 +1,29 @@
+name: Platform-CacheSync-Service-$(Build.BuildId)
+
+pr: none
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - Platform/Platform.CacheSync.Service
+
+
+resources:
+  repositories:
+    - repository: bt
+      type: github
+      name: FlyingCockatoo/BuildTemplates
+      endpoint: FlyingCockatoo
+      ref: refs/tags/v1.8.0
+
+extends:
+  template: dotnetservice.yml@bt
+  parameters:
+    runtime: win-x64
+    authToFeeds: false
+    projects:
+      - Platform/Platform.CacheSync.Service

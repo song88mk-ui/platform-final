@@ -8751,6 +8751,26 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request)
+        {
+            if (request.CacheType == CacheType.MarketSortOrder)
+                _memCache.DeleteCache("cmtg");
+
+            if (request.CacheType == CacheType.SportSortOrder)
+            {
+                _memCache.DeleteCache("so");
+                _memCache.DeleteCache("seo");
+                _memCache.DeleteCache("leo");
+            }
+
+            return new BaseResponseDTO<bool>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = true
+            };
+        }
+
         private string GetSportName(string name, List<SportTranslationMDB> translations, LanguageCode languageCode)
         {
             if (translations == null)

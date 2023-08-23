@@ -83,5 +83,6 @@ namespace Platform.Sportsbook.API.Repository
         Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>> GetClientMarketSortOrder(MarketSortOrderRequestDTO request);
         Task<BaseResponseDTO<ClientFixtureSortOrderResponseDTO>> GetClientFixtureSortOrder(FixtureSortOrderRequestDTO request);
         Task<BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>> GetMarketTemplatePlayerProps(MarketTemplatePlayerPropsRequestDTO request);
+        Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request);
     }
 }

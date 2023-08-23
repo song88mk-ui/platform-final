@@ -9085,9 +9085,6 @@ namespace Platform.Sportsbook.API.Repository
             {
                 foreach (var selection in selections)
                 {
-                    if (activeSelectionCount == 1)
-                        activeSelectionCount = selections.Count;
-
                     if (sportId == 1 && _marketTemplateIds.Contains(marketTemplateId) && _asianClientCodes.Contains(client.Item1.ToUpper()))
                     {
                         result.Add(new ClientOdds
@@ -9103,6 +9100,9 @@ namespace Platform.Sportsbook.API.Repository
 
                         continue;
                     }
+
+                    if (activeSelectionCount == 1)
+                        activeSelectionCount = selections.Count;
 
                     if (selection.IsAc == true && selection.Od > 0m)
                     {
@@ -9272,9 +9272,6 @@ namespace Platform.Sportsbook.API.Repository
             {
                 foreach (var selection in selections)
                 {
-                    if (activeSelectionCount == 1)
-                        activeSelectionCount = selections.Count;
-
                     if (sportId == 1 && _marketTemplateIds.Contains(marketTemplateId) && _asianClientCodes.Contains(client.Item1.ToUpper()))
                     {
                         result.Add(new ClientOdds
@@ -9290,6 +9287,9 @@ namespace Platform.Sportsbook.API.Repository
 
                         continue;
                     }
+
+                    if (activeSelectionCount == 1)
+                        activeSelectionCount = selections.Count;
 
                     if (marketTemplateId == "16" || marketTemplateId == "18" || marketTemplateId == "66" || marketTemplateId == "68")
                     {

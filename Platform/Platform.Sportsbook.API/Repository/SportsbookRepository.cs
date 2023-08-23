@@ -9085,6 +9085,9 @@ namespace Platform.Sportsbook.API.Repository
             {
                 foreach (var selection in selections)
                 {
+                    if (activeSelectionCount == 1)
+                        activeSelectionCount = selections.Count;
+
                     if (sportId == 1 && _marketTemplateIds.Contains(marketTemplateId) && _asianClientCodes.Contains(client.Item1.ToUpper()))
                     {
                         result.Add(new ClientOdds
@@ -9269,6 +9272,9 @@ namespace Platform.Sportsbook.API.Repository
             {
                 foreach (var selection in selections)
                 {
+                    if (activeSelectionCount == 1)
+                        activeSelectionCount = selections.Count;
+
                     if (sportId == 1 && _marketTemplateIds.Contains(marketTemplateId) && _asianClientCodes.Contains(client.Item1.ToUpper()))
                     {
                         result.Add(new ClientOdds

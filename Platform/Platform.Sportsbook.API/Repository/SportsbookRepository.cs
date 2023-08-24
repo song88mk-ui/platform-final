@@ -1224,7 +1224,10 @@ namespace Platform.Sportsbook.API.Repository
                             var activeSelections = marketSelections.Where(c => c.MaId == market.MaId && c.IsAc == true && c.Od > 0m).ToList();
                             var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-                            clientOdds = GetClientOdds(fixture.SpId, activeSelections.Count, margin, marketSelections, market.ClCoMa, request.ClientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == fixture.SpId).ToList());
+							if (activeSelections.Count == 1)
+								margin = (Math.Round(marketSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+
+							clientOdds = GetClientOdds(fixture.SpId, activeSelections.Count, margin, marketSelections, market.ClCoMa, request.ClientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == fixture.SpId).ToList());
                         }
 
                         foreach (var selection in marketSelections)
@@ -5271,7 +5274,10 @@ namespace Platform.Sportsbook.API.Repository
                             var activeSelections = tempSelections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
                             var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-                            clientOdds = GetClientOdds(sportId, activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
+							if (activeSelections.Count == 1)
+								margin = (Math.Round(tempSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+
+							clientOdds = GetClientOdds(sportId, activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
                         }
 
                         result.Add(new MarketLimitedDTO
@@ -5391,7 +5397,10 @@ namespace Platform.Sportsbook.API.Repository
                             var activeSelections = tempSelections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
                             var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-                            clientOdds = GetClientOdds(sportId, activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
+							if (activeSelections.Count == 1)
+								margin = (Math.Round(tempSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+
+							clientOdds = GetClientOdds(sportId, activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
                         }
 
                         var selectionsToAdd = new List<SelectionDTO>();
@@ -5576,7 +5585,10 @@ namespace Platform.Sportsbook.API.Repository
                             var activeSelections = tempSelections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
                             var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-                            clientOdds = GetClientOdds(sportId, activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
+							if (activeSelections.Count == 1)
+								margin = (Math.Round(tempSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+
+							clientOdds = GetClientOdds(sportId, activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
                         }
 
                         result.Add(new BoostedMarketDTO
@@ -5729,7 +5741,10 @@ namespace Platform.Sportsbook.API.Repository
                             var activeSelections = tempSelections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
                             var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-                            clientOdds = GetClientOdds(sportId, activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
+							if (activeSelections.Count == 1)
+								margin = (Math.Round(tempSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+
+							clientOdds = GetClientOdds(sportId, activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
                         }
 
                         var selectionsToAdd = new List<SelectionDTO>();

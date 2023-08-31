@@ -9175,6 +9175,22 @@ namespace Platform.Sportsbook.API.Repository
                             }
                         }
 
+                        if (margin == targetMargin)
+                        {
+                            result.Add(new ClientOdds
+                            {
+                                ClientCode = client.Item1,
+                                DecimalOdds = selection.Od,
+                                MalaysianOdds = GetMalayOdds(selection.Od, isBinary),
+                                HongkongOdds = GetHongkongOdds(selection.Od, isBinary),
+                                IndonesianOdds = GetIndoOdds(selection.Od, isBinary),
+                                SelectionTemplateId = selection.SeTeId,
+                                SelectionId = selection.SeId
+                            });
+
+                            continue;
+                        }
+
                         var fairOddsInitialDivideBy = activeSelectionCount - (margin * selection.Od);
 
                         if (fairOddsInitialDivideBy <= 0)
@@ -9376,6 +9392,22 @@ namespace Platform.Sportsbook.API.Repository
 
                                 continue;
                             }
+                        }
+
+                        if (margin == targetMargin)
+                        {
+                            result.Add(new ClientOdds
+                            {
+                                ClientCode = client.Item1,
+                                DecimalOdds = selection.Od,
+                                MalaysianOdds = GetMalayOdds(selection.Od, isBinary),
+                                HongkongOdds = GetHongkongOdds(selection.Od, isBinary),
+                                IndonesianOdds = GetIndoOdds(selection.Od, isBinary),
+                                SelectionTemplateId = selection.SeTeId,
+                                SelectionId = selection.SeId
+                            });
+
+                            continue;
                         }
 
                         var fairOddsInitialDivideBy = activeSelectionCount - (margin * selection.Od);

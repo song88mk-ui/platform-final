@@ -24,6 +24,7 @@ namespace Platform.CacheSync.Service.Repository
                 using (var httpClient = new HttpClient())
                 {
                     httpClient.BaseAddress = new Uri(baseUri);
+                    //httpClient.Timeout = TimeSpan.FromSeconds(5);
 
                     var response = await httpClient.PostAsync($"v1/sportsbook/cachepreload", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 

@@ -14,6 +14,7 @@ namespace Platform.API.Models
         public OddsChangeType OddsChangeType { get; set; }
         public Channel Channel { get; set; }
         public string IPAddress { get; set; }
+        public string IPAddressV6 { get; set; }
         public bool IsBoosted { get; set; } = false;
         public bool IsBetBuilder { get; set; } = false;
         public string BonusId { get; set; } = string.Empty;

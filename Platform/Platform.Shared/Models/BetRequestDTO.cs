@@ -31,7 +31,9 @@ namespace Platform.Shared.Models
         public CurrencyCode CurrencyCode { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public Channel Channel { get; set; }
-        public string IPAddress { get; set; }
+        public string IPAddressV4 { get; set; }
+        public string IPAddressV6 { get; set; }
+        public bool IsV4 { get; set; }
         public bool IsBoosted { get; set; }
         public bool IsBetBuilder { get; set; }
         public string BonusId { get; set; }

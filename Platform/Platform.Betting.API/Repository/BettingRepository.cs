@@ -386,7 +386,7 @@ namespace Platform.Betting.API.Repository
                         CurrencyCode = request.CurrencyCode.ToString(),
                         LanguageCode = request.LanguageCode.ToString(),
                         ExchangeRate = request.ExchangeRate,
-                        IPAddress = request.IPAddress,
+                        IPAddress = request.IsV4 ? request.IPAddressV4 : request.IPAddressV6,
                         Channel = request.Channel.ToString(),
                         ClientId = request.ClientId,
                         ClientIdRef = request.ClientIdRef,
@@ -420,6 +420,8 @@ namespace Platform.Betting.API.Repository
                     }).Entity;
 
                     betData = betEntity;
+                    betData.IPAddress = request.IPAddressV4;
+
                     betId = betEntity.BetId;
                     request.BetId = betId;
 
@@ -1020,7 +1022,7 @@ namespace Platform.Betting.API.Repository
                         CurrencyCode = request.CurrencyCode.ToString(),
                         LanguageCode = request.LanguageCode.ToString(),
                         ExchangeRate = request.ExchangeRate,
-                        IPAddress = request.IPAddress,
+                        IPAddress = request.IsV4 ? request.IPAddressV4 : request.IPAddressV6,
                         Channel = request.Channel.ToString(),
                         ClientId = request.ClientId,
                         ClientIdRef = request.ClientIdRef,
@@ -1054,6 +1056,8 @@ namespace Platform.Betting.API.Repository
                     }).Entity;
 
                     betData = betEntity;
+                    betData.IPAddress = request.IPAddressV4;
+
                     betId = betEntity.BetId;
                     request.BetId = betId;
 

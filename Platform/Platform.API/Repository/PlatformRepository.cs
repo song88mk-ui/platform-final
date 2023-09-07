@@ -415,6 +415,8 @@ namespace Platform.API.Repository
                 });
             }
 
+            var isV4 = Convert.ToInt32(request.IPAddress.Split(".").First()) >= 240 ? false : true;
+
             var payload = new BetRequestDTO
             {
                 APIKey = apiKey,
@@ -435,7 +437,9 @@ namespace Platform.API.Repository
                 CurrencyCode = (CurrencyCode)Enum.Parse(typeof(CurrencyCode), authenticationResponse.Result.CurrencyCode),
                 LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode.ToUpper()) == LanguageCode.ZHT ? LanguageCode.ZH : (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode.ToUpper()),
                 Channel = request.Channel,
-                IPAddress = request.IPAddress,
+                IPAddressV4 = request.IPAddress,
+                IPAddressV6 = request.IPAddressV6,
+                IsV4 = isV4,
                 IsBoosted = request.IsBoosted,
                 Selections = selections,
                 IsBetBuilder = request.IsBetBuilder,
@@ -592,7 +596,7 @@ namespace Platform.API.Repository
                 CurrencyCode = (CurrencyCode)Enum.Parse(typeof(CurrencyCode), authenticationResponse.Result.CurrencyCode),
                 LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode.ToUpper()) == LanguageCode.ZHT ? LanguageCode.ZH : (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode.ToUpper()),
                 Channel = request.Channel,
-                IPAddress = request.IPAddress,
+                IPAddressV4 = request.IPAddress,
                 IsBoosted = request.IsBoosted,
                 Selections = request.Selections.Select(s => new BetSelectionRequestDTO
                 {

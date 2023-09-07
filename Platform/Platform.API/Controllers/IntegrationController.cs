@@ -144,14 +144,16 @@ namespace Platform.API.Controllers
         [HttpPost("v2/bet/placement")]
         public async Task<IActionResult> PlaceBet([FromBody] BetRequest request)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var ipAddressV4 = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var ipAddressV6 = HttpContext.Request.Headers["Cf-Connecting-IPv6"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var connectionId = HttpContext.Request.Headers["x-connection-id"].FirstOrDefault();
             var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
 
-            request.IPAddress = String.IsNullOrEmpty(request.IPAddress) ? ipAddress : request.IPAddress;
+            request.IPAddress = String.IsNullOrEmpty(request.IPAddress) ? ipAddressV4 : request.IPAddress;
+            request.IPAddressV6 = ipAddressV6;
 
             var result = await _platformRepository.PlaceBet(apiKey, clientId, operatorToken, request);
 
@@ -159,7 +161,7 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipAddress", ipAddress },
+                                { "ipAddress", ipAddressV4 },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },

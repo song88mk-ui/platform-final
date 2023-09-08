@@ -18,6 +18,7 @@ namespace Platform.CacheSync.Service
 
         public Worker(IMessageBroker messageBroker, ICacheSyncRepository cacheSyncRepository)
         {
+            //
             _messageBroker = messageBroker;
             _cacheSyncRepository = cacheSyncRepository;
         }

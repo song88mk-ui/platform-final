@@ -1407,7 +1407,7 @@ namespace Platform.Sportsbook.API.Repository
                         MarketId = result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.MaId).FirstOrDefault(),
                         MarketName = GetMarketName(result.Item2.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId).Select(ss => ss.MaNa).FirstOrDefault(), result.Item2.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId).Select(ss => ss.MaNaTr).FirstOrDefault(), request.LanguageCode),
                         SelectionId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeId).FirstOrDefault(),
-                        SelectionName = GetSelectionName(result.Item3.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId && c.SeId == s.SelectionId).Select(ss => ss.SeNa).FirstOrDefault(), result.Item3.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId && c.SeId == s.SelectionId).Select(ss => ss.SeNaTr).FirstOrDefault(), request.LanguageCode)
+                        SelectionName = GetComputedSelectionName(result.Item3.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId && c.SeId == s.SelectionId).Select(ss => ss.SeNa).FirstOrDefault(), result.Item3.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId && c.SeId == s.SelectionId).Select(ss => ss.SeNaTr).FirstOrDefault(), request.LanguageCode, result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SpId).FirstOrDefault(), result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.MaTeId).FirstOrDefault(), result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeTeId).FirstOrDefault(), result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.Li).FirstOrDefault())
                     }).ToList()
                 }
             };
@@ -5290,7 +5290,7 @@ namespace Platform.Sportsbook.API.Repository
                             Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionLimitedDTO
                             {
                                 SelectionId = s.SeId.ToString(),
-                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                SelectionName = GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
                                 //Odds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
                                 Odds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).DecimalOdds.ToString(),
                                 //MalaysianOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).MalaysianOdds.ToString(),
@@ -5322,7 +5322,7 @@ namespace Platform.Sportsbook.API.Repository
                         Selections = filteredSelections.Select(s => new SelectionLimitedDTO
                         {
                             SelectionId = s.SeId.ToString(),
-                            SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                            SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode)  : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
                             Odds = s.Od.ToString("0.00"),
                             //MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                             //HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -5413,7 +5413,7 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionTemplateId = item.SeTeId,
                                 SelectionId = item.SeId.ToString(),
-                                SelectionName = GetSelectionName(item.SeNa, item.SeNaTr, languageCode),
+                                SelectionName = GetComputedSelectionName(item.SeNa, item.SeNaTr, languageCode, sportId, market.MaTeId, item.SeTeId, market.Li),
                                 DecimalOdds = odds.DecimalOdds.ToString("0.00"),
                                 MalaysianOdds = odds.MalaysianOdds.ToString("0.00"),
                                 HongkongOdds = odds.HongkongOdds.ToString("0.00"),
@@ -5500,7 +5500,7 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
-                            SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                            SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
                             DecimalOdds = s.Od.ToString("0.00"),
                             MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                             HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -5757,7 +5757,7 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionTemplateId = item.SeTeId,
                                 SelectionId = item.SeId.ToString(),
-                                SelectionName = GetSelectionName(item.SeNa, item.SeNaTr, languageCode),
+                                SelectionName = GetComputedSelectionName(item.SeNa, item.SeNaTr, languageCode, sportId, market.MaTeId, item.SeTeId, market.Li),
                                 DecimalOdds = odds.DecimalOdds.ToString("0.00"),
                                 MalaysianOdds = odds.MalaysianOdds.ToString("0.00"),
                                 HongkongOdds = odds.HongkongOdds.ToString("0.00"),
@@ -5864,7 +5864,7 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
-                            SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                            SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
                             DecimalOdds = s.Od.ToString("0.00"),
                             MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                             HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -8881,6 +8881,57 @@ namespace Platform.Sportsbook.API.Repository
                 return result.SeNa;
             else
                 return name;
+        }
+        private string GetComputedSelectionName(string name, List<SelectionTranslationMDB> translations, LanguageCode languageCode, int sportId, string marketTemplateId, string selectionTemplateId, string line)
+        {
+            if (translations == null)
+                return name;
+
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
+
+            if (result == null)
+                return name;
+
+            var marketTemplateIds = new string[] { "16", "66" };
+
+            if (sportId == 1 && marketTemplateIds.Contains(marketTemplateId))
+            {
+                var decLine = Convert.ToDecimal(line);
+                var absLine = Math.Abs(decLine);
+
+                var selectionName = string.Empty;
+
+                if (decLine == 0m)
+                {
+                    selectionName = result.SeNa.Replace("(0)", string.Empty).TrimEnd(); // backward compatibility
+                    selectionName = $"{selectionName} (0)";
+                }
+                else
+                {
+                    selectionName = result.SeNa.Replace($"(+{absLine})", string.Empty).TrimEnd();  // backward compatibility
+                    selectionName = selectionName.Replace($"(-{absLine})", string.Empty).TrimEnd();  // backward compatibility
+
+                    if (selectionTemplateId == "1714")
+                    {
+
+                        if (decLine > 0)
+                            selectionName = $"{selectionName} (+{absLine})";
+                        else
+                            selectionName = $"{selectionName} (-{absLine})";
+                    }
+                    else if (selectionTemplateId == "1715")
+                    {
+                        if (decLine > 0)
+                            selectionName = $"{selectionName} (-{absLine})";
+                        else
+                            selectionName = $"{selectionName} (+{absLine})";
+                    }
+                }
+
+                return selectionName;
+            }
+            
+            return result.SeNa;
         }
         private string GetBoostedSelectionName(string clientCode, string selectionName, List<ClientBoostedSelectionNameMDB> boostedSelectionNames, List<ClientBoostedSelectionNameTranslationMDB> translations, LanguageCode languageCode)
         {

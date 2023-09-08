@@ -51,7 +51,7 @@ namespace Platform.CacheSync.Service.Repository
         {
             var request = new CachePreloadRequestDTO
             {
-                CacheType = CacheType.SportSortOrder,
+                CacheType = CacheType.UserFavorites,
                 CacheKey = message.CacheKey                
             };
 

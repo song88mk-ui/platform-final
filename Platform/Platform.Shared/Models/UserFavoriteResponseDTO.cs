@@ -34,6 +34,7 @@ namespace Platform.Shared.Models
 
     public class UserFavoriteInsertDeleteRequestDTO
     {
+        public Guid ClientId { get; set; }
         public string ClientCode { get; set; }
         public string UserId { get; set; }
         public string Id { get; set; }

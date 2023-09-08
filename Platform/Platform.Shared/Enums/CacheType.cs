@@ -3,6 +3,7 @@
     public enum CacheType
     {
         MarketSortOrder = 0,
-        SportSortOrder = 1
+        SportSortOrder = 1,
+        UserFavorites = 2,
     }
 }

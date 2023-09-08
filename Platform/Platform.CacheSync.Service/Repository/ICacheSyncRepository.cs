@@ -1,4 +1,4 @@
-﻿using Platform.CacheSync.Service.Models;
+﻿using Platform.Shared.MessageModels;
 
 namespace Platform.CacheSync.Service.Repository
 {
@@ -6,5 +6,6 @@ namespace Platform.CacheSync.Service.Repository
     {
         void ProcessMarketSortOrderChange(OnDeleteCacheMessage message);
         void ProcessSportSortOrderChange(OnDeleteCacheMessage message);
+        void ProcessUpdateUserFavorites(OnDeleteCacheMessage message);
     }
 }

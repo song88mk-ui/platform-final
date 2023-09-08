@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Platform.CacheSync.Service.Models;
 using Platform.Shared.Enums;
+using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
@@ -42,6 +42,17 @@ namespace Platform.CacheSync.Service.Repository
             var request = new CachePreloadRequestDTO
             {
                 CacheType = CacheType.SportSortOrder
+            };
+
+            var publishMessage = await DeleteCachePreload(request);
+        }
+
+        public async void ProcessUpdateUserFavorites(OnDeleteCacheMessage message)
+        {
+            var request = new CachePreloadRequestDTO
+            {
+                CacheType = CacheType.SportSortOrder,
+                CacheKey = message.CacheKey                
             };
 
             var publishMessage = await DeleteCachePreload(request);

@@ -5,6 +5,7 @@ using Platform.Shared.Data.Sportsbook;
 using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Data.Sportsbook.SQLEntities;
 using Platform.Shared.Enums;
+using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using Platform.Sportsbook.API.Models;
@@ -1857,6 +1858,20 @@ namespace Platform.Sportsbook.API.Repository
                 });
 
                 _sportsbookContext.SaveChanges();
+
+                var payload = new OnDeleteCacheMessage
+                {
+                    CacheType = CacheType.UserFavorites,
+                    CacheKey = $"nuf:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.UserId.ToUpper()}"
+                };
+
+                await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO
+                {
+                    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                    MessageType = "OnUpdateUserFavorites",
+                    RoutingKey = "r.oe.cachesync.onupdateuserfavorites",
+                    Payload = JsonSerializer.Serialize(payload)
+                });
             }
 
             var favorites = await _sportsbookContext.UserFavorite.Where(c => c.UserId == $"{request.ClientCode}-{request.UserId}").ToListAsync();
@@ -1939,6 +1954,20 @@ namespace Platform.Sportsbook.API.Repository
             {
                 _sportsbookContext.UserFavorite.Remove(favorite);
                 _sportsbookContext.SaveChanges();
+
+                var payload = new OnDeleteCacheMessage
+                {
+                    CacheType = CacheType.UserFavorites,
+                    CacheKey = $"nuf:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.UserId.ToUpper()}"
+                };
+
+                await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO
+                {
+                    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                    MessageType = "OnUpdateUserFavorites",
+                    RoutingKey = "r.oe.cachesync.onupdateuserfavorites",
+                    Payload = JsonSerializer.Serialize(payload)
+                });
             }
 
             var favorites = await _sportsbookContext.UserFavorite.Where(c => c.UserId == $"{request.ClientCode}-{request.UserId}").ToListAsync();
@@ -8776,6 +8805,11 @@ namespace Platform.Sportsbook.API.Repository
                 _memCache.DeleteCache("so");
                 _memCache.DeleteCache("seo");
                 _memCache.DeleteCache("leo");
+            }
+
+            if (request.CacheType == CacheType.UserFavorites)
+            {
+                _memCache.DeleteCache(request.CacheKey);
             }
 
             return new BaseResponseDTO<bool>

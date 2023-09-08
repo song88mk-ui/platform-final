@@ -2596,6 +2596,7 @@ namespace Platform.API.Repository
 
             return await _sportsbookRepository.AddUserFavorites(new UserFavoriteInsertDeleteRequestDTO
             {
+                ClientId = clientResponse.Result.ClientId,
                 UserId = authenticationResponse.Result.UserId,
                 ClientCode = clientResponse.Result.ClientCode,
                 Id = request.Id,
@@ -2660,6 +2661,7 @@ namespace Platform.API.Repository
 
             return await _sportsbookRepository.DeleteUserFavorites(new UserFavoriteInsertDeleteRequestDTO
             {
+                ClientId = clientResponse.Result.ClientId,
                 UserId = authenticationResponse.Result.UserId,
                 ClientCode = clientResponse.Result.ClientCode,
                 Id = request.Id,

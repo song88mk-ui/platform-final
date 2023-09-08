@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
-using Platform.CacheSync.Service.Models;
 using Platform.CacheSync.Service.Repository;
+using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using RabbitMQ.Client.Events;
 using System;
@@ -58,6 +58,10 @@ namespace Platform.CacheSync.Service
                     case "OnSportSortOrderChange":
                         var sportSortOrderMessage = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
                         _cacheSyncRepository.ProcessSportSortOrderChange(sportSortOrderMessage);
+                        break;
+                    case "OnUpdateUserFavorites":
+                        var userFavorite = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
+                        _cacheSyncRepository.ProcessUpdateUserFavorites(userFavorite);
                         break;
                 }
             }

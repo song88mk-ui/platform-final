@@ -166,6 +166,7 @@ namespace Platform.API.Controllers
             var properties = new Dictionary<string, string>
                             {
                                 { "ipAddress", ipAddressV4 },
+                                { "ipAddressV6", ipAddressV6 },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
@@ -196,7 +197,12 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
-            request.IPAddress = ipAddress;
+            var isSSR = HttpContext.Request.Headers["x-is-ssr"].FirstOrDefault();
+
+            if (isSSR == null)
+            {
+                request.IPAddress = ipAddress;
+            }
 
             var result = await _platformRepository.GetMaxStake(apiKey, clientId, operatorToken, request);
 

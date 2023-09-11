@@ -152,7 +152,7 @@ namespace Platform.API.Controllers
             var connectionId = HttpContext.Request.Headers["x-connection-id"].FirstOrDefault();
             var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
 
-            request.IPAddress = String.IsNullOrEmpty(request.IPAddress) ? ipAddressV4 : request.IPAddress;
+            request.IPAddress = ipAddressV4;
             request.IPAddressV6 = ipAddressV6;
 
             var result = await _platformRepository.PlaceBet(apiKey, clientId, operatorToken, request);
@@ -192,7 +192,7 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
-            request.IPAddress = String.IsNullOrEmpty(request.IPAddress) ? ipAddress : request.IPAddress;
+            request.IPAddress = ipAddress;
 
             var result = await _platformRepository.GetMaxStake(apiKey, clientId, operatorToken, request);
 
@@ -395,7 +395,7 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
-            request.IPAddress = String.IsNullOrEmpty(request.IPAddress) ? ipAddress : request.IPAddress;
+            request.IPAddress = ipAddress;
 
             var result = await _platformRepository.CashoutBet(apiKey, clientId, operatorToken, request);
 
@@ -432,7 +432,7 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
-            request.IPAddress = String.IsNullOrEmpty(request.IPAddress) ? ipAddress : request.IPAddress;
+            request.IPAddress = ipAddress;
 
             var result = await _platformRepository.GetLivestream(apiKey, clientId, operatorToken, ipCountryCode, request);
 

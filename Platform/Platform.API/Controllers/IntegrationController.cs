@@ -400,12 +400,17 @@ namespace Platform.API.Controllers
         [HttpPost("v1/bet/cashout")]
         public async Task<IActionResult> CashoutBet([FromBody] CashoutBetRequest request)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var ipAddressV4 = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
-            request.IPAddress = ipAddress;
+            var isSSR = HttpContext.Request.Headers["x-is-ssr"].FirstOrDefault();
+
+            if (isSSR == null)
+            {
+                request.IPAddress = ipAddressV4;
+            }
 
             var result = await _platformRepository.CashoutBet(apiKey, clientId, operatorToken, request);
 
@@ -413,7 +418,7 @@ namespace Platform.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                { "ipAddress", ipAddress },
+                                { "ipAddress", ipAddressV4 },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },

@@ -151,9 +151,13 @@ namespace Platform.API.Controllers
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var connectionId = HttpContext.Request.Headers["x-connection-id"].FirstOrDefault();
             var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
+            var isSSR = HttpContext.Request.Headers["x-is-ssr"].FirstOrDefault();
 
-            request.IPAddress = ipAddressV4;
-            request.IPAddressV6 = ipAddressV6;
+            if (isSSR == null)
+            {
+                request.IPAddress = ipAddressV4;
+                request.IPAddressV6 = ipAddressV6;
+            }
 
             var result = await _platformRepository.PlaceBet(apiKey, clientId, operatorToken, request);
 

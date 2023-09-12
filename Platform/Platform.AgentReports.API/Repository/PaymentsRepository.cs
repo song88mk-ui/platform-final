@@ -840,63 +840,67 @@ namespace Platform.AgentReports.API.Repository
 
                             #region Wallet
 
-                            var amount = Math.Abs(request.TransferAmount);
-
-                            // wallet repository here
-                            var creditTypes = new TransactionType[] { TransactionType.CreditPartialPaymentTransfer, TransactionType.CreditFullPaymentTransfer };
-
-                            if (creditTypes.Contains(transactionType))
+                            if(balance.UserTypeId == (int)UserType.Player)
                             {
-                                var walletResponse = _walletRepository.Credit(new CreditOrDebitRequestDTO
-                                {
-                                    ClientId = Guid.Parse(request.ClientId),
-                                    UserId = request.UserId.ToString(),
-                                    Amount = amount,
-                                    CurrencyCode = balance.CurrencyCode,
-                                    ReferenceId = Guid.NewGuid().ToString(),
-                                    TransactionTypeId = (int)transactionType,
-                                    TransactionTypeName = transactionType.ToString()
-                                }).Result;
+                                var amount = Math.Abs(request.TransferAmount);
 
-                                if (walletResponse.StatusCode != 1000)
-                                {
-                                    scope.Complete();
+                                // wallet repository here
+                                var creditTypes = new TransactionType[] { TransactionType.CreditPartialPaymentTransfer, TransactionType.CreditFullPaymentTransfer };
 
-                                    return new BaseResponseDTO<PaymentTransferResponse>
+                                if (creditTypes.Contains(transactionType))
+                                {
+                                    var walletResponse = _walletRepository.Credit(new CreditOrDebitRequestDTO
                                     {
-                                        StatusCode = StatusCode.Error,
-                                        Message = walletResponse.Message,
-                                        Result = new PaymentTransferResponse()
-                                    };
-                                }
-                            }
+                                        ClientId = Guid.Parse(request.ClientId),
+                                        UserId = request.UserId.ToString(),
+                                        Amount = amount,
+                                        CurrencyCode = balance.CurrencyCode,
+                                        ReferenceId = Guid.NewGuid().ToString(),
+                                        TransactionTypeId = (int)transactionType,
+                                        TransactionTypeName = transactionType.ToString()
+                                    }).Result;
 
-                            var debitTypes = new TransactionType[] { TransactionType.DebitPartialPaymentTransfer, TransactionType.DebitFullPaymentTransfer };
-
-                            if (debitTypes.Contains(transactionType))
-                            {
-                                var walletResponse = _walletRepository.Debit(new CreditOrDebitRequestDTO
-                                {
-                                    ClientId = Guid.Parse(request.ClientId),
-                                    UserId = request.UserId.ToString(),
-                                    Amount = amount,
-                                    CurrencyCode = balance.CurrencyCode,
-                                    ReferenceId = Guid.NewGuid().ToString(),
-                                    TransactionTypeId = (int)transactionType,
-                                    TransactionTypeName = transactionType.ToString()
-                                }).Result;
-
-                                if (walletResponse.StatusCode != 1000)
-                                {
-                                    scope.Complete();
-
-                                    return new BaseResponseDTO<PaymentTransferResponse>
+                                    if (walletResponse.StatusCode != 1000)
                                     {
-                                        StatusCode = StatusCode.Error,
-                                        Message = walletResponse.Message,
-                                        Result = new PaymentTransferResponse()
-                                    };
+                                        scope.Complete();
+
+                                        return new BaseResponseDTO<PaymentTransferResponse>
+                                        {
+                                            StatusCode = StatusCode.Error,
+                                            Message = walletResponse.Message,
+                                            Result = new PaymentTransferResponse()
+                                        };
+                                    }
                                 }
+
+                                var debitTypes = new TransactionType[] { TransactionType.DebitPartialPaymentTransfer, TransactionType.DebitFullPaymentTransfer };
+
+                                if (debitTypes.Contains(transactionType))
+                                {
+                                    var walletResponse = _walletRepository.Debit(new CreditOrDebitRequestDTO
+                                    {
+                                        ClientId = Guid.Parse(request.ClientId),
+                                        UserId = request.UserId.ToString(),
+                                        Amount = amount,
+                                        CurrencyCode = balance.CurrencyCode,
+                                        ReferenceId = Guid.NewGuid().ToString(),
+                                        TransactionTypeId = (int)transactionType,
+                                        TransactionTypeName = transactionType.ToString()
+                                    }).Result;
+
+                                    if (walletResponse.StatusCode != 1000)
+                                    {
+                                        scope.Complete();
+
+                                        return new BaseResponseDTO<PaymentTransferResponse>
+                                        {
+                                            StatusCode = StatusCode.Error,
+                                            Message = walletResponse.Message,
+                                            Result = new PaymentTransferResponse()
+                                        };
+                                    }
+                                }
+
                             }
 
                             #endregion

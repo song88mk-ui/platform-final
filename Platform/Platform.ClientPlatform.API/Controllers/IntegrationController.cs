@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Platform.ClientPlatform.API.ActionFilters;
 using Platform.ClientPlatform.API.Models;
 using Platform.ClientPlatform.API.Repository;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Platform.ClientPlatform.API.Controllers
@@ -76,6 +77,7 @@ namespace Platform.ClientPlatform.API.Controllers
         [HttpGet("v1/bet/history/running")]
         public async Task<IActionResult> GetBetHistoryRunning()
         {
+
             var result = await _platformRepository.GetBetHistoryRunning(ApiKey, ClientId, OperatorToken, IPAddress);
 
             switch (result.StatusCode)
@@ -90,6 +92,13 @@ namespace Platform.ClientPlatform.API.Controllers
         [HttpPost("v1/bet/cashout")]
         public async Task<IActionResult> CashoutBet([FromBody] CashoutBetRequest request)
         {
+            var isSSR = HttpContext.Request.Headers["x-is-ssr"].FirstOrDefault();
+
+            if (isSSR == null)
+            {
+                IPAddress = request.IPAddress;
+            }
+
             var result = await _platformRepository.CashoutBet(ApiKey, ClientId, OperatorToken, IPAddress, request);
 
             switch (result.StatusCode)

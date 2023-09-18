@@ -58,6 +58,7 @@ namespace Platform.ClientPlatform.API.Repository
                 _httpClient.DefaultRequestHeaders.Add("X-Forwarded-For", ipAddress);
                 _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
                 _httpClient.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+                _httpClient.DefaultRequestHeaders.Add("x-is-ssr", "true");
 
                 var response = await _httpClient.PostAsync($"v1/bet/cashout", new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"));
 

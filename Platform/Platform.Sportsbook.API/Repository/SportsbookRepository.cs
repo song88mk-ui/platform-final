@@ -43,7 +43,7 @@ namespace Platform.Sportsbook.API.Repository
         private readonly IBetBuilderRepository _betBuilderRepository;
         private readonly List<string> _africaClientCodes = new List<string>();
         private readonly List<string> _countryWhiteList = new List<string>();
-        private static List<string> _asianClientCodes = new List<string> { "A88", "BE8", "B88", "ID8", "W88", "V88", "SET", "S88", "EKI", "EKT" };
+        private static List<string> _asianClientCodes = new List<string>();
         private static List<string> _marketTemplateIds = new List<string> { "16", "18", "66", "68" };
 
         public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMemCache memCache, IConfiguration configuration, IRabbitMQRepository rabbitMQRepository, IBetBuilderRepository betBuilderRepository)
@@ -52,6 +52,7 @@ namespace Platform.Sportsbook.API.Repository
 
             _africaClientCodes = _configuration["ConnectionStrings:MongoDB-Sportsbook"].Split(',').ToList();
             _countryWhiteList = _configuration["Custom:CountryWhiteList"].Split(',').ToList();
+            _marketTemplateIds = _configuration["Custom:AsianClientCodes"].Split(',').ToList();
 
             if (_db == null)
             {
@@ -9426,22 +9427,6 @@ namespace Platform.Sportsbook.API.Repository
 
                     if (activeSelectionCount == 1)
                         activeSelectionCount = selections.Count;
-
-                    if (marketTemplateId == "16" || marketTemplateId == "18" || marketTemplateId == "66" || marketTemplateId == "68")
-                    {
-                        result.Add(new ClientOdds
-                        {
-                            ClientCode = client.Item1,
-                            DecimalOdds = selection.Od,
-                            MalaysianOdds = GetMalayOdds(selection.Od, isBinary),
-                            HongkongOdds = GetHongkongOdds(selection.Od, isBinary),
-                            IndonesianOdds = GetIndoOdds(selection.Od, isBinary),
-                            SelectionTemplateId = selection.SeTeId,
-                            SelectionId = selection.SeId
-                        });
-
-                        continue;
-                    }
 
                     if (selection.IsAc == true && selection.Od > 0m)
                     {

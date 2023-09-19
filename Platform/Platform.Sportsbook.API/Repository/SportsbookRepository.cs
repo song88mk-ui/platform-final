@@ -52,7 +52,7 @@ namespace Platform.Sportsbook.API.Repository
 
             _africaClientCodes = _configuration["ConnectionStrings:MongoDB-Sportsbook"].Split(',').ToList();
             _countryWhiteList = _configuration["Custom:CountryWhiteList"].Split(',').ToList();
-            _marketTemplateIds = _configuration["Custom:AsianClientCodes"].Split(',').ToList();
+            _asianClientCodes = _configuration["Custom:AsianClientCodes"].Split(',').ToList();
 
             if (_db == null)
             {

@@ -14,7 +14,7 @@ namespace Platform.Operator.API.Repository
         Task<AuthResponseDTO> Authenticate(AuthRequestDTO request);
         Task<BetPlacementResponseDTO> BetPlacement(OperatorBetRequestDTO request, string clientId, string operatorToken, string isAgent);
         Task<BetSettlementResponseDTO> BetSettlement(OperatorBetSettlementRequestDTO request, string clientId);
-        Task<BetSettlementResponseDTO> CashOutBet(OperatorBetSettlementRequestDTO request, string clientId, string operatorToken, string isAgent);
+        Task<BetSettlementResponseDTO> CashOutBet(OperatorBetSettlementRequestDTO request, string clientId, string isAgent);
         Task<BetSettlementResponseDTO> BetCancellation(OperatorBetCancellationRequestDTO request, string clientId);
 
         Task<BetPlacementResponseDTO> BetPlacementCasino(OperatorCasinoBetPlacementRequestDTO request, string clientId, string operatorToken, string isAgent);

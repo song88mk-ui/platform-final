@@ -239,17 +239,8 @@ namespace Platform.Operator.API.Repository
                 Balance = betResponse.Balance
             };
         }
-        public async Task<BetSettlementResponseDTO> CashOutBet(OperatorBetSettlementRequestDTO request, string clientId, string operatorToken, string isAgent)
+        public async Task<BetSettlementResponseDTO> CashOutBet(OperatorBetSettlementRequestDTO request, string clientId, string isAgent)
         {
-            var authResponse = await _authRepository.Authenticate(operatorToken, isAgent);
-
-            if (authResponse.StatusCode != Enums.AuthStatusCode.Success)
-            {
-                return new BetSettlementResponseDTO
-                {
-                    StatusId = 1002
-                };
-            }
 
             var betResponse = await _walletRepository.CashOutBet(new CreditOrDebitRequest
             {

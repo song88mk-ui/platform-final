@@ -15,11 +15,13 @@ namespace Platform.Shared.Models
     {
         public int SportId { get; set; }
         public string SportName { get; set; }
+        public string Scope { get; set; }
     }
 
     public class TempOrderedSport : OrderedSport
     {
         public bool HasOutrights { get; set; }
+
         public int SortOrder { get; set; }
     }
 
@@ -40,6 +42,7 @@ namespace Platform.Shared.Models
         }
         public int SportId { get; set; }
         public string SportName { get; set; }
+        public string Scope { get; set; }
         public List<SegmentDTO> Segments { get; set; }
     }
 

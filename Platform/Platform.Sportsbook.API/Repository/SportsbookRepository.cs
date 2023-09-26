@@ -739,10 +739,10 @@ namespace Platform.Sportsbook.API.Repository
 
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             if (IsOEEnable(request.ClientCode))
-                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).OrderBy(o => o.FiTyId).ThenBy(o => o.FiStDa).ToList();
 
             if (request.SportGroup == Shared.Enums.SportGroup.SimulatedRealitySports)
-                fixtures = fixtures.Where(c => c.SegNa.ToLower().Contains("simulated")).ToList();
+                fixtures = fixtures.Where(c => c.SegNa.ToLower().Contains("simulated")).OrderBy(o => o.FiTyId).ThenBy(o => o.FiStDa).ToList();
 
             if (fixtures.Count == 0)
             {
@@ -788,6 +788,10 @@ namespace Platform.Sportsbook.API.Repository
             foreach (var item in sportResult)
             {
                 if (finalResult.Any(c => c.SportId == item.SportId)) continue;
+
+                var fixture = fixtures.FirstOrDefault(c => c.SpId == item.SportId);
+
+                item.Scope = GetScope(fixture, request.MinuteUTCOffset.HasValue ? request.MinuteUTCOffset.Value : 0);
 
                 finalResult.Add(item);
 
@@ -837,6 +841,7 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         SportId = sport.SportId,
                         SportName = sport.SportName,
+                        Scope = sport.Scope,
                         Segments = result.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
                         {
                             SegmentId = s.Key,
@@ -859,6 +864,7 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         SportId = sport.SportId,
                         SportName = sport.SportName,
+                        Scope = sport.Scope,
                         Segments = result.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
                         {
                             SegmentId = s.Key,
@@ -880,6 +886,7 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         SportId = sport.SportId,
                         SportName = sport.SportName,
+                        Scope = sport.Scope,
                         Segments = result.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
                         {
                             SegmentId = s.Key,
@@ -9795,6 +9802,38 @@ namespace Platform.Sportsbook.API.Repository
         {
             DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
             return dtDateTime.AddMilliseconds(timestamp).ToUniversalTime();
+        }
+
+        private string GetScope(Fixture fixture, int? minuteUTCOffset)
+        {
+            var retval = string.Empty;
+
+            if (fixture.FiTyId == (int)FixtureType.Match)
+            {
+                if (fixture.FiStId == (int)FixtureStatus.Live)
+                {
+                    retval = "Today";
+                }
+                else
+                {
+                    var todayDateUTC = GetDateTimeRange(DateTime.UtcNow, minuteUTCOffset.Value);
+
+                    if (fixture.FiStDa < todayDateUTC.Item2)
+                        retval = "Today";
+                    else
+                    {
+                        var refDate = fixture.FiStDa.AddMinutes(minuteUTCOffset.Value);
+
+                        retval = $"Early|{refDate:MM-dd-yyyy}";
+                    }
+                }
+            }
+            else if (fixture.FiTyId == (int)FixtureType.Outright)
+            {
+                retval = "Outrights";
+            }
+
+            return retval;
         }
     }
 

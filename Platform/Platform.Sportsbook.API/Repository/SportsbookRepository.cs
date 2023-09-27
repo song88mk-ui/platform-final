@@ -791,7 +791,7 @@ namespace Platform.Sportsbook.API.Repository
 
                 var fixture = fixtures.FirstOrDefault(c => c.SpId == item.SportId);
 
-                item.Scope = GetScope(fixture, request.MinuteUTCOffset.HasValue ? request.MinuteUTCOffset.Value : 0);
+                item.Scope = GetScope(fixture);
 
                 finalResult.Add(item);
 
@@ -9804,7 +9804,7 @@ namespace Platform.Sportsbook.API.Repository
             return dtDateTime.AddMilliseconds(timestamp).ToUniversalTime();
         }
 
-        private string GetScope(Fixture fixture, int? minuteUTCOffset)
+        private string GetScope(Fixture fixture)
         {
             var retval = string.Empty;
 
@@ -9816,15 +9816,11 @@ namespace Platform.Sportsbook.API.Repository
                 }
                 else
                 {
-                    var todayDateUTC = GetDateTimeRange(DateTime.UtcNow, minuteUTCOffset.Value);
-
-                    if (fixture.FiStDa < todayDateUTC.Item2)
+                    if (fixture.FiStDa.Date == DateTime.UtcNow.Date)
                         retval = "Today";
                     else
                     {
-                        var refDate = fixture.FiStDa.AddMinutes(minuteUTCOffset.Value);
-
-                        retval = $"Early|{refDate:MM-dd-yyyy}";
+                        retval = $"Early|{fixture.FiStDa}";
                     }
                 }
             }

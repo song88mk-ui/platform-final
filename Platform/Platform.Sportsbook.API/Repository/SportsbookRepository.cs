@@ -9820,7 +9820,7 @@ namespace Platform.Sportsbook.API.Repository
                         retval = "Today";
                     else
                     {
-                        retval = $"Early|{fixture.FiStDa:MM/dd/yyyy hh:mm:ss tt}";
+                        retval = $"Early|{fixture.SegId}|{fixture.LeId}|{fixture.FiStDa:MM/dd/yyyy hh:mm:ss tt}";
                     }
                 }
             }

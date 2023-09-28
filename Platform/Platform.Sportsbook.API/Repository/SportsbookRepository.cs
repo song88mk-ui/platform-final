@@ -9808,11 +9808,6 @@ namespace Platform.Sportsbook.API.Repository
         {
             var retval = string.Empty;
 
-            //if (fixture.SpId == 16)
-            //{
-                
-            //}
-
             if (fixture.FiTyId == (int)FixtureType.Match)
             {
                 if (fixture.FiStId == (int)FixtureStatus.Live)
@@ -9822,7 +9817,7 @@ namespace Platform.Sportsbook.API.Repository
                 else
                 {
                     if (fixture.FiStDa.Date == DateTime.UtcNow.Date)
-                        retval = $"Today|{fixture.FiStDa}";
+                        retval = $"Today|{fixture.FiStDa:MM/dd/yyyy hh:mm:ss tt}";
                     else
                     {
                         retval = $"Early|{fixture.SegId}|{fixture.LeId}|{fixture.FiStDa:MM/dd/yyyy hh:mm:ss tt}";

@@ -43,7 +43,7 @@ namespace Platform.Shared.Models
         public SenderDTO Sender { get; set; }
 
         [JsonProperty("version")]
-        public string Version { get; set; } = "2.2";
+        public string Version { get; set; } = "2.3";
 
         [JsonProperty("testSource")]
         public bool TestSource { get; set; } = false;

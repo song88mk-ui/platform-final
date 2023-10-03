@@ -66,7 +66,7 @@ namespace Platform.Betting.API.Repository
                         CustomBet = true,
                         CalculationOdds = Convert.ToInt32(calculatedOdds * 10000),
                         Id = betId,
-                        Stake = new MTSStakeDTO { Value = 10000 },
+                        Stake = new MTSStakeDTO { Value = 10000, Type = "total" },
                         SelectedSystems = new int[] { request.BetSelections.Count }
                     });
                 }

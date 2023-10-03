@@ -598,6 +598,8 @@ namespace Platform.API.Repository
                 Channel = request.Channel,
                 IPAddressV4 = request.IPAddress,
                 IsBoosted = request.IsBoosted,
+                IsBetBuilder = request.IsBetBuilder,
+                Odds = request.TotalOdds,
                 Selections = request.Selections.Select(s => new BetSelectionRequestDTO
                 {
                     SportId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SportId).FirstOrDefault(),

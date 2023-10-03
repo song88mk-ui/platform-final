@@ -898,7 +898,7 @@ namespace Platform.Betting.API.Repository
                 if (request.IsBetBuilder)
                 {
                     minStake = GetMinStake(betBuilderConfig.MinStake, request.ExchangeRate, request.CompanyShare, request.CurrencyCode.ToString());
-                    maxStake = GetMaxStakeForBetBuilderWithMTS(parlayConfig.MaxStake, mtsMaxStake.Result.Stake, request.CompanyShare);
+                    maxStake = GetMaxStakeForBetBuilderWithMTS(betBuilderConfig.MaxStake, mtsMaxStake.Result.Stake, request.CompanyShare);
                 }
                 else
                 {

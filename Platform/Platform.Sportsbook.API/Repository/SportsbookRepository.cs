@@ -739,7 +739,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             if (IsOEEnable(request.ClientCode))
-                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).OrderBy(o => o.FiTyId).ThenBy(o => o.FiStDa).ToList();
+                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).OrderBy(o => o.FiTyId).ThenByDescending(o => o.FiStId).ThenBy(o => o.FiStDa).ToList();
 
             if (request.SportGroup == Shared.Enums.SportGroup.SimulatedRealitySports)
                 fixtures = fixtures.Where(c => c.SegNa.ToLower().Contains("simulated")).OrderBy(o => o.FiTyId).ThenBy(o => o.FiStDa).ToList();
@@ -789,7 +789,8 @@ namespace Platform.Sportsbook.API.Repository
             {
                 if (finalResult.Any(c => c.SportId == item.SportId)) continue;
 
-                var fixture = fixtures.FirstOrDefault(c => c.SpId == item.SportId);
+                var refFixtures = fixtures.Where(c => c.SpId == item.SportId).ToList();
+                var fixture = refFixtures.FirstOrDefault(c => c.SpId == item.SportId);
 
                 item.Scope = GetScope(fixture);
 

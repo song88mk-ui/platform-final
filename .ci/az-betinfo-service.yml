@@ -1,0 +1,28 @@
+name: Platform-BetInfo-Service-$(Build.BuildId)
+
+pr: none
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - FCI-8937
+  paths:
+    include:
+      - Platform/Platform.BetInfo.Service
+
+resources:
+  repositories:
+    - repository: bt
+      type: github
+      name: FlyingCockatoo/BuildTemplates
+      endpoint: FlyingCockatoo
+      ref: refs/tags/v1.9.0
+
+extends:
+  template: dotnetservice.yml@bt
+  parameters:
+    runtime: win-x64
+    authToFeeds: false
+    projects:
+      - Platform/Platform.BetInfo.Service

@@ -622,7 +622,8 @@ namespace Platform.Betting.API.Repository
                         IsBoosted = request.IsBoosted,
                         IsBetBuilder = request.IsBetBuilder,
                         BonusId = request.BonusId,
-                        Odds = request.Odds
+                        Odds = request.Odds,
+                        UserAgent = request.UserAgent,
                     };
 
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
@@ -1262,7 +1263,8 @@ namespace Platform.Betting.API.Repository
                         IsBoosted = request.IsBoosted,
                         IsBetBuilder = request.IsBetBuilder,
                         BonusId = request.BonusId,
-                        Odds = request.Odds
+                        Odds = request.Odds,
+                        UserAgent = request.UserAgent,
                     };
 
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO

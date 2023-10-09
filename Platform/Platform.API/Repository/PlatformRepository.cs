@@ -152,7 +152,7 @@ namespace Platform.API.Repository
                 }
             };
         }
-        public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(string apiKey, string clientId, string operatorToken, BetRequest request)
+        public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(string apiKey, string clientId, string operatorToken, BetRequest request, string userAgent = "")
         {
             if (request.Selections.Count >= 2 && request.Selections.Any(c => c.SportId > 1000) && request.Selections.Any(c => c.SportId < 1000))
             {
@@ -445,6 +445,7 @@ namespace Platform.API.Repository
                 IsBetBuilder = request.IsBetBuilder,
                 BonusId = request.BonusId,
                 Odds = result.Result.TotalOdds,
+                UserAgent = userAgent,
             };
 
             return await _bettingRepository.PlaceBet(payload);

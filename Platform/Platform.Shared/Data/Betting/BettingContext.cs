@@ -21,6 +21,7 @@ namespace Platform.Shared.Data.Betting
             modelBuilder.Entity<Tier>().HasKey(k => new { k.TierId });
             modelBuilder.Entity<League>().HasKey(k => new { k.Id });
             modelBuilder.Entity<UserBetConfig>().HasKey(k => new { k.UserId });
+            modelBuilder.Entity<BetInfo>().HasKey(k => new { k.BetId });
         }
 
         public DbSet<Bet> Bet { get; set; }
@@ -34,5 +35,6 @@ namespace Platform.Shared.Data.Betting
         public DbSet<League> League { get; set; }
         public DbSet<Tier> Tier { get; set; }
         public DbSet<UserBetConfig> UserBetConfig { get; set; }
+        public DbSet<BetInfo> BetInfo { get; set; }
     }
 }

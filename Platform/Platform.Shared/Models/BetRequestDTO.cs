@@ -37,6 +37,7 @@ namespace Platform.Shared.Models
         public bool IsBoosted { get; set; }
         public bool IsBetBuilder { get; set; }
         public string BonusId { get; set; }
+        public string UserAgent { get; set; } = string.Empty;
         public List<BetSelectionRequestDTO> Selections { get; set; }
     }
 

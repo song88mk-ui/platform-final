@@ -156,7 +156,7 @@ namespace Platform.API.Controllers
                 request.IPAddressV6 = ipAddressV6;
             }
 
-            var result = await _platformRepository.PlaceBet(apiKey, clientId, operatorToken, request);
+            var result = await _platformRepository.PlaceBet(apiKey, clientId, operatorToken, request, userAgent);
 
             var parameters = request;
 

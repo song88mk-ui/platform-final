@@ -220,11 +220,12 @@ namespace Platform.Operator.Servicev2.Repository
                 Message = reason
             }, messageBroker, correlationId, threadId);
         }
-        private void AcceptBet(Guid betId, string correlationId, IMessageBroker messageBroker, OperatorBetResponseDTO operatorResponse, bool isBoosted = false, bool isBetBuilder = false)
+        private void AcceptBet(Guid betId, string correlationId, IMessageBroker messageBroker, OperatorBetResponseDTO operatorResponse, bool isBoosted = false, bool isBetBuilder = false, string userAgent = "")
         {
             var payload = new OnBetPlacement();
             payload.IsBoosted = isBoosted;
             payload.IsBetBuilder = isBetBuilder;
+            payload.UserAgent = userAgent;
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
@@ -373,6 +374,8 @@ namespace Platform.Operator.Servicev2.Repository
                             messageBroker.Publish(payload, "OnBetPlacement", "r.bet.reports.agent", correlationId);
                         else
                             messageBroker.Publish(payload, "OnBetPlacement", "r.bet.reports", correlationId);
+
+                        messageBroker.Publish(payload, "OnBetPlacement", "r.bet.betinfo", correlationId);
 
                         //TODO: delete when TW is no longer the frontend
                         messageBroker.Publish(new OnBetStatus
@@ -642,7 +645,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        AcceptBet(message.Bet.BetId, correlationId, messageBroker, result, message.IsBoosted, message.IsBetBuilder);
+                        AcceptBet(message.Bet.BetId, correlationId, messageBroker, result, message.IsBoosted, message.IsBetBuilder, message.UserAgent);
                     }
                     
                 }

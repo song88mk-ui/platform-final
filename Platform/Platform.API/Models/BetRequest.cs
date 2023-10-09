@@ -19,6 +19,7 @@ namespace Platform.API.Models
         public bool IsBetBuilder { get; set; } = false;
         public string BonusId { get; set; } = string.Empty;
         public decimal TotalOdds { get; set; }
+        public string UserAgent { get; set; } = string.Empty;
         public List<BetSelectionRequest> Selections { get; set; }
     }
 

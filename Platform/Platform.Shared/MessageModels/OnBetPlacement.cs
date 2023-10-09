@@ -15,6 +15,7 @@ namespace Platform.Shared.MessageModels
         public bool IsBetBuilder { get; set; }
         public string BonusId { get; set; }
         public decimal Odds { get; set; }
+        public string UserAgent { get; set; } = string.Empty;
         public List<BetSelection> BetSelections { get; set; }
     }
 

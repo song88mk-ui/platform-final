@@ -6,7 +6,7 @@ trigger:
   batch: true
   branches:
     include:
-      - FCI-8937
+      - main
   paths:
     include:
       - Platform/Platform.BetInfo.Service

@@ -362,7 +362,7 @@ namespace Platform.Operator.Servicev2
             try
             {
                 switch (messageType)
-                {//
+                {
                     case "OnBetPlacement":
                         var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
                         Console.WriteLine($"{DateTime.UtcNow} {onBetPlacement.Bet.BetId} - OnBetPlacement");

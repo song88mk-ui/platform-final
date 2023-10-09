@@ -443,8 +443,12 @@ namespace Platform.API.Controllers
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var isSSR = HttpContext.Request.Headers["x-is-ssr"].FirstOrDefault();
 
-            request.IPAddress = ipAddress;
+            if (isSSR == null)
+            {
+                request.IPAddress = ipAddress;
+            }
 
             var result = await _platformRepository.GetLivestream(apiKey, clientId, operatorToken, ipCountryCode, request);
 

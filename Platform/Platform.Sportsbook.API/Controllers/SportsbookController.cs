@@ -1080,5 +1080,19 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/sportsbook/translations")]
+        public async Task<IActionResult> GetTranslationByLanguageCode([FromBody] TranslationRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetTranslationByLanguageCode(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

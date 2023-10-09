@@ -8829,6 +8829,25 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<List<TranslationResponseDTO>>> GetTranslationByLanguageCode(TranslationRequestDTO request)
+        {
+            var languageCode = request.LanguageCode.ToString().ToUpper();
+            var translations = GetTranslations().Where(c => c.LanguageCode == languageCode).ToList();
+
+            return new BaseResponseDTO<List<TranslationResponseDTO>>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = translations.Where(c => c.LanguageCode == languageCode)
+                .Select(s => new TranslationResponseDTO
+                {
+                    LanguageCode = s.LanguageCode,
+                    Name = s.Name,
+                    Value = s.Value
+                }).ToList()
+            };
+        }
+
         private string GetSportName(string name, List<SportTranslationMDB> translations, LanguageCode languageCode)
         {
             if (translations == null)
@@ -9784,6 +9803,11 @@ namespace Platform.Sportsbook.API.Repository
         private List<MarketTemplatePlayerProps> GetMarketTemplatePlayerProps()
         {
             return _memCache.GetCache("mtpp", () => _sportsbookContext.MarketTemplatePlayerProps.AsNoTracking().ToList(), 24);
+        }
+
+        private List<Translation> GetTranslations()
+        {
+            return _memCache.GetCache("tr", () => _sportsbookContext.Translation.AsNoTracking().ToList(), 24);
         }
 
         private bool IsBetBuilder(int sportId, int fixtureTypeId, int fixtureStatusId, List<BetBuilderMarketTemplates> betBuilderMarketTemplates)

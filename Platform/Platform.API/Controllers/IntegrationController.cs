@@ -1946,5 +1946,34 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpGet("v1/sportsbook/translations")]
+        public async Task<IActionResult> GetTranslationByLanguageCode()
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
+
+            var result = await _platformRepository.GetTranslationByLanguageCode(apiKey, clientId, languageCode);
+
+            var properties = new Dictionary<string, string>
+            {
+                                { "x-client-id", clientId },
+                                { "x-language-code", languageCode },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/sportsbook/translations", properties);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

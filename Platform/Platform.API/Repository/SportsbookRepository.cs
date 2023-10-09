@@ -1626,5 +1626,36 @@ namespace Platform.API.Repository
                 };
             }
         }
+        public async Task<BaseResponseDTO<List<TranslationResponseDTO>>> GetTranslationByLanguageCode(TranslationRequestDTO request)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"v1/sportsbook/translations", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                    return JsonSerializer.Deserialize<BaseResponseDTO<List<TranslationResponseDTO>>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                        return JsonSerializer.Deserialize<BaseResponseDTO<List<TranslationResponseDTO>>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    else
+                    {
+                        return new BaseResponseDTO<List<TranslationResponseDTO>>
+                        {
+                            StatusCode = StatusCode.Error,
+                            Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<List<TranslationResponseDTO>>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
+            }
+        }
     }
 }

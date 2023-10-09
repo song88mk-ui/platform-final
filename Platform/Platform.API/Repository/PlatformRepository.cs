@@ -4255,6 +4255,38 @@ namespace Platform.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<List<TranslationResponseDTO>>> GetTranslationByLanguageCode(string apiKey, string clientId, string langCode)
+        {
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<List<TranslationResponseDTO>>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<List<TranslationResponseDTO>>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var request = new TranslationRequestDTO
+            {
+                LanguageCode = languageCode
+            };
+
+            return await _sportsbookRepository.GetTranslationByLanguageCode(request);
+        }
+
         private DateTime GetFirstDayOfNextMonth()
         {
             DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);

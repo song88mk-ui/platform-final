@@ -21,7 +21,7 @@ namespace Platform.Shared.Data.Betting
             modelBuilder.Entity<Tier>().HasKey(k => new { k.TierId });
             modelBuilder.Entity<League>().HasKey(k => new { k.Id });
             modelBuilder.Entity<UserBetConfig>().HasKey(k => new { k.UserId });
-            modelBuilder.Entity<BetInfo>().HasKey(k => new { k.BetId });
+            modelBuilder.Entity<BetInfo>().HasKey(k => new { k.Id });
         }
 
         public DbSet<Bet> Bet { get; set; }

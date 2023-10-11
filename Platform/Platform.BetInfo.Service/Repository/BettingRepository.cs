@@ -19,7 +19,6 @@ namespace Platform.BetInfo.Service.Repository
 
         public void ProcessBetPlacement(OnBetPlacement message)
         {
-            //
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
                 var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);

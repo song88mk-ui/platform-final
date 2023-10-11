@@ -5,6 +5,7 @@ using System;
 using Platform.Shared.MessageModels;
 using Microsoft.EntityFrameworkCore;
 using Platform.Shared.Data.Betting;
+using System.Linq;
 
 namespace Platform.BetInfo.Service.Repository
 {
@@ -27,16 +28,11 @@ namespace Platform.BetInfo.Service.Repository
                 {
                     try
                     {
-                        var bet = context.BetInfo.Find(message.Bet.BetId);
-
-                        if (bet == null)
+                        context.BetInfo.Add(new Shared.Data.Betting.Entities.BetInfo
                         {
-                            context.BetInfo.Add(new Shared.Data.Betting.Entities.BetInfo
-                            {
-                                BetId = message.Bet.BetId,
-                                UserAgent = message.UserAgent,
-                            });
-                        }
+                            BetId = message.Bet.BetId,
+                            UserAgent = message.UserAgent,
+                        });
 
                         context.SaveChanges();
                         scope.Complete();

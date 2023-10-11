@@ -33,11 +33,14 @@ namespace Platform.Sportsbook.API.Repository
         private static IMongoCollection<MarketMapping> marketMappingCollection;
         private static IMongoCollection<Selection> selectionCollection;
         private static IMongoCollection<BettingStatus> bettingStatusCollection;
+        private static IMongoCollection<Maintenance> maintenanceCollection;
 
         private static IMongoCollection<Fixture> primaryFixtureCollection;
         private static IMongoCollection<Market> primaryMarketCollection;
         private static IMongoCollection<Selection> primarySelectionCollection;
         private static IMongoCollection<BettingStatus> primaryBettingStatusCollection;
+        private static IMongoCollection<Maintenance> primaryMaintenanceCollection;
+
         private readonly HttpClient _httpClient;
         private readonly IRabbitMQRepository _rabbitMQRepository;
         private readonly IBetBuilderRepository _betBuilderRepository;
@@ -66,11 +69,13 @@ namespace Platform.Sportsbook.API.Repository
                     marketMappingCollection = _db.GetCollection<MarketMapping>("MarketMapping").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
                     selectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
                     bettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
+                    maintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
 
                     primaryFixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
                     primaryMarketCollection = _db.GetCollection<Market>("Market").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
                     primarySelectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
                     primaryBettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+                    primaryMaintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
                 }
                 else
                 {
@@ -79,11 +84,13 @@ namespace Platform.Sportsbook.API.Repository
                     marketMappingCollection = _db.GetCollection<MarketMapping>("MarketMapping").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
                     selectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
                     bettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
+                    maintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
 
                     primaryFixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
                     primaryMarketCollection = _db.GetCollection<Market>("Market").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
                     primarySelectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
                     primaryBettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+                    primaryMaintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
                 }
             }
 
@@ -8846,6 +8853,34 @@ namespace Platform.Sportsbook.API.Repository
                     Value = s.Value
                 }).ToList()
             };
+        }
+
+        public async Task<BaseResponseDTO<MaintenanceResponseDTO>> GetMaintenance()
+        {
+            var key = $"mtnn";
+
+            var cache = _memCache.GetCache< BaseResponseDTO<MaintenanceResponseDTO>>(key);
+
+            if (cache != null)
+                return cache;
+
+            var maintenanceFilter = Builders<Maintenance>.Filter.Where(c => c.ma == "maintenance");
+            var maintenance = await primaryMaintenanceCollection.Find(maintenanceFilter).FirstOrDefaultAsync();
+
+            var response = new BaseResponseDTO<MaintenanceResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new MaintenanceResponseDTO
+                {
+                    IsMaintenance = maintenance.isMa,
+                    IsBetStop = maintenance.isBeSt
+                }
+            };
+
+            _memCache.AddOrUpdateCache(key, response, DateTimeOffset.UtcNow.AddMinutes(30));
+
+            return response;
         }
 
         private string GetSportName(string name, List<SportTranslationMDB> translations, LanguageCode languageCode)

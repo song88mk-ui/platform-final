@@ -4288,6 +4288,22 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.GetTranslationByLanguageCode(request);
         }
 
+        public async Task<BaseResponseDTO<MaintenanceResponseDTO>> GetMaintenance(string apiKey, string clientId)
+        {
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<MaintenanceResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetMaintenance();
+        }
+
         private DateTime GetFirstDayOfNextMonth()
         {
             DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);

@@ -26,22 +26,14 @@ namespace Platform.BetInfo.Service.Repository
 
                 using (var context = new BettingContext(optionsBuilder.Options))
                 {
-                    try
+                    context.BetInfo.Add(new Shared.Data.Betting.Entities.BetInfo
                     {
-                        context.BetInfo.Add(new Shared.Data.Betting.Entities.BetInfo
-                        {
-                            BetId = message.Bet.BetId,
-                            UserAgent = message.UserAgent,
-                        });
+                        BetId = message.Bet.BetId,
+                        UserAgent = message.UserAgent,
+                    });
 
-                        context.SaveChanges();
-                        scope.Complete();
-
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
+                    context.SaveChanges();
+                    scope.Complete();
                 }
             }
         }

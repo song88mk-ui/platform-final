@@ -8828,6 +8828,11 @@ namespace Platform.Sportsbook.API.Repository
                 _memCache.DeleteCache(request.CacheKey);
             }
 
+            if (request.CacheType == CacheType.Maintenance)
+            {
+                _memCache.DeleteCache("mtnn");
+            }
+
             return new BaseResponseDTO<bool>
             {
                 StatusCode = StatusCode.Success,

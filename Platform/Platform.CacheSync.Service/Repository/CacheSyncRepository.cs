@@ -58,6 +58,16 @@ namespace Platform.CacheSync.Service.Repository
             var publishMessage = await DeleteCachePreload(request);
         }
 
+        public async void ProcessMaintenance(OnDeleteCacheMessage message)
+        {
+            var request = new CachePreloadRequestDTO
+            {
+                CacheType = CacheType.Maintenance
+            };
+
+            var publishMessage = await DeleteCachePreload(request);
+        }
+
         private async Task<bool> DeleteCachePreload(CachePreloadRequestDTO request)
         {
             var apis = bool.Parse(_configuration["IsProduction"]) ? _configuration.GetSection("API:Production:PlatformSportsbookAPI").Get<List<string>>() : _configuration.GetSection("API:Staging:PlatformSportsbookAPI").Get<List<string>>();

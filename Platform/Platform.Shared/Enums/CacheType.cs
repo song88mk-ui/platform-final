@@ -5,5 +5,6 @@
         MarketSortOrder = 0,
         SportSortOrder = 1,
         UserFavorites = 2,
+        Maintenance = 4
     }
 }

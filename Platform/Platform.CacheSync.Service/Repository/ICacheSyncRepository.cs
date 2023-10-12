@@ -7,5 +7,6 @@ namespace Platform.CacheSync.Service.Repository
         void ProcessMarketSortOrderChange(OnDeleteCacheMessage message);
         void ProcessSportSortOrderChange(OnDeleteCacheMessage message);
         void ProcessUpdateUserFavorites(OnDeleteCacheMessage message);
+        void ProcessMaintenance(OnDeleteCacheMessage message);
     }
 }

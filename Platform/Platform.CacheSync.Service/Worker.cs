@@ -64,6 +64,10 @@ namespace Platform.CacheSync.Service
                         var userFavorite = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
                         _cacheSyncRepository.ProcessUpdateUserFavorites(userFavorite);
                         break;
+                    case "OnMaintenance":
+                        var maintenance = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
+                        _cacheSyncRepository.ProcessUpdateUserFavorites(userFavorite);
+                        break;
                 }
             }
             catch (Exception)

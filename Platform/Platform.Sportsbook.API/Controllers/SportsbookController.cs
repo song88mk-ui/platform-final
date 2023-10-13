@@ -23,6 +23,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -37,6 +38,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -51,6 +53,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -65,6 +68,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -79,6 +83,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -93,6 +98,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -107,6 +113,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -122,6 +129,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -136,6 +144,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -150,6 +159,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -164,6 +174,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -178,6 +189,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -192,6 +204,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -206,6 +219,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -220,6 +234,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -234,6 +249,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -248,6 +264,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -262,6 +279,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -276,6 +294,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -290,6 +309,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -304,6 +324,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -318,6 +339,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -332,6 +354,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -346,6 +369,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -360,6 +384,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -374,6 +399,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -388,6 +414,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -402,6 +429,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -416,6 +444,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -430,6 +459,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -444,6 +474,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -458,6 +489,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -472,6 +504,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -486,6 +519,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -499,6 +533,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -513,6 +548,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -527,6 +563,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -541,6 +578,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -555,6 +593,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -571,6 +610,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -585,6 +625,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -599,6 +640,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -613,6 +655,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -632,6 +675,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -651,6 +695,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -671,6 +716,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -690,6 +736,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -708,7 +755,7 @@ namespace Platform.Sportsbook.API.Controllers
 
         //    switch (result.StatusCode)
         //    {
-        //        case Shared.Enums.StatusCode.Success:
+        //        case Shared.Enums.StatusCode.Success: case Shared.Enums.StatusCode.Maintenance:
         //            return Ok(result);
         //        default:
         //            return BadRequest(result);
@@ -728,6 +775,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -746,6 +794,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -763,6 +812,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -780,6 +830,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -797,6 +848,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -812,6 +864,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -829,6 +882,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -846,6 +900,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -863,6 +918,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -877,6 +933,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -891,6 +948,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -905,6 +963,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -919,6 +978,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -933,6 +993,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -947,6 +1008,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -961,6 +1023,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -975,6 +1038,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -989,6 +1053,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -1003,6 +1068,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -1018,6 +1084,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -1032,6 +1099,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -1046,6 +1114,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -1060,6 +1129,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -1074,6 +1144,7 @@ namespace Platform.Sportsbook.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -1084,21 +1155,6 @@ namespace Platform.Sportsbook.API.Controllers
         public async Task<IActionResult> GetTranslationByLanguageCode([FromBody] TranslationRequestDTO request)
         {
             var result = await _sportsbookRepository.GetTranslationByLanguageCode(request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
-        [HttpPost("v1/sportsbook/maintenance")]
-        public async Task<IActionResult> GetMaintenance()
-        {
-            //
-            var result = await _sportsbookRepository.GetMaintenance();
 
             switch (result.StatusCode)
             {

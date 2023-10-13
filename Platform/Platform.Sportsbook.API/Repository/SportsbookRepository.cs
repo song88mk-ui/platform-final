@@ -106,6 +106,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(LivestreamRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<LivestreamResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.PrFiId == request.ProviderFixtureId);
             var fixture = await fixtureCollection.Find(fixtureFilter).FirstOrDefaultAsync();
 
@@ -193,6 +204,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<BetSettlementScoreResponseDTO>> GetBetSettlementScore(BetSettlementScoreRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<BetSettlementScoreResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var setlementScore = string.Empty;
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == request.FixtureId);
             var fixture = await fixtureCollection.Find(fixtureFilter).FirstOrDefaultAsync();
@@ -317,9 +339,19 @@ namespace Platform.Sportsbook.API.Repository
             }
         }
 
-
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetTopLeagues(TopLeaguesRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TopLeaguesResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = $"ntl:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportId}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TopLeaguesResponseDTO>>(mKey);
@@ -442,6 +474,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues(TopLeaguesRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TopLeaguesResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = $"nal:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportId}:{(int)request.FixtureStatusGroup}:{request.MinuteUTCOffset}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TopLeaguesResponseDTO>>(mKey);
@@ -527,6 +570,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<TopLeaguesResponseDTO>> GetAllLeagues2(TopLeaguesRequest2DTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TopLeaguesResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
 
@@ -584,6 +638,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<TopFixturesResponseDTO>> GetTopFixtures(TopFixturesRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TopFixturesResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 1 && c.FiTyId == (int)FixtureType.Match);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             if (IsOEEnable(request.ClientCode))
@@ -638,6 +703,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TopFixturesIdsResponseDTO>> GetTopFixtureIds(TopFixturesRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TopFixturesIdsResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             if (IsOEEnable(request.ClientCode))
@@ -692,6 +768,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<SportsResponseDTO>> GetSports(SportsRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<SportsResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = string.Empty;
 
             if (request.FixtureScope == null)
@@ -1002,6 +1089,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>> GetClientSelectorMarketTemplates(SelectorMarketTemplatesRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var result = GetClientSelectorMarketTemplate().Where(c => c.ClientId == request.ClientId);
             var finalResult = new List<SportSelectorMarketTemplateDTO>();
 
@@ -1321,6 +1419,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<BetSelectionProbabilityResponseDTO>> GetBetSelectionProbabilities(BetSelectionProbabilityRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<BetSelectionProbabilityResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureIds = request.Selections.Select(s => s.Item1).Distinct().ToList();
             var marketIds = request.Selections.Select(s => s.Item2).Distinct().ToList();
             var selectionIds = request.Selections.Select(s => s.Item3).Distinct().ToList();
@@ -1403,6 +1512,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<BetFixtureTranslationResponseDTO>> GetBetFixtureTranslation(BetFixtureTranslationRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<BetFixtureTranslationResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var result = await GetBetFixtureTranslations(request);
 
             return new BaseResponseDTO<BetFixtureTranslationResponseDTO>
@@ -1431,6 +1551,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<BetFixtureResponseDTO>> GetBetFixture(BetFixtureRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<BetFixtureResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var result = await GetBetFixtures2(request);
 
             var raw = new List<BetFixtureSelectionResponseDTO>();
@@ -1500,6 +1631,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<TWResponseDTO>> GetUserFavoritesAll(UserFavoriteRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var result = new List<FixtureDTO>();
             var favorites = await _sportsbookContext.UserFavorite.Where(c => c.UserId == $"{request.ClientCode}-{request.UserId}").ToListAsync();
 
@@ -1745,6 +1887,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(UserFavoriteRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = $"nuf:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.UserId.ToUpper()}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<UserFavoriteResponseDTO>>(mKey);
@@ -1830,6 +1983,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> AddFavorites(UserFavoriteInsertDeleteRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var result = new List<UserFavoriteDTO>();
 
             if (request.UserFavoriteHierarchy == UserFavoriteHierarchy.League)
@@ -1962,6 +2126,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> DeleteFavorites(UserFavoriteInsertDeleteRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var result = new List<UserFavoriteDTO>();
 
             var favorite = await _sportsbookContext.UserFavorite.FindAsync($"{request.ClientCode}-{request.UserId}", request.Id);
@@ -2059,6 +2234,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopFixturesTW(TWRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var sKey = $"sctf:{request.ClientId.ToString().ToUpper()}";
 
             var cache = _memCache.GetCache<List<ClientTopFixture>>(sKey);
@@ -2250,6 +2436,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(TWFLiveFixtureCountRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWFixtureCountResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = $"nlfc:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportGroupId}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TWFixtureCountResponseDTO>>(mKey);
@@ -2317,6 +2514,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetTodayFixtureCount(TWFTodayFixtureCountRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWFixtureCountResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = $"ntfc:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.MinuteUTCOffset}:{request.SportGroupId}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TWFixtureCountResponseDTO>>(mKey);
@@ -2405,6 +2613,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixtures(TWLiveFixtureRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = $"nlf:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportId}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
@@ -2559,6 +2778,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixturesByLeague(TWLeagueLiveFixtureRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = $"nlfbl:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportId}:{request.SegmentId}:{request.LeagueId}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
@@ -2714,6 +2944,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixtures(TWTodayFixtureRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = $"ntf:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportId}:{request.MinuteUTCOffset}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
@@ -2932,6 +3173,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixturesByLeague(TWLeagueTodayFixtureRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = $"ntfbl:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.MinuteUTCOffset}:{request.SportId}:{request.SegmentId}:{request.LeagueId}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
@@ -3143,6 +3395,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetUpcomingFixtures(TWUpcomingFixtureRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = $"nuf:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.MinuteUTCOffset}:{request.SportId}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
@@ -3357,6 +3620,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<TWResponseDTO>> GetUpcomingFixturesByLeague(TWLeagueUpcomingFixtureRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = $"nufbl:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.MinuteUTCOffset}:{request.SportId}:{request.SegmentId}:{request.LeagueId}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
@@ -3569,6 +3843,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixtures(TWDailyFixtureRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = $"ndf:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportId}:{request.MinuteUTCOffset}:{request.DateUTC}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
@@ -3737,6 +4022,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetDailyFixturesByLeague(TWLeagueDailyFixtureRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = $"ndfbl:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.MinuteUTCOffset}:{request.DateUTC}:{request.SportId}:{request.SegmentId}:{request.LeagueId}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
@@ -3900,6 +4196,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetOutrightFixtures(TWOutrightFixtureRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Outright && c.SpId == request.SportId);
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
 
@@ -4029,6 +4336,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetOutrightFixturesByLeague(TWLeagueOutrightFixtureRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Outright && c.SpId == request.SportId && c.SegId == request.SegmentId && c.LeId == request.LeagueId);
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
 
@@ -4158,6 +4476,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTopLeagueFixtures(TWTopLeagueFixtureRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = $"ntlf:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportId}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
@@ -4353,6 +4682,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWSegmentFixtureRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = $"nfbs:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportId}:{request.SegmentId}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
@@ -4462,6 +4802,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtures(TWLeagueFixtureRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var mKey = $"nfbl:{request.ClientId.ToString().ToUpper()}:{request.LanguageCode.ToString().ToUpper()}:{request.SportId}:{request.SegmentId}:{request.LeagueId}";
 
             var mCache = _memCache.GetCache<BaseResponseDTO<TWResponseDTO>>(mKey);
@@ -4571,6 +4922,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWSearchResponseDTO>> GetSearchResults(TWSearchRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWSearchResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var result = new List<SearchResponse>();
 
             FilterDefinition<Fixture> leagueFilter;
@@ -4921,6 +5283,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtureDetails(TWFixtureDetailsRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == Convert.ToInt64(request.FixtureId));
             var tempFixture = fixtureCollection.Find(fixtureFilter).FirstOrDefaultAsync();
 
@@ -5030,6 +5403,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWLimitedResponseDTO>> GetFixtureDetailsLimited(TWFixtureDetailsRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWLimitedResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == Convert.ToInt64(request.FixtureId));
             var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.PrFiId).Include(c => c.FiStId).Include(c => c.ClCo).Include(c => c.SpId)
                 .Include(c => c.SpNa).Include(c => c.SegId).Include(c => c.SegNa).Include(c => c.LeId).Include(c => c.LeNa).Include(c => c.FiNa).Include(c => c.FiTyId)
@@ -5107,6 +5491,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWResponseDTO>> GetFixtureMarketSelectionDetails(TWFixtureMarketSelectionDetailsRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == Convert.ToInt64(request.FixtureId));
             var tempFixture = fixtureCollection.Find(fixtureFilter).FirstOrDefaultAsync();
 
@@ -6350,6 +6745,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(ActiveFixturesRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<ActiveFixturesResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
             var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.PrFiId).Include(c => c.FiStId).Include(c => c.ClCo).Include(c => c.SpId)
                 .Include(c => c.SpNa).Include(c => c.SegId).Include(c => c.SegNa).Include(c => c.LeId).Include(c => c.LeNa).Include(c => c.FiNa).Include(c => c.FiTyId)
@@ -6404,6 +6810,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<ActiveFixtureCountResponseDTO>> GetActiveFixtureCount(ActiveFixtureCountRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<ActiveFixtureCountResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
             var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.FiStId).Include(c => c.ClCo).Include(c => c.SpId).Include(c => c.SpNa).Include(c => c.FiTyId).Include(c => c.SpNaTr).ElemMatch(c => c.SpNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var fixtures = await fixtureCollection.Find(fixtureFilter).Project<ActiveFixtureCountProjection>(fixtureProjection).ToListAsync();
@@ -6441,6 +6858,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetSportsLookup(SportsLookupRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<SportsLookupResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
             var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.FiStId).Include(c => c.FiTyId).Include(c => c.SpId).Include(c => c.SpNa).Include(c => c.ClCo).Include(c => c.SpNaTr).ElemMatch(c => c.SpNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var fixtures = await fixtureCollection.Find(fixtureFilter).Project<SportsLookupProjection>(fixtureProjection).ToListAsync();
@@ -6478,6 +6906,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<SegmentsLookupResponseDTO>> GetSegmentsLookup(SegmentsLookupRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<SegmentsLookupResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
             var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.FiStId).Include(c => c.FiTyId).Include(c => c.SpId).Include(c => c.SpNa).Include(c => c.SegId).Include(c => c.SegNa).Include(c => c.ClCo).Include(c => c.SpNaTr).ElemMatch(c => c.SpNaTr, cc => cc.LaCo == request.LanguageCode.ToString()).Include(c => c.SegNaTr).ElemMatch(c => c.SegNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var fixtures = await fixtureCollection.Find(fixtureFilter).Project<SegmentsLookupProjection>(fixtureProjection).ToListAsync();
@@ -6521,6 +6960,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<LeaguesLookupResponseDTO>> GetLeaguesLookup(LeaguesLookupRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<LeaguesLookupResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
             var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.FiStId).Include(c => c.FiTyId).Include(c => c.SpId).Include(c => c.SpNa).Include(c => c.SegId).Include(c => c.SegNa).Include(c => c.LeId).Include(c => c.LeNa).Include(c => c.ClCo).Include(c => c.SpNaTr).ElemMatch(c => c.SpNaTr, cc => cc.LaCo == request.LanguageCode.ToString()).Include(c => c.SegNaTr).ElemMatch(c => c.SegNaTr, cc => cc.LaCo == request.LanguageCode.ToString()).Include(c => c.LeNaTr).ElemMatch(c => c.LeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var fixtures = await fixtureCollection.Find(fixtureFilter).Project<LeaguesLookupProjection>(fixtureProjection).ToListAsync();
@@ -6566,6 +7016,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<BoostedResponseDTO>> GetBoostedFixtures(BoostedFixturesRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<BoostedResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 1 && c.IsBo == true && c.ClBo.Contains(request.ClientCode));
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
 
@@ -6667,6 +7128,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<BetBuilderMarketTemplatesDTO>> GetBetBuilderMarketTemplatesDTO()
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<BetBuilderMarketTemplatesDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var result = GetBetBuilderMarketTemplates();
             var finalResult = new BetBuilderMarketTemplatesDTO();
 
@@ -6873,6 +7345,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>> GetBetBuilderSelectionsOdds(BetBuilderSelectionsOddsRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureIds = request.Selections.Select(s => Convert.ToInt64(s.FixtureId)).Distinct().ToList();
 
             if (fixtureIds.Count > 1)
@@ -7111,6 +7594,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>> GetClientMarketSortOrder(MarketSortOrderRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var initialResult = GetClientMarketTemplateGroups();
 
             var result = initialResult.Where(c => c.ClientId == request.ClientId && c.Id == 1).Select(s => new ClientMarketTemplateGroupDTO
@@ -7132,6 +7626,17 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<ClientFixtureSortOrderResponseDTO>> GetClientFixtureSortOrder(FixtureSortOrderRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<ClientFixtureSortOrderResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var clientLeagueOrder = GetLeagueOrder();
 
             var result = clientLeagueOrder == null ? new List<ClientFixtureSortOrderDTO>() : clientLeagueOrder.Where(c => c.ClientId == request.ClientId).Select(s => new ClientFixtureSortOrderDTO
@@ -7191,6 +7696,17 @@ namespace Platform.Sportsbook.API.Repository
 
             if (request.Selections.Count > 0)
             {
+                var maintenance = GetMaintenance();
+
+                if (maintenance.isMa)
+                {
+                    return new BaseResponseDTO<StatusCode>
+                    {
+                        StatusCode = StatusCode.Maintenance,
+                        Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                    };
+                }
+
                 string manualSettlementConfig = string.IsNullOrEmpty(_configuration["Custom:ManualSettlement"]) ? "Old" : _configuration["Custom:ManualSettlement"];
                 if (manualSettlementConfig.ToUpper() == "NEW")
                 {
@@ -7335,6 +7851,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures(ClientTopFixtureRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<ClientTopFixtureResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var topFixtures = _sportsbookContext.ClientTopFixture
                 .Where(c => request.ClientIds.Contains(c.ClientId))
                 .OrderBy(o => o.ClientId).ThenBy(o => o.SortOrder).ToList();
@@ -7417,6 +7944,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<ClientTopFixtureResponseDTO>> GetClientTopFixtures2(ClientTopFixtureRequestDTO2 request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<ClientTopFixtureResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var result = new List<OrderedClientTopFixture>();
 
             if (request.ClientInfos != null && request.ClientInfos.Any())
@@ -7499,6 +8037,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(BackofficeSportsRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<BackofficeSportsResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => (c.FiStId == (int)FixtureStatus.Prematch || c.FiStId == (int)FixtureStatus.Live) && c.SpId < 1000);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             if (IsOEEnable(request.ClientCode))
@@ -7601,6 +8150,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>> PostClientTopFixtures(PostClientTopFixtureRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             // validate requests
 
             // check if fixtures requests are duplicate
@@ -7679,6 +8239,17 @@ namespace Platform.Sportsbook.API.Repository
         {
             try
             {
+                var maintenance = GetMaintenance();
+
+                if (maintenance.isMa)
+                {
+                    return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
+                    {
+                        StatusCode = StatusCode.Maintenance,
+                        Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                    };
+                }
+
                 // check if fixtures requests are duplicate
                 var duplicateFixtures = request.TopFixtures.GroupBy(g => g.FixtureId).Where(c => c.Count() > 1).ToList();
 
@@ -7766,6 +8337,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<ClientTopLeaguesResponseDTO>> GetClientIdsTopLeagues(ClientTopLeaguesRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<ClientTopLeaguesResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId);
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             if (request.ClientCodes != null && request.ClientCodes.Any())
@@ -7834,6 +8416,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>> AddOrUpdateTopLeagues(ClientTopLeagueDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new System.Transactions.TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
             {
                 // validate requests
@@ -7922,6 +8515,17 @@ namespace Platform.Sportsbook.API.Repository
         {
             try
             {
+                var maintenance = GetMaintenance();
+
+                if (maintenance.isMa)
+                {
+                    return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
+                    {
+                        StatusCode = StatusCode.Maintenance,
+                        Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                    };
+                }
+
                 using (var scope = new TransactionScope(TransactionScopeOption.Required, new System.Transactions.TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
                 {
                     // validate requests
@@ -8020,6 +8624,16 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<SportsLookupResponseDTO>> GetClientSportsLookup(string clientCode)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<SportsLookupResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
 
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 12 && c.SpId < 1000);
             var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.FiTyId).Include(c => c.FiStId).Include(c => c.SpId).Include(c => c.SpNa);
@@ -8062,6 +8676,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<SportGroupResponseDTO>> GetSportGroups()
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<SportGroupResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             return _memCache.GetCache("sport-groups", () =>
             {
                 return new BaseResponseDTO<SportGroupResponseDTO>()
@@ -8078,6 +8703,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO>> GetClientMarketTemplateGroups(ClientMarketTemplateGroupRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<ClientMarketTemplateGroupResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             // get client market template group
             var clientMarketTemplateGroups = await _sportsbookContext.ClientMarketTemplateGroup.AsNoTracking()
                 .Where(c => c.SportId == request.SportId && c.ClientId == request.ClientId && c.FixtureStatusId == request.FixtureStatusId)
@@ -8174,6 +8810,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<ClientMarketTemplateResponseDTO>> GetClientMarketTemplates(ClientMarketTemplateRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<ClientMarketTemplateResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var rawMarketTemplateGroups = (await GetClientMarketTemplateGroups(new ClientMarketTemplateGroupRequestDTO
             {
                 ClientId = request.ClientId,
@@ -8252,6 +8899,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<ClientMarketTemplateResponseDTO>> AddOrUpdateClientMarketTemplatesOrder(ClientMarketTemplateRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<ClientMarketTemplateResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var virtualSportIds = new int[] { 1001, 1002, 1003, 1005, 1021 };
             var hasVirtualSports = virtualSportIds.Any(c => c == request.SportId + 1000);
 
@@ -8471,6 +9129,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<ClientAddMarketTemplateGroupResponseDTO>> AddClientMarketTemplateGroup(ClientAddMarketTemplateGroupRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<ClientAddMarketTemplateGroupResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var virtualSportIds = new int[] { 1001, 1002, 1003, 1005, 1021 };
             var hasVirtualSports = virtualSportIds.Any(c => c == request.SportId + 1000);
 
@@ -8600,6 +9269,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<ClientPostMarketTemplateGroupResponseDTO>> AddOrUpdateClientMarketTemplateGroup(ClientPostMarketTemplateGroupRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<ClientPostMarketTemplateGroupResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var virtualSportIds = new int[] { 1001, 1002, 1003, 1005, 1021 };
             var hasVirtualSports = virtualSportIds.Any(c => c == request.SportId + 1000);
 
@@ -8715,6 +9395,17 @@ namespace Platform.Sportsbook.API.Repository
         {
             try
             {
+                var maintenance = GetMaintenance();
+
+                if (maintenance.isMa)
+                {
+                    return new BaseResponseDTO<bool>
+                    {
+                        StatusCode = StatusCode.Maintenance,
+                        Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                    };
+                }
+
                 var marketGroup = await _sportsbookContext.ClientMarketTemplateGroup.FirstOrDefaultAsync(f => f.ClientId == request.ClientId && f.SportId == request.SportId && f.FixtureStatusId == request.FixtureStatusId && f.Id == request.MarketTemplateGroup.MarketTemplateGroupId);
 
                 if (marketGroup != null)
@@ -8745,6 +9436,17 @@ namespace Platform.Sportsbook.API.Repository
         {
             try
             {
+                var maintenance = GetMaintenance();
+
+                if (maintenance.isMa)
+                {
+                    return new BaseResponseDTO<ClientMarketTemplateGroupResponseDTO>
+                    {
+                        StatusCode = StatusCode.Maintenance,
+                        Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                    };
+                }
+
                 _sportsbookContext.Database.ExecuteSqlRaw("CopyClientMarketTemplateGroup {0}, {1}, {2}, {3}, {4}, {5}",
                         request.ClientId.ToString(), request.SportId, request.FixtureStatusId, request.CopyToClientId.ToString(), request.CopyToSportId, request.CopyToFixtureStatusId);
 
@@ -8793,6 +9495,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>> GetMarketTemplatePlayerProps(MarketTemplatePlayerPropsRequestDTO request)
         {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
             var result = GetMarketTemplatePlayerProps();
 
             if (request.SportId != 0)
@@ -8858,44 +9571,6 @@ namespace Platform.Sportsbook.API.Repository
                     Value = s.Value
                 }).ToList()
             };
-        }
-
-        public async Task<BaseResponseDTO<bool>> GetMaintenance()
-        {
-            var key = $"mtnn";
-
-            var cache = _memCache.GetCache< BaseResponseDTO<bool>>(key);
-
-            if (cache != null)
-                return cache;
-
-            var maintenanceFilter = Builders<Maintenance>.Filter.Where(c => c.ma == "maintenance");
-            var maintenance = await primaryMaintenanceCollection.Find(maintenanceFilter).FirstOrDefaultAsync();
-
-            var response = new BaseResponseDTO<bool>();
-
-            if (maintenance.isMa)
-            {
-                response = new BaseResponseDTO<bool>
-                {
-                    StatusCode = StatusCode.Maintenance,
-                    Message = StatusCode.Maintenance.ToString(),
-                    Result = maintenance.isMa
-                };
-            }
-            else
-            {
-                response = new BaseResponseDTO<bool>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = maintenance.isMa
-                };
-            }
-
-            _memCache.AddOrUpdateCache(key, response, DateTimeOffset.UtcNow.AddMinutes(30));
-
-            return response;
         }
 
         private string GetSportName(string name, List<SportTranslationMDB> translations, LanguageCode languageCode)
@@ -9858,6 +10533,18 @@ namespace Platform.Sportsbook.API.Repository
         private List<Translation> GetTranslations()
         {
             return _memCache.GetCache("tr", () => _sportsbookContext.Translation.AsNoTracking().ToList(), 24);
+        }
+
+        private Maintenance GetMaintenance()
+        {
+            return _memCache.GetCache("mtnn", () =>
+            {
+
+                var maintenanceFilter = Builders<Maintenance>.Filter.Where(c => c.ma == "maintenance");
+                var maintenance = primaryMaintenanceCollection.Find(maintenanceFilter).FirstOrDefault();
+
+                return maintenance;
+            }, 24);
         }
 
         private bool IsBetBuilder(int sportId, int fixtureTypeId, int fixtureStatusId, List<BetBuilderMarketTemplates> betBuilderMarketTemplates)

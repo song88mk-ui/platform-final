@@ -16,7 +16,6 @@ namespace Platform.API.Controllers
 
         public InternalController(IPlatformRepository platformRepository)
         {
-            //
             _platformRepository = platformRepository;
         }
 
@@ -28,6 +27,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -52,6 +52,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -66,6 +67,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -83,6 +85,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -100,6 +103,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -114,6 +118,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -129,6 +134,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -143,6 +149,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -157,6 +164,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -171,6 +179,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -185,6 +194,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -195,7 +205,7 @@ namespace Platform.API.Controllers
         public async Task<IActionResult> GetClientAllLeagues([FromQuery] BackofficeClientAllLeaguesRequestDTO request2)
         {
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
-            
+
             var request = new TopLeaguesRequest
             {
                 SportId = request2.SportId
@@ -206,6 +216,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -228,6 +239,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -242,6 +254,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -256,6 +269,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -268,7 +282,7 @@ namespace Platform.API.Controllers
 
         //    switch (result.StatusCode)
         //    {
-        //        case Shared.Enums.StatusCode.Success:
+        //        case Shared.Enums.StatusCode.Success: case Shared.Enums.StatusCode.Maintenance:
         //            return Ok(result);
         //        default:
         //            return BadRequest(result);
@@ -283,6 +297,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -297,6 +312,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -311,6 +327,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -325,6 +342,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -339,6 +357,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -353,6 +372,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -367,6 +387,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);
@@ -381,6 +402,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);

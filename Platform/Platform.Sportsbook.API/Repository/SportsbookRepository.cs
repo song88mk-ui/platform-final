@@ -8860,11 +8860,11 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
-        public async Task<BaseResponseDTO<MaintenanceResponseDTO>> GetMaintenance()
+        public async Task<BaseResponseDTO<bool>> GetMaintenance()
         {
             var key = $"mtnn";
 
-            var cache = _memCache.GetCache< BaseResponseDTO<MaintenanceResponseDTO>>(key);
+            var cache = _memCache.GetCache< BaseResponseDTO<bool>>(key);
 
             if (cache != null)
                 return cache;
@@ -8872,16 +8872,26 @@ namespace Platform.Sportsbook.API.Repository
             var maintenanceFilter = Builders<Maintenance>.Filter.Where(c => c.ma == "maintenance");
             var maintenance = await primaryMaintenanceCollection.Find(maintenanceFilter).FirstOrDefaultAsync();
 
-            var response = new BaseResponseDTO<MaintenanceResponseDTO>
+            var response = new BaseResponseDTO<bool>();
+
+            if (maintenance.isMa)
             {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = new MaintenanceResponseDTO
+                response = new BaseResponseDTO<bool>
                 {
-                    IsMaintenance = maintenance.isMa,
-                    IsBetStop = maintenance.isBeSt
-                }
-            };
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString(),
+                    Result = maintenance.isMa
+                };
+            }
+            else
+            {
+                response = new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = maintenance.isMa
+                };
+            }
 
             _memCache.AddOrUpdateCache(key, response, DateTimeOffset.UtcNow.AddMinutes(30));
 

@@ -2000,6 +2000,7 @@ namespace Platform.API.Controllers
             switch (result.StatusCode)
             {
                 case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
                     return Ok(result);
                 default:
                     return BadRequest(result);

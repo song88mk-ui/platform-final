@@ -86,7 +86,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<ESportConfigResponseDTO>> GetESportConfig(string clientId, string operatorToken, string langCode);
         Task<BaseResponseDTO<CasinoBetHistoryResponseDTO>> GetCasinoBetHistory(string apiKey, string clientId, string langCode, string operatorToken, BetHistoryRequest request);
         Task<BaseResponseDTO<List<TranslationResponseDTO>>> GetTranslationByLanguageCode(string apiKey, string clientId, string langCode);
-        Task<BaseResponseDTO<MaintenanceResponseDTO>> GetMaintenance(string apiKey, string clientId);
+        Task<BaseResponseDTO<bool>> GetMaintenance(string apiKey, string clientId);
 
     }
 }

@@ -4288,13 +4288,13 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.GetTranslationByLanguageCode(request);
         }
 
-        public async Task<BaseResponseDTO<MaintenanceResponseDTO>> GetMaintenance(string apiKey, string clientId)
+        public async Task<BaseResponseDTO<bool>> GetMaintenance(string apiKey, string clientId)
         {
             var clientResponse = await GetClient(clientId);
 
             if (clientResponse.StatusCode != StatusCode.Success)
             {
-                return new BaseResponseDTO<MaintenanceResponseDTO>
+                return new BaseResponseDTO<bool>
                 {
                     StatusCode = clientResponse.StatusCode,
                     Message = clientResponse.Message

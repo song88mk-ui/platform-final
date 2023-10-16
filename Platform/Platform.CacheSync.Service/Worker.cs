@@ -65,7 +65,7 @@ namespace Platform.CacheSync.Service
                         break;
                     case "OnMaintenance":
                         var maintenance = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
-                        _cacheSyncRepository.ProcessUpdateUserFavorites(userFavorite);
+                        _cacheSyncRepository.ProcessUpdateUserFavorites(maintenance);
                         break;
                 }
             }

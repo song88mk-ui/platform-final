@@ -9559,6 +9559,11 @@ namespace Platform.Sportsbook.API.Repository
             var languageCode = request.LanguageCode.ToString().ToUpper();
             var translations = GetTranslations().Where(c => c.LanguageCode == languageCode).ToList();
 
+            if (translations.Count == 0)
+            {
+                translations = GetTranslations().Where(c => c.LanguageCode == "EN").ToList();
+            }
+
             return new BaseResponseDTO<List<TranslationResponseDTO>>
             {
                 StatusCode = StatusCode.Success,

@@ -9568,8 +9568,7 @@ namespace Platform.Sportsbook.API.Repository
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = translations.Where(c => c.LanguageCode == languageCode)
-                .Select(s => new TranslationResponseDTO
+                Result = translations.Select(s => new TranslationResponseDTO
                 {
                     LanguageCode = s.LanguageCode,
                     Name = s.Name,

@@ -9557,24 +9557,43 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<List<TranslationResponseDTO>>> GetTranslationByLanguageCode(TranslationRequestDTO request)
         {
             var languageCode = request.LanguageCode.ToString().ToUpper();
-            var translations = GetTranslations().Where(c => c.LanguageCode == languageCode).ToList();
+            var key = $"tr-{languageCode}";
 
-            if (translations.Count == 0)
-            {
-                translations = GetTranslations().Where(c => c.LanguageCode == "EN").ToList();
-            }
+            var cache = _memCache.GetCache<BaseResponseDTO<List<TranslationResponseDTO>>>(key);
 
-            return new BaseResponseDTO<List<TranslationResponseDTO>>
+            if (cache != null)
+                return cache;
+
+            var translations = GetTranslations();
+
+            var englishTranslations = translations.Where(c => c.LanguageCode == "EN").ToList();
+            var refTranslations = translations.Where(c => c.LanguageCode == languageCode).ToList();
+
+            var finalTranslations = englishTranslations.GroupJoin(refTranslations,
+                en => en.Name,
+                la => la.Name,
+                (english, language) => new { english, language })
+                .SelectMany(s => s.language.DefaultIfEmpty(),
+                (left, right) => new TranslationResponseDTO
+                { 
+                    LanguageCode = languageCode,
+                    Name = left.english.Name,
+                    Value = right != null ? right.Value : left.english.Value
+                }).ToList();
+
+            var result = new BaseResponseDTO<List<TranslationResponseDTO>>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = translations.Select(s => new TranslationResponseDTO
-                {
-                    LanguageCode = s.LanguageCode,
-                    Name = s.Name,
-                    Value = s.Value
-                }).ToList()
+                Result = finalTranslations
             };
+
+            if (refTranslations.Count > 0)
+            {
+                _memCache.AddOrUpdateCache(key, result, 24);
+            }
+
+            return result;
         }
 
         private string GetSportName(string name, List<SportTranslationMDB> translations, LanguageCode languageCode)

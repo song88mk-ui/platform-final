@@ -1657,14 +1657,16 @@ namespace Platform.Sportsbook.API.Repository
 
             var userFavorites = new List<UserFavoriteDTO>();
 
-            var favoriteIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.League).Select(s => $"{s.SportId}-{s.Id}").Distinct().ToList();
+            var leagues = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.League);
+            var leagueIds = leagues.Select(s => Convert.ToInt32(s.Id)).Distinct().ToList();
+            var userfavoriteKeys = leagues.Select(s => $"{s.SportId}-{s.Id}").Distinct().ToList();
 
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
             var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
 
-            if (favoriteIds.Count() > 0)
+            if (leagueIds.Count() > 0)
             {
-                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && favoriteIds.Contains($"{c.SpId}-{c.LeId}"));
+                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && leagueIds.Contains(c.LeId));
                 var tempLeagueResult = fixtureCollection.Find(leagueFilter).ToListAsync();
 
                 var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
@@ -1675,7 +1677,7 @@ namespace Platform.Sportsbook.API.Repository
                 var leagueResult = tempLeagueResult.Result;
 
                 if (IsOEEnable(request.ClientCode))
-                    leagueResult = leagueResult.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
+                    leagueResult = leagueResult.Where(f => userfavoriteKeys.Contains($"{f.SpId}-{f.LeId}") && (f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright)).ToList();
 
                 var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
@@ -2159,7 +2161,7 @@ namespace Platform.Sportsbook.API.Repository
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result =  new UserFavoriteResponseDTO
+                Result = new UserFavoriteResponseDTO
                 {
                     Favorites = result
                 }
@@ -9508,7 +9510,7 @@ namespace Platform.Sportsbook.API.Repository
                 (english, language) => new { english, language })
                 .SelectMany(s => s.language.DefaultIfEmpty(),
                 (left, right) => new TranslationResponseDTO
-                { 
+                {
                     LanguageCode = languageCode,
                     Name = left.english.Name,
                     Value = right != null ? right.Value : left.english.Value
@@ -9539,29 +9541,32 @@ namespace Platform.Sportsbook.API.Repository
                 return null;
             }
 
-            var favoriteIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.League).Select(s => $"{s.SportId}-{s.Id}").Distinct().ToList();
+            var leagues = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.League);
+            var leagueIds = leagues.Select(s => Convert.ToInt32(s.Id)).Distinct().ToList();
+            var userfavoriteKeys = leagues.Select(s => $"{s.SportId}-{s.Id}").Distinct().ToList();
 
-            if (favoriteIds.Count > 0)
+            if (leagueIds.Count > 0)
             {
-                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && favoriteIds.Contains($"{c.SpId}-{c.LeId}"));
-                var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
-                if (IsOEEnable(clientCode))
-                    leagueResult = leagueResult.Where(f => f.ClCo.Contains(clientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
+                    var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && leagueIds.Contains(c.LeId));
+                    var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
 
-                foreach (var item in leagueResult)
-                {
-                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.LeId.ToString())) continue;
+                    if (IsOEEnable(clientCode))
+                        leagueResult = leagueResult.Where(f => userfavoriteKeys.Contains($"{f.SpId}-{f.LeId}") && (f.ClCo.Contains(clientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright)).ToList();
 
-                    result.Add(new UserFavoriteDTO
+                    foreach (var item in leagueResult)
                     {
-                        SportId = item.SpId,
-                        SportName = GetSportName(item.SpNa, item.SpNaTr, languageCode),
-                        HierarchyId = (int)UserFavoriteHierarchy.League,
-                        HierarchyName = UserFavoriteHierarchy.League.ToString(),
-                        Id = item.LeId.ToString(),
-                        Name = GetLeagueName(item.LeNa, item.LeNaTr, languageCode)
-                    });
-                }
+                        if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.LeId.ToString())) continue;
+
+                        result.Add(new UserFavoriteDTO
+                        {
+                            SportId = item.SpId,
+                            SportName = GetSportName(item.SpNa, item.SpNaTr, languageCode),
+                            HierarchyId = (int)UserFavoriteHierarchy.League,
+                            HierarchyName = UserFavoriteHierarchy.League.ToString(),
+                            Id = item.LeId.ToString(),
+                            Name = GetLeagueName(item.LeNa, item.LeNaTr, languageCode)
+                        });
+                    }
             }
 
             var fixtureIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.Fixture).Select(s => Convert.ToInt64(s.Id)).Distinct().ToList();

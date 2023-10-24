@@ -37,6 +37,7 @@ namespace Platform.Shared.Models
         public Guid ClientId { get; set; }
         public string ClientCode { get; set; }
         public string UserId { get; set; }
+        public int SportId { get; set; }
         public string Id { get; set; }
         public UserFavoriteHierarchy UserFavoriteHierarchy { get; set; }
         public LanguageCode LanguageCode { get; set; }

@@ -1339,10 +1339,10 @@ namespace Platform.Sportsbook.API.Repository
                             var activeSelections = marketSelections.Where(c => c.MaId == market.MaId && c.IsAc == true && c.Od > 0m).ToList();
                             var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-							if (activeSelections.Count == 1)
-								margin = (Math.Round(marketSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+                            if (activeSelections.Count == 1)
+                                margin = (Math.Round(marketSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-							clientOdds = GetClientOdds(fixture.SpId, activeSelections.Count, margin, marketSelections, market.ClCoMa, request.ClientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == fixture.SpId).ToList());
+                            clientOdds = GetClientOdds(fixture.SpId, activeSelections.Count, margin, marketSelections, market.ClCoMa, request.ClientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == fixture.SpId).ToList());
                         }
 
                         foreach (var selection in marketSelections)
@@ -1657,14 +1657,14 @@ namespace Platform.Sportsbook.API.Repository
 
             var userFavorites = new List<UserFavoriteDTO>();
 
-            var leagues = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.League).Select(s => Convert.ToInt32(s.Id)).Distinct().ToList();
+            var favoriteIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.League).Select(s => $"{s.SportId}-{s.Id}").Distinct().ToList();
 
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
             var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
 
-            if (leagues.Count > 0)
+            if (favoriteIds.Count() > 0)
             {
-                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && leagues.Contains(c.LeId));
+                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && favoriteIds.Contains($"{c.SpId}-{c.LeId}"));
                 var tempLeagueResult = fixtureCollection.Find(leagueFilter).ToListAsync();
 
                 var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
@@ -1673,6 +1673,7 @@ namespace Platform.Sportsbook.API.Repository
                 await Task.WhenAll(tempLeagueResult, tempBettingStatus);
 
                 var leagueResult = tempLeagueResult.Result;
+
                 if (IsOEEnable(request.ClientCode))
                     leagueResult = leagueResult.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
 
@@ -1994,8 +1995,6 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var result = new List<UserFavoriteDTO>();
-
             if (request.UserFavoriteHierarchy == UserFavoriteHierarchy.League)
             {
                 var leagueIdDataTypeTest = int.TryParse(request.Id, out int tempLeagueId);
@@ -2026,13 +2025,14 @@ namespace Platform.Sportsbook.API.Repository
                 }
             }
 
-            var favorite = await _sportsbookContext.UserFavorite.FindAsync($"{request.ClientCode}-{request.UserId}", request.Id);
+            var favorite = await _sportsbookContext.UserFavorite.FindAsync($"{request.ClientCode}-{request.UserId}", request.SportId, request.Id);
 
             if (favorite == null)
             {
                 _sportsbookContext.UserFavorite.Add(new UserFavorite
                 {
                     UserId = $"{request.ClientCode}-{request.UserId}",
+                    SportId = request.SportId,
                     Id = request.Id,
                     HierarchyId = (int)request.UserFavoriteHierarchy
                 });
@@ -2054,9 +2054,9 @@ namespace Platform.Sportsbook.API.Repository
                 });
             }
 
-            var favorites = await _sportsbookContext.UserFavorite.Where(c => c.UserId == $"{request.ClientCode}-{request.UserId}").ToListAsync();
+            var result = await GetUserFavorite(request.ClientCode, request.UserId, request.LanguageCode);
 
-            if (favorites.Count == 0)
+            if (result == null)
             {
                 return new BaseResponseDTO<UserFavoriteResponseDTO>
                 {
@@ -2066,61 +2066,13 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var leagueIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.League).Select(s => Convert.ToInt32(s.Id)).Distinct().ToList();
-
-            if (leagueIds.Count > 0)
-            {
-                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && leagueIds.Contains(c.LeId));
-                var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
-
-                foreach (var item in leagueResult)
-                {
-                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.LeId.ToString())) continue;
-
-                    result.Add(new UserFavoriteDTO
-                    {
-                        SportId = item.SpId,
-                        SportName = GetSportName(item.SpNa, item.SpNaTr, request.LanguageCode),
-                        HierarchyId = (int)UserFavoriteHierarchy.League,
-                        HierarchyName = UserFavoriteHierarchy.League.ToString(),
-                        Id = item.LeId.ToString(),
-                        Name = GetLeagueName(item.LeNa, item.LeNaTr, request.LanguageCode)
-                    });
-                }
-            }
-
-            var fixtureIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.Fixture).Select(s => Convert.ToInt64(s.Id)).Distinct().ToList();
-
-            if (fixtureIds.Count > 0)
-            {
-                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && fixtureIds.Contains(c.FiId));
-                var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-                if (IsOEEnable(request.ClientCode))
-                    fixtureResult = fixtureResult.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
-
-                foreach (var item in fixtureResult)
-                {
-                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.FiId.ToString())) continue;
-
-                    result.Add(new UserFavoriteDTO
-                    {
-                        SportId = item.SpId,
-                        SportName = GetSportName(item.SpNa, item.SpNaTr, request.LanguageCode),
-                        HierarchyId = (int)UserFavoriteHierarchy.Fixture,
-                        HierarchyName = UserFavoriteHierarchy.Fixture.ToString(),
-                        Id = item.FiId.ToString(),
-                        Name = GetFixtureName(item.FiNa, item.FiNaTr, request.LanguageCode)
-                    });
-                }
-            }
-
             return new BaseResponseDTO<UserFavoriteResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
                 Result = new UserFavoriteResponseDTO
                 {
-                    Favorites = result.OrderBy(o => o.Name).ToList()
+                    Favorites = result
                 }
             };
         }
@@ -2137,9 +2089,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var result = new List<UserFavoriteDTO>();
-
-            var favorite = await _sportsbookContext.UserFavorite.FindAsync($"{request.ClientCode}-{request.UserId}", request.Id);
+            var favorite = await _sportsbookContext.UserFavorite.FindAsync($"{request.ClientCode}-{request.UserId}", request.SportId, request.Id);
 
             if (favorite != null)
             {
@@ -2159,6 +2109,26 @@ namespace Platform.Sportsbook.API.Repository
                     RoutingKey = "r.oe.cachesync.onupdateuserfavorites",
                     Payload = JsonSerializer.Serialize(payload)
                 });
+
+                await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO
+                {
+                    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                    MessageType = "OnRemoveUserFavorites",
+                    RoutingKey = $"r.oe.sb.engine.onvisitfavorites.{request.ClientCode.ToLower()}",
+                    Payload = JsonSerializer.Serialize(JsonSerializer.Serialize(new
+                    {
+                        UserId = request.UserId,
+                        Favorites = new List<UserFavorite>() {
+                            new UserFavorite()
+                            {
+                                UserId = favorite.UserId,
+                                SportId = favorite.SportId,
+                                Id = favorite.Id,
+                                HierarchyId = favorite.HierarchyId
+                            }
+                        }
+                    }))
+                });
             }
 
             var favorites = await _sportsbookContext.UserFavorite.Where(c => c.UserId == $"{request.ClientCode}-{request.UserId}").ToListAsync();
@@ -2173,62 +2143,25 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var leagueIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.League).Select(s => Convert.ToInt32(s.Id)).Distinct().ToList();
+            var result = await GetUserFavorite(request.ClientCode, request.UserId, request.LanguageCode);
 
-            if (leagueIds.Count > 0)
+            if (result == null)
             {
-                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && leagueIds.Contains(c.LeId));
-                var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
-                if (IsOEEnable(request.ClientCode))
-                    leagueResult = leagueResult.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
-                foreach (var item in leagueResult)
+                return new BaseResponseDTO<UserFavoriteResponseDTO>
                 {
-                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.LeId.ToString())) continue;
-
-                    result.Add(new UserFavoriteDTO
-                    {
-                        SportId = item.SpId,
-                        SportName = GetSportName(item.SpNa, item.SpNaTr, request.LanguageCode),
-                        HierarchyId = (int)UserFavoriteHierarchy.League,
-                        HierarchyName = UserFavoriteHierarchy.League.ToString(),
-                        Id = item.LeId.ToString(),
-                        Name = GetLeagueName(item.LeNa, item.LeNaTr, request.LanguageCode)
-                    });
-                }
-            }
-
-            var fixtureIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.Fixture).Select(s => Convert.ToInt64(s.Id)).Distinct().ToList();
-
-            if (fixtureIds.Count > 0)
-            {
-                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && fixtureIds.Contains(c.FiId));
-                var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-                if (IsOEEnable(request.ClientCode))
-                    fixtureResult = fixtureResult.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
-
-                foreach (var item in fixtureResult)
-                {
-                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.FiId.ToString())) continue;
-
-                    result.Add(new UserFavoriteDTO
-                    {
-                        SportId = item.SpId,
-                        SportName = GetSportName(item.SpNa, item.SpNaTr, request.LanguageCode),
-                        HierarchyId = (int)UserFavoriteHierarchy.Fixture,
-                        HierarchyName = UserFavoriteHierarchy.Fixture.ToString(),
-                        Id = item.FiId.ToString(),
-                        Name = GetFixtureName(item.FiNa, item.FiNaTr, request.LanguageCode)
-                    });
-                }
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new UserFavoriteResponseDTO()
+                };
             }
 
             return new BaseResponseDTO<UserFavoriteResponseDTO>
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
-                Result = new UserFavoriteResponseDTO
+                Result =  new UserFavoriteResponseDTO
                 {
-                    Favorites = result.OrderBy(o => o.Name).ToList()
+                    Favorites = result
                 }
             };
         }
@@ -5714,10 +5647,10 @@ namespace Platform.Sportsbook.API.Repository
                             var activeSelections = tempSelections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
                             var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-							if (activeSelections.Count == 1)
-								margin = (Math.Round(tempSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+                            if (activeSelections.Count == 1)
+                                margin = (Math.Round(tempSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-							clientOdds = GetClientOdds(sportId, activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
+                            clientOdds = GetClientOdds(sportId, activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
                         }
 
                         result.Add(new MarketLimitedDTO
@@ -5762,7 +5695,7 @@ namespace Platform.Sportsbook.API.Repository
                         Selections = filteredSelections.Select(s => new SelectionLimitedDTO
                         {
                             SelectionId = s.SeId.ToString(),
-                            SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode)  : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
+                            SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
                             Odds = s.Od.ToString("0.00"),
                             //MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                             //HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -5837,10 +5770,10 @@ namespace Platform.Sportsbook.API.Repository
                             var activeSelections = tempSelections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
                             var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-							if (activeSelections.Count == 1)
-								margin = (Math.Round(tempSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+                            if (activeSelections.Count == 1)
+                                margin = (Math.Round(tempSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-							clientOdds = GetClientOdds(sportId, activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
+                            clientOdds = GetClientOdds(sportId, activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
                         }
 
                         var selectionsToAdd = new List<SelectionDTO>();
@@ -6025,10 +5958,10 @@ namespace Platform.Sportsbook.API.Repository
                             var activeSelections = tempSelections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
                             var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-							if (activeSelections.Count == 1)
-								margin = (Math.Round(tempSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+                            if (activeSelections.Count == 1)
+                                margin = (Math.Round(tempSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-							clientOdds = GetClientOdds(sportId, activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
+                            clientOdds = GetClientOdds(sportId, activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
                         }
 
                         result.Add(new BoostedMarketDTO
@@ -6181,10 +6114,10 @@ namespace Platform.Sportsbook.API.Repository
                             var activeSelections = tempSelections.Where(c => c.IsAc == true && c.Od > 0m).ToList();
                             var margin = (Math.Round(activeSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-							if (activeSelections.Count == 1)
-								margin = (Math.Round(tempSelections.Sum(s => 100 / s.Od)) - 100) / 100;
+                            if (activeSelections.Count == 1)
+                                margin = (Math.Round(tempSelections.Sum(s => 100 / s.Od)) - 100) / 100;
 
-							clientOdds = GetClientOdds(sportId, activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
+                            clientOdds = GetClientOdds(sportId, activeSelections.Count, margin, tempSelections, market.ClCoMa, clientCode, market.MaTeId, marketTemplateGroupPlayerProps.Where(c => c.SportId == sportId).ToList());
                         }
 
                         var selectionsToAdd = new List<SelectionDTO>();
@@ -7659,7 +7592,7 @@ namespace Platform.Sportsbook.API.Repository
                     SortOrder = s.SortOrder + 1000
                 }).ToList();
 
-                if(tierResult.Any())
+                if (tierResult.Any())
                     result.AddRange(tierResult);
             }
 
@@ -9595,7 +9528,69 @@ namespace Platform.Sportsbook.API.Repository
 
             return result;
         }
+        private async Task<List<UserFavoriteDTO>> GetUserFavorite(string clientCode, string userId, LanguageCode languageCode)
+        {
+            var result = new List<UserFavoriteDTO>();
 
+            var favorites = await _sportsbookContext.UserFavorite.Where(c => c.UserId == $"{clientCode}-{userId}").ToListAsync();
+
+            if (favorites.Count == 0)
+            {
+                return null;
+            }
+
+            var favoriteIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.League).Select(s => $"{s.SportId}-{s.Id}").Distinct().ToList();
+
+            if (favoriteIds.Count > 0)
+            {
+                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && favoriteIds.Contains($"{c.SpId}-{c.LeId}"));
+                var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
+                if (IsOEEnable(clientCode))
+                    leagueResult = leagueResult.Where(f => f.ClCo.Contains(clientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
+
+                foreach (var item in leagueResult)
+                {
+                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.LeId.ToString())) continue;
+
+                    result.Add(new UserFavoriteDTO
+                    {
+                        SportId = item.SpId,
+                        SportName = GetSportName(item.SpNa, item.SpNaTr, languageCode),
+                        HierarchyId = (int)UserFavoriteHierarchy.League,
+                        HierarchyName = UserFavoriteHierarchy.League.ToString(),
+                        Id = item.LeId.ToString(),
+                        Name = GetLeagueName(item.LeNa, item.LeNaTr, languageCode)
+                    });
+                }
+            }
+
+            var fixtureIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.Fixture).Select(s => Convert.ToInt64(s.Id)).Distinct().ToList();
+
+            if (fixtureIds.Count > 0)
+            {
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && fixtureIds.Contains(c.FiId));
+                var fixtureResult = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+                if (IsOEEnable(clientCode))
+                    fixtureResult = fixtureResult.Where(f => f.ClCo.Contains(clientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
+
+                foreach (var item in fixtureResult)
+                {
+                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.FiId.ToString())) continue;
+
+                    result.Add(new UserFavoriteDTO
+                    {
+                        SportId = item.SpId,
+                        SportName = GetSportName(item.SpNa, item.SpNaTr, languageCode),
+                        HierarchyId = (int)UserFavoriteHierarchy.Fixture,
+                        HierarchyName = UserFavoriteHierarchy.Fixture.ToString(),
+                        Id = item.FiId.ToString(),
+                        Name = GetFixtureName(item.FiNa, item.FiNaTr, languageCode)
+                    });
+                }
+            }
+
+            return result.OrderBy(o => o.Name).ToList();
+        }
         private string GetSportName(string name, List<SportTranslationMDB> translations, LanguageCode languageCode)
         {
             if (translations == null)
@@ -9740,7 +9735,7 @@ namespace Platform.Sportsbook.API.Repository
 
                 return selectionName;
             }
-            
+
             return result.SeNa;
         }
         private string GetBoostedSelectionName(string clientCode, string selectionName, List<ClientBoostedSelectionNameMDB> boostedSelectionNames, List<ClientBoostedSelectionNameTranslationMDB> translations, LanguageCode languageCode)

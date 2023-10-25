@@ -1826,8 +1826,12 @@ namespace Platform.Sportsbook.API.Repository
 
                         if (betBuilderSportIds.Contains(item.SpId) && item.FiTyId == (int)FixtureType.Match)
                         {
-                            filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == item.SpId).ToList();
-                            isBetBuilder = true;
+                            if (item.FiStId == (int)FixtureStatus.Prematch)
+                                filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == item.SpId && c.Prematch == true).ToList();
+                            else if (item.FiStId == (int)FixtureStatus.Live)
+                                filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == item.SpId && c.Live == true).ToList();
+
+                            isBetBuilder = filteredBetBuilderMarketTemplates.Any() ? true : false;
                         }
 
                         result.Add(new FixtureDTO

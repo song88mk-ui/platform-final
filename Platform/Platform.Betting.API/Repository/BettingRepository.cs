@@ -1,6 +1,7 @@
 ﻿using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
@@ -2839,6 +2840,31 @@ namespace Platform.Betting.API.Repository
                 Result = payload
             };
         }
+
+
+        public async Task<BaseResponseDTO<BetStatus>> GetBetStatus(BetStatusRequestDTO request)
+        {
+            try
+            {
+                var bet = _bettingContext.Bet.Find(request.BetId);
+
+                return new BaseResponseDTO<BetStatus>
+                {
+                    StatusCode = StatusCode.Success,
+                    Result = (BetStatus)Enum.Parse(typeof(BetStatus), bet.BetStatusName)
+                };
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<BetStatus>
+                {
+                    StatusCode = StatusCode.Error, 
+                    Message = ex.Message
+                };
+            }
+
+        }
+
         private decimal GetMinStake(decimal minStake, decimal exchangeRate, decimal companyShare, string currencyCode)
         {
             List<decimal> minimumStake = new List<decimal>();

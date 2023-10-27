@@ -3841,7 +3841,7 @@ namespace Platform.API.Repository
 
                 result = await _casinoRepository.GetLobbyURL(payload);
             }
-            
+
             if (result.StatusCode == StatusCode.Success)
             {
                 return new BaseResponseDTO<CasinoURLResponseDTO>
@@ -4194,7 +4194,7 @@ namespace Platform.API.Repository
                 IsOddsString = !string.IsNullOrEmpty(_configuration["Custom:IsOddsString"]) && Convert.ToBoolean(_configuration["Custom:IsOddsString"]) == true
             };
 
-            return await _casinoRepository.GetBetHistory(payload);           
+            return await _casinoRepository.GetBetHistory(payload);
         }
 
         public async Task<BaseResponseDTO<ESportConfigResponseDTO>> GetESportConfig(string clientId, string operatorToken, string langCode)
@@ -4288,6 +4288,27 @@ namespace Platform.API.Repository
             };
 
             return await _sportsbookRepository.GetTranslationByLanguageCode(request);
+        }
+
+        public async Task<BaseResponseDTO<BetStatus>> GetBetStatus(string clientId, BetStatusRequest request)
+        {
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<BetStatus>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var payload = new BetStatusRequestDTO()
+            {
+                BetId = request.BetId
+            };
+
+            return await _bettingRepository.GetBetStatus(payload);
         }
 
         private DateTime GetFirstDayOfNextMonth()

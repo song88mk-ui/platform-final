@@ -211,5 +211,19 @@ namespace Platform.Betting.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/bet/status")]
+        public async Task<IActionResult> GetBetStatus([FromBody] BetStatusRequestDTO request)
+        {
+            var result = await _bettingRepository.GetBetStatus(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

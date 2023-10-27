@@ -23,5 +23,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<ResendSettlementResponseDTO>> ResendSettlement(ResendSettlementMessageRequestDTO request);
         Task<BaseResponseDTO<StatusCode>> ProcessParlayBonus(ParlayBonusRequestDTO request);
         Task<BaseResponseDTO<ParlayBonusResponseDTO>> GetParlayBonus(GetParlayBonusRequestDTO request);
+        Task<BaseResponseDTO<BetStatus>> GetBetStatus(BetStatusRequestDTO request);
     }
 }

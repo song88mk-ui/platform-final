@@ -211,7 +211,7 @@ namespace Platform.Betting.API.Controllers
                     return BadRequest(result);
             }
         }
-
+        //
         [HttpPost("v1/bet/status")]
         public async Task<IActionResult> GetBetStatus([FromBody] BetStatusRequestDTO request)
         {

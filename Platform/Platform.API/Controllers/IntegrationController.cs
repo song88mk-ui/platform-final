@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 
 namespace Platform.API.Controllers
 {
-    //
     [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(APIKeyFilter))]
     public class IntegrationController : ControllerBase
     {

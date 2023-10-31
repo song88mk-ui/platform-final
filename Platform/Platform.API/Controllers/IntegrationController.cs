@@ -284,8 +284,7 @@ namespace Platform.API.Controllers
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode.ToString() }
                             };
 
             _telemetryClient.TrackEvent("e:v1/bet/status", properties);

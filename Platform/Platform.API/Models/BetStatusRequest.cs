@@ -4,6 +4,6 @@ namespace Platform.API.Models
 {
     public class BetStatusRequest
     {
-        public Guid BetId { get; set; }
+        public string BetId { get; set; }
     }
 }

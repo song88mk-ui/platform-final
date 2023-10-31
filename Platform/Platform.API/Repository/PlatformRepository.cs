@@ -4292,6 +4292,17 @@ namespace Platform.API.Repository
 
         public async Task<BaseResponseDTO<BetStatus>> GetBetStatus(string clientId, BetStatusRequest request)
         {
+            var isGuid = Guid.TryParse(request.BetId, out Guid BetId);
+
+            if (!isGuid)
+            {
+                return new BaseResponseDTO<BetStatus>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString()
+                };
+            }
+
             var clientResponse = await GetClient(clientId);
 
             if (clientResponse.StatusCode != StatusCode.Success)
@@ -4305,7 +4316,7 @@ namespace Platform.API.Repository
 
             var payload = new BetStatusRequestDTO()
             {
-                BetId = request.BetId
+                BetId = BetId
             };
 
             return await _bettingRepository.GetBetStatus(payload);

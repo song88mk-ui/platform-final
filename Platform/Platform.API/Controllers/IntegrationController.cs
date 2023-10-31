@@ -143,7 +143,7 @@ namespace Platform.API.Controllers
 
         [HttpPost("v2/bet/placement")]
         public async Task<IActionResult> PlaceBet([FromBody] BetRequest request)
-        {//
+        {
             var ipAddressV4 = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var ipAddressV6 = HttpContext.Request.Headers["Cf-Connecting-IPv6"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();

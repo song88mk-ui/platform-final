@@ -1659,7 +1659,10 @@ namespace Platform.Sportsbook.API.Repository
 
             var leagues = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.League);
             var leagueIds = leagues.Select(s => Convert.ToInt32(s.Id)).Distinct().ToList();
-            var userfavoriteKeys = leagues.Select(s => $"{s.SportId}-{s.Id}").Distinct().ToList();
+            // Temp
+            //var userfavoriteKeys = leagues.Select(s => $"{s.SportId}-{s.Id}").Distinct().ToList();
+            var userfavoriteKeys = leagues.Select(s => $"{s.Id}").Distinct().ToList();
+
 
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
             var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
@@ -1676,8 +1679,12 @@ namespace Platform.Sportsbook.API.Repository
 
                 var leagueResult = tempLeagueResult.Result;
 
+                // Temp
+                //if (IsOEEnable(request.ClientCode))
+                //    leagueResult = leagueResult.Where(f => userfavoriteKeys.Contains($"{f.SpId}-{f.LeId}") && (f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright)).ToList();
+
                 if (IsOEEnable(request.ClientCode))
-                    leagueResult = leagueResult.Where(f => userfavoriteKeys.Contains($"{f.SpId}-{f.LeId}") && (f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright)).ToList();
+                    leagueResult = leagueResult.Where(f => userfavoriteKeys.Contains($"{f.LeId}") && (f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright)).ToList();
 
                 var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
@@ -2031,14 +2038,15 @@ namespace Platform.Sportsbook.API.Repository
                 }
             }
 
-            var favorite = await _sportsbookContext.UserFavorite.FindAsync($"{request.ClientCode}-{request.UserId}", request.SportId, request.Id);
+            //var favorite = await _sportsbookContext.UserFavorite.FindAsync($"{request.ClientCode}-{request.UserId}", request.SportId, request.Id);
+            var favorite = await _sportsbookContext.UserFavorite.FindAsync($"{request.ClientCode}-{request.UserId}", request.Id);
 
             if (favorite == null)
             {
                 _sportsbookContext.UserFavorite.Add(new UserFavorite
                 {
                     UserId = $"{request.ClientCode}-{request.UserId}",
-                    SportId = request.SportId,
+                    //SportId = request.SportId,
                     Id = request.Id,
                     HierarchyId = (int)request.UserFavoriteHierarchy
                 });
@@ -2095,7 +2103,8 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var favorite = await _sportsbookContext.UserFavorite.FindAsync($"{request.ClientCode}-{request.UserId}", request.SportId, request.Id);
+            //var favorite = await _sportsbookContext.UserFavorite.FindAsync($"{request.ClientCode}-{request.UserId}", request.SportId, request.Id);
+            var favorite = await _sportsbookContext.UserFavorite.FindAsync($"{request.ClientCode}-{request.UserId}", request.Id);
 
             if (favorite != null)
             {
@@ -2128,7 +2137,7 @@ namespace Platform.Sportsbook.API.Repository
                             new UserFavorite()
                             {
                                 UserId = favorite.UserId,
-                                SportId = favorite.SportId,
+                                //SportId = favorite.SportId,
                                 Id = favorite.Id,
                                 HierarchyId = favorite.HierarchyId
                             }
@@ -9547,30 +9556,37 @@ namespace Platform.Sportsbook.API.Repository
 
             var leagues = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.League);
             var leagueIds = leagues.Select(s => Convert.ToInt32(s.Id)).Distinct().ToList();
-            var userfavoriteKeys = leagues.Select(s => $"{s.SportId}-{s.Id}").Distinct().ToList();
+            // Temp
+            //var userfavoriteKeys = leagues.Select(s => $"{s.SportId}-{s.Id}").Distinct().ToList();
+            var userfavoriteKeys = leagues.Select(s => $"{s.Id}").Distinct().ToList();
 
             if (leagueIds.Count > 0)
             {
-                    var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && leagueIds.Contains(c.LeId));
-                    var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
+                var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && leagueIds.Contains(c.LeId));
+                var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
 
-                    if (IsOEEnable(clientCode))
-                        leagueResult = leagueResult.Where(f => userfavoriteKeys.Contains($"{f.SpId}-{f.LeId}") && (f.ClCo.Contains(clientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright)).ToList();
+                // Temp
+                //if (IsOEEnable(clientCode))
+                //leagueResult = leagueResult.Where(f => userfavoriteKeys.Contains($"{f.SpId}-{f.LeId}") && (f.ClCo.Contains(clientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright)).ToList();
 
-                    foreach (var item in leagueResult)
+                if (IsOEEnable(clientCode))
+                    leagueResult = leagueResult.Where(f => userfavoriteKeys.Contains($"{f.LeId}") && (f.ClCo.Contains(clientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright)).ToList();
+
+
+                foreach (var item in leagueResult)
+                {
+                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.LeId.ToString())) continue;
+
+                    result.Add(new UserFavoriteDTO
                     {
-                        if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.LeId.ToString())) continue;
-
-                        result.Add(new UserFavoriteDTO
-                        {
-                            SportId = item.SpId,
-                            SportName = GetSportName(item.SpNa, item.SpNaTr, languageCode),
-                            HierarchyId = (int)UserFavoriteHierarchy.League,
-                            HierarchyName = UserFavoriteHierarchy.League.ToString(),
-                            Id = item.LeId.ToString(),
-                            Name = GetLeagueName(item.LeNa, item.LeNaTr, languageCode)
-                        });
-                    }
+                        SportId = item.SpId,
+                        SportName = GetSportName(item.SpNa, item.SpNaTr, languageCode),
+                        HierarchyId = (int)UserFavoriteHierarchy.League,
+                        HierarchyName = UserFavoriteHierarchy.League.ToString(),
+                        Id = item.LeId.ToString(),
+                        Name = GetLeagueName(item.LeNa, item.LeNaTr, languageCode)
+                    });
+                }
             }
 
             var fixtureIds = favorites.Where(c => c.HierarchyId == (int)UserFavoriteHierarchy.Fixture).Select(s => Convert.ToInt64(s.Id)).Distinct().ToList();

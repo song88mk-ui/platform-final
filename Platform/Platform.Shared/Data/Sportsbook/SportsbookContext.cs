@@ -16,7 +16,8 @@ namespace Platform.Shared.Data.Sportsbook
             modelBuilder.Entity<ClientTopLeague>().HasKey(k => new { k.ClientId, k.SportId, k.SegmentId, k.LeagueId });
             modelBuilder.Entity<TierLeagueOrder>().HasKey(k => new { k.SportId, k.SegmentId, k.LeagueId });
             modelBuilder.Entity<MarketTemplateGroup>().HasKey(k => new { k.SportId, k.FixtureStatusId, k.Id });
-            modelBuilder.Entity<UserFavorite>().HasKey(k => new { k.UserId, k.SportId, k.Id });
+            //modelBuilder.Entity<UserFavorite>().HasKey(k => new { k.UserId, k.SportId, k.Id });
+            modelBuilder.Entity<UserFavorite>().HasKey(k => new { k.UserId, k.Id });
             modelBuilder.Entity<SportGroup>().HasKey(k => new { k.SportGroupId });
             modelBuilder.Entity<SelectorMarketTemplate>().HasKey(k => new { k.SportId, k.MarketTemplateId });
             modelBuilder.Entity<ClientSegmentOrder>().HasKey(k => new { k.ClientId, k.SportId, k.SegmentId });

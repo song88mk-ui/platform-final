@@ -2125,25 +2125,25 @@ namespace Platform.Sportsbook.API.Repository
                     Payload = JsonSerializer.Serialize(payload)
                 });
 
-                await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO
-                {
-                    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
-                    MessageType = "OnRemoveUserFavorites",
-                    RoutingKey = $"r.oe.sb.engine.onvisitfavorites.{request.ClientCode.ToLower()}",
-                    Payload = JsonSerializer.Serialize(JsonSerializer.Serialize(new
-                    {
-                        UserId = request.UserId,
-                        Favorites = new List<UserFavorite>() {
-                            new UserFavorite()
-                            {
-                                UserId = favorite.UserId,
-                                //SportId = favorite.SportId,
-                                Id = favorite.Id,
-                                HierarchyId = favorite.HierarchyId
-                            }
-                        }
-                    }))
-                });
+                //await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO
+                //{
+                //    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                //    MessageType = "OnRemoveUserFavorites",
+                //    RoutingKey = $"r.oe.sb.engine.onvisitfavorites.{request.ClientCode.ToLower()}",
+                //    Payload = JsonSerializer.Serialize(JsonSerializer.Serialize(new
+                //    {
+                //        UserId = request.UserId,
+                //        Favorites = new List<UserFavorite>() {
+                //            new UserFavorite()
+                //            {
+                //                UserId = favorite.UserId,
+                //                SportId = favorite.SportId,
+                //                Id = favorite.Id,
+                //                HierarchyId = favorite.HierarchyId
+                //            }
+                //        }
+                //    }))
+                //});
             }
 
             var favorites = await _sportsbookContext.UserFavorite.Where(c => c.UserId == $"{request.ClientCode}-{request.UserId}").ToListAsync();

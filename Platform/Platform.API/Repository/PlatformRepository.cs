@@ -2602,7 +2602,7 @@ namespace Platform.API.Repository
                 ClientId = clientResponse.Result.ClientId,
                 UserId = authenticationResponse.Result.UserId,
                 ClientCode = clientResponse.Result.ClientCode,
-                //SportId = request.SportId,
+                SportId = request.SportId,
                 Id = request.Id,
                 UserFavoriteHierarchy = request.UserFavoriteHierarchy,
                 LanguageCode = languageCode
@@ -2668,7 +2668,7 @@ namespace Platform.API.Repository
                 ClientId = clientResponse.Result.ClientId,
                 UserId = authenticationResponse.Result.UserId,
                 ClientCode = clientResponse.Result.ClientCode,
-                //SportId = request.SportId,
+                SportId = request.SportId,
                 Id = request.Id,
                 UserFavoriteHierarchy = request.UserFavoriteHierarchy,
                 LanguageCode = languageCode

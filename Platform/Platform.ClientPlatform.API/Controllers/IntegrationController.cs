@@ -21,7 +21,7 @@ namespace Platform.ClientPlatform.API.Controllers
         [HttpGet("v1/sportsbook/topfixtures")]
         public async Task<IActionResult> GetTopFixtures()
         {
-            var result = await _platformRepository.GetClientTopFixtures(ClientId, ApiKey, CountryCode, LanguageCode);
+            var result = await _platformRepository.GetClientTopFixtures(ApiKey, ClientId, CountryCode, LanguageCode);
 
             switch (result.StatusCode)
             {

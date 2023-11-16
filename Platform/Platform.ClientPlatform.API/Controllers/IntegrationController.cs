@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Platform.ClientPlatform.API.ActionFilters;
 using Platform.ClientPlatform.API.Models;
 using Platform.ClientPlatform.API.Repository;
+using Platform.Shared.Enums;
+using System.Collections.Generic;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -36,6 +39,21 @@ namespace Platform.ClientPlatform.API.Controllers
         public async Task<IActionResult> GetActiveFixtures()
         {
             var result = await _platformRepository.GetClientActiveFixtures(ApiKey, ClientId, CountryCode, LanguageCode);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/sportsbook/activefixtures/details")]
+        public async Task<IActionResult> GetFixtureDetails([FromQuery] string fixtureId)
+        {
+
+            var result = await _platformRepository.GetActiveFixtureDetails(ApiKey, ClientId, fixtureId, CountryCode, LanguageCode);
 
             switch (result.StatusCode)
             {

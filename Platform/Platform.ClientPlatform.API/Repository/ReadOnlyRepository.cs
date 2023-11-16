@@ -98,6 +98,43 @@ namespace Platform.ClientPlatform.API.Repository
             }
         }
 
+        public async Task<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>> GetActiveFixtureDetails(string apiKey, string clientId, string fixtureId, string ipCountryCode, string languageCode)
+        {
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
+                _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
+                _httpClient.DefaultRequestHeaders.Add("x-country-code", ipCountryCode);
+                _httpClient.DefaultRequestHeaders.Add("x-language-code", languageCode);
+
+                var response = await _httpClient.GetAsync($"v1/sportsbook/activefixtures/details?fixtureId={fixtureId}");
+
+                if (response.IsSuccessStatusCode)
+                    return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                        return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    else
+                    {
+                        return new BaseResponseDTO<ActiveFixtureDetailsResponseDTO>
+                        {
+                            StatusCode = StatusCode.Error,
+                            Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<ActiveFixtureDetailsResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
+            }
+        }
+
         public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(string apiKey, string clientId, string languageCode, string operatorToken, BetHistoryRequest request)
         {
             try

@@ -85,7 +85,7 @@ namespace Platform.AgentReports.Service
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message.ToString());
+                Console.WriteLine($"{ex.Message}- {ex.StackTrace}");
             }
         }
     }

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace Platform.Sportsbook.API.Controllers
 {
-    //
     [ApiController, EnableCors("AllowAllOrigins")]
     public class SportsbookController : ControllerBase
     {

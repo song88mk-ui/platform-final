@@ -35,7 +35,7 @@ namespace Platform.ClientPlatform.API.Controllers
 
         [HttpGet("v1/sportsbook/activefixtures")]
         public async Task<IActionResult> GetActiveFixtures([FromQuery] ActiveFixturesFilterRequestDTO request)
-        {
+        {//
             var result = await _platformRepository.GetClientActiveFixtures(ApiKey, ClientId, CountryCode, LanguageCode, request);
 
             switch (result.StatusCode)

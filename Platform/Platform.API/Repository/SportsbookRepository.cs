@@ -398,6 +398,7 @@ namespace Platform.API.Repository
                 };
             }
         }
+
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(ActiveFixturesRequestDTO request)
         {
             try

@@ -6,6 +6,7 @@ using Platform.API.ActionFilters;
 using Platform.API.Models;
 using Platform.API.Repository;
 using Platform.Shared.Enums;
+using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -877,7 +878,7 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/activefixtures")]
-        public async Task<IActionResult> GetActiveFixtures()
+        public async Task<IActionResult> GetActiveFixtures([FromQuery] ActiveFixturesFilterRequestDTO request)
         {
             var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();

@@ -1496,7 +1496,7 @@ namespace Platform.API.Repository
                 IpCountryCode = ipCountryCode,
             });
         }
-        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(string apiKey, string clientId, string langCode, string ipCountryCode)
+        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(string apiKey, string clientId, string langCode, string ipCountryCode, ActiveFixturesFilterRequestDTO request)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -1537,6 +1537,11 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode,
                 ClientCode = clientResponse.Result.ClientCode,
                 IPCountryCode = ipCountryCode,
+                Home = request.Home,
+                Away = request.Away,
+                FromFixtureStartDate = request.FromFixtureStartDate,
+                ToFixtureStartDate = request.ToFixtureStartDate,
+                FixtureStatus = request.FixtureStatus,
             });
         }
 

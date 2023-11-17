@@ -24,6 +24,7 @@ namespace Platform.ClientPlatform.API.Repository
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(_configuration["API:PlatformAPIReadOnly"]);
         }
+
         public async Task<BaseResponseDTO<TWResponseDTO>> GetClientTopFixtures(string apiKey, string clientId, string countryCode, string languageCode)
         {
             try
@@ -61,7 +62,7 @@ namespace Platform.ClientPlatform.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(string apiKey, string clientId, string countryCode, string languageCode)
+        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(string apiKey, string clientId, string countryCode, string languageCode, ActiveFixturesFilterRequestDTO request)
         {
             try
             {
@@ -70,7 +71,24 @@ namespace Platform.ClientPlatform.API.Repository
                 _httpClient.DefaultRequestHeaders.Add("x-country-code", countryCode);
                 _httpClient.DefaultRequestHeaders.Add("x-language-code", languageCode);
 
-                var response = await _httpClient.GetAsync($"v1/sportsbook/activefixtures");
+                var queryString = string.Empty;
+                if(request != null)
+                {
+                    if (!string.IsNullOrEmpty(request.Home))
+                        queryString = queryString + $"home={request.Home}&";
+                    if (!string.IsNullOrEmpty(request.Away))
+                        queryString = queryString + $"away={request.Away}&";
+                    if (!string.IsNullOrEmpty(request.FixtureStatus))
+                        queryString = queryString + $"fixtureStatus={request.FixtureStatus}&";
+                    if (request.FromFixtureStartDate != null)
+                        queryString = queryString + $"fromFixtureStartDate={request.FromFixtureStartDate}&";
+                    if (request.ToFixtureStartDate != null)
+                        queryString = queryString + $"toFixtureStartDate={request.ToFixtureStartDate}&";
+
+                    queryString = queryString.TrimEnd('&');
+                }
+
+                var response = await _httpClient.GetAsync($"v1/sportsbook/activefixtures?{queryString}");
 
                 if (response.IsSuccessStatusCode)
                     return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixturesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });

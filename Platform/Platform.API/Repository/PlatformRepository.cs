@@ -2770,7 +2770,7 @@ namespace Platform.API.Repository
 
                     scope.Complete();
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     scope.Dispose();
                     return new BaseResponseDTO<ClientResponseDTO>
@@ -2807,7 +2807,7 @@ namespace Platform.API.Repository
 
                     scope.Complete();
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     scope.Dispose();
                     return new BaseResponseDTO<bool>

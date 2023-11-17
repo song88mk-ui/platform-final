@@ -5,6 +5,7 @@ using Platform.ClientPlatform.API.Models;
 using Platform.ClientPlatform.API.Repository;
 using System.Linq;
 using System.Threading.Tasks;
+using Platform.Shared.Models;
 
 namespace Platform.ClientPlatform.API.Controllers
 {
@@ -33,9 +34,24 @@ namespace Platform.ClientPlatform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/activefixtures")]
-        public async Task<IActionResult> GetActiveFixtures()
+        public async Task<IActionResult> GetActiveFixtures([FromQuery] ActiveFixturesFilterRequestDTO request)
         {
-            var result = await _platformRepository.GetClientActiveFixtures(ApiKey, ClientId, CountryCode, LanguageCode);
+            var result = await _platformRepository.GetClientActiveFixtures(ApiKey, ClientId, CountryCode, LanguageCode, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/sportsbook/activefixtures/details")]
+        public async Task<IActionResult> GetFixtureDetails([FromQuery] string fixtureId)
+        {
+
+            var result = await _platformRepository.GetActiveFixtureDetails(ApiKey, ClientId, fixtureId, CountryCode, LanguageCode);
 
             switch (result.StatusCode)
             {

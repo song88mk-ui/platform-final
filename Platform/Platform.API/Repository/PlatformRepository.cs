@@ -1,9 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.Internal;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.Extensions.Configuration;
 using Platform.API.Models;
-using Platform.Shared.Data;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Enums;
@@ -17,7 +14,6 @@ using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace Platform.API.Repository
 {
@@ -1500,7 +1496,7 @@ namespace Platform.API.Repository
                 IpCountryCode = ipCountryCode,
             });
         }
-        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(string apiKey, string clientId, string langCode, string ipCountryCode)
+        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(string apiKey, string clientId, string langCode, string ipCountryCode, ActiveFixturesFilterRequestDTO request)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -1541,8 +1537,59 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode,
                 ClientCode = clientResponse.Result.ClientCode,
                 IPCountryCode = ipCountryCode,
+                Home = request.Home,
+                Away = request.Away,
+                FromFixtureStartDate = request.FromFixtureStartDate,
+                ToFixtureStartDate = request.ToFixtureStartDate,
+                FixtureStatus = request.FixtureStatus,
             });
         }
+
+        public async Task<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>> GetActiveFixtureDetails(string apiKey, string clientId, string langCode, string ipCountryCode, string fixtureId)
+        {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<ActiveFixtureDetailsResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<ActiveFixtureDetailsResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<ActiveFixtureDetailsResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetActiveFixtureDetails(new ActiveFixtureDetailsRequestDTO
+            {
+                ClientId = clientResponse.Result.ClientId,
+                LanguageCode = languageCode,
+                FixtureId = fixtureId,
+                ClientCode = clientResponse.Result.ClientCode,
+                IpCountryCode = ipCountryCode,
+            });
+        }
+
         public async Task<BaseResponseDTO<TWFixtureCountResponseDTO>> GetLiveFixtureCount(string apiKey, string clientId, string langCode, SportGroup sportGroupId)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;

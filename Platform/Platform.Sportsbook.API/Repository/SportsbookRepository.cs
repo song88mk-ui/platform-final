@@ -6696,7 +6696,25 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
+            var fixtureStatusIds = new int[] { 0, 1 };
+            if (!string.IsNullOrEmpty(request.FixtureStatus))
+            {
+                if(request.FixtureStatus.ToLower().Equals("prematch"))
+                    fixtureStatusIds = new int[] { 0};
+                if (request.FixtureStatus.ToLower().Equals("live"))
+                    fixtureStatusIds = new int[] { 1 };
+            }
+
+            FilterDefinition<Fixture> fixtureFilter;
+            if(request.FromFixtureStartDate != null && request.ToFixtureStartDate != null)
+            {
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureStatusIds.Contains(c.FiStId) && c.FiStDa >= request.FromFixtureStartDate && c.FiStDa <= request.ToFixtureStartDate);
+            }
+            else
+            {
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureStatusIds.Contains(c.FiStId));
+            }
+
             var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.PrFiId).Include(c => c.FiStId).Include(c => c.ClCo).Include(c => c.SpId)
                 .Include(c => c.SpNa).Include(c => c.SegId).Include(c => c.SegNa).Include(c => c.LeId).Include(c => c.LeNa).Include(c => c.FiNa).Include(c => c.FiTyId)
                 .Include(c => c.FiTyNa).Include(c => c.FiStDa).Include(c => c.FiStNa).Include(c => c.IsOfLi).Include(c => c.LiId).Include(c => c.GeAl)
@@ -6737,6 +6755,12 @@ namespace Platform.Sportsbook.API.Repository
                 IsLive = s.SpId == 21 ? s.FiStId == (int)FixtureStatus.Live ? true : false : s.IsOfLi,
                 IsLiveStream = IsLiveStream(s.LiId, s.GeAl, request.IPCountryCode),
             }).ToList();
+
+            if (!string.IsNullOrEmpty(request.Home))
+                result = result.Where(r => r.Home == request.Home).ToList();
+
+            if (!string.IsNullOrEmpty(request.Away))
+                result = result.Where(r => r.Away == request.Away).ToList();
 
             return new BaseResponseDTO<ActiveFixturesResponseDTO>
             {

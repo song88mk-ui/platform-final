@@ -24,6 +24,7 @@ namespace Platform.ClientPlatform.API.Repository
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(_configuration["API:PlatformAPIReadOnly"]);
         }
+
         public async Task<BaseResponseDTO<TWResponseDTO>> GetClientTopFixtures(string apiKey, string clientId, string countryCode, string languageCode)
         {
             try
@@ -61,7 +62,7 @@ namespace Platform.ClientPlatform.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(string apiKey, string clientId, string countryCode, string languageCode)
+        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(string apiKey, string clientId, string countryCode, string languageCode, ActiveFixturesFilterRequestDTO request)
         {
             try
             {
@@ -70,7 +71,24 @@ namespace Platform.ClientPlatform.API.Repository
                 _httpClient.DefaultRequestHeaders.Add("x-country-code", countryCode);
                 _httpClient.DefaultRequestHeaders.Add("x-language-code", languageCode);
 
-                var response = await _httpClient.GetAsync($"v1/sportsbook/activefixtures");
+                var queryString = string.Empty;
+                if(request != null)
+                {
+                    if (!string.IsNullOrEmpty(request.Home))
+                        queryString = queryString + $"home={request.Home}&";
+                    if (!string.IsNullOrEmpty(request.Away))
+                        queryString = queryString + $"away={request.Away}&";
+                    if (!string.IsNullOrEmpty(request.FixtureStatus))
+                        queryString = queryString + $"fixtureStatus={request.FixtureStatus}&";
+                    if (request.FromFixtureStartDate != null)
+                        queryString = queryString + $"fromFixtureStartDate={request.FromFixtureStartDate}&";
+                    if (request.ToFixtureStartDate != null)
+                        queryString = queryString + $"toFixtureStartDate={request.ToFixtureStartDate}&";
+
+                    queryString = queryString.TrimEnd('&');
+                }
+
+                var response = await _httpClient.GetAsync($"v1/sportsbook/activefixtures?{queryString}");
 
                 if (response.IsSuccessStatusCode)
                     return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixturesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
@@ -91,6 +109,43 @@ namespace Platform.ClientPlatform.API.Repository
             catch (Exception ex)
             {
                 return new BaseResponseDTO<ActiveFixturesResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
+            }
+        }
+
+        public async Task<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>> GetActiveFixtureDetails(string apiKey, string clientId, string fixtureId, string ipCountryCode, string languageCode)
+        {
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
+                _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
+                _httpClient.DefaultRequestHeaders.Add("x-country-code", ipCountryCode);
+                _httpClient.DefaultRequestHeaders.Add("x-language-code", languageCode);
+
+                var response = await _httpClient.GetAsync($"v1/sportsbook/activefixtures/details?fixtureId={fixtureId}");
+
+                if (response.IsSuccessStatusCode)
+                    return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                        return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    else
+                    {
+                        return new BaseResponseDTO<ActiveFixtureDetailsResponseDTO>
+                        {
+                            StatusCode = StatusCode.Error,
+                            Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<ActiveFixtureDetailsResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"

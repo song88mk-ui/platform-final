@@ -17,6 +17,7 @@ using System.Net;
 using System.Text.Json;
 using System.Threading;
 using System.Transactions;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Platform.Placement.Servicev2.Repository
 {
@@ -222,8 +223,6 @@ namespace Platform.Placement.Servicev2.Repository
             }
             else
             {
-                //Console.WriteLine($"{DateTime.UtcNow} - BEG - Rejected - {message.Bet.BetId.ToString().ToUpper()}");
-
                 try
                 {
                     using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
@@ -356,7 +355,7 @@ namespace Platform.Placement.Servicev2.Repository
                                     });
                                 }
 
-                                if(message.IsBoosted == true)
+                                if (message.IsBoosted == true)
                                 {
                                     var betBoosted = context.BetPriceBoost.Where(c => c.BetId == bet.BetId).FirstOrDefault();
                                     betBoosted.BetStatusId = bet.BetStatusId;
@@ -407,12 +406,31 @@ namespace Platform.Placement.Servicev2.Repository
                         }
                     }
 
-                    //Console.WriteLine($"{DateTime.UtcNow} - END - Rejected - {message.Bet.BetId.ToString().ToUpper()}");
+                    // check if error code is due to Market/SOV expired in MTS. (-423)
+                    var reason = result.Item2.Split(" - ");
+
+                    if (reason.First() == "-423")
+                    {
+                        // prepare message
+                        var split = reason.Last().Split(" + ").First().Split(",");
+
+                        var selectionSpecifier = split[1].Replace(" Selection: ", string.Empty);
+                        var fixtureSpecifier = split[2].Replace(" Match: ", string.Empty);
+
+                        var betSelection = message.BetSelections.FirstOrDefault(c => c.FixtureSpecifier == fixtureSpecifier && c.SelectionSpecifier == selectionSpecifier);
+
+                        messageBroker.Publish(new OnMarketDeactivationMesssage
+                        {
+                            SportId = betSelection.SportId,
+                            FixtureId = betSelection.FixtureId,
+                            FixtureSpecifier = betSelection.FixtureSpecifier,
+                            MarketId = betSelection.MarketId,
+                            MarketTemplateId = betSelection.MarketTemplateId
+                        }, "OnMarketDeactivation", "r.oe.marketdeactivation", correlationId);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    //Console.WriteLine($"{DateTime.UtcNow} - END - Error Rejected - {message.Bet.BetId.ToString().ToUpper()} - {ex.Message}");
-
                     messageBroker.Publish(new OnBetStatus
                     {
                         ClientId = message.Bet.ClientId.ToString().ToUpper(),

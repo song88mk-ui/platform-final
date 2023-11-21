@@ -849,6 +849,14 @@ namespace Platform.CashOut.Service
             }
             catch (Exception ex)
             {
+                var errorMessage = new
+                {
+                    Message = ex.Message, 
+                    StackTrace = ex.StackTrace,
+                    Payload = payload
+                };
+
+                _messageBroker.Publish(errorMessage, "OnBetFullCashOutError", "r.bet.cashout.error", correlationId ?? Guid.NewGuid().ToString());
                 _messageBroker.Acknowledge(e);
             }
         }

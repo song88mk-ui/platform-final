@@ -16,6 +16,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Transactions;
+using static App.Metrics.Health.HealthCheck;
 
 namespace Platform.CashOut.Service.Repository
 {
@@ -169,6 +170,15 @@ namespace Platform.CashOut.Service.Repository
                                     UserId = message.UserId,
                                     BetId = message.BetId.ToString().ToUpper(),
                                     BetStatus = BetStatus.Running,
+                                    Message = JsonSerializer.Serialize(result),
+                                }, "OnBetStatus", $"r.bet.cashout.error", correlationId);
+
+                                messageBroker.Publish(new OnBetStatus
+                                {
+                                    ClientId = message.ClientId.ToString().ToUpper(),
+                                    UserId = message.UserId,
+                                    BetId = message.BetId.ToString().ToUpper(),
+                                    BetStatus = BetStatus.Running,
                                     Message = "Cashout request has been declined"
                                 }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
@@ -200,6 +210,22 @@ namespace Platform.CashOut.Service.Repository
                     BetStatus = BetStatus.Running,
                     Message = "Cashout request has been declined"
                 }, "OnBetStatus", "r.bet.betstatus", correlationId);
+
+                var errorMessage = new
+                {
+                    Message = ex.Message,
+                    StackTrace = ex.StackTrace,
+                    Payload = message
+                };
+
+                messageBroker.Publish(new OnBetStatus
+                {
+                    ClientId = message.ClientId.ToString().ToUpper(),
+                    UserId = message.UserId,
+                    BetId = message.BetId.ToString().ToUpper(),
+                    BetStatus = BetStatus.Running,
+                    Message = JsonSerializer.Serialize(errorMessage),
+                }, "OnBetStatus", $"r.bet.cashout.error", correlationId);
 
                 messageBroker.Publish(new OnBetStatus
                 {

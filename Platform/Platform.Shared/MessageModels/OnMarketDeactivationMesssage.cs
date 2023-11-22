@@ -6,6 +6,5 @@
         public long FixtureId { get; set; }
         public string FixtureSpecifier { get; set; }
         public long MarketId { get; set; }
-        public string MarketTemplateId { get; set; }
     }
 }

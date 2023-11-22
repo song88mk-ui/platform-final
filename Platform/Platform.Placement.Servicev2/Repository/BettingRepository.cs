@@ -422,8 +422,7 @@ namespace Platform.Placement.Servicev2.Repository
                             SportId = betSelection.SportId,
                             FixtureId = betSelection.FixtureId,
                             FixtureSpecifier = betSelection.FixtureSpecifier,
-                            MarketId = betSelection.MarketId,
-                            MarketTemplateId = betSelection.MarketTemplateId
+                            MarketId = betSelection.MarketId
                         }, "OnMarketDeactivation", "r.oe.marketdeactivation", correlationId);
                     }
                 }

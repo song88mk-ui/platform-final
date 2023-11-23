@@ -391,15 +391,15 @@ namespace Platform.Placement.Servicev2.Repository
                                 }, "OnBetStatus", $"r.bet.betstatus.{payload.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
                                 // check if error code is due to Market/SOV expired in MTS. (-423)
-                                var reason = result.Item2.Split(" - ");
+                                var reason = result.Item2.Split(" - Market/SOV expired in MTS,");
 
                                 if (reason.First() == "-423")
                                 {
                                     // prepare message
-                                    var split = reason[1].Split(" + ").First().Split(",");
+                                    var split = reason.Last().Split(" + ").First().Split(",");
 
-                                    var selectionSpecifier = split[1].Replace(" Selection: ", string.Empty);
-                                    var fixtureSpecifier = split[2].Replace(" Match: ", string.Empty);
+                                    var selectionSpecifier = split[0].Replace(" Selection: ", string.Empty);
+                                    var fixtureSpecifier = split[1].Replace(" Match: ", string.Empty);
 
                                     var betSelection = message.BetSelections.FirstOrDefault(c => c.FixtureSpecifier == fixtureSpecifier && c.SelectionSpecifier == selectionSpecifier);
 

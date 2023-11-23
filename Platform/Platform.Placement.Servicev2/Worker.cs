@@ -229,7 +229,6 @@ namespace Platform.Placement.Servicev2
 
         public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository, IConfiguration configuration)
         {
-            //
             _logger = logger;
             _messageBroker = messageBroker;
             _bettingRepository = bettingRepository;

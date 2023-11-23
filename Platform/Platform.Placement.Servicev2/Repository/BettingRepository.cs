@@ -389,6 +389,28 @@ namespace Platform.Placement.Servicev2.Repository
                                     BetId = payload.Bet.BetId.ToString().ToUpper(),
                                     BetStatus = (BetStatus)payload.Bet.BetStatusId
                                 }, "OnBetStatus", $"r.bet.betstatus.{payload.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+
+                                // check if error code is due to Market/SOV expired in MTS. (-423)
+                                var reason = result.Item2.Split(" - ");
+
+                                if (reason.First() == "-423")
+                                {
+                                    // prepare message
+                                    var split = reason[1].Split(" + ").First().Split(",");
+
+                                    var selectionSpecifier = split[1].Replace(" Selection: ", string.Empty);
+                                    var fixtureSpecifier = split[2].Replace(" Match: ", string.Empty);
+
+                                    var betSelection = message.BetSelections.FirstOrDefault(c => c.FixtureSpecifier == fixtureSpecifier && c.SelectionSpecifier == selectionSpecifier);
+
+                                    messageBroker.Publish(new OnMarketDeactivationMesssage
+                                    {
+                                        SportId = betSelection.SportId,
+                                        FixtureId = betSelection.FixtureId,
+                                        FixtureSpecifier = betSelection.FixtureSpecifier,
+                                        MarketId = betSelection.MarketId
+                                    }, "OnMarketDeactivation", "r.oe.marketdeactivation", correlationId);
+                                }
                             }
                             else
                             {
@@ -402,28 +424,6 @@ namespace Platform.Placement.Servicev2.Repository
 
                             }
                         }
-                    }
-
-                    // check if error code is due to Market/SOV expired in MTS. (-423)
-                    var reason = result.Item2.Split(" - ");
-
-                    if (reason.First() == "-423")
-                    {
-                        // prepare message
-                        var split = reason.Last().Split(" + ").First().Split(",");
-
-                        var selectionSpecifier = split[1].Replace(" Selection: ", string.Empty);
-                        var fixtureSpecifier = split[2].Replace(" Match: ", string.Empty);
-
-                        var betSelection = message.BetSelections.FirstOrDefault(c => c.FixtureSpecifier == fixtureSpecifier && c.SelectionSpecifier == selectionSpecifier);
-
-                        messageBroker.Publish(new OnMarketDeactivationMesssage
-                        {
-                            SportId = betSelection.SportId,
-                            FixtureId = betSelection.FixtureId,
-                            FixtureSpecifier = betSelection.FixtureSpecifier,
-                            MarketId = betSelection.MarketId
-                        }, "OnMarketDeactivation", "r.oe.marketdeactivation", correlationId);
                     }
                 }
                 catch (Exception ex)

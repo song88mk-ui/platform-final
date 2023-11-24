@@ -19,6 +19,7 @@
         FR = 15,    //French
         PT = 16,    //Portuguese
         AM = 17,     //Amharic
-        ES = 18
+        ES = 18,
+        BR = 19     // Brazilian Portuguese
     }
 }

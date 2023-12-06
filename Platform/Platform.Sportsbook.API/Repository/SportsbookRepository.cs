@@ -71,11 +71,11 @@ namespace Platform.Sportsbook.API.Repository
                     bettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
                     maintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
 
-                    primaryFixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                    primaryMarketCollection = _db.GetCollection<Market>("Market").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                    primarySelectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                    primaryBettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                    primaryMaintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+                    primaryFixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
+                    primaryMarketCollection = _db.GetCollection<Market>("Market").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
+                    primarySelectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
+                    primaryBettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
+                    primaryMaintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
                 }
                 else
                 {

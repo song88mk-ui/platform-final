@@ -43,6 +43,8 @@ namespace Platform.API.Models
         public int SportId { get; set; }
         public int SegmentId { get; set; }
         public int LeagueId { get; set; }
+        public int PageCount { get; set; }
+        public int PageSize { get; set; }
     }
     public class UpcomingFixtureRequest
     {

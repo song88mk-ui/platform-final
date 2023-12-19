@@ -4369,6 +4369,54 @@ namespace Platform.API.Repository
             return await _bettingRepository.GetBetStatus(payload);
         }
 
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixturesPagination(string apiKey, string clientId, string langCode, TodayFixtureRequest request, string ipCountryCode)
+        {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetTodayFixturesPagination(new TodayFixtureRequestDTO
+            {
+                MinuteUTCOffset = request.MinuteUTCOffset,
+                ClientId = clientResponse.Result.ClientId,
+                LanguageCode = languageCode,
+                SportId = request.SportId,
+                ClientCode = clientResponse.Result.ClientCode,
+                IpCountryCode = ipCountryCode,
+                PageCount = request.PageCount,
+                PageSize = request.PageSize
+            });
+        }
+
         private DateTime GetFirstDayOfNextMonth()
         {
             DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);

@@ -85,5 +85,7 @@ namespace Platform.Sportsbook.API.Repository
         Task<BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>> GetMarketTemplatePlayerProps(MarketTemplatePlayerPropsRequestDTO request);
         Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request);
         Task<BaseResponseDTO<List<TranslationResponseDTO>>> GetTranslationByLanguageCode(TranslationRequestDTO request);
+
+        Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixturesPagination(TodayFixtureRequestDTO request);
     }
 }

@@ -4910,8 +4910,18 @@ namespace Platform.Sportsbook.API.Repository
                 }
                 else
                 {
-                    leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.LeNaTr.Any(s => s.LeNa.ToLower().Contains(request.SearchText.ToLower())));
-                    fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.FiNaTr.Any(s => s.FiNa.ToLower().Contains(request.SearchText.ToLower())));
+
+                    fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && 
+                    (c.FiNaTr.Any(s => s.LaCo == request.LanguageCode.ToString() && s.FiNa.ToLower().Contains(request.SearchText.ToLower())) ||
+                    (!c.FiNaTr.Any(s => s.LaCo == request.LanguageCode.ToString()) && c.FiNa.ToLower().Contains(request.SearchText.ToLower()))));
+
+                    leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match &&
+                    (c.LeNaTr.Any(s => s.LaCo == request.LanguageCode.ToString() && s.LeNa.ToLower().Contains(request.SearchText.ToLower())) ||
+                    (!c.LeNaTr.Any(s => s.LaCo == request.LanguageCode.ToString()) && c.LeNa.ToLower().Contains(request.SearchText.ToLower()))
+                    ));
+
+                    //leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.LeNaTr.Any(s => s.LeNa.ToLower().Contains(request.SearchText.ToLower())));
+                    //fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.FiNaTr.Any(s => s.FiNa.ToLower().Contains(request.SearchText.ToLower())));
                 }
 
                 leagues = fixtureCollection.Find(leagueFilter).ToListAsync();
@@ -5103,7 +5113,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
                 else
                 {
-                    if (fixture.FiNaTr.Where(c => c.LaCo == request.LanguageCode.ToString()).Select(s => s.FiNa).FirstOrDefault().Split(" vs. ").First().ToLower().StartsWith(request.SearchText.ToLower()) || fixture.FiNa.Split(" vs. ").Last().ToLower().StartsWith(request.SearchText.ToLower()))
+                    if (fixture.FiNaTr.Where(c => c.LaCo == request.LanguageCode.ToString())?.Select(s => s.FiNa).FirstOrDefault()?.Split(" vs. ").First().ToLower().StartsWith(request.SearchText.ToLower()) ?? false || fixture.FiNa.Split(" vs. ").First().ToLower().StartsWith(request.SearchText.ToLower()))
                     {
                         fixtureListStartsWith.Add(new SearchResponse
                         {
@@ -5119,7 +5129,7 @@ namespace Platform.Sportsbook.API.Repository
                     }
                     else
                     {
-                        if (fixture.FiNaTr.Where(c => c.LaCo == request.LanguageCode.ToString()).Select(s => s.FiNa).FirstOrDefault().Split(" vs. ").First().ToLower().Contains(request.SearchText.ToLower()))
+                        if (fixture.FiNaTr.Where(c => c.LaCo == request.LanguageCode.ToString())?.Select(s => s.FiNa).FirstOrDefault()?.Split(" vs. ").First().ToLower().Contains(request.SearchText.ToLower()) ?? false)
                         {
                             fixtureListNotStartsWith.Add(new SearchResponse
                             {

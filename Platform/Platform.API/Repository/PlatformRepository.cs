@@ -774,6 +774,8 @@ namespace Platform.API.Repository
                             WinningsTax = s.WinningsTax,
                             ParlayBonus = s.ParlayBonus,
                             ParlayBonusWinnings = s.ParlayBonusWinnings,
+                            IsBetBuilder = s.IsBetBuilder,
+                            UserId = s.UserId,
                             IsBoosted = s.IsBoosted,
                             IsFreeBet = s.IsFreeBet,
                             StakeBonus = s.StakeBonus,

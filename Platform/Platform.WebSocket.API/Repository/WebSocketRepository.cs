@@ -249,8 +249,9 @@ namespace Platform.WebSocket.API.Repository
             await Clients.Groups(message.Gr).OnOddsChange(message.Pa);
 
             var item = MessagePackSerializer.Serialize(message.Pa, ContractlessStandardResolver.Options);
+            var groups = message.Gr.Select(s => $"{s}:2").ToList();
 
-            await Clients.Groups($"{message.Gr}:2").OnOddsChange2(item);
+            await Clients.Groups(groups).OnOddsChange2(item);
         }
         public async Task PublishOddsChangeForAllMarkets(string clientCode, OutgoingOddsChange message)
         {
@@ -258,9 +259,10 @@ namespace Platform.WebSocket.API.Repository
             await Clients.Groups(message.Gr).OnOddsChange(message.Pa);
 
             var item = MessagePackSerializer.Serialize(message.Pa, ContractlessStandardResolver.Options);
+            var groups = message.Gr.Select(s => $"{s}:2").ToList();
 
             await Clients.Group($"onbetslipoddschange:{clientCode}:{message.Pa.FiId}").OnBetslipOddsChange2(item);
-            await Clients.Groups($"{message.Gr}:2").OnOddsChange2(item);
+            await Clients.Groups(groups).OnOddsChange2(item);
         }
         public async Task PublishBetStopFixture(string clientCode, OutgoingBetStopFixture message)
         {
@@ -268,9 +270,10 @@ namespace Platform.WebSocket.API.Repository
             await Clients.Groups(message.Gr).OnBetStopFixture(message.Pa);
 
             var item = MessagePackSerializer.Serialize(message.Pa, ContractlessStandardResolver.Options);
+            var groups = message.Gr.Select(s => $"{s}:2").ToList();
 
             await Clients.Group($"onbetslipbetstopfixture:{clientCode}:{message.Pa.FiId}").OnBetslipBetStopFixture2(item);
-            await Clients.Groups($"{message.Gr}:2").OnBetStopFixture2(item);
+            await Clients.Groups(groups).OnBetStopFixture2(item);
         }
         public async Task PublishBetStopGlobal(string clientCode, OutgoingBetStopGlobal message)
         {

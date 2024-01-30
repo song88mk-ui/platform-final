@@ -7,37 +7,36 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Platform.Shared.Data.Platform;
+using Platform.ClientSportsbook.API.Models;
 
 namespace Platform.ClientSportsbook.API.Repository
 {
     public class SportsbookRepository : ISportsbookRepository
     {
         private readonly HttpClient _httpClient;
-        private readonly PlatformContext _platformContext;
-        public SportsbookRepository(IConfiguration configuration, HttpClient httpClient, PlatformContext platformContext)
+        public SportsbookRepository(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _platformContext = platformContext;
         }
-        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(Guid clientId, string ipCountryCode, LanguageCode languageCode)
+        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(ClientKeyFilter clientKeyFilter)
         {
-            var clientCode = await GetClientCodeById(clientId);
+            //var clientCode = await GetClientCodeById(clientId);
 
-            if (string.IsNullOrEmpty(clientCode))
-            {
-                return new BaseResponseDTO<ActiveFixturesResponseDTO>
-                {
-                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
-                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
-                };
-            }
+            //if (string.IsNullOrEmpty(clientCode))
+            //{
+            //    return new BaseResponseDTO<ActiveFixturesResponseDTO>
+            //    {
+            //        StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+            //        Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+            //    };
+            //}
 
             var request = new ActiveFixturesRequestDTO
             {
-                ClientId = clientId,
-                LanguageCode = languageCode,
-                ClientCode = clientCode,
-                IPCountryCode = ipCountryCode
+                ClientId = clientKeyFilter.ClientId,
+                ClientCode = clientKeyFilter.ClientCode,
+                LanguageCode = clientKeyFilter.LanguageCode,
+                IPCountryCode = clientKeyFilter.IPCountryCode
             };
 
             try
@@ -69,18 +68,56 @@ namespace Platform.ClientSportsbook.API.Repository
                 };
             }
         }
-
-
-        private async Task<string> GetClientCodeById(Guid clientId)
+        public async Task<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>> GetActiveFixtureDetails(ClientKeyFilter clientKeyFilter, string fixtureId)
         {
-            var result = await _platformContext.Client.FindAsync(clientId);
+            //var clientCode = await GetClientCodeById(clientId);
 
-            if (result != null && result.IsActive)
+            //if (string.IsNullOrEmpty(clientCode))
+            //{
+            //    return new BaseResponseDTO<ActiveFixturesResponseDTO>
+            //    {
+            //        StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+            //        Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+            //    };
+            //}
+
+            var request = new ActiveFixtureDetailsRequestDTO
             {
-                return result.ClientCode;
-            }
+                ClientId = clientKeyFilter.ClientId,
+                ClientCode = clientKeyFilter.ClientCode,
+                LanguageCode = clientKeyFilter.LanguageCode,
+                IpCountryCode = clientKeyFilter.IPCountryCode,
+                FixtureId = fixtureId
+            };
 
-            return string.Empty;
+            try
+            {
+                var response = await _httpClient.PostAsync($"v2/sportsbook/fixtures/details/limited", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                    return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                        return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    else
+                    {
+                        return new BaseResponseDTO<ActiveFixtureDetailsResponseDTO>
+                        {
+                            StatusCode = StatusCode.Error,
+                            Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<ActiveFixtureDetailsResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
+            }
         }
     }
 }

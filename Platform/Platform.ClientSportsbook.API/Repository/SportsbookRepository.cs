@@ -68,7 +68,7 @@ namespace Platform.ClientSportsbook.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>> GetActiveFixtureDetails(ClientKeyFilter clientKeyFilter, string fixtureId)
+        public async Task<BaseResponseDTO<TWLimitedResponseDTO>> GetActiveFixtureDetails(ClientKeyFilter clientKeyFilter, string fixtureId)
         {
             //var clientCode = await GetClientCodeById(clientId);
 
@@ -95,14 +95,14 @@ namespace Platform.ClientSportsbook.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/fixtures/details/limited", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<BaseResponseDTO<TWLimitedResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<BaseResponseDTO<TWLimitedResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     else
                     {
-                        return new BaseResponseDTO<ActiveFixtureDetailsResponseDTO>
+                        return new BaseResponseDTO<TWLimitedResponseDTO>
                         {
                             StatusCode = StatusCode.Error,
                             Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
@@ -112,12 +112,31 @@ namespace Platform.ClientSportsbook.API.Repository
             }
             catch (Exception ex)
             {
-                return new BaseResponseDTO<ActiveFixtureDetailsResponseDTO>
+                return new BaseResponseDTO<TWLimitedResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
                 };
             }
+        }
+
+        public Task<BaseResponseDTO<bool>> SubscribeToMarkets(ClientKeyFilter clientKeyFilter, MarketsSubscriptionRequestDTO request)
+        {
+            // Save to redis
+            throw new NotImplementedException();
+        }
+        public Task<BaseResponseDTO<bool>> UnsubscribeToMarkets(ClientKeyFilter clientKeyFilter, MarketsSubscriptionRequestDTO request)
+        {
+            // remove from redis
+
+            throw new NotImplementedException();
+        }
+
+        public Task<BaseResponseDTO<bool>> GetMarketsSubscription(ClientKeyFilter clientKeyFilter)
+        {
+            // Pull from Redis
+
+            throw new NotImplementedException();
         }
     }
 }

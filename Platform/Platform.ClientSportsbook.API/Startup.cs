@@ -10,6 +10,9 @@ using Platform.ClientSportsbook.API.Repository;
 using Platform.Shared.Data.Platform;
 using System;
 using System.Collections.Generic;
+using Platform.ClientSportsbook.API.ActionFilters;
+using StackExchange.Redis;
+using Platform.Shared.Utility;
 
 namespace Platform.ClientSportsbook.API
 {
@@ -69,11 +72,16 @@ namespace Platform.ClientSportsbook.API
                 c.AddSecurityRequirement(requirement);
             });
 
+            services.AddSingleton<IMemCache, MemCache>();
+            services.AddScoped<ApiKeyFilter>();
+            services.AddScoped<RedisCache>();
             services.AddHttpClient<ISportsbookRepository, SportsbookRepository>(client =>
             {
-                client.BaseAddress = new Uri(Configuration["API:Sportsbook:Uri"]);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Add("x-api-key", Configuration["API:Sportsbook:Key"]);
+                client.BaseAddress = new Uri(Configuration["API:SportsbookAPI"]);
+            });
+            services.AddHttpClient<IRabbitMQRepository, RabbitMQRepository>(client =>
+            {
+                client.BaseAddress = new Uri(Configuration["API:RabbitMQAPI"]);
             });
             services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Platform"]));
         }

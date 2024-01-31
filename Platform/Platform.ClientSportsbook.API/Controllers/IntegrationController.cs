@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Platform.ClientSportsbook.API.ActionFilters;
 using Platform.ClientSportsbook.API.Repository;
 using Platform.Shared.Models;
 using System.Threading.Tasks;
 
 namespace Platform.ClientSportsbook.API.Controllers
 {
-    [ApiController, EnableCors("AllowAllOrigins")]
+    [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(ApiKeyFilter))]
     public class IntegrationController : IntegrationControllerBase
     {
         private readonly ISportsbookRepository _sportsbookRepository;
@@ -15,8 +16,8 @@ namespace Platform.ClientSportsbook.API.Controllers
             _sportsbookRepository = platformRepository;
         }
 
-        [HttpPost("v1/sportsbook/activefixtures")]
-        public async Task<IActionResult> GetActiveFixtures([FromBody] ActiveFixturesFilterRequestDTO request)
+        [HttpGet("v1/sportsbook/activefixtures")]
+        public async Task<IActionResult> GetActiveFixtures()
         {
             var result = await _sportsbookRepository.GetClientActiveFixtures(ClientKeyFilter);
 

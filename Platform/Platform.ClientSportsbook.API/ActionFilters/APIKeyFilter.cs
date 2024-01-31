@@ -13,20 +13,20 @@ using Platform.Shared.Utility;
 
 namespace Platform.ClientSportsbook.API.ActionFilters
 {
-    public class APIKeyFilter : ActionFilterAttribute
+    public class ApiKeyFilter : ActionFilterAttribute
     {
         private readonly IConfiguration _configuration;
         private readonly PlatformContext _platformContext;
         private readonly IMemCache _memCache;
 
-        public APIKeyFilter(IConfiguration configuration, PlatformContext platformContext, IMemCache memCache)
+        public ApiKeyFilter(IConfiguration configuration, PlatformContext platformContext, IMemCache memCache)
         {
             _configuration = configuration;
             _platformContext = platformContext;
             _memCache = memCache;
         }
 
-        public override async void OnActionExecuting(ActionExecutingContext context)
+        public override void OnActionExecuting(ActionExecutingContext context)
         {
             var clientId = context.HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var isGuid = Guid.TryParse(clientId, out Guid clientGuid);
@@ -41,7 +41,7 @@ namespace Platform.ClientSportsbook.API.ActionFilters
                 return;
             }
 
-            var cliendCode = await GetClientCodeById(clientGuid);
+            var cliendCode = GetClientCodeById(clientGuid);
             if (string.IsNullOrEmpty(cliendCode))
             {
                 context.Result = new BadRequestObjectResult(new
@@ -85,7 +85,7 @@ namespace Platform.ClientSportsbook.API.ActionFilters
             };
         }
 
-        private async Task<string> GetClientCodeById(Guid clientId)
+        private string GetClientCodeById(Guid clientId)
         {
             var key = $"cc:{clientId.ToString().ToUpper()}";
 
@@ -94,7 +94,7 @@ namespace Platform.ClientSportsbook.API.ActionFilters
             if (cache != null)
                 return cache;
 
-            var result = await _platformContext.Client.FindAsync(clientId);
+            var result =  _platformContext.Client.Find(clientId);
 
             if (result != null && result.IsActive)
             {

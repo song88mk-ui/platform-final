@@ -1,6 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Platform.ClientSportsbook.API.Models;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System;
 using System.Net.Http;
@@ -14,9 +17,13 @@ namespace Platform.ClientSportsbook.API.Repository
     public class SportsbookRepository : ISportsbookRepository
     {
         private readonly HttpClient _httpClient;
-        public SportsbookRepository(HttpClient httpClient)
+        private readonly IRabbitMQRepository _rabbitMQRepository;
+        private readonly RedisCache _redisCache;
+        public SportsbookRepository(HttpClient httpClient, IRabbitMQRepository rabbitMQRepository, RedisCache redisCache)
         {
             _httpClient = httpClient;
+            _rabbitMQRepository = rabbitMQRepository;
+            _redisCache = redisCache;
         }
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(ClientKeyFilter clientKeyFilter)
         {

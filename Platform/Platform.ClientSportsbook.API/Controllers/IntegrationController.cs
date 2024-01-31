@@ -69,9 +69,12 @@ namespace Platform.ClientSportsbook.API.Controllers
             }
         }
         [HttpGet("v1/sportsbook/market/subscription")]
-        public async Task<IActionResult> GetMarketsSubscription()
+        public async Task<IActionResult> GetMarketsSubscription([FromQuery] string languageCode = "")
         {
-            var result = await _sportsbookRepository.GetMarketsSubscription(ClientKeyFilter);
+            if (string.IsNullOrEmpty(languageCode))
+                languageCode = ClientKeyFilter.LanguageCode.ToString();
+
+            var result = await _sportsbookRepository.GetMarketsSubscription(ClientKeyFilter, languageCode);
 
             switch (result.StatusCode)
             {

@@ -5,12 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Platform.Shared.Data.Platform;
-using Platform.ClientSportsbook.API.Models;
 
 namespace Platform.ClientSportsbook.API.Repository
 {
@@ -127,23 +124,127 @@ namespace Platform.ClientSportsbook.API.Repository
             }
         }
 
-        public Task<BaseResponseDTO<bool>> SubscribeToMarkets(ClientKeyFilter clientKeyFilter, MarketsSubscriptionRequestDTO request)
+        public async Task<BaseResponseDTO<bool>> SubscribeToMarkets(ClientKeyFilter clientKeyFilter, MarketsSubscriptionRequestDTO request)
         {
-            // Save to redis
-            throw new NotImplementedException();
+            try
+            {
+                var isValidFixtureId = long.TryParse(request.FixtureId, out var fixtutreIds);
+                var isValidIds = request.MarketIds.All(x => long.TryParse(x, out var id)) && isValidFixtureId;
+
+                if (!isValidIds)
+                {
+                    return new BaseResponseDTO<bool>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} (Invalid IDs)"
+                    };
+                }
+                var payload = new
+                {
+                    FixtureId = fixtutreIds,
+                    MarketIds = request.MarketIds.Select(x => long.Parse(x))
+                };
+
+                _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                {
+                    Payload = JsonSerializer.Serialize(payload),
+                    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                    MessageType = "OnSubscribeMarket",
+                    RoutingKey = $"r.oe.sb.engine.onsubscribemarket.{clientKeyFilter.ClientCode.ToLower()}"
+                });
+
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = $"{StatusCode.Success.ToString().Replace('_', ' ')}",
+                    Result = true
+                };
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
+            }
         }
-        public Task<BaseResponseDTO<bool>> UnsubscribeToMarkets(ClientKeyFilter clientKeyFilter, MarketsSubscriptionRequestDTO request)
+        public async Task<BaseResponseDTO<bool>> UnsubscribeToMarkets(ClientKeyFilter clientKeyFilter, MarketsSubscriptionRequestDTO request)
         {
-            // remove from redis
+            try
+            {
+                var isValidFixtureId = long.TryParse(request.FixtureId, out var fixtutreIds);
+                var isValidIds = request.MarketIds.All(x => long.TryParse(x, out var id)) && isValidFixtureId;
 
-            throw new NotImplementedException();
+                if (!isValidIds)
+                {
+                    return new BaseResponseDTO<bool>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} (Invalid IDs)"
+                    };
+                }
+                var payload = new
+                {
+                    FixtureId = fixtutreIds,
+                    MarketIds = request.MarketIds.Select(x => long.Parse(x))
+                };
+
+                _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                {
+                    Payload = JsonSerializer.Serialize(payload),
+                    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                    MessageType = "OnUnsubscribeMarket",
+                    RoutingKey = $"r.oe.sb.engine.onunsubscribemarket.{clientKeyFilter.ClientCode.ToLower()}"
+                });
+
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = $"{StatusCode.Success.ToString().Replace('_', ' ')}",
+                    Result = true
+                };
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
+            }
         }
 
-        public Task<BaseResponseDTO<bool>> GetMarketsSubscription(ClientKeyFilter clientKeyFilter)
+        public async Task<BaseResponseDTO<TWLimitedResponseDTO>> GetMarketsSubscription(ClientKeyFilter clientKeyFilter, string languageCode)
         {
-            // Pull from Redis
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), languageCode);
 
-            throw new NotImplementedException();
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<TWLimitedResponseDTO>()
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var fixtureIds = await _redisCache.GetAsync<List<long>>($"subscribed-fixture-ids:{clientKeyFilter.ClientCode}");
+            if (fixtureIds != null)
+            {
+                foreach (var fixtureId in fixtureIds)
+                {
+                    var payload = await _redisCache.GetAsync<FixtureLimited>($"subscribed-fixture-markets:{clientKeyFilter.ClientCode}:{fixtureId}");
+
+                }
+            }
+
+            var result = new TWLimitedResponseDTO();
+            return new BaseResponseDTO<TWLimitedResponseDTO>()
+            {
+                StatusCode = StatusCode.Success,
+                Message = $"{StatusCode.Success.ToString().Replace('_', ' ')}",
+                Result = result
+            };
         }
     }
 }

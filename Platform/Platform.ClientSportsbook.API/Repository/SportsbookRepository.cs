@@ -43,6 +43,12 @@ namespace Platform.ClientSportsbook.API.Repository
                 IPCountryCode = clientKeyFilter.IPCountryCode
             };
 
+            //if (!string.IsNullOrEmpty(participantName))
+            //{
+            //    request.Home = participantName;
+            //    request.Away = participantName;
+            //}
+
             try
             {
                 var response = await _httpClient.PostAsync($"v1/sportsbook/activefixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
@@ -229,22 +235,152 @@ namespace Platform.ClientSportsbook.API.Repository
             }
 
             var fixtureIds = await _redisCache.GetAsync<List<long>>($"subscribed-fixture-ids:{clientKeyFilter.ClientCode}");
+
+
+            var result = new TWLimitedResponseDTO();
             if (fixtureIds != null)
             {
                 foreach (var fixtureId in fixtureIds)
                 {
                     var payload = await _redisCache.GetAsync<FixtureLimited>($"subscribed-fixture-markets:{clientKeyFilter.ClientCode}:{fixtureId}");
 
+                    result.Fixtures.Add(new FixtureLimitedDTO()
+                    {
+                        SportId = payload.SpId,
+                        SportName = GetSportName(payload.SpNa, payload.SpNaTr, clientKeyFilter.LanguageCode),
+                        SegmentId = payload.SegId,
+                        SegmentName = GetSegmentName(payload.SegNa, payload.SegNaTr, clientKeyFilter.LanguageCode),
+                        LeagueId = payload.LeId,
+                        LeagueName = GetLeagueName(payload.LeNa, payload.LeNaTr, clientKeyFilter.LanguageCode),
+                        FixtureId = payload.FiId.ToString(),
+                        ProviderFixtureId = payload.PrFiId,
+                        FixtureName = GetFixtureName(payload.FiNa, payload.FiNaTr, clientKeyFilter.LanguageCode),
+                        Home = GetHomeName(payload.FiNa, payload.FiNaTr, clientKeyFilter.LanguageCode),
+                        Away = GetAwayName(payload.FiNa, payload.FiNaTr, clientKeyFilter.LanguageCode),
+                        FixtureStartDate = payload.FiStDa,
+                        FixtureStatus = payload.FiStNa,
+                        IsLive = payload.SpId == 21 ? payload.FiStId == (int)FixtureStatus.Live : payload.IsOfLi, // To be added
+                        IsLiveStream = payload.IsOfLi,
+                        Markets = payload.Ma.Select(market => new MarketLimitedDTO()
+                        {
+                            MarketTemplateId = market.MaTeId,
+                            MarketId = market.MaId,
+                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, clientKeyFilter.LanguageCode),
+                            Line = market.Li,
+                            MarketStatus = market.MaStNa,
+                            Selections = market.Se.Select(selection => new SelectionLimitedDTO()
+                            {
+                                SelectionId = selection.SeId,
+                                SelectionName = GetSelectionName(selection.SeNa, selection.SeNaTr, clientKeyFilter.LanguageCode),
+                                Odds = selection.Od
+                            }).ToList()
+                        }).ToList()
+                    });
                 }
             }
 
-            var result = new TWLimitedResponseDTO();
             return new BaseResponseDTO<TWLimitedResponseDTO>()
             {
                 StatusCode = StatusCode.Success,
                 Message = $"{StatusCode.Success.ToString().Replace('_', ' ')}",
                 Result = result
             };
+        }
+        private string GetSportName(string name, List<SportTranslation> translations, LanguageCode languageCode)
+        {
+            if (translations == null)
+                return name;
+
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
+
+            if (result != null)
+                return result.SpNa;
+            else
+                return name;
+        }
+        private string GetSegmentName(string name, List<SegmentTranslation> translations, LanguageCode languageCode)
+        {
+            if (translations == null)
+                return name;
+
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
+
+            if (result != null)
+                return result.SegNa;
+            else
+                return name;
+        }
+        private string GetLeagueName(string name, List<LeagueTranslation> translations, LanguageCode languageCode)
+        {
+            if (translations == null)
+                return name;
+
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
+
+            if (result != null)
+                return result.LeNa;
+            else
+                return name;
+        }
+        private string GetFixtureName(string name, List<FixtureTranslation> translations, LanguageCode languageCode)
+        {
+            if (translations == null)
+                return name;
+
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
+
+            if (result != null)
+                return result.FiNa;
+            else
+                return name;
+        }
+        private string GetHomeName(string name, List<FixtureTranslation> translations, LanguageCode languageCode)
+        {
+            if (translations == null)
+                return name.Split(" vs. ").First().Trim();
+
+            var translation = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
+
+            if (translation != null)
+                return translation.FiNa.Split(" vs. ").First().Trim();
+            else
+                return name.Split(" vs. ").First().Trim();
+        }
+        private string GetAwayName(string name, List<FixtureTranslation> translations, LanguageCode languageCode)
+        {
+            if (translations == null)
+                return name.Split(" vs. ").Last().Trim();
+
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
+
+            if (result != null)
+                return result.FiNa.Split(" vs. ").Last().Trim();
+            else
+                return name.Split(" vs. ").Last().Trim();
+        }
+        private string GetMarketName(string name, List<MarketTranslation> translations, LanguageCode languageCode)
+        {
+            if (translations == null)
+                return name;
+
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
+
+            if (result != null)
+                return result.MaNa;
+            else
+                return name;
+        }
+        private string GetSelectionName(string name, List<SelectionTranslation> translations, LanguageCode languageCode)
+        {
+            if (translations == null)
+                return name;
+
+            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
+
+            if (result != null)
+                return result.SeNa;
+            else
+                return name;
         }
     }
 }

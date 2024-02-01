@@ -8,7 +8,7 @@ namespace Platform.ClientSportsbook.API.Repository
 {
     public interface ISportsbookRepository
     {
-        Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(ClientKeyFilter clientKeyFilter);
+        Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(ClientKeyFilter clientKeyFilter, string participantName);
         Task<BaseResponseDTO<TWLimitedResponseDTO>> GetActiveFixtureDetails(ClientKeyFilter clientKeyFilter, string fixtureId);
         Task<BaseResponseDTO<bool>> SubscribeToMarkets(ClientKeyFilter clientKeyFilter, MarketsSubscriptionRequestDTO request);
         Task<BaseResponseDTO<bool>> UnsubscribeToMarkets(ClientKeyFilter clientKeyFilter, MarketsSubscriptionRequestDTO request);

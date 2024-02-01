@@ -19,8 +19,11 @@ namespace Platform.ClientSportsbook.API.Models
         public string SegNa { get; set; }
         public int LeId { get; set; }
         public string LeNa { get; set; }
+        public string LiId { get; set; }
+        public string GeAl { get; set; }
         public string FiId { get; set; }
         public string PrFiId { get; set; }
+        public int FiTyId { get; set; }
         public string FiNa { get; set; }
         public string HoNa { get; set; }
         public string AwNa { get; set; }

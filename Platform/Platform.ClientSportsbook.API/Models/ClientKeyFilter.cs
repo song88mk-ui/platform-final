@@ -8,6 +8,7 @@ namespace Platform.ClientSportsbook.API.Models
         public Guid ClientId { get; set; }
         public string ClientCode { get; set; }
         public LanguageCode LanguageCode { get; set; }
-        public string IPCountryCode { get; set; }
+        public string IpCountryCode { get; set; }
+        public string IpAddress { get; set; }
     }
 }

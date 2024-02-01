@@ -6,13 +6,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Platform.ClientSportsbook.API.ActionFilters;
 using Platform.ClientSportsbook.API.Repository;
 using Platform.Shared.Data.Platform;
+using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
-using Platform.ClientSportsbook.API.ActionFilters;
-using StackExchange.Redis;
-using Platform.Shared.Utility;
 
 namespace Platform.ClientSportsbook.API
 {
@@ -74,7 +73,7 @@ namespace Platform.ClientSportsbook.API
 
             services.AddSingleton<IMemCache, MemCache>();
             services.AddScoped<ApiKeyFilter>();
-            services.AddScoped<RedisCache>();
+            services.AddSingleton<RedisCache>();
             services.AddHttpClient<ISportsbookRepository, SportsbookRepository>(client =>
             {
                 client.BaseAddress = new Uri(Configuration["API:SportsbookAPI"]);
@@ -84,6 +83,7 @@ namespace Platform.ClientSportsbook.API
                 client.BaseAddress = new Uri(Configuration["API:RabbitMQAPI"]);
             });
             services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Platform"]));
+            services.AddApplicationInsightsTelemetry();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

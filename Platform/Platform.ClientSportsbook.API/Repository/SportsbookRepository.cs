@@ -1,4 +1,5 @@
-﻿using Platform.ClientSportsbook.API.Models;
+﻿using Microsoft.Extensions.Configuration;
+using Platform.ClientSportsbook.API.Models;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
@@ -16,13 +17,15 @@ namespace Platform.ClientSportsbook.API.Repository
         private readonly HttpClient _httpClient;
         private readonly IRabbitMQRepository _rabbitMQRepository;
         private readonly RedisCache _redisCache;
-        public SportsbookRepository(HttpClient httpClient, IRabbitMQRepository rabbitMQRepository, RedisCache redisCache)
+        private readonly List<string> _countryWhiteList;
+        public SportsbookRepository(IConfiguration configuration, HttpClient httpClient, IRabbitMQRepository rabbitMQRepository, RedisCache redisCache)
         {
             _httpClient = httpClient;
             _rabbitMQRepository = rabbitMQRepository;
             _redisCache = redisCache;
+            _countryWhiteList = configuration["Custom:CountryWhiteList"].Split(',').ToList();
         }
-        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(ClientKeyFilter clientKeyFilter)
+        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(ClientKeyFilter clientKeyFilter, string participantName)
         {
             //var clientCode = await GetClientCodeById(clientId);
 
@@ -40,7 +43,7 @@ namespace Platform.ClientSportsbook.API.Repository
                 ClientId = clientKeyFilter.ClientId,
                 ClientCode = clientKeyFilter.ClientCode,
                 LanguageCode = clientKeyFilter.LanguageCode,
-                IPCountryCode = clientKeyFilter.IPCountryCode
+                IPCountryCode = clientKeyFilter.IpCountryCode
             };
 
             //if (!string.IsNullOrEmpty(participantName))
@@ -80,23 +83,21 @@ namespace Platform.ClientSportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<TWLimitedResponseDTO>> GetActiveFixtureDetails(ClientKeyFilter clientKeyFilter, string fixtureId)
         {
-            //var clientCode = await GetClientCodeById(clientId);
-
-            //if (string.IsNullOrEmpty(clientCode))
-            //{
-            //    return new BaseResponseDTO<ActiveFixturesResponseDTO>
-            //    {
-            //        StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
-            //        Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
-            //    };
-            //}
+            if(!long.TryParse(fixtureId, out var id))
+            {
+                return new BaseResponseDTO<TWLimitedResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} (Invalid ID)"
+                };
+            }
 
             var request = new ActiveFixtureDetailsRequestDTO
             {
                 ClientId = clientKeyFilter.ClientId,
                 ClientCode = clientKeyFilter.ClientCode,
                 LanguageCode = clientKeyFilter.LanguageCode,
-                IpCountryCode = clientKeyFilter.IPCountryCode,
+                IpCountryCode = clientKeyFilter.IpCountryCode,
                 FixtureId = fixtureId
             };
 
@@ -243,7 +244,7 @@ namespace Platform.ClientSportsbook.API.Repository
                 foreach (var fixtureId in fixtureIds)
                 {
                     var payload = await _redisCache.GetAsync<FixtureLimited>($"subscribed-fixture-markets:{clientKeyFilter.ClientCode}:{fixtureId}");
-
+                    
                     result.Fixtures.Add(new FixtureLimitedDTO()
                     {
                         SportId = payload.SpId,
@@ -257,10 +258,11 @@ namespace Platform.ClientSportsbook.API.Repository
                         FixtureName = GetFixtureName(payload.FiNa, payload.FiNaTr, clientKeyFilter.LanguageCode),
                         Home = GetHomeName(payload.FiNa, payload.FiNaTr, clientKeyFilter.LanguageCode),
                         Away = GetAwayName(payload.FiNa, payload.FiNaTr, clientKeyFilter.LanguageCode),
+                        FixtureType = ((FixtureType)payload.FiTyId).ToString(),
                         FixtureStartDate = payload.FiStDa,
                         FixtureStatus = payload.FiStNa,
-                        IsLive = payload.SpId == 21 ? payload.FiStId == (int)FixtureStatus.Live : payload.IsOfLi, // To be added
-                        IsLiveStream = payload.IsOfLi,
+                        IsLive = payload.SpId == 21 ? payload.FiStId == (int)FixtureStatus.Live : payload.IsOfLi,
+                        IsLiveStream = IsLiveStream(payload.LiId, payload.GeAl, clientKeyFilter.IpCountryCode),
                         Markets = payload.Ma.Select(market => new MarketLimitedDTO()
                         {
                             MarketTemplateId = market.MaTeId,
@@ -381,6 +383,23 @@ namespace Platform.ClientSportsbook.API.Repository
                 return result.SeNa;
             else
                 return name;
+        }
+        private bool IsLiveStream(string livestreamId, string geoAllowed, string ipCountryCode)
+        {
+            if (string.IsNullOrEmpty(livestreamId))
+                return false;
+
+            if (!string.IsNullOrEmpty(livestreamId) && !string.IsNullOrEmpty(ipCountryCode) && _countryWhiteList.Contains(ipCountryCode.ToUpper()))
+                return true;
+
+            if (!string.IsNullOrEmpty(geoAllowed) && !string.IsNullOrEmpty(ipCountryCode))
+            {
+                if (!geoAllowed.Split(",").Any(g => g.ToUpper() == ipCountryCode.ToUpper()))
+                    return false;
+            }
+
+            return true;
+
         }
     }
 }

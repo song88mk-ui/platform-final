@@ -3,22 +3,28 @@ using System;
 using StackExchange.Redis;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Rewrite;
 
 namespace Platform.ClientSportsbook.API.Repository
 {
     public class RedisCache
     {
-        Lazy<ConnectionMultiplexer> _connection;
-        ConnectionMultiplexer _connectionV2;
+        private ConnectionMultiplexer _connection;
+        private readonly IDatabase redisDb;
+
         public RedisCache(IConfiguration configuration)
         {
-            _connection = new Lazy<ConnectionMultiplexer>(() => ConnectionMultiplexer.Connect(configuration["ConnectionStrings:Redis"]));
+            _connection = ConnectionMultiplexer.Connect(configuration["ConnectionStrings:Redis"]);
+            redisDb = _connection.GetDatabase();
         }
 
         public async Task<TVal> GetAsync<TVal>(string key) where TVal : class
         {
-            var database = _connection.Value.GetDatabase();
-            var result = await database.StringGetAsync(key.ToLower());
+            if(redisDb == null)
+            {
+                return null;
+            }
+            var result = await redisDb.StringGetAsync(key.ToLower());
 
             return result.IsNullOrEmpty ? null : JsonSerializer.Deserialize<TVal>(result);
         }

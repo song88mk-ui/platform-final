@@ -80,8 +80,9 @@ namespace Platform.ClientSportsbook.API.ActionFilters
             {
                 ClientId = clientGuid,
                 ClientCode = cliendCode,
-                IPCountryCode = context.HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault(),
-                LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), languageCode)
+                IpCountryCode = context.HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault(),
+                LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), languageCode),
+                IpAddress = ipAddress
             };
         }
 

@@ -86,7 +86,7 @@ namespace Platform.ClientSportsbook.API.Controllers
         {
             var parameters = request;
 
-            var result = await _sportsbookRepository.SubscribeToMarkets(ClientKeyFilter, request);
+            var result = await _sportsbookRepository.SubscribeToMarkets(ClientKeyFilter.ClientCode, request);
 
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var properties = new Dictionary<string, string>
@@ -115,7 +115,7 @@ namespace Platform.ClientSportsbook.API.Controllers
         {
             var parameters = request;
 
-            var result = await _sportsbookRepository.UnsubscribeToMarkets(ClientKeyFilter, request);
+            var result = await _sportsbookRepository.UnsubscribeToMarkets(ClientKeyFilter.ClientCode, request);
 
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var properties = new Dictionary<string, string>

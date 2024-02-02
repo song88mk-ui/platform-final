@@ -74,10 +74,12 @@ namespace Platform.ClientPlatform.API.Repository
                 var queryString = string.Empty;
                 if(request != null)
                 {
-                    if (!string.IsNullOrEmpty(request.Home))
-                        queryString = queryString + $"home={request.Home}&";
-                    if (!string.IsNullOrEmpty(request.Away))
-                        queryString = queryString + $"away={request.Away}&";
+                    //if (!string.IsNullOrEmpty(request.Home))
+                    //    queryString = queryString + $"home={request.Home}&";
+                    //if (!string.IsNullOrEmpty(request.Away))
+                    //    queryString = queryString + $"away={request.Away}&";
+                    if (!string.IsNullOrEmpty(request.ParticipantName))
+                        queryString = queryString + $"participantName={request.ParticipantName}&";
                     if (!string.IsNullOrEmpty(request.FixtureStatus))
                         queryString = queryString + $"fixtureStatus={request.FixtureStatus}&";
                     if (request.FromFixtureStartDate != null)

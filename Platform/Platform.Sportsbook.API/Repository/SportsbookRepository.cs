@@ -6767,11 +6767,19 @@ namespace Platform.Sportsbook.API.Repository
                 IsLiveStream = IsLiveStream(s.LiId, s.GeAl, request.IPCountryCode),
             }).ToList();
 
-            if (!string.IsNullOrEmpty(request.Home))
-                result = result.Where(r => r.Home == request.Home).ToList();
 
-            if (!string.IsNullOrEmpty(request.Away))
-                result = result.Where(r => r.Away == request.Away).ToList();
+            if(!string.IsNullOrEmpty(request.ParticipantName))
+            {
+                result = result.Where(r => r.Home == request.ParticipantName || r.Away == request.ParticipantName).ToList();
+            }
+            //else
+            //{
+            //    if (!string.IsNullOrEmpty(request.Home))
+            //        result = result.Where(r => r.Home == request.Home).ToList();
+
+            //    if (!string.IsNullOrEmpty(request.Away))
+            //        result = result.Where(r => r.Away == request.Away).ToList();
+            //}
 
             return new BaseResponseDTO<ActiveFixturesResponseDTO>
             {

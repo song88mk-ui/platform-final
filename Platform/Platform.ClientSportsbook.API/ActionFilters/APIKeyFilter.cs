@@ -41,8 +41,8 @@ namespace Platform.ClientSportsbook.API.ActionFilters
                 return;
             }
 
-            var cliendCode = GetClientCodeById(clientGuid);
-            if (string.IsNullOrEmpty(cliendCode))
+            var clientCode = GetClientCodeById(clientGuid);
+            if (string.IsNullOrEmpty(clientCode))
             {
                 context.Result = new BadRequestObjectResult(new
                 {
@@ -79,7 +79,7 @@ namespace Platform.ClientSportsbook.API.ActionFilters
             ((IntegrationControllerBase)context.Controller).ClientKeyFilter = new ClientKeyFilter()
             {
                 ClientId = clientGuid,
-                ClientCode = cliendCode,
+                ClientCode = clientCode,
                 IpCountryCode = context.HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault(),
                 LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), languageCode),
                 IpAddress = context.HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()

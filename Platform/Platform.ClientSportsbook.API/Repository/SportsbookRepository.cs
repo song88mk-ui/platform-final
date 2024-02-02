@@ -39,8 +39,7 @@ namespace Platform.ClientSportsbook.API.Repository
             {
                 if (!string.IsNullOrEmpty(request.ParticipantName))
                 {
-                    payload.Home = request.ParticipantName;
-                    payload.Away = request.ParticipantName;
+                    payload.ParticipantName = request.ParticipantName;
                 }
                 if(request.ToFixtureStartDate != null)
                 {
@@ -135,7 +134,7 @@ namespace Platform.ClientSportsbook.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<bool>> SubscribeToMarkets(ClientKeyFilter clientKeyFilter, MarketsSubscriptionRequestDTO request)
+        public async Task<BaseResponseDTO<bool>> SubscribeToMarkets(string clientCode, MarketsSubscriptionRequestDTO request)
         {
             try
             {
@@ -161,7 +160,7 @@ namespace Platform.ClientSportsbook.API.Repository
                     Payload = JsonSerializer.Serialize(payload),
                     CorrelationId = Guid.NewGuid().ToString().ToUpper(),
                     MessageType = "OnSubscribeMarket",
-                    RoutingKey = $"r.oe.sb.engine.onsubscribemarket.{clientKeyFilter.ClientCode.ToLower()}"
+                    RoutingKey = $"r.oe.sb.engine.onsubscribemarket.{clientCode.ToLower()}"
                 });
 
                 return new BaseResponseDTO<bool>
@@ -180,7 +179,7 @@ namespace Platform.ClientSportsbook.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<bool>> UnsubscribeToMarkets(ClientKeyFilter clientKeyFilter, MarketsSubscriptionRequestDTO request)
+        public async Task<BaseResponseDTO<bool>> UnsubscribeToMarkets(string clientCode, MarketsSubscriptionRequestDTO request)
         {
             try
             {
@@ -206,7 +205,7 @@ namespace Platform.ClientSportsbook.API.Repository
                     Payload = JsonSerializer.Serialize(payload),
                     CorrelationId = Guid.NewGuid().ToString().ToUpper(),
                     MessageType = "OnUnsubscribeMarket",
-                    RoutingKey = $"r.oe.sb.engine.onunsubscribemarket.{clientKeyFilter.ClientCode.ToLower()}"
+                    RoutingKey = $"r.oe.sb.engine.onunsubscribemarket.{clientCode.ToLower()}"
                 });
 
                 return new BaseResponseDTO<bool>

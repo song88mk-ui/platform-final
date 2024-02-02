@@ -10,8 +10,8 @@ namespace Platform.ClientSportsbook.API.Repository
     {
         Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(ClientKeyFilter clientKeyFilter, ActiveFixtureRequest request);
         Task<BaseResponseDTO<TWLimitedResponseDTO>> GetActiveFixtureDetails(ClientKeyFilter clientKeyFilter, string fixtureId);
-        Task<BaseResponseDTO<bool>> SubscribeToMarkets(ClientKeyFilter clientKeyFilter, MarketsSubscriptionRequestDTO request);
-        Task<BaseResponseDTO<bool>> UnsubscribeToMarkets(ClientKeyFilter clientKeyFilter, MarketsSubscriptionRequestDTO request);
+        Task<BaseResponseDTO<bool>> SubscribeToMarkets(string clientCode, MarketsSubscriptionRequestDTO request);
+        Task<BaseResponseDTO<bool>> UnsubscribeToMarkets(string clientCode, MarketsSubscriptionRequestDTO request);
         Task<BaseResponseDTO<TWLimitedResponseDTO>> GetMarketsSubscription(ClientKeyFilter clientKeyFilter);
     }
 }

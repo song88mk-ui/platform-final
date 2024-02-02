@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Platform.ClientSportsbook.API.ActionFilters;
+using Platform.ClientSportsbook.API.Models;
 using Platform.ClientSportsbook.API.Repository;
 using Platform.Shared.Models;
 using System.Collections.Generic;
@@ -23,11 +24,11 @@ namespace Platform.ClientSportsbook.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/activefixtures")]
-        public async Task<IActionResult> GetActiveFixtures([FromQuery] string participant = "")
+        public async Task<IActionResult> GetActiveFixtures([FromQuery] ActiveFixtureRequest request = null)
         {
-            var parameters = new { };
+            var parameters = request;
 
-            var result = await _sportsbookRepository.GetClientActiveFixtures(ClientKeyFilter, string.Empty);
+            var result = await _sportsbookRepository.GetClientActiveFixtures(ClientKeyFilter, request);
 
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var properties = new Dictionary<string, string>

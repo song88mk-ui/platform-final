@@ -25,20 +25,9 @@ namespace Platform.ClientSportsbook.API.Repository
             _redisCache = redisCache;
             _countryWhiteList = configuration["Custom:CountryWhiteList"].Split(',').ToList();
         }
-        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(ClientKeyFilter clientKeyFilter, string participantName)
+        public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetClientActiveFixtures(ClientKeyFilter clientKeyFilter, ActiveFixtureRequest request)
         {
-            //var clientCode = await GetClientCodeById(clientId);
-
-            //if (string.IsNullOrEmpty(clientCode))
-            //{
-            //    return new BaseResponseDTO<ActiveFixturesResponseDTO>
-            //    {
-            //        StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
-            //        Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
-            //    };
-            //}
-
-            var request = new ActiveFixturesRequestDTO
+            var payload = new ActiveFixturesRequestDTO
             {
                 ClientId = clientKeyFilter.ClientId,
                 ClientCode = clientKeyFilter.ClientCode,
@@ -46,15 +35,30 @@ namespace Platform.ClientSportsbook.API.Repository
                 IPCountryCode = clientKeyFilter.IpCountryCode
             };
 
-            //if (!string.IsNullOrEmpty(participantName))
-            //{
-            //    request.Home = participantName;
-            //    request.Away = participantName;
-            //}
+            if(request != null)
+            {
+                if (!string.IsNullOrEmpty(request.ParticipantName))
+                {
+                    payload.Home = request.ParticipantName;
+                    payload.Away = request.ParticipantName;
+                }
+                if(request.ToFixtureStartDate != null)
+                {
+                    payload.ToFixtureStartDate = request.ToFixtureStartDate;
+                }
+                if (request.FromFixtureStartDate != null)
+                {
+                    payload.FromFixtureStartDate = request.FromFixtureStartDate;
+                }
+                if (!string.IsNullOrEmpty(request.FixtureStatus))
+                {
+                    payload.FixtureStatus = request.FixtureStatus;
+                }
+            }
 
             try
             {
-                var response = await _httpClient.PostAsync($"v1/sportsbook/activefixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.PostAsync($"v1/sportsbook/activefixtures", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
                     return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixturesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
@@ -92,7 +96,7 @@ namespace Platform.ClientSportsbook.API.Repository
                 };
             }
 
-            var request = new ActiveFixtureDetailsRequestDTO
+            var payload = new ActiveFixtureDetailsRequestDTO
             {
                 ClientId = clientKeyFilter.ClientId,
                 ClientCode = clientKeyFilter.ClientCode,
@@ -103,7 +107,7 @@ namespace Platform.ClientSportsbook.API.Repository
 
             try
             {
-                var response = await _httpClient.PostAsync($"v2/sportsbook/fixtures/details/limited", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.PostAsync($"v2/sportsbook/fixtures/details/limited", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
                     return JsonSerializer.Deserialize<BaseResponseDTO<TWLimitedResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });

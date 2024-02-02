@@ -226,20 +226,9 @@ namespace Platform.ClientSportsbook.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<TWLimitedResponseDTO>> GetMarketsSubscription(ClientKeyFilter clientKeyFilter, string languageCode)
+        public async Task<BaseResponseDTO<TWLimitedResponseDTO>> GetMarketsSubscription(ClientKeyFilter clientKeyFilter)
         {
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), languageCode);
-
-            if (!isValidLanguageCode)
-            {
-                return new BaseResponseDTO<TWLimitedResponseDTO>()
-                {
-                    StatusCode = StatusCode.Unsupported_LanguageCode,
-                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
-                };
-            }
-
-            var fixtureIds = await _redisCache.GetAsync<List<long>>($"subscribed-fixture-ids:{clientKeyFilter.ClientCode}");
+            var fixtureIds = await _redisCache.GetAsync<List<long>>(clientKeyFilter.ClientCode, $"subscribed-fixture-ids:{clientKeyFilter.ClientCode}");
 
 
             var result = new TWLimitedResponseDTO();
@@ -247,7 +236,7 @@ namespace Platform.ClientSportsbook.API.Repository
             {
                 foreach (var fixtureId in fixtureIds)
                 {
-                    var payload = await _redisCache.GetAsync<FixtureLimited>($"subscribed-fixture-markets:{clientKeyFilter.ClientCode}:{fixtureId}");
+                    var payload = await _redisCache.GetAsync<FixtureLimited>(clientKeyFilter.ClientCode, $"subscribed-fixture-markets:{clientKeyFilter.ClientCode}:{fixtureId}");
                     
                     result.Fixtures.Add(new FixtureLimitedDTO()
                     {

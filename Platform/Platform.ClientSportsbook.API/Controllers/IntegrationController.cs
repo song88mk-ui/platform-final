@@ -82,7 +82,7 @@ namespace Platform.ClientSportsbook.API.Controllers
             }
         }
         [HttpPost("v1/sportsbook/market/subscribe")]
-        public async Task<IActionResult> SubscribetToMarkets([FromBody] MarketsSubscriptionRequestDTO request)
+        public async Task<IActionResult> SubscribeToMarkets([FromBody] MarketsSubscriptionRequestDTO request)
         {
             var parameters = request;
 
@@ -111,7 +111,7 @@ namespace Platform.ClientSportsbook.API.Controllers
             }
         }
         [HttpPost("v1/sportsbook/market/unsubscribe")]
-        public async Task<IActionResult> UnsubscribetToMarkets([FromBody] MarketsSubscriptionRequestDTO request)
+        public async Task<IActionResult> UnsubscribeToMarkets([FromBody] MarketsSubscriptionRequestDTO request)
         {
             var parameters = request;
 
@@ -140,14 +140,11 @@ namespace Platform.ClientSportsbook.API.Controllers
             }
         }
         [HttpGet("v1/sportsbook/market/subscription")]
-        public async Task<IActionResult> GetMarketsSubscription([FromQuery] string languageCode = "")
+        public async Task<IActionResult> GetMarketsSubscription()
         {
-            var parameters = new { languageCode };
+            var parameters = new { ClientKeyFilter.LanguageCode };
 
-            if (string.IsNullOrEmpty(languageCode))
-                languageCode = ClientKeyFilter.LanguageCode.ToString();
-
-            var result = await _sportsbookRepository.GetMarketsSubscription(ClientKeyFilter, languageCode);
+            var result = await _sportsbookRepository.GetMarketsSubscription(ClientKeyFilter);
 
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var properties = new Dictionary<string, string>
@@ -171,6 +168,5 @@ namespace Platform.ClientSportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
-        // v1/sportsbook/active/
     }
 }

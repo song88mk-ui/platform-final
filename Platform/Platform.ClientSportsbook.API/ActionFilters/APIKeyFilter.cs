@@ -75,14 +75,14 @@ namespace Platform.ClientSportsbook.API.ActionFilters
                 });
                 return;
             }
-            var ipAddress = context.HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+
             ((IntegrationControllerBase)context.Controller).ClientKeyFilter = new ClientKeyFilter()
             {
                 ClientId = clientGuid,
                 ClientCode = cliendCode,
                 IpCountryCode = context.HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault(),
                 LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), languageCode),
-                IpAddress = ipAddress
+                IpAddress = context.HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()
             };
         }
 

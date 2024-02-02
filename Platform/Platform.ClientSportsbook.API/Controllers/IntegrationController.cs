@@ -53,7 +53,7 @@ namespace Platform.ClientSportsbook.API.Controllers
             }
         }
         [HttpGet("v1/sportsbook/activefixtures/details/{fixtureId}")]
-        public async Task<IActionResult> GetActiveFixtureDeatils([FromRoute] string fixtureId)
+        public async Task<IActionResult> GetActiveFixtureDetails([FromRoute] string fixtureId)
         {
             var parameters = new { };
 

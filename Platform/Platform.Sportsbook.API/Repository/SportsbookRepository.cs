@@ -5416,6 +5416,7 @@ namespace Platform.Sportsbook.API.Repository
                     SegmentName = GetSegmentName(fixture.SegNa, fixture.SegNaTr, request.LanguageCode),
                     LeagueId = fixture.LeId,
                     LeagueName = GetLeagueName(fixture.LeNa, fixture.LeNaTr, request.LanguageCode),
+                    FixtureType = ((FixtureType)fixture.FiTyId).ToString(),
                     FixtureId = fixture.FiId.ToString(),
                     ProviderFixtureId = fixture.PrFiId,
                     FixtureName = GetFixtureName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode),

@@ -39,7 +39,7 @@ namespace Platform.ClientSportsbook.API.Controllers
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },
-                                { "response", JsonSerializer.Serialize(result) }
+                                { "response", JsonSerializer.Serialize(new { Status = result.StatusCode, Message = result.Message }) }
                             };
 
             _telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures", properties);
@@ -68,7 +68,7 @@ namespace Platform.ClientSportsbook.API.Controllers
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },
-                                { "response", JsonSerializer.Serialize(result) }
+                                { "response", JsonSerializer.Serialize(new { Status = result.StatusCode, Message = result.Message }) }
                             };
 
             _telemetryClient.TrackEvent($"e:v1/sportsbook/activefixtures/details/{fixtureId}", properties);
@@ -97,7 +97,7 @@ namespace Platform.ClientSportsbook.API.Controllers
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },
-                                { "response", JsonSerializer.Serialize(result) }
+                                { "response", JsonSerializer.Serialize(new { Status = result.StatusCode, Message = result.Message }) }
                             };
 
             _telemetryClient.TrackEvent("e:v1/sportsbook/market/subscribe", properties);
@@ -126,7 +126,7 @@ namespace Platform.ClientSportsbook.API.Controllers
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },
-                                { "response", JsonSerializer.Serialize(result) }
+                                { "response", JsonSerializer.Serialize(new { Status = result.StatusCode, Message = result.Message }) }
                             };
 
             _telemetryClient.TrackEvent("e:v1/sportsbook/market/unsubscribe", properties);
@@ -155,7 +155,7 @@ namespace Platform.ClientSportsbook.API.Controllers
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },
-                                { "response", JsonSerializer.Serialize(result) }
+                                { "response", JsonSerializer.Serialize(new { Status = result.StatusCode, Message = result.Message }) }
                             };
 
             _telemetryClient.TrackEvent("e:v1/sportsbook/market/subscription", properties);

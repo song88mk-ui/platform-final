@@ -17,6 +17,7 @@ using System.Net;
 using System.Text.Json;
 using System.Threading;
 using System.Transactions;
+using System.Xml.Linq;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace Platform.Placement.Servicev2.Repository
@@ -680,7 +681,13 @@ namespace Platform.Placement.Servicev2.Repository
             //var companyStake = betData.TrueStake * 10000;
             //var stake = (betData.TrueStake - (betData.TrueStake * betData.WinningsTax)) * 10000;
 
-            var stake = betData.TrueStake * 10000;
+            var stake = 0m;
+            var entireStake = betData.TrueStake * 10000;
+
+            if (betData.ClientCode.ToUpper() == "RKP")
+                stake = (betData.TrueStake * .10m) * 10000;
+            else
+                stake = betData.TrueStake * 10000;
 
             #region Get Parlay Bonus
             var bonus = 0m;
@@ -723,7 +730,7 @@ namespace Platform.Placement.Servicev2.Repository
                                     .SetBetId(betData.BetId.ToString().ToUpper())
                                     .SetBetBonus(Convert.ToInt64(bonus), BetBonusMode.All, BetBonusType.Total, bonusDescription, BetBonusPaidAs.Cash)
                                     .SetStake(Convert.ToInt64(stake), StakeType.Total)
-                                    .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
+                                    .SetEntireStake(Convert.ToInt64(entireStake), StakeType.Total)
                                     .AddSelectedSystem(betSelectionData.Count)
                                     :
                                         isBetBuilder ? _factory.CreateBetBuilder()
@@ -731,13 +738,13 @@ namespace Platform.Placement.Servicev2.Repository
                                             .SetCalculationOdds(Convert.ToInt32(calculatedOdds * 10000))
                                             .SetBetId(betData.BetId.ToString().ToUpper())
                                             .SetStake(Convert.ToInt64(stake), StakeType.Total)
-                                            .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
+                                            .SetEntireStake(Convert.ToInt64(entireStake), StakeType.Total)
                                             .AddSelectedSystem(betSelectionData.Count)
                                             :
                                                 _factory.CreateBetBuilder()
                                                 .SetBetId(betData.BetId.ToString().ToUpper())
                                                 .SetStake(Convert.ToInt64(stake), StakeType.Total)
-                                                .SetEntireStake(Convert.ToInt64(stake), StakeType.Total)
+                                                .SetEntireStake(Convert.ToInt64(entireStake), StakeType.Total)
                                                 .AddSelectedSystem(betSelectionData.Count);
 
             foreach (var betSelection in betSelectionData)

@@ -116,7 +116,9 @@ namespace Platform.CashOutStake.Servicev2.Repository
         {
             if (message.Bet.IsFreeBet == true)
                 return;
-            if (message.IsBoosted == true)
+			if (message.Bet.BetTypeId == (int)BetType.BetBuilder)
+				return;
+			if (message.IsBoosted == true)
                 return;
 
             var bet = new BetMemory

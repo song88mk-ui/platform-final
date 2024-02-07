@@ -477,7 +477,14 @@ namespace Platform.CashOut.Service.Repository
                 CashoutAcceptance betStatus;
                 string reason;
 
-                var cashoutStake = (long)(message.CashOutStake * 10000);
+                var cashoutStake = (long)0;
+
+                if (message.ClientCode.ToUpper() == "RKP" || message.ClientCode.ToUpper() == "TSO")
+                    cashoutStake = (long)(message.CashOutStake * .10m) * 10000;
+                else
+                    cashoutStake = (long)(message.CashOutStake * 10000);
+
+                //var cashoutStake = (long)(message.CashOutStake * 10000);
 
                 var betCashout = _factory.CreateTicketCashoutBuilder().SetTicketId(message.BetId.ToString().ToUpper()).SetCashoutStake(cashoutStake).BuildTicket();
 

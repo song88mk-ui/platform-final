@@ -479,7 +479,7 @@ namespace Platform.CashOut.Service.Repository
 
                 var cashoutStake = (long)0;
 
-                if (message.ClientCode.ToUpper() == "RKP" || message.ClientCode.ToUpper() == "TSO")
+                if (message.ClientCode.ToUpper() == "RKP")
                     cashoutStake = (long)(message.CashOutStake * .10m) * 10000;
                 else
                     cashoutStake = (long)(message.CashOutStake * 10000);

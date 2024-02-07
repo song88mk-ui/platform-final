@@ -684,7 +684,7 @@ namespace Platform.Placement.Servicev2.Repository
             var stake = 0m;
             var entireStake = betData.TrueStake * 10000;
 
-            if (betData.ClientCode.ToUpper() == "RKP" || betData.ClientCode.ToUpper() == "TSO")
+            if (betData.ClientCode.ToUpper() == "RKP")
                 stake = (betData.TrueStake * .10m) * 10000;
             else
                 stake = betData.TrueStake * 10000;

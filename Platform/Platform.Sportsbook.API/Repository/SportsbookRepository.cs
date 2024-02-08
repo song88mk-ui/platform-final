@@ -4911,7 +4911,7 @@ namespace Platform.Sportsbook.API.Repository
                 else
                 {
 
-                    fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && 
+                    fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match &&
                     (c.FiNaTr.Any(s => s.LaCo == request.LanguageCode.ToString() && s.FiNa.ToLower().Contains(request.SearchText.ToLower())) ||
                     (!c.FiNaTr.Any(s => s.LaCo == request.LanguageCode.ToString()) && c.FiNa.ToLower().Contains(request.SearchText.ToLower()))));
 
@@ -6710,14 +6710,14 @@ namespace Platform.Sportsbook.API.Repository
             var fixtureStatusIds = new int[] { 0, 1 };
             if (!string.IsNullOrEmpty(request.FixtureStatus))
             {
-                if(request.FixtureStatus.ToLower().Equals("prematch"))
-                    fixtureStatusIds = new int[] { 0};
+                if (request.FixtureStatus.ToLower().Equals("prematch"))
+                    fixtureStatusIds = new int[] { 0 };
                 if (request.FixtureStatus.ToLower().Equals("live"))
                     fixtureStatusIds = new int[] { 1 };
             }
 
             FilterDefinition<Fixture> fixtureFilter;
-            if(request.FromFixtureStartDate != null && request.ToFixtureStartDate != null)
+            if (request.FromFixtureStartDate != null && request.ToFixtureStartDate != null)
             {
                 fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureStatusIds.Contains(c.FiStId) && c.FiStDa >= request.FromFixtureStartDate && c.FiStDa <= request.ToFixtureStartDate);
             }
@@ -6768,7 +6768,7 @@ namespace Platform.Sportsbook.API.Repository
             }).ToList();
 
 
-            if(!string.IsNullOrEmpty(request.ParticipantName))
+            if (!string.IsNullOrEmpty(request.ParticipantName))
             {
                 result = result.Where(r => r.Home == request.ParticipantName || r.Away == request.ParticipantName).ToList();
             }
@@ -10895,7 +10895,7 @@ namespace Platform.Sportsbook.API.Repository
             var retval = string.Empty;
 
             var orderedFixtures = fixtures.OrderBy(x => x.FiStDa).ToList();
-            var fixture = orderedFixtures.FirstOrDefault();
+            var fixture = orderedFixtures.FirstOrDefault(x => x.FiTyId == (int)FixtureType.Match) ?? orderedFixtures.FirstOrDefault();
 
             if (fixture.FiTyId == (int)FixtureType.Match)
             {
@@ -10909,7 +10909,7 @@ namespace Platform.Sportsbook.API.Repository
                         retval = $"Today|{fixture.FiStDa:MM/dd/yyyy hh:mm:ss tt}";
                     else
                     {
-                        if (fixture.FiStDa.Date > DateTime.UtcNow.Date.AddDays(7) && orderedFixtures.Any(x => x.FiTyId == (int)FixtureType.Outright))
+                        if (fixture.FiStDa.Date > DateTime.UtcNow.AddDays(7).Date && orderedFixtures.Any(x => x.FiTyId == (int)FixtureType.Outright))
                         {
                             retval = "Outrights";
                         }

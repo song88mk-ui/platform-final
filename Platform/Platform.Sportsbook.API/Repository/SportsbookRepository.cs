@@ -884,9 +884,9 @@ namespace Platform.Sportsbook.API.Repository
                 if (finalResult.Any(c => c.SportId == item.SportId)) continue;
 
                 var refFixtures = fixtures.Where(c => c.SpId == item.SportId).ToList();
-                var fixture = refFixtures.FirstOrDefault(c => c.SpId == item.SportId);
+                //var fixture = refFixtures.FirstOrDefault(c => c.SpId == item.SportId);
 
-                item.Scope = GetScope(fixture);
+                item.Scope = GetScope(refFixtures);
 
                 finalResult.Add(item);
 
@@ -10880,6 +10880,43 @@ namespace Platform.Sportsbook.API.Repository
                     else
                     {
                         retval = $"Early|{fixture.SegId}|{fixture.LeId}|{fixture.FiStDa:MM/dd/yyyy hh:mm:ss tt}";
+                    }
+                }
+            }
+            else if (fixture.FiTyId == (int)FixtureType.Outright)
+            {
+                retval = "Outrights";
+            }
+
+            return retval;
+        }
+        private string GetScope(List<Fixture> fixtures)
+        {
+            var retval = string.Empty;
+
+            var orderedFixtures = fixtures.OrderBy(x => x.FiStDa).ToList();
+            var fixture = orderedFixtures.FirstOrDefault();
+
+            if (fixture.FiTyId == (int)FixtureType.Match)
+            {
+                if (fixture.FiStId == (int)FixtureStatus.Live)
+                {
+                    retval = "Today";
+                }
+                else
+                {
+                    if (fixture.FiStDa.Date == DateTime.UtcNow.Date)
+                        retval = $"Today|{fixture.FiStDa:MM/dd/yyyy hh:mm:ss tt}";
+                    else
+                    {
+                        if (fixture.FiStDa.Date > DateTime.UtcNow.Date.AddDays(7) && orderedFixtures.Any(x => x.FiTyId == (int)FixtureType.Outright))
+                        {
+                            retval = "Outrights";
+                        }
+                        else
+                        {
+                            retval = $"Early|{fixture.SegId}|{fixture.LeId}|{fixture.FiStDa:MM/dd/yyyy hh:mm:ss tt}";
+                        }
                     }
                 }
             }

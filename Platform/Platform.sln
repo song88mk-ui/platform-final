@@ -72,6 +72,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.BetInfo.Service", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.ClientSportsbook.API", "Platform.ClientSportsbook.API\Platform.ClientSportsbook.API.csproj", "{DB0FBFCD-7028-47BE-BAC9-5130BC1B61C1}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Websocket.API2", "Platform.Websocket.API2\Platform.Websocket.API2.csproj", "{CC1C4866-7C5C-45C4-B8EF-6D86CAF5C28B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -210,6 +212,10 @@ Global
 		{DB0FBFCD-7028-47BE-BAC9-5130BC1B61C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB0FBFCD-7028-47BE-BAC9-5130BC1B61C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB0FBFCD-7028-47BE-BAC9-5130BC1B61C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC1C4866-7C5C-45C4-B8EF-6D86CAF5C28B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC1C4866-7C5C-45C4-B8EF-6D86CAF5C28B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC1C4866-7C5C-45C4-B8EF-6D86CAF5C28B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC1C4866-7C5C-45C4-B8EF-6D86CAF5C28B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

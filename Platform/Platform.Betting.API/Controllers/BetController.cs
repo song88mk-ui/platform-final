@@ -225,5 +225,21 @@ namespace Platform.Betting.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v1/cachepreload")]
+        public async Task<IActionResult> CachePreload([FromBody] CachePreloadRequestDTO request)
+        {
+            var result = await _bettingRepository.DeleteCachePreload(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
     }
 }

@@ -5,6 +5,8 @@
         MarketSortOrder = 0,
         SportSortOrder = 1,
         UserFavorites = 2,
-        Maintenance = 4
+        Maintenance = 4,
+        ParlayBonus = 5,
+        Client = 6
     }
 }

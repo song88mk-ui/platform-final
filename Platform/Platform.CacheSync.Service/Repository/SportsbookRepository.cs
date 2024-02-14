@@ -26,7 +26,7 @@ namespace Platform.CacheSync.Service.Repository
                     httpClient.BaseAddress = new Uri(baseUri);
                     //httpClient.Timeout = TimeSpan.FromSeconds(5);
 
-                    var response = await httpClient.PostAsync($"v1/sportsbook/cachepreload", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+                    var response = await httpClient.PostAsync($"v1/cachepreload", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                     if (response.IsSuccessStatusCode)
                         return JsonSerializer.Deserialize<BaseResponseDTO<bool>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });

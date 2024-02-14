@@ -29,7 +29,7 @@ namespace Platform.CacheSync.Service.Repository
                 CacheType = CacheType.MarketSortOrder
             };
 
-            var publishMessage = await DeleteCachePreload(request);
+            var publishMessage = await DeleteCachePreload_SportsbookApi(request);
 
             if (publishMessage)
             {
@@ -44,7 +44,7 @@ namespace Platform.CacheSync.Service.Repository
                 CacheType = CacheType.SportSortOrder
             };
 
-            var publishMessage = await DeleteCachePreload(request);
+            var publishMessage = await DeleteCachePreload_SportsbookApi(request);
         }
 
         public async void ProcessUpdateUserFavorites(OnDeleteCacheMessage message)
@@ -55,7 +55,7 @@ namespace Platform.CacheSync.Service.Repository
                 CacheKey = message.CacheKey                
             };
 
-            var publishMessage = await DeleteCachePreload(request);
+            var publishMessage = await DeleteCachePreload_SportsbookApi(request);
         }
 
         public async void ProcessMaintenance(OnDeleteCacheMessage message)
@@ -65,10 +65,33 @@ namespace Platform.CacheSync.Service.Repository
                 CacheType = CacheType.Maintenance
             };
 
-            var publishMessage = await DeleteCachePreload(request);
+            var publishMessage = await DeleteCachePreload_SportsbookApi(request);
         }
 
-        private async Task<bool> DeleteCachePreload(CachePreloadRequestDTO request)
+
+        public async void ProcessParlayBonusChange(OnDeleteCacheMessage message)
+        {
+            var request = new CachePreloadRequestDTO
+            {
+                CacheType = message.CacheType            
+            };
+
+            await DeleteCachePreload_BettingApi(request);
+        }
+
+        public async void ProcessClientChange(OnDeleteCacheMessage message)
+        {
+            var request = new CachePreloadRequestDTO
+            {
+                CacheType = message.CacheType,
+                CacheKey = message.CacheKey
+            };
+
+            await DeleteCachePreload_PlatformApi(request);
+        }
+
+        #region Private Methods
+        private async Task<bool> DeleteCachePreload_SportsbookApi(CachePreloadRequestDTO request)
         {
             var apis = bool.Parse(_configuration["IsProduction"]) ? _configuration.GetSection("API:Production:PlatformSportsbookAPI").Get<List<string>>() : _configuration.GetSection("API:Staging:PlatformSportsbookAPI").Get<List<string>>();
             var publishMessage = true;
@@ -86,5 +109,45 @@ namespace Platform.CacheSync.Service.Repository
 
             return publishMessage;
         }
+
+        private async Task<bool> DeleteCachePreload_BettingApi(CachePreloadRequestDTO request)
+        {
+            var apis = bool.Parse(_configuration["IsProduction"]) ? _configuration.GetSection("API:Production:PlatformBettingAPI").Get<List<string>>() : _configuration.GetSection("API:Staging:PlatformBettingAPI").Get<List<string>>();
+            var publishMessage = true;
+
+            foreach (var api in apis)
+            {
+                var result = await _sportsbookRepository.DeleteCachePreload(request, api);
+
+                if (result.StatusCode != StatusCode.Success)
+                {
+                    publishMessage = false;
+                    break;
+                }
+            }
+
+            return publishMessage;
+        }
+
+
+        private async Task<bool> DeleteCachePreload_PlatformApi(CachePreloadRequestDTO request)
+        {
+            var apis = bool.Parse(_configuration["IsProduction"]) ? _configuration.GetSection("API:Production:PlatformAPI").Get<List<string>>() : _configuration.GetSection("API:Staging:PlatformAPI").Get<List<string>>();
+            var publishMessage = true;
+
+            foreach (var api in apis)
+            {
+                var result = await _sportsbookRepository.DeleteCachePreload(request, api);
+
+                if (result.StatusCode != StatusCode.Success)
+                {
+                    publishMessage = false;
+                    break;
+                }
+            }
+
+            return publishMessage;
+        }
+        #endregion
     }
 }

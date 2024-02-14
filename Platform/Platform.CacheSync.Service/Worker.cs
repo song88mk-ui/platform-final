@@ -67,6 +67,14 @@ namespace Platform.CacheSync.Service
                         var maintenance = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
                         _cacheSyncRepository.ProcessUpdateUserFavorites(maintenance);
                         break;
+                    case "OnParlayBonusChange":
+                        var parlayBonus = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
+                        _cacheSyncRepository.ProcessParlayBonusChange(parlayBonus);
+                        break;
+                    case "OnClientChange":
+                        var client = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
+                        _cacheSyncRepository.ProcessClientChange(client);
+                        break;
                 }
             }
             catch (Exception)

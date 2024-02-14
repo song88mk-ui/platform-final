@@ -1136,7 +1136,7 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
-        [HttpPost("v1/sportsbook/cachepreload")]
+        [HttpPost("v1/cachepreload")]
         public async Task<IActionResult> CachePreload([FromBody] CachePreloadRequestDTO request)
         {
             var result = await _sportsbookRepository.DeleteCachePreload(request);

@@ -1,11 +1,8 @@
 ﻿using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
-using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Helpers;
 using Platform.Shared.MessageModels;
@@ -13,7 +10,6 @@ using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -2863,6 +2859,20 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
+        }
+
+
+        public async Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request)
+        {
+            if (request.CacheType == CacheType.ParlayBonus)
+                _memCache.DeleteCache("pba");
+
+            return new BaseResponseDTO<bool>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = true
+            };
         }
 
         private decimal GetMinStake(decimal minStake, decimal exchangeRate, decimal companyShare, string currencyCode)

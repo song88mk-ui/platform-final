@@ -99,19 +99,6 @@ namespace Platform.Betting.API.Controllers
                     return BadRequest(result);
             }
         }
-        //[HttpPost("v1/bet/config/user")]
-        //public async Task<IActionResult> GetUserBetConfig([FromBody] UserBetConfigDetailsRequestDTO request)
-        //{
-        //    var result = await _bettingRepository.GetUserBetConfig(request);
-
-        //    switch (result.StatusCode)
-        //    {
-        //        case Shared.Enums.StatusCode.Success:
-        //            return Ok(result);
-        //        default:
-        //            return BadRequest(result);
-        //    }
-        //}
 
         [HttpPost("v1/bet/cancel")]
         public async Task<IActionResult> CancelBets([FromBody] BetModifyRequestDTO request)

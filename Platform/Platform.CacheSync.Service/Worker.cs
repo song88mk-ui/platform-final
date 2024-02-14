@@ -72,6 +72,7 @@ namespace Platform.CacheSync.Service
                         _cacheSyncRepository.ProcessParlayBonusChange(parlayBonus);
                         break;
                     case "OnClientChange":
+                        //
                         var client = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
                         _cacheSyncRepository.ProcessClientChange(client);
                         break;

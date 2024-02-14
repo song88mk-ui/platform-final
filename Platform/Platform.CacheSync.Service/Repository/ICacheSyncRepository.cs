@@ -8,5 +8,7 @@ namespace Platform.CacheSync.Service.Repository
         void ProcessSportSortOrderChange(OnDeleteCacheMessage message);
         void ProcessUpdateUserFavorites(OnDeleteCacheMessage message);
         void ProcessMaintenance(OnDeleteCacheMessage message);
+        void ProcessParlayBonusChange(OnDeleteCacheMessage message);
+        void ProcessClientChange(OnDeleteCacheMessage message);
     }
 }

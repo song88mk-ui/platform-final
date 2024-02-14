@@ -79,6 +79,17 @@ namespace Platform.CacheSync.Service.Repository
             await DeleteCachePreload_BettingApi(request);
         }
 
+        public async void ProcessClientChange(OnDeleteCacheMessage message)
+        {
+            var request = new CachePreloadRequestDTO
+            {
+                CacheType = message.CacheType,
+                CacheKey = message.CacheKey
+            };
+
+            await DeleteCachePreload_PlatformApi(request);
+        }
+
         #region Private Methods
         private async Task<bool> DeleteCachePreload_SportsbookApi(CachePreloadRequestDTO request)
         {

@@ -69,7 +69,11 @@ namespace Platform.CacheSync.Service
                         break;
                     case "OnParlayBonusChange":
                         var parlayBonus = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
-                        _cacheSyncRepository.ProcessMarketSortOrderChange(parlayBonus);
+                        _cacheSyncRepository.ProcessParlayBonusChange(parlayBonus);
+                        break;
+                    case "OnClientChange":
+                        var client = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
+                        _cacheSyncRepository.ProcessClientChange(client);
                         break;
                 }
             }

@@ -1932,6 +1932,8 @@ namespace Platform.Sportsbook.API.Repository
             {
                 var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && leagueIds.Contains(c.LeId));
                 var leagueResult = await fixtureCollection.Find(leagueFilter).ToListAsync();
+                if (IsOEEnable(request.ClientCode))
+                    leagueResult = leagueResult.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).ToList();
 
                 foreach (var item in leagueResult)
                 {
@@ -1989,6 +1991,7 @@ namespace Platform.Sportsbook.API.Repository
 
             return returnResult;
         }
+
         public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> AddFavorites(UserFavoriteInsertDeleteRequestDTO request)
         {
             var maintenance = GetMaintenance();

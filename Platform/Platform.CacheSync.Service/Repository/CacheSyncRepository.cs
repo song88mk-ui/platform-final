@@ -73,9 +73,10 @@ namespace Platform.CacheSync.Service.Repository
         {
             var request = new CachePreloadRequestDTO
             {
-                CacheType = message.CacheType            };
+                CacheType = message.CacheType            
+            };
 
-            var publishMessage = await DeleteCachePreload_SportsbookApi(request);
+            await DeleteCachePreload_BettingApi(request);
         }
 
         #region Private Methods

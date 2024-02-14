@@ -408,5 +408,21 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+
+
+        [HttpPost("v1/cachepreload")]
+        public async Task<IActionResult> CachePreload([FromBody] CachePreloadRequestDTO request)
+        {
+            var result = await _platformRepository.DeleteCachePreload(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

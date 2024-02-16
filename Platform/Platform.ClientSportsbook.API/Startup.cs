@@ -23,7 +23,6 @@ namespace Platform.ClientSportsbook.API
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddCors(options =>
@@ -45,30 +44,30 @@ namespace Platform.ClientSportsbook.API
 
             services.AddControllers();
 
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Client Sportsbook API", Version = "v1" });
-                c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
-                {
-                    Name = "x-api-key",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.ApiKey,
-                    Description = "Authorization by x-api-key inside request's header",
-                    Scheme = "ApiKeyScheme"
-                });
-                var key = new OpenApiSecurityScheme()
-                {
-                    Reference = new OpenApiReference
-                    {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "ApiKey"
-                    },
-                    In = ParameterLocation.Header
-                };
+            //services.AddSwaggerGen(c =>
+            //{
+            //    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Client Sportsbook API", Version = "v1" });
+            //    c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+            //    {
+            //        Name = "x-api-key",
+            //        In = ParameterLocation.Header,
+            //        Type = SecuritySchemeType.ApiKey,
+            //        Description = "Authorization by x-api-key inside request's header",
+            //        Scheme = "ApiKeyScheme"
+            //    });
+            //    var key = new OpenApiSecurityScheme()
+            //    {
+            //        Reference = new OpenApiReference
+            //        {
+            //            Type = ReferenceType.SecurityScheme,
+            //            Id = "ApiKey"
+            //        },
+            //        In = ParameterLocation.Header
+            //    };
 
-                var requirement = new OpenApiSecurityRequirement { { key, new List<string>() } };
-                c.AddSecurityRequirement(requirement);
-            });
+            //    var requirement = new OpenApiSecurityRequirement { { key, new List<string>() } };
+            //    c.AddSecurityRequirement(requirement);
+            //});
 
             services.AddMemoryCache();
             services.AddScoped<ApiKeyFilter>();
@@ -95,11 +94,11 @@ namespace Platform.ClientSportsbook.API
 
             app.UseForwardedHeaders();
 
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Client Sportsbook API V1");
-            });
+            //app.UseSwagger();
+            //app.UseSwaggerUI(c =>
+            //{
+            //    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Client Sportsbook API V1");
+            //});
             app.UseRouting();
             app.UseCors("AllowAllOrigins");
 

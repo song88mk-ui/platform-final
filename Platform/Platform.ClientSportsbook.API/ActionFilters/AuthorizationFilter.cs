@@ -1,23 +1,23 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Platform.ClientSportsbook.API.Controllers;
 using Platform.ClientSportsbook.API.Models;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
+using Platform.Shared.Utility;
 using System;
 using System.Linq;
 
 namespace Platform.ClientSportsbook.API.ActionFilters
 {
-    public class ApiKeyFilter : ActionFilterAttribute
+    public class AuthorizationFilter : ActionFilterAttribute
     {
         private readonly IConfiguration _configuration;
         private readonly PlatformContext _platformContext;
-        private readonly IMemoryCache _cache;
+        private readonly IMemCache _cache;
 
-        public ApiKeyFilter(IConfiguration configuration, PlatformContext platformContext, IMemoryCache cache)
+        public AuthorizationFilter(IConfiguration configuration, PlatformContext platformContext, IMemCache cache)
         {
             _configuration = configuration;
             _platformContext = platformContext;
@@ -27,6 +27,7 @@ namespace Platform.ClientSportsbook.API.ActionFilters
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             var clientId = context.HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
             var isGuid = Guid.TryParse(clientId, out Guid clientGuid);
 
             if (string.IsNullOrEmpty(clientId) || !isGuid)
@@ -39,7 +40,7 @@ namespace Platform.ClientSportsbook.API.ActionFilters
                 return;
             }
 
-            var clientCode = GetClientCodeById(clientGuid);
+            var clientCode = GetClientCode(clientGuid);
             if (string.IsNullOrEmpty(clientCode))
             {
                 context.Result = new BadRequestObjectResult(new
@@ -84,19 +85,20 @@ namespace Platform.ClientSportsbook.API.ActionFilters
             };
         }
 
-        private string GetClientCodeById(Guid clientId)
+        private string GetClientCode(Guid clientId)
         {
             var key = $"cc:{clientId.ToString().ToUpper()}";
 
-            if (_cache.TryGetValue(key, out string clientCode))
-                if (clientCode != null)
-                    return clientCode;
+            var cache = _cache.GetCache<string>(key);
+
+            if (cache != null)
+                return cache;
 
             var result = _platformContext.Client.Find(clientId);
 
             if (result != null && result.IsActive)
             {
-                _cache.Set(key, result.ClientCode, TimeSpan.FromHours(24));
+                _cache.AddOrUpdateCache(key, result.ClientCode, 24);
 
                 return result.ClientCode;
             }

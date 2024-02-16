@@ -5,12 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
 using Platform.ClientSportsbook.API.ActionFilters;
 using Platform.ClientSportsbook.API.Repository;
 using Platform.Shared.Data.Platform;
+using Platform.Shared.Utility;
 using System;
-using System.Collections.Generic;
 
 namespace Platform.ClientSportsbook.API
 {
@@ -69,8 +68,8 @@ namespace Platform.ClientSportsbook.API
             //    c.AddSecurityRequirement(requirement);
             //});
 
-            services.AddMemoryCache();
-            services.AddScoped<ApiKeyFilter>();
+            services.AddSingleton<IMemCache, MemCache>();
+            services.AddScoped<AuthorizationFilter>();
             services.AddSingleton<RedisCache>();
             services.AddHttpClient<ISportsbookRepository, SportsbookRepository>(client =>
             {

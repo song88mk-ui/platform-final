@@ -229,7 +229,6 @@ namespace Platform.ClientSportsbook.API.Repository
         {
             var fixtureIds = await _redisCache.GetAsync<List<long>>(clientKeyFilter.ClientCode, $"subscribed-fixture-ids:{clientKeyFilter.ClientCode}");
 
-
             var result = new TWLimitedResponseDTO();
             if (fixtureIds != null)
             {

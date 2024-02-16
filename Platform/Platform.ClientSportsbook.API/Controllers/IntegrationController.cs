@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Platform.ClientSportsbook.API.Controllers
 {
-    [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(ApiKeyFilter))]
+    [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(AuthorizationFilter))]
     public class IntegrationController : IntegrationControllerBase
     {
         private readonly ISportsbookRepository _sportsbookRepository;

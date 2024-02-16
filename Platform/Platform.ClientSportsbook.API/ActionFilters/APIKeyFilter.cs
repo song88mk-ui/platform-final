@@ -1,15 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Platform.ClientSportsbook.API.Controllers;
+using Platform.ClientSportsbook.API.Models;
+using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
-using System.Collections.Generic;
 using System;
 using System.Linq;
-using Platform.ClientSportsbook.API.Models;
-using System.Threading.Tasks;
-using Platform.Shared.Data.Platform;
-using Platform.Shared.Utility;
 
 namespace Platform.ClientSportsbook.API.ActionFilters
 {
@@ -17,13 +15,13 @@ namespace Platform.ClientSportsbook.API.ActionFilters
     {
         private readonly IConfiguration _configuration;
         private readonly PlatformContext _platformContext;
-        private readonly IMemCache _memCache;
+        private readonly IMemoryCache _cache;
 
-        public ApiKeyFilter(IConfiguration configuration, PlatformContext platformContext, IMemCache memCache)
+        public ApiKeyFilter(IConfiguration configuration, PlatformContext platformContext, IMemoryCache cache)
         {
             _configuration = configuration;
             _platformContext = platformContext;
-            _memCache = memCache;
+            _cache = cache;
         }
 
         public override void OnActionExecuting(ActionExecutingContext context)
@@ -57,8 +55,8 @@ namespace Platform.ClientSportsbook.API.ActionFilters
             {
                 context.Result = new BadRequestObjectResult(new
                 {
-                    StatusCode = StatusCode.Not_Authorized,
-                    Message = StatusCode.Not_Authorized.ToString().Replace('_', ' ')
+                    StatusCode = StatusCode.Missing_Or_Unsupported_APIKey_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_APIKey_In_Request_Headers.ToString().Replace('_', ' ')
                 });
                 return;
             }
@@ -90,16 +88,15 @@ namespace Platform.ClientSportsbook.API.ActionFilters
         {
             var key = $"cc:{clientId.ToString().ToUpper()}";
 
-            var cache = _memCache.GetCache<string>(key);
+            if (_cache.TryGetValue(key, out string clientCode))
+                if (clientCode != null)
+                    return clientCode;
 
-            if (cache != null)
-                return cache;
-
-            var result =  _platformContext.Client.Find(clientId);
+            var result = _platformContext.Client.Find(clientId);
 
             if (result != null && result.IsActive)
             {
-                _memCache.AddOrUpdateCache(key, result.ClientCode, 24);
+                _cache.Set(key, result.ClientCode, TimeSpan.FromHours(24));
 
                 return result.ClientCode;
             }

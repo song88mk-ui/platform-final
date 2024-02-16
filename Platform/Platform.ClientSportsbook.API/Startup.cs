@@ -9,7 +9,6 @@ using Microsoft.OpenApi.Models;
 using Platform.ClientSportsbook.API.ActionFilters;
 using Platform.ClientSportsbook.API.Repository;
 using Platform.Shared.Data.Platform;
-using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
 
@@ -71,7 +70,7 @@ namespace Platform.ClientSportsbook.API
                 c.AddSecurityRequirement(requirement);
             });
 
-            services.AddSingleton<IMemCache, MemCache>();
+            services.AddMemoryCache();
             services.AddScoped<ApiKeyFilter>();
             services.AddSingleton<RedisCache>();
             services.AddHttpClient<ISportsbookRepository, SportsbookRepository>(client =>

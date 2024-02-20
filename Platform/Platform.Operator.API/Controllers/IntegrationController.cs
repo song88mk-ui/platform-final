@@ -12,11 +12,11 @@ namespace Platform.Operator.API.Controllers
     [ApiController, EnableCors("AllowAllOrigins")]
     public class IntegrationController : ControllerBase
     {
+        //
         private readonly IPlatformRepository _platformRepository;
 
         public IntegrationController(IPlatformRepository platformRepository)
         {
-            //
             _platformRepository = platformRepository;
         }
 

@@ -58,7 +58,7 @@ namespace Platform.Betting.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<List<CashOutDetailsReponse>>> GetCashOut(List<Bet> bets, List<BetSelection> betSelections, List<Guid> boostedList)
+        public async Task<BaseResponseDTO<List<CashOutDetailsReponse>>> GetCashOut(List<Bet> bets, List<BetSelection> betSelections, List<Guid> boostedList, List<CashOutHistory> cashoutHistory)
         {
             var result = new List<CashOutDetailsReponse>();
 
@@ -201,13 +201,15 @@ namespace Platform.Betting.API.Repository
                     try
                     {
                         //var taxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
+                        var prevCashout = cashoutHistory.FirstOrDefault(c => c.BetId == bet.BetId);
+                        var remainingStake = prevCashout == null ? bet.TrueStake : prevCashout.PostStake;
 
-                        var finalStake = bet.TrueStake - bet.StakeBonus;
+                        var finalStake = remainingStake - bet.StakeBonus;
 
                         var taxedStake = finalStake - (finalStake / (1 + bet.StakeTax));
-                        var stake = bet.TrueStake - taxedStake;
+                        var stake = remainingStake - taxedStake;
 
-                        var nonTaxedStake = bet.TrueStake;
+                        var nonTaxedStake = remainingStake;
                         var nonTaxedPayout = 0m;
 
                         var probabilites = new List<Probabilities>();
@@ -322,7 +324,7 @@ namespace Platform.Betting.API.Repository
                                 {
                                     won = Convert.ToDecimal(probabilites.First().WonProbability) * (stake + bet.Stake);
                                     halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * ((bet.Stake / 2) + stake);
-                                    nonTaxedWon = Convert.ToDecimal(probabilites.First().WonProbability) * (bet.TrueStake + bet.Stake);
+                                    nonTaxedWon = Convert.ToDecimal(probabilites.First().WonProbability) * (bet.TrueStake + bet.Stake); //TODO: analyze how to compute by remaining stake
                                     nonTaxedHalfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * ((bet.Stake / 2) + stake);
                                 }
                                 else

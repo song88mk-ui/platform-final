@@ -2680,7 +2680,9 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var result = await _sportsbookRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>());
+            var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().FirstOrDefault(c => c.BetId == bet.BetId);
+
+            var result = await _sportsbookRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>(), new List<CashOutHistory> { cashoutHistory });
 
             var cashOut = result.Result.Where(c => c.BetId == bet.BetId && c.CashOutStatus == CashOutStatus.Available).FirstOrDefault();
 

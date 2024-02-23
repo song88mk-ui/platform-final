@@ -12,6 +12,7 @@ namespace Platform.API.Repository
 {
     public class BettingRepository : IBettingRepository
     {
+        //
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
 

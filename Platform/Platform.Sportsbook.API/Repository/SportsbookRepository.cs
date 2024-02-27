@@ -2125,7 +2125,7 @@ namespace Platform.Sportsbook.API.Repository
                     CorrelationId = Guid.NewGuid().ToString().ToUpper(),
                     MessageType = "OnRemoveUserFavorites",
                     RoutingKey = $"r.oe.sb.engine.onvisitfavorites.{request.ClientCode.ToLower()}",
-                    Payload = JsonSerializer.Serialize(JsonSerializer.Serialize(new
+                    Payload = JsonSerializer.Serialize(new
                     {
                         UserId = request.UserId,
                         Favorites = new List<UserFavorite>() {
@@ -2137,7 +2137,7 @@ namespace Platform.Sportsbook.API.Repository
                                 HierarchyId = favorite.HierarchyId
                             }
                         }
-                    }))
+                    })
                 });
             }
 

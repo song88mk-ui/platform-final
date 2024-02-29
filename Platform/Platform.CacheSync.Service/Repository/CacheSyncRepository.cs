@@ -141,13 +141,10 @@ namespace Platform.CacheSync.Service.Repository
 
             foreach (var api in apis)
             {
-                Console.WriteLine($"DeleteCachePreload_PlatformApi: {JsonSerializer.Serialize(request)} - {api}");
-
                 var result = await _sportsbookRepository.DeleteCachePreload(request, api, header);
 
                 if (result.StatusCode != StatusCode.Success)
                 {
-                    Console.WriteLine(result.Message);
                     publishMessage = false;
                     break;
                 }

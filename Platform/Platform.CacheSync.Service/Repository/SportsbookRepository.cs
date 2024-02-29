@@ -34,8 +34,6 @@ namespace Platform.CacheSync.Service.Repository
                             httpClient.DefaultRequestHeaders.Add(key.Key, key.Value);
                         }
                     }
-
-
                     //httpClient.Timeout = TimeSpan.FromSeconds(5);
 
                     var response = await httpClient.PostAsync($"v1/cachepreload", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));

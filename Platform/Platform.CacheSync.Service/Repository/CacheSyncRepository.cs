@@ -5,6 +5,7 @@ using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Platform.CacheSync.Service.Repository
@@ -135,9 +136,14 @@ namespace Platform.CacheSync.Service.Repository
             var apis = bool.Parse(_configuration["IsProduction"]) ? _configuration.GetSection("API:Production:PlatformAPI").Get<List<string>>() : _configuration.GetSection("API:Staging:PlatformAPI").Get<List<string>>();
             var publishMessage = true;
 
+            var header = new Dictionary<string, string>();
+            header["x-api-key"] = bool.Parse(_configuration["IsProduction"]) ? _configuration.GetSection("API:Production:PlatformAPIKey").Get<string>() : _configuration.GetSection("API:Staging:PlatformAPIKey").Get<string>();
+
             foreach (var api in apis)
             {
-                var result = await _sportsbookRepository.DeleteCachePreload(request, api);
+                Console.WriteLine($"DeleteCachePreload_PlatformApi: {JsonSerializer.Serialize(request)} - {api}");
+
+                var result = await _sportsbookRepository.DeleteCachePreload(request, api, header);
 
                 if (result.StatusCode != StatusCode.Success)
                 {

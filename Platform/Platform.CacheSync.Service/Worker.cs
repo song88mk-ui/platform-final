@@ -80,6 +80,7 @@ namespace Platform.CacheSync.Service
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"{messageType} {payload}");
                 Console.WriteLine($"{ex.Message} - {ex.StackTrace}");
             }
         }

@@ -141,6 +141,7 @@ namespace Platform.CacheSync.Service.Repository
 
                 if (result.StatusCode != StatusCode.Success)
                 {
+                    Console.WriteLine(result.Message);
                     publishMessage = false;
                     break;
                 }

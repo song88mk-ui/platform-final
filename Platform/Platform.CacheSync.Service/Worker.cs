@@ -78,9 +78,9 @@ namespace Platform.CacheSync.Service
                         break;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                Console.WriteLine($"{ex.Message} - {ex.StackTrace}");
             }
         }
     }

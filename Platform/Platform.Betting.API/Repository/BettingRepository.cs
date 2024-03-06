@@ -2719,38 +2719,79 @@ namespace Platform.Betting.API.Repository
             }
             else
             {
-                var payload = new OnCashoutBetSettlement
+                
+                if(request.CashOutStakePercent > 0 && request.CashOutStakePercent < 1)
                 {
-                    BetId = request.BetId,
-                    UserId = bet.UserId,
-                    ClientCode = bet.ClientCode,
-                    ClientId = bet.ClientId.ToUpper(),
-                    CashoutType = CashoutType.Full,
-                    CashOutStake = cashOut.CashOutStake,
-                    TaxedStake = cashOut.TaxedStake,
-                    TaxedWinnings = cashOut.TaxedWinnings,
-                    NonTaxedPayout = cashOut.NonTaxedPayout,
-                    HasLive = cashOut.HasLive,
-                    Endpoint = bet.Endpoint,
-                    Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities
+                    var payload = new OnCashoutBetSettlement
                     {
-                        BetSelectionId = s.BetSelectionId,
-                        Probability = s.Probability,
-                        WonProbability = s.WonProbability,
-                        LostProbability = s.LostProbability,
-                        VoidProbability = s.VoidProbability,
-                        HalfWonProbability = s.HalfWonProbability,
-                        HalfLostProbability = s.HalfLostProbability
-                    }).ToList()
-                };
+                        BetId = request.BetId,
+                        UserId = bet.UserId,
+                        ClientCode = bet.ClientCode,
+                        ClientId = bet.ClientId.ToUpper(),
+                        CashoutType = CashoutType.Partial,
+                        CashOutStake = cashOut.CashOutStake,
+                        CashOutStakePercent = request.CashOutStakePercent,
+                        TaxedStake = cashOut.TaxedStake,
+                        TaxedWinnings = cashOut.TaxedWinnings,
+                        NonTaxedPayout = cashOut.NonTaxedPayout,
+                        HasLive = cashOut.HasLive,
+                        Endpoint = bet.Endpoint,
+                        Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities
+                        {
+                            BetSelectionId = s.BetSelectionId,
+                            Probability = s.Probability,
+                            WonProbability = s.WonProbability,
+                            LostProbability = s.LostProbability,
+                            VoidProbability = s.VoidProbability,
+                            HalfWonProbability = s.HalfWonProbability,
+                            HalfLostProbability = s.HalfLostProbability
+                        }).ToList()
+                    };
 
-                _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                    _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                    {
+                        Payload = JsonSerializer.Serialize(payload),
+                        CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                        MessageType = "OnBetPartialCashOut",
+                        RoutingKey = "r.bet.cashout"
+                    });
+                }
+                else
                 {
-                    Payload = JsonSerializer.Serialize(payload),
-                    CorrelationId = Guid.NewGuid().ToString().ToUpper(),
-                    MessageType = "OnBetFullCashOut",
-                    RoutingKey = "r.bet.cashout"
-                });
+                    var payload = new OnCashoutBetSettlement
+                    {
+                        BetId = request.BetId,
+                        UserId = bet.UserId,
+                        ClientCode = bet.ClientCode,
+                        ClientId = bet.ClientId.ToUpper(),
+                        CashoutType = CashoutType.Full,
+                        CashOutStake = cashOut.CashOutStake,
+                        TaxedStake = cashOut.TaxedStake,
+                        TaxedWinnings = cashOut.TaxedWinnings,
+                        NonTaxedPayout = cashOut.NonTaxedPayout,
+                        HasLive = cashOut.HasLive,
+                        Endpoint = bet.Endpoint,
+                        Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities
+                        {
+                            BetSelectionId = s.BetSelectionId,
+                            Probability = s.Probability,
+                            WonProbability = s.WonProbability,
+                            LostProbability = s.LostProbability,
+                            VoidProbability = s.VoidProbability,
+                            HalfWonProbability = s.HalfWonProbability,
+                            HalfLostProbability = s.HalfLostProbability
+                        }).ToList()
+                    };
+
+                    _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                    {
+                        Payload = JsonSerializer.Serialize(payload),
+                        CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                        MessageType = "OnBetFullCashOut",
+                        RoutingKey = "r.bet.cashout"
+                    });
+                }
+
 
                 return new BaseResponseDTO<BetCashOutResponseDTO>
                 {

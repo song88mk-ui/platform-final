@@ -8,7 +8,7 @@ namespace Platform.Betting.API.Repository
 {
     public interface ISportsbookRepository
     {
-        Task<BaseResponseDTO<List<CashOutDetailsReponse>>> GetCashOut(List<Bet> bets, List<BetSelection> betSelections, List<Guid> boostedList);
+        Task<BaseResponseDTO<List<CashOutDetailsReponse>>> GetCashOut(List<Bet> bets, List<BetSelection> betSelections, List<Guid> boostedList, List<CashOutHistory> cashoutHistory);
         Task<BaseResponseDTO<BetSettlementScoreResponseDTO>> GetBetSettlementScore(BetSettlementScoreRequestDTO request);
     }
 }

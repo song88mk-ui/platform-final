@@ -1575,7 +1575,9 @@ namespace Platform.Betting.API.Repository
                 var runningBetIds = runningBets.Select(s => s.BetId).Distinct().ToList();
                 var runningSelections = selections.Where(c => runningBetIds.Contains(c.BetId)).ToList();
 
-                var cashOutList = await _sportsbookRepository.GetCashOut(runningBets, runningSelections, betBoosted);
+                var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().Where(c => runningBetIds.Contains(c.BetId)).ToList();
+
+                var cashOutList = await _sportsbookRepository.GetCashOut(runningBets, runningSelections, betBoosted, cashoutHistory);
 
 
                 foreach (var bet in transactions)
@@ -1880,7 +1882,9 @@ namespace Platform.Betting.API.Repository
             var runningBetIds = runningBets.Select(s => s.BetId).Distinct().ToList();
             var runningSelections = selections.Where(c => runningBetIds.Contains(c.BetId)).ToList();
 
-            var cashOutList = await _sportsbookRepository.GetCashOut(runningBets, runningSelections, betBoosted);
+            var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().Where(c => betIds.Contains(c.BetId)).ToList();
+
+            var cashOutList = await _sportsbookRepository.GetCashOut(runningBets, runningSelections, betBoosted, cashoutHistory);
 
             foreach (var bet in transactions)
             {
@@ -2798,7 +2802,9 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var result = await _sportsbookRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>());
+            var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).ToList();
+
+            var result = await _sportsbookRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>(), cashoutHistory);
 
             var cashOut = result.Result.Where(c => c.BetId == bet.BetId && c.CashOutStatus == CashOutStatus.Available).FirstOrDefault();
 

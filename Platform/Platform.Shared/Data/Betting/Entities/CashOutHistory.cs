@@ -20,6 +20,14 @@ namespace Platform.Shared.Data.Betting.Entities
         [Column(TypeName = "decimal(26,12)")]
         public decimal PostStake { get; set; }
         [Column(TypeName = "decimal(26,12)")]
+        public decimal TrueStake { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal TrueStakeUsed { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal PreTrueStake { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal PostTrueStake { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
         public decimal CashoutPercent { get; set; }
         [Column(TypeName = "decimal(26,12)")]
         public decimal CashoutAmount { get; set; }

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Platform.CashOut.Service.Repository;
+using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using RabbitMQ.Client.Events;
@@ -838,7 +839,14 @@ namespace Platform.CashOut.Service
                     case "OnBetFullCashOut":
                         var onCashoutBetSettlement = JsonSerializer.Deserialize<OnCashoutBetSettlement>(payload);
                         
-                        _bettingRepository.ProcessCashOut(onCashoutBetSettlement, _mts, _messageBroker, correlationId ?? Guid.NewGuid().ToString());
+                        _bettingRepository.ProcessCashOut(onCashoutBetSettlement, CashoutType.Full, _mts, _messageBroker, correlationId ?? Guid.NewGuid().ToString());
+
+                        _messageBroker.Acknowledge(e);
+                        break;
+                    case "OnBetPartialCashOut":
+                        var onPartialCashoutBetSettlement = JsonSerializer.Deserialize<OnCashoutBetSettlement>(payload);
+
+                        _bettingRepository.ProcessCashOut(onPartialCashoutBetSettlement, CashoutType.Partial, _mts, _messageBroker, correlationId ?? Guid.NewGuid().ToString());
 
                         _messageBroker.Acknowledge(e);
                         break;

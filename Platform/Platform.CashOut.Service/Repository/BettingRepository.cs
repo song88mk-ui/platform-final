@@ -297,13 +297,13 @@ namespace Platform.CashOut.Service.Repository
 
                             var isPublish = false;
                             var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
-                                SendCashoutToMTS(message, mts) : new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Accepted, "1024 - Cashout Accepted (MTS disabled)");
+                                SendPartialCashoutToMTS(message, mts) : new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Accepted, "1024 - Partial Cashout Accepted (MTS disabled)");
 
                             if (result.Item1 == CashoutAcceptance.Accepted)
                             {
-                                var payload = new OnBetSettlement();
+                                //var payload = new OnBetSettlement();
 
-                                payload.NonTaxedPayout = message.NonTaxedPayout;
+                                //payload.NonTaxedPayout = message.NonTaxedPayout;
 
                                 var selections = context.BetSelection.Where(c => c.BetId == message.BetId).ToList();
                                 if (selections.Count == 0)
@@ -320,9 +320,7 @@ namespace Platform.CashOut.Service.Repository
                                     return;
                                 }
 
-                                bet.Reason = $"{result.Item2} (MTS)";
-
-                                isPublish = SettleBet(message, bet, isPublish, payload, settledDate, context, selections, filteredSelections);
+                                isPublish = SettlePartialBet(message, bet, isPublish, settledDate, context);
 
                                 context.SaveChanges();
 
@@ -330,25 +328,15 @@ namespace Platform.CashOut.Service.Repository
 
                                 if (isPublish)
                                 {
-                                    messageBroker.Publish(payload, "OnBetFullCashOut", "r.bet.operator", correlationId, 10);
-
-                                    //TODO: delete when TW is no longer the frontend
-                                    messageBroker.Publish(new OnBetStatus
-                                    {
-                                        ClientId = message.ClientId.ToString().ToUpper(),
-                                        UserId = message.UserId,
-                                        BetId = message.BetId.ToString().ToUpper(),
-                                        BetStatus = (BetStatus)payload.Bet.BetStatusId,
-                                        Message = "Cashout request has been accepted"
-                                    }, "OnBetStatus", "r.bet.betstatus", correlationId);
+                                    messageBroker.Publish(message, "OnBetPartialCashOut", "r.bet.operator", correlationId, 10);
 
                                     messageBroker.Publish(new OnBetStatus
                                     {
                                         ClientId = message.ClientId.ToString().ToUpper(),
                                         UserId = message.UserId,
                                         BetId = message.BetId.ToString().ToUpper(),
-                                        BetStatus = (BetStatus)payload.Bet.BetStatusId,
-                                        Message = "Cashout request has been accepted"
+                                        BetStatus = BetStatus.Running,
+                                        Message = "Partial Cashout request has been accepted"
                                     }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
                                     messageBroker.Publish(new OnCashOutResult
@@ -356,7 +344,7 @@ namespace Platform.CashOut.Service.Repository
                                         ClientCode = message.ClientCode.ToString().ToUpper(),
                                         UserId = message.UserId,
                                         BetId = message.BetId.ToString().ToUpper(),
-                                        BetStatus = (BetStatus)payload.Bet.BetStatusId,
+                                        BetStatus = BetStatus.Running,
                                         CashOutStatus = CashOutStatus.Unavailable,
                                         CashOutStake = 0,
                                         Message = "Cashout request has been accepted",
@@ -367,16 +355,6 @@ namespace Platform.CashOut.Service.Repository
                             }
                             else
                             {
-                                //TODO: delete when TW is no longer the frontend
-                                messageBroker.Publish(new OnBetStatus
-                                {
-                                    ClientId = message.ClientId.ToString().ToUpper(),
-                                    UserId = message.UserId,
-                                    BetId = message.BetId.ToString().ToUpper(),
-                                    BetStatus = BetStatus.Running,
-                                    Message = "Cashout request has been declined"
-                                }, "OnBetStatus", "r.bet.betstatus", correlationId);
-
                                 messageBroker.Publish(new OnBetStatus
                                 {
                                     ClientId = message.ClientId.ToString().ToUpper(),
@@ -392,7 +370,7 @@ namespace Platform.CashOut.Service.Repository
                                     UserId = message.UserId,
                                     BetId = message.BetId.ToString().ToUpper(),
                                     BetStatus = BetStatus.Running,
-                                    Message = "Cashout request has been declined"
+                                    Message = "Partial Cashout request has been declined"
                                 }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
                                 messageBroker.Publish(new OnCashOutResult
@@ -400,10 +378,10 @@ namespace Platform.CashOut.Service.Repository
                                     ClientCode = bet.ClientCode.ToUpper(),
                                     UserId = bet.UserId,
                                     BetId = bet.BetId.ToString().ToUpper(),
-                                    BetStatus = (BetStatus)bet.BetStatusId,
+                                    BetStatus = BetStatus.Running,
                                     CashOutStatus = CashOutStatus.Unavailable,
                                     CashOutStake = 0,
-                                    Message = "Cashout request has been declined",
+                                    Message = "Partial Cashout request has been declined",
                                     ClientId = message.ClientId.ToString().ToUpper(),
                                     Endpoint = message.Endpoint
                                 }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
@@ -414,16 +392,6 @@ namespace Platform.CashOut.Service.Repository
             }
             catch (Exception ex)
             {
-                //TODO: delete when TW is no longer the frontend
-                messageBroker.Publish(new OnBetStatus
-                {
-                    ClientId = message.ClientId.ToString().ToUpper(),
-                    UserId = message.UserId,
-                    BetId = message.BetId.ToString().ToUpper(),
-                    BetStatus = BetStatus.Running,
-                    Message = "Cashout request has been declined"
-                }, "OnBetStatus", "r.bet.betstatus", correlationId);
-
                 var errorMessage = new
                 {
                     Message = ex.Message,
@@ -446,7 +414,7 @@ namespace Platform.CashOut.Service.Repository
                     UserId = message.UserId,
                     BetId = message.BetId.ToString().ToUpper(),
                     BetStatus = BetStatus.Running,
-                    Message = "Cashout request has been declined"
+                    Message = "Partial Cashout request has been declined"
                 }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
                 messageBroker.Publish(new OnCashOutResult
@@ -457,7 +425,7 @@ namespace Platform.CashOut.Service.Repository
                     BetStatus = (BetStatus)bet.BetStatusId,
                     CashOutStatus = CashOutStatus.Unavailable,
                     CashOutStake = 0,
-                    Message = "Cashout request has been declined",
+                    Message = "Partial Cashout request has been declined",
                     ClientId = message.ClientId,
                     Endpoint = message.Endpoint
                 }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
@@ -627,6 +595,68 @@ namespace Platform.CashOut.Service.Repository
             return isPublish;
         }
 
+        private bool SettlePartialBet(OnCashoutBetSettlement message, Bet bet, bool isPublish, DateTime settledDate, BettingContext context)
+        {
+            var cashoutHistory = context.CashOutHistory.AsNoTracking().FirstOrDefault(c => c.BetId == message.BetId);
+
+            if (cashoutHistory != null)
+            {
+                var stakeUsed = cashoutHistory.PostStake * message.CashOutStakePercent;
+                var trueStakeUsed = cashoutHistory.PostTrueStake * message.CashOutStakePercent;
+
+                context.CashOutHistory.Add(new CashOutHistory
+                {
+                    Id = Guid.NewGuid(),
+                    BetId = message.BetId,
+                    ClientId = message.ClientId,
+                    ClientCode = message.ClientCode,
+                    OriginalStake = bet.Stake,
+                    StakeUsed = stakeUsed,
+                    PreStake = cashoutHistory.PostStake,
+                    PostStake = cashoutHistory.PostStake - stakeUsed,
+                    TrueStake = bet.TrueStake,
+                    TrueStakeUsed = trueStakeUsed,
+                    PreTrueStake = cashoutHistory.PostTrueStake,
+                    PostTrueStake = cashoutHistory.PostTrueStake - trueStakeUsed,
+                    CashoutAmount = message.CashOutStake * message.CashOutStakePercent,
+                    CashoutPercent = message.CashOutStakePercent,
+                    CashoutDate = settledDate,
+                    CashoutDateOffset = settledDate.AddHours(-4),
+                });
+            }
+            else
+            {
+                var stakeUsed = bet.Stake * message.CashOutStakePercent;
+                var trueStakeUsed = bet.TrueStake * message.CashOutStakePercent;
+
+                context.CashOutHistory.Add(new CashOutHistory
+                {
+                    Id = Guid.NewGuid(),
+                    BetId = message.BetId,
+                    ClientId = message.ClientId,
+                    ClientCode = message.ClientCode,
+                    OriginalStake = bet.Stake,
+                    StakeUsed = stakeUsed,
+                    PreStake = bet.Stake,
+                    PostStake = bet.Stake - stakeUsed,
+                    TrueStake = bet.TrueStake,
+                    TrueStakeUsed = trueStakeUsed,
+                    PreTrueStake = bet.TrueStake,
+                    PostTrueStake = bet.TrueStake - trueStakeUsed,
+                    CashoutAmount = message.CashOutStake * message.CashOutStakePercent,
+                    CashoutPercent = message.CashOutStakePercent,
+                    CashoutDate = settledDate,
+                    CashoutDateOffset = settledDate.AddHours(-4),
+                });
+
+            }
+
+            isPublish = true;
+
+            context.SaveChanges();
+            return isPublish;
+        }
+
         private BetStatus GetStatus(List<BetStatus> statuses, decimal payout, decimal stake)
         {
             var result = BetStatus.Lost;
@@ -723,17 +753,17 @@ namespace Platform.CashOut.Service.Repository
                 string reason;
 
                 var cashoutStake = (long)0;
-                var cashoutStakePercent = (long)0;
+                var cashoutStakePercent = (int)0;
 
                 if (message.ClientCode.ToUpper() == "RKP")
                 {
                     cashoutStake = (long)(message.CashOutStake * message.CashOutStakePercent * .10m) * 10000;
-                    cashoutStakePercent = (long)(message.CashOutStakePercent * .10m) * 10000;
+                    cashoutStakePercent = (int)(message.CashOutStakePercent * .10m) * 10000;
                 }
                 else
                 {
                     cashoutStake = (long)(message.CashOutStake * message.CashOutStakePercent * 10000);
-                    cashoutStakePercent = (long)(message.CashOutStakePercent * 10000);
+                    cashoutStakePercent = (int)(message.CashOutStakePercent * 10000);
                 }
 
                 var betCashout = _factory.CreateTicketCashoutBuilder().SetTicketId(message.BetId.ToString().ToUpper()).SetCashoutStake(cashoutStake).SetCashoutPercent(cashoutStakePercent).BuildTicket();
@@ -857,7 +887,11 @@ namespace Platform.CashOut.Service.Repository
 
                         if (isSuccess == true)
                         {
-                            ProcessCashOutSettlement(payload, mts, messageBroker, correlationId);
+                            if(cashoutType == CashoutType.Full)
+                                ProcessCashOutSettlement(payload, mts, messageBroker, correlationId);
+                            else if (cashoutType == CashoutType.Partial)
+                                ProcessPartialCashOutSettlement(payload, mts, messageBroker, correlationId);
+
                             Console.WriteLine($"{DateTime.UtcNow} : Live Cashout successful - {result.Result.BetId}");
                         }
                     }

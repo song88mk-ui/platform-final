@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using Platform.Shared.Data.Betting;
+using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Helpers;
@@ -94,6 +95,25 @@ namespace Platform.CashOutStake.Servicev2.Repository
                     return;
 
                 bet.BetSelections.AddRange(betSelections);
+
+                var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).Select(s => new CashoutBetMemory
+                {
+                    BetId = bet.BetId,
+                    CashoutAmount = s.CashoutAmount,
+                    CashoutDate = s.CashoutDate,
+                    CashoutPercent = s.CashoutPercent,
+                    OriginalStake = s.OriginalStake,
+                    PostStake = s.PostStake,
+                    PostTrueStake = s.PostTrueStake,
+                    PreStake = s.PreStake,
+                    PreTrueStake = s.PreTrueStake,
+                    StakeUsed = s.StakeUsed,
+                    TrueStake = s.TrueStake,
+                    TrueStakeUsed = s.TrueStakeUsed,
+                }).ToList();
+
+                if(cashoutHistory.Any())
+                    bet.CashoutHistory.AddRange(cashoutHistory);
 
                 _bets.Add(bet);
 
@@ -227,6 +247,63 @@ namespace Platform.CashOutStake.Servicev2.Repository
             }
         }
 
+        public void ProcessPartialCashOut(OnCashoutBetSettlement message)
+        {
+            var bet = _bets.Where(c => c.BetId == message.BetId).FirstOrDefault();
+
+            if (bet != null)
+            {
+                var cashoutHistory = bet.CashoutHistory;
+                var lastCashout = cashoutHistory.LastOrDefault();
+
+                if (lastCashout != null)
+                {
+                    var cashoutAmount = message.CashOutStake * message.CashOutStakePercent;
+                    var stakeUsed = lastCashout.PostStake * message.CashOutStakePercent;
+                    var trueStakeUsed = lastCashout.PostTrueStake * message.CashOutStakePercent;
+
+                    cashoutHistory.Add(new CashoutBetMemory
+                    {
+                        BetId = bet.BetId,
+                        CashoutAmount = cashoutAmount,
+                        CashoutDate = DateTime.UtcNow,
+                        CashoutPercent = message.CashOutStakePercent,
+                        OriginalStake = bet.Stake,
+                        TrueStake = bet.TrueStake,
+                        StakeUsed = stakeUsed,
+                        PreStake = lastCashout.PostStake,
+                        PostStake = lastCashout.PostStake - stakeUsed,
+                        TrueStakeUsed = trueStakeUsed,
+                        PreTrueStake = lastCashout.PostTrueStake,
+                        PostTrueStake = lastCashout.PostTrueStake - trueStakeUsed,
+                    });
+                }
+                else
+                {
+                    var cashoutAmount = message.CashOutStake * message.CashOutStakePercent;
+                    var stakeUsed = bet.Stake * message.CashOutStakePercent;
+                    var trueStakeUsed = bet.TrueStake * message.CashOutStakePercent;
+
+                    cashoutHistory.Add(new CashoutBetMemory
+                    {
+                        BetId = bet.BetId,
+                        CashoutAmount = cashoutAmount,
+                        CashoutDate = DateTime.UtcNow,
+                        CashoutPercent = message.CashOutStakePercent,
+                        OriginalStake = bet.Stake,
+                        TrueStake = bet.TrueStake,
+                        StakeUsed = stakeUsed,
+                        PreStake = bet.Stake,
+                        PostStake = bet.Stake - stakeUsed,
+                        TrueStakeUsed = trueStakeUsed,
+                        PreTrueStake = bet.TrueStake,
+                        PostTrueStake = bet.TrueStake - trueStakeUsed,
+                    });
+                }
+
+                Console.WriteLine($"{DateTime.UtcNow} - ProcessPartialCashOut : {JsonSerializer.Serialize(cashoutHistory)}");
+            }
+        }
         private void ProcessCashOut(Guid betId, OnExternalOddsChangeMessage message, IMessageBroker messageBroker)
         {
             var bet = _bets.Where(c => c.BetId == betId).FirstOrDefault();
@@ -249,6 +326,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.cashoutchange.{bet.ClientCode.ToString().ToLower()}", Guid.NewGuid().ToString());
             }
         }
+
         private void PreloadMarket(long marketId, OnExternalOddsChangeMessage message)
         {
             var expiration = DateTime.UtcNow.AddHours(6);
@@ -353,8 +431,13 @@ namespace Platform.CashOutStake.Servicev2.Repository
         }
         private OnCashOutChange GetCashOut(BetMemory bet, OnExternalOddsChangeMessage message)
         {
-            var taxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
-            var stake = bet.TrueStake - taxedStake;
+            var prevCashout = bet.CashoutHistory.LastOrDefault(c => c.BetId == bet.BetId);
+            var remaining = prevCashout == null ? bet.TrueStake : prevCashout.PostTrueStake;
+
+            var finalStake = remaining;
+
+            var taxedStake = finalStake - (finalStake / (1 + bet.StakeTax));
+            var stake = remaining - taxedStake;
 
             var probabilites = new List<Probabilities>();
             var hasProbabilityChanged = false;
@@ -471,7 +554,8 @@ namespace Platform.CashOutStake.Servicev2.Repository
             else
             {
                 decimal cashOutStake = 0m;
-
+                var remainingStake = prevCashout == null ? bet.Stake : prevCashout.PostStake;
+                
                 if (probabilites.First().WonProbability > 0 ||
                     probabilites.First().LostProbability > 0 ||
                     probabilites.First().VoidProbability > 0 ||
@@ -483,8 +567,8 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
                     if (OddsTypeHelper.GetOddsByOddsType(bet.OddsTypeId, bet.BetSelections.First().Odds, bet.BetSelections.First().IsBinary) < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
                     {
-                        won = Convert.ToDecimal(probabilites.First().WonProbability) * (stake + bet.Stake);
-                        halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * ((bet.Stake / 2) + stake);
+                        won = Convert.ToDecimal(probabilites.First().WonProbability) * (stake + remainingStake);
+                        halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * ((remainingStake / 2) + stake);
                     }
                     else
                     {
@@ -501,11 +585,10 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 else
                 {
                     if (OddsTypeHelper.GetOddsByOddsType(bet.OddsTypeId, bet.BetSelections.First().Odds, bet.BetSelections.First().IsBinary) < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
-                        cashOutStake = (stake + bet.Stake) * Convert.ToDecimal(probabilites.First().Probability);
+                        cashOutStake = (stake + remainingStake) * Convert.ToDecimal(probabilites.First().Probability);
                     else
                         cashOutStake = (stake * bet.Odds) * Convert.ToDecimal(probabilites.First().Probability);
                 }
-
 
                 cashOutStake = cashOutStake - (cashOutStake * 0.10m);
 
@@ -620,6 +703,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
         public BetMemory()
         {
             BetSelections = new List<BetSelectionMemory>();
+            CashoutHistory = new List<CashoutBetMemory>();
         }
 
         public Guid BetId { get; set; }
@@ -634,6 +718,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
         public decimal WinningsTax { get; set; }
         public int OddsTypeId { get; set; }
         public List<BetSelectionMemory> BetSelections { get; set; }
+        public List<CashoutBetMemory> CashoutHistory { get; set; }
     }
 
     public class BetSelectionMemory
@@ -657,6 +742,22 @@ namespace Platform.CashOutStake.Servicev2.Repository
         [Column(TypeName = "decimal(26,12)")]
         public decimal DeadHeatFactor { get; set; }
         public bool IsBinary { get; set; }
+    }
+
+    public class CashoutBetMemory
+    {
+        public Guid BetId { get; set; }
+        public decimal OriginalStake { get; set; }
+        public decimal StakeUsed { get; set; }
+        public decimal PreStake { get; set; }
+        public decimal PostStake { get; set; }
+        public decimal TrueStake { get; set; }
+        public decimal TrueStakeUsed { get; set; }
+        public decimal PreTrueStake { get; set; }
+        public decimal PostTrueStake { get; set; }
+        public decimal CashoutPercent { get; set; }
+        public decimal CashoutAmount { get; set; }
+        public DateTime CashoutDate { get; set; }
     }
 
     public class OnExternalOddsChangeMessage

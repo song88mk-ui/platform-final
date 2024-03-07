@@ -824,10 +824,15 @@ namespace Platform.Settlement.Service.Repository
             var isInsertToBetAudit = true;
             isPublish = true;
 
+            var cashoutHistory = context.CashOutHistory.AsNoTracking().FirstOrDefault(c => c.BetId == bet.BetId);
+
+            var remainingTrueStake = cashoutHistory == null ? bet.TrueStake : cashoutHistory.PostTrueStake;
+            var remainingStake = cashoutHistory == null ? bet.Stake : cashoutHistory.PostStake;
+
             var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
-            var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal, bool>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor, s.IsBinary)).ToList(), bet.TrueStake, bet.Stake, isBetBuilder, bet.Odds, (OddsType)bet.OddsTypeId);
-            var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake, isBetBuilder);
+            var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal, bool>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor, s.IsBinary)).ToList(), remainingTrueStake, remainingStake, isBetBuilder, bet.Odds, (OddsType)bet.OddsTypeId);
+            var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, remainingTrueStake, isBetBuilder);
 
             if (betStatus == (BetStatus)bet.BetStatusId)
                 isInsertToBetAudit = false;
@@ -839,13 +844,13 @@ namespace Platform.Settlement.Service.Repository
 
             payload.NonTaxedPayout = payout;
 
-            bet.WinLoss = payout == 0 ? -bet.TrueStake : payout - bet.TrueStake;
+            bet.WinLoss = payout == 0 ? -remainingTrueStake : payout - remainingTrueStake;
             bet.BetStatusId = (int)betStatus;
             bet.BetStatusName = betStatus.ToString();
 
             bet.Payout = payout;
 
-            var finalStake = bet.TrueStake - bet.StakeBonus;
+            var finalStake = remainingTrueStake - bet.StakeBonus;
 
             bet.TaxedStake = bet.IsFreeBet == false ? finalStake - (finalStake / (1 + bet.StakeTax)) : 0;
             bet.TaxedWinnings = 0;
@@ -926,19 +931,24 @@ namespace Platform.Settlement.Service.Repository
             var isInsertToBetAudit = true;
             isPublish = true;
 
+            var cashoutHistory = context.CashOutHistory.AsNoTracking().FirstOrDefault(c => c.BetId == bet.BetId);
+
+            var remainingTrueStake = cashoutHistory == null ? bet.TrueStake : cashoutHistory.PostTrueStake;
+            var remainingStake = cashoutHistory == null ? bet.Stake : cashoutHistory.PostStake;
+
             var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
-            var finalStake = bet.TrueStake - bet.StakeBonus;
+            var finalStake = remainingTrueStake - bet.StakeBonus;
 
             var taxedStake = bet.IsFreeBet == false ? finalStake - (finalStake / (1 + bet.StakeTax)) : 0;
 
-            var stake = GetStake(selections, taxedStake, bet.TrueStake);
-            var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal, bool>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor, s.IsBinary)).ToList(), stake, bet.Stake, isBetBuilder, bet.Odds, (OddsType)bet.OddsTypeId);
+            var stake = GetStake(selections, taxedStake, remainingTrueStake);
+            var payout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal, bool>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor, s.IsBinary)).ToList(), stake, remainingStake, isBetBuilder, bet.Odds, (OddsType)bet.OddsTypeId);
             var parlayBonusWinnings = 0m;
             var parlayBonus = 0m;
 
-            var nonTaxedStake = bet.TrueStake;
-            var nonTaxedPayout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal, bool>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor, s.IsBinary)).ToList(), nonTaxedStake, bet.Stake, isBetBuilder, bet.Odds, (OddsType)bet.OddsTypeId);
+            var nonTaxedStake = remainingTrueStake;
+            var nonTaxedPayout = GetPayout(selections.Select(s => new Tuple<BetStatus, decimal, decimal, bool>((BetStatus)s.BetSelectionStatusId, s.Odds, s.DeadHeatFactor, s.IsBinary)).ToList(), nonTaxedStake, remainingStake, isBetBuilder, bet.Odds, (OddsType)bet.OddsTypeId);
             var nonTaxedParlayBonusWinnings = 0m;
 
             var wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won).Count();
@@ -961,18 +971,18 @@ namespace Platform.Settlement.Service.Repository
             var taxedWinnings = payout + parlayBonusWinnings;
 
             if (bet.IsFreeBet)
-                finalStake = bet.TrueStake;
+                finalStake = remainingTrueStake;
 
-            taxedWinnings = bet.IsFreeBet == false && bet.StakeBonus == bet.TrueStake ? 0 : (taxedWinnings - finalStake) * bet.WinningsTax;
+            taxedWinnings = bet.IsFreeBet == false && bet.StakeBonus == remainingTrueStake ? 0 : (taxedWinnings - finalStake) * bet.WinningsTax;
 
-            if (payout > bet.TrueStake)
+            if (payout > remainingTrueStake)
                 payout = payout - taxedWinnings;
             else
                 taxedWinnings = 0;
 
             var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, stake, isBetBuilder);
 
-            stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon || betStatus == BetStatus.Void ? bet.TrueStake : stake;
+            stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon || betStatus == BetStatus.Void ? remainingTrueStake : stake;
 
             var totalPayout = payout + parlayBonusWinnings;
 
@@ -986,7 +996,7 @@ namespace Platform.Settlement.Service.Repository
                 bet.SettlementDateOffset = settledDate.AddHours(-4);
             }
             
-            bet.WinLoss = totalPayout == 0 ? -bet.TrueStake : totalPayout - stake;
+            bet.WinLoss = totalPayout == 0 ? -remainingTrueStake : totalPayout - stake;
             bet.BetStatusId = (int)betStatus;
             bet.BetStatusName = betStatus.ToString();
             bet.Payout = totalPayout;
@@ -996,8 +1006,8 @@ namespace Platform.Settlement.Service.Repository
             bet.ParlayBonusWinnings = parlayBonusWinnings;            
 
             // get percentage of real and bonus payout.
-            var stakeRealPayoutPercentage = bet.StakeReal / bet.TrueStake;
-            var stakeBonusPayoutPercentage = bet.StakeBonus / bet.TrueStake;
+            var stakeRealPayoutPercentage = bet.StakeReal / remainingTrueStake;
+            var stakeBonusPayoutPercentage = bet.StakeBonus / remainingTrueStake;
 
             bet.StakeRealPayout = payout * stakeRealPayoutPercentage;
             bet.StakeBonusPayout = payout * stakeBonusPayoutPercentage;
@@ -1077,8 +1087,13 @@ namespace Platform.Settlement.Service.Repository
 
         private void ApplyRunning(BettingContext context, Bet bet, List<BetSelection> selections, BetSelection betSelection, DateTime settledDate)
         {
+
+            var cashoutHistory = context.CashOutHistory.AsNoTracking().FirstOrDefault(c => c.BetId == bet.BetId);
+
+            var remainingTrueStake = cashoutHistory == null ? bet.TrueStake : cashoutHistory.PostTrueStake;
+
             var taxedStake = 0m;
-            var stake = bet.TrueStake - taxedStake;
+            var stake = remainingTrueStake - taxedStake;
 
             var payout = stake * bet.Odds;
 

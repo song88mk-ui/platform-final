@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json.Linq;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Data.Platform;
@@ -819,14 +818,6 @@ namespace Platform.Operator.Servicev2.Repository
                         Timestamp = DateTime.UtcNow
                     });
 
-                    //TODO: delete when TW is no longer the frontend
-                    messageBroker.Publish(new OnWalletChange
-                    {
-                        ClientId = message.Bet.ClientId.ToUpper(),
-                        UserId = message.Bet.UserId,
-                        Balance = result.Balance
-                    }, "OnWalletChange", "r.bet.betstatus", correlationId);
-
                     messageBroker.Publish(new OnWalletChange
                     {
                         ClientId = message.Bet.ClientId.ToUpper(),
@@ -855,7 +846,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId, threadId);
+                        RetryBetCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, path, "OnBetFullCashOut", messageBroker, correlationId, threadId);
                     }
                     else
                     {
@@ -872,7 +863,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId, threadId);
+                        RetryBetCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, path, "OnBetFullCashOut", messageBroker, correlationId, threadId);
                     }
                 }
             }
@@ -891,9 +882,179 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                RetryBetFullCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetFullCashOut", messageBroker, correlationId, threadId);
+                RetryBetCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, path, "OnBetFullCashOut", messageBroker, correlationId, threadId);
             }
         }
+
+        public void ProcessBetPartialCashOut(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId)
+        {
+            if (message.IsRetry)
+            {
+                var initialMessage = IsProcess(message.Bet.BetId);
+
+                if (initialMessage.Item1 == false)
+                    return;
+
+                message = initialMessage.Item2;
+                message.IsRetry = true;
+            }
+
+            var path = "/v1/bet/partial/cashout";
+
+            var payload = new OperatorBetSettlementRequestDTO
+            {
+                TransactionId = correlationId,
+                BetId = message.Bet.BetId.ToString().ToUpper(),
+                UserId = message.Bet.UserId,
+                CurrencyCode = message.Bet.CurrencyCode,
+                Payout = message.Bet.Payout,
+                NonTaxedPayout = message.NonTaxedPayout,
+                Stake = message.Bet.Stake,
+                Odds = message.Bet.Odds,
+                BetStatus = message.Bet.BetStatusName,
+                StakeTax = message.Bet.StakeTax,
+                WinningsTax = message.Bet.WinningsTax,
+                TaxedStake = message.Bet.TaxedStake,
+                TaxedWinnings = message.Bet.TaxedWinnings,
+                TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO
+                {
+                    BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
+                    BetSelectionStatus = s.BetSelectionStatusName,
+                    SportId = s.SportId,
+                    SportName = s.SportName,
+                    SegmentId = s.SegmentId,
+                    SegmentName = s.SegmentName,
+                    LeagueId = s.LeagueId,
+                    LeagueName = s.LeagueName,
+                    FixtureId = s.FixtureId.ToString(),
+                    FixtureName = s.FixtureName,
+                    FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                    FixtureStatus = s.FixtureStatusName,
+                    Score = s.BetScore,
+                    SettlementScore = s.SettlementScore,
+                    MarketId = s.MarketId.ToString(),
+                    MarketName = s.MarketName,
+                    Line = s.Line,
+                    SelectionId = s.SelectionId.ToString(),
+                    SelectionName = s.SelectionName,
+                    Odds = s.Odds,
+                    MarketTemplateId = s.MarketTemplateId,
+                    HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
+                    AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty
+                }).ToList()
+            };
+
+            try
+            {
+                if (message.IsRetry == false)
+                {
+                    if (message.Bet.IsAgent)
+                        messageBroker.Publish(message, "OnBetPartialCashOut", "r.bet.reports.agent", correlationId);
+                    else
+                        messageBroker.Publish(message, "OnBetPartialCashOut", "r.bet.reports", correlationId);
+                }
+
+                AddOperatorLog(new OperatorLog
+                {
+                    Direction = "REQUEST",
+                    ClientId = message.Bet.ClientId,
+                    ClientCode = message.Bet.ClientCode,
+                    URL = $"{message.Bet.Endpoint}{path}",
+                    BetId = message.Bet.BetId.ToString().ToUpper(),
+                    Info = JsonSerializer.Serialize(payload),
+                    OperatorToken = message.Bet.OperatorToken,
+                    CorrelationId = correlationId,
+                    Timestamp = DateTime.UtcNow
+                });
+
+                var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    AddOperatorLog(new OperatorLog
+                    {
+                        Direction = "RESPONSE",
+                        ClientId = message.Bet.ClientId,
+                        ClientCode = message.Bet.ClientCode,
+                        URL = $"{message.Bet.Endpoint}{path}",
+                        BetId = message.Bet.BetId.ToString().ToUpper(),
+                        Info = JsonSerializer.Serialize(result),
+                        OperatorToken = message.Bet.OperatorToken,
+                        CorrelationId = correlationId,
+                        Timestamp = DateTime.UtcNow
+                    });
+
+                    messageBroker.Publish(new OnWalletChange
+                    {
+                        ClientId = message.Bet.ClientId.ToUpper(),
+                        UserId = message.Bet.UserId,
+                        Balance = result.Balance
+                    }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+
+                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetPartialCashOut", correlationId, response.IsSuccessStatusCode);
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = message.Bet.ClientId,
+                            ClientCode = message.Bet.ClientCode,
+                            URL = $"{message.Bet.Endpoint}{path}",
+                            BetId = message.Bet.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(result),
+                            OperatorToken = message.Bet.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
+
+                        RetryBetCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, path, "OnBetPartialCashOut", messageBroker, correlationId, threadId);
+                    }
+                    else
+                    {
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = message.Bet.ClientId,
+                            ClientCode = message.Bet.ClientCode,
+                            URL = $"{message.Bet.Endpoint}{path}",
+                            BetId = message.Bet.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(response.ReasonPhrase),
+                            OperatorToken = message.Bet.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
+
+                        RetryBetCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, path, "OnBetFullCashOut", messageBroker, correlationId, threadId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AddOperatorLog(new OperatorLog
+                {
+                    Direction = "RESPONSE",
+                    ClientId = message.Bet.ClientId,
+                    ClientCode = message.Bet.ClientCode,
+                    URL = $"{message.Bet.Endpoint}{path}",
+                    BetId = message.Bet.BetId.ToString().ToUpper(),
+                    Info = JsonSerializer.Serialize(new { message = ex.Message, stackTrace = ex.StackTrace }),
+                    OperatorToken = message.Bet.OperatorToken,
+                    CorrelationId = correlationId,
+                    Timestamp = DateTime.UtcNow
+                });
+
+                RetryBetCashOut(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, path, "OnBetFullCashOut", messageBroker, correlationId, threadId);
+            }
+        }
+
         public void ProcesssBetSettlement(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId)
         {
             if (message.IsRetry)
@@ -1297,7 +1458,7 @@ namespace Platform.Operator.Servicev2.Repository
             }
         }
 
-        private void RetryBetFullCashOut(OnBetSettlementRetry message, OperatorBetSettlementRequestDTO payload, string messageType, IMessageBroker messageBroker, string correlationId, string threadId)
+        private void RetryBetCashOut(OnBetSettlementRetry message, OperatorBetSettlementRequestDTO payload, string path, string messageType, IMessageBroker messageBroker, string correlationId, string threadId)
         {
             if (message.RemainingRetries == 0)
             {
@@ -1306,8 +1467,6 @@ namespace Platform.Operator.Servicev2.Repository
             }
 
             message.RemainingRetries -= 1;
-
-            var path = "/v1/bet/full/cashout";
 
             try
             {
@@ -1362,7 +1521,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetFullCashOut(message, payload, messageType, messageBroker, correlationId, threadId);
+                        RetryBetCashOut(message, payload, path, messageType, messageBroker, correlationId, threadId);
                     }
                     else
                     {
@@ -1379,7 +1538,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        RetryBetFullCashOut(message, payload, messageType, messageBroker, correlationId, threadId);
+                        RetryBetCashOut(message, payload, path, messageType, messageBroker, correlationId, threadId);
                     }
                 }
             }
@@ -1398,7 +1557,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                RetryBetFullCashOut(message, payload, messageType, messageBroker, correlationId, threadId);
+                RetryBetCashOut(message, payload, path, messageType, messageBroker, correlationId, threadId);
             }
         }
         private void RetryBetSettlement(OnBetSettlementRetry message, OperatorBetSettlementRequestDTO payload, string messageType, IMessageBroker messageBroker, string correlationId, string threadId)

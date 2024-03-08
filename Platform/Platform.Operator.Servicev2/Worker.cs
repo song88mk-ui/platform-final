@@ -370,6 +370,13 @@ namespace Platform.Operator.Servicev2
                         _bettingRepository.ProcesssBetPlacement(onBetPlacement, _messageBroker, correlationId, threadId);
                         break;
 
+                    case "OnBetPartialCashOut":
+                        var onBetPartialCashout = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+                        Console.WriteLine($"{DateTime.UtcNow} {onBetPartialCashout.Bet.BetId} - OnBetPartialCashOut");
+
+                        _bettingRepository.ProcessBetPartialCashOut(onBetPartialCashout, _messageBroker, correlationId, threadId);
+                        break;
+
                     case "OnBetFullCashOut":
                         var onBetFullCashout = JsonSerializer.Deserialize<OnBetSettlement>(payload);
                         Console.WriteLine($"{DateTime.UtcNow} {onBetFullCashout.Bet.BetId} - OnBetFullCashOut");

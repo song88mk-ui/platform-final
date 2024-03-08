@@ -98,6 +98,21 @@ namespace Platform.Operator.API.Controllers
             }
         }
 
+        [HttpPost("v1/bet/partial/cashout")]
+        public async Task<IActionResult> BetPartialCashOut([FromBody] OperatorBetSettlementRequestDTO request)
+        {
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var result = await _platformRepository.BetPartialCashOut(request, clientId);
+
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/bet/settlement")]
         public async Task<IActionResult> BetSettlement([FromBody] OperatorBetSettlementRequestDTO request)
         {

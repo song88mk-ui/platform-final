@@ -306,6 +306,77 @@ namespace Platform.Operator.API.Repository
             }
         }
 
+        public async Task<OperatorBetResponseDTO> BetPartialCashOut(OperatorBetSettlementRequestDTO request, string clientId)
+        {
+            Guid.TryParse(clientId, out Guid id);
+
+            var res = _platformContext.NegativeTest.Find(id);
+
+            if (res != null && res.ClientId == id)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003
+                };
+            }
+
+            var isGuid = Guid.TryParse(request.UserId, out Guid guid);
+
+            if (!isGuid)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003
+                };
+            }
+
+            if (request.IsBetBuilder)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003
+                };
+            }
+
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                try
+                {
+                    var result = _platformContext.Operator.Where(c => c.UserId == guid).FirstOrDefault();
+
+                    if (result == null)
+                    {
+                        return new OperatorBetResponseDTO
+                        {
+                            StatusId = 1003
+                        };
+                    }
+
+                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, request.Payout, request.Stake, request.BetStatus, false, true);
+
+                    result.Balance = operatorAudit.PostBalance;
+                    _platformContext.Operator.Update(result);
+
+                    _platformContext.SaveChanges();
+                    scope.Complete();
+
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1000,
+                        Balance = result.Balance
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1003
+                    };
+                }
+            }
+        }
+
         public async Task<OperatorBetResponseDTO> BetSettlement(OperatorBetSettlementRequestDTO request, string clientId)
         {
             Guid.TryParse(clientId, out Guid id);
@@ -837,19 +908,19 @@ namespace Platform.Operator.API.Repository
         }
         #region Private Method
 
-        private OperatorAudit AddOrUpdateOperatorAudit(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal payout, decimal stake, string betStatus, bool isFreebet = false)
+        private OperatorAudit AddOrUpdateOperatorAudit(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal payout, decimal stake, string betStatus, bool isFreebet = false, bool isPartialCashout = false)
         {
             var amount = payout;
-            if ((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Running)
+            if ((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Running && isPartialCashout == false)
             {
                 if (isFreebet)
                     amount = 0;
                 else
                     amount = stake * -1;
-            }
+            } 
 
             var postBalance = _operator.Balance;
-            var prevOperatorAudit = _platformContext.OperatorAudit.AsNoTracking().Where(o => o.UserId == _operator.UserId && o.BetId == Guid.Parse(betId)).FirstOrDefault();
+            var prevOperatorAudit = _platformContext.OperatorAudit.AsNoTracking().FirstOrDefault(o => o.UserId == _operator.UserId && o.BetId == Guid.Parse(betId));
 
             if (prevOperatorAudit != null)
             {
@@ -912,11 +983,11 @@ namespace Platform.Operator.API.Repository
             return operatorAuditEntity;
         }
 
-        private OperatorAudit AddOrUpdateOperatorAuditForESports(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal payout, decimal stake, string betStatus, bool isFreebet = false, string transactionId = null)
+        private OperatorAudit AddOrUpdateOperatorAuditForESports(Shared.Data.Platform.Entities.Operator _operator, string betId, decimal payout, decimal stake, string betStatus, bool isFreebet = false, string transactionId = null, bool isPartialCashout = false)
         {
             var amount = payout;
 
-            if ((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Running)
+            if ((int)Enum.Parse(typeof(BetStatus), betStatus) == (int)BetStatus.Running && isPartialCashout == false)
             {
                 amount = stake * -1;
             }

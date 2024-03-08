@@ -22,6 +22,7 @@ namespace Platform.Shared.Models
         public SettlementHistoryDTO()
         {
             Selections = new List<BetSelectionHistoryDTO>();
+            PartialCashout = new List<PartialCashoutDTO>();
         }
         public string BetId { get; set; }
         public string UserId { get; set; }
@@ -53,6 +54,7 @@ namespace Platform.Shared.Models
         public bool IsBoosted { get; set; }
         public bool IsBetBuilder { get; set; }
         public List<BetSelectionHistoryDTO> Selections { get; set; }
+        public List<PartialCashoutDTO> PartialCashout { get; set; }
     }
 
 }

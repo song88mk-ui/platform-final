@@ -2712,9 +2712,9 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().FirstOrDefault(c => c.BetId == bet.BetId);
+            var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).ToList();
 
-            var result = await _sportsbookRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>(), new List<CashOutHistory> { cashoutHistory });
+            var result = await _sportsbookRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>(), cashoutHistory);
 
             var cashOut = result.Result.Where(c => c.BetId == bet.BetId && c.CashOutStatus == CashOutStatus.Available).FirstOrDefault();
 
@@ -2748,7 +2748,7 @@ namespace Platform.Betting.API.Repository
             else
             {
                 
-                if(request.CashOutStakePercent > 0 && request.CashOutStakePercent < 1)
+                if(request.CashOutStakePercent > 0 && request.CashOutStakePercent < 1) //TODO: check what amount to be passed from FE
                 {
                     var payload = new OnCashoutBetSettlement
                     {

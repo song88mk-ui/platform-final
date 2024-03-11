@@ -110,7 +110,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                     StakeUsed = s.StakeUsed,
                     TrueStake = s.TrueStake,
                     TrueStakeUsed = s.TrueStakeUsed,
-                }).ToList();
+                }).OrderBy(o => o.CashoutDate).ToList();
 
                 if(cashoutHistory.Any())
                     bet.CashoutHistory.AddRange(cashoutHistory);
@@ -319,9 +319,6 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 var payload = GetCashOut(bet, message);
 
                 Console.WriteLine($"{DateTime.UtcNow} - OddsChange : {JsonSerializer.Serialize(payload)}");
-
-                //TODO: delete when TW is no longer the frontend
-                messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.betstatus", Guid.NewGuid().ToString());
 
                 messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.cashoutchange.{bet.ClientCode.ToString().ToLower()}", Guid.NewGuid().ToString());
             }

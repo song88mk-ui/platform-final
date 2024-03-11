@@ -216,6 +216,11 @@ namespace Platform.Operator.Servicev2
                         firstChar = onBetPlacement.Bet.BetId.ToString().ToUpper().Substring(0, 1);
                         break;
 
+                    case "OnBetPartialCashOut":
+                        var OnBetPartialCashOut = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+                        firstChar = OnBetPartialCashOut.Bet.BetId.ToString().ToUpper().Substring(0, 1);
+                        break;
+                    
                     case "OnBetFullCashOut":
                         var onBetFullCashout = JsonSerializer.Deserialize<OnBetSettlement>(payload);
                         firstChar = onBetFullCashout.Bet.BetId.ToString().ToUpper().Substring(0, 1);

@@ -49,15 +49,6 @@ namespace Platform.CashOut.Service.Repository
                         {
                             if (bet.BetStatusId != (int)BetStatus.Running || bet.IsFreeBet)
                             {
-                                //TODO: delete when TW is no longer the frontend
-                                messageBroker.Publish(new OnBetStatus
-                                {
-                                    ClientId = message.ClientId.ToString().ToUpper(),
-                                    UserId = message.UserId,
-                                    BetId = message.BetId.ToString().ToUpper(),
-                                    BetStatus = (BetStatus)bet.BetStatusId,
-                                    Message = "Cashout request has been declined"
-                                }, "OnBetStatus", "r.bet.betstatus", correlationId);
 
                                 messageBroker.Publish(new OnBetStatus
                                 {
@@ -68,18 +59,18 @@ namespace Platform.CashOut.Service.Repository
                                     Message = "Cashout request has been declined"
                                 }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
-                                messageBroker.Publish(new OnCashOutResult
-                                {
-                                    ClientCode = bet.ClientCode.ToUpper(),
-                                    UserId = bet.UserId,
-                                    BetId = bet.BetId.ToString().ToUpper(),
-                                    BetStatus = (BetStatus)bet.BetStatusId,
-                                    CashOutStatus = CashOutStatus.Unavailable,
-                                    CashOutStake = 0,
-                                    Message = "Cashout request has been declined",
-                                    ClientId = bet.ClientId,
-                                    Endpoint = message.Endpoint
-                                }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+                                //messageBroker.Publish(new OnCashOutResult
+                                //{
+                                //    ClientCode = bet.ClientCode.ToUpper(),
+                                //    UserId = bet.UserId,
+                                //    BetId = bet.BetId.ToString().ToUpper(),
+                                //    BetStatus = (BetStatus)bet.BetStatusId,
+                                //    CashOutStatus = CashOutStatus.Unavailable,
+                                //    CashOutStake = 0,
+                                //    Message = "Cashout request has been declined",
+                                //    ClientId = bet.ClientId,
+                                //    Endpoint = message.Endpoint
+                                //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
                                 return;
                             }
                                 
@@ -120,16 +111,6 @@ namespace Platform.CashOut.Service.Repository
                                 {
                                     messageBroker.Publish(payload, "OnBetFullCashOut", "r.bet.operator", correlationId, 10);
 
-                                    //TODO: delete when TW is no longer the frontend
-                                    messageBroker.Publish(new OnBetStatus
-                                    {
-                                        ClientId = message.ClientId.ToString().ToUpper(),
-                                        UserId = message.UserId,
-                                        BetId = message.BetId.ToString().ToUpper(),
-                                        BetStatus = (BetStatus)payload.Bet.BetStatusId,
-                                        Message = "Cashout request has been accepted"
-                                    }, "OnBetStatus", "r.bet.betstatus", correlationId);
-
                                     messageBroker.Publish(new OnBetStatus
                                     {
                                         ClientId = message.ClientId.ToString().ToUpper(),
@@ -139,31 +120,22 @@ namespace Platform.CashOut.Service.Repository
                                         Message = "Cashout request has been accepted"
                                     }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
-                                    messageBroker.Publish(new OnCashOutResult
-                                    {
-                                        ClientCode = message.ClientCode.ToString().ToUpper(),
-                                        UserId = message.UserId,
-                                        BetId = message.BetId.ToString().ToUpper(),
-                                        BetStatus = (BetStatus)payload.Bet.BetStatusId,
-                                        CashOutStatus = CashOutStatus.Unavailable,
-                                        CashOutStake = 0,
-                                        Message = "Cashout request has been accepted",
-                                        ClientId = message.ClientId.ToString().ToUpper(),
-                                        Endpoint = message.Endpoint
-                                    }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+                                    //messageBroker.Publish(new OnCashOutResult
+                                    //{
+                                    //    ClientCode = message.ClientCode.ToString().ToUpper(),
+                                    //    UserId = message.UserId,
+                                    //    BetId = message.BetId.ToString().ToUpper(),
+                                    //    BetStatus = (BetStatus)payload.Bet.BetStatusId,
+                                    //    CashOutStatus = CashOutStatus.Unavailable,
+                                    //    CashOutStake = 0,
+                                    //    Message = "Cashout request has been accepted",
+                                    //    ClientId = message.ClientId.ToString().ToUpper(),
+                                    //    Endpoint = message.Endpoint
+                                    //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
                                 }
                             }
                             else
                             {
-                                //TODO: delete when TW is no longer the frontend
-                                messageBroker.Publish(new OnBetStatus
-                                {
-                                    ClientId = message.ClientId.ToString().ToUpper(),
-                                    UserId = message.UserId,
-                                    BetId = message.BetId.ToString().ToUpper(),
-                                    BetStatus = BetStatus.Running,
-                                    Message = "Cashout request has been declined"
-                                }, "OnBetStatus", "r.bet.betstatus", correlationId);
 
                                 messageBroker.Publish(new OnBetStatus
                                 {
@@ -183,18 +155,18 @@ namespace Platform.CashOut.Service.Repository
                                     Message = "Cashout request has been declined"
                                 }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
-                                messageBroker.Publish(new OnCashOutResult
-                                {
-                                    ClientCode = bet.ClientCode.ToUpper(),
-                                    UserId = bet.UserId,
-                                    BetId = bet.BetId.ToString().ToUpper(),
-                                    BetStatus = (BetStatus)bet.BetStatusId,
-                                    CashOutStatus = CashOutStatus.Unavailable,
-                                    CashOutStake = 0,
-                                    Message = "Cashout request has been declined",
-                                    ClientId = message.ClientId.ToString().ToUpper(),
-                                    Endpoint = message.Endpoint
-                                }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+                                //messageBroker.Publish(new OnCashOutResult
+                                //{
+                                //    ClientCode = bet.ClientCode.ToUpper(),
+                                //    UserId = bet.UserId,
+                                //    BetId = bet.BetId.ToString().ToUpper(),
+                                //    BetStatus = (BetStatus)bet.BetStatusId,
+                                //    CashOutStatus = CashOutStatus.Unavailable,
+                                //    CashOutStake = 0,
+                                //    Message = "Cashout request has been declined",
+                                //    ClientId = message.ClientId.ToString().ToUpper(),
+                                //    Endpoint = message.Endpoint
+                                //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
                             }
                         }
                     }
@@ -202,15 +174,6 @@ namespace Platform.CashOut.Service.Repository
             }
             catch (Exception ex)
             {
-                //TODO: delete when TW is no longer the frontend
-                messageBroker.Publish(new OnBetStatus
-                {
-                    ClientId = message.ClientId.ToString().ToUpper(),
-                    UserId = message.UserId,
-                    BetId = message.BetId.ToString().ToUpper(),
-                    BetStatus = BetStatus.Running,
-                    Message = "Cashout request has been declined"
-                }, "OnBetStatus", "r.bet.betstatus", correlationId);
 
                 var errorMessage = new
                 {
@@ -237,18 +200,18 @@ namespace Platform.CashOut.Service.Repository
                     Message = "Cashout request has been declined"
                 }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
-                messageBroker.Publish(new OnCashOutResult
-                {
-                    ClientCode = message.ClientCode.ToUpper(),
-                    UserId = message.UserId,
-                    BetId = message.BetId.ToString().ToUpper(),
-                    BetStatus = (BetStatus)bet.BetStatusId,
-                    CashOutStatus = CashOutStatus.Unavailable,
-                    CashOutStake = 0,
-                    Message = "Cashout request has been declined",
-                    ClientId = message.ClientId,
-                    Endpoint = message.Endpoint
-                }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+                //messageBroker.Publish(new OnCashOutResult
+                //{
+                //    ClientCode = message.ClientCode.ToUpper(),
+                //    UserId = message.UserId,
+                //    BetId = message.BetId.ToString().ToUpper(),
+                //    BetStatus = (BetStatus)bet.BetStatusId,
+                //    CashOutStatus = CashOutStatus.Unavailable,
+                //    CashOutStake = 0,
+                //    Message = "Cashout request has been declined",
+                //    ClientId = message.ClientId,
+                //    Endpoint = message.Endpoint
+                //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
             }
         }
 
@@ -280,31 +243,29 @@ namespace Platform.CashOut.Service.Repository
                                     Message = "Cashout request has been declined"
                                 }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
-                                messageBroker.Publish(new OnCashOutResult
-                                {
-                                    ClientCode = bet.ClientCode.ToUpper(),
-                                    UserId = bet.UserId,
-                                    BetId = bet.BetId.ToString().ToUpper(),
-                                    BetStatus = (BetStatus)bet.BetStatusId,
-                                    CashOutStatus = CashOutStatus.Unavailable,
-                                    CashOutStake = 0,
-                                    Message = "Cashout request has been declined",
-                                    ClientId = bet.ClientId,
-                                    Endpoint = message.Endpoint
-                                }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+                                //messageBroker.Publish(new OnCashOutResult
+                                //{
+                                //    ClientCode = bet.ClientCode.ToUpper(),
+                                //    UserId = bet.UserId,
+                                //    BetId = bet.BetId.ToString().ToUpper(),
+                                //    BetStatus = (BetStatus)bet.BetStatusId,
+                                //    CashOutStatus = CashOutStatus.Unavailable,
+                                //    CashOutStake = 0,
+                                //    Message = "Cashout request has been declined",
+                                //    ClientId = bet.ClientId,
+                                //    Endpoint = message.Endpoint
+                                //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
                                 return;
                             }
 
+                            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).ToList();
+
                             var isPublish = false;
                             var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
-                                SendPartialCashoutToMTS(message, mts) : new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Accepted, "1024 - Partial Cashout Accepted (MTS disabled)");
+                                SendPartialCashoutToMTS(message, mts, bet.Stake, cashoutHistory) : new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Accepted, "1024 - Partial Cashout Accepted (MTS disabled)");
 
                             if (result.Item1 == CashoutAcceptance.Accepted)
                             {
-                                //var payload = new OnBetSettlement();
-
-                                //payload.NonTaxedPayout = message.NonTaxedPayout;
-
                                 var selections = context.BetSelection.Where(c => c.BetId == message.BetId).ToList();
                                 if (selections.Count == 0)
                                 {
@@ -328,7 +289,15 @@ namespace Platform.CashOut.Service.Repository
 
                                 if (isPublish)
                                 {
-                                    messageBroker.Publish(message, "OnBetPartialCashOut", "r.bet.operator", correlationId, 10);
+                                    bet.Payout = message.CashOutStake * message.CashOutStakePercent;
+
+                                    var payload = new OnBetSettlement();
+
+                                    payload.NonTaxedPayout = message.NonTaxedPayout;
+                                    payload.Bet = bet;
+                                    payload.BetSelections = selections;
+
+                                    messageBroker.Publish(payload, "OnBetPartialCashOut", "r.bet.operator", correlationId, 10);
 
                                     messageBroker.Publish(new OnBetStatus
                                     {
@@ -339,18 +308,18 @@ namespace Platform.CashOut.Service.Repository
                                         Message = "Partial Cashout request has been accepted"
                                     }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
-                                    messageBroker.Publish(new OnCashOutResult
-                                    {
-                                        ClientCode = message.ClientCode.ToString().ToUpper(),
-                                        UserId = message.UserId,
-                                        BetId = message.BetId.ToString().ToUpper(),
-                                        BetStatus = BetStatus.Running,
-                                        CashOutStatus = CashOutStatus.Unavailable,
-                                        CashOutStake = 0,
-                                        Message = "Cashout request has been accepted",
-                                        ClientId = message.ClientId.ToString().ToUpper(),
-                                        Endpoint = message.Endpoint
-                                    }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+                                    //messageBroker.Publish(new OnCashOutResult
+                                    //{
+                                    //    ClientCode = message.ClientCode.ToString().ToUpper(),
+                                    //    UserId = message.UserId,
+                                    //    BetId = message.BetId.ToString().ToUpper(),
+                                    //    BetStatus = BetStatus.Running,
+                                    //    CashOutStatus = CashOutStatus.Unavailable,
+                                    //    CashOutStake = 0,
+                                    //    Message = "Cashout request has been accepted",
+                                    //    ClientId = message.ClientId.ToString().ToUpper(),
+                                    //    Endpoint = message.Endpoint
+                                    //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
                                 }
                             }
                             else
@@ -373,18 +342,18 @@ namespace Platform.CashOut.Service.Repository
                                     Message = "Partial Cashout request has been declined"
                                 }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
-                                messageBroker.Publish(new OnCashOutResult
-                                {
-                                    ClientCode = bet.ClientCode.ToUpper(),
-                                    UserId = bet.UserId,
-                                    BetId = bet.BetId.ToString().ToUpper(),
-                                    BetStatus = BetStatus.Running,
-                                    CashOutStatus = CashOutStatus.Unavailable,
-                                    CashOutStake = 0,
-                                    Message = "Partial Cashout request has been declined",
-                                    ClientId = message.ClientId.ToString().ToUpper(),
-                                    Endpoint = message.Endpoint
-                                }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+                                //messageBroker.Publish(new OnCashOutResult
+                                //{
+                                //    ClientCode = bet.ClientCode.ToUpper(),
+                                //    UserId = bet.UserId,
+                                //    BetId = bet.BetId.ToString().ToUpper(),
+                                //    BetStatus = BetStatus.Running,
+                                //    CashOutStatus = CashOutStatus.Unavailable,
+                                //    CashOutStake = 0,
+                                //    Message = "Partial Cashout request has been declined",
+                                //    ClientId = message.ClientId.ToString().ToUpper(),
+                                //    Endpoint = message.Endpoint
+                                //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
                             }
                         }
                     }
@@ -417,18 +386,18 @@ namespace Platform.CashOut.Service.Repository
                     Message = "Partial Cashout request has been declined"
                 }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
-                messageBroker.Publish(new OnCashOutResult
-                {
-                    ClientCode = message.ClientCode.ToUpper(),
-                    UserId = message.UserId,
-                    BetId = message.BetId.ToString().ToUpper(),
-                    BetStatus = (BetStatus)bet.BetStatusId,
-                    CashOutStatus = CashOutStatus.Unavailable,
-                    CashOutStake = 0,
-                    Message = "Partial Cashout request has been declined",
-                    ClientId = message.ClientId,
-                    Endpoint = message.Endpoint
-                }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+                //messageBroker.Publish(new OnCashOutResult
+                //{
+                //    ClientCode = message.ClientCode.ToUpper(),
+                //    UserId = message.UserId,
+                //    BetId = message.BetId.ToString().ToUpper(),
+                //    BetStatus = (BetStatus)bet.BetStatusId,
+                //    CashOutStatus = CashOutStatus.Unavailable,
+                //    CashOutStake = 0,
+                //    Message = "Partial Cashout request has been declined",
+                //    ClientId = message.ClientId,
+                //    Endpoint = message.Endpoint
+                //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
             }
         }
 
@@ -743,7 +712,7 @@ namespace Platform.CashOut.Service.Repository
             }
         }
 
-        private Tuple<CashoutAcceptance, string> SendPartialCashoutToMTS(OnCashoutBetSettlement message, IMtsSdk mts)
+        private Tuple<CashoutAcceptance, string> SendPartialCashoutToMTS(OnCashoutBetSettlement message, IMtsSdk mts, decimal stake, List<CashOutHistory> cashoutHistory)
         {
             try
             {
@@ -754,16 +723,23 @@ namespace Platform.CashOut.Service.Repository
 
                 var cashoutStake = (long)0;
                 var cashoutStakePercent = (int)0;
+                
+                var prevCashoutAmount = cashoutHistory.Any() ? cashoutHistory.Sum(c => c.CashoutAmount) : 0m;
+                var newCashoutAmount = message.CashOutStake * message.CashOutStakePercent;
+                
+                var prevRemainingStake = cashoutHistory.Any() ? cashoutHistory.FirstOrDefault().PostStake : stake;
+                var newRemainingStake = prevRemainingStake * message.CashOutStakePercent;
+                var tempCashoutPercent = (stake - newRemainingStake) / stake;
 
                 if (message.ClientCode.ToUpper() == "RKP")
                 {
-                    cashoutStake = (long)(message.CashOutStake * message.CashOutStakePercent * .10m) * 10000;
-                    cashoutStakePercent = (int)(message.CashOutStakePercent * .10m) * 10000;
+                    cashoutStake = (long)((prevCashoutAmount + newCashoutAmount) * .10m) * 10000;
+                    cashoutStakePercent = (int)((tempCashoutPercent * 100) * .10m) * 10000;
                 }
                 else
                 {
-                    cashoutStake = (long)(message.CashOutStake * message.CashOutStakePercent * 10000);
-                    cashoutStakePercent = (int)(message.CashOutStakePercent * 10000);
+                    cashoutStake = (long)((prevCashoutAmount + newCashoutAmount) * 10000);
+                    cashoutStakePercent = (int)((tempCashoutPercent * 100) * 10000);
                 }
 
                 var betCashout = _factory.CreateTicketCashoutBuilder().SetTicketId(message.BetId.ToString().ToUpper()).SetCashoutStake(cashoutStake).SetCashoutPercent(cashoutStakePercent).BuildTicket();
@@ -834,18 +810,18 @@ namespace Platform.CashOut.Service.Repository
                                     Message = "Cashout request has been declined"
                                 }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
-                                messageBroker.Publish(new OnCashOutResult
-                                {
-                                    ClientCode = message.ClientCode.ToUpper(),
-                                    UserId = payload.UserId,
-                                    BetId = payload.BetId.ToString().ToUpper(),
-                                    BetStatus = BetStatus.Running,
-                                    CashOutStatus = CashOutStatus.Unavailable,
-                                    CashOutStake = 0,
-                                    Message = "Cashout request has been declined",
-                                    ClientId = payload.ClientId,
-                                    Endpoint = message.Endpoint
-                                }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+                                //messageBroker.Publish(new OnCashOutResult
+                                //{
+                                //    ClientCode = message.ClientCode.ToUpper(),
+                                //    UserId = payload.UserId,
+                                //    BetId = payload.BetId.ToString().ToUpper(),
+                                //    BetStatus = BetStatus.Running,
+                                //    CashOutStatus = CashOutStatus.Unavailable,
+                                //    CashOutStake = 0,
+                                //    Message = "Cashout request has been declined",
+                                //    ClientId = payload.ClientId,
+                                //    Endpoint = message.Endpoint
+                                //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
 
                                 Console.WriteLine($"{DateTime.UtcNow} : Live Cashout declined - {message.BetId}");
                                 isSuccess = false;
@@ -865,18 +841,18 @@ namespace Platform.CashOut.Service.Repository
                                         Message = "Cashout request has been declined"
                                     }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
-                                    messageBroker.Publish(new OnCashOutResult
-                                    {
-                                        ClientCode = message.ClientCode.ToUpper(),
-                                        UserId = payload.UserId,
-                                        BetId = payload.BetId.ToString().ToUpper(),
-                                        BetStatus = BetStatus.Running,
-                                        CashOutStatus = payload.CashOutStake == 0 ? CashOutStatus.Unavailable : CashOutStatus.Available,
-                                        CashOutStake = payload.CashOutStake,
-                                        Message = "Cashout request has been declined",
-                                        ClientId = message.ClientId,
-                                        Endpoint = message.Endpoint
-                                    }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+                                    //messageBroker.Publish(new OnCashOutResult
+                                    //{
+                                    //    ClientCode = message.ClientCode.ToUpper(),
+                                    //    UserId = payload.UserId,
+                                    //    BetId = payload.BetId.ToString().ToUpper(),
+                                    //    BetStatus = BetStatus.Running,
+                                    //    CashOutStatus = payload.CashOutStake == 0 ? CashOutStatus.Unavailable : CashOutStatus.Available,
+                                    //    CashOutStake = payload.CashOutStake,
+                                    //    Message = "Cashout request has been declined",
+                                    //    ClientId = message.ClientId,
+                                    //    Endpoint = message.Endpoint
+                                    //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
 
                                     Console.WriteLine($"{DateTime.UtcNow} : Live Cashout declined - {message.BetId}");//
                                     isSuccess = false;
@@ -897,15 +873,6 @@ namespace Platform.CashOut.Service.Repository
                     }
                     else
                     {
-                        //TODO: delete when TW is no longer the frontend
-                        messageBroker.Publish(new OnBetStatus
-                        {
-                            ClientId = message.ClientId,
-                            UserId = message.UserId,
-                            BetId = message.BetId.ToString().ToUpper(),
-                            BetStatus = BetStatus.Running,
-                            Message = "Cashout request has been declined"
-                        }, "OnBetStatus", "r.bet.betstatus", correlationId);
 
                         messageBroker.Publish(new OnBetStatus
                         {
@@ -916,18 +883,18 @@ namespace Platform.CashOut.Service.Repository
                             Message = "Cashout request has been declined"
                         }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
-                        messageBroker.Publish(new OnCashOutResult
-                        {
-                            ClientCode = message.ClientCode.ToUpper(),
-                            UserId = message.UserId,
-                            BetId = message.BetId.ToString().ToUpper(),
-                            BetStatus = BetStatus.Running,
-                            CashOutStatus = CashOutStatus.Unavailable,
-                            CashOutStake = 0,
-                            Message = "Cashout request has been declined",
-                            ClientId = message.ClientId,
-                            Endpoint = message.Endpoint
-                        }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+                        //messageBroker.Publish(new OnCashOutResult
+                        //{
+                        //    ClientCode = message.ClientCode.ToUpper(),
+                        //    UserId = message.UserId,
+                        //    BetId = message.BetId.ToString().ToUpper(),
+                        //    BetStatus = BetStatus.Running,
+                        //    CashOutStatus = CashOutStatus.Unavailable,
+                        //    CashOutStake = 0,
+                        //    Message = "Cashout request has been declined",
+                        //    ClientId = message.ClientId,
+                        //    Endpoint = message.Endpoint
+                        //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
 
                         Console.WriteLine($"{DateTime.UtcNow} : Live Cashout declined - {message.BetId}");
                     }
@@ -942,18 +909,18 @@ namespace Platform.CashOut.Service.Repository
             }
             catch (Exception ex)
             {
-                messageBroker.Publish(new OnCashOutResult
-                {
-                    ClientCode = message.ClientCode.ToUpper(),
-                    UserId = message.UserId,
-                    BetId = message.BetId.ToString().ToUpper(),
-                    BetStatus = BetStatus.Running,
-                    CashOutStatus = CashOutStatus.Unavailable,
-                    CashOutStake = 0,
-                    Message = "Cashout request has been declined",
-                    ClientId = message.ClientId,
-                    Endpoint = message.Endpoint
-                }, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+                //messageBroker.Publish(new OnCashOutResult
+                //{
+                //    ClientCode = message.ClientCode.ToUpper(),
+                //    UserId = message.UserId,
+                //    BetId = message.BetId.ToString().ToUpper(),
+                //    BetStatus = BetStatus.Running,
+                //    CashOutStatus = CashOutStatus.Unavailable,
+                //    CashOutStake = 0,
+                //    Message = "Cashout request has been declined",
+                //    ClientId = message.ClientId,
+                //    Endpoint = message.Endpoint
+                //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
 
                 Console.WriteLine($"{DateTime.UtcNow} : Error: {ex.Message} -> Payload: {JsonSerializer.Serialize(message)}");
             }

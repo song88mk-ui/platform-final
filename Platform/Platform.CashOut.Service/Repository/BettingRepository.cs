@@ -901,7 +901,10 @@ namespace Platform.CashOut.Service.Repository
                 }
                 else
                 {
-                    ProcessCashOutSettlement(message, mts, messageBroker, correlationId);
+                    if (cashoutType == CashoutType.Full)
+                        ProcessCashOutSettlement(message, mts, messageBroker, correlationId);
+                    else if (cashoutType == CashoutType.Partial)
+                        ProcessPartialCashOutSettlement(message, mts, messageBroker, correlationId);
 
                     Console.WriteLine($"{DateTime.UtcNow} : Prematch Cashout successful - {message.BetId}");
                 }

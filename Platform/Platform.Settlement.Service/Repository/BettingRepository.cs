@@ -824,10 +824,24 @@ namespace Platform.Settlement.Service.Repository
             var isInsertToBetAudit = true;
             isPublish = true;
 
-            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate).FirstOrDefault();
+            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate);
 
-            var remainingTrueStake = cashoutHistory == null ? bet.TrueStake : cashoutHistory.PostTrueStake;
-            var remainingStake = cashoutHistory == null ? bet.Stake : cashoutHistory.PostStake;
+            var remainingTrueStake = bet.TrueStake;
+            var remainingStake = bet.Stake;
+
+            var prevTaxedStake = 0m;
+            var prevTaxedWinnings = 0m;
+            var prevCashout = 0m;
+            var partialCashout = cashoutHistory.FirstOrDefault(c => c.BetId == bet.BetId);
+
+            if (partialCashout != null)
+            {
+                remainingTrueStake = partialCashout.PostTrueStake;
+                remainingStake = partialCashout.PostStake;
+                prevTaxedStake = cashoutHistory.Where(c => c.BetId == bet.BetId).Sum(s => s.TaxedStake);
+                prevTaxedWinnings = cashoutHistory.Where(c => c.BetId == bet.BetId).Sum(s => s.TaxedWinnings);
+                prevCashout = cashoutHistory.Where(c => c.BetId == bet.BetId).Sum(s => s.CashoutAmount);
+            }
 
             var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
@@ -842,6 +856,8 @@ namespace Platform.Settlement.Service.Repository
                 bet.SettlementDateOffset = settledDate.AddHours(-4);
             }
 
+            payout = payout + prevCashout;
+
             payload.NonTaxedPayout = payout;
 
             bet.WinLoss = payout == 0 ? -remainingTrueStake : payout - remainingTrueStake;
@@ -852,7 +868,7 @@ namespace Platform.Settlement.Service.Repository
 
             var finalStake = remainingTrueStake - bet.StakeBonus;
 
-            bet.TaxedStake = bet.IsFreeBet == false ? finalStake - (finalStake / (1 + bet.StakeTax)) : 0;
+            bet.TaxedStake = bet.IsFreeBet == false ? prevTaxedStake + (finalStake - (finalStake / (1 + bet.StakeTax))) : 0;
             bet.TaxedWinnings = 0;
 
             bet.ParlayBonus = 0;
@@ -931,10 +947,24 @@ namespace Platform.Settlement.Service.Repository
             var isInsertToBetAudit = true;
             isPublish = true;
 
-            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate).FirstOrDefault();
+            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate);
 
-            var remainingTrueStake = cashoutHistory == null ? bet.TrueStake : cashoutHistory.PostTrueStake;
-            var remainingStake = cashoutHistory == null ? bet.Stake : cashoutHistory.PostStake;
+            var remainingTrueStake = bet.TrueStake;
+            var remainingStake = bet.Stake;
+
+            var prevTaxedStake = 0m;
+            var prevTaxedWinnings = 0m;
+            var prevCashout = 0m;
+            var partialCashout = cashoutHistory.FirstOrDefault(c => c.BetId == bet.BetId);
+
+            if (partialCashout != null)
+            {
+                remainingTrueStake = partialCashout.PostTrueStake;
+                remainingStake = partialCashout.PostStake;
+                prevTaxedStake = cashoutHistory.Where(c => c.BetId == bet.BetId).Sum(s => s.TaxedStake);
+                prevTaxedWinnings = cashoutHistory.Where(c => c.BetId == bet.BetId).Sum(s => s.TaxedWinnings);
+                prevCashout = cashoutHistory.Where(c => c.BetId == bet.BetId).Sum(s => s.CashoutAmount);
+            }
 
             var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
@@ -984,7 +1014,7 @@ namespace Platform.Settlement.Service.Repository
 
             stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon || betStatus == BetStatus.Void ? remainingTrueStake : stake;
 
-            var totalPayout = payout + parlayBonusWinnings;
+            var totalPayout = payout + parlayBonusWinnings + prevCashout;
 
             nonTaxedPayout = nonTaxedPayout + nonTaxedParlayBonusWinnings;
 
@@ -1000,8 +1030,8 @@ namespace Platform.Settlement.Service.Repository
             bet.BetStatusId = (int)betStatus;
             bet.BetStatusName = betStatus.ToString();
             bet.Payout = totalPayout;
-            bet.TaxedStake = betStatus == BetStatus.Cancelled ? 0 : taxedStake;
-            bet.TaxedWinnings = taxedWinnings;
+            bet.TaxedStake = betStatus == BetStatus.Cancelled ? 0 : taxedStake + prevTaxedStake;
+            bet.TaxedWinnings = taxedWinnings + prevTaxedWinnings;
             bet.ParlayBonus = parlayBonus;
             bet.ParlayBonusWinnings = parlayBonusWinnings;            
 
@@ -1087,10 +1117,17 @@ namespace Platform.Settlement.Service.Repository
 
         private void ApplyRunning(BettingContext context, Bet bet, List<BetSelection> selections, BetSelection betSelection, DateTime settledDate)
         {
+            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate);
 
-            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate).FirstOrDefault();
+            var remainingTrueStake = bet.TrueStake;
+            var prevCashout = 0m;
+            var partialCashout = cashoutHistory.FirstOrDefault(c => c.BetId == bet.BetId);
 
-            var remainingTrueStake = cashoutHistory == null ? bet.TrueStake : cashoutHistory.PostTrueStake;
+            if (partialCashout != null)
+            {
+                remainingTrueStake = partialCashout.PostTrueStake;
+                prevCashout = cashoutHistory.Where(c => c.BetId == bet.BetId).Sum(s => s.CashoutAmount);
+            }
 
             var taxedStake = 0m;
             var stake = remainingTrueStake - taxedStake;
@@ -1115,7 +1152,7 @@ namespace Platform.Settlement.Service.Repository
             bet.WinLoss = 0m;
             bet.BetStatusId = (int)BetStatus.Running;
             bet.BetStatusName = BetStatus.Running.ToString();
-            bet.Payout = payout;
+            bet.Payout = payout + prevCashout;
             bet.SettlementDate = settledDate;
             bet.SettlementDateOffset = settledDate.AddHours(-4);
             bet.TaxedStake = 0m;

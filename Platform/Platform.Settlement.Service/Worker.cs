@@ -95,6 +95,7 @@ namespace Platform.Settlement.Service
 
                 switch (messageType)
                 {
+                    //
                     case "OnBetSettlement":
                         var onBetSettlement = JsonSerializer.Deserialize<OnUOFBetSettlement>(payload);
                         _bettingRepository.ProcessBetSettlement(onBetSettlement, _messageBroker, correlationId);

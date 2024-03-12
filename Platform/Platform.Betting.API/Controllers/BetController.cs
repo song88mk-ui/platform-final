@@ -9,7 +9,6 @@ namespace Platform.Betting.API.Controllers
     [ApiController, EnableCors("AllowAllOrigins")]
     public class BetController : ControllerBase
     {
-        //
         private readonly IBettingRepository _bettingRepository;
 
         public BetController(IBettingRepository bettingRepository)

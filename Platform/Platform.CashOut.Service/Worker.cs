@@ -843,6 +843,7 @@ namespace Platform.CashOut.Service
 
                         _messageBroker.Acknowledge(e);
                         break;
+                        //
                     case "OnBetPartialCashOut":
                         var onPartialCashoutBetSettlement = JsonSerializer.Deserialize<OnCashoutBetSettlement>(payload);
 

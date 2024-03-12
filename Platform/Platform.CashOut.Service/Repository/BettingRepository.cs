@@ -591,7 +591,7 @@ namespace Platform.CashOut.Service.Repository
                         TrueStakeUsed = trueStakeUsed,
                         PreTrueStake = cashoutHistory.PostTrueStake,
                         PostTrueStake = cashoutHistory.PostTrueStake - trueStakeUsed,
-                        CashoutAmount = message.CashOutStake * message.CashOutStakePercent,
+                        CashoutAmount = message.CashOutStake,
                         CashoutPercent = 1,
                         CashoutDate = settledDate,
                         CashoutDateOffset = settledDate.AddHours(-4),

@@ -574,8 +574,8 @@ namespace Platform.CashOut.Service.Repository
 
                 if (cashoutHistory != null)
                 {
-                    var stakeUsed = cashoutHistory.PostStake * message.CashOutStakePercent;
-                    var trueStakeUsed = cashoutHistory.PostTrueStake * message.CashOutStakePercent;
+                    var stakeUsed = cashoutHistory.PostStake;
+                    var trueStakeUsed = cashoutHistory.PostTrueStake;
 
                     context.CashOutHistory.Add(new CashOutHistory
                     {
@@ -592,7 +592,7 @@ namespace Platform.CashOut.Service.Repository
                         PreTrueStake = cashoutHistory.PostTrueStake,
                         PostTrueStake = cashoutHistory.PostTrueStake - trueStakeUsed,
                         CashoutAmount = message.CashOutStake * message.CashOutStakePercent,
-                        CashoutPercent = message.CashOutStakePercent,
+                        CashoutPercent = 1,
                         CashoutDate = settledDate,
                         CashoutDateOffset = settledDate.AddHours(-4),
                         NonTaxedPayout = message.NonTaxedPayout,

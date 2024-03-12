@@ -2790,9 +2790,9 @@ namespace Platform.Betting.API.Repository
                         CashoutType = CashoutType.Partial,
                         CashOutStake = cashOut.CashOutStake,
                         CashOutStakePercent = request.CashOutStakePercent,
-                        TaxedStake = cashOut.TaxedStake,
-                        TaxedWinnings = cashOut.TaxedWinnings,
-                        NonTaxedPayout = cashOut.NonTaxedPayout,
+                        TaxedStake = cashOut.TaxedStake * request.CashOutStakePercent,
+                        TaxedWinnings = cashOut.TaxedWinnings * request.CashOutStakePercent,
+                        NonTaxedPayout = cashOut.NonTaxedPayout * request.CashOutStakePercent,
                         HasLive = cashOut.HasLive,
                         Endpoint = bet.Endpoint,
                         Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities

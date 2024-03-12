@@ -860,7 +860,7 @@ namespace Platform.Settlement.Service.Repository
 
             payload.NonTaxedPayout = payout;
 
-            bet.WinLoss = payout == 0 ? -remainingTrueStake : payout - remainingTrueStake;
+            bet.WinLoss = payout == 0 ? -bet.TrueStake : payout - bet.TrueStake;
             bet.BetStatusId = (int)betStatus;
             bet.BetStatusName = betStatus.ToString();
 
@@ -1012,7 +1012,7 @@ namespace Platform.Settlement.Service.Repository
 
             var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, stake, isBetBuilder);
 
-            stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon || betStatus == BetStatus.Void ? remainingTrueStake : stake;
+            stake = betStatus == BetStatus.Won || betStatus == BetStatus.HalfWon || betStatus == BetStatus.Void ? bet.TrueStake : stake;
 
             var totalPayout = payout + parlayBonusWinnings + prevCashout;
 

@@ -81,7 +81,10 @@ namespace Platform.CashOutStake.Servicev2
                             _bettingRepository.RemoveBet(onBetSettlement);
                         }
                         break;
-
+                    case "OnBetPartialCashOut":
+                        var onBetPartialCashOut = JsonSerializer.Deserialize<OnCashoutBetSettlement>(payload);
+                        _bettingRepository.ProcessPartialCashOut(onBetPartialCashOut);
+                        break;
                     case "OnBetFullCashOut":
                         var onBetFullCashOut = JsonSerializer.Deserialize<OnBetSettlement>(payload);
                         _bettingRepository.RemoveBet(onBetFullCashOut);

@@ -3176,7 +3176,8 @@ namespace Platform.API.Repository
                 CompanyShare = clientResponse.Result.CompanyShare,
                 BetId = betId,
                 UserId = authenticationResponse.Result.UserId,
-                CashOutStake = request.CashoutStake
+                CashOutStake = request.CashoutStake,
+                CashOutStakePercent = request.CashoutStakePercent
             });
         }
 

@@ -216,6 +216,11 @@ namespace Platform.Operator.Servicev2
                         firstChar = onBetPlacement.Bet.BetId.ToString().ToUpper().Substring(0, 1);
                         break;
 
+                    case "OnBetPartialCashOut":
+                        var OnBetPartialCashOut = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+                        firstChar = OnBetPartialCashOut.Bet.BetId.ToString().ToUpper().Substring(0, 1);
+                        break;
+                    
                     case "OnBetFullCashOut":
                         var onBetFullCashout = JsonSerializer.Deserialize<OnBetSettlement>(payload);
                         firstChar = onBetFullCashout.Bet.BetId.ToString().ToUpper().Substring(0, 1);
@@ -368,6 +373,13 @@ namespace Platform.Operator.Servicev2
                         Console.WriteLine($"{DateTime.UtcNow} {onBetPlacement.Bet.BetId} - OnBetPlacement");
 
                         _bettingRepository.ProcesssBetPlacement(onBetPlacement, _messageBroker, correlationId, threadId);
+                        break;
+
+                    case "OnBetPartialCashOut":
+                        var onBetPartialCashout = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+                        Console.WriteLine($"{DateTime.UtcNow} {onBetPartialCashout.Bet.BetId} - OnBetPartialCashOut");
+
+                        _bettingRepository.ProcessBetPartialCashOut(onBetPartialCashout, _messageBroker, correlationId, threadId);
                         break;
 
                     case "OnBetFullCashOut":

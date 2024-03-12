@@ -1,5 +1,4 @@
-﻿using Platform.Shared.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Platform.Shared.Models
@@ -25,6 +24,7 @@ namespace Platform.Shared.Models
         public BetHistoryDTO()
         {
             Selections = new List<BetSelectionHistoryDTO>();
+            PartialCashout = new List<PartialCashoutDTO>();
         }
         public string BetId { get; set; }
         public string UserId { get; set; }
@@ -56,6 +56,7 @@ namespace Platform.Shared.Models
         public bool IsBoosted { get; set; }
         public bool IsBetBuilder { get; set; }        
         public List<BetSelectionHistoryDTO> Selections { get; set; }
+        public List<PartialCashoutDTO> PartialCashout { get; set; }
     }
 
     public class BetSelectionHistoryDTO
@@ -92,5 +93,14 @@ namespace Platform.Shared.Models
         public double HalfWonProbability { get; set; }
         public double HalfLostProbability { get; set; }
         public decimal DeadHeatFactor { get; set; }
+    }
+
+    public class PartialCashoutDTO
+    {
+        public string TransactionId { get; set; }
+        public decimal Stake { get; set; }
+        public decimal Payout { get; set; }
+        public decimal CashoutPercent { get; set; }
+        public DateTime TransactionDate { get; set; }
     }
 }

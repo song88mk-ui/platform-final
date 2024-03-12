@@ -2712,7 +2712,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).ToList();
+            var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate).ToList();
 
             var result = await _sportsbookRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>(), cashoutHistory);
 
@@ -2871,7 +2871,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).ToList();
+            var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate).ToList();
 
             var result = await _sportsbookRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>(), cashoutHistory);
 

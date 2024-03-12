@@ -74,7 +74,7 @@ namespace Platform.CashOut.Service.Repository
                                 return;
                             }
 
-                            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).ToList();
+                            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate).ToList();
 
                             var isPublish = false;
                             var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
@@ -262,7 +262,7 @@ namespace Platform.CashOut.Service.Repository
                                 return;
                             }
 
-                            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).ToList();
+                            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate).ToList();
 
                             var isPublish = false;
                             var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
@@ -613,7 +613,7 @@ namespace Platform.CashOut.Service.Repository
 
         private bool SettlePartialBet(OnCashoutBetSettlement message, Bet bet, bool isPublish, DateTime settledDate, BettingContext context)
         {
-            var cashoutHistory = context.CashOutHistory.AsNoTracking().FirstOrDefault(c => c.BetId == message.BetId);
+            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == message.BetId).OrderByDescending(o => o.CashoutDate).FirstOrDefault();
 
             if (cashoutHistory != null)
             {
@@ -779,9 +779,9 @@ namespace Platform.CashOut.Service.Repository
                 
                 var prevCashoutAmount = cashoutHistory.Any() ? cashoutHistory.Sum(c => c.CashoutAmount) : 0m;
                 var newCashoutAmount = message.CashOutStake * message.CashOutStakePercent;
-                
-                var prevRemainingStake = cashoutHistory.Any() ? cashoutHistory.FirstOrDefault().PostStake : stake; //1000
-                var newRemainingStake = prevRemainingStake - (prevRemainingStake * message.CashOutStakePercent); //300
+
+                var prevRemainingStake = cashoutHistory.Any() ? cashoutHistory.FirstOrDefault().PostStake : stake;
+                var newRemainingStake = prevRemainingStake - (prevRemainingStake * message.CashOutStakePercent); 
                 var tempCashoutPercent = (stake - newRemainingStake) / stake;
 
                 if (message.ClientCode.ToUpper() == "RKP")

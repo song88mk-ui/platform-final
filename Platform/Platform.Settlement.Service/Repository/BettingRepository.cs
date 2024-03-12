@@ -824,7 +824,7 @@ namespace Platform.Settlement.Service.Repository
             var isInsertToBetAudit = true;
             isPublish = true;
 
-            var cashoutHistory = context.CashOutHistory.AsNoTracking().FirstOrDefault(c => c.BetId == bet.BetId);
+            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate).FirstOrDefault();
 
             var remainingTrueStake = cashoutHistory == null ? bet.TrueStake : cashoutHistory.PostTrueStake;
             var remainingStake = cashoutHistory == null ? bet.Stake : cashoutHistory.PostStake;
@@ -931,7 +931,7 @@ namespace Platform.Settlement.Service.Repository
             var isInsertToBetAudit = true;
             isPublish = true;
 
-            var cashoutHistory = context.CashOutHistory.AsNoTracking().FirstOrDefault(c => c.BetId == bet.BetId);
+            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate).FirstOrDefault();
 
             var remainingTrueStake = cashoutHistory == null ? bet.TrueStake : cashoutHistory.PostTrueStake;
             var remainingStake = cashoutHistory == null ? bet.Stake : cashoutHistory.PostStake;
@@ -1088,7 +1088,7 @@ namespace Platform.Settlement.Service.Repository
         private void ApplyRunning(BettingContext context, Bet bet, List<BetSelection> selections, BetSelection betSelection, DateTime settledDate)
         {
 
-            var cashoutHistory = context.CashOutHistory.AsNoTracking().FirstOrDefault(c => c.BetId == bet.BetId);
+            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate).FirstOrDefault();
 
             var remainingTrueStake = cashoutHistory == null ? bet.TrueStake : cashoutHistory.PostTrueStake;
 

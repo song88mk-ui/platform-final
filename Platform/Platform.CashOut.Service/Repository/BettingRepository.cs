@@ -780,8 +780,8 @@ namespace Platform.CashOut.Service.Repository
                 var prevCashoutAmount = cashoutHistory.Any() ? cashoutHistory.Sum(c => c.CashoutAmount) : 0m;
                 var newCashoutAmount = message.CashOutStake * message.CashOutStakePercent;
                 
-                var prevRemainingStake = cashoutHistory.Any() ? cashoutHistory.FirstOrDefault().PostStake : stake;
-                var newRemainingStake = prevRemainingStake * message.CashOutStakePercent;
+                var prevRemainingStake = cashoutHistory.Any() ? cashoutHistory.FirstOrDefault().PostStake : stake; //1000
+                var newRemainingStake = prevRemainingStake - (prevRemainingStake * message.CashOutStakePercent); //300
                 var tempCashoutPercent = (stake - newRemainingStake) / stake;
 
                 if (message.ClientCode.ToUpper() == "RKP")

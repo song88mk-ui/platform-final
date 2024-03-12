@@ -2748,7 +2748,7 @@ namespace Platform.Betting.API.Repository
             else
             {
                 
-                if(request.CashOutStakePercent > 0 && request.CashOutStakePercent < 1) //TODO: check what amount to be passed from FE
+                if(request.CashOutStakePercent > 0 && request.CashOutStakePercent < 1)
                 {
                     var payload = new OnCashoutBetSettlement
                     {

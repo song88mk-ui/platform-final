@@ -73,7 +73,9 @@ namespace Platform.CashOut.Service.Repository
                                 //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
                                 return;
                             }
-                                
+
+                            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).ToList();
+
                             var isPublish = false;
                             var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
                                 SendCashoutToMTS(message, mts) : new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Accepted, "1024 - Cashout Accepted (MTS disabled)");
@@ -83,6 +85,8 @@ namespace Platform.CashOut.Service.Repository
                                 var payload = new OnBetSettlement();
                                 
                                 payload.NonTaxedPayout = message.NonTaxedPayout;
+                                if (cashoutHistory.Any())
+                                    payload.NonTaxedPayout = payload.NonTaxedPayout + cashoutHistory.Sum(c => c.NonTaxedPayout);
 
                                 var selections = context.BetSelection.Where(c => c.BetId == message.BetId).ToList();
                                 if (selections.Count == 0)
@@ -101,7 +105,7 @@ namespace Platform.CashOut.Service.Repository
 
                                 bet.Reason = $"{result.Item2} (MTS)";
 
-                                isPublish = SettleBet(message, bet, isPublish, payload, settledDate, context, selections, filteredSelections);
+                                isPublish = SettleBet(message, bet, isPublish, payload, settledDate, context, selections, filteredSelections, cashoutHistory);
 
                                 context.SaveChanges();
 
@@ -292,7 +296,6 @@ namespace Platform.CashOut.Service.Repository
                                     bet.Payout = message.CashOutStake * message.CashOutStakePercent;
 
                                     var payload = new OnBetSettlement();
-
                                     payload.NonTaxedPayout = message.NonTaxedPayout;
                                     payload.Bet = bet;
                                     payload.BetSelections = selections;
@@ -401,7 +404,7 @@ namespace Platform.CashOut.Service.Repository
             }
         }
 
-        private bool SettleBet(OnCashoutBetSettlement message, Bet bet, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, List<BetSelection> filteredSelections)
+        private bool SettleBet(OnCashoutBetSettlement message, Bet bet, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, List<BetSelection> filteredSelections, List<CashOutHistory> partialCashout)
         {
 
             foreach (var selection in filteredSelections)
@@ -476,9 +479,18 @@ namespace Platform.CashOut.Service.Repository
                     });
                 }
             }
+            var prevCashoutTaxedStake = 0m;
+            var prevCashoutTaxedWinnings = 0m;
+            var prevCashoutAmount = 0m;
+            if (partialCashout.Any())
+            {
+                prevCashoutTaxedStake = partialCashout.Sum(c => c.TaxedStake);
+                prevCashoutTaxedWinnings = partialCashout.Sum(c => c.TaxedWinnings);
+                prevCashoutAmount = partialCashout.Sum(c => c.CashoutAmount);
+            }
 
             var stake = bet.TrueStake - bet.TaxedStake;
-            var payout = message.CashOutStake;
+            var payout = prevCashoutAmount + message.CashOutStake;
             var winloss = payout - bet.TrueStake;
 
             var betStatus = GetStatus(selections.Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), payout, stake);
@@ -491,8 +503,8 @@ namespace Platform.CashOut.Service.Repository
             bet.SettlementDate = settledDate;
             bet.SettlementDateOffset = settledDate.AddHours(-4);
 
-            bet.TaxedStake = message.TaxedStake;
-            bet.TaxedWinnings = message.TaxedWinnings;
+            bet.TaxedStake = prevCashoutTaxedStake + message.TaxedStake;
+            bet.TaxedWinnings = prevCashoutTaxedWinnings + message.TaxedWinnings;
 
             bet.ParlayBonus = 0;
             bet.ParlayBonusWinnings = 0;
@@ -556,6 +568,41 @@ namespace Platform.CashOut.Service.Repository
                 IsAgent = betEntity.IsAgent
             });
 
+            if(partialCashout.Any())
+            {
+                var cashoutHistory = partialCashout.FirstOrDefault(c => c.BetId == message.BetId);
+
+                if (cashoutHistory != null)
+                {
+                    var stakeUsed = cashoutHistory.PostStake * message.CashOutStakePercent;
+                    var trueStakeUsed = cashoutHistory.PostTrueStake * message.CashOutStakePercent;
+
+                    context.CashOutHistory.Add(new CashOutHistory
+                    {
+                        Id = Guid.NewGuid(),
+                        BetId = message.BetId,
+                        ClientId = message.ClientId,
+                        ClientCode = message.ClientCode,
+                        OriginalStake = bet.Stake,
+                        StakeUsed = stakeUsed,
+                        PreStake = cashoutHistory.PostStake,
+                        PostStake = cashoutHistory.PostStake - stakeUsed,
+                        TrueStake = bet.TrueStake,
+                        TrueStakeUsed = trueStakeUsed,
+                        PreTrueStake = cashoutHistory.PostTrueStake,
+                        PostTrueStake = cashoutHistory.PostTrueStake - trueStakeUsed,
+                        CashoutAmount = message.CashOutStake * message.CashOutStakePercent,
+                        CashoutPercent = message.CashOutStakePercent,
+                        CashoutDate = settledDate,
+                        CashoutDateOffset = settledDate.AddHours(-4),
+                        NonTaxedPayout = message.NonTaxedPayout,
+                        TaxedStake = message.TaxedStake,
+                        TaxedWinnings = message.TaxedWinnings
+                    });
+                }
+
+            }
+
             isPublish = true;
             payload.Bet = betEntity;
             payload.BetSelections = selections;
@@ -591,6 +638,9 @@ namespace Platform.CashOut.Service.Repository
                     CashoutPercent = message.CashOutStakePercent,
                     CashoutDate = settledDate,
                     CashoutDateOffset = settledDate.AddHours(-4),
+                    NonTaxedPayout = message.NonTaxedPayout,
+                    TaxedStake = message.TaxedStake,
+                    TaxedWinnings = message.TaxedWinnings   
                 });
             }
             else
@@ -616,6 +666,9 @@ namespace Platform.CashOut.Service.Repository
                     CashoutPercent = message.CashOutStakePercent,
                     CashoutDate = settledDate,
                     CashoutDateOffset = settledDate.AddHours(-4),
+                    NonTaxedPayout = message.NonTaxedPayout,
+                    TaxedStake = message.TaxedStake,
+                    TaxedWinnings = message.TaxedWinnings
                 });
 
             }

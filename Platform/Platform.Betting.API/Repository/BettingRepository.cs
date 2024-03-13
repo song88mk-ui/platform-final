@@ -1575,7 +1575,7 @@ namespace Platform.Betting.API.Repository
                 var runningBetIds = runningBets.Select(s => s.BetId).Distinct().ToList();
                 var runningSelections = selections.Where(c => runningBetIds.Contains(c.BetId)).ToList();
 
-                var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().Where(c => runningBetIds.Contains(c.BetId)).OrderByDescending(o => o.CashoutDate).ToList();
+                var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().Where(c => betIds.Contains(c.BetId)).OrderByDescending(o => o.CashoutDate).ToList();
 
                 var cashOutList = await _sportsbookRepository.GetCashOut(runningBets, runningSelections, betBoosted, cashoutHistory);
 

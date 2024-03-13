@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Platform.Shared.Data.Betting.Entities
 {
-    public class CashOutHistory
+    public class PartialCashoutAudit
     {
         public Guid Id { get; set; }
         public Guid BetId { get; set; }

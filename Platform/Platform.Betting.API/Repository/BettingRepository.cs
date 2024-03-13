@@ -2743,9 +2743,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate).ToList();
-
-            var result = await _sportsbookRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>(), cashoutHistory);
+            var result = await _sportsbookRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>());
 
             var cashOut = result.Result.Where(c => c.BetId == bet.BetId && c.CashOutStatus == CashOutStatus.Available).FirstOrDefault();
 
@@ -2758,7 +2756,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            if (Math.Round(request.CashOutStake, 2) != Math.Round(cashOut.CashOutStake, 2))
+            if (request.IsPartialCashout == false && Math.Round(request.CashOutStake, 2) != Math.Round(cashOut.CashOutStake, 2))
             {
                 var requestCashOutStake = request.CashOutStake % 1 == 0 ? request.CashOutStake.ToString().TrimEnd('0').TrimEnd('.') : request.CashOutStake.ToString().TrimEnd('0').TrimEnd('.');
                 var resultCashOutStake = cashOut.CashOutStake % 1 == 0 ? cashOut.CashOutStake.ToString().TrimEnd('0').TrimEnd('.') : cashOut.CashOutStake.ToString().TrimEnd('0').TrimEnd('.');
@@ -2776,10 +2774,25 @@ namespace Platform.Betting.API.Repository
                     }
                 };
             }
+            else if (request.IsPartialCashout && Math.Round(request.CashOutStake, 2) >= Math.Round(cashOut.CashOutStake, 2))
+            {
+                return new BaseResponseDTO<BetCashOutResponseDTO>
+                {
+                    StatusCode = StatusCode.Partial_CashOut_Stake_Must_Not_Be_Higher_Than_Cashout_Amount,
+                    Message = StatusCode.Partial_CashOut_Stake_Must_Not_Be_Higher_Than_Cashout_Amount.ToString(),
+                    Result = new BetCashOutResponseDTO
+                    {
+                        BetId = bet.BetId.ToString().ToUpper(),
+                        BetStatus = (BetStatus)bet.BetStatusId,
+                        UserId = bet.UserId,
+                        CashOutStake = cashOut.CashOutStake
+                    }
+                };
+            }
             else
             {
                 
-                if(request.CashOutStakePercent > 0 && request.CashOutStakePercent < 1)
+                if(request.IsPartialCashout)
                 {
                     var payload = new OnCashoutBetSettlement
                     {
@@ -2789,10 +2802,9 @@ namespace Platform.Betting.API.Repository
                         ClientId = bet.ClientId.ToUpper(),
                         CashoutType = CashoutType.Partial,
                         CashOutStake = cashOut.CashOutStake,
-                        CashOutStakePercent = request.CashOutStakePercent,
-                        TaxedStake = cashOut.TaxedStake * request.CashOutStakePercent,
-                        TaxedWinnings = cashOut.TaxedWinnings * request.CashOutStakePercent,
-                        NonTaxedPayout = cashOut.NonTaxedPayout * request.CashOutStakePercent,
+                        TaxedStake = cashOut.TaxedStake,
+                        TaxedWinnings = cashOut.TaxedWinnings,
+                        NonTaxedPayout = cashOut.NonTaxedPayout,
                         HasLive = cashOut.HasLive,
                         Endpoint = bet.Endpoint,
                         Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities

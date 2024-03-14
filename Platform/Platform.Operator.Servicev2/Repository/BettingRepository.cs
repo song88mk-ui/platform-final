@@ -376,15 +376,6 @@ namespace Platform.Operator.Servicev2.Repository
 
                         messageBroker.Publish(payload, "OnBetPlacement", "r.bet.betinfo", correlationId);
 
-                        //TODO: delete when TW is no longer the frontend
-                        messageBroker.Publish(new OnBetStatus
-                        {
-                            ClientId = payload.Bet.ClientId.ToString().ToUpper(),
-                            UserId = payload.Bet.UserId,
-                            BetId = payload.Bet.BetId.ToString().ToUpper(),
-                            BetStatus = (BetStatus)payload.Bet.BetStatusId
-                        }, "OnBetStatus", "r.bet.betstatus", correlationId);
-
                         messageBroker.Publish(new OnBetStatus
                         {
                             ClientId = payload.Bet.ClientId.ToString().ToUpper(),
@@ -392,14 +383,6 @@ namespace Platform.Operator.Servicev2.Repository
                             BetId = payload.Bet.BetId.ToString().ToUpper(),
                             BetStatus = (BetStatus)payload.Bet.BetStatusId
                         }, "OnBetStatus", $"r.bet.betstatus.{payload.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
-
-                        //TODO: delete when TW is no longer the frontend
-                        messageBroker.Publish(new OnWalletChange
-                        {
-                            ClientId = payload.Bet.ClientId.ToString().ToUpper(),
-                            UserId = payload.Bet.UserId,
-                            Balance = operatorResponse.Balance
-                        }, "OnWalletChange", "r.bet.betstatus", correlationId);
 
                         messageBroker.Publish(new OnWalletChange
                         {
@@ -1166,14 +1149,6 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        //TODO: delete when TW is no longer the frontend
-                        messageBroker.Publish(new OnWalletChange
-                        {
-                            ClientId = message.Bet.ClientId.ToUpper(),
-                            UserId = message.Bet.UserId,
-                            Balance = result.Balance
-                        }, "OnWalletChange", "r.bet.betstatus", correlationId);
-
                         messageBroker.Publish(new OnBetStatus
                         {
                             ClientId = message.Bet.ClientId.ToUpper(),
@@ -1317,16 +1292,7 @@ namespace Platform.Operator.Servicev2.Repository
 
             try
             {
-                //TODO: delete when TW is no longer the frontend
-                messageBroker.Publish(new OnBetStatus
-                {
-                    ClientId = message.Bet.ClientId.ToString().ToUpper(),
-                    UserId = message.Bet.UserId,
-                    BetId = message.Bet.BetId.ToString().ToUpper(),
-                    BetStatus = (BetStatus)message.Bet.BetStatusId,
-                    Message = message.Message
-                }, "OnBetStatus", "r.bet.betstatus", correlationId);
-
+                
                 messageBroker.Publish(new OnBetStatus
                 {
                     ClientId = message.Bet.ClientId.ToString().ToUpper(),
@@ -1378,14 +1344,6 @@ namespace Platform.Operator.Servicev2.Repository
                         CorrelationId = correlationId,
                         Timestamp = DateTime.UtcNow
                     });
-
-                    //TODO: delete when TW is no longer the frontend
-                    messageBroker.Publish(new OnWalletChange
-                    {
-                        ClientId = message.Bet.ClientId.ToUpper(),
-                        UserId = message.Bet.UserId,
-                        Balance = result.Balance
-                    }, "OnWalletChange", "r.bet.betstatus", correlationId);
 
                     messageBroker.Publish(new OnWalletChange
                     {

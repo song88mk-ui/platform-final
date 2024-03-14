@@ -174,6 +174,7 @@ namespace Platform.Betting.API.Controllers
         [HttpPost("v1/bet/cashout")]
         public async Task<IActionResult> CashoutBet([FromBody] CashoutBetRequestDTO request)
         {
+            //
             var result = await _bettingRepository.CashOutBet(request);
 
             switch (result.StatusCode)

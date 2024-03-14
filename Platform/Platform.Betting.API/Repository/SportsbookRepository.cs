@@ -58,7 +58,7 @@ namespace Platform.Betting.API.Repository
             }
         }
 
-        public async Task<BaseResponseDTO<List<CashOutDetailsReponse>>> GetCashOut(List<Bet> bets, List<BetSelection> betSelections, List<Guid> boostedList, List<CashOutHistory> cashoutHistory)
+        public async Task<BaseResponseDTO<List<CashOutDetailsReponse>>> GetCashOut(List<Bet> bets, List<BetSelection> betSelections, List<Guid> boostedList)
         {
             var result = new List<CashOutDetailsReponse>();
 
@@ -201,15 +201,13 @@ namespace Platform.Betting.API.Repository
                     try
                     {
                         //var taxedStake = bet.TrueStake - (bet.TrueStake / (1 + bet.StakeTax));
-                        var prevCashout = cashoutHistory.FirstOrDefault(c => c.BetId == bet.BetId);
-                        var remaining = prevCashout == null ? bet.TrueStake : prevCashout.PostTrueStake;
 
-                        var finalStake = remaining - bet.StakeBonus;
+                        var finalStake = bet.TrueStake - bet.StakeBonus;
 
                         var taxedStake = finalStake - (finalStake / (1 + bet.StakeTax));
-                        var stake = remaining - taxedStake;
+                        var stake = bet.TrueStake - taxedStake;
 
-                        var nonTaxedStake = remaining;
+                        var nonTaxedStake = bet.TrueStake;
                         var nonTaxedPayout = 0m;
 
                         var probabilites = new List<Probabilities>();
@@ -308,8 +306,6 @@ namespace Platform.Betting.API.Repository
                         if (selections.Count == 1)
                         {
                             decimal cashOutStake = 0m;
-                            var remainingStake = prevCashout == null ? bet.Stake : prevCashout.PostStake;
-                            var remainingTrueStake = prevCashout == null ? bet.TrueStake : prevCashout.PostTrueStake;
 
                             if (probabilites.First().WonProbability > 0 ||
                                 probabilites.First().LostProbability > 0 ||
@@ -325,10 +321,10 @@ namespace Platform.Betting.API.Repository
                                 if (OddsTypeHelper.GetOddsByOddsType(bet.OddsTypeId, selections.First().Odds, selections.First().IsBinary) < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
                                 {
                                     
-                                    won = Convert.ToDecimal(probabilites.First().WonProbability) * (stake + remainingStake);
-                                    halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * ((remainingStake / 2) + stake);
-                                    nonTaxedWon = Convert.ToDecimal(probabilites.First().WonProbability) * (remainingTrueStake + remainingStake); //TODO: analyze how to compute by remaining stake
-                                    nonTaxedHalfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * ((remainingStake / 2) + stake);
+                                    won = Convert.ToDecimal(probabilites.First().WonProbability) * (stake + bet.Stake);
+                                    halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * ((bet.Stake / 2) + stake);
+                                    nonTaxedWon = Convert.ToDecimal(probabilites.First().WonProbability) * (bet.TrueStake + bet.Stake);
+                                    nonTaxedHalfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * ((bet.Stake / 2) + stake);
                                 }
                                 else
                                 {
@@ -355,8 +351,8 @@ namespace Platform.Betting.API.Repository
                             {
                                 if (OddsTypeHelper.GetOddsByOddsType(bet.OddsTypeId, selections.First().Odds, selections.First().IsBinary) < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
                                 {
-                                    cashOutStake = (stake + remainingStake) * Convert.ToDecimal(probabilites.First().Probability);
-                                    nonTaxedPayout = (remainingTrueStake * remainingStake) * Convert.ToDecimal(probabilites.First().Probability);
+                                    cashOutStake = (stake + bet.Stake) * Convert.ToDecimal(probabilites.First().Probability);
+                                    nonTaxedPayout = (bet.TrueStake * bet.Stake) * Convert.ToDecimal(probabilites.First().Probability);
                                 }
                                 else
                                 {

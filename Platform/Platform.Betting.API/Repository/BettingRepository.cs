@@ -1575,9 +1575,9 @@ namespace Platform.Betting.API.Repository
                 var runningBetIds = runningBets.Select(s => s.BetId).Distinct().ToList();
                 var runningSelections = selections.Where(c => runningBetIds.Contains(c.BetId)).ToList();
 
-                var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().Where(c => betIds.Contains(c.BetId)).OrderByDescending(o => o.CashoutDate).ToList();
+                var partialCashoutAudit = _bettingContext.PartialCashoutAudit.AsNoTracking().Where(c => betIds.Contains(c.BetId)).OrderByDescending(o => o.CashoutDate).ToList();
 
-                var cashOutList = await _sportsbookRepository.GetCashOut(runningBets, runningSelections, betBoosted, cashoutHistory);
+                var cashOutList = await _sportsbookRepository.GetCashOut(runningBets, runningSelections, betBoosted);
 
 
                 foreach (var bet in transactions)
@@ -1605,18 +1605,16 @@ namespace Platform.Betting.API.Repository
 
                     var trueStake = bet.TrueStake;
                     var stake = bet.Stake;
+
+                    var cashoutBets = partialCashoutAudit.Where(c => c.BetId == bet.BetId);
                     var prevTaxedStake = 0m;
                     var prevTaxedWinnings = 0m;
                     var prevCashout = 0m;
-                    var partialCashout = cashoutHistory.FirstOrDefault(c => c.BetId == bet.BetId);
-
-                    if (partialCashout != null)
+                    if (cashoutBets.Any())
                     {
-                        trueStake = partialCashout.PostTrueStake;
-                        stake = partialCashout.PostStake;
-                        prevTaxedStake = cashoutHistory.Where(c => c.BetId == bet.BetId).Sum(s => s.TaxedStake);
-                        prevTaxedWinnings = cashoutHistory.Where(c => c.BetId == bet.BetId).Sum(s => s.TaxedWinnings);
-                        prevCashout = cashoutHistory.Where(c => c.BetId == bet.BetId).Sum(s => s.CashoutAmount);
+                        prevTaxedStake = cashoutBets.Sum(s => s.TaxedStake);
+                        prevTaxedWinnings = cashoutBets.Sum(s => s.TaxedWinnings);
+                        prevCashout = cashoutBets.Sum(s => s.CashoutAmount);
                     }
 
 
@@ -1639,8 +1637,7 @@ namespace Platform.Betting.API.Repository
                         //recompute bet odds for parlay bets
                         bet.Odds = bet.BetStatusId == (int)BetStatus.Running ? bet.Odds : RecomputeBetOdds(bet.Odds, (BetStatus)bet.BetStatusId, filteredSelections);
                     }
-                    var cashoutBets = cashoutHistory.Where(c => c.BetId == bet.BetId);
-
+                    
                     result.Add(new BetHistoryDTO
                     {
                         BetId = bet.BetId.ToString(),
@@ -1784,14 +1781,14 @@ namespace Platform.Betting.API.Repository
 
             var betBoosted = _bettingContext.BetPriceBoost.AsNoTracking().Where(b => betIds.Contains(b.BetId) && b.BetStatusId != (int)BetStatus.Rejected
                                                 && b.BetStatusId != (int)BetStatus.Cancelled).Select(s => s.BetId).ToList();
-            var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().Where(c => betIds.Contains(c.BetId)).ToList();
+            var partialCashoutAudit = _bettingContext.PartialCashoutAudit.AsNoTracking().Where(c => betIds.Contains(c.BetId)).ToList();
 
             foreach (var bet in transactions)
             {
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
                 var isBoosted = betBoosted.Any(b => b == bet.BetId);
                 var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
-                var cashoutBets = cashoutHistory.Where(c => c.BetId == bet.BetId);
+                var cashoutBets = partialCashoutAudit.Where(c => c.BetId == bet.BetId);
 
                 result.Add(new SettlementHistoryDTO
                 {
@@ -1917,9 +1914,9 @@ namespace Platform.Betting.API.Repository
             var runningBetIds = runningBets.Select(s => s.BetId).Distinct().ToList();
             var runningSelections = selections.Where(c => runningBetIds.Contains(c.BetId)).ToList();
 
-            var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().Where(c => betIds.Contains(c.BetId)).OrderByDescending(o => o.CashoutDate).ToList();
+            var partialCashoutAudit = _bettingContext.PartialCashoutAudit.AsNoTracking().Where(c => betIds.Contains(c.BetId)).OrderByDescending(o => o.CashoutDate).ToList();
 
-            var cashOutList = await _sportsbookRepository.GetCashOut(runningBets, runningSelections, betBoosted, cashoutHistory);
+            var cashOutList = await _sportsbookRepository.GetCashOut(runningBets, runningSelections, betBoosted);
 
             foreach (var bet in transactions)
             {
@@ -1934,18 +1931,17 @@ namespace Platform.Betting.API.Repository
 
                 var trueStake = bet.TrueStake;
                 var stake = bet.Stake;
+
                 var prevTaxedStake = 0m;
                 var prevTaxedWinnings = 0m;
                 var prevCashout = 0m;
-                var partialCashout = cashoutHistory.FirstOrDefault(c => c.BetId == bet.BetId);
+                var cashoutBets = partialCashoutAudit.Where(c => c.BetId == bet.BetId);
 
-                if(partialCashout != null)
+                if (cashoutBets.Any())
                 {
-                    trueStake = partialCashout.PostTrueStake;
-                    stake = partialCashout.PostStake;
-                    prevTaxedStake = cashoutHistory.Where(c => c.BetId == bet.BetId).Sum(s => s.TaxedStake);
-                    prevTaxedWinnings = cashoutHistory.Where(c => c.BetId == bet.BetId).Sum(s => s.TaxedWinnings);
-                    prevCashout = cashoutHistory.Where(c => c.BetId == bet.BetId).Sum(s => s.CashoutAmount);
+                    prevTaxedStake = cashoutBets.Sum(s => s.TaxedStake);
+                    prevTaxedWinnings = cashoutBets.Sum(s => s.TaxedWinnings);
+                    prevCashout = cashoutBets.Sum(s => s.CashoutAmount);
                 }
 
                 var runningfinalStake = trueStake - bet.StakeBonus;
@@ -1978,8 +1974,6 @@ namespace Platform.Betting.API.Repository
                     runningTaxedWinnings = 0;
 
                 runningPayout = runningPayout + parlayBonusWinnings;
-
-                var cashoutBets = cashoutHistory.Where(c => c.BetId == bet.BetId);
 
                 result.Add(new BetHistoryRunning
                 {
@@ -2743,9 +2737,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate).ToList();
-
-            var result = await _sportsbookRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>(), cashoutHistory);
+            var result = await _sportsbookRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>());
 
             var cashOut = result.Result.Where(c => c.BetId == bet.BetId && c.CashOutStatus == CashOutStatus.Available).FirstOrDefault();
 
@@ -2758,7 +2750,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            if (Math.Round(request.CashOutStake, 2) != Math.Round(cashOut.CashOutStake, 2))
+            if (request.IsPartialCashout == false && Math.Round(request.CashOutStake, 2) != Math.Round(cashOut.CashOutStake, 2))
             {
                 var requestCashOutStake = request.CashOutStake % 1 == 0 ? request.CashOutStake.ToString().TrimEnd('0').TrimEnd('.') : request.CashOutStake.ToString().TrimEnd('0').TrimEnd('.');
                 var resultCashOutStake = cashOut.CashOutStake % 1 == 0 ? cashOut.CashOutStake.ToString().TrimEnd('0').TrimEnd('.') : cashOut.CashOutStake.ToString().TrimEnd('0').TrimEnd('.');
@@ -2776,10 +2768,25 @@ namespace Platform.Betting.API.Repository
                     }
                 };
             }
+            else if (request.IsPartialCashout && Math.Round(request.CashOutStake, 2) >= Math.Round(cashOut.CashOutStake, 2))
+            {
+                return new BaseResponseDTO<BetCashOutResponseDTO>
+                {
+                    StatusCode = StatusCode.Partial_CashOut_Cannot_Be_Greater_Than_Full_Cashout_Amount,
+                    Message = StatusCode.Partial_CashOut_Cannot_Be_Greater_Than_Full_Cashout_Amount.ToString(),
+                    Result = new BetCashOutResponseDTO
+                    {
+                        BetId = bet.BetId.ToString().ToUpper(),
+                        BetStatus = (BetStatus)bet.BetStatusId,
+                        UserId = bet.UserId,
+                        CashOutStake = cashOut.CashOutStake
+                    }
+                };
+            }
             else
             {
                 
-                if(request.CashOutStakePercent > 0 && request.CashOutStakePercent < 1)
+                if(request.IsPartialCashout)
                 {
                     var payload = new OnCashoutBetSettlement
                     {
@@ -2789,10 +2796,10 @@ namespace Platform.Betting.API.Repository
                         ClientId = bet.ClientId.ToUpper(),
                         CashoutType = CashoutType.Partial,
                         CashOutStake = cashOut.CashOutStake,
-                        CashOutStakePercent = request.CashOutStakePercent,
-                        TaxedStake = cashOut.TaxedStake * request.CashOutStakePercent,
-                        TaxedWinnings = cashOut.TaxedWinnings * request.CashOutStakePercent,
-                        NonTaxedPayout = cashOut.NonTaxedPayout * request.CashOutStakePercent,
+                        CashOutStakePercent = request.CashOutStake / cashOut.CashOutStake,
+                        TaxedStake = cashOut.TaxedStake,
+                        TaxedWinnings = cashOut.TaxedWinnings,
+                        NonTaxedPayout = cashOut.NonTaxedPayout,
                         HasLive = cashOut.HasLive,
                         Endpoint = bet.Endpoint,
                         Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities
@@ -2825,6 +2832,7 @@ namespace Platform.Betting.API.Repository
                         ClientId = bet.ClientId.ToUpper(),
                         CashoutType = CashoutType.Full,
                         CashOutStake = cashOut.CashOutStake,
+                        CashOutStakePercent = 1,
                         TaxedStake = cashOut.TaxedStake,
                         TaxedWinnings = cashOut.TaxedWinnings,
                         NonTaxedPayout = cashOut.NonTaxedPayout,
@@ -2902,9 +2910,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var cashoutHistory = _bettingContext.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate).ToList();
-
-            var result = await _sportsbookRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>(), cashoutHistory);
+            var result = await _sportsbookRepository.GetCashOut(new List<Bet> { bet }, betSelections, new List<Guid>());
 
             var cashOut = result.Result.Where(c => c.BetId == bet.BetId && c.CashOutStatus == CashOutStatus.Available).FirstOrDefault();
 

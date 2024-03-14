@@ -2797,9 +2797,9 @@ namespace Platform.Betting.API.Repository
                         CashoutType = CashoutType.Partial,
                         CashOutStake = request.CashOutStake,
                         CashOutStakePercent = request.CashOutStake / cashOut.CashOutStake,
-                        TaxedStake = cashOut.TaxedStake,
-                        TaxedWinnings = cashOut.TaxedWinnings,
-                        NonTaxedPayout = cashOut.NonTaxedPayout,
+                        TaxedStake = cashOut.TaxedStake * (request.CashOutStake / cashOut.CashOutStake),
+                        TaxedWinnings = cashOut.TaxedWinnings * (request.CashOutStake / cashOut.CashOutStake),
+                        NonTaxedPayout = cashOut.NonTaxedPayout * (request.CashOutStake / cashOut.CashOutStake),
                         HasLive = cashOut.HasLive,
                         Endpoint = bet.Endpoint,
                         Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities
@@ -2869,7 +2869,7 @@ namespace Platform.Betting.API.Repository
                         BetId = bet.BetId.ToString().ToUpper(),
                         BetStatus = (BetStatus)bet.BetStatusId,
                         UserId = bet.UserId,
-                        CashOutStake = cashOut.CashOutStake
+                        CashOutStake = request.CashOutStake
                     }
                 };
             }

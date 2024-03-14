@@ -837,8 +837,6 @@ namespace Platform.Settlement.Service.Repository
                 bet.SettlementDateOffset = settledDate.AddHours(-4);
             }
 
-            payout = payout;
-
             payload.NonTaxedPayout = payout;
 
             bet.WinLoss = payout == 0 ? -bet.TrueStake : payout - bet.TrueStake;
@@ -849,7 +847,7 @@ namespace Platform.Settlement.Service.Repository
 
             var finalStake = bet.TrueStake - bet.StakeBonus;
 
-            bet.TaxedStake = bet.IsFreeBet == false ? (finalStake - (finalStake / (1 + bet.StakeTax))) : 0;
+            bet.TaxedStake = bet.IsFreeBet == false ? finalStake - (finalStake / (1 + bet.StakeTax)) : 0;
             bet.TaxedWinnings = 0;
 
             bet.ParlayBonus = 0;
@@ -1079,7 +1077,6 @@ namespace Platform.Settlement.Service.Repository
 
         private void ApplyRunning(BettingContext context, Bet bet, List<BetSelection> selections, BetSelection betSelection, DateTime settledDate)
         {
-
             var taxedStake = 0m;
             var stake = bet.TrueStake - taxedStake;
 

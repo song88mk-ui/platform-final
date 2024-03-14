@@ -1079,20 +1079,9 @@ namespace Platform.Settlement.Service.Repository
 
         private void ApplyRunning(BettingContext context, Bet bet, List<BetSelection> selections, BetSelection betSelection, DateTime settledDate)
         {
-            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate);
-
-            var remainingTrueStake = bet.TrueStake;
-            var prevCashout = 0m;
-            var partialCashout = cashoutHistory.FirstOrDefault(c => c.BetId == bet.BetId);
-
-            if (partialCashout != null)
-            {
-                remainingTrueStake = partialCashout.PostTrueStake;
-                prevCashout = cashoutHistory.Where(c => c.BetId == bet.BetId).Sum(s => s.CashoutAmount);
-            }
 
             var taxedStake = 0m;
-            var stake = remainingTrueStake - taxedStake;
+            var stake = bet.TrueStake - taxedStake;
 
             var payout = stake * bet.Odds;
 
@@ -1114,7 +1103,7 @@ namespace Platform.Settlement.Service.Repository
             bet.WinLoss = 0m;
             bet.BetStatusId = (int)BetStatus.Running;
             bet.BetStatusName = BetStatus.Running.ToString();
-            bet.Payout = payout + prevCashout;
+            bet.Payout = payout;
             bet.SettlementDate = settledDate;
             bet.SettlementDateOffset = settledDate.AddHours(-4);
             bet.TaxedStake = 0m;

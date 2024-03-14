@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
+using Platform.Shared.Helpers;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
@@ -74,19 +75,29 @@ namespace Platform.CashOut.Service.Repository
                                 return;
                             }
 
-                            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate).ToList();
-
                             var isPublish = false;
-                            var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
-                                SendCashoutToMTS(message, mts) : new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Accepted, "1024 - Cashout Accepted (MTS disabled)");
+                            Tuple<CashoutAcceptance, string> result;
+                            var partialCashout = context.PartialCashoutAudit.AsNoTracking().Where(c => c.BetId == bet.BetId).ToList();
+
+                            if (!partialCashout.Any() && message.CashoutType == CashoutType.Full)
+                            {
+                                result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ? SendCashoutToMTS(message, mts) : new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Accepted, "1024 - Cashout Accepted (MTS disabled)");
+                            }
+                            else
+                            {
+                                var prevCashoutAmount = partialCashout.Any() ? partialCashout.Sum(s => s.CashoutAmount) : 0;
+                                var originalStake = partialCashout.Any() ? partialCashout.FirstOrDefault(c => c.BetId == bet.BetId).OriginalStake : bet.Stake;
+                                var remainingStake = bet.Stake - (bet.Stake * message.CashOutStakePercent);
+                                var cashoutPercent = (originalStake - remainingStake) / originalStake;
+
+                                result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ? SendPartialCashoutToMTS(message, mts, cashoutPercent, prevCashoutAmount) : new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Accepted, "1024 - Cashout Accepted (MTS disabled)");
+                            }
 
                             if (result.Item1 == CashoutAcceptance.Accepted)
                             {
                                 var payload = new OnBetSettlement();
                                 
                                 payload.NonTaxedPayout = message.NonTaxedPayout;
-                                if (cashoutHistory.Any())
-                                    payload.NonTaxedPayout = payload.NonTaxedPayout + cashoutHistory.Sum(c => c.NonTaxedPayout);
 
                                 var selections = context.BetSelection.Where(c => c.BetId == message.BetId).ToList();
                                 if (selections.Count == 0)
@@ -103,9 +114,10 @@ namespace Platform.CashOut.Service.Repository
                                     return;
                                 }
 
-                                bet.Reason = $"{result.Item2} (MTS)";
+                                if(message.CashoutType == CashoutType.Full)
+                                    bet.Reason = $"{result.Item2} (MTS)";
 
-                                isPublish = SettleBet(message, bet, isPublish, payload, settledDate, context, selections, filteredSelections, cashoutHistory);
+                                isPublish = SettleBet(message, bet, isPublish, payload, settledDate, context, selections, filteredSelections);
 
                                 context.SaveChanges();
 
@@ -113,7 +125,11 @@ namespace Platform.CashOut.Service.Repository
 
                                 if (isPublish)
                                 {
-                                    messageBroker.Publish(payload, "OnBetFullCashOut", "r.bet.operator", correlationId, 10);
+                                    if(message.CashoutType == CashoutType.Full)
+                                        messageBroker.Publish(payload, "OnBetFullCashOut", "r.bet.operator", correlationId, 10);
+                                    else
+                                        messageBroker.Publish(payload, "OnBetPartialCashOut", "r.bet.operator", correlationId, 10);
+
 
                                     messageBroker.Publish(new OnBetStatus
                                     {
@@ -219,199 +235,14 @@ namespace Platform.CashOut.Service.Repository
             }
         }
 
-        private void ProcessPartialCashOutSettlement(OnCashoutBetSettlement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
-        {
-            var bet = new Bet();
-
-            try
-            {
-                using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
-                {
-                    var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
-
-                    using (var context = new BettingContext(optionsBuilder.Options))
-                    {
-                        var settledDate = DateTime.UtcNow;
-                        bet = context.Bet.Where(c => c.BetId == message.BetId).FirstOrDefault();
-
-                        if (bet != null)
-                        {
-                            if (bet.BetStatusId != (int)BetStatus.Running || bet.IsFreeBet)
-                            {
-                                messageBroker.Publish(new OnBetStatus
-                                {
-                                    ClientId = message.ClientId.ToString().ToUpper(),
-                                    UserId = message.UserId,
-                                    BetId = message.BetId.ToString().ToUpper(),
-                                    BetStatus = (BetStatus)bet.BetStatusId,
-                                    Message = "Cashout request has been declined"
-                                }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
-
-                                //messageBroker.Publish(new OnCashOutResult
-                                //{
-                                //    ClientCode = bet.ClientCode.ToUpper(),
-                                //    UserId = bet.UserId,
-                                //    BetId = bet.BetId.ToString().ToUpper(),
-                                //    BetStatus = (BetStatus)bet.BetStatusId,
-                                //    CashOutStatus = CashOutStatus.Unavailable,
-                                //    CashOutStake = 0,
-                                //    Message = "Cashout request has been declined",
-                                //    ClientId = bet.ClientId,
-                                //    Endpoint = message.Endpoint
-                                //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
-                                return;
-                            }
-
-                            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == bet.BetId).OrderByDescending(o => o.CashoutDate).ToList();
-
-                            var isPublish = false;
-                            var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
-                                SendPartialCashoutToMTS(message, mts, bet.Stake, cashoutHistory) : new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Accepted, "1024 - Partial Cashout Accepted (MTS disabled)");
-
-                            if (result.Item1 == CashoutAcceptance.Accepted)
-                            {
-                                var selections = context.BetSelection.Where(c => c.BetId == message.BetId).ToList();
-                                if (selections.Count == 0)
-                                {
-                                    scope.Complete();
-                                    return;
-                                }
-
-                                var filteredSelections = selections.Where(c => c.BetId == message.BetId).ToList();
-
-                                if (filteredSelections.Count == 0)
-                                {
-                                    scope.Complete();
-                                    return;
-                                }
-
-                                isPublish = SettlePartialBet(message, bet, isPublish, settledDate, context);
-
-                                context.SaveChanges();
-
-                                scope.Complete();
-
-                                if (isPublish)
-                                {
-                                    bet.Payout = message.CashOutStake * message.CashOutStakePercent;
-
-                                    var payload = new OnBetSettlement();
-                                    payload.NonTaxedPayout = message.NonTaxedPayout;
-                                    payload.Bet = bet;
-                                    payload.BetSelections = selections;
-
-                                    messageBroker.Publish(payload, "OnBetPartialCashOut", "r.bet.operator", correlationId, 10);
-
-                                    messageBroker.Publish(new OnBetStatus
-                                    {
-                                        ClientId = message.ClientId.ToString().ToUpper(),
-                                        UserId = message.UserId,
-                                        BetId = message.BetId.ToString().ToUpper(),
-                                        BetStatus = BetStatus.Running,
-                                        Message = "Partial Cashout request has been accepted"
-                                    }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
-
-                                    //messageBroker.Publish(new OnCashOutResult
-                                    //{
-                                    //    ClientCode = message.ClientCode.ToString().ToUpper(),
-                                    //    UserId = message.UserId,
-                                    //    BetId = message.BetId.ToString().ToUpper(),
-                                    //    BetStatus = BetStatus.Running,
-                                    //    CashOutStatus = CashOutStatus.Unavailable,
-                                    //    CashOutStake = 0,
-                                    //    Message = "Cashout request has been accepted",
-                                    //    ClientId = message.ClientId.ToString().ToUpper(),
-                                    //    Endpoint = message.Endpoint
-                                    //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
-                                }
-                            }
-                            else
-                            {
-                                messageBroker.Publish(new OnBetStatus
-                                {
-                                    ClientId = message.ClientId.ToString().ToUpper(),
-                                    UserId = message.UserId,
-                                    BetId = message.BetId.ToString().ToUpper(),
-                                    BetStatus = BetStatus.Running,
-                                    Message = JsonSerializer.Serialize(result),
-                                }, "OnBetStatus", $"r.bet.cashout.error", correlationId);
-
-                                messageBroker.Publish(new OnBetStatus
-                                {
-                                    ClientId = message.ClientId.ToString().ToUpper(),
-                                    UserId = message.UserId,
-                                    BetId = message.BetId.ToString().ToUpper(),
-                                    BetStatus = BetStatus.Running,
-                                    Message = "Partial Cashout request has been declined"
-                                }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
-
-                                //messageBroker.Publish(new OnCashOutResult
-                                //{
-                                //    ClientCode = bet.ClientCode.ToUpper(),
-                                //    UserId = bet.UserId,
-                                //    BetId = bet.BetId.ToString().ToUpper(),
-                                //    BetStatus = BetStatus.Running,
-                                //    CashOutStatus = CashOutStatus.Unavailable,
-                                //    CashOutStake = 0,
-                                //    Message = "Partial Cashout request has been declined",
-                                //    ClientId = message.ClientId.ToString().ToUpper(),
-                                //    Endpoint = message.Endpoint
-                                //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                var errorMessage = new
-                {
-                    Message = ex.Message,
-                    StackTrace = ex.StackTrace,
-                    Payload = message
-                };
-
-                messageBroker.Publish(new OnBetStatus
-                {
-                    ClientId = message.ClientId.ToString().ToUpper(),
-                    UserId = message.UserId,
-                    BetId = message.BetId.ToString().ToUpper(),
-                    BetStatus = BetStatus.Running,
-                    Message = JsonSerializer.Serialize(errorMessage),
-                }, "OnBetStatus", $"r.bet.cashout.error", correlationId);
-
-                messageBroker.Publish(new OnBetStatus
-                {
-                    ClientId = message.ClientId.ToString().ToUpper(),
-                    UserId = message.UserId,
-                    BetId = message.BetId.ToString().ToUpper(),
-                    BetStatus = BetStatus.Running,
-                    Message = "Partial Cashout request has been declined"
-                }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
-
-                //messageBroker.Publish(new OnCashOutResult
-                //{
-                //    ClientCode = message.ClientCode.ToUpper(),
-                //    UserId = message.UserId,
-                //    BetId = message.BetId.ToString().ToUpper(),
-                //    BetStatus = (BetStatus)bet.BetStatusId,
-                //    CashOutStatus = CashOutStatus.Unavailable,
-                //    CashOutStake = 0,
-                //    Message = "Partial Cashout request has been declined",
-                //    ClientId = message.ClientId,
-                //    Endpoint = message.Endpoint
-                //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
-            }
-        }
-
-        private bool SettleBet(OnCashoutBetSettlement message, Bet bet, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, List<BetSelection> filteredSelections, List<CashOutHistory> partialCashout)
+        private bool SettleBet(OnCashoutBetSettlement message, Bet bet, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, List<BetSelection> filteredSelections)
         {
 
             foreach (var selection in filteredSelections)
             {
                 var tempSelection = message.Probabilities.Where(c => c.BetSelectionId == selection.BetSelectionId).FirstOrDefault();
 
-                if (selection.BetSelectionStatusId == (int)BetStatus.Running)
+                if (message.CashoutType == CashoutType.Full && selection.BetSelectionStatusId == (int)BetStatus.Running)
                 {
                     selection.IsSettled = true;
                     selection.BetSelectionStatusId = (int)BetStatus.CashedOut;
@@ -479,21 +310,76 @@ namespace Platform.CashOut.Service.Repository
                     });
                 }
             }
-            var prevCashoutTaxedStake = 0m;
-            var prevCashoutTaxedWinnings = 0m;
-            var prevCashoutAmount = 0m;
-            if (partialCashout.Any())
+
+            var payout = message.CashOutStake;
+            
+            if (message.CashoutType == CashoutType.Partial)
             {
-                prevCashoutTaxedStake = partialCashout.Sum(c => c.TaxedStake);
-                prevCashoutTaxedWinnings = partialCashout.Sum(c => c.TaxedWinnings);
-                prevCashoutAmount = partialCashout.Sum(c => c.CashoutAmount);
+                var prevCashout = context.PartialCashoutAudit.AsNoTracking().FirstOrDefault(p => p.BetId == message.BetId);
+                var originalStake = prevCashout != null ? prevCashout.OriginalStake : bet.Stake;
+                var originalTrueStake = prevCashout != null ? prevCashout.TrueStake : bet.TrueStake;
+                var stakeUsed = bet.Stake * message.CashOutStakePercent;
+                var trueStakeUsed = bet.TrueStake * message.CashOutStakePercent;
+
+                context.PartialCashoutAudit.Add(new PartialCashoutAudit
+                {
+                    Id = Guid.NewGuid(),
+                    BetId = message.BetId,
+                    ClientId = message.ClientId,
+                    ClientCode = message.ClientCode,
+                    OriginalStake = originalStake,
+                    StakeUsed = stakeUsed,
+                    PreStake = bet.Stake,
+                    PostStake = bet.Stake - stakeUsed,
+                    TrueStake = originalTrueStake,
+                    TrueStakeUsed = trueStakeUsed,
+                    PreTrueStake = bet.TrueStake,
+                    PostTrueStake = bet.TrueStake - trueStakeUsed,
+                    CashoutAmount = message.CashOutStake,
+                    CashoutPercent = message.CashOutStakePercent,
+                    CashoutDate = settledDate,
+                    CashoutDateOffset = settledDate.AddHours(-4),
+                    NonTaxedPayout = message.NonTaxedPayout,
+                    TaxedStake = message.TaxedStake,
+                    TaxedWinnings = message.TaxedWinnings
+                });
+
+                bet.Stake = bet.Stake - stakeUsed;
+                bet.TrueStake = bet.TrueStake - trueStakeUsed;
+                bet.TaxedStake = bet.TaxedStake - message.TaxedStake;
+                bet.TaxedWinnings = bet.TaxedWinnings - message.TaxedWinnings;
+
+
+                var finalStake = bet.Stake;
+                payout = finalStake * bet.Odds;
+
+                // Malay and Indo
+                if (filteredSelections.Count == 1)
+                {
+                    var selection = filteredSelections.FirstOrDefault();
+
+                    // malay code here
+                    if ((int)bet.OddsTypeId == (int)OddsType.Malaysian && OddsTypeHelper.GetOddsByOddsType((int)bet.OddsTypeId, selection.Odds, selection.IsBinary) < 0 && selection.IsBinary == true)
+                    {
+                        var currentStake = finalStake;
+                        finalStake = Math.Abs(finalStake * Math.Round(OddsTypeHelper.GetOddsByOddsType((int)bet.OddsTypeId, selection.Odds, selection.IsBinary), 2));
+                        payout = currentStake + finalStake;
+                    }
+
+                    // indo code here
+                    if ((int)bet.OddsTypeId == (int)OddsType.Indonesian && OddsTypeHelper.GetOddsByOddsType((int)bet.OddsTypeId, selection.Odds, selection.IsBinary) < 0 && selection.IsBinary == true)
+                    {
+                        var currentStake = finalStake;
+                        finalStake = Math.Abs(finalStake * Math.Round(OddsTypeHelper.GetOddsByOddsType((int)bet.OddsTypeId, selection.Odds, selection.IsBinary), 2));
+                        payout = currentStake + finalStake;
+                    }
+                }
             }
 
             var stake = bet.TrueStake - bet.TaxedStake;
-            var payout = prevCashoutAmount + message.CashOutStake;
             var winloss = payout - bet.TrueStake;
 
-            var betStatus = GetStatus(selections.Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), payout, stake);
+            var betStatus = message.CashoutType == CashoutType.Full ? GetStatus(selections.Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), payout, stake) : BetStatus.Running;
 
             bet.WinLoss = winloss;
             bet.BetStatusId = (int)betStatus;
@@ -503,8 +389,12 @@ namespace Platform.CashOut.Service.Repository
             bet.SettlementDate = settledDate;
             bet.SettlementDateOffset = settledDate.AddHours(-4);
 
-            bet.TaxedStake = prevCashoutTaxedStake + message.TaxedStake;
-            bet.TaxedWinnings = prevCashoutTaxedWinnings + message.TaxedWinnings;
+            if (message.CashoutType == CashoutType.Full)
+            {
+                bet.TaxedStake = message.TaxedStake;
+                bet.TaxedWinnings = message.TaxedWinnings;
+
+            }
 
             bet.ParlayBonus = 0;
             bet.ParlayBonusWinnings = 0;
@@ -568,112 +458,9 @@ namespace Platform.CashOut.Service.Repository
                 IsAgent = betEntity.IsAgent
             });
 
-            if(partialCashout.Any())
-            {
-                var cashoutHistory = partialCashout.FirstOrDefault(c => c.BetId == message.BetId);
-
-                if (cashoutHistory != null)
-                {
-                    var stakeUsed = cashoutHistory.PostStake;
-                    var trueStakeUsed = cashoutHistory.PostTrueStake;
-
-                    context.CashOutHistory.Add(new CashOutHistory
-                    {
-                        Id = Guid.NewGuid(),
-                        BetId = message.BetId,
-                        ClientId = message.ClientId,
-                        ClientCode = message.ClientCode,
-                        OriginalStake = bet.Stake,
-                        StakeUsed = stakeUsed,
-                        PreStake = cashoutHistory.PostStake,
-                        PostStake = cashoutHistory.PostStake - stakeUsed,
-                        TrueStake = bet.TrueStake,
-                        TrueStakeUsed = trueStakeUsed,
-                        PreTrueStake = cashoutHistory.PostTrueStake,
-                        PostTrueStake = cashoutHistory.PostTrueStake - trueStakeUsed,
-                        CashoutAmount = message.CashOutStake,
-                        CashoutPercent = 1,
-                        CashoutDate = settledDate,
-                        CashoutDateOffset = settledDate.AddHours(-4),
-                        NonTaxedPayout = message.NonTaxedPayout,
-                        TaxedStake = message.TaxedStake,
-                        TaxedWinnings = message.TaxedWinnings
-                    });
-                }
-
-            }
-
             isPublish = true;
             payload.Bet = betEntity;
             payload.BetSelections = selections;
-
-            context.SaveChanges();
-            return isPublish;
-        }
-
-        private bool SettlePartialBet(OnCashoutBetSettlement message, Bet bet, bool isPublish, DateTime settledDate, BettingContext context)
-        {
-            var cashoutHistory = context.CashOutHistory.AsNoTracking().Where(c => c.BetId == message.BetId).OrderByDescending(o => o.CashoutDate).FirstOrDefault();
-
-            if (cashoutHistory != null)
-            {
-                var stakeUsed = cashoutHistory.PostStake * message.CashOutStakePercent;
-                var trueStakeUsed = cashoutHistory.PostTrueStake * message.CashOutStakePercent;
-
-                context.CashOutHistory.Add(new CashOutHistory
-                {
-                    Id = Guid.NewGuid(),
-                    BetId = message.BetId,
-                    ClientId = message.ClientId,
-                    ClientCode = message.ClientCode,
-                    OriginalStake = bet.Stake,
-                    StakeUsed = stakeUsed,
-                    PreStake = cashoutHistory.PostStake,
-                    PostStake = cashoutHistory.PostStake - stakeUsed,
-                    TrueStake = bet.TrueStake,
-                    TrueStakeUsed = trueStakeUsed,
-                    PreTrueStake = cashoutHistory.PostTrueStake,
-                    PostTrueStake = cashoutHistory.PostTrueStake - trueStakeUsed,
-                    CashoutAmount = message.CashOutStake * message.CashOutStakePercent,
-                    CashoutPercent = message.CashOutStakePercent,
-                    CashoutDate = settledDate,
-                    CashoutDateOffset = settledDate.AddHours(-4),
-                    NonTaxedPayout = message.NonTaxedPayout,
-                    TaxedStake = message.TaxedStake,
-                    TaxedWinnings = message.TaxedWinnings   
-                });
-            }
-            else
-            {
-                var stakeUsed = bet.Stake * message.CashOutStakePercent;
-                var trueStakeUsed = bet.TrueStake * message.CashOutStakePercent;
-
-                context.CashOutHistory.Add(new CashOutHistory
-                {
-                    Id = Guid.NewGuid(),
-                    BetId = message.BetId,
-                    ClientId = message.ClientId,
-                    ClientCode = message.ClientCode,
-                    OriginalStake = bet.Stake,
-                    StakeUsed = stakeUsed,
-                    PreStake = bet.Stake,
-                    PostStake = bet.Stake - stakeUsed,
-                    TrueStake = bet.TrueStake,
-                    TrueStakeUsed = trueStakeUsed,
-                    PreTrueStake = bet.TrueStake,
-                    PostTrueStake = bet.TrueStake - trueStakeUsed,
-                    CashoutAmount = message.CashOutStake * message.CashOutStakePercent,
-                    CashoutPercent = message.CashOutStakePercent,
-                    CashoutDate = settledDate,
-                    CashoutDateOffset = settledDate.AddHours(-4),
-                    NonTaxedPayout = message.NonTaxedPayout,
-                    TaxedStake = message.TaxedStake,
-                    TaxedWinnings = message.TaxedWinnings
-                });
-
-            }
-
-            isPublish = true;
 
             context.SaveChanges();
             return isPublish;
@@ -765,7 +552,7 @@ namespace Platform.CashOut.Service.Repository
             }
         }
 
-        private Tuple<CashoutAcceptance, string> SendPartialCashoutToMTS(OnCashoutBetSettlement message, IMtsSdk mts, decimal stake, List<CashOutHistory> cashoutHistory)
+        private Tuple<CashoutAcceptance, string> SendPartialCashoutToMTS(OnCashoutBetSettlement message, IMtsSdk mts, decimal cashoutPercent, decimal prevCashoutAmount)
         {
             try
             {
@@ -777,22 +564,15 @@ namespace Platform.CashOut.Service.Repository
                 var cashoutStake = (long)0;
                 var cashoutStakePercent = (int)0;
                 
-                var prevCashoutAmount = cashoutHistory.Any() ? cashoutHistory.Sum(c => c.CashoutAmount) : 0m;
-                var newCashoutAmount = message.CashOutStake * message.CashOutStakePercent;
-
-                var prevRemainingStake = cashoutHistory.Any() ? cashoutHistory.FirstOrDefault().PostStake : stake;
-                var newRemainingStake = prevRemainingStake - (prevRemainingStake * message.CashOutStakePercent); 
-                var tempCashoutPercent = (stake - newRemainingStake) / stake;
-
                 if (message.ClientCode.ToUpper() == "RKP")
                 {
-                    cashoutStake = (long)((prevCashoutAmount + newCashoutAmount) * .10m) * 10000;
-                    cashoutStakePercent = (int)((tempCashoutPercent * 100) * .10m) * 10000;
+                    cashoutStake = (long)((prevCashoutAmount + message.CashOutStake) * .10m) * 10000;
+                    cashoutStakePercent = (int)((cashoutPercent * 100) * .10m) * 10000;
                 }
                 else
                 {
-                    cashoutStake = (long)((prevCashoutAmount + newCashoutAmount) * 10000);
-                    cashoutStakePercent = (int)((tempCashoutPercent * 100) * 10000);
+                    cashoutStake = (long)((prevCashoutAmount + message.CashOutStake) * 10000);
+                    cashoutStakePercent = (int)((cashoutPercent * 100) * 10000);
                 }
 
                 var betCashout = _factory.CreateTicketCashoutBuilder().SetTicketId(message.BetId.ToString().ToUpper()).SetCashoutStake(cashoutStake).SetCashoutPercent(cashoutStakePercent).BuildTicket();
@@ -837,13 +617,13 @@ namespace Platform.CashOut.Service.Repository
                             UserId = message.UserId,
                             CashoutType = result.Result.CashoutType,
                             CashOutStake = result.Result.CashOutStake,
+                            CashOutStakePercent = message.CashOutStakePercent,
                             TaxedStake = result.Result.TaxedStake,
                             TaxedWinnings = result.Result.TaxedWinnings,
                             NonTaxedPayout = result.Result.NonTaxedPayout,
                             HasLive = message.HasLive,
                             Probabilities = result.Result.Probabilities,
                             Endpoint = message.Endpoint,
-                            CashOutStakePercent = message.CashOutStakePercent
                         };
 
                         var isSuccess = true;
@@ -916,10 +696,7 @@ namespace Platform.CashOut.Service.Repository
 
                         if (isSuccess == true)
                         {
-                            if(cashoutType == CashoutType.Full)
-                                ProcessCashOutSettlement(payload, mts, messageBroker, correlationId);
-                            else if (cashoutType == CashoutType.Partial)
-                                ProcessPartialCashOutSettlement(payload, mts, messageBroker, correlationId);
+                            ProcessCashOutSettlement(payload, mts, messageBroker, correlationId);
 
                             Console.WriteLine($"{DateTime.UtcNow} : Live Cashout successful - {result.Result.BetId}");
                         }
@@ -954,10 +731,7 @@ namespace Platform.CashOut.Service.Repository
                 }
                 else
                 {
-                    if (cashoutType == CashoutType.Full)
-                        ProcessCashOutSettlement(message, mts, messageBroker, correlationId);
-                    else if (cashoutType == CashoutType.Partial)
-                        ProcessPartialCashOutSettlement(message, mts, messageBroker, correlationId);
+                    ProcessCashOutSettlement(message, mts, messageBroker, correlationId);
 
                     Console.WriteLine($"{DateTime.UtcNow} : Prematch Cashout successful - {message.BetId}");
                 }

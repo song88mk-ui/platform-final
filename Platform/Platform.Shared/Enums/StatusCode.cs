@@ -88,7 +88,7 @@
 
         Boosted_Odds_Is_Only_Applicable_With_Decimal_Odds_Type_Format = 160,
 
-        Partial_CashOut_Stake_Must_Not_Be_Higher_Than_Cashout_Amount = 161,
+        Partial_CashOut_Cannot_Be_Greater_Than_Full_Cashout_Amount = 161,
 
         Error = 1000,
         Operator_Error = 1001,

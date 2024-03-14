@@ -2795,7 +2795,7 @@ namespace Platform.Betting.API.Repository
                         ClientCode = bet.ClientCode,
                         ClientId = bet.ClientId.ToUpper(),
                         CashoutType = CashoutType.Partial,
-                        CashOutStake = cashOut.CashOutStake,
+                        CashOutStake = request.CashOutStake,
                         CashOutStakePercent = request.CashOutStake / cashOut.CashOutStake,
                         TaxedStake = cashOut.TaxedStake,
                         TaxedWinnings = cashOut.TaxedWinnings,

@@ -1932,17 +1932,7 @@ namespace Platform.Betting.API.Repository
                 var trueStake = bet.TrueStake;
                 var stake = bet.Stake;
 
-                var prevTaxedStake = 0m;
-                var prevTaxedWinnings = 0m;
-                var prevCashout = 0m;
                 var cashoutBets = bet.IsPartialCashout ? partialCashoutAudit.Where(c => c.BetId == bet.BetId) : new List<PartialCashoutAudit>();
-
-                if (cashoutBets.Any())
-                {
-                    prevTaxedStake = cashoutBets.Sum(s => s.TaxedStake);
-                    prevTaxedWinnings = cashoutBets.Sum(s => s.TaxedWinnings);
-                    prevCashout = cashoutBets.Sum(s => s.CashoutAmount);
-                }
 
                 var runningfinalStake = trueStake - bet.StakeBonus;
                 var runningTaxedStake = bet.IsFreeBet == false ? runningfinalStake - (runningfinalStake / (1 + bet.StakeTax)) : 0;
@@ -1981,9 +1971,9 @@ namespace Platform.Betting.API.Repository
                     CashOutStake = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStake : 0,
                     CashOutStatusId = bet.BetStatusId == (int)BetStatus.Running ? (int)cashOut.CashOutStatus : (int)CashOutStatus.Unavailable,
                     CashOutStatusName = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStatus.ToString() : CashOutStatus.Unavailable.ToString(),
-                    TaxedWinnings = prevTaxedWinnings + runningTaxedWinnings,
-                    TaxedStake = prevTaxedStake + runningTaxedStake,
-                    Payout = prevCashout + runningPayout,
+                    TaxedWinnings = runningTaxedWinnings,
+                    TaxedStake = runningTaxedStake,
+                    Payout = runningPayout,
                     PartialCashout = cashoutBets.Any() ? cashoutBets.Select(s => new PartialCashoutDTO
                     {
                         TransactionId = s.Id.ToString().ToUpper(),

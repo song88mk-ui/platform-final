@@ -1607,17 +1607,7 @@ namespace Platform.Betting.API.Repository
                     var stake = bet.Stake;
 
                     var cashoutBets = bet.IsPartialCashout ? partialCashoutAudit.Where(c => c.BetId == bet.BetId) : new List<PartialCashoutAudit>();
-                    var prevTaxedStake = 0m;
-                    var prevTaxedWinnings = 0m;
-                    var prevCashout = 0m;
-                    if (cashoutBets.Any())
-                    {
-                        prevTaxedStake = cashoutBets.Sum(s => s.TaxedStake);
-                        prevTaxedWinnings = cashoutBets.Sum(s => s.TaxedWinnings);
-                        prevCashout = cashoutBets.Sum(s => s.CashoutAmount);
-                    }
-
-
+                    
                     var runningfinalStake = trueStake - bet.StakeBonus;
                     var runningTaxedStake = bet.IsFreeBet == false ? runningfinalStake - (runningfinalStake / (1 + bet.StakeTax)) : 0;
                     var runningStake = bet.BetStatusId == (int)BetStatus.Running ? GetStake(filteredSelections, runningTaxedStake, trueStake) : 0;
@@ -1643,7 +1633,7 @@ namespace Platform.Betting.API.Repository
                         BetId = bet.BetId.ToString(),
                         Stake = bet.Stake,
                         Odds = bet.Odds.ToString(),
-                        Payout = bet.BetStatusId == (int)BetStatus.Running ? prevCashout + runningPayout : bet.Payout,
+                        Payout = bet.BetStatusId == (int)BetStatus.Running ? runningPayout : bet.Payout,
                         WinLoss = bet.WinLoss,
                         BetStatusId = bet.BetStatusId,
                         BetStatusName = bet.BetStatusName,
@@ -1657,8 +1647,8 @@ namespace Platform.Betting.API.Repository
                         CashOutStatusName = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStatus.ToString() : CashOutStatus.Unavailable.ToString(),
                         StakeTax = bet.StakeTax,
                         WinningsTax = bet.WinningsTax,
-                        TaxedStake = bet.BetStatusId == (int)BetStatus.Running ? prevTaxedStake + runningTaxedStake : bet.TaxedStake,
-                        TaxedWinnings = bet.BetStatusId == (int)BetStatus.Running ? prevTaxedWinnings + runningTaxedWinnings : bet.TaxedWinnings,
+                        TaxedStake = bet.BetStatusId == (int)BetStatus.Running ? runningTaxedStake : bet.TaxedStake,
+                        TaxedWinnings = bet.BetStatusId == (int)BetStatus.Running ? runningTaxedWinnings : bet.TaxedWinnings,
                         ParlayBonus = parlayBonus,
                         ParlayBonusWinnings = bet.BetStatusId == (int)BetStatus.Running ? parlayBonusWinnings : bet.ParlayBonusWinnings,
                         StakeReal = bet.StakeReal,

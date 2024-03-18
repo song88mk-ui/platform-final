@@ -97,24 +97,28 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
                 bet.BetSelections.AddRange(betSelections);
 
-                var partialCashoutAudit = context.PartialCashoutAudit.AsNoTracking().Where(c => c.BetId == bet.BetId).Select(s => new PartialCashoutAuditMemory
+                if(bet.IsPartialCashout)
                 {
-                    BetId = bet.BetId,
-                    CashoutAmount = s.CashoutAmount,
-                    CashoutDate = s.CashoutDate,
-                    CashoutPercent = s.CashoutPercent,
-                    OriginalStake = s.OriginalStake,
-                    PostStake = s.PostStake,
-                    PostTrueStake = s.PostTrueStake,
-                    PreStake = s.PreStake,
-                    PreTrueStake = s.PreTrueStake,
-                    StakeUsed = s.StakeUsed,
-                    TrueStake = s.TrueStake,
-                    TrueStakeUsed = s.TrueStakeUsed,
-                }).OrderBy(o => o.CashoutDate).ToList();
+                    var partialCashoutAudit = context.PartialCashoutAudit.AsNoTracking().Where(c => c.BetId == bet.BetId).Select(s => new PartialCashoutAuditMemory
+                    {
+                        BetId = bet.BetId,
+                        CashoutAmount = s.CashoutAmount,
+                        CashoutDate = s.CashoutDate,
+                        CashoutPercent = s.CashoutPercent,
+                        OriginalStake = s.OriginalStake,
+                        PostStake = s.PostStake,
+                        PostTrueStake = s.PostTrueStake,
+                        PreStake = s.PreStake,
+                        PreTrueStake = s.PreTrueStake,
+                        StakeUsed = s.StakeUsed,
+                        TrueStake = s.TrueStake,
+                        TrueStakeUsed = s.TrueStakeUsed,
+                    }).OrderBy(o => o.CashoutDate).ToList();
 
-                if(partialCashoutAudit.Any())
-                    bet.PartialCashoutAudit.AddRange(partialCashoutAudit);
+                    if (partialCashoutAudit.Any())
+                        bet.PartialCashoutAudit.AddRange(partialCashoutAudit);
+
+                }
 
                 _bets.Add(bet);
 
@@ -279,7 +283,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
                 bet.Stake = bet.Stake - stakeUsed;
                 bet.TrueStake = bet.TrueStake - trueStakeUsed;
-
+                bet.IsPartialCashout = true;
                 Console.WriteLine($"{DateTime.UtcNow} - ProcessPartialCashOut : {JsonSerializer.Serialize(cashoutHistory)}");
             }
         }
@@ -407,8 +411,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
         }
         private OnCashOutChange GetCashOut(BetMemory bet, OnExternalOddsChangeMessage message)
         {
-            var prevCashout = bet.PartialCashoutAudit.LastOrDefault(c => c.BetId == bet.BetId);
-            var remaining = prevCashout == null ? bet.TrueStake : prevCashout.PostTrueStake;
+            var remaining = bet.TrueStake;
 
             var finalStake = remaining;
 
@@ -530,7 +533,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
             else
             {
                 decimal cashOutStake = 0m;
-                var remainingStake = prevCashout == null ? bet.Stake : prevCashout.PostStake;
+                var remainingStake = bet.Stake;
                 
                 if (probabilites.First().WonProbability > 0 ||
                     probabilites.First().LostProbability > 0 ||
@@ -693,6 +696,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
         public decimal StakeTax { get; set; }
         public decimal WinningsTax { get; set; }
         public int OddsTypeId { get; set; }
+        public bool IsPartialCashout { get; set; }
         public List<BetSelectionMemory> BetSelections { get; set; }
         public List<PartialCashoutAuditMemory> PartialCashoutAudit { get; set; }
     }

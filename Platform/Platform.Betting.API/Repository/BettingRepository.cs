@@ -1606,7 +1606,7 @@ namespace Platform.Betting.API.Repository
                     var trueStake = bet.TrueStake;
                     var stake = bet.Stake;
 
-                    var cashoutBets = partialCashoutAudit.Where(c => c.BetId == bet.BetId);
+                    var cashoutBets = bet.IsPartialCashout ? bet.IsPartialCashout ? partialCashoutAudit.Where(c => c.BetId == bet.BetId) : new List<PartialCashoutAudit>();
                     var prevTaxedStake = 0m;
                     var prevTaxedWinnings = 0m;
                     var prevCashout = 0m;
@@ -1788,7 +1788,7 @@ namespace Platform.Betting.API.Repository
                 var filteredSelections = selections.Where(c => c.BetId == bet.BetId).ToList();
                 var isBoosted = betBoosted.Any(b => b == bet.BetId);
                 var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
-                var cashoutBets = partialCashoutAudit.Where(c => c.BetId == bet.BetId);
+                var cashoutBets = bet.IsPartialCashout ? partialCashoutAudit.Where(c => c.BetId == bet.BetId) : new List<PartialCashoutAudit>();
 
                 result.Add(new SettlementHistoryDTO
                 {
@@ -1935,7 +1935,7 @@ namespace Platform.Betting.API.Repository
                 var prevTaxedStake = 0m;
                 var prevTaxedWinnings = 0m;
                 var prevCashout = 0m;
-                var cashoutBets = partialCashoutAudit.Where(c => c.BetId == bet.BetId);
+                var cashoutBets = bet.IsPartialCashout ? partialCashoutAudit.Where(c => c.BetId == bet.BetId) : new List<PartialCashoutAudit>();
 
                 if (cashoutBets.Any())
                 {
@@ -1982,7 +1982,7 @@ namespace Platform.Betting.API.Repository
                     CashOutStatusId = bet.BetStatusId == (int)BetStatus.Running ? (int)cashOut.CashOutStatus : (int)CashOutStatus.Unavailable,
                     CashOutStatusName = bet.BetStatusId == (int)BetStatus.Running ? cashOut.CashOutStatus.ToString() : CashOutStatus.Unavailable.ToString(),
                     TaxedWinnings = prevTaxedWinnings + runningTaxedWinnings,
-                    TaxedStake = runningTaxedStake + runningTaxedStake,
+                    TaxedStake = prevTaxedStake + runningTaxedStake,
                     Payout = prevCashout + runningPayout,
                     PartialCashout = cashoutBets.Any() ? cashoutBets.Select(s => new PartialCashoutDTO
                     {

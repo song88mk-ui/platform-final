@@ -38,6 +38,7 @@ namespace Platform.Shared.Data.Betting.Entities
         public decimal CompanyShare { get; set; }
         public bool IsResettled { get; set; }
         public bool IsCashout { get; set; }
+        public bool IsPartialCashout { get; set; }
         public DateTime BetDate { get; set; }
         public DateTime BetDateOffset { get; set; }
         public DateTime SettlementDate { get; set; }

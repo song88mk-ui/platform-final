@@ -1606,7 +1606,7 @@ namespace Platform.Betting.API.Repository
                     var trueStake = bet.TrueStake;
                     var stake = bet.Stake;
 
-                    var cashoutBets = bet.IsPartialCashout ? bet.IsPartialCashout ? partialCashoutAudit.Where(c => c.BetId == bet.BetId) : new List<PartialCashoutAudit>();
+                    var cashoutBets = bet.IsPartialCashout ? partialCashoutAudit.Where(c => c.BetId == bet.BetId) : new List<PartialCashoutAudit>();
                     var prevTaxedStake = 0m;
                     var prevTaxedWinnings = 0m;
                     var prevCashout = 0m;

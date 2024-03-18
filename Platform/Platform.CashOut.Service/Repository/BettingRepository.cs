@@ -377,7 +377,7 @@ namespace Platform.CashOut.Service.Repository
             }
 
             var stake = bet.TrueStake - bet.TaxedStake;
-            var winloss = payout - bet.TrueStake;
+            var winloss = message.CashoutType == CashoutType.Partial ? 0m : payout - bet.TrueStake;
 
             var betStatus = message.CashoutType == CashoutType.Full ? GetStatus(selections.Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), payout, stake) : BetStatus.Running;
 

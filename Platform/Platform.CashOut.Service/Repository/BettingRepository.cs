@@ -348,7 +348,7 @@ namespace Platform.CashOut.Service.Repository
                 bet.TrueStake = bet.TrueStake - trueStakeUsed;
                 bet.TaxedStake = bet.TaxedStake - message.TaxedStake;
                 bet.TaxedWinnings = bet.TaxedWinnings - message.TaxedWinnings;
-
+                bet.IsPartialCashout = true;
 
                 var finalStake = bet.Stake;
                 payout = finalStake * bet.Odds;

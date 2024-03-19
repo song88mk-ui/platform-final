@@ -101,17 +101,12 @@ namespace Platform.CashOut.Service.Repository
                                 {
                                     partialPayload = new OnBetSettlementPartial()
                                     {
-                                        Bet = payload.Bet,
-                                        BetSelections = payload.BetSelections,
-                                        IsAudit = payload.IsAudit,
-                                        Message = payload.Message,
-                                        IsRetry = payload.IsRetry,
                                         CashoutStake = message.CashOutStake,
                                         CashoutStakePercent = message.CashOutStakePercent,
                                         Stake = bet.Stake * message.CashOutStakePercent,
                                         TrueStake = bet.TrueStake * message.CashOutStakePercent,
                                         TaxedStake = message.TaxedStake,
-                                        NonTaxedPayout = payload.NonTaxedPayout,
+                                        NonTaxedPayout = message.NonTaxedPayout,
                                     };
                                 }
 
@@ -146,7 +141,14 @@ namespace Platform.CashOut.Service.Repository
                                     if (message.CashoutType == CashoutType.Full)
                                         messageBroker.Publish(payload, "OnBetFullCashOut", "r.bet.operator", correlationId, 10);
                                     else
+                                    {
+                                        partialPayload.Bet = payload.Bet;
+                                        partialPayload.BetSelections = payload.BetSelections;
+                                        partialPayload.IsAudit = payload.IsAudit;
+                                        partialPayload.Message = payload.Message;
+                                        partialPayload.IsRetry = payload.IsRetry;
                                         messageBroker.Publish(partialPayload, "OnBetPartialCashOut", "r.bet.operator", correlationId, 10);
+                                    }
 
                                     messageBroker.Publish(new OnBetStatus
                                     {

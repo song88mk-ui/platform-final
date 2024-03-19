@@ -12,6 +12,6 @@ namespace Platform.CashOutStake.Servicev2.Repository
         void RemoveBet(OnBetSettlement message);
         void ProcessOddsChange(OnExternalOddsChangeMessage message, IMessageBroker messageBroker);
         void ProcessOnBetSettlement(OnExternalBetSettlementMessage onBetSettlement, IMessageBroker messageBroker);
-        void ProcessPartialCashOut(OnCashoutBetSettlement message, IMessageBroker messageBroker);
+        void ProcessPartialCashOut(OnBetSettlementPartial message, IMessageBroker messageBroker);
     }
 }

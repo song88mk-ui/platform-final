@@ -838,13 +838,13 @@ namespace Platform.CashOut.Service
                 {
                     case "OnBetFullCashOut":
                         var onCashoutBetSettlement = JsonSerializer.Deserialize<OnCashoutBetSettlement>(payload);
-                        _bettingRepository.ProcessCashOut(onCashoutBetSettlement, CashoutType.Full, _mts, _messageBroker, correlationId ?? Guid.NewGuid().ToString());
+                        _bettingRepository.ProcessCashOut(onCashoutBetSettlement, _mts, _messageBroker, correlationId ?? Guid.NewGuid().ToString());
                         _messageBroker.Acknowledge(e);
                         break;
                         //
                     case "OnBetPartialCashOut":
                         var onPartialCashoutBetSettlement = JsonSerializer.Deserialize<OnCashoutBetSettlement>(payload);
-                        _bettingRepository.ProcessCashOut(onPartialCashoutBetSettlement, CashoutType.Partial, _mts, _messageBroker, correlationId ?? Guid.NewGuid().ToString());
+                        _bettingRepository.ProcessCashOut(onPartialCashoutBetSettlement, _mts, _messageBroker, correlationId ?? Guid.NewGuid().ToString());
                         _messageBroker.Acknowledge(e);
                         break;
                     default:

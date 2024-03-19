@@ -590,7 +590,7 @@ namespace Platform.CashOut.Service.Repository
             }
         }
 
-        public void ProcessCashOut(OnCashoutBetSettlement message, CashoutType cashoutType, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
+        public void ProcessCashOut(OnCashoutBetSettlement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
         {
             try
             {
@@ -615,7 +615,7 @@ namespace Platform.CashOut.Service.Repository
                             ClientId = message.ClientId,
                             ClientCode = message.ClientCode,
                             UserId = message.UserId,
-                            CashoutType = result.Result.CashoutType,
+                            CashoutType = message.CashoutType,
                             CashOutStake = result.Result.CashOutStake,
                             CashOutStakePercent = message.CashOutStakePercent,
                             TaxedStake = result.Result.TaxedStake,

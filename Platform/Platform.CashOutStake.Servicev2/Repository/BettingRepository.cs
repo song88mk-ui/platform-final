@@ -252,7 +252,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
             }
         }
 
-        public void ProcessPartialCashOut(OnCashoutBetSettlement message)
+        public void ProcessPartialCashOut(OnCashoutBetSettlement message, IMessageBroker messageBroker)
         {
             var bet = _bets.Where(c => c.BetId == message.BetId).FirstOrDefault();
 
@@ -284,6 +284,15 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 bet.Stake = bet.Stake - stakeUsed;
                 bet.TrueStake = bet.TrueStake - trueStakeUsed;
                 bet.IsPartialCashout = true;
+
+                var xmessage = new OnExternalOddsChangeMessage
+                {
+                    IsSuspended = false,
+                };
+                var payload = GetCashOut(bet, xmessage);
+
+                messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.cashoutchange.{bet.ClientCode.ToString().ToLower()}", Guid.NewGuid().ToString());
+
                 Console.WriteLine($"{DateTime.UtcNow} - ProcessPartialCashOut : {JsonSerializer.Serialize(cashoutHistory)}");
             }
         }

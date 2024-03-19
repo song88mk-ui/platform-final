@@ -97,14 +97,22 @@ namespace Platform.CashOut.Service.Repository
                             {
                                 var payload = new OnBetSettlement();
                                 OnBetSettlementPartial partialPayload = null;
-                                if(message.CashoutType == CashoutType.Partial)
+                                if (message.CashoutType == CashoutType.Partial)
                                 {
-                                    partialPayload = (OnBetSettlementPartial)payload;
-                                    partialPayload.CashoutStake = message.CashOutStake;
-                                    partialPayload.CashoutStakePercent = message.CashOutStakePercent;
-                                    partialPayload.Stake = bet.Stake * message.CashOutStakePercent;
-                                    partialPayload.TrueStake = bet.TrueStake * message.CashOutStakePercent;
-                                    partialPayload.TaxedStake = message.TaxedStake;
+                                    partialPayload = new OnBetSettlementPartial()
+                                    {
+                                        Bet = payload.Bet,
+                                        BetSelections = payload.BetSelections,
+                                        IsAudit = payload.IsAudit,
+                                        Message = payload.Message,
+                                        IsRetry = payload.IsRetry,
+                                        CashoutStake = message.CashOutStake,
+                                        CashoutStakePercent = message.CashOutStakePercent,
+                                        Stake = bet.Stake * message.CashOutStakePercent,
+                                        TrueStake = bet.TrueStake * message.CashOutStakePercent,
+                                        TaxedStake = message.TaxedStake,
+                                        NonTaxedPayout = payload.NonTaxedPayout,
+                                    };
                                 }
 
                                 payload.NonTaxedPayout = message.NonTaxedPayout;
@@ -124,7 +132,7 @@ namespace Platform.CashOut.Service.Repository
                                     return;
                                 }
 
-                                if(message.CashoutType == CashoutType.Full)
+                                if (message.CashoutType == CashoutType.Full)
                                     bet.Reason = $"{result.Item2} (MTS)";
 
                                 isPublish = SettleBet(message, bet, isPublish, payload, settledDate, context, selections, filteredSelections);
@@ -135,7 +143,7 @@ namespace Platform.CashOut.Service.Repository
 
                                 if (isPublish)
                                 {
-                                    if(message.CashoutType == CashoutType.Full)
+                                    if (message.CashoutType == CashoutType.Full)
                                         messageBroker.Publish(payload, "OnBetFullCashOut", "r.bet.operator", correlationId, 10);
                                     else
                                         messageBroker.Publish(partialPayload, "OnBetPartialCashOut", "r.bet.operator", correlationId, 10);
@@ -321,7 +329,7 @@ namespace Platform.CashOut.Service.Repository
             }
 
             var payout = message.CashOutStake;
-            
+
             if (message.CashoutType == CashoutType.Partial)
             {
                 var prevCashout = context.PartialCashoutAudit.AsNoTracking().FirstOrDefault(p => p.BetId == message.BetId);
@@ -480,7 +488,7 @@ namespace Platform.CashOut.Service.Repository
             var result = BetStatus.Lost;
 
             var betSelections = statuses;
-            
+
             var lost = betSelections.Where(c => c == BetStatus.Lost).Count();
             var won = betSelections.Where(c => c == BetStatus.Won).Count();
             var halfWon = betSelections.Where(c => c == BetStatus.HalfWon).Count();
@@ -572,7 +580,7 @@ namespace Platform.CashOut.Service.Repository
 
                 var cashoutStake = (long)0;
                 var cashoutStakePercent = (int)0;
-                
+
                 if (message.ClientCode.ToUpper() == "RKP")
                 {
                     cashoutStake = (long)((prevCashoutAmount + message.CashOutStake) * .10m) * 10000;

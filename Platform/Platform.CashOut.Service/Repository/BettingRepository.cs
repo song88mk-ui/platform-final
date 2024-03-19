@@ -96,7 +96,17 @@ namespace Platform.CashOut.Service.Repository
                             if (result.Item1 == CashoutAcceptance.Accepted)
                             {
                                 var payload = new OnBetSettlement();
-                                
+                                OnBetSettlementPartial partialPayload = null;
+                                if(message.CashoutType == CashoutType.Partial)
+                                {
+                                    partialPayload = (OnBetSettlementPartial)payload;
+                                    partialPayload.CashoutStake = message.CashOutStake;
+                                    partialPayload.CashoutStakePercent = message.CashOutStakePercent;
+                                    partialPayload.Stake = bet.Stake * message.CashOutStakePercent;
+                                    partialPayload.TrueStake = bet.TrueStake * message.CashOutStakePercent;
+                                    partialPayload.TaxedStake = message.TaxedStake;
+                                }
+
                                 payload.NonTaxedPayout = message.NonTaxedPayout;
 
                                 var selections = context.BetSelection.Where(c => c.BetId == message.BetId).ToList();
@@ -128,8 +138,7 @@ namespace Platform.CashOut.Service.Repository
                                     if(message.CashoutType == CashoutType.Full)
                                         messageBroker.Publish(payload, "OnBetFullCashOut", "r.bet.operator", correlationId, 10);
                                     else
-                                        messageBroker.Publish(payload, "OnBetPartialCashOut", "r.bet.operator", correlationId, 10);
-
+                                        messageBroker.Publish(partialPayload, "OnBetPartialCashOut", "r.bet.operator", correlationId, 10);
 
                                     messageBroker.Publish(new OnBetStatus
                                     {

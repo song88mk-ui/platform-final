@@ -522,6 +522,26 @@ namespace Platform.Operator.Servicev2.Repository
             }
         }
 
+        private Tuple<bool, OnBetSettlementPartial> IsProcessPartial(Guid betId)
+        {
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadUncommitted }))
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]);
+
+                using (var context = new PlatformContext(optionsBuilder.Options))
+                {
+                    var bet = context.OperatorSettlementRetry.Find(betId);
+
+                    scope.Complete();
+
+                    if (bet == null)
+                        return new Tuple<bool, OnBetSettlementPartial>(false, JsonSerializer.Deserialize<OnBetSettlementPartial>(bet.Info));
+
+                    return new Tuple<bool, OnBetSettlementPartial>(true, JsonSerializer.Deserialize<OnBetSettlementPartial>(bet.Info));
+                }
+            }
+        }
+
         public void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId, string threadId)
         {
             var path = "/v1/bet/placement";
@@ -869,11 +889,11 @@ namespace Platform.Operator.Servicev2.Repository
             }
         }
 
-        public void ProcessBetPartialCashOut(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId)
+        public void ProcessBetPartialCashOut(OnBetSettlementPartial message, IMessageBroker messageBroker, string correlationId, string threadId)
         {
             if (message.IsRetry)
             {
-                var initialMessage = IsProcess(message.Bet.BetId);
+                var initialMessage = IsProcessPartial(message.Bet.BetId);
 
                 if (initialMessage.Item1 == false)
                     return;
@@ -890,14 +910,14 @@ namespace Platform.Operator.Servicev2.Repository
                 BetId = message.Bet.BetId.ToString().ToUpper(),
                 UserId = message.Bet.UserId,
                 CurrencyCode = message.Bet.CurrencyCode,
-                Payout = message.Bet.Payout,
+                Payout = message.CashoutStake,
                 NonTaxedPayout = message.NonTaxedPayout,
-                Stake = message.Bet.Stake,
+                Stake = message.Stake,
                 Odds = message.Bet.Odds,
                 BetStatus = message.Bet.BetStatusName,
                 StakeTax = message.Bet.StakeTax,
                 WinningsTax = message.Bet.WinningsTax,
-                TaxedStake = message.Bet.TaxedStake,
+                TaxedStake = message.TaxedStake,
                 TaxedWinnings = message.Bet.TaxedWinnings,
                 TransactionDate = message.Bet.SettlementDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                 BetSelections = message.BetSelections.Select(s => new OperatorBetSelectionSettlementRequestDTO

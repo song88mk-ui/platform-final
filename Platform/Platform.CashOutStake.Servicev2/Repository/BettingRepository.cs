@@ -252,25 +252,25 @@ namespace Platform.CashOutStake.Servicev2.Repository
             }
         }
 
-        public void ProcessPartialCashOut(OnCashoutBetSettlement message, IMessageBroker messageBroker)
+        public void ProcessPartialCashOut(OnBetSettlementPartial message, IMessageBroker messageBroker)
         {
-            var bet = _bets.Where(c => c.BetId == message.BetId).FirstOrDefault();
+            var bet = _bets.Where(c => c.BetId == message.Bet.BetId).FirstOrDefault();
 
             if (bet != null)
             {
                 var cashoutHistory = bet.PartialCashoutAudit;
                 var lastCashout = cashoutHistory.LastOrDefault();
 
-                var cashoutAmount = message.CashOutStake;
-                var stakeUsed = bet.Stake * message.CashOutStakePercent;
-                var trueStakeUsed = bet.TrueStake * message.CashOutStakePercent;
+                var cashoutAmount = message.CashoutStake;
+                var stakeUsed = message.Stake;
+                var trueStakeUsed = message.TrueStake;
 
                 cashoutHistory.Add(new PartialCashoutAuditMemory
                 {
                     BetId = bet.BetId,
                     CashoutAmount = cashoutAmount,
                     CashoutDate = DateTime.UtcNow,
-                    CashoutPercent = message.CashOutStakePercent,
+                    CashoutPercent = message.CashoutStakePercent,
                     OriginalStake = lastCashout != null ? lastCashout.OriginalStake : bet.Stake,
                     TrueStake = lastCashout != null ? lastCashout.TrueStake : bet.TrueStake,
                     StakeUsed = stakeUsed,

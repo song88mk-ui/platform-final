@@ -97,7 +97,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
                 bet.BetSelections.AddRange(betSelections);
 
-                if(bet.IsPartialCashout)
+                if (bet.IsPartialCashout)
                 {
                     var partialCashoutAudit = context.PartialCashoutAudit.AsNoTracking().Where(c => c.BetId == bet.BetId).Select(s => new PartialCashoutAuditMemory
                     {
@@ -141,9 +141,9 @@ namespace Platform.CashOutStake.Servicev2.Repository
         {
             if (message.Bet.IsFreeBet == true)
                 return;
-			if (message.Bet.BetTypeId == (int)BetType.BetBuilder)
-				return;
-			if (message.IsBoosted == true)
+            if (message.Bet.BetTypeId == (int)BetType.BetBuilder)
+                return;
+            if (message.IsBoosted == true)
                 return;
 
             var bet = new BetMemory
@@ -323,7 +323,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
             }
         }
 
-        private void PreloadMarket(long marketId, OnExternalOddsChangeMessage message, bool isPreload = false)
+        private void PreloadMarket(long marketId, OnExternalOddsChangeMessage message, bool isPartial = false)
         {
             var expiration = DateTime.UtcNow.AddHours(6);
 
@@ -331,7 +331,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
             var marketResult = _memCache.GetCache<CashOutMarketFilter>(marketKey);
 
-            if (marketResult == null || isPreload)
+            if (marketResult == null)
             {
                 var filter = Builders<Market>.Filter.Eq("MaId", marketId);
                 var projection = Builders<Market>.Projection.Include(c => c.MaId).Include(c => c.MaStId);
@@ -339,7 +339,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
                 _memCache.AddOrUpdateCache(marketKey, result, expiration);
             }
-            else
+            else if (isPartial == false)
             {
                 var market = message.Markets.Where(c => c.MarketId == marketId).FirstOrDefault();
 
@@ -366,7 +366,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 _memCache.AddOrUpdateCache(marketKey, marketResult, expiration);
             }
         }
-        private void PreloadSelection(long marketId, long selectionId, OnExternalOddsChangeMessage message, bool isPreload = false)
+        private void PreloadSelection(long marketId, long selectionId, OnExternalOddsChangeMessage message, bool isPartial = false)
         {
             var expiration = DateTime.UtcNow.AddHours(6);
 
@@ -374,7 +374,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
             var selectionResult = _memCache.GetCache<CashOutSelectionFilter>(selectionKey);
 
-            if (selectionResult == null || isPreload)
+            if (selectionResult == null)
             {
                 var filter = Builders<Selection>.Filter.Eq("SeId", selectionId);
                 var projection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr).Include(c => c.SeStId);
@@ -382,7 +382,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
                 _memCache.AddOrUpdateCache(selectionKey, result, expiration);
             }
-            else
+            else if (isPartial == false)
             {
                 var market = message.Markets.Where(c => c.MarketId == marketId).FirstOrDefault();
 
@@ -454,8 +454,8 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 var marketResult = _memCache.GetCache<CashOutMarketFilter>($"market:{betSelection.MarketId}");
                 var selectionResult = _memCache.GetCache<CashOutSelectionFilter>($"selection:{betSelection.SelectionId}");
 
-                if (marketResult == null 
-                    || selectionResult == null 
+                if (marketResult == null
+                    || selectionResult == null
                     || selectionResult.SeStId == (int)BetStatus.Lost
                     || selectionResult.SeStId == (int)BetStatus.Cancelled
                     || (selectionResult.IsAc == false && selectionResult.MaStId == (int)MarketStatus.Active)
@@ -550,7 +550,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
             {
                 decimal cashOutStake = 0m;
                 var remainingStake = bet.Stake;
-                
+
                 if (probabilites.First().WonProbability > 0 ||
                     probabilites.First().LostProbability > 0 ||
                     probabilites.First().VoidProbability > 0 ||

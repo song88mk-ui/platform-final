@@ -31,6 +31,7 @@ namespace Platform.Shared.Models
     {
         public string UserId { get; set; }
         public string BetId { get; set; }
+        public string TransactionId { get; set; }
         public BetStatus BetStatus { get; set; }
         public decimal CashOutStake { get; set; }
     }

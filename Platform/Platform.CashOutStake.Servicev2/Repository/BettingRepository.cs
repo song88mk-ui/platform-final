@@ -289,6 +289,13 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 {
                     IsSuspended = false,
                 };
+
+                foreach (var betSelection in bet.BetSelections)
+                {
+                    PreloadMarket(betSelection.MarketId, xmessage, true);
+                    PreloadSelection(betSelection.MarketId, betSelection.SelectionId, xmessage, true);
+                }
+
                 var payload = GetCashOut(bet, xmessage);
 
                 messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.cashoutchange.{bet.ClientCode.ToString().ToLower()}", Guid.NewGuid().ToString());
@@ -316,7 +323,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
             }
         }
 
-        private void PreloadMarket(long marketId, OnExternalOddsChangeMessage message)
+        private void PreloadMarket(long marketId, OnExternalOddsChangeMessage message, bool isPreload = false)
         {
             var expiration = DateTime.UtcNow.AddHours(6);
 
@@ -324,7 +331,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
             var marketResult = _memCache.GetCache<CashOutMarketFilter>(marketKey);
 
-            if (marketResult == null)
+            if (marketResult == null || isPreload)
             {
                 var filter = Builders<Market>.Filter.Eq("MaId", marketId);
                 var projection = Builders<Market>.Projection.Include(c => c.MaId).Include(c => c.MaStId);
@@ -359,7 +366,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 _memCache.AddOrUpdateCache(marketKey, marketResult, expiration);
             }
         }
-        private void PreloadSelection(long marketId, long selectionId, OnExternalOddsChangeMessage message)
+        private void PreloadSelection(long marketId, long selectionId, OnExternalOddsChangeMessage message, bool isPreload = false)
         {
             var expiration = DateTime.UtcNow.AddHours(6);
 
@@ -367,7 +374,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
             var selectionResult = _memCache.GetCache<CashOutSelectionFilter>(selectionKey);
 
-            if (selectionResult == null)
+            if (selectionResult == null || isPreload)
             {
                 var filter = Builders<Selection>.Filter.Eq("SeId", selectionId);
                 var projection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr).Include(c => c.SeStId);

@@ -130,7 +130,7 @@ namespace Platform.CashOut.Service.Repository
                                 if (message.CashoutType == CashoutType.Full)
                                     bet.Reason = $"{result.Item2} (MTS)";
 
-                                isPublish = SettleBet(message, bet, isPublish, payload, settledDate, context, selections, filteredSelections);
+                                isPublish = SettleBet(message, bet, isPublish, payload, settledDate, context, selections, filteredSelections, correlationId);
 
                                 context.SaveChanges();
 
@@ -254,7 +254,7 @@ namespace Platform.CashOut.Service.Repository
             }
         }
 
-        private bool SettleBet(OnCashoutBetSettlement message, Bet bet, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, List<BetSelection> filteredSelections)
+        private bool SettleBet(OnCashoutBetSettlement message, Bet bet, bool isPublish, OnBetSettlement payload, DateTime settledDate, BettingContext context, List<BetSelection> selections, List<BetSelection> filteredSelections, string correlationId)
         {
 
             foreach (var selection in filteredSelections)
@@ -344,7 +344,7 @@ namespace Platform.CashOut.Service.Repository
 
                 context.PartialCashoutAudit.Add(new PartialCashoutAudit
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.Parse(correlationId),
                     BetId = message.BetId,
                     ClientId = message.ClientId,
                     ClientCode = message.ClientCode,

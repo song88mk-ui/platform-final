@@ -2765,8 +2765,8 @@ namespace Platform.Betting.API.Repository
             }
             else
             {
-                
-                if(request.IsPartialCashout)
+                var correlationId = Guid.NewGuid().ToString().ToUpper();
+                if (request.IsPartialCashout)
                 {
                     var payload = new OnCashoutBetSettlement
                     {
@@ -2797,7 +2797,7 @@ namespace Platform.Betting.API.Repository
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
                     {
                         Payload = JsonSerializer.Serialize(payload),
-                        CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                        CorrelationId = correlationId,
                         MessageType = "OnBetPartialCashOut",
                         RoutingKey = "r.bet.cashout"
                     });
@@ -2833,7 +2833,7 @@ namespace Platform.Betting.API.Repository
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
                     {
                         Payload = JsonSerializer.Serialize(payload),
-                        CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                        CorrelationId = correlationId,
                         MessageType = "OnBetFullCashOut",
                         RoutingKey = "r.bet.cashout"
                     });
@@ -2847,6 +2847,7 @@ namespace Platform.Betting.API.Repository
                     Result = new BetCashOutResponseDTO
                     {
                         BetId = bet.BetId.ToString().ToUpper(),
+                        TransactionId = correlationId,
                         BetStatus = (BetStatus)bet.BetStatusId,
                         UserId = bet.UserId,
                         CashOutStake = request.CashOutStake

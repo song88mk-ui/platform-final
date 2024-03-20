@@ -88,6 +88,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<CasinoBetHistoryResponseDTO>> GetCasinoBetHistory(string apiKey, string clientId, string langCode, string operatorToken, BetHistoryRequest request);
         Task<BaseResponseDTO<List<TranslationResponseDTO>>> GetTranslationByLanguageCode(string apiKey, string clientId, string langCode);
         Task<BaseResponseDTO<BetStatus>> GetBetStatus(string clientId, BetStatusRequest request);
+        Task<BaseResponseDTO<bool>> GetPartialCashoutBetStatus(string clientId, PartialCashoutStatusRequest request);
         Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixturesPagination(string apiKey, string clientId, string langCode, TodayFixtureRequest request, string ipCountryCode);
         Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request);
 

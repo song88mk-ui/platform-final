@@ -2932,7 +2932,6 @@ namespace Platform.Betting.API.Repository
             };
         }
 
-
         public async Task<BaseResponseDTO<BetStatus>> GetBetStatus(BetStatusRequestDTO request)
         {
             try
@@ -2953,9 +2952,29 @@ namespace Platform.Betting.API.Repository
                     Message = ex.Message
                 };
             }
-
         }
 
+        public async Task<BaseResponseDTO<bool>> GetPartialCashoutStatus(PartialCashoutStatusRequestDTO request)
+        {
+            try
+            {
+                var bet = _bettingContext.ParlayBonusAudit.Find(request.TransactionId);
+
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.Success,
+                    Result = bet != null
+                };
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = ex.Message
+                };
+            }
+        }
 
         public async Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request)
         {

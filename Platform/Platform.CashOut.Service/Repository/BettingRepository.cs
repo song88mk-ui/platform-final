@@ -339,6 +339,8 @@ namespace Platform.CashOut.Service.Repository
                 var originalTrueStake = prevCashout != null ? prevCashout.TrueStake : bet.TrueStake;
                 var stakeUsed = bet.Stake * message.CashOutStakePercent;
                 var trueStakeUsed = bet.TrueStake * message.CashOutStakePercent;
+                var stakeRealUsed = bet.StakeReal * message.CashOutStakePercent;
+                var stakeBonusUsed = bet.StakeBonus * message.CashOutStakePercent;
 
                 context.PartialCashoutAudit.Add(new PartialCashoutAudit
                 {
@@ -365,6 +367,8 @@ namespace Platform.CashOut.Service.Repository
 
                 bet.Stake = bet.Stake - stakeUsed;
                 bet.TrueStake = bet.TrueStake - trueStakeUsed;
+                bet.StakeReal = bet.StakeReal - stakeRealUsed;
+                bet.StakeBonus = bet.StakeBonus - stakeBonusUsed;
                 bet.TaxedStake = bet.TaxedStake - message.TaxedStake;
                 bet.TaxedWinnings = bet.TaxedWinnings - message.TaxedWinnings;
                 bet.IsPartialCashout = true;

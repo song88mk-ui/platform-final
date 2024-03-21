@@ -6,8 +6,4 @@ namespace Platform.Shared.Models
     {
         public Guid BetId { get; set; }
     }
-    public class PartialCashoutStatusRequestDTO
-    {
-        public Guid TransactionId { get; set; }
-    }
 }

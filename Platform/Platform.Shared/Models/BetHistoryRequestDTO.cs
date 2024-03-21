@@ -18,5 +18,6 @@ namespace Platform.Shared.Models
         public int PageSize { get; set; }
         public bool IsCurrent { get; set; }
         public bool IsOddsString { get; set; }
+        public string BetId { get; set; } = string.Empty;
     }
 }

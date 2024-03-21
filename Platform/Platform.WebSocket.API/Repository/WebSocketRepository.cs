@@ -247,72 +247,36 @@ namespace Platform.WebSocket.API.Repository
         public async Task PublishOddsChangeForMainMarkets(string clientCode, OutgoingOddsChange message)
         {
             await Clients.Groups(message.Gr).OnOddsChange(message.Pa);
-
-            //var item = MessagePackSerializer.Serialize(message.Pa, ContractlessStandardResolver.Options);
-            //var groups = message.Gr.Select(s => $"{s}:2").ToList();
-
-            //await Clients.Groups(groups).OnOddsChange2(item);
         }
         public async Task PublishOddsChangeForAllMarkets(string clientCode, OutgoingOddsChange message)
         {
             await Clients.Group($"onbetslipoddschange:{clientCode}:{message.Pa.FiId}").OnBetslipOddsChange(message.Pa);
             await Clients.Groups(message.Gr).OnOddsChange(message.Pa);
-
-            //var item = MessagePackSerializer.Serialize(message.Pa, ContractlessStandardResolver.Options);
-            //var groups = message.Gr.Select(s => $"{s}:2").ToList();
-
-            //await Clients.Group($"onbetslipoddschange:{clientCode}:{message.Pa.FiId}").OnBetslipOddsChange2(item);
-            //await Clients.Groups(groups).OnOddsChange2(item);
         }
         public async Task PublishBetStopFixture(string clientCode, OutgoingBetStopFixture message)
         {
             await Clients.Group($"onbetslipbetstopfixture:{clientCode}:{message.Pa.FiId}").OnBetslipBetStopFixture(message.Pa);
             await Clients.Groups(message.Gr).OnBetStopFixture(message.Pa);
-
-            //var item = MessagePackSerializer.Serialize(message.Pa, ContractlessStandardResolver.Options);
-            //var groups = message.Gr.Select(s => $"{s}:2").ToList();
-
-            //await Clients.Group($"onbetslipbetstopfixture:{clientCode}:{message.Pa.FiId}").OnBetslipBetStopFixture2(item);
-            //await Clients.Groups(groups).OnBetStopFixture2(item);
         }
         public async Task PublishBetStopGlobal(string clientCode, OutgoingBetStopGlobal message)
         {
             await Clients.Group($"onbetstopglobal:{clientCode}").OnBetStopGlobal(message);
-
-            //var item = MessagePackSerializer.Serialize(message, ContractlessStandardResolver.Options);
-            //await Clients.Groups($"onbetstopglobal:{clientCode}").OnBetStopGlobal2(item);
         }
         public async Task PublishBetStatus(string clientCode, OutgoingBetStatus message)
         {
             await Clients.Group($"onbetstatus:{clientCode}:{message.UsId.ToLower()}").OnBetStatus(message);
-
-            //var item = MessagePackSerializer.Serialize(message, ContractlessStandardResolver.Options);
-
-            //await Clients.Group($"onbetstatus:{clientCode}:{message.UsId.ToLower()}").OnBetStatus2(item);
         }
         public async Task PublishCashOutChange(string clientCode, OutgoingCashOutChange message)
         {
             await Clients.Group($"oncashoutchange:{clientCode}:{message.UsId.ToLower()}").OnCashOutChange(message);
-
-            //var item = MessagePackSerializer.Serialize(message, ContractlessStandardResolver.Options);
-
-            //await Clients.Group($"oncashoutchange:{clientCode}:{message.UsId.ToLower()}").OnCashOutChange2(item);
         }
         public async Task PublishWalletChange(string clientCode, OutgoingWalletChange message)
         {
             await Clients.Group($"onwalletchange:{clientCode}:{message.UsId.ToLower()}").OnWalletChange(message);
-
-            //var item = MessagePackSerializer.Serialize(message, ContractlessStandardResolver.Options);
-
-            //await Clients.Group($"onwalletchange:{clientCode}:{message.UsId.ToLower()}").OnWalletChange2(item);
         }
         public async Task PublishPayableChange(string clientCode, OutgoingPayableChange message)
         {
             await Clients.Group($"onpayablechange:{clientCode}:{message.UsId.ToLower()}").OnPayableChange(message);
-
-            //var item = MessagePackSerializer.Serialize(message, ContractlessStandardResolver.Options);
-
-            //await Clients.Group($"onpayablechange:{clientCode}:{message.UsId.ToLower()}").OnPayableChange2(item);
         }
         private async Task<Tuple<bool, string>> GetClient(string clientId)
         {

@@ -6,8 +6,4 @@ namespace Platform.API.Models
     {
         public string BetId { get; set; }
     }
-    public class PartialCashoutStatusRequest
-    {
-        public string TransactionId { get; set; }
-    }
 }

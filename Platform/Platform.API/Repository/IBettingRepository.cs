@@ -24,6 +24,5 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<StatusCode>> ProcessParlayBonus(ParlayBonusRequestDTO request);
         Task<BaseResponseDTO<ParlayBonusResponseDTO>> GetParlayBonus(GetParlayBonusRequestDTO request);
         Task<BaseResponseDTO<BetStatus>> GetBetStatus(BetStatusRequestDTO request);
-        Task<BaseResponseDTO<bool>> GetPartialCashoutBetStatus(PartialCashoutStatusRequestDTO request);
     }
 }

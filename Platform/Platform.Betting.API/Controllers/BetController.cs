@@ -212,19 +212,6 @@ namespace Platform.Betting.API.Controllers
                     return BadRequest(result);
             }
         }
-        [HttpPost("v1/cashout/partial/status")]
-        public async Task<IActionResult> GetPartialCashoutStatus([FromBody] PartialCashoutStatusRequestDTO request)
-        {
-            var result = await _bettingRepository.GetPartialCashoutStatus(request);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
 
         [HttpPost("v1/cachepreload")]
         public async Task<IActionResult> CachePreload([FromBody] CachePreloadRequestDTO request)

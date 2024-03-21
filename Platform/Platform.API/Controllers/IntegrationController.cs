@@ -299,38 +299,6 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
-        [HttpGet("v1/cashout/partial/status")]
-        public async Task<IActionResult> GetPartialCashoutStatus([FromQuery] PartialCashoutStatusRequest request)
-        {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-
-            var result = await _platformRepository.GetPartialCashoutBetStatus(clientId, request);
-
-            var parameters = request;
-
-            var properties = new Dictionary<string, string>
-                            {
-                                { "ipAddress", ipAddress },
-                                { "x-api-key", apiKey },
-                                { "x-client-id", clientId },
-                                { "x-operator-token", string.Empty },
-                                { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() }
-                            };
-
-            _telemetryClient.TrackEvent("e:v1/cashout/partial/status", properties);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                case Shared.Enums.StatusCode.Maintenance:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
 
         //[HttpGet("v1/bet/config/user")]
         //public async Task<IActionResult> GetUserBetConfig([FromQuery] UserBetConfigDetailsRequest request)

@@ -709,7 +709,8 @@ namespace Platform.API.Repository
                 IsCurrent = request.IsCurrent,
                 Page = request.Page,
                 PageSize = request.PageSize,
-                IsOddsString = !string.IsNullOrEmpty(_configuration["Custom:IsOddsString"]) && Convert.ToBoolean(_configuration["Custom:IsOddsString"]) == true
+                IsOddsString = !string.IsNullOrEmpty(_configuration["Custom:IsOddsString"]) && Convert.ToBoolean(_configuration["Custom:IsOddsString"]) == true,
+                BetId = request.BetId
             };
 
             if (languageCode == LanguageCode.EN)
@@ -4369,37 +4370,6 @@ namespace Platform.API.Repository
             };
 
             return await _bettingRepository.GetBetStatus(payload);
-        }
-        public async Task<BaseResponseDTO<bool>> GetPartialCashoutBetStatus(string clientId, PartialCashoutStatusRequest request)
-        {
-            var isGuid = Guid.TryParse(request.TransactionId, out Guid BetId);
-
-            if (!isGuid)
-            {
-                return new BaseResponseDTO<bool>
-                {
-                    StatusCode = StatusCode.Error,
-                    Message = StatusCode.Error.ToString()
-                };
-            }
-
-            var clientResponse = await GetClient(clientId);
-
-            if (clientResponse.StatusCode != StatusCode.Success)
-            {
-                return new BaseResponseDTO<bool>
-                {
-                    StatusCode = clientResponse.StatusCode,
-                    Message = clientResponse.Message
-                };
-            }
-
-            var payload = new PartialCashoutStatusRequestDTO()
-            {
-                TransactionId = BetId
-            };
-
-            return await _bettingRepository.GetPartialCashoutBetStatus(payload);
         }
 
         public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixturesPagination(string apiKey, string clientId, string langCode, TodayFixtureRequest request, string ipCountryCode)

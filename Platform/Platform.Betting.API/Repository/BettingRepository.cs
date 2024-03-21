@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Security.AccessControl;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -1498,50 +1499,49 @@ namespace Platform.Betting.API.Repository
                 var result = new List<BetHistoryDTO>();
                 var transactions = new List<Bet>();
 
+                IQueryable<Bet> raw = null;
+
                 if (request.IsCurrent)
                 {
                     var openBets = new List<int> { (int)BetStatus.Running };
-                    var openBetsResponse = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && openBets.Contains(c.BetStatusId)).ToList();
 
-                    if (openBetsResponse.Count > 0)
-                        transactions.AddRange(openBetsResponse);
+                    if (!string.IsNullOrEmpty(request.BetId))
+                    {
+                        if (Guid.TryParse(request.BetId, out var betId))
+                            raw = _bettingContext.Bet.AsNoTracking().Where(c => c.BetId == betId && c.UserId == request.UserId && c.ClientId == request.ClientId && openBets.Contains(c.BetStatusId));
+                    }
+                    else
+                        raw = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && openBets.Contains(c.BetStatusId));
 
-                    rowCount = Convert.ToDouble(transactions.Count());
+                    rowCount = transactions?.Count() ?? 0;
+                    transactions = raw?.ToList() ?? new List<Bet>();
                 }
                 else
                 {
+
                     if ((request.ToDate - request.FromDate).TotalDays > 30)
                         request.FromDate = request.ToDate.AddDays(-30);
 
-                    if (request.BetStatusFilter == BetStatusFilter.All)
+
+                    var betStatuses = Enum.GetValues(typeof(BetStatus)).Cast<int>().ToList();
+                    var betStatusIdsTemp = request.BetStatusFilter switch
                     {
-                        var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Rejected };
-                        var rawAll = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
+                        BetStatusFilter.All => betStatuses.Where(c => !(new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Rejected }).Contains(c)),
+                        BetStatusFilter.Open => betStatuses.Where(c => (new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running }).Contains(c)),
+                        BetStatusFilter.Settled => betStatuses.Where(c=> !(new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running, (int)BetStatus.Rejected }).Contains(c)),
+                        _ => null
+                    };
 
-                        rowCount = rawAll.Count();
-                        //winLoss = rawAll.Sum(c => c.WinLoss);
-                        transactions = rawAll.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
-                    }
-
-                    if (request.BetStatusFilter == BetStatusFilter.Open)
+                    if (!string.IsNullOrEmpty(request.BetId))
                     {
-                        var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running };
-                        var rawOpen = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
-
-                        rowCount = rawOpen.Count();
-                        //winLoss = rawOpen.Sum(c => c.WinLoss);
-                        transactions = rawOpen.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
+                        if (Guid.TryParse(request.BetId, out var betId))
+                            raw = _bettingContext.Bet.AsNoTracking().Where(c => c.BetId == betId && c.UserId == request.UserId && c.ClientId == request.ClientId && betStatusIdsTemp.Contains(c.BetStatusId));
                     }
+                    else
+                        raw = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && betStatusIdsTemp.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
 
-                    if (request.BetStatusFilter == BetStatusFilter.Settled)
-                    {
-                        var betStatusIds = new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running, (int)BetStatus.Rejected };
-                        var rawSettled = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && !betStatusIds.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
-
-                        rowCount = rawSettled.Count();
-                        //winLoss = rawSettled.Sum(c => c.WinLoss);
-                        transactions = rawSettled.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList();
-                    }
+                    rowCount = raw?.Count() ?? 0;
+                    transactions = raw?.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList() ?? new List<Bet>();
                 }
 
                 if (transactions.Count == 0)
@@ -1607,7 +1607,7 @@ namespace Platform.Betting.API.Repository
                     var stake = bet.Stake;
 
                     var cashoutBets = bet.IsPartialCashout ? partialCashoutAudit.Where(c => c.BetId == bet.BetId) : new List<PartialCashoutAudit>();
-                    
+
                     var runningfinalStake = trueStake - bet.StakeBonus;
                     var runningTaxedStake = bet.IsFreeBet == false ? runningfinalStake - (runningfinalStake / (1 + bet.StakeTax)) : 0;
                     var runningStake = bet.BetStatusId == (int)BetStatus.Running ? GetStake(filteredSelections, runningTaxedStake, trueStake) : 0;
@@ -1627,7 +1627,7 @@ namespace Platform.Betting.API.Repository
                         //recompute bet odds for parlay bets
                         bet.Odds = bet.BetStatusId == (int)BetStatus.Running ? bet.Odds : RecomputeBetOdds(bet.Odds, (BetStatus)bet.BetStatusId, filteredSelections);
                     }
-                    
+
                     result.Add(new BetHistoryDTO
                     {
                         BetId = bet.BetId.ToString(),
@@ -2947,28 +2947,6 @@ namespace Platform.Betting.API.Repository
             catch (Exception ex)
             {
                 return new BaseResponseDTO<BetStatus>
-                {
-                    StatusCode = StatusCode.Error, 
-                    Message = ex.Message
-                };
-            }
-        }
-
-        public async Task<BaseResponseDTO<bool>> GetPartialCashoutStatus(PartialCashoutStatusRequestDTO request)
-        {
-            try
-            {
-                var bet = _bettingContext.ParlayBonusAudit.Find(request.TransactionId);
-
-                return new BaseResponseDTO<bool>
-                {
-                    StatusCode = StatusCode.Success,
-                    Result = bet != null
-                };
-            }
-            catch (Exception ex)
-            {
-                return new BaseResponseDTO<bool>
                 {
                     StatusCode = StatusCode.Error,
                     Message = ex.Message

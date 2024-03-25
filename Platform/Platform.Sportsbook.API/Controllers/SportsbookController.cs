@@ -1165,10 +1165,10 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
-        [HttpPost("v2/sportsbook/todayfixtures/pagination")]
-        public async Task<IActionResult> GetTodayFixturesPagination([FromBody] TodayFixtureRequestDTO request)
+        [HttpPost("v2/sportsbook/highlights")]
+        public async Task<IActionResult> GetLeagueHighlights([FromBody] LeagueHighlightsRequestDTO request)
         {
-            var result = await _sportsbookRepository.GetTodayFixturesPagination(request);
+            var result = await _sportsbookRepository.GetLeagueHighlights(request);
 
             switch (result.StatusCode)
             {

@@ -1,5 +1,6 @@
 ﻿using Platform.Shared.Enums;
 using System;
+using System.Collections.Generic;
 
 namespace Platform.API.Models
 {
@@ -14,5 +15,7 @@ namespace Platform.API.Models
         public int PageSize { get; set; }
         public bool IsCurrent { get; set; }
         public string BetId { get; set; } = string.Empty;
+        public List<string> BetType { get; set; } = new List<string>();
+        public List<string> BetStatus { get; set; } = new List<string>();
     }
 }

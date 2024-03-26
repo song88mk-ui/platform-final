@@ -62,5 +62,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>> GetMarketTemplatePlayerProps(MarketTemplatePlayerPropsRequestDTO request);
         Task<BaseResponseDTO<List<TranslationResponseDTO>>> GetTranslationByLanguageCode(TranslationRequestDTO request);
         Task<BaseResponseDTO<List<LeagueHighlightsResponseDTO>>> GetLeagueHighlights(LeagueHighlightsRequestDTO request);
+        Task<BaseResponseDTO<TWResponseDTO>> GetLeagueHighlightsFixtures(LeagueHighlightsRequestDTO request);
     }
 }

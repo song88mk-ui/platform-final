@@ -4429,6 +4429,49 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode
             });
         }
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetLeagueHighlightsFixtures(string clientId, string langCode)
+        {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<TWResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+
+            return await _sportsbookRepository.GetLeagueHighlightsFixtures(new LeagueHighlightsRequestDTO
+            {
+                ClientId = clientResponse.Result.ClientId,
+                ClientCode = clientResponse.Result.ClientCode,
+                LanguageCode = languageCode
+            });
+        }
 
         private DateTime GetFirstDayOfNextMonth()
         {

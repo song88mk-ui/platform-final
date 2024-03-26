@@ -86,5 +86,6 @@ namespace Platform.Sportsbook.API.Repository
         Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request);
         Task<BaseResponseDTO<List<TranslationResponseDTO>>> GetTranslationByLanguageCode(TranslationRequestDTO request);
         Task<BaseResponseDTO<List<LeagueHighlightsResponseDTO>>> GetLeagueHighlights(LeagueHighlightsRequestDTO request);
+        Task<BaseResponseDTO<TWResponseDTO>> GetLeagueHighlightsFixtures(LeagueHighlightsFixturesRequestDTO request);
     }
 }

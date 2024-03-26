@@ -90,5 +90,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<BetStatus>> GetBetStatus(string clientId, BetStatusRequest request);
         Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request);
         Task<BaseResponseDTO<List<LeagueHighlightsResponseDTO>>> GetLeagueHighlights(string clientId, string langCode);
+        Task<BaseResponseDTO<TWResponseDTO>> GetLeagueHighlightsFixtures(string clientId, string langCode);
     }
 }

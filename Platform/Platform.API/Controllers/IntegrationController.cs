@@ -2181,5 +2181,38 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+        [HttpGet("v1/sportsbook/highlights/fixtures")]
+        public async Task<IActionResult> GetLeagueHighlightsFixtures()
+        {
+            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
+
+            var result = await _platformRepository.GetLeagueHighlightsFixtures(clientId, languageCode);
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "ipCountryCode", ipCountryCode },
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "x-operator-token", string.Empty },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/sportsbook/highlights", properties);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

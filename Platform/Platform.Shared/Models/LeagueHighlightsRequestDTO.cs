@@ -9,4 +9,8 @@ namespace Platform.Shared.Models
         public string ClientCode { get; set; }
         public LanguageCode LanguageCode { get; set; }
     }
+    public class LeagueHighlightsFixturesRequestDTO : LeagueHighlightsRequestDTO
+    {
+        public string IpCountryCode { get; set; }
+    }
 }

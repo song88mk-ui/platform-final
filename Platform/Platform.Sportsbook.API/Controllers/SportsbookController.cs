@@ -1179,5 +1179,19 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+        [HttpPost("v2/sportsbook/highlights/fixtures")]
+        public async Task<IActionResult> GetLeagueHighlightsFixtures([FromBody] LeagueHighlightsFixturesRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetLeagueHighlightsFixtures(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

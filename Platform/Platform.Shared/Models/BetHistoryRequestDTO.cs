@@ -1,5 +1,6 @@
 ﻿using Platform.Shared.Enums;
 using System;
+using System.Collections.Generic;
 
 namespace Platform.Shared.Models
 {
@@ -19,5 +20,7 @@ namespace Platform.Shared.Models
         public bool IsCurrent { get; set; }
         public bool IsOddsString { get; set; }
         public string BetId { get; set; } = string.Empty;
+        public List<int> BetType { get; set; } = new List<int>();
+        public List<int> BetStatus { get; set; } = new List<int>();
     }
 }

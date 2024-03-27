@@ -1501,6 +1501,10 @@ namespace Platform.Betting.API.Repository
 
                 IQueryable<Bet> raw = null;
 
+                var betTypeFilter = Enum.GetValues(typeof(BetType)).Cast<int>().ToList();
+                if(request.BetType.Any())
+                    betTypeFilter = request.BetType.ToList();
+
                 if (request.IsCurrent)
                 {
                     var openBets = new List<int> { (int)BetStatus.Running };
@@ -1508,10 +1512,10 @@ namespace Platform.Betting.API.Repository
                     if (!string.IsNullOrEmpty(request.BetId))
                     {
                         if (Guid.TryParse(request.BetId, out var betId))
-                            raw = _bettingContext.Bet.AsNoTracking().Where(c => c.BetId == betId && c.UserId == request.UserId && c.ClientId == request.ClientId && openBets.Contains(c.BetStatusId));
+                            raw = _bettingContext.Bet.AsNoTracking().Where(c => c.BetId == betId && c.UserId == request.UserId && c.ClientId == request.ClientId && openBets.Contains(c.BetStatusId) && betTypeFilter.Contains(c.BetTypeId));
                     }
                     else
-                        raw = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && openBets.Contains(c.BetStatusId));
+                        raw = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && openBets.Contains(c.BetStatusId) && betTypeFilter.Contains(c.BetTypeId));
 
                     rowCount = transactions?.Count() ?? 0;
                     transactions = raw?.ToList() ?? new List<Bet>();
@@ -1524,7 +1528,7 @@ namespace Platform.Betting.API.Repository
 
 
                     var betStatuses = Enum.GetValues(typeof(BetStatus)).Cast<int>().ToList();
-                    var betStatusIdsTemp = request.BetStatusFilter switch
+                    var betStatusIdsFilter = request.BetStatusFilter switch
                     {
                         BetStatusFilter.All => betStatuses.Where(c => !(new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Rejected }).Contains(c)),
                         BetStatusFilter.Open => betStatuses.Where(c => (new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running }).Contains(c)),
@@ -1532,13 +1536,16 @@ namespace Platform.Betting.API.Repository
                         _ => null
                     };
 
+                    if (request.BetStatusFilter != BetStatusFilter.Open && request.BetStatus.Any())
+                        betStatusIdsFilter = request.BetStatus.ToList();
+
                     if (!string.IsNullOrEmpty(request.BetId))
                     {
                         if (Guid.TryParse(request.BetId, out var betId))
-                            raw = _bettingContext.Bet.AsNoTracking().Where(c => c.BetId == betId && c.UserId == request.UserId && c.ClientId == request.ClientId && betStatusIdsTemp.Contains(c.BetStatusId));
+                            raw = _bettingContext.Bet.AsNoTracking().Where(c => c.BetId == betId && c.UserId == request.UserId && c.ClientId == request.ClientId && betStatusIdsFilter.Contains(c.BetStatusId) && betTypeFilter.Contains(c.BetTypeId));
                     }
                     else
-                        raw = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && betStatusIdsTemp.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate);
+                        raw = _bettingContext.Bet.AsNoTracking().Where(c => c.UserId == request.UserId && c.ClientId == request.ClientId && betStatusIdsFilter.Contains(c.BetStatusId) && c.BetDate >= request.FromDate && c.BetDate <= request.ToDate && betTypeFilter.Contains(c.BetTypeId));
 
                     rowCount = raw?.Count() ?? 0;
                     transactions = raw?.OrderByDescending(o => o.BetDate).Skip(skip).Take(request.PageSize).ToList() ?? new List<Bet>();

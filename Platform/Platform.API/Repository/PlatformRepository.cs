@@ -710,7 +710,9 @@ namespace Platform.API.Repository
                 Page = request.Page,
                 PageSize = request.PageSize,
                 IsOddsString = !string.IsNullOrEmpty(_configuration["Custom:IsOddsString"]) && Convert.ToBoolean(_configuration["Custom:IsOddsString"]) == true,
-                BetId = request.BetId
+                BetId = request.BetId,
+                BetStatus = request.BetStatus,
+                BetType = request.BetType,
             };
 
             if (languageCode == LanguageCode.EN)

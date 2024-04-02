@@ -372,9 +372,11 @@ namespace Platform.Operator.Servicev2
                         var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
                         Console.WriteLine($"{DateTime.UtcNow} {onBetPlacement.Bet.BetId} - OnBetPlacement");
 
-                        _bettingRepository.ProcesssBetPlacement(onBetPlacement, _messageBroker, correlationId, threadId);
+                        if(!onBetPlacement.IsOGClient)
+                            _bettingRepository.ProcesssBetPlacement(onBetPlacement, _messageBroker, correlationId, threadId);
+                        else
+                            _bettingRepository.ProcesssBetPlacementOG(onBetPlacement, _messageBroker, correlationId, threadId);
                         break;
-                        //
                     case "OnBetPartialCashOut":
                         var onBetPartialCashout = JsonSerializer.Deserialize<OnBetSettlementPartial>(payload);
                         Console.WriteLine($"{DateTime.UtcNow} {onBetPartialCashout.Bet.BetId} - OnBetPartialCashOut");

@@ -5,6 +5,7 @@ using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Enums;
+using Platform.Shared.Extensions;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
@@ -28,7 +29,14 @@ namespace Platform.Operator.Servicev2.Repository
             _configuration = configuration;
         }
 
-        private HttpClient GetHttpClient(string threadId, string endpoint, string operatorToken, string clientId, bool isAgent)
+        private HttpClient GetHttpClient(string threadId, string endpoint, string operatorToken, string clientId, bool isAgent, string ogPublicKey = "", string ogVendorName = "")
+        {
+            if (string.IsNullOrEmpty(ogPublicKey))
+                return GetHttpClientSW(threadId, endpoint, operatorToken, clientId, isAgent);
+            else
+                return GetHttpClientOGS(threadId, endpoint, ogPublicKey, ogVendorName);
+        }
+        private HttpClient GetHttpClientSW(string threadId, string endpoint, string operatorToken, string clientId, bool isAgent)
         {
             var client = _httpClients.Where(c => c.Item1 == threadId).ToList();
             var httpClient = client.Where(c => c.Item2.BaseAddress.OriginalString == endpoint).FirstOrDefault();
@@ -59,6 +67,38 @@ namespace Platform.Operator.Servicev2.Repository
                 httpClient.Item2.DefaultRequestHeaders.Add("x-is-agent", isAgent.ToString());
                 httpClient.Item2.DefaultRequestHeaders.Add("x-client-id", clientId);
                 httpClient.Item2.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+
+                return httpClient.Item2;
+            }
+        }
+        private HttpClient GetHttpClientOGS(string threadId, string endpoint, string key, string vendorName)
+        {
+            var client = _httpClients.Where(c => c.Item1 == threadId).ToList();
+            var httpClient = client.Where(c => c.Item2.BaseAddress.OriginalString == endpoint).FirstOrDefault();
+
+            if (httpClient == null)
+            {
+                var newHttpClient = new HttpClient
+                {
+                    BaseAddress = new Uri(endpoint),
+                    Timeout = TimeSpan.FromSeconds(5)
+                };
+
+                newHttpClient.DefaultRequestHeaders.Add("key", key);
+                newHttpClient.DefaultRequestHeaders.Add("vendor-name", vendorName);
+
+                lock (_lock)
+                    _httpClients.Add(new Tuple<string, HttpClient>(threadId, newHttpClient));
+
+                return newHttpClient;
+            }
+            else
+            {
+                httpClient.Item2.DefaultRequestHeaders.Remove("key");
+                httpClient.Item2.DefaultRequestHeaders.Remove("vendor-name");
+
+                httpClient.Item2.DefaultRequestHeaders.Add("key", key);
+                httpClient.Item2.DefaultRequestHeaders.Add("vendor-name", vendorName);
 
                 return httpClient.Item2;
             }
@@ -615,6 +655,169 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
+                    if (result.IsFreeBet == true && message.IsBetBuilder)
+                    {
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = betData.ClientId,
+                            ClientCode = betData.ClientCode,
+                            URL = $"{betData.Endpoint}{path}",
+                            BetId = betData.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(response.ReasonPhrase),
+                            OperatorToken = betData.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
+
+                        CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, result.IsFreeBet, message.IsBoosted, threadId);
+                    }
+                    else
+                    {
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = betData.ClientId,
+                            ClientCode = betData.ClientCode,
+                            URL = $"{betData.Endpoint}{path}",
+                            BetId = betData.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(result),
+                            OperatorToken = betData.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
+
+                        AcceptBet(message.Bet.BetId, correlationId, messageBroker, result, message.IsBoosted, message.IsBetBuilder, message.UserAgent);
+                    }
+
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = betData.ClientId,
+                            ClientCode = betData.ClientCode,
+                            URL = $"{betData.Endpoint}{path}",
+                            BetId = betData.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(result),
+                            OperatorToken = betData.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
+
+                        var betMessage = string.Empty;
+
+                        if (result.StatusId == 1001)
+                            betMessage = "Insufficient Funds";
+                        else if (result.StatusId == 1002)
+                            betMessage = "Invalid Token";
+                        else if (result.StatusId == 1003)
+                            betMessage = "Operator Error";
+                        else
+                            betMessage = result.Message;
+
+                        CancelBet(betData.BetId, betMessage, Guid.NewGuid().ToString().ToUpper(), messageBroker, result.IsFreeBet, message.IsBoosted, threadId);
+                    }
+                    else
+                    {
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = betData.ClientId,
+                            ClientCode = betData.ClientCode,
+                            URL = $"{betData.Endpoint}{path}",
+                            BetId = betData.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(response.ReasonPhrase),
+                            OperatorToken = betData.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
+
+                        CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AddOperatorLog(new OperatorLog
+                {
+                    Direction = "RESPONSE",
+                    ClientId = betData.ClientId,
+                    ClientCode = betData.ClientCode,
+                    URL = $"{betData.Endpoint}{path}",
+                    BetId = betData.BetId.ToString().ToUpper(),
+                    Info = JsonSerializer.Serialize(new { message = ex.Message, stackTrace = ex.StackTrace }),
+                    OperatorToken = betData.OperatorToken,
+                    CorrelationId = correlationId,
+                    Timestamp = DateTime.UtcNow
+                });
+
+                CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId);
+            }
+        }
+
+        public void ProcesssBetPlacementOG(OnBetPlacement message, IMessageBroker messageBroker, string correlationId, string threadId)
+        {
+            var path = "/api/v2/platform/transaction/bulk/debit";
+
+            var betData = message.Bet;
+            var betSelectionData = message.BetSelections;
+
+            try
+            {
+
+                var publicKey = _configuration["Custom:OrientalGaming:PublicAPIKey"].ToString();
+                var privateKey = _configuration["Custom:OrientalGaming:PrivateAPIKey"].ToString();
+                var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
+
+                var records = new List<object> { new {
+                       amount = betData.TrueStake,
+                       bet_place = "",
+                       transaction_id = correlationId,
+                       secondary_info = new { bet_amount = betData.TrueStake, detain_amount = 0m },
+                       other_info = betSelectionData,
+                       remark = ""
+                    } };
+
+                var payload = new OnOGDebitRequest
+                {
+                    Currency = betData.CurrencyCode,
+                    PlayerCode = betData.UserId,
+                    TotalAmount = betData.TrueStake,
+                    GameCode = "ogsports",
+                    RoundId = betData.BetId.ToString().ToUpper(),
+                    Records = JsonSerializer.Serialize(records),
+                    Signature = ""
+                };
+
+                //signature generation
+                var md5Hash = payload.ToSignOG(privateKey);
+                payload.Signature = md5Hash;
+
+                AddOperatorLog(new OperatorLog
+                {
+                    Direction = "REQUEST",
+                    ClientId = betData.ClientId,
+                    ClientCode = betData.ClientCode,
+                    URL = $"{betData.Endpoint}{path}",
+                    BetId = betData.BetId.ToString().ToUpper(),
+                    Info = JsonSerializer.Serialize(payload),
+                    OperatorToken = betData.OperatorToken,
+                    CorrelationId = correlationId,
+                    Timestamp = DateTime.UtcNow
+                });
+
+                var response = GetHttpClient(threadId, betData.Endpoint, betData.OperatorToken, betData.ClientId, betData.IsAgent, publicKey, vendorName).PostAsync($"{betData.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
                     if(result.IsFreeBet == true && message.IsBetBuilder)
                     {
                         AddOperatorLog(new OperatorLog
@@ -720,6 +923,7 @@ namespace Platform.Operator.Servicev2.Repository
                 CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId);
             }
         }
+
         public void ProcessBetFullCashOut(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId)
         {
             if (message.IsRetry)

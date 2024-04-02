@@ -279,7 +279,7 @@ namespace Platform.API.Repository
                     PoolId = request.PoolId,
                     BetLimit = request.BetLimit,
                     Signature = request.Signature, // to be modified
-                    Timestamp = request.Timestamp,
+                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 };
 
                 var authenticationResponse = await _httpClient.PostAsync($"{endpoint}/api/v2/platform/security/authenticate", new StringContent(JsonSerializer.Serialize(authenticationPayload), System.Text.Encoding.UTF8, "application/json"));
@@ -291,7 +291,7 @@ namespace Platform.API.Repository
                     return new BaseResponseDTO<AuthenticationResponseDTO>
                     {
                         StatusCode = StatusCode.Operator_Error,
-                        Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({authenticationResult.Code} - {authenticationResult.Message})",
+                        Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({authenticationResult.Code}: {authenticationResult.Message})",
                     };
                 }
 
@@ -301,7 +301,7 @@ namespace Platform.API.Repository
                 if (!request.IsSBLaunch)
                 {
                     // wallet endpoint
-                    var walletResponse = await _httpClient.GetAsync($"{endpoint}/api/v2/platform/player/balance?player_code={request.PlayerCode}&timestamp={request.Timestamp}&signature={request.Signature}");
+                    var walletResponse = await _httpClient.GetAsync($"{endpoint}/api/v2/platform/player/balance?player_code={request.PlayerCode}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}&signature={request.Signature}");
 
                     var walletResult = JsonSerializer.Deserialize<OGWalletResponse>(await walletResponse.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = false });
                     
@@ -310,7 +310,7 @@ namespace Platform.API.Repository
                         return new BaseResponseDTO<AuthenticationResponseDTO>
                         {
                             StatusCode = StatusCode.Operator_Error,
-                            Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({authenticationResult.Code} - {authenticationResult.Message})",
+                            Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({authenticationResult.Code}: {authenticationResult.Message})",
                         };
                     }
 

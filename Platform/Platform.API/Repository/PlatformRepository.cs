@@ -102,7 +102,7 @@ namespace Platform.API.Repository
                 Message = StatusCode.Success.ToString()
             };
         }
-        public async Task<BaseResponseDTO<WalletBalanceResponseDTO>> GetWalletBalance(string clientId, string operatorToken)
+        public async Task<BaseResponseDTO<WalletBalanceResponseDTO>> GetWalletBalance(string clientId, string operatorToken, OGClientRequest ogParameters)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
@@ -124,7 +124,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -148,7 +148,7 @@ namespace Platform.API.Repository
                 }
             };
         }
-        public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(string apiKey, string clientId, string operatorToken, BetRequest request, string userAgent = "")
+        public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(string apiKey, string clientId, string operatorToken, BetRequest request, OGClientRequest ogParameters, string userAgent = "")
         {
             if (request.Selections.Count >= 2 && request.Selections.Any(c => c.SportId > 1000) && request.Selections.Any(c => c.SportId < 1000))
             {
@@ -278,7 +278,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -446,7 +446,7 @@ namespace Platform.API.Repository
 
             return await _bettingRepository.PlaceBet(payload);
         }
-        public async Task<BaseResponseDTO<MaxStakeResponseDTO>> GetMaxStake(string apiKey, string clientId, string operatorToken, BetRequest request)
+        public async Task<BaseResponseDTO<MaxStakeResponseDTO>> GetMaxStake(string apiKey, string clientId, string operatorToken, BetRequest request, OGClientRequest ogParameters)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
@@ -528,7 +528,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -630,7 +630,7 @@ namespace Platform.API.Repository
 
             return await _bettingRepository.GetMaxStake(payload);
         }
-        public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(string apiKey, string clientId, string langCode, string operatorToken, BetHistoryRequest request)
+        public async Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistory(string apiKey, string clientId, string langCode, string operatorToken, BetHistoryRequest request, OGClientRequest ogParameters)
         {
             if (request.IsCurrent == false)
             {
@@ -686,7 +686,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -793,7 +793,7 @@ namespace Platform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<BetHistoryRunningFilteredResponseDTO>> GetBetHistoryRunning(string clientId, string langCode, string operatorToken)
+        public async Task<BaseResponseDTO<BetHistoryRunningFilteredResponseDTO>> GetBetHistoryRunning(string clientId, string langCode, string operatorToken, OGClientRequest ogParameters)
         {
             var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
 
@@ -826,7 +826,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -1124,7 +1124,7 @@ namespace Platform.API.Repository
 
             return await _bettingRepository.BetConfig(payload);
         }
-        public async Task<BaseResponseDTO<VerticalConfig>> GetUserBetConfig(string apiKey, string clientId, UserBetConfigDetailsRequest request, string operatorToken)
+        public async Task<BaseResponseDTO<VerticalConfig>> GetUserBetConfig(string apiKey, string clientId, UserBetConfigDetailsRequest request, string operatorToken, OGClientRequest ogParameters)
         {
             var clientResponse = await GetClient(clientId);
 
@@ -1146,7 +1146,7 @@ namespace Platform.API.Repository
                     Result = new VerticalConfig(false)
                 };
             }
-            var authenticationResponse = await _operatorRepository.Authenticate(clientId, operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientId, operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -1166,7 +1166,7 @@ namespace Platform.API.Repository
             return await _bettingRepository.UserBetConfig(payload);
         }
 
-        public async Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(string apiKey, string clientId, string operatorToken, string IPCountryCode, LivestreamRequest request)
+        public async Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(string apiKey, string clientId, string operatorToken, string IPCountryCode, LivestreamRequest request, OGClientRequest ogParameters)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
@@ -1199,7 +1199,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -2412,7 +2412,7 @@ namespace Platform.API.Repository
                 IpCountryCode = ipCountryCode,
             });
         }
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetUserFavorites2(string apiKey, string clientId, string langCode, string operatorToken, string ipCountryCode)
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetUserFavorites2(string apiKey, string clientId, string langCode, string operatorToken, string ipCountryCode, OGClientRequest ogParameters)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -2456,7 +2456,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -2529,7 +2529,7 @@ namespace Platform.API.Repository
                 SportGroupId = (int)sportGroupId
             });
         }
-        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(string apiKey, string clientId, string langCode, string operatorToken, string ipCountryCode)
+        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> GetUserFavorites(string apiKey, string clientId, string langCode, string operatorToken, string ipCountryCode, OGClientRequest ogParameters)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -2573,7 +2573,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -2593,7 +2593,7 @@ namespace Platform.API.Repository
                 IpCountryCode = ipCountryCode,
             });
         }
-        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> AddUserFavorites(string apiKey, string clientId, string langCode, string operatorToken, InsertDeleteUserFavoritesRequest request)
+        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> AddUserFavorites(string apiKey, string clientId, string langCode, string operatorToken, InsertDeleteUserFavoritesRequest request, OGClientRequest ogParameters)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -2637,7 +2637,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -2659,7 +2659,7 @@ namespace Platform.API.Repository
                 LanguageCode = languageCode
             });
         }
-        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> DeleteUserFavorites(string apiKey, string clientId, string langCode, string operatorToken, InsertDeleteUserFavoritesRequest request)
+        public async Task<BaseResponseDTO<UserFavoriteResponseDTO>> DeleteUserFavorites(string apiKey, string clientId, string langCode, string operatorToken, InsertDeleteUserFavoritesRequest request, OGClientRequest ogParameters)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -2703,7 +2703,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -3106,7 +3106,7 @@ namespace Platform.API.Repository
             });
         }
 
-        public async Task<BaseResponseDTO<BetCashOutResponseDTO>> CashoutBet(string apiKey, string clientId, string operatorToken, CashoutBetRequest request)
+        public async Task<BaseResponseDTO<BetCashOutResponseDTO>> CashoutBet(string apiKey, string clientId, string operatorToken, CashoutBetRequest request, OGClientRequest ogParameters)
         {
             if (!Guid.TryParse(request.BetId, out Guid betId))
             {
@@ -3155,7 +3155,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -3791,7 +3791,7 @@ namespace Platform.API.Repository
             });
         }
 
-        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetCasinoURL(string clientId, string operatorToken, string countryCode, string langCode, bool isMobile)
+        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetCasinoURL(string clientId, string operatorToken, string countryCode, string langCode, bool isMobile, OGClientRequest ogParameters)
         {
             //if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             //{
@@ -3866,7 +3866,7 @@ namespace Platform.API.Repository
             }
             else
             {
-                var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+                var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
                 if (authenticationResponse.StatusCode != StatusCode.Success)
                 {
@@ -3915,7 +3915,7 @@ namespace Platform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetLiveCasinoURL(string clientId, string operatorToken, string countryCode, string langCode, bool isMobile)
+        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetLiveCasinoURL(string clientId, string operatorToken, string countryCode, string langCode, bool isMobile, OGClientRequest ogParameters)
         {
             //if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             //{
@@ -3990,7 +3990,7 @@ namespace Platform.API.Repository
             }
             else
             {
-                var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+                var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
                 if (authenticationResponse.StatusCode != StatusCode.Success)
                 {
@@ -4039,7 +4039,7 @@ namespace Platform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetVirtualGames(string clientId, string operatorToken, string countryCode, string langCode, bool isMobile)
+        public async Task<BaseResponseDTO<CasinoURLResponseDTO>> GetVirtualGames(string clientId, string operatorToken, string countryCode, string langCode, bool isMobile, OGClientRequest ogParameters)
         {
             //if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             //{
@@ -4114,7 +4114,7 @@ namespace Platform.API.Repository
             }
             else
             {
-                var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+                var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
                 if (authenticationResponse.StatusCode != StatusCode.Success)
                 {
@@ -4163,7 +4163,7 @@ namespace Platform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<CasinoBetHistoryResponseDTO>> GetCasinoBetHistory(string apiKey, string clientId, string langCode, string operatorToken, BetHistoryRequest request)
+        public async Task<BaseResponseDTO<CasinoBetHistoryResponseDTO>> GetCasinoBetHistory(string apiKey, string clientId, string langCode, string operatorToken, BetHistoryRequest request, OGClientRequest ogParameters)
         {
             if (request.IsCurrent == false)
             {
@@ -4219,7 +4219,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -4249,7 +4249,7 @@ namespace Platform.API.Repository
             return await _casinoRepository.GetBetHistory(payload);
         }
 
-        public async Task<BaseResponseDTO<ESportConfigResponseDTO>> GetESportConfig(string clientId, string operatorToken, string langCode)
+        public async Task<BaseResponseDTO<ESportConfigResponseDTO>> GetESportConfig(string clientId, string operatorToken, string langCode, OGClientRequest ogParameters)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
@@ -4282,7 +4282,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
@@ -4433,6 +4433,38 @@ namespace Platform.API.Repository
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
                 Result = true
+            };
+        }
+
+        public async Task<BaseResponseDTO<string>> AuthenticateOG(string clientId, string operatorToken, OGClientRequest ogParameters)
+        {
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<string>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
+
+            if (authenticationResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<string>
+                {
+                    StatusCode = authenticationResponse.StatusCode,
+                    Message = authenticationResponse.Message,
+                };
+            }
+
+            return new BaseResponseDTO<string>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = operatorToken
             };
         }
 

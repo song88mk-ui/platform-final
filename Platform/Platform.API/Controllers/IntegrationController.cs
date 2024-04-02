@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 namespace Platform.API.Controllers
 {
     [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(APIKeyFilter))]
-    public class IntegrationController : ControllerBase
+    public class IntegrationController : BaseController
     {
         private readonly IPlatformRepository _platformRepository;
         private readonly TelemetryClient _telemetryClient;
@@ -113,7 +113,7 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
-            var result = await _platformRepository.GetWalletBalance(clientId, operatorToken);
+            var result = await _platformRepository.GetWalletBalance(clientId, operatorToken, OGParameters);
 
             var parameters = new
             {
@@ -160,7 +160,7 @@ namespace Platform.API.Controllers
                 request.IPAddressV6 = ipAddressV6;
             }
 
-            var result = await _platformRepository.PlaceBet(apiKey, clientId, operatorToken, request, userAgent);
+            var result = await _platformRepository.PlaceBet(apiKey, clientId, operatorToken, request, OGParameters, userAgent);
 
             var parameters = request;
 
@@ -206,7 +206,7 @@ namespace Platform.API.Controllers
                 request.IPAddress = ipAddress;
             }
 
-            var result = await _platformRepository.GetMaxStake(apiKey, clientId, operatorToken, request);
+            var result = await _platformRepository.GetMaxStake(apiKey, clientId, operatorToken, request, OGParameters);
 
             var parameters = request;
 
@@ -333,10 +333,10 @@ namespace Platform.API.Controllers
             switch (request.ProductFilter)
             {
                 case ProductFilter.Casino:
-                    result = await _platformRepository.GetCasinoBetHistory(apiKey, clientId, languageCode, operatorToken, request);
+                    result = await _platformRepository.GetCasinoBetHistory(apiKey, clientId, languageCode, operatorToken, request, OGParameters);
                     break;
                 default:
-                    result = await _platformRepository.GetBetHistory(apiKey, clientId, languageCode, operatorToken, request);
+                    result = await _platformRepository.GetBetHistory(apiKey, clientId, languageCode, operatorToken, request, OGParameters);
                     break;
             }
 
@@ -379,10 +379,10 @@ namespace Platform.API.Controllers
             switch (request.ProductFilter)
             {
                 case ProductFilter.Casino:
-                    result = await _platformRepository.GetCasinoBetHistory(apiKey, clientId, languageCode, operatorToken, request);
+                    result = await _platformRepository.GetCasinoBetHistory(apiKey, clientId, languageCode, operatorToken, request, OGParameters);
                     break;
                 default:
-                    result = await _platformRepository.GetBetHistory(apiKey, clientId, languageCode, operatorToken, request);
+                    result = await _platformRepository.GetBetHistory(apiKey, clientId, languageCode, operatorToken, request, OGParameters);
                     break;
             }
 
@@ -454,7 +454,7 @@ namespace Platform.API.Controllers
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetBetHistoryRunning(clientId, languageCode, operatorToken);
+            var result = await _platformRepository.GetBetHistoryRunning(clientId, languageCode, operatorToken, OGParameters);
 
             var parameters = new
             {
@@ -499,7 +499,7 @@ namespace Platform.API.Controllers
                 request.IPAddress = ipAddressV4;
             }
 
-            var result = await _platformRepository.CashoutBet(apiKey, clientId, operatorToken, request);
+            var result = await _platformRepository.CashoutBet(apiKey, clientId, operatorToken, request, OGParameters);
 
             var parameters = request;
 
@@ -541,7 +541,7 @@ namespace Platform.API.Controllers
                 request.IPAddress = ipAddress;
             }
 
-            var result = await _platformRepository.GetLivestream(apiKey, clientId, operatorToken, ipCountryCode, request);
+            var result = await _platformRepository.GetLivestream(apiKey, clientId, operatorToken, ipCountryCode, request, OGParameters);
 
             var parameters = request;
 
@@ -820,7 +820,7 @@ namespace Platform.API.Controllers
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetUserFavorites2(apiKey, clientId, languageCode, operatorToken, ipCountryCode);
+            var result = await _platformRepository.GetUserFavorites2(apiKey, clientId, languageCode, operatorToken, ipCountryCode, OGParameters);
 
             var parameters = new { };
 
@@ -858,7 +858,7 @@ namespace Platform.API.Controllers
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetUserFavorites(apiKey, clientId, languageCode, operatorToken, ipCountryCode);
+            var result = await _platformRepository.GetUserFavorites(apiKey, clientId, languageCode, operatorToken, ipCountryCode, OGParameters);
 
             var parameters = new { };
 
@@ -1778,7 +1778,7 @@ namespace Platform.API.Controllers
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.AddUserFavorites(apiKey, clientId, languageCode, operatorToken, request);
+            var result = await _platformRepository.AddUserFavorites(apiKey, clientId, languageCode, operatorToken, request, OGParameters);
 
             var parameters = request;
 
@@ -1814,7 +1814,7 @@ namespace Platform.API.Controllers
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.DeleteUserFavorites(apiKey, clientId, languageCode, operatorToken, request);
+            var result = await _platformRepository.DeleteUserFavorites(apiKey, clientId, languageCode, operatorToken, request, OGParameters);
 
             var parameters = request;
 
@@ -1993,7 +1993,7 @@ namespace Platform.API.Controllers
             var countryCode = HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault();
             var languageCode = HttpContext.Request.Headers["x-language-code"].FirstOrDefault();
 
-            var result = await _platformRepository.GetCasinoURL(clientId, operatorToken, countryCode, languageCode, isMobile);
+            var result = await _platformRepository.GetCasinoURL(clientId, operatorToken, countryCode, languageCode, isMobile, OGParameters);
 
             var properties = new Dictionary<string, string>
             {
@@ -2027,7 +2027,7 @@ namespace Platform.API.Controllers
             var countryCode = HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault();
             var languageCode = HttpContext.Request.Headers["x-language-code"].FirstOrDefault();
 
-            var result = await _platformRepository.GetLiveCasinoURL(clientId, operatorToken, countryCode, languageCode, isMobile);
+            var result = await _platformRepository.GetLiveCasinoURL(clientId, operatorToken, countryCode, languageCode, isMobile, OGParameters);
 
             var properties = new Dictionary<string, string>
             {
@@ -2061,7 +2061,7 @@ namespace Platform.API.Controllers
             var countryCode = HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault();
             var languageCode = HttpContext.Request.Headers["x-language-code"].FirstOrDefault();
 
-            var result = await _platformRepository.GetVirtualGames(clientId, operatorToken, countryCode, languageCode, isMobile);
+            var result = await _platformRepository.GetVirtualGames(clientId, operatorToken, countryCode, languageCode, isMobile, OGParameters);
 
             var properties = new Dictionary<string, string>
             {
@@ -2094,7 +2094,7 @@ namespace Platform.API.Controllers
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = HttpContext.Request.Headers["x-language-code"].FirstOrDefault();
 
-            var result = await _platformRepository.GetESportConfig(clientId, operatorToken, languageCode);
+            var result = await _platformRepository.GetESportConfig(clientId, operatorToken, languageCode, OGParameters);
 
             var properties = new Dictionary<string, string>
             {
@@ -2178,6 +2178,36 @@ namespace Platform.API.Controllers
                             };
 
             _telemetryClient.TrackEvent("e:v1/sportsbook/sports/todayfixtures", properties);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/authentication/og")]
+        public async Task<IActionResult> AuthenticateOG()
+        {
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+
+            var result = await _platformRepository.AuthenticateOG(clientId, operatorToken, OGParameters);
+
+            var properties = new Dictionary<string, string>
+            {
+                                { "x-client-id", clientId },
+                                { "x-operator-token", operatorToken },
+                                { "requestParameters", JsonSerializer.Serialize(OGParameters)},
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/authentication/og", properties);
 
             switch (result.StatusCode)
             {

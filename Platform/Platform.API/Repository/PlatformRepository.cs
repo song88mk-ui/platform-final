@@ -442,6 +442,7 @@ namespace Platform.API.Repository
                 BonusId = request.BonusId,
                 Odds = result.Result.TotalOdds,
                 UserAgent = userAgent,
+                IsOGClient = ogParameters != null ? true : false
             };
 
             return await _bettingRepository.PlaceBet(payload);

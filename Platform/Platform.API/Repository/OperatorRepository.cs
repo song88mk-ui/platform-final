@@ -165,9 +165,7 @@ namespace Platform.API.Repository
 
         public async Task<BaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string clientId, string operatorToken, string endpoint, bool isAgent, OGClientRequest request)
         {
-            var ogClientIds = _configuration["Custom:OrientalGaming:ClientIds"].Split(','); 
-
-            if (ogClientIds.Contains(clientId.ToUpper()))
+            if (request != null)
             {
                 return await AuthenticateOGPlayer(operatorToken, endpoint, request);
             }

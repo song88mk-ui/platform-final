@@ -47,7 +47,7 @@ namespace Platform.API.ActionFilters
                     PoolId = int.Parse(context.HttpContext.Request.Headers["x-og-pool-id"].FirstOrDefault()),
                     BetLimit = int.Parse(context.HttpContext.Request.Headers["x-og-bet-limit"].FirstOrDefault()),
                     Nickname = context.HttpContext.Request.Headers["x-og-nickname"].FirstOrDefault(),
-                    //Timestamp = long.Parse(context.HttpContext.Request.Headers["x-og-timestamp"].FirstOrDefault()),
+                    Timestamp = long.Parse(context.HttpContext.Request.Headers["x-og-timestamp"].FirstOrDefault()),
                     Signature = context.HttpContext.Request.Headers["x-og-signature"].FirstOrDefault(),
                     IsSBLaunch = isSbLaunch != null ? bool.Parse(isSbLaunch) : false,
                     CurrencyCode = context.HttpContext.Request.Headers["x-og-currency"].FirstOrDefault()

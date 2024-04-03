@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Platform.API.Models;
 using Platform.Shared.Enums;
+using Platform.Shared.Extensions;
 using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography.Xml;
 using System.Text.Json;
 using System.Threading.Tasks;
 using JsonSerializer = System.Text.Json.JsonSerializer;
@@ -166,9 +168,7 @@ namespace Platform.API.Repository
         public async Task<BaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string clientId, string operatorToken, string endpoint, bool isAgent, OGClientRequest request)
         {
             if (request != null)
-            {
                 return await AuthenticateOGPlayer(operatorToken, endpoint, request);
-            }
 
             return await AuthenticatePlayer(clientId, operatorToken, endpoint, isAgent);
         }
@@ -268,6 +268,8 @@ namespace Platform.API.Repository
 
             try
             {
+                var privateKey = _configuration["Custom:OrientalGaming:PrivateAPIKey"].ToString();
+
                 // authenticate endpoint
                 var authenticationPayload = new OGAuthenticationRequest
                 {
@@ -276,9 +278,12 @@ namespace Platform.API.Repository
                     GameCode = request.GameCode,
                     PoolId = request.PoolId,
                     BetLimit = request.BetLimit,
-                    Signature = request.Signature, // to be modified
-                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                    Signature = string.Empty,
+                    //Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                    Timestamp = request.Timestamp,
                 };
+
+                authenticationPayload.Signature = authenticationPayload.ToSignOG(privateKey);
 
                 var authenticationResponse = await _httpClient.PostAsync($"{endpoint}/api/v2/platform/security/authenticate", new StringContent(JsonSerializer.Serialize(authenticationPayload), System.Text.Encoding.UTF8, "application/json"));
 
@@ -299,7 +304,15 @@ namespace Platform.API.Repository
                 if (!request.IsSBLaunch)
                 {
                     // wallet endpoint
-                    var walletResponse = await _httpClient.GetAsync($"{endpoint}/api/v2/platform/player/balance?player_code={request.PlayerCode}&timestamp={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}&signature={request.Signature}");
+                    var walletRequest = new
+                    {
+                        player_code = request.PlayerCode,
+                        timestamp = request.Timestamp
+                    };
+
+                    var signature = walletRequest.ToSignOG(privateKey);
+
+                    var walletResponse = await _httpClient.GetAsync($"{endpoint}/api/v2/platform/player/balance?player_code={request.PlayerCode}&timestamp={request.Timestamp}&signature={signature}");
 
                     var walletResult = JsonSerializer.Deserialize<OGWalletResponse>(await walletResponse.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = false });
                     

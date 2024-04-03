@@ -1,13 +1,13 @@
-﻿namespace Platform.API.Models
+﻿using Platform.Shared.Models;
+
+namespace Platform.API.Models
 {
-    public class OGClientRequest
+    public class OGClientRequest : OGRequestDTO
     {
         public string PlayerCode { get; set; }
-        public string GameCode { get; set; }
         public int PoolId { get; set; }
         public int BetLimit { get; set; }
         public string Nickname { get; set; }
-        public long Timestamp { get; set; }
         public string Signature { get; set; }
         public bool IsSBLaunch { get; set; }
         public string CurrencyCode { get; set; }

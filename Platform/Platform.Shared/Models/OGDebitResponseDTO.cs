@@ -5,10 +5,6 @@ namespace Platform.Shared.Models
 {
     public class OGDebitResponseDTO : OGBaseResponseDTO
     {
-        [JsonPropertyName("rs_code")]
-        public string Code { get; set; }
-        [JsonPropertyName("rs_message")]
-        public string Message { get; set; }
         [JsonPropertyName("player_code")]
         public string PlayerCode { get; set; }
         [JsonPropertyName("total_amount")]

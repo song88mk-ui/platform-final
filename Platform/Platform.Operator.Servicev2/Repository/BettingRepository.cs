@@ -103,7 +103,7 @@ namespace Platform.Operator.Servicev2.Repository
                 return httpClient.Item2;
             }
         }
-        private void CancelBet(Guid betId, string reason, string correlationId, IMessageBroker messageBroker, bool isFreebet, bool isBoosted, string threadId)
+        private void CancelBet(Guid betId, string reason, string correlationId, IMessageBroker messageBroker, bool isFreebet, bool isBoosted, string threadId, bool isOGClient = false, OGRequestDTO OGParameters = null)
         {
             var betData = new Bet();
             var betSelectionData = new List<BetSelection>();
@@ -252,12 +252,24 @@ namespace Platform.Operator.Servicev2.Repository
                 }
             }
 
-            ProcesssBetCancellation(new OnBetSettlement
+            if(isOGClient == false)
             {
-                Bet = betData,
-                BetSelections = betSelectionData,
-                Message = reason
-            }, messageBroker, correlationId, threadId);
+                ProcesssBetCancellation(new OnBetSettlement
+                {
+                    Bet = betData,
+                    BetSelections = betSelectionData,
+                    Message = reason
+                }, messageBroker, correlationId, threadId);
+            }
+            else
+            {
+                ProcesssBetCancellationOG(new OnBetSettlement
+                {
+                    Bet = betData,
+                    BetSelections = betSelectionData,
+                    Message = reason
+                }, messageBroker, correlationId, threadId, OGParameters);
+            }
         }
         private void AcceptBet(Guid betId, string correlationId, IMessageBroker messageBroker, OperatorBetResponseDTO operatorResponse, bool isBoosted = false, bool isBetBuilder = false, string userAgent = "")
         {
@@ -787,10 +799,10 @@ namespace Platform.Operator.Servicev2.Repository
                 var payload = new OnOGDebitRequest
                 {
                     PlayerCode = betData.UserId,
-                    TimeStamp = 0, //get from request
+                    TimeStamp = message.OGParameters.Timestamp,
                     TotalAmount = betData.TrueStake,
                     TransactionType = "debit",
-                    GameCode = "ogsports", //get from request
+                    GameCode = message.OGParameters.GameCode,
                     RoundId = betData.BetId.ToString().ToUpper(),
                     Currency = betData.CurrencyCode,
                     CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
@@ -872,7 +884,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                         AddOperatorLog(new OperatorLog
                         {
@@ -889,16 +901,16 @@ namespace Platform.Operator.Servicev2.Repository
 
                         var betMessage = string.Empty;
 
-                        if (result.StatusId == 1001)
+                        if (result.Code == "S-103")
                             betMessage = "Insufficient Funds";
-                        else if (result.StatusId == 1002)
+                        else if (result.Code == "E-106")
                             betMessage = "Invalid Token";
-                        else if (result.StatusId == 1003)
+                        else if (result.Code == "E-000")
                             betMessage = "Operator Error";
                         else
                             betMessage = result.Message;
 
-                        CancelBet(betData.BetId, betMessage, Guid.NewGuid().ToString().ToUpper(), messageBroker, result.IsFreeBet, message.IsBoosted, threadId);
+                        CancelBet(betData.BetId, betMessage, Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId);
                     }
                     else
                     {
@@ -1651,6 +1663,181 @@ namespace Platform.Operator.Servicev2.Repository
 
                 messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
                 RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId, threadId);
+            }
+        }
+
+        public void ProcesssBetCancellationOG(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId, OGRequestDTO OGParameters)
+        {
+            if (message.IsRetry)
+            {
+                var initialMessage = IsProcess(message.Bet.BetId);
+
+                if (initialMessage.Item1 == false)
+                    return;
+
+                message = initialMessage.Item2;
+                message.IsRetry = true;
+            }
+
+            var path = "/api/v2/platform/transaction/bulk/debit";
+
+            var publicKey = _configuration["Custom:OrientalGaming:PublicAPIKey"].ToString();
+            var privateKey = _configuration["Custom:OrientalGaming:PrivateAPIKey"].ToString();
+            var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
+
+            var records = new List<object> { new {
+                       amount = message.Bet.TrueStake,
+                       bet_place = "",
+                       transaction_id = correlationId,
+                       secondary_info = new { bet_amount = message.Bet.TrueStake, detain_amount = 0m },
+                       other_info = message.BetSelections,
+                       remark = ""
+                    } };
+
+            var payload = new OnOGDebitRequest
+            {
+                PlayerCode = message.Bet.UserId,
+                TimeStamp = OGParameters.Timestamp,
+                TotalAmount = message.Bet.TrueStake,
+                TransactionType = "rollback",
+                GameCode = OGParameters.GameCode,
+                RoundId = message.Bet.BetId.ToString().ToUpper(),
+                Currency = message.Bet.CurrencyCode,
+                CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                Records = JsonSerializer.Serialize(records),
+                Signature = ""
+            };
+
+            //signature generation
+            var signature = payload.ToSignOG(privateKey);
+            payload.Signature = signature;
+
+
+            try
+            {
+
+                messageBroker.Publish(new OnBetStatus
+                {
+                    ClientId = message.Bet.ClientId.ToString().ToUpper(),
+                    UserId = message.Bet.UserId,
+                    BetId = message.Bet.BetId.ToString().ToUpper(),
+                    BetStatus = (BetStatus)message.Bet.BetStatusId,
+                    Message = message.Message
+                }, "OnBetStatus", $"r.bet.betstatus.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+
+                if (message.IsRetry == false)
+                {
+                    if (message.Bet.IsAgent)
+                        messageBroker.Publish(message, "OnBetCancellation", "r.bet.reports.agent", correlationId);
+                    else
+                        messageBroker.Publish(message, "OnBetCancellation", "r.bet.reports", correlationId);
+                }
+
+                messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackOfficeCancellation", "r.bet.cancellation", correlationId);
+
+                AddOperatorLog(new OperatorLog
+                {
+                    Direction = "REQUEST",
+                    ClientId = message.Bet.ClientId,
+                    ClientCode = message.Bet.ClientCode,
+                    URL = $"{message.Bet.Endpoint}{path}",
+                    BetId = message.Bet.BetId.ToString().ToUpper(),
+                    Info = JsonSerializer.Serialize(payload),
+                    OperatorToken = message.Bet.OperatorToken,
+                    CorrelationId = correlationId,
+                    Timestamp = DateTime.UtcNow
+                });
+
+                var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    AddOperatorLog(new OperatorLog
+                    {
+                        Direction = "RESPONSE",
+                        ClientId = message.Bet.ClientId,
+                        ClientCode = message.Bet.ClientCode,
+                        URL = $"{message.Bet.Endpoint}{path}",
+                        BetId = message.Bet.BetId.ToString().ToUpper(),
+                        Info = JsonSerializer.Serialize(result),
+                        OperatorToken = message.Bet.OperatorToken,
+                        CorrelationId = correlationId,
+                        Timestamp = DateTime.UtcNow
+                    });
+
+                    messageBroker.Publish(new OnWalletChange
+                    {
+                        ClientId = message.Bet.ClientId.ToUpper(),
+                        UserId = message.Bet.UserId,
+                        Balance = result.Balance
+                    }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+
+                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, null, "OnBetCancellation", correlationId, response.IsSuccessStatusCode);
+                }
+                else
+                {
+                    //TODO: check how to retry OG cancelation
+                    //if (response.StatusCode == HttpStatusCode.BadRequest)
+                    //{
+                    //    var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    //    AddOperatorLog(new OperatorLog
+                    //    {
+                    //        Direction = "RESPONSE",
+                    //        ClientId = message.Bet.ClientId,
+                    //        ClientCode = message.Bet.ClientCode,
+                    //        URL = $"{message.Bet.Endpoint}{path}",
+                    //        BetId = message.Bet.BetId.ToString().ToUpper(),
+                    //        Info = JsonSerializer.Serialize(result),
+                    //        OperatorToken = message.Bet.OperatorToken,
+                    //        CorrelationId = correlationId,
+                    //        Timestamp = DateTime.UtcNow
+                    //    });
+
+                    //    messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
+                    //    RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId, threadId);
+                    //}
+                    //else
+                    //{
+                    //    AddOperatorLog(new OperatorLog
+                    //    {
+                    //        Direction = "RESPONSE",
+                    //        ClientId = message.Bet.ClientId,
+                    //        ClientCode = message.Bet.ClientCode,
+                    //        URL = $"{message.Bet.Endpoint}{path}",
+                    //        BetId = message.Bet.BetId.ToString().ToUpper(),
+                    //        Info = JsonSerializer.Serialize(response.ReasonPhrase),
+                    //        OperatorToken = message.Bet.OperatorToken,
+                    //        CorrelationId = correlationId,
+                    //        Timestamp = DateTime.UtcNow
+                    //    });
+
+                    //    messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
+                    //    RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId, threadId);
+                    //}
+                }
+            }
+            catch (Exception ex)
+            {
+                //TODO: check how to retry OG cancelation
+
+                //AddOperatorLog(new OperatorLog
+                //{
+                //    Direction = "RESPONSE",
+                //    ClientId = message.Bet.ClientId,
+                //    ClientCode = message.Bet.ClientCode,
+                //    URL = $"{message.Bet.Endpoint}{path}",
+                //    BetId = message.Bet.BetId.ToString().ToUpper(),
+                //    Info = JsonSerializer.Serialize(new { message = ex.Message, stackTrace = ex.StackTrace }),
+                //    OperatorToken = message.Bet.OperatorToken,
+                //    CorrelationId = correlationId,
+                //    Timestamp = DateTime.UtcNow
+                //});
+
+                //messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
+                //RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId, threadId);
             }
         }
 

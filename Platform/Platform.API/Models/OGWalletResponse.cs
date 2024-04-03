@@ -1,8 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using Platform.Shared.Models;
+using System.Text.Json.Serialization;
 
 namespace Platform.API.Models
 {
-    public class OGWalletResponse : OGBaseResponse
+    public class OGWalletResponse : OGBaseResponseDTO
     {
         [JsonPropertyName("player_code")]
         public string PlayerCode { get; set; }

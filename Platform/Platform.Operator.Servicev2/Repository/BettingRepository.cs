@@ -786,18 +786,21 @@ namespace Platform.Operator.Servicev2.Repository
 
                 var payload = new OnOGDebitRequest
                 {
-                    Currency = betData.CurrencyCode,
                     PlayerCode = betData.UserId,
+                    TimeStamp = 0, //get from request
                     TotalAmount = betData.TrueStake,
-                    GameCode = "ogsports",
+                    TransactionType = "debit",
+                    GameCode = "ogsports", //get from request
                     RoundId = betData.BetId.ToString().ToUpper(),
+                    Currency = betData.CurrencyCode,
+                    CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Records = JsonSerializer.Serialize(records),
                     Signature = ""
                 };
 
                 //signature generation
-                var md5Hash = payload.ToSignOG(privateKey);
-                payload.Signature = md5Hash;
+                var signature = payload.ToSignOG(privateKey);
+                payload.Signature = signature;
 
                 AddOperatorLog(new OperatorLog
                 {
@@ -816,9 +819,9 @@ namespace Platform.Operator.Servicev2.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                    if(result.IsFreeBet == true && message.IsBetBuilder)
+                    if(result.Code != "S-100")
                     {
                         AddOperatorLog(new OperatorLog
                         {
@@ -833,7 +836,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, result.IsFreeBet, message.IsBoosted, threadId);
+                        CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId);
                     }
                     else
                     {
@@ -850,7 +853,18 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        AcceptBet(message.Bet.BetId, correlationId, messageBroker, result, message.IsBoosted, message.IsBetBuilder, message.UserAgent);
+                        var operatorResponse = new OperatorBetResponseDTO
+                        {
+                            Balance = result.Balance,
+                            IsFreeBet = false,
+                            IsCashoutDisabled = false,
+                            Message = JsonSerializer.Serialize(result.Message),
+                            StatusId = (int)StatusCode.Success,
+                            StakeReal = betData.TrueStake,
+                            StakeBonus = 0m,
+                        };
+
+                        AcceptBet(message.Bet.BetId, correlationId, messageBroker, operatorResponse, message.IsBoosted, message.IsBetBuilder, message.UserAgent);
                     }
                     
                 }

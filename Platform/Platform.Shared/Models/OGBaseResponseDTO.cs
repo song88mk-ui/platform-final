@@ -1,8 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using Platform.Shared.Enums;
+using System.Text.Json.Serialization;
 
-namespace Platform.API.Models
+namespace Platform.Shared.Models
 {
-    public class OGBaseResponse
+    public class OGBaseResponseDTO
     {
         [JsonPropertyName("rs_code")]
         public string Code { get; set; }

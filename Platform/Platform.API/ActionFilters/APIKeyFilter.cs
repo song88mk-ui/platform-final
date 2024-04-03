@@ -42,8 +42,8 @@ namespace Platform.API.ActionFilters
                 ((BaseController)context.Controller).OGParameters = new OGClientRequest
                 {
                     PlayerCode = context.HttpContext.Request.Headers["x-og-player-code"].FirstOrDefault(),
-                    //GameCode = context.HttpContext.Request.Headers["x-og-game-code"].FirstOrDefault(),
-                    GameCode = "ogsports",
+                    GameCode = context.HttpContext.Request.Headers["x-og-game-code"].FirstOrDefault(),
+                    //GameCode = "ogsports",
                     PoolId = int.Parse(context.HttpContext.Request.Headers["x-og-pool-id"].FirstOrDefault()),
                     BetLimit = int.Parse(context.HttpContext.Request.Headers["x-og-bet-limit"].FirstOrDefault()),
                     Nickname = context.HttpContext.Request.Headers["x-og-nickname"].FirstOrDefault(),

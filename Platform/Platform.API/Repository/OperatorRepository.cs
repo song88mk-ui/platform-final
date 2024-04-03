@@ -243,8 +243,6 @@ namespace Platform.API.Repository
                 };
             }
 
-            // validate signature here
-
             var key = _configuration["Custom:OrientalGaming:PublicAPIKey"].ToString();
             var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
 
@@ -284,6 +282,15 @@ namespace Platform.API.Repository
                 };
 
                 authenticationPayload.Signature = authenticationPayload.ToSignOG(privateKey);
+
+                //if (request.Signature != authenticationPayload.Signature)
+                //{
+                //    return new BaseResponseDTO<AuthenticationResponseDTO>
+                //    {
+                //        StatusCode = StatusCode.Signature_Mismatch,
+                //        Message = StatusCode.Signature_Mismatch.ToString().Replace('_', ' '),
+                //    };
+                //}
 
                 var authenticationResponse = await _httpClient.PostAsync($"{endpoint}/api/v2/platform/security/authenticate", new StringContent(JsonSerializer.Serialize(authenticationPayload), System.Text.Encoding.UTF8, "application/json"));
 

@@ -4374,7 +4374,62 @@ namespace Platform.API.Repository
             return await _bettingRepository.GetBetStatus(payload);
         }
 
-        public async Task<BaseResponseDTO<TWResponseDTO>> GetTodayFixturesPagination(string apiKey, string clientId, string langCode, TodayFixtureRequest request, string ipCountryCode)
+        public async Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request)
+        {
+            if (request.CacheType == CacheType.Client)
+                _memCache.DeleteCache(request.CacheKey);
+
+            return new BaseResponseDTO<bool>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = true
+            };
+        }
+
+        public async Task<BaseResponseDTO<List<LeagueHighlightsResponseDTO>>> GetLeagueHighlights(string clientId, string langCode)
+        {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<List<LeagueHighlightsResponseDTO>>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<List<LeagueHighlightsResponseDTO>>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<List<LeagueHighlightsResponseDTO>>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetLeagueHighlights(new LeagueHighlightsRequestDTO
+            {
+                ClientId = clientResponse.Result.ClientId,
+                ClientCode = clientResponse.Result.ClientCode,
+                LanguageCode = languageCode
+            });
+        }
+        public async Task<BaseResponseDTO<TWResponseDTO>> GetLeagueHighlightsFixtures(string clientId, string langCode)
         {
             var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
 
@@ -4409,33 +4464,14 @@ namespace Platform.API.Repository
                 };
             }
 
-            return await _sportsbookRepository.GetTodayFixturesPagination(new TodayFixtureRequestDTO
+
+            return await _sportsbookRepository.GetLeagueHighlightsFixtures(new LeagueHighlightsRequestDTO
             {
-                MinuteUTCOffset = request.MinuteUTCOffset,
                 ClientId = clientResponse.Result.ClientId,
-                LanguageCode = languageCode,
-                SportId = request.SportId,
                 ClientCode = clientResponse.Result.ClientCode,
-                IpCountryCode = ipCountryCode,
-                PageCount = request.PageCount,
-                PageSize = request.PageSize
+                LanguageCode = languageCode
             });
         }
-
-
-        public async Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request)
-        {
-            if (request.CacheType == CacheType.Client)
-                _memCache.DeleteCache(request.CacheKey);
-
-            return new BaseResponseDTO<bool>
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = true
-            };
-        }
-
 
         private DateTime GetFirstDayOfNextMonth()
         {

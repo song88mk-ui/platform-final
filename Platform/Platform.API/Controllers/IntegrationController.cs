@@ -2148,8 +2148,8 @@ namespace Platform.API.Controllers
             }
         }
 
-        [HttpGet("v1/sportsbook/sports/todayfixtures/pagination")]
-        public async Task<IActionResult> GetTodayFixturesPagination([FromQuery] int sportId, int minuteUTCOffset, int pageCount, int pageSize)
+        [HttpGet("v1/sportsbook/highlights")]
+        public async Task<IActionResult> GetLeagueHighlights()
         {
             var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
@@ -2157,13 +2157,7 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetTodayFixturesPagination(apiKey, clientId, languageCode, new TodayFixtureRequest { SportId = sportId, MinuteUTCOffset = minuteUTCOffset, PageCount = pageCount, PageSize = pageSize }, ipCountryCode);
-
-            var parameters = new
-            {
-                sportId,
-                minuteUTCOffset
-            };
+            var result = await _platformRepository.GetLeagueHighlights(clientId, languageCode);
 
             var properties = new Dictionary<string, string>
                             {
@@ -2172,12 +2166,44 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
-                                { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/todayfixtures", properties);
+            _telemetryClient.TrackEvent("e:v1/sportsbook/highlights", properties);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+        [HttpGet("v1/sportsbook/highlights/fixtures")]
+        public async Task<IActionResult> GetLeagueHighlightsFixtures()
+        {
+            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
+
+            var result = await _platformRepository.GetLeagueHighlightsFixtures(clientId, languageCode);
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "ipCountryCode", ipCountryCode },
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "x-operator-token", string.Empty },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/sportsbook/highlights", properties);
 
             switch (result.StatusCode)
             {

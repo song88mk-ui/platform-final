@@ -1516,7 +1516,7 @@ namespace Platform.Operator.Servicev2.Repository
                     TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Amount = message.Bet.Payout,
                     TransactionId = correlationId,
-                    TransactionType = "debit",
+                    TransactionType = "credit",
                     GameCode = ogParam.GameCode,
                     RoundId = message.Bet.BetId.ToString().ToUpper(),
                     BetPlace = ogParam.BetPlace,

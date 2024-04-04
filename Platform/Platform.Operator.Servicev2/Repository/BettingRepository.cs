@@ -1509,6 +1509,31 @@ namespace Platform.Operator.Servicev2.Repository
                 var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
                 var transType = "credit";
 
+                var payload = new OnOGCreditRequest
+                {
+                    PlayerCode = message.Bet.UserId,
+                    TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                    Amount = message.Bet.Payout,
+                    TransactionId = correlationId,
+                    TransactionType = transType,
+                    GameCode = ogParam.GameCode,
+                    RoundId = message.Bet.BetId.ToString().ToUpper(),
+                    BetPlace = ogParam.BetPlace,
+                    Currency = message.Bet.CurrencyCode,
+                    WinloseAmount = message.Bet.WinLoss.ToString(),
+                    EffectiveAmount = message.Bet.WinLoss.ToString(),
+                    ResultUrl = string.Empty,
+                    SecondaryInfo = new { bet_amount = message.Bet.TrueStake, detain_amount = 0m },
+                    OtherInfo = message.BetSelections,
+                    Remark = "",
+                    CalledAt = ogParam.CalledAt,
+                    Signature = ""
+                };
+
+                //signature generation
+                var signature = payload.ToSignOG(privateKey);
+                payload.Signature = signature;
+
                 if (message.IsResettle)
                 {
                     transType = "cancel";
@@ -1590,34 +1615,9 @@ namespace Platform.Operator.Servicev2.Repository
                     if (transType == "cancel")
                     {
                         //TODO: check logic for OG
-                        RetryBetSettlementOG(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, null, cancelPayload, "OnBetSettlement", messageBroker, correlationId, threadId);
+                        RetryBetSettlementOG(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, cancelPayload, "OnBetSettlement", messageBroker, correlationId, threadId);
                     }
                 }
-
-                var payload = new OnOGCreditRequest
-                {
-                    PlayerCode = message.Bet.UserId,
-                    TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    Amount = message.Bet.Payout,
-                    TransactionId = correlationId,
-                    TransactionType = transType,
-                    GameCode = ogParam.GameCode,
-                    RoundId = message.Bet.BetId.ToString().ToUpper(),
-                    BetPlace = ogParam.BetPlace,
-                    Currency = message.Bet.CurrencyCode,
-                    WinloseAmount = message.Bet.WinLoss.ToString(),
-                    EffectiveAmount = message.Bet.WinLoss.ToString(),
-                    ResultUrl = string.Empty,
-                    SecondaryInfo = new { bet_amount = message.Bet.TrueStake, detain_amount = 0m },
-                    OtherInfo = message.BetSelections,
-                    Remark = "",
-                    CalledAt = ogParam.CalledAt,
-                    Signature = ""
-                };
-
-                //signature generation
-                var signature = payload.ToSignOG(privateKey);
-                payload.Signature = signature;
 
                 if (message.IsRetry == false)
                 {

@@ -622,8 +622,7 @@ namespace Platform.Betting.API.Repository
                         BonusId = request.BonusId,
                         Odds = request.Odds,
                         UserAgent = request.UserAgent,
-                        IsOGClient = request.IsOGClient,
-                        OGParameters = request.OGParameters
+                        IsOGClient = request.IsOGClient
                     };
 
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
@@ -1265,8 +1264,7 @@ namespace Platform.Betting.API.Repository
                         BonusId = request.BonusId,
                         Odds = request.Odds,
                         UserAgent = request.UserAgent,
-                        IsOGClient = request.IsOGClient,
-                        OGParameters = request.OGParameters
+                        IsOGClient = request.IsOGClient
                     };
 
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO

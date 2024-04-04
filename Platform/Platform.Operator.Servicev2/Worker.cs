@@ -9,7 +9,9 @@ using Microsoft.Extensions.Logging;
 using Platform.Operator.Servicev2.Repository;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
+using Platform.Shared.Extensions
 using RabbitMQ.Client.Events;
+using System.Runtime.Serialization;
 
 namespace Platform.Operator.Servicev2
 {
@@ -395,7 +397,11 @@ namespace Platform.Operator.Servicev2
                         var onBetSettlement = JsonSerializer.Deserialize<OnBetSettlement>(payload);
                         Console.WriteLine($"{DateTime.UtcNow} {onBetSettlement.Bet.BetId} - OnBetSettlement");
 
-                        _bettingRepository.ProcesssBetSettlement(onBetSettlement, _messageBroker, correlationId, threadId);
+                        var ogParam = onBetSettlement.Bet.OperatorToken.ToOGParam();
+                        if(ogParam == null)
+                            _bettingRepository.ProcesssBetSettlement(onBetSettlement, _messageBroker, correlationId, threadId);
+                        else
+                            _bettingRepository.ProcesssBetSettlementOG(onBetSettlement, _messageBroker, correlationId, threadId, ogParam);
                         break;
 
                     case "OnBetCancellation":

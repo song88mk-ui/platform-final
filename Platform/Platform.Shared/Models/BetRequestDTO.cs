@@ -39,7 +39,6 @@ namespace Platform.Shared.Models
         public string BonusId { get; set; }
         public string UserAgent { get; set; } = string.Empty;
         public bool IsOGClient { get; set; }
-        public OGRequestDTO OGParameters { get; set; }
         public List<BetSelectionRequestDTO> Selections { get; set; }
     }
 

@@ -417,7 +417,7 @@ namespace Platform.API.Repository
             {
                 APIKey = apiKey,
                 IsAgent = clientResponse.Result.IsAgent,
-                OperatorToken = operatorToken,
+                OperatorToken = ogParameters != null ?  $"{operatorToken}|{ogParameters.CalledAt}|{ogParameters.GameCode}|{ogParameters.BetPlace}" : operatorToken,
                 ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
                 ClientIdRef = clientResponse.Result.ClientIdRef,
                 ClientCode = clientResponse.Result.ClientCode,
@@ -443,7 +443,6 @@ namespace Platform.API.Repository
                 Odds = result.Result.TotalOdds,
                 UserAgent = userAgent,
                 IsOGClient = ogParameters != null ? true : false,
-                OGParameters = ogParameters,
             };
 
             return await _bettingRepository.PlaceBet(payload);

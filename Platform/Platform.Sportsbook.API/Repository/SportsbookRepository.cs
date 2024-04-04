@@ -892,6 +892,7 @@ namespace Platform.Sportsbook.API.Repository
                 //var fixture = refFixtures.FirstOrDefault(c => c.SpId == item.SportId);
 
                 item.Scope = GetScope(refFixtures);
+                item.FixtureCount = refFixtures.Count;
 
                 finalResult.Add(item);
 
@@ -942,6 +943,7 @@ namespace Platform.Sportsbook.API.Repository
                         SportId = sport.SportId,
                         SportName = sport.SportName,
                         Scope = sport.Scope,
+                        FixtureCount = sport.FixtureCount,
                         Segments = result.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
                         {
                             SegmentId = s.Key,
@@ -965,6 +967,7 @@ namespace Platform.Sportsbook.API.Repository
                         SportId = sport.SportId,
                         SportName = sport.SportName,
                         Scope = sport.Scope,
+                        FixtureCount = sport.FixtureCount,
                         Segments = result.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
                         {
                             SegmentId = s.Key,
@@ -987,6 +990,7 @@ namespace Platform.Sportsbook.API.Repository
                         SportId = sport.SportId,
                         SportName = sport.SportName,
                         Scope = sport.Scope,
+                        FixtureCount = sport.FixtureCount,
                         Segments = result.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
                         {
                             SegmentId = s.Key,

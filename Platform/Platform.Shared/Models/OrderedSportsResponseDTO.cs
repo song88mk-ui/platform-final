@@ -16,6 +16,7 @@ namespace Platform.Shared.Models
         public int SportId { get; set; }
         public string SportName { get; set; }
         public string Scope { get; set; }
+        public int FixtureCount { get; set; }
     }
 
     public class TempOrderedSport : OrderedSport
@@ -43,6 +44,7 @@ namespace Platform.Shared.Models
         public int SportId { get; set; }
         public string SportName { get; set; }
         public string Scope { get; set; }
+        public int FixtureCount { get; set; }
         public List<SegmentDTO> Segments { get; set; }
     }
 

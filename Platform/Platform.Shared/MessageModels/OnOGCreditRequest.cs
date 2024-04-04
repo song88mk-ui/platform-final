@@ -29,9 +29,9 @@ namespace Platform.Shared.MessageModels
         [JsonPropertyName("result_url")]
         public string ResultUrl { get; set; }
         [JsonPropertyName("secondary_info")]
-        public string SecondaryInfo { get; set; }
+        public object SecondaryInfo { get; set; }
         [JsonPropertyName("other_info")]
-        public string OtherInfo { get; set; }
+        public object OtherInfo { get; set; }
         [JsonPropertyName("remark")]
         public string Remark { get; set; }
         [JsonPropertyName("called_at")]

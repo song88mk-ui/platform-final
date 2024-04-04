@@ -232,7 +232,7 @@ namespace Platform.Operator.Servicev2.Repository
                             });
                         }
 
-                        if(isBoosted == true)
+                        if (isBoosted == true)
                         {
                             var betPriceboost = context.BetPriceBoost.Where(c => c.BetId == bet.BetId).FirstOrDefault();
                             betPriceboost.BetStatusId = betEntity.BetStatusId;
@@ -252,7 +252,7 @@ namespace Platform.Operator.Servicev2.Repository
                 }
             }
 
-            if(isOGClient == false)
+            if (isOGClient == false)
             {
                 ProcesssBetCancellation(new OnBetSettlement
                 {
@@ -797,7 +797,6 @@ namespace Platform.Operator.Servicev2.Repository
                        remark = ""
                     } };
 
-
                 var payload = new OnOGDebitRequest
                 {
                     PlayerCode = betData.UserId,
@@ -835,7 +834,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                    if(result.Code != "S-100")
+                    if (result.Code != "S-100")
                     {
                         AddOperatorLog(new OperatorLog
                         {
@@ -880,7 +879,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                         AcceptBet(message.Bet.BetId, correlationId, messageBroker, operatorResponse, message.IsBoosted, message.IsBetBuilder, message.UserAgent);
                     }
-                    
+
                 }
                 else
                 {
@@ -1505,10 +1504,95 @@ namespace Platform.Operator.Servicev2.Repository
 
             try
             {
-
                 var publicKey = _configuration["Custom:OrientalGaming:PublicAPIKey"].ToString();
                 var privateKey = _configuration["Custom:OrientalGaming:PrivateAPIKey"].ToString();
                 var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
+                var transType = "credit";
+
+                if (message.IsResettle)
+                {
+                    transType = "cancel";
+
+                    var cancelPayload = new OnOGCreditCancelRequest
+                    {
+                        PlayerCode = message.Bet.UserId,
+                        TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                        TransactionId = correlationId,
+                        TransactionType = transType,
+                        SecondaryInfo = new { bet_amount = message.Bet.TrueStake, detain_amount = 0m },
+                        OtherInfo = message.BetSelections,
+                        Remark = "",
+                        CalledAt = ogParam.CalledAt,
+                        Signature = ""
+                    };
+
+                    //signature generation
+                    var cancelSignature = cancelPayload.ToSignOG(privateKey);
+                    cancelPayload.Signature = cancelSignature;
+
+                    if (message.IsAudit)
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "REQUEST",
+                            ClientId = message.Bet.ClientId,
+                            ClientCode = message.Bet.ClientCode,
+                            URL = $"{message.Bet.Endpoint}{path}",
+                            BetId = message.Bet.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(cancelPayload),
+                            OperatorToken = message.Bet.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
+
+                    var cancelResponse = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(cancelPayload), System.Text.Encoding.UTF8, "application/json")).Result;
+                    if (cancelResponse.IsSuccessStatusCode)
+                    {
+                        if (message.IsAudit)
+                        {
+                            var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(cancelResponse.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                            if (result.Code == "S-100")
+                                transType = "resettle";
+
+                            AddOperatorLog(new OperatorLog
+                            {
+                                Direction = "RESPONSE",
+                                ClientId = message.Bet.ClientId,
+                                ClientCode = message.Bet.ClientCode,
+                                URL = $"{message.Bet.Endpoint}{path}",
+                                BetId = message.Bet.BetId.ToString().ToUpper(),
+                                Info = JsonSerializer.Serialize(result),
+                                OperatorToken = message.Bet.OperatorToken,
+                                CorrelationId = correlationId,
+                                Timestamp = DateTime.UtcNow
+                            });
+                        }
+                    }
+                    else
+                    {
+                        if (message.IsAudit)
+                        {
+                            AddOperatorLog(new OperatorLog
+                            {
+                                Direction = "RESPONSE",
+                                ClientId = message.Bet.ClientId,
+                                ClientCode = message.Bet.ClientCode,
+                                URL = $"{message.Bet.Endpoint}{path}",
+                                BetId = message.Bet.BetId.ToString().ToUpper(),
+                                Info = cancelResponse.Content.ReadAsStringAsync().Result,
+                                OperatorToken = message.Bet.OperatorToken,
+                                CorrelationId = correlationId,
+                                Timestamp = DateTime.UtcNow
+                            });
+                        }
+                    }
+
+                    if (transType == "cancel")
+                    {
+                        //TODO: check logic for OG
+                        RetryBetSettlementOG(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, null, cancelPayload, "OnBetSettlement", messageBroker, correlationId, threadId);
+                    }
+                }
 
                 var payload = new OnOGCreditRequest
                 {
@@ -1516,16 +1600,24 @@ namespace Platform.Operator.Servicev2.Repository
                     TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Amount = message.Bet.Payout,
                     TransactionId = correlationId,
-                    TransactionType = "credit",
+                    TransactionType = transType,
                     GameCode = ogParam.GameCode,
                     RoundId = message.Bet.BetId.ToString().ToUpper(),
                     BetPlace = ogParam.BetPlace,
                     Currency = message.Bet.CurrencyCode,
                     WinloseAmount = message.Bet.WinLoss.ToString(),
                     EffectiveAmount = message.Bet.WinLoss.ToString(),
+                    ResultUrl = string.Empty,
+                    SecondaryInfo = new { bet_amount = message.Bet.TrueStake, detain_amount = 0m },
+                    OtherInfo = message.BetSelections,
+                    Remark = "",
                     CalledAt = ogParam.CalledAt,
                     Signature = ""
                 };
+
+                //signature generation
+                var signature = payload.ToSignOG(privateKey);
+                payload.Signature = signature;
 
                 if (message.IsRetry == false)
                 {
@@ -1611,15 +1703,15 @@ namespace Platform.Operator.Servicev2.Repository
                             //TODO: check logic for OG
                             //RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
                         }
-                        
+
                     }
-                    
+
                 }
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        
+
                         if (message.IsAudit)
                         {
                             var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
@@ -1741,7 +1833,7 @@ namespace Platform.Operator.Servicev2.Repository
 
             try
             {
-                
+
                 messageBroker.Publish(new OnBetStatus
                 {
                     ClientId = message.Bet.ClientId.ToString().ToUpper(),
@@ -2259,6 +2351,133 @@ namespace Platform.Operator.Servicev2.Repository
                 }
 
                 RetryBetSettlement(message, payload, messageType, messageBroker, correlationId, threadId);
+            }
+        }
+        private void RetryBetSettlementOG(OnBetSettlementRetry message, OnOGCreditRequest payload, OnOGCreditCancelRequest cancelPayload, string messageType, IMessageBroker messageBroker, string correlationId, string threadId)
+        {
+            if (message.RemainingRetries == 0)
+            {
+                //TODO: logic for OG
+                //AddOrUpdateOperatorSettlementRetry(message, payload, messageType, correlationId, false);
+                return;
+            }
+
+            message.RemainingRetries -= 1;
+
+            var path = "/api/v2/platform/transaction/credit";
+
+            try
+            {
+                var publicKey = _configuration["Custom:OrientalGaming:PublicAPIKey"].ToString();
+                var privateKey = _configuration["Custom:OrientalGaming:PrivateAPIKey"].ToString();
+                var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
+                var transType = "credit";
+
+                if (message.OnBetSettlement.IsResettle)
+                {
+                }
+
+                if (message.OnBetSettlement.IsAudit)
+                    AddOperatorLog(new OperatorLog
+                    {
+                        Direction = "REQUEST",
+                        ClientId = message.OnBetSettlement.Bet.ClientId,
+                        ClientCode = message.OnBetSettlement.Bet.ClientCode,
+                        URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
+                        BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
+                        Info = JsonSerializer.Serialize(payload),
+                        OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
+                        CorrelationId = correlationId,
+                        Timestamp = DateTime.UtcNow
+                    });
+
+                var response = GetHttpClient(threadId, message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId, message.OnBetSettlement.Bet.IsAgent).PostAsync($"{message.OnBetSettlement.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    if (message.OnBetSettlement.IsAudit)
+                    {
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = message.OnBetSettlement.Bet.ClientId,
+                            ClientCode = message.OnBetSettlement.Bet.ClientCode,
+                            URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
+                            BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(result),
+                            OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
+                    }
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                        if (message.OnBetSettlement.IsAudit)
+                        {
+                            AddOperatorLog(new OperatorLog
+                            {
+                                Direction = "RESPONSE",
+                                ClientId = message.OnBetSettlement.Bet.ClientId,
+                                ClientCode = message.OnBetSettlement.Bet.ClientCode,
+                                URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
+                                BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
+                                Info = JsonSerializer.Serialize(result),
+                                OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
+                                CorrelationId = correlationId,
+                                Timestamp = DateTime.UtcNow
+                            });
+                        }
+
+                        RetryBetSettlementOG(message, payload, cancelPayload, messageType, messageBroker, correlationId, threadId);
+                    }
+                    else
+                    {
+                        if (message.OnBetSettlement.IsAudit)
+                        {
+                            AddOperatorLog(new OperatorLog
+                            {
+                                Direction = "RESPONSE",
+                                ClientId = message.OnBetSettlement.Bet.ClientId,
+                                ClientCode = message.OnBetSettlement.Bet.ClientCode,
+                                URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
+                                BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
+                                Info = JsonSerializer.Serialize(response.ReasonPhrase),
+                                OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
+                                CorrelationId = correlationId,
+                                Timestamp = DateTime.UtcNow
+                            });
+                        }
+
+                        RetryBetSettlementOG(message, payload, cancelPayload, messageType, messageBroker, correlationId, threadId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                if (message.OnBetSettlement.IsAudit)
+                {
+                    AddOperatorLog(new OperatorLog
+                    {
+                        Direction = "RESPONSE",
+                        ClientId = message.OnBetSettlement.Bet.ClientId,
+                        ClientCode = message.OnBetSettlement.Bet.ClientCode,
+                        URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
+                        BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
+                        Info = JsonSerializer.Serialize(new { message = ex.Message, stackTrace = ex.StackTrace }),
+                        OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
+                        CorrelationId = correlationId,
+                        Timestamp = DateTime.UtcNow
+                    });
+                }
+
+                RetryBetSettlementOG(message, payload, cancelPayload, messageType, messageBroker, correlationId, threadId);
             }
         }
         private void RetryBetCancellation(OnBetSettlementRetry message, OperatorBetSettlementRequestDTO payload, string messageType, IMessageBroker messageBroker, string correlationId, string threadId)

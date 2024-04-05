@@ -9,9 +9,8 @@ using Microsoft.Extensions.Logging;
 using Platform.Operator.Servicev2.Repository;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
-using Platform.Shared.Extensions
+using Platform.Shared.Extensions;
 using RabbitMQ.Client.Events;
-using System.Runtime.Serialization;
 
 namespace Platform.Operator.Servicev2
 {

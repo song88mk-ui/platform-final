@@ -277,8 +277,7 @@ namespace Platform.API.Repository
                     PoolId = request.PoolId,
                     BetLimit = request.BetLimit,
                     Signature = string.Empty,
-                    //Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    Timestamp = request.Timestamp,
+                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 };
 
                 authenticationPayload.Signature = authenticationPayload.ToSignOG(privateKey);
@@ -314,12 +313,12 @@ namespace Platform.API.Repository
                     var walletRequest = new
                     {
                         player_code = request.PlayerCode,
-                        timestamp = request.Timestamp
+                        timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
                     };
 
                     var signature = walletRequest.ToSignOG(privateKey);
 
-                    var walletResponse = await _httpClient.GetAsync($"{endpoint}/api/v2/platform/player/balance?player_code={request.PlayerCode}&timestamp={request.Timestamp}&signature={signature}");
+                    var walletResponse = await _httpClient.GetAsync($"{endpoint}/api/v2/platform/player/balance?player_code={walletRequest.player_code}&timestamp={walletRequest.timestamp}&signature={signature}");
 
                     var walletResult = JsonSerializer.Deserialize<OGWalletResponse>(await walletResponse.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = false });
                     

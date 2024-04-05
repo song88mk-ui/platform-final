@@ -457,7 +457,7 @@ namespace Platform.Operator.Servicev2.Repository
                 }
             }
         }
-        private void AddOrUpdateOperatorSettlementRetry(OnBetSettlementRetry message, OperatorBetSettlementRequestDTO payload, string messageType, string correlationId, bool isSuccess)
+        private void AddOrUpdateOperatorSettlementRetry(OnBetSettlementRetry message, string messageType, string correlationId, bool isSuccess)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
@@ -473,6 +473,7 @@ namespace Platform.Operator.Servicev2.Repository
                         {
                             if (bet != null)
                             {
+                                bet.MessageType = messageType;
                                 bet.Info = JsonSerializer.Serialize(message.OnBetSettlement);
                                 bet.IsRetry = false;
                                 bet.IsSuccess = isSuccess;
@@ -504,6 +505,7 @@ namespace Platform.Operator.Servicev2.Repository
                             {
                                 var isRetry = bet.RetryCount < 8 ? true : false;
 
+                                bet.MessageType = messageType;
                                 bet.Info = JsonSerializer.Serialize(message.OnBetSettlement);
                                 bet.IsRetry = bet.RetryCount + 1 >= 8 ? false : true;
                                 bet.RetryCount = isRetry == true ? bet.RetryCount + 1 : bet.RetryCount;
@@ -1059,7 +1061,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Balance = result.Balance
                     }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
-                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetFullCashOut", correlationId, response.IsSuccessStatusCode);
+                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetFullCashOut", correlationId, response.IsSuccessStatusCode);
                 }
                 else
                 {
@@ -1228,7 +1230,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Balance = result.Balance
                     }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
-                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetPartialCashOut", correlationId, response.IsSuccessStatusCode);
+                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetPartialCashOut", correlationId, response.IsSuccessStatusCode);
                 }
                 else
                 {
@@ -1416,7 +1418,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Balance = result.Balance
                         }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
-                        AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetSettlement", correlationId, response.IsSuccessStatusCode);
+                        AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetSettlement", correlationId, response.IsSuccessStatusCode);
                     }
                 }
                 else
@@ -1500,10 +1502,20 @@ namespace Platform.Operator.Servicev2.Repository
                 message.IsRetry = true;
             }
 
+            var isCancelSuccess = false;
             var path = "/api/v2/platform/transaction/credit";
 
             try
             {
+
+                if (message.IsRetry == false)
+                {
+                    if (message.Bet.IsAgent)
+                        messageBroker.Publish(message, "OnBetSettlement", "r.bet.reports.agent", correlationId);
+                    else
+                        messageBroker.Publish(message, "OnBetSettlement", "r.bet.reports", correlationId);
+                }
+
                 var publicKey = _configuration["Custom:OrientalGaming:PublicAPIKey"].ToString();
                 var privateKey = _configuration["Custom:OrientalGaming:PrivateAPIKey"].ToString();
                 var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
@@ -1548,7 +1560,7 @@ namespace Platform.Operator.Servicev2.Repository
                         OtherInfo = message.BetSelections,
                         Remark = "",
                         CalledAt = ogParam.CalledAt,
-                        Signature = ""
+                        Signature = ""                        
                     };
 
                     //signature generation
@@ -1577,7 +1589,10 @@ namespace Platform.Operator.Servicev2.Repository
                             var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(cancelResponse.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                             if (result.Code == "S-100")
+                            {
+                                isCancelSuccess = true;
                                 transType = "resettle";
+                            }
 
                             AddOperatorLog(new OperatorLog
                             {
@@ -1614,17 +1629,9 @@ namespace Platform.Operator.Servicev2.Repository
 
                     if (transType == "cancel")
                     {
-                        //TODO: check logic for OG
-                        RetryBetSettlementOG(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, cancelPayload, "OnBetSettlement", messageBroker, correlationId, threadId);
+                        AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetSettlement", correlationId, false);
+                        return;
                     }
-                }
-
-                if (message.IsRetry == false)
-                {
-                    if (message.Bet.IsAgent)
-                        messageBroker.Publish(message, "OnBetSettlement", "r.bet.reports.agent", correlationId);
-                    else
-                        messageBroker.Publish(message, "OnBetSettlement", "r.bet.reports", correlationId);
                 }
 
                 if (message.IsAudit)
@@ -1645,11 +1652,11 @@ namespace Platform.Operator.Servicev2.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    if (message.IsAudit)
-                    {
-                        var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                        if (result.Code == "S-100")
+                    if (result.Code == "S-100")
+                    {
+                        if (message.IsAudit)
                         {
                             AddOperatorLog(new OperatorLog
                             {
@@ -1680,38 +1687,34 @@ namespace Platform.Operator.Servicev2.Repository
                                 Balance = result.Balance
                             }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
-                            //TODO: check logic for OG
-                            //AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetSettlement", correlationId, response.IsSuccessStatusCode);
-                        }
-                        else
-                        {
-                            if (message.IsAudit)
-                            {
-                                AddOperatorLog(new OperatorLog
-                                {
-                                    Direction = "RESPONSE",
-                                    ClientId = message.Bet.ClientId,
-                                    ClientCode = message.Bet.ClientCode,
-                                    URL = $"{message.Bet.Endpoint}{path}",
-                                    BetId = message.Bet.BetId.ToString().ToUpper(),
-                                    Info = JsonSerializer.Serialize(result),
-                                    OperatorToken = message.Bet.OperatorToken,
-                                    CorrelationId = correlationId,
-                                    Timestamp = DateTime.UtcNow
-                                });
-                            }
-                            //TODO: check logic for OG
-                            //RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
                         }
 
+                        AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetSettlement", correlationId, response.IsSuccessStatusCode);
                     }
-
+                    else
+                    {
+                        if (message.IsAudit)
+                        {
+                            AddOperatorLog(new OperatorLog
+                            {
+                                Direction = "RESPONSE",
+                                ClientId = message.Bet.ClientId,
+                                ClientCode = message.Bet.ClientCode,
+                                URL = $"{message.Bet.Endpoint}{path}",
+                                BetId = message.Bet.BetId.ToString().ToUpper(),
+                                Info = JsonSerializer.Serialize(result),
+                                OperatorToken = message.Bet.OperatorToken,
+                                CorrelationId = correlationId,
+                                Timestamp = DateTime.UtcNow
+                            });
+                        }
+                        AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetSettlementOG", correlationId, false);
+                    }
                 }
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-
                         if (message.IsAudit)
                         {
                             var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
@@ -1729,8 +1732,6 @@ namespace Platform.Operator.Servicev2.Repository
                                 Timestamp = DateTime.UtcNow
                             });
                         }
-                        //TODO: check logic for OG
-                        //RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
                     }
                     else
                     {
@@ -1749,9 +1750,8 @@ namespace Platform.Operator.Servicev2.Repository
                                 Timestamp = DateTime.UtcNow
                             });
                         }
-                        //TODO: check logic for OG
-                        //RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
                     }
+                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetSettlementOG", correlationId, false);
                 }
             }
             catch (Exception ex)
@@ -1771,8 +1771,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Timestamp = DateTime.UtcNow
                     });
                 }
-                //TODO: check logic for OG
-                //RetryBetSettlement(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetSettlement", messageBroker, correlationId, threadId);
+                AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, isCancelSuccess ? "OnBetSettlementOG" : "OnBetSettlement", correlationId, false);
             }
         }
 
@@ -1893,7 +1892,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Balance = result.Balance
                     }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
-                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, payload, "OnBetCancellation", correlationId, response.IsSuccessStatusCode);
+                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetCancellation", correlationId, response.IsSuccessStatusCode);
                 }
                 else
                 {
@@ -2065,7 +2064,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Balance = result.Balance
                     }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
-                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, null, "OnBetCancellation", correlationId, response.IsSuccessStatusCode);
+                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetCancellation", correlationId, response.IsSuccessStatusCode);
                 }
                 else
                 {
@@ -2136,7 +2135,7 @@ namespace Platform.Operator.Servicev2.Repository
         {
             if (message.RemainingRetries == 0)
             {
-                AddOrUpdateOperatorSettlementRetry(message, payload, messageType, correlationId, false);
+                AddOrUpdateOperatorSettlementRetry(message, messageType, correlationId, false);
                 return;
             }
 
@@ -2238,7 +2237,7 @@ namespace Platform.Operator.Servicev2.Repository
         {
             if (message.RemainingRetries == 0)
             {
-                AddOrUpdateOperatorSettlementRetry(message, payload, messageType, correlationId, false);
+                AddOrUpdateOperatorSettlementRetry(message, messageType, correlationId, false);
                 return;
             }
 
@@ -2353,138 +2352,12 @@ namespace Platform.Operator.Servicev2.Repository
                 RetryBetSettlement(message, payload, messageType, messageBroker, correlationId, threadId);
             }
         }
-        private void RetryBetSettlementOG(OnBetSettlementRetry message, OnOGCreditRequest payload, OnOGCreditCancelRequest cancelPayload, string messageType, IMessageBroker messageBroker, string correlationId, string threadId)
-        {
-            if (message.RemainingRetries == 0)
-            {
-                //TODO: logic for OG
-                //AddOrUpdateOperatorSettlementRetry(message, payload, messageType, correlationId, false);
-                return;
-            }
 
-            message.RemainingRetries -= 1;
-
-            var path = "/api/v2/platform/transaction/credit";
-
-            try
-            {
-                var publicKey = _configuration["Custom:OrientalGaming:PublicAPIKey"].ToString();
-                var privateKey = _configuration["Custom:OrientalGaming:PrivateAPIKey"].ToString();
-                var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
-                var transType = "credit";
-
-                if (message.OnBetSettlement.IsResettle)
-                {
-                }
-
-                if (message.OnBetSettlement.IsAudit)
-                    AddOperatorLog(new OperatorLog
-                    {
-                        Direction = "REQUEST",
-                        ClientId = message.OnBetSettlement.Bet.ClientId,
-                        ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                        URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
-                        BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
-                        Info = JsonSerializer.Serialize(payload),
-                        OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
-                        CorrelationId = correlationId,
-                        Timestamp = DateTime.UtcNow
-                    });
-
-                var response = GetHttpClient(threadId, message.OnBetSettlement.Bet.Endpoint, message.OnBetSettlement.Bet.OperatorToken, message.OnBetSettlement.Bet.ClientId, message.OnBetSettlement.Bet.IsAgent).PostAsync($"{message.OnBetSettlement.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-
-                    if (message.OnBetSettlement.IsAudit)
-                    {
-                        AddOperatorLog(new OperatorLog
-                        {
-                            Direction = "RESPONSE",
-                            ClientId = message.OnBetSettlement.Bet.ClientId,
-                            ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                            URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
-                            BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
-                            Info = JsonSerializer.Serialize(result),
-                            OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
-                            CorrelationId = correlationId,
-                            Timestamp = DateTime.UtcNow
-                        });
-                    }
-                }
-                else
-                {
-                    if (response.StatusCode == HttpStatusCode.BadRequest)
-                    {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-
-                        if (message.OnBetSettlement.IsAudit)
-                        {
-                            AddOperatorLog(new OperatorLog
-                            {
-                                Direction = "RESPONSE",
-                                ClientId = message.OnBetSettlement.Bet.ClientId,
-                                ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                                URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
-                                BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
-                                Info = JsonSerializer.Serialize(result),
-                                OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
-                                CorrelationId = correlationId,
-                                Timestamp = DateTime.UtcNow
-                            });
-                        }
-
-                        RetryBetSettlementOG(message, payload, cancelPayload, messageType, messageBroker, correlationId, threadId);
-                    }
-                    else
-                    {
-                        if (message.OnBetSettlement.IsAudit)
-                        {
-                            AddOperatorLog(new OperatorLog
-                            {
-                                Direction = "RESPONSE",
-                                ClientId = message.OnBetSettlement.Bet.ClientId,
-                                ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                                URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
-                                BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
-                                Info = JsonSerializer.Serialize(response.ReasonPhrase),
-                                OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
-                                CorrelationId = correlationId,
-                                Timestamp = DateTime.UtcNow
-                            });
-                        }
-
-                        RetryBetSettlementOG(message, payload, cancelPayload, messageType, messageBroker, correlationId, threadId);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                if (message.OnBetSettlement.IsAudit)
-                {
-                    AddOperatorLog(new OperatorLog
-                    {
-                        Direction = "RESPONSE",
-                        ClientId = message.OnBetSettlement.Bet.ClientId,
-                        ClientCode = message.OnBetSettlement.Bet.ClientCode,
-                        URL = $"{message.OnBetSettlement.Bet.Endpoint}{path}",
-                        BetId = message.OnBetSettlement.Bet.BetId.ToString().ToUpper(),
-                        Info = JsonSerializer.Serialize(new { message = ex.Message, stackTrace = ex.StackTrace }),
-                        OperatorToken = message.OnBetSettlement.Bet.OperatorToken,
-                        CorrelationId = correlationId,
-                        Timestamp = DateTime.UtcNow
-                    });
-                }
-
-                RetryBetSettlementOG(message, payload, cancelPayload, messageType, messageBroker, correlationId, threadId);
-            }
-        }
         private void RetryBetCancellation(OnBetSettlementRetry message, OperatorBetSettlementRequestDTO payload, string messageType, IMessageBroker messageBroker, string correlationId, string threadId)
         {
             if (message.RemainingRetries == 0)
             {
-                AddOrUpdateOperatorSettlementRetry(message, payload, messageType, correlationId, false);
+                AddOrUpdateOperatorSettlementRetry(message, messageType, correlationId, false);
                 return;
             }
 

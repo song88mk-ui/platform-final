@@ -221,7 +221,7 @@ namespace Platform.Operator.Servicev2
                         var OnBetPartialCashOut = JsonSerializer.Deserialize<OnBetSettlementPartial>(payload);
                         firstChar = OnBetPartialCashOut.Bet.BetId.ToString().ToUpper().Substring(0, 1);
                         break;
-                    
+
                     case "OnBetFullCashOut":
                         var onBetFullCashout = JsonSerializer.Deserialize<OnBetSettlement>(payload);
                         firstChar = onBetFullCashout.Bet.BetId.ToString().ToUpper().Substring(0, 1);
@@ -373,7 +373,7 @@ namespace Platform.Operator.Servicev2
                         var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
                         Console.WriteLine($"{DateTime.UtcNow} {onBetPlacement.Bet.BetId} - OnBetPlacement");
 
-                        if(!onBetPlacement.IsOGClient)
+                        if (!onBetPlacement.IsOGClient)
                             _bettingRepository.ProcesssBetPlacement(onBetPlacement, _messageBroker, correlationId, threadId);
                         else
                             _bettingRepository.ProcesssBetPlacementOG(onBetPlacement, _messageBroker, correlationId, threadId);
@@ -397,10 +397,10 @@ namespace Platform.Operator.Servicev2
                         Console.WriteLine($"{DateTime.UtcNow} {onBetSettlement.Bet.BetId} - OnBetSettlement");
 
                         var ogParam = onBetSettlement.Bet.OperatorToken.ToOGParam();
-                        if(ogParam == null)
+                        if (ogParam == null)
                             _bettingRepository.ProcesssBetSettlement(onBetSettlement, _messageBroker, correlationId, threadId);
                         else
-                            _bettingRepository.ProcesssBetSettlementOG(onBetSettlement, _messageBroker, correlationId, threadId, ogParam);
+                            _bettingRepository.ProcesssBetSettlementOG(onBetSettlement, _messageBroker, correlationId, threadId, ogParam, false);
                         break;
 
                     case "OnBetCancellation":
@@ -409,6 +409,16 @@ namespace Platform.Operator.Servicev2
 
                         _bettingRepository.ProcesssBetCancellation(onBetCancellation, _messageBroker, correlationId, threadId);
                         break;
+
+                    case "OnBetSettlementOG":
+                        var onBetSettlementOG = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+                        Console.WriteLine($"{DateTime.UtcNow} {onBetSettlementOG.Bet.BetId} - OnBetSettlementOG");
+
+                        var ogParam2 = onBetSettlementOG.Bet.OperatorToken.ToOGParam();
+                        if (ogParam2 != null)
+                            _bettingRepository.ProcesssBetSettlementOG(onBetSettlementOG, _messageBroker, correlationId, threadId, ogParam2, true);
+                        break;
+
                 }
 
                 _messageBroker.Acknowledge(e);

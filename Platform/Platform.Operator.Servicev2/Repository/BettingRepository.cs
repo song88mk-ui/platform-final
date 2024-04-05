@@ -1489,7 +1489,7 @@ namespace Platform.Operator.Servicev2.Repository
             }
         }
 
-        public void ProcesssBetSettlementOG(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId, OGRequestDTO ogParam)
+        public void ProcesssBetSettlementOG(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId, OGRequestDTO ogParam, bool isOGResettle)
         {
             if (message.IsRetry)
             {
@@ -1546,7 +1546,7 @@ namespace Platform.Operator.Servicev2.Repository
                 var signature = payload.ToSignOG(privateKey);
                 payload.Signature = signature;
 
-                if (message.IsResettle)
+                if (message.IsResettle && isOGResettle == false)
                 {
                     transType = "cancel";
 

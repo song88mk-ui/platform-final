@@ -50,7 +50,7 @@ namespace Platform.API.ActionFilters
                     CalledAt = long.Parse(context.HttpContext.Request.Headers["x-og-timestamp"].FirstOrDefault()),
                     Signature = context.HttpContext.Request.Headers["x-og-signature"].FirstOrDefault(),
                     IsSBLaunch = isSbLaunch != null ? bool.Parse(isSbLaunch) : false,
-                    CurrencyCode = context.HttpContext.Request.Headers["x-og-currency"].FirstOrDefault()
+                    CurrencyCode = context.HttpContext.Request.Headers["x-og-currency"].FirstOrDefault(),
                     BetPlace = string.Empty,
                 };
             }

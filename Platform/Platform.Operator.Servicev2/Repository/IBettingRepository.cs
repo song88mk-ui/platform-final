@@ -10,6 +10,7 @@ namespace Platform.Operator.Servicev2.Repository
         void ProcesssBetPlacementOG(OnBetPlacement message, IMessageBroker messageBroker, string correlationId, string threadId);
         void ProcessBetPartialCashOut(OnBetSettlementPartial message, IMessageBroker messageBroker, string correlationId, string threadId);
         void ProcessBetFullCashOut(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId);
+        void ProcessBetFullCashOutOG(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId, OGRequestDTO ogParam);
         void ProcesssBetSettlement(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId);
         void ProcesssBetSettlementOG(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId, OGRequestDTO ogParam, bool isOGResettle);
         void ProcesssBetCancellation(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId);

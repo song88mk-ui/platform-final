@@ -389,7 +389,11 @@ namespace Platform.Operator.Servicev2
                         var onBetFullCashout = JsonSerializer.Deserialize<OnBetSettlement>(payload);
                         Console.WriteLine($"{DateTime.UtcNow} {onBetFullCashout.Bet.BetId} - OnBetFullCashOut");
 
-                        _bettingRepository.ProcessBetFullCashOut(onBetFullCashout, _messageBroker, correlationId, threadId);
+                        var ogParamFC = onBetFullCashout.Bet.OperatorToken.ToOGParam();
+                        if (ogParamFC == null)
+                            _bettingRepository.ProcessBetFullCashOut(onBetFullCashout, _messageBroker, correlationId, threadId);
+                        else
+                            _bettingRepository.ProcessBetFullCashOutOG(onBetFullCashout, _messageBroker, correlationId, threadId, ogParamFC);
                         break;
 
                     case "OnBetSettlement":

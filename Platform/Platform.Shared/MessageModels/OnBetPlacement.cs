@@ -1,4 +1,5 @@
 ﻿using Platform.Shared.Data.Betting.Entities;
+using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
 
@@ -16,6 +17,7 @@ namespace Platform.Shared.MessageModels
         public string BonusId { get; set; }
         public decimal Odds { get; set; }
         public string UserAgent { get; set; } = string.Empty;
+        public bool IsOGClient { get; set; }
         public List<BetSelection> BetSelections { get; set; }
     }
 

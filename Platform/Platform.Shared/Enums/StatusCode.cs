@@ -90,6 +90,8 @@
 
         Partial_CashOut_Cannot_Be_Greater_Than_Full_Cashout_Amount = 161,
 
+        Signature_Mismatch = 162,
+
         Error = 1000,
         Operator_Error = 1001,
 

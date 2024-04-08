@@ -417,7 +417,7 @@ namespace Platform.API.Repository
             {
                 APIKey = apiKey,
                 IsAgent = clientResponse.Result.IsAgent,
-                OperatorToken = ogParameters != null ?  $"{operatorToken}|{ogParameters.CalledAt}|{ogParameters.GameCode}|{ogParameters.BetPlace}" : operatorToken,
+                OperatorToken = ogParameters != null ? $"{operatorToken}|{ogParameters.CalledAt}|{ogParameters.GameCode}|{ogParameters.BetPlace}" : operatorToken,
                 ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
                 ClientIdRef = clientResponse.Result.ClientIdRef,
                 ClientCode = clientResponse.Result.ClientCode,
@@ -4462,7 +4462,17 @@ namespace Platform.API.Repository
                 {
                     StatusCode = clientResponse.StatusCode,
                     Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetLeagueHighlightsFixtures(new LeagueHighlightsRequestDTO
+            {
+                ClientId = clientResponse.Result.ClientId,
+                ClientCode = clientResponse.Result.ClientCode,
+                LanguageCode = languageCode
+            });
         }
+
 
         public async Task<BaseResponseDTO<string>> AuthenticateOG(string clientId, string operatorToken, OGClientRequest ogParameters)
         {
@@ -4493,16 +4503,7 @@ namespace Platform.API.Repository
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),
                 Result = operatorToken
-                };
-            }
-
-
-            return await _sportsbookRepository.GetLeagueHighlightsFixtures(new LeagueHighlightsRequestDTO
-            {
-                ClientId = clientResponse.Result.ClientId,
-                ClientCode = clientResponse.Result.ClientCode,
-                LanguageCode = languageCode
-            });
+            };
         }
 
         private DateTime GetFirstDayOfNextMonth()

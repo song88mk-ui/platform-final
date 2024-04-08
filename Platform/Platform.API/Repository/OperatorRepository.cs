@@ -28,7 +28,7 @@ namespace Platform.API.Repository
             _httpClient = httpClient;
             _telemetryClient = telemetryClient;
             _configuration = configuration;
-            _httpClient.Timeout = TimeSpan.FromSeconds(2);
+            _httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
 
         public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string userName, string password, string endpoint, Dictionary<string, string> headers = null)

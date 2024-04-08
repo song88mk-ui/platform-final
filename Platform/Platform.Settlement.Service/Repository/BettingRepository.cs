@@ -657,6 +657,8 @@ namespace Platform.Settlement.Service.Repository
             var bet = context.Bet.Find(betSelection.BetId);
             if (bet != null)
             {
+                var isBetRunning = bet.BetStatusId == (int)BetStatus.Running;
+
                 if (message.SelectionStatus == BetStatus.Lost)
                 {
                     finalResult = ApplyLost(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason);
@@ -675,6 +677,9 @@ namespace Platform.Settlement.Service.Repository
                         finalResult = ApplyAllSettled(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason, false);
                     }
                 }
+
+                if (!isBetRunning && finalResult.Item1 == true)
+                    payload.IsResettle = true;
             }
 
             context.SaveChanges();
@@ -787,6 +792,7 @@ namespace Platform.Settlement.Service.Repository
 
             if (bet != null)
             {
+                var isBetRunning = bet.BetStatusId == (int)BetStatus.Running;
                 if (message.SelectionStatus == BetStatus.Lost)
                 {
                     finalResult = ApplyLost(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason);
@@ -813,6 +819,9 @@ namespace Platform.Settlement.Service.Repository
                         ApplyRunning(context, bet, selections, betSelection, settledDate);
                     }
                 }
+
+                if (!isBetRunning && finalResult.Item1 == true)
+                    payload.IsResettle = true;
             }
 
             context.SaveChanges();

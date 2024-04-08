@@ -1,10 +1,16 @@
 ﻿using Microsoft.ApplicationInsights;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Platform.API.Models;
 using Platform.Shared.Enums;
+using Platform.Shared.Extensions;
 using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography.Xml;
 using System.Text.Json;
 using System.Threading.Tasks;
 using JsonSerializer = System.Text.Json.JsonSerializer;
@@ -15,11 +21,13 @@ namespace Platform.API.Repository
     {
         private readonly HttpClient _httpClient;
         private readonly TelemetryClient _telemetryClient;
+        private readonly IConfiguration _configuration;
 
-        public OperatorRepository(HttpClient httpClient, TelemetryClient telemetryClient)
+        public OperatorRepository(HttpClient httpClient, TelemetryClient telemetryClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
             _telemetryClient = telemetryClient;
+            _configuration = configuration;
             _httpClient.Timeout = TimeSpan.FromSeconds(2);
         }
 
@@ -156,7 +164,211 @@ namespace Platform.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string clientId, string operatorToken, string endpoint, bool isAgent)
+
+        public async Task<BaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string clientId, string operatorToken, string endpoint, bool isAgent, OGClientRequest request)
+        {
+            if (request != null)
+                return await AuthenticateOGPlayer(operatorToken, endpoint, request);
+
+            return await AuthenticatePlayer(clientId, operatorToken, endpoint, isAgent);
+        }
+
+        public async Task<BaseResponseDTO<OperatorBetResponseDTO>> ResendCancellation(string endpoint, string info)
+        {
+            _httpClient.BaseAddress = new Uri(endpoint);
+
+            try
+            {
+                var response = await _httpClient.PostAsync($"{endpoint}", new StringContent(info, System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return new BaseResponseDTO<OperatorBetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString(),
+                        Result = result
+                    };
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                        return new BaseResponseDTO<OperatorBetResponseDTO>
+                        {
+                            StatusCode = StatusCode.Operator_Error,
+                            Message = StatusCode.Operator_Error.ToString(),
+                            Result = result
+                        };
+                    }
+
+                    return new BaseResponseDTO<OperatorBetResponseDTO>
+                    {
+                        StatusCode = StatusCode.Operator_Error,
+                        Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})",
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<OperatorBetResponseDTO>
+                {
+                    StatusCode = StatusCode.Operator_Error,
+                    Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({ex.Message})",
+                };
+            }
+        }
+
+        private async Task<BaseResponseDTO<AuthenticationResponseDTO>> AuthenticateOGPlayer(string operatorToken, string endpoint, OGClientRequest request)
+        {
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+            {
+                return new BaseResponseDTO<AuthenticationResponseDTO>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
+                };
+            }
+
+            if (string.IsNullOrEmpty(request.PlayerCode) || string.IsNullOrWhiteSpace(request.PlayerCode))
+            {
+                return new BaseResponseDTO<AuthenticationResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString().Replace('_', ' '),
+                };
+            }
+
+            var key = _configuration["Custom:OrientalGaming:PublicAPIKey"].ToString();
+            var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
+
+            _httpClient.BaseAddress = new Uri(endpoint);
+
+            if (_httpClient.DefaultRequestHeaders.Contains("key"))
+            {
+                _httpClient.DefaultRequestHeaders.Remove("key");
+                _httpClient.DefaultRequestHeaders.Add("key", key);
+            }
+            else
+                _httpClient.DefaultRequestHeaders.Add("key", key);
+
+            if (_httpClient.DefaultRequestHeaders.Contains("vendor-name"))
+            {
+                _httpClient.DefaultRequestHeaders.Remove("vendor-name");
+                _httpClient.DefaultRequestHeaders.Add("vendor-name", vendorName);
+            }
+            else
+                _httpClient.DefaultRequestHeaders.Add("vendor-name", vendorName);
+
+            try
+            {
+                var privateKey = _configuration["Custom:OrientalGaming:PrivateAPIKey"].ToString();
+
+                // authenticate endpoint
+                var authenticationPayload = new OGAuthenticationRequest
+                {
+                    Token = operatorToken,
+                    PlayerCode = request.PlayerCode,
+                    GameCode = request.GameCode,
+                    PoolId = request.PoolId,
+                    BetLimit = request.BetLimit,
+                    Signature = string.Empty,
+                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                };
+
+                authenticationPayload.Signature = authenticationPayload.ToSignOG(privateKey);
+
+                //if (request.Signature != authenticationPayload.Signature)
+                //{
+                //    return new BaseResponseDTO<AuthenticationResponseDTO>
+                //    {
+                //        StatusCode = StatusCode.Signature_Mismatch,
+                //        Message = StatusCode.Signature_Mismatch.ToString().Replace('_', ' '),
+                //    };
+                //}
+
+                var authenticationResponse = await _httpClient.PostAsync($"{endpoint}/api/v2/platform/security/authenticate", new StringContent(JsonSerializer.Serialize(authenticationPayload), System.Text.Encoding.UTF8, "application/json"));
+
+                var authenticationResult = JsonSerializer.Deserialize<OGAuthenticationResponse>(await authenticationResponse.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = false });
+
+                if (authenticationResult.Code != "S-100")
+                {
+                    return new BaseResponseDTO<AuthenticationResponseDTO>
+                    {
+                        StatusCode = StatusCode.Operator_Error,
+                        Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({authenticationResult.Code}: {authenticationResult.Message})",
+                    };
+                }
+
+                var balance = 0m;
+                var currencyCode = string.Empty;
+
+                if (!request.IsSBLaunch)
+                {
+                    // wallet endpoint
+                    var walletRequest = new
+                    {
+                        player_code = request.PlayerCode,
+                        timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                    };
+
+                    var signature = walletRequest.ToSignOG(privateKey);
+
+                    var walletResponse = await _httpClient.GetAsync($"{endpoint}/api/v2/platform/player/balance?player_code={walletRequest.player_code}&timestamp={walletRequest.timestamp}&signature={signature}");
+
+                    var walletResult = JsonSerializer.Deserialize<OGWalletResponse>(await walletResponse.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = false });
+                    
+                    if (walletResult.Code != "S-100")
+                    {
+                        return new BaseResponseDTO<AuthenticationResponseDTO>
+                        {
+                            StatusCode = StatusCode.Operator_Error,
+                            Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({authenticationResult.Code}: {authenticationResult.Message})",
+                        };
+                    }
+
+                    balance = walletResult.Balance;
+                    currencyCode = walletResult.CurrencyCode;
+
+                    if (currencyCode.ToUpper() != request.CurrencyCode.ToUpper())
+                    {
+                        return new BaseResponseDTO<AuthenticationResponseDTO>
+                        {
+                            StatusCode = StatusCode.CurrencyCode_Mismatch,
+                            Message = StatusCode.CurrencyCode_Mismatch.ToString().Replace('_', ' '),
+                        };
+                    }
+                }
+
+                // combine result
+                return new BaseResponseDTO<AuthenticationResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new AuthenticationResponseDTO
+                    {
+                        UserId = request.PlayerCode,
+                        Balance = balance,
+                        CurrencyCode = currencyCode,
+                        StatusId = 1000
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<AuthenticationResponseDTO>
+                {
+                    StatusCode = StatusCode.Operator_Error,
+                    Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({ex.Message})",
+                };
+            }
+        }
+
+        private async Task<BaseResponseDTO<AuthenticationResponseDTO>> AuthenticatePlayer(string clientId, string operatorToken, string endpoint, bool isAgent)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
@@ -257,55 +469,6 @@ namespace Platform.API.Repository
             catch (Exception ex)
             {
                 return new BaseResponseDTO<AuthenticationResponseDTO>
-                {
-                    StatusCode = StatusCode.Operator_Error,
-                    Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({ex.Message})",
-                };
-            }
-        }
-        public async Task<BaseResponseDTO<OperatorBetResponseDTO>> ResendCancellation(string endpoint, string info)
-        {
-            _httpClient.BaseAddress = new Uri(endpoint);
-
-            try
-            {
-                var response = await _httpClient.PostAsync($"{endpoint}", new StringContent(info, System.Text.Encoding.UTF8, "application/json"));
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-
-                    return new BaseResponseDTO<OperatorBetResponseDTO>
-                    {
-                        StatusCode = StatusCode.Success,
-                        Message = StatusCode.Success.ToString(),
-                        Result = result
-                    };
-                }
-                else
-                {
-                    if (response.StatusCode == HttpStatusCode.BadRequest)
-                    {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-
-                        return new BaseResponseDTO<OperatorBetResponseDTO>
-                        {
-                            StatusCode = StatusCode.Operator_Error,
-                            Message = StatusCode.Operator_Error.ToString(),
-                            Result = result
-                        };
-                    }
-
-                    return new BaseResponseDTO<OperatorBetResponseDTO>
-                    {
-                        StatusCode = StatusCode.Operator_Error,
-                        Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})",
-                    };
-                }
-            }
-            catch (Exception ex)
-            {
-                return new BaseResponseDTO<OperatorBetResponseDTO>
                 {
                     StatusCode = StatusCode.Operator_Error,
                     Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({ex.Message})",

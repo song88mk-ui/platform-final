@@ -2242,66 +2242,63 @@ namespace Platform.Operator.Servicev2.Repository
                 }
                 else
                 {
-                    //TODO: check how to retry OG cancelation
-                    //if (response.StatusCode == HttpStatusCode.BadRequest)
-                    //{
-                    //    var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                    //    AddOperatorLog(new OperatorLog
-                    //    {
-                    //        Direction = "RESPONSE",
-                    //        ClientId = message.Bet.ClientId,
-                    //        ClientCode = message.Bet.ClientCode,
-                    //        URL = $"{message.Bet.Endpoint}{path}",
-                    //        BetId = message.Bet.BetId.ToString().ToUpper(),
-                    //        Info = JsonSerializer.Serialize(result),
-                    //        OperatorToken = message.Bet.OperatorToken,
-                    //        CorrelationId = correlationId,
-                    //        Timestamp = DateTime.UtcNow
-                    //    });
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = message.Bet.ClientId,
+                            ClientCode = message.Bet.ClientCode,
+                            URL = $"{message.Bet.Endpoint}{path}",
+                            BetId = message.Bet.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(result),
+                            OperatorToken = message.Bet.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
 
-                    //    messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
-                    //    RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId, threadId);
-                    //}
-                    //else
-                    //{
-                    //    AddOperatorLog(new OperatorLog
-                    //    {
-                    //        Direction = "RESPONSE",
-                    //        ClientId = message.Bet.ClientId,
-                    //        ClientCode = message.Bet.ClientCode,
-                    //        URL = $"{message.Bet.Endpoint}{path}",
-                    //        BetId = message.Bet.BetId.ToString().ToUpper(),
-                    //        Info = JsonSerializer.Serialize(response.ReasonPhrase),
-                    //        OperatorToken = message.Bet.OperatorToken,
-                    //        CorrelationId = correlationId,
-                    //        Timestamp = DateTime.UtcNow
-                    //    });
+                        messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
+                        AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetCancellation", correlationId, false);
+                    }
+                    else
+                    {
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = message.Bet.ClientId,
+                            ClientCode = message.Bet.ClientCode,
+                            URL = $"{message.Bet.Endpoint}{path}",
+                            BetId = message.Bet.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(response.ReasonPhrase),
+                            OperatorToken = message.Bet.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
 
-                    //    messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
-                    //    RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId, threadId);
-                    //}
+                        messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
+                        AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetCancellation", correlationId, false);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                //TODO: check how to retry OG cancelation
+                AddOperatorLog(new OperatorLog
+                {
+                    Direction = "RESPONSE",
+                    ClientId = message.Bet.ClientId,
+                    ClientCode = message.Bet.ClientCode,
+                    URL = $"{message.Bet.Endpoint}{path}",
+                    BetId = message.Bet.BetId.ToString().ToUpper(),
+                    Info = JsonSerializer.Serialize(new { message = ex.Message, stackTrace = ex.StackTrace }),
+                    OperatorToken = message.Bet.OperatorToken,
+                    CorrelationId = correlationId,
+                    Timestamp = DateTime.UtcNow
+                });
 
-                //AddOperatorLog(new OperatorLog
-                //{
-                //    Direction = "RESPONSE",
-                //    ClientId = message.Bet.ClientId,
-                //    ClientCode = message.Bet.ClientCode,
-                //    URL = $"{message.Bet.Endpoint}{path}",
-                //    BetId = message.Bet.BetId.ToString().ToUpper(),
-                //    Info = JsonSerializer.Serialize(new { message = ex.Message, stackTrace = ex.StackTrace }),
-                //    OperatorToken = message.Bet.OperatorToken,
-                //    CorrelationId = correlationId,
-                //    Timestamp = DateTime.UtcNow
-                //});
-
-                //messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
-                //RetryBetCancellation(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, payload, "OnBetCancellation", messageBroker, correlationId, threadId);
+                messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
+                AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetCancellation", correlationId, false);
             }
         }
 

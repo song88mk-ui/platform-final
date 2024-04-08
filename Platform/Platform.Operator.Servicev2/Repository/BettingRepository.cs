@@ -2130,7 +2130,7 @@ namespace Platform.Operator.Servicev2.Repository
             }
         }
 
-        public void ProcesssBetCancellationOG(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId, OGRequestDTO OGParameters)
+        public void ProcesssBetCancellationOG(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId, OGRequestDTO ogParam)
         {
             if (message.IsRetry)
             {
@@ -2164,10 +2164,10 @@ namespace Platform.Operator.Servicev2.Repository
                 TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 TotalAmount = message.Bet.TrueStake,
                 TransactionType = "rollback",
-                GameCode = OGParameters.GameCode,
+                GameCode = ogParam.GameCode,
                 RoundId = message.Bet.BetId.ToString().ToUpper(),
                 Currency = message.Bet.CurrencyCode,
-                CalledAt = OGParameters.CalledAt,
+                CalledAt = ogParam.CalledAt,
                 Records = JsonSerializer.Serialize(records),
                 Signature = ""
             };

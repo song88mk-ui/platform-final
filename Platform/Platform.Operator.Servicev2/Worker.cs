@@ -411,7 +411,11 @@ namespace Platform.Operator.Servicev2
                         var onBetCancellation = JsonSerializer.Deserialize<OnBetSettlement>(payload);
                         Console.WriteLine($"{DateTime.UtcNow} {onBetCancellation.Bet.BetId} - OnBetCancellation");
 
-                        _bettingRepository.ProcesssBetCancellation(onBetCancellation, _messageBroker, correlationId, threadId);
+                        var ogParamC = onBetCancellation.Bet.OperatorToken.ToOGParam();
+                        if (ogParamC == null)
+                            _bettingRepository.ProcesssBetCancellation(onBetCancellation, _messageBroker, correlationId, threadId);
+                        else
+                            _bettingRepository.ProcesssBetCancellationOG(onBetCancellation, _messageBroker, correlationId, threadId, ogParamC);
                         break;
 
                     case "OnBetSettlementOG":

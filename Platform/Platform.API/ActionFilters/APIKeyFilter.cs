@@ -51,6 +51,7 @@ namespace Platform.API.ActionFilters
                     Signature = context.HttpContext.Request.Headers["x-og-signature"].FirstOrDefault(),
                     IsSBLaunch = isSbLaunch != null ? bool.Parse(isSbLaunch) : false,
                     CurrencyCode = context.HttpContext.Request.Headers["x-og-currency"].FirstOrDefault()
+                    BetPlace = string.Empty,
                 };
             }
         }

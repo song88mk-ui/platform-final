@@ -11,5 +11,6 @@ namespace Platform.API.Models
         public string Signature { get; set; }
         public bool IsSBLaunch { get; set; }
         public string CurrencyCode { get; set; }
+        public string LanguageCode { get; set; }
     }
 }

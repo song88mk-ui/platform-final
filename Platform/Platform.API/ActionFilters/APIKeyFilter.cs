@@ -52,6 +52,7 @@ namespace Platform.API.ActionFilters
                     IsSBLaunch = isSbLaunch != null ? bool.Parse(isSbLaunch) : false,
                     CurrencyCode = context.HttpContext.Request.Headers["x-og-currency"].FirstOrDefault(),
                     BetPlace = string.Empty,
+                    LanguageCode = LanguageCode.EN.ToString(),
                 };
             }
         }

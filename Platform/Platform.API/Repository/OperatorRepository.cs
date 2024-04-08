@@ -354,7 +354,8 @@ namespace Platform.API.Repository
                         UserId = request.PlayerCode,
                         Balance = balance,
                         CurrencyCode = currencyCode,
-                        StatusId = 1000
+                        StatusId = 1000,
+                        LanguageCode = request.LanguageCode,
                     }
                 };
             }

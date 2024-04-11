@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 using Platform.API.Controllers;
@@ -38,6 +39,7 @@ namespace Platform.API.ActionFilters
             if (ogClientIds.Contains(clientId.ToUpper()))
             {
                 var isSbLaunch = context.HttpContext.Request.Headers["x-og-issblaunch"].FirstOrDefault();
+                var languageCode = string.IsNullOrEmpty(context.HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "en" : context.HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToLower();
 
                 ((BaseController)context.Controller).OGParameters = new OGClientRequest
                 {
@@ -52,7 +54,7 @@ namespace Platform.API.ActionFilters
                     IsSBLaunch = isSbLaunch != null ? bool.Parse(isSbLaunch) : false,
                     CurrencyCode = context.HttpContext.Request.Headers["x-og-currency"].FirstOrDefault(),
                     BetPlace = string.Empty,
-                    LanguageCode = LanguageCode.EN.ToString(),
+                    LanguageCode = languageCode,
                 };
             }
         }

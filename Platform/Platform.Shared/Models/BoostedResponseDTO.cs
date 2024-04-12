@@ -46,6 +46,7 @@ namespace Platform.Shared.Models
         public bool IsBetStopGlobal { get; set; }
         public int SortOrder { get; set; }
         public bool IsBoosted { get; set; }
+        public int CountryId { get; set; }
         public SportMarketTemplateGroup MarketTemplateGroups { get; set; }
         public List<BoostedMarketDTO> Markets { get; set; }
     }

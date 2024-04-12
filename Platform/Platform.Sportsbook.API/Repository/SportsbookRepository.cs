@@ -860,6 +860,13 @@ namespace Platform.Sportsbook.API.Repository
             var segmentOrder = GetSegmentOrder().Where(c => c.ClientId == request.ClientId).ToList();
             var leagueOrder = GetLeagueOrder().Where(c => c.ClientId == request.ClientId).ToList();
             var activeSportIds = sportSortOrder.Select(s => s.SportId).ToList();
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss => 
+                                    new CountrySegment { 
+                                        CountryId = s.Id, 
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()), 
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault()) 
+                                    }).ToList()).ToList();
+
 
             var result = fixtures.Where(c => activeSportIds.Contains(c.SpId) && c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
             {
@@ -949,6 +956,7 @@ namespace Platform.Sportsbook.API.Repository
                             SegmentId = s.Key,
                             SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
                             SortOrder = s.Select(se => se.LeagueSortOrder).FirstOrDefault(),
+                            CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == sport.SportId && cc.SegmentId == s.Key)?.CountryId ?? 0,
                             Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
                             {
                                 LeagueId = l.Key,
@@ -974,6 +982,7 @@ namespace Platform.Sportsbook.API.Repository
                             SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
                             SortOrder = segment?.FirstOrDefault(c => c.SegmentId == s.Key)?.SortOrder == null && s.Select(se => se.SegmentId).FirstOrDefault() == 999999 ? 2000
                                         : segment?.FirstOrDefault(c => c.SegmentId == s.Key)?.SortOrder ?? 1000,
+                            CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == sport.SportId && cc.SegmentId == s.Key)?.CountryId ?? 0,
                             Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
                             {
                                 LeagueId = l.Key,
@@ -996,6 +1005,7 @@ namespace Platform.Sportsbook.API.Repository
                             SegmentId = s.Key,
                             SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
                             SortOrder = s.Select(se => se.LeagueSortOrder).FirstOrDefault(),
+                            CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == sport.SportId && cc.SegmentId == s.Key)?.CountryId ?? 0,
                             Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
                             {
                                 LeagueId = l.Key,
@@ -7671,6 +7681,10 @@ namespace Platform.Sportsbook.API.Repository
         private List<ClientLeagueOrder> GetLeagueOrder()
         {
             return _memCache.GetCache($"leo", () => _sportsbookContext.ClientLeagueOrder.ToList(), 24);
+        }
+        private List<Country> GetSegmentCountry()
+        {
+            return _memCache.GetCache($"sc", () => _sportsbookContext.Country.ToList(), 24);
         }
         private Shared.Data.Sportsbook.SQLEntities.SportGroup GetSportGroups(Shared.Enums.SportGroup sportGroup)
         {

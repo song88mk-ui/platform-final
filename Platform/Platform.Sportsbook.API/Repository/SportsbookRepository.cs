@@ -15,6 +15,7 @@ using Platform.Sportsbook.API.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -860,6 +861,13 @@ namespace Platform.Sportsbook.API.Repository
             var segmentOrder = GetSegmentOrder().Where(c => c.ClientId == request.ClientId).ToList();
             var leagueOrder = GetLeagueOrder().Where(c => c.ClientId == request.ClientId).ToList();
             var activeSportIds = sportSortOrder.Select(s => s.SportId).ToList();
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss => 
+                                    new CountrySegment { 
+                                        CountryId = s.Id, 
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()), 
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault()) 
+                                    }).ToList()).ToList();
+
 
             var result = fixtures.Where(c => activeSportIds.Contains(c.SpId) && c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
             {
@@ -949,6 +957,7 @@ namespace Platform.Sportsbook.API.Repository
                             SegmentId = s.Key,
                             SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
                             SortOrder = s.Select(se => se.LeagueSortOrder).FirstOrDefault(),
+                            CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == sport.SportId && cc.SegmentId == s.Key)?.CountryId ?? 0,
                             Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
                             {
                                 LeagueId = l.Key,
@@ -974,6 +983,7 @@ namespace Platform.Sportsbook.API.Repository
                             SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
                             SortOrder = segment?.FirstOrDefault(c => c.SegmentId == s.Key)?.SortOrder == null && s.Select(se => se.SegmentId).FirstOrDefault() == 999999 ? 2000
                                         : segment?.FirstOrDefault(c => c.SegmentId == s.Key)?.SortOrder ?? 1000,
+                            CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == sport.SportId && cc.SegmentId == s.Key)?.CountryId ?? 0,
                             Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
                             {
                                 LeagueId = l.Key,
@@ -996,6 +1006,7 @@ namespace Platform.Sportsbook.API.Repository
                             SegmentId = s.Key,
                             SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
                             SortOrder = s.Select(se => se.LeagueSortOrder).FirstOrDefault(),
+                            CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == sport.SportId && cc.SegmentId == s.Key)?.CountryId ?? 0,
                             Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
                             {
                                 LeagueId = l.Key,
@@ -1674,6 +1685,14 @@ namespace Platform.Sportsbook.API.Repository
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
             var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
 
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+                                    new CountrySegment
+                                    {
+                                        CountryId = s.Id,
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()),
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
+                                    }).ToList()).ToList();
+
             if (leagueIds.Count() > 0)
             {
                 var leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && leagueIds.Contains(c.LeId));
@@ -1771,6 +1790,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsBetStop = item.IsSu,
                             IsBetStopGlobal = bettingStatus.IsBeSo,
                             IsBetBuilder = isBetBuilder,
+                            CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SpId && cc.SegmentId == item.SegId)?.CountryId ?? 0,
                             Markets = GetMainMarkets(item.SpId, item.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), request.LanguageCode, request.ClientCode, item.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
                         });
                     }
@@ -1873,6 +1893,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsBetStop = item.IsSu,
                             IsBetStopGlobal = bettingStatus.IsBeSo,
                             IsBetBuilder = isBetBuilder,
+                            CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SpId && cc.SegmentId == item.SegId)?.CountryId ?? 0,
                             Markets = GetMainMarkets(item.SpId, item.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), request.LanguageCode, request.ClientCode, item.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
                         });
                     }
@@ -2326,6 +2347,14 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+                                    new CountrySegment
+                                    {
+                                        CountryId = s.Id,
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()),
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
+                                    }).ToList()).ToList();
+
             foreach (var item in initialResult)
             {
                 var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(item.SportId) && item.FixtureTypeId == (int)FixtureType.Match ? betBuilderMarketTemplates.Where(c => c.SportId == item.SportId).ToList() : new List<BetBuilderMarketTemplates>();
@@ -2365,7 +2394,8 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     IsBetBuilder = item.IsBetBuilder,
                     Markets = currentMarkets,
-                    SortOrder = item.SortOrder
+                    SortOrder = item.SortOrder,
+                    CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0
                 });
 
                 if (finalResult.Count == 10) break;
@@ -2676,6 +2706,14 @@ namespace Platform.Sportsbook.API.Repository
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+                                    new CountrySegment
+                                    {
+                                        CountryId = s.Id,
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()),
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
+                                    }).ToList()).ToList();
+
             Parallel.ForEach(initialResult, item =>
             {
                 finalResult.Add(new FixtureDTO
@@ -2709,6 +2747,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     IsBetBuilder = item.IsBetBuilder,
                     SortOrder = item.SortOrder,
+                    CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0,
                     Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
                 });
             });
@@ -2842,6 +2881,14 @@ namespace Platform.Sportsbook.API.Repository
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+                                    new CountrySegment
+                                    {
+                                        CountryId = s.Id,
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()),
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
+                                    }).ToList()).ToList();
+
             Parallel.ForEach(initialResult, item =>
             {
                 finalResult.Add(new FixtureDTO
@@ -2875,6 +2922,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     IsBetBuilder = item.IsBetBuilder,
                     SortOrder = item.SortOrder,
+                    CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0,
                     Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
                 });
             });
@@ -3064,6 +3112,14 @@ namespace Platform.Sportsbook.API.Repository
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+                                    new CountrySegment
+                                    {
+                                        CountryId = s.Id,
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()),
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
+                                    }).ToList()).ToList();
+
             Parallel.ForEach(initialResult, item =>
             {
                 tempFinalResult.Add(new FixtureDTO
@@ -3097,6 +3153,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     IsBetBuilder = item.IsBetBuilder,
                     SortOrder = item.SortOrder,
+                    CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0,
                     Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
                 });
             });
@@ -3286,6 +3343,14 @@ namespace Platform.Sportsbook.API.Repository
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+                                    new CountrySegment
+                                    {
+                                        CountryId = s.Id,
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()),
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
+                                    }).ToList()).ToList();
+
             Parallel.ForEach(initialResult, item =>
             {
                 tempFinalResult.Add(new FixtureDTO
@@ -3319,6 +3384,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     IsBetBuilder = item.IsBetBuilder,
                     SortOrder = item.SortOrder,
+                    CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0,
                     Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
                 });
             });
@@ -3510,6 +3576,14 @@ namespace Platform.Sportsbook.API.Repository
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+                                    new CountrySegment
+                                    {
+                                        CountryId = s.Id,
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()),
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
+                                    }).ToList()).ToList();
+
             Parallel.ForEach(initialResult, item =>
             {
                 tempFinalResult.Add(new FixtureDTO
@@ -3543,6 +3617,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     IsBetBuilder = item.IsBetBuilder,
                     SortOrder = item.SortOrder,
+                    CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0,
                     Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
                 });
             });
@@ -3733,6 +3808,14 @@ namespace Platform.Sportsbook.API.Repository
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+                                    new CountrySegment
+                                    {
+                                        CountryId = s.Id,
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()),
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
+                                    }).ToList()).ToList();
+
             Parallel.ForEach(initialResult, item =>
             {
                 tempFinalResult.Add(new FixtureDTO
@@ -3766,6 +3849,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     IsBetBuilder = item.IsBetBuilder,
                     SortOrder = item.SortOrder,
+                    CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0,
                     Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
                 });
             });
@@ -3841,6 +3925,13 @@ namespace Platform.Sportsbook.API.Repository
             var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
 
             var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+                                    new CountrySegment
+                                    {
+                                        CountryId = s.Id,
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()),
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
+                                    }).ToList()).ToList();
 
             var result = fixtures.Select(s => new TempFixtureDTO
             {
@@ -3941,6 +4032,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     IsBetBuilder = item.IsBetBuilder,
                     SortOrder = item.SortOrder,
+                    CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0,
                     Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
                 });
             });
@@ -4020,6 +4112,13 @@ namespace Platform.Sportsbook.API.Repository
             var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
 
             var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+                                    new CountrySegment
+                                    {
+                                        CountryId = s.Id,
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()),
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
+                                    }).ToList()).ToList();
 
             var result = fixtures.Select(s => new TempFixtureDTO
             {
@@ -4120,6 +4219,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     IsBetBuilder = item.IsBetBuilder,
                     SortOrder = item.SortOrder,
+                    CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0,
                     Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
                 });
             });
@@ -4582,6 +4682,13 @@ namespace Platform.Sportsbook.API.Repository
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
             var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+                                    new CountrySegment
+                                    {
+                                        CountryId = s.Id,
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()),
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
+                                    }).ToList()).ToList();
 
             var result = fixtures2.Select(s => new FixtureDTO
             {
@@ -4614,6 +4721,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
                 SortOrder = clientTopLeagues.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() == 0 ? sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() : clientTopLeagues.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault(),
+                CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == s.SpId && cc.SegmentId == s.SegId)?.CountryId ?? 0,
                 Markets = GetMainMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, s.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
@@ -4678,6 +4786,13 @@ namespace Platform.Sportsbook.API.Repository
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
             var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+                                    new CountrySegment
+                                    {
+                                        CountryId = s.Id,
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()),
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
+                                    }).ToList()).ToList();
 
             var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId && c.SegmentId == request.SegmentId).ToList();
 
@@ -4731,6 +4846,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
                 SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault(),
+                CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == s.SpId && cc.SegmentId == s.SegId)?.CountryId ?? 0,
                 Markets = GetMainMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, s.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
@@ -4824,6 +4940,14 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+                                    new CountrySegment
+                                    {
+                                        CountryId = s.Id,
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()),
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
+                                    }).ToList()).ToList();
+
             var result = fixtures.Select(s => new FixtureDTO
             {
                 SportId = s.SpId,
@@ -4854,6 +4978,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
+                CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == s.SpId && cc.SegmentId == s.SegId)?.CountryId ?? 0,
                 Markets = GetMainMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, s.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
             }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
@@ -7057,6 +7182,13 @@ namespace Platform.Sportsbook.API.Repository
 
 
             var clientInitial = GetClientMarketTemplateGroups();
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+                                    new CountrySegment
+                                    {
+                                        CountryId = s.Id,
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()),
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
+                                    }).ToList()).ToList();
 
             var result = fixtures.Select(s => new BoostedFixtureDTO
             {
@@ -7085,6 +7217,7 @@ namespace Platform.Sportsbook.API.Repository
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 IsBoosted = s.IsBo,
+                CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == s.SpId && cc.SegmentId == s.SegId)?.CountryId ?? 0,
                 Markets = GetBoostedMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, true, s.FiStId, clientInitial.Where(c => c.SportId == s.SpId && c.ClientId == request.ClientId).ToList())
             }).ToList();
 
@@ -7671,6 +7804,10 @@ namespace Platform.Sportsbook.API.Repository
         private List<ClientLeagueOrder> GetLeagueOrder()
         {
             return _memCache.GetCache($"leo", () => _sportsbookContext.ClientLeagueOrder.ToList(), 24);
+        }
+        private List<Country> GetSegmentCountry()
+        {
+            return _memCache.GetCache($"sc", () => _sportsbookContext.Country.ToList(), 24);
         }
         private Shared.Data.Sportsbook.SQLEntities.SportGroup GetSportGroups(Shared.Enums.SportGroup sportGroup)
         {
@@ -9740,6 +9877,14 @@ namespace Platform.Sportsbook.API.Repository
                                 .Where(c => c.Fixtures.Count > 0)
                                 .Take(numSize);
 
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+                                    new CountrySegment
+                                    {
+                                        CountryId = s.Id,
+                                        SportId = Convert.ToInt32(ss.Split(':').FirstOrDefault()),
+                                        SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
+                                    }).ToList()).ToList();
+
             var sportIds = tierLeagueFixtures.Select(s => s.SportId).ToList();
             var fixturesInTierLeague = tierLeagueFixtures.SelectMany(x => x.Fixtures).ToList();
 
@@ -9847,7 +9992,8 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStopGlobal = fixture.IsBetStopGlobal,
                     IsBetBuilder = isBetBuilder,
                     SortOrder = fixture.SortOrder,
-                    Markets = currentMarkets
+                    Markets = currentMarkets,
+                    CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == fixture.SportId && cc.SegmentId == fixture.SegmentId)?.CountryId ?? 0,
                 });
             }
 

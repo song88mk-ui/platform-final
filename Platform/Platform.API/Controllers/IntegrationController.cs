@@ -1649,7 +1649,7 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
-
+        //
         [HttpGet("v1/sportsbook/sports")]
         public async Task<IActionResult> GetSports([FromQuery] SportGroup sportGroup, FixtureScope? fixtureScope, DateTime? dateUTC, int? minuteUTCOffset)
         {

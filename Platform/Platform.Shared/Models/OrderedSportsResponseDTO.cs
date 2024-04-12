@@ -57,6 +57,7 @@ namespace Platform.Shared.Models
         public int SegmentId { get; set; }
         public string SegmentName { get; set; }
         public int SortOrder { get; set; }
+        public int CountryId { get; set; }
         public List<LeagueDTO> Leagues { get; set; }
     }
 

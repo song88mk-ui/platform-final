@@ -780,42 +780,89 @@ namespace Platform.Operator.Servicev2.Repository
             var path = "/api/v2/platform/transaction/bulk/debit";
 
             var betData = message.Bet;
-            var betSelectionData = message.BetSelections;
+            //var betSelectionData = message.BetSelections;
 
             try
             {
-
                 var publicKey = _configuration["Custom:OrientalGaming:PublicAPIKey"].ToString();
                 var privateKey = _configuration["Custom:OrientalGaming:PrivateAPIKey"].ToString();
                 var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
                 var ogParam = message.Bet.OperatorToken.ToOGParam();
 
-                var records = new List<object> { new {
-                       amount = betData.TrueStake,
-                       bet_place = "",
-                       transaction_id = correlationId,
-                       secondary_info = new { bet_amount = betData.TrueStake, detain_amount = 0m },
-                       other_info = betSelectionData,
-                       remark = ""
-                    } };
+                //TODO: need to convert from message.BetSelections;; make sure decimal type be converted into double
+                var betSelectionData = new List<BetSelection> { new BetSelection {
+                    BetSelectionId = Guid.Parse("e943b552-87a6-4d26-1ca1-08dc5ceea5f2"),
+                    BetId = Guid.Parse("617aff7c-f0cb-47d8-d530-08dc5ceea5d2"),
+                    UserId = "455_grpdevcnytest002",
+                    SportId = 1,
+                    SportName = "Soccer",
+                    SegmentId = 299,
+                    SegmentName = "United Arab Emirates",
+                    LeagueId = 971,
+                    LeagueName = "Arabian Gulf League",
+                    FixtureId = 1229249586858586000,
+                    FixtureName = "Ittihad Kalba FC vs. Al Wahda FC (UAE)",
+                    FixtureTypeId = 0,
+                    FixtureTypeName = "Match",
+                    MarketTemplateId = "16",
+                    MarketId = 1229249613236564200,
+                    MarketName = "Handicap",
+                    SelectionTemplateId = "1714",
+                    SelectionId = 1229249613236564200,
+                    SelectionName = "Ittihad Kalba FC (\\u002B1.25)",
+                    FixtureStatusId = 0,
+                    FixtureStatusName = "Prematch",
+                    Line = "1.25",
+                    Odds = 1.67m,
+                    BetSelectionStatusId = 1000,
+                    BetSelectionStatusName = "Waiting",
+                    IsSettled = false,
+                    IsResettled = false,
+                    FixtureSpecifier = "sr:match:41967017",
+                    SelectionSpecifier = @"uof:3/sr:sport:1/16/1714?hcp=1.25",
+                    FixtureStartDate = DateTime.Parse("2024-04-15T16:30:00"),
+                    BetScore = "0 - 0",
+                    SettlementScore = "0 - 0",
+                    Probability = 0.549957,
+                    WonProbability = 0,
+                    LostProbability = 0,
+                    VoidProbability = 0,
+                    HalfWonProbability = 0,
+                    HalfLostProbability = 0,
+                    CorrelationId = "1713160423948",
+                    DeadHeatFactor = 1,
+                    OddsRef = 1.67m,
+                    IsBinary = true
+                } };
+
+                var records = new[] { new {
+                           amount = Convert.ToDouble(betData.TrueStake),
+                           bet_place = betSelectionData.Count > 1 ? "multiple" : "single",
+                           transaction_id = correlationId.ToLower().Replace("-","") + "7",
+                           secondary_info = new { bet_amount = Convert.ToDouble(betData.TrueStake), detain_amount = 0 },
+                           other_info = betSelectionData.FirstOrDefault(),
+                           remark = (string)null
+                        }};
 
                 var payload = new OnOGDebitRequest
                 {
                     PlayerCode = betData.UserId,
-                    TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    TotalAmount = betData.TrueStake,
+                    TimeStamp = ogParam.CalledAt,
+                    TotalAmount = Convert.ToDouble(betData.TrueStake),
                     TransactionType = "debit",
                     GameCode = ogParam.GameCode,
-                    RoundId = betData.BetId.ToString().ToUpper(),
+                    RoundId = "testround",
                     Currency = betData.CurrencyCode,
-                    CalledAt = ogParam.CalledAt,
-                    Records = JsonSerializer.Serialize(records),
+                    CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                    Records = records,
                     Signature = ""
                 };
+
 
                 //signature generation
                 var signature = payload.ToSignOG(privateKey);
                 payload.Signature = signature;
+
 
                 AddOperatorLog(new OperatorLog
                 {
@@ -2162,13 +2209,13 @@ namespace Platform.Operator.Servicev2.Repository
             {
                 PlayerCode = message.Bet.UserId,
                 TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                TotalAmount = message.Bet.TrueStake,
+                TotalAmount = Convert.ToDouble(message.Bet.TrueStake),
                 TransactionType = "rollback",
                 GameCode = ogParam.GameCode,
                 RoundId = message.Bet.BetId.ToString().ToUpper(),
                 Currency = message.Bet.CurrencyCode,
                 CalledAt = ogParam.CalledAt,
-                Records = JsonSerializer.Serialize(records),
+                Records = records,
                 Signature = ""
             };
 

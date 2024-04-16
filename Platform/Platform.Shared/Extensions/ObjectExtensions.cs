@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -38,13 +37,10 @@ namespace Platform.Shared.Extensions
         {
             var dictionary = model.ToDictionary(false);
             var list = dictionary.Where(c => c.Key != "signature")
-                .Select(s => $"{s.Key}={s.Value}")
-                .ToList();
-
+            .Select(s => $"{s.Key}={s.Value.ToString().Replace("/",@"\/") }")
+            .ToList();
             var hash = list.GetDataString();
-
             var strHash = hash.ToMD5Hash(privateKey).ToLower();
-
             return strHash;
         }
 

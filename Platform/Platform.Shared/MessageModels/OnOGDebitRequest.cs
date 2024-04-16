@@ -1,4 +1,6 @@
-﻿using System.Text.Json.Serialization;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Platform.Shared.MessageModels
 {
@@ -9,7 +11,7 @@ namespace Platform.Shared.MessageModels
         [JsonPropertyName("timestamp")]
         public long TimeStamp { get; set; }
         [JsonPropertyName("total_amount")]
-        public decimal TotalAmount { get; set; }
+        public double TotalAmount { get; set; }
         [JsonPropertyName("transaction_type")]
         public string TransactionType { get; set; }
         [JsonPropertyName("game_code")]
@@ -23,6 +25,6 @@ namespace Platform.Shared.MessageModels
         [JsonPropertyName("signature")]
         public string Signature { get; set; }
         [JsonPropertyName("records")]
-        public string Records { get; set; }
+        public object Records { get; set; }
     }
 }

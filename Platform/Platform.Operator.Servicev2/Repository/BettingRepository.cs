@@ -1206,7 +1206,7 @@ namespace Platform.Operator.Servicev2.Repository
                     TransactionType = transType,
                     GameCode = ogParam.GameCode,
                     RoundId = message.Bet.BetId.ToString().ToUpper(),
-                    BetPlace = ogParam.BetPlace,
+                    BetPlace = message.BetSelections.Count > 1 ? "multiple" : "single",
                     Currency = message.Bet.CurrencyCode,
                     WinloseAmount = message.Bet.WinLoss.ToString(),
                     EffectiveAmount = message.Bet.WinLoss.ToString(),
@@ -1749,7 +1749,7 @@ namespace Platform.Operator.Servicev2.Repository
                     TransactionType = transType,
                     GameCode = ogParam.GameCode,
                     RoundId = message.Bet.BetId.ToString().ToUpper(),
-                    BetPlace = ogParam.BetPlace,
+                    BetPlace = message.BetSelections.Count > 1 ? "multiple" : "single",
                     Currency = message.Bet.CurrencyCode,
                     WinloseAmount = message.Bet.WinLoss.ToString(),
                     EffectiveAmount = message.Bet.WinLoss.ToString(),
@@ -2309,27 +2309,48 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                    AddOperatorLog(new OperatorLog
+                    if (result.Code == "S-100")
                     {
-                        Direction = "RESPONSE",
-                        ClientId = message.Bet.ClientId,
-                        ClientCode = message.Bet.ClientCode,
-                        URL = $"{message.Bet.Endpoint}{path}",
-                        BetId = message.Bet.BetId.ToString().ToUpper(),
-                        Info = JsonSerializer.Serialize(result),
-                        OperatorToken = message.Bet.OperatorToken,
-                        CorrelationId = correlationId,
-                        Timestamp = DateTime.UtcNow
-                    });
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = message.Bet.ClientId,
+                            ClientCode = message.Bet.ClientCode,
+                            URL = $"{message.Bet.Endpoint}{path}",
+                            BetId = message.Bet.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(result),
+                            OperatorToken = message.Bet.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
 
-                    messageBroker.Publish(new OnWalletChange
+                        messageBroker.Publish(new OnWalletChange
+                        {
+                            ClientId = message.Bet.ClientId.ToUpper(),
+                            UserId = message.Bet.UserId,
+                            Balance = result.Balance
+                        }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+
+                        AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetCancellation", correlationId, response.IsSuccessStatusCode);
+                    }
+                    else
                     {
-                        ClientId = message.Bet.ClientId.ToUpper(),
-                        UserId = message.Bet.UserId,
-                        Balance = result.Balance
-                    }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+                        AddOperatorLog(new OperatorLog
+                        {
+                            Direction = "RESPONSE",
+                            ClientId = message.Bet.ClientId,
+                            ClientCode = message.Bet.ClientCode,
+                            URL = $"{message.Bet.Endpoint}{path}",
+                            BetId = message.Bet.BetId.ToString().ToUpper(),
+                            Info = JsonSerializer.Serialize(result),
+                            OperatorToken = message.Bet.OperatorToken,
+                            CorrelationId = correlationId,
+                            Timestamp = DateTime.UtcNow
+                        });
 
-                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetCancellation", correlationId, response.IsSuccessStatusCode);
+                        messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
+                        AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetCancellation", correlationId, false);
+                    }
                 }
                 else
                 {

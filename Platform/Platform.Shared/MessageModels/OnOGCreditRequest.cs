@@ -9,7 +9,7 @@ namespace Platform.Shared.MessageModels
         [JsonPropertyName("timestamp")]
         public long TimeStamp { get; set; }
         [JsonPropertyName("amount")]
-        public decimal Amount { get; set; }
+        public double Amount { get; set; }
         [JsonPropertyName("transaction_id")]
         public string TransactionId { get; set; }
         [JsonPropertyName("transaction_type")]

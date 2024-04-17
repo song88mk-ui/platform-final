@@ -837,7 +837,7 @@ namespace Platform.Operator.Servicev2.Repository
                 var records = new[] { new {
                            amount = Convert.ToDouble(betData.TrueStake),
                            bet_place = betSelectionData.Count > 1 ? "multiple" : "single",
-                           transaction_id = correlationId.ToLower().Replace("-",""),
+                           transaction_id = betData.BetId.ToString().ToLower().Replace("-",""),
                            secondary_info = new { bet_amount = Convert.ToDouble(betData.TrueStake), detain_amount = 0 },
                            other_info = betSelectionData,
                            remark = (string)null
@@ -1249,7 +1249,7 @@ namespace Platform.Operator.Servicev2.Repository
                     PlayerCode = message.Bet.UserId,
                     TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Amount = (double)message.Bet.Payout,
-                    TransactionId = correlationId.ToLower().Replace("-", ""),
+                    TransactionId = message.Bet.BetId.ToString().ToLower().Replace("-", ""),
                     TransactionType = transType,
                     GameCode = ogParam.GameCode,
                     RoundId = "testround",
@@ -1839,7 +1839,7 @@ namespace Platform.Operator.Servicev2.Repository
                     PlayerCode = message.Bet.UserId,
                     TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Amount = (double)message.Bet.Payout,
-                    TransactionId = correlationId.ToLower().Replace("-", ""),
+                    TransactionId = message.Bet.BetId.ToString().ToLower().Replace("-", ""),
                     TransactionType = transType,
                     GameCode = ogParam.GameCode,
                     RoundId = "testround",
@@ -2338,7 +2338,7 @@ namespace Platform.Operator.Servicev2.Repository
             var records = new[] { new {
                            amount = Convert.ToDouble(message.Bet.TrueStake),
                            bet_place = message.BetSelections.Count > 1 ? "multiple" : "single",
-                           transaction_id = correlationId.ToLower().Replace("-",""),
+                           transaction_id = message.Bet.BetId.ToString().ToLower().Replace("-",""),
                            secondary_info = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake), detain_amount = 0 },
                            other_info = betSelectionData,
                            remark = (string)null

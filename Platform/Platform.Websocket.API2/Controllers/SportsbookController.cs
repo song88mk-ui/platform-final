@@ -16,6 +16,7 @@ namespace Platform.Websocket.API2.Controllers
         [HttpGet("v1/connections")]
         public IActionResult GetConnections()
         {
+            //
             var result = new
             {
                 Connections = UserHandler.ConnectedIds.ToList(),

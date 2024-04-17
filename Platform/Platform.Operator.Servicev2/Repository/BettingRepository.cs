@@ -81,7 +81,7 @@ namespace Platform.Operator.Servicev2.Repository
                 var newHttpClient = new HttpClient
                 {
                     BaseAddress = new Uri(endpoint),
-                    Timeout = TimeSpan.FromSeconds(5)
+                    Timeout = TimeSpan.FromSeconds(20)
                 };
 
                 newHttpClient.DefaultRequestHeaders.Add("key", key);
@@ -1845,12 +1845,11 @@ namespace Platform.Operator.Servicev2.Repository
                     RoundId = "testround",
                     BetPlace = message.BetSelections.Count > 1 ? "multiple" : "single",
                     Currency = message.Bet.CurrencyCode,
-                    WinloseAmount = message.Bet.WinLoss.ToString(),
-                    EffectiveAmount = message.Bet.WinLoss.ToString(),
-                    ResultUrl = string.Empty,
+                    WinloseAmount = message.Bet.WinLoss.ToString("#.##"),
+                    EffectiveAmount = message.Bet.WinLoss.ToString("#.##"),
+                    ResultUrl = "https://preprod-platform.jmj.bet/play",
                     SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake), detain_amount = 0 },
                     OtherInfo = betSelectionData,
-                    Remark = "",
                     CalledAt = ogParam.CalledAt,
                     Signature = ""
                 };
@@ -1871,7 +1870,6 @@ namespace Platform.Operator.Servicev2.Repository
                         TransactionType = transType,
                         SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake), detain_amount = 0 },
                         OtherInfo = betSelectionData,
-                        Remark = "",
                         CalledAt = ogParam.CalledAt,
                         Signature = ""                        
                     };

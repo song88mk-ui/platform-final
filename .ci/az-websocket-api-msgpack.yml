@@ -23,5 +23,6 @@ extends:
   template: dotnetservice.yml@bt
   parameters:
     authToFeeds: false
+    dotnetVersion: '7.0.408'
     projects:
       - Platform/Platform.WebSocket.API2

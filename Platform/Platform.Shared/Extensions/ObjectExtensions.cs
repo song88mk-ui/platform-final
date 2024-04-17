@@ -37,7 +37,7 @@ namespace Platform.Shared.Extensions
         {
             var dictionary = model.ToDictionary(false);
             var list = dictionary.Where(c => c.Key != "signature")
-                .Select(s => $"{s.Key}={s.Value.ToString().Replace("/", @"\/")}")
+                .Select(s => $"{s.Key}={s.Value?.ToString().Replace("/", @"\/") ?? "null"}")
                 .ToList();
 
             //var dictionary = ConvertObjectToDictionary(model);

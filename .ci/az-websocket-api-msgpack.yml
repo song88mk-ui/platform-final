@@ -1,0 +1,27 @@
+name: Platform-WebSocket-API-MsgPack-$(Build.BuildId)
+
+pr: none
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - Platform/Platform.WebSocket.API2
+
+resources:
+  repositories:
+    - repository: bt
+      type: github
+      name: FlyingCockatoo/BuildTemplates
+      endpoint: FlyingCockatoo
+      ref: refs/tags/v2.0.0
+
+extends:
+  template: dotnetservice.yml@bt
+  parameters:
+    authToFeeds: false
+    projects:
+      - Platform/Platform.WebSocket.API2

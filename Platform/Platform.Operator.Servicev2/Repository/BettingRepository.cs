@@ -839,7 +839,7 @@ namespace Platform.Operator.Servicev2.Repository
                            bet_place = betSelectionData.Count > 1 ? "multiple" : "single",
                            transaction_id = betData.BetId.ToString().ToLower().Replace("-",""),
                            secondary_info = new { bet_amount = Convert.ToDouble(betData.TrueStake), detain_amount = 0 },
-                           other_info = betSelectionData,
+                           other_info = new { betSelectionData },
                            remark = (string)null
                         }};
 
@@ -1259,7 +1259,7 @@ namespace Platform.Operator.Servicev2.Repository
                     EffectiveAmount = message.Bet.WinLoss.ToString(),
                     ResultUrl = string.Empty,
                     SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake), detain_amount = 0m },
-                    OtherInfo = betSelectionData,
+                    OtherInfo = new { betSelectionData },
                     Remark = "",
                     CalledAt = ogParam.CalledAt,
                     Signature = ""
@@ -1849,7 +1849,7 @@ namespace Platform.Operator.Servicev2.Repository
                     EffectiveAmount = message.Bet.WinLoss.ToString("#.##"),
                     ResultUrl = "https://preprod-platform.jmj.bet/play",
                     SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake), detain_amount = 0 },
-                    OtherInfo = betSelectionData,
+                    OtherInfo = new { betSelectionData },
                     CalledAt = ogParam.CalledAt,
                     Signature = ""
                 };
@@ -1869,7 +1869,7 @@ namespace Platform.Operator.Servicev2.Repository
                         TransactionId = correlationId.ToLower().Replace("-", ""),
                         TransactionType = transType,
                         SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake), detain_amount = 0 },
-                        OtherInfo = betSelectionData,
+                        OtherInfo = new { betSelectionData },
                         CalledAt = ogParam.CalledAt,
                         Signature = ""                        
                     };
@@ -2338,7 +2338,7 @@ namespace Platform.Operator.Servicev2.Repository
                            bet_place = message.BetSelections.Count > 1 ? "multiple" : "single",
                            transaction_id = message.Bet.BetId.ToString().ToLower().Replace("-",""),
                            secondary_info = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake), detain_amount = 0 },
-                           other_info = betSelectionData,
+                           other_info = new { betSelectionData },
                            remark = (string)null
                         }};
 

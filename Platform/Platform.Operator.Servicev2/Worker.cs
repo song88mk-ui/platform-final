@@ -236,6 +236,10 @@ namespace Platform.Operator.Servicev2
                         var onBetCancellation = JsonSerializer.Deserialize<OnBetSettlement>(payload);
                         firstChar = onBetCancellation.Bet.BetId.ToString().ToUpper().Substring(0, 1);
                         break;
+                    case "OnBetSettlementOG":
+                        var onBetSettlementOG = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+                        firstChar = onBetSettlementOG.Bet.BetId.ToString().ToUpper().Substring(0, 1);
+                        break;
                 }
 
                 switch (firstChar)

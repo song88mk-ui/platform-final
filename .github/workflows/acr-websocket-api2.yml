@@ -28,7 +28,7 @@ jobs:
           password: ${{ secrets.ACR_PASSWORD }}
 
       - name: Set image tag
-        id: image
+        id: tag
         run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Build and Push
@@ -37,4 +37,4 @@ jobs:
           build-contexts: shared=Platform
           context: Platform/Platform.Websocket.API2
           push: true
-          tags: ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME }}:${{ steps.image.sha }}
+          tags: ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.sha }}

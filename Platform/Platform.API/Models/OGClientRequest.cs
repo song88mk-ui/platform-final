@@ -12,5 +12,6 @@ namespace Platform.API.Models
         public bool IsSBLaunch { get; set; }
         public string CurrencyCode { get; set; }
         public string LanguageCode { get; set; }
+        public long Timestamp { get; set; }
     }
 }

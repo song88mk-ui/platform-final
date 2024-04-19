@@ -846,7 +846,7 @@ namespace Platform.Operator.Servicev2.Repository
                 var payload = new OnOGDebitRequest
                 {
                     PlayerCode = betData.UserId,
-                    TimeStamp = ogParam.CalledAt,
+                    TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     TotalAmount = Convert.ToDouble(betData.TrueStake),
                     TransactionType = "debit",
                     GameCode = ogParam.GameCode,
@@ -1261,7 +1261,7 @@ namespace Platform.Operator.Servicev2.Repository
                     SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake), detain_amount = 0m },
                     OtherInfo = new { betSelectionData },
                     Remark = "",
-                    CalledAt = ogParam.CalledAt,
+                    CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Signature = ""
                 };
 
@@ -1850,7 +1850,7 @@ namespace Platform.Operator.Servicev2.Repository
                     ResultUrl = "https://preprod-platform.jmj.bet/play",
                     SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake), detain_amount = 0 },
                     OtherInfo = new { betSelectionData },
-                    CalledAt = ogParam.CalledAt,
+                    CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Signature = ""
                 };
 
@@ -1870,7 +1870,7 @@ namespace Platform.Operator.Servicev2.Repository
                         TransactionType = transType,
                         SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake), detain_amount = 0 },
                         OtherInfo = new { betSelectionData },
-                        CalledAt = ogParam.CalledAt,
+                        CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                         Signature = ""                        
                     };
 
@@ -2345,7 +2345,7 @@ namespace Platform.Operator.Servicev2.Repository
             var payload = new OnOGDebitRequest
             {
                 PlayerCode = message.Bet.UserId,
-                TimeStamp = ogParam.CalledAt,
+                TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 TotalAmount = Convert.ToDouble(message.Bet.TrueStake),
                 TransactionType = "rollback",
                 GameCode = ogParam.GameCode,

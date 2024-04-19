@@ -277,7 +277,7 @@ namespace Platform.API.Repository
                     PoolId = request.PoolId,
                     BetLimit = request.BetLimit,
                     Signature = string.Empty,
-                    Timestamp = request.CalledAt,
+                    Timestamp = request.Timestamp,
                 };
 
                 authenticationPayload.Signature = authenticationPayload.ToSignOG(privateKey);
@@ -313,7 +313,7 @@ namespace Platform.API.Repository
                     var walletRequest = new
                     {
                         player_code = request.PlayerCode,
-                        timestamp = request.CalledAt
+                        timestamp = request.Timestamp
                     };
 
                     var signature = walletRequest.ToSignOG(privateKey);

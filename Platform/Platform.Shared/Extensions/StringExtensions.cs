@@ -12,12 +12,10 @@ namespace Platform.Shared.Extensions
             if (ogParam.Length <= 1)
                 return null;
 
-            var gameCode = ogParam.Length >= 3 ? ogParam[2] : string.Empty;
-            var calledAt = ogParam.Length >= 3 ? Convert.ToInt64(ogParam[1]) : 0;
+            var gameCode = ogParam.Length >= 2 ? ogParam[1] : string.Empty;
 
             return new OGRequestDTO
             {
-                CalledAt = calledAt,
                 GameCode = gameCode
             };
         }

@@ -1845,11 +1845,11 @@ namespace Platform.Operator.Servicev2.Repository
                     RoundId = "testround",
                     BetPlace = message.BetSelections.Count > 1 ? "multiple" : "single",
                     Currency = message.Bet.CurrencyCode,
-                    WinloseAmount = message.Bet.WinLoss.ToString("#.##"),
-                    EffectiveAmount = message.Bet.WinLoss.ToString("#.##"),
+                    WinloseAmount = message.Bet.WinLoss.ToString("0.##"),
+                    EffectiveAmount = message.Bet.WinLoss.ToString("0.##"),
                     ResultUrl = "https://preprod-platform.jmj.bet/play",
                     SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake), detain_amount = 0 },
-                    OtherInfo = new { betSelectionData },
+                    OtherInfo = betSelectionData.FirstOrDefault(),
                     CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Signature = ""
                 };

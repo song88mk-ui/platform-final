@@ -12,8 +12,12 @@ using Platform.API.Repository;
 using Platform.Shared.Data;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Utility;
+using System;
 using System.IO.Compression;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using static Platform.API.Program;
 
 namespace Platform.API
 {
@@ -71,7 +75,11 @@ namespace Platform.API
             services.AddScoped<APIKeyFilter>();
             services.AddScoped<InternalAPIKeyFilter>();
 
-            services.AddControllers();
+            services.AddControllers().AddJsonOptions(options =>
+            {
+                // Add the custom DateTime converter
+                options.JsonSerializerOptions.Converters.Add(new CustomDateTimeConverter());
+            });
 
             services.AddSingleton<IMemCache, MemCache>();
             services.AddScoped<IPlatformRepository, PlatformRepository>();

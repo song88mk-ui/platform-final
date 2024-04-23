@@ -37,7 +37,7 @@ namespace Platform.Shared.Extensions
         {
             var dictionary = model.ToDictionary(false);
             var list = dictionary.Where(c => c.Key != "signature")
-                .Select(s => $"{s.Key}={s.Value?.ToString().Replace("/", @"\/") ?? "null"}")
+                .Select(s => $"{s.Key}={s.Value.ConvertObjectToString()}")
                 .ToList();
 
             //var dictionary = ConvertObjectToDictionary(model);
@@ -48,6 +48,14 @@ namespace Platform.Shared.Extensions
             var hash = list.GetDataString();
             var strHash = hash.ToMD5Hash(privateKey).ToLower();
             return strHash;
+        }
+
+        private static string ConvertObjectToString(this object? obj)
+        {
+            if(obj != null && ((JsonElement)obj).ValueKind == JsonValueKind.Object)
+                return obj.ToString().Replace("/", @"\/");
+            else
+                return obj?.ToString() ?? "null";
         }
 
         //private static string ConvertObjectToKeyValue(object obj)

@@ -1,5 +1,4 @@
-﻿using Platform.Shared.Enums;
-using Platform.Shared.MessageModels;
+﻿using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using Sportradar.MTS.SDK.API;
 

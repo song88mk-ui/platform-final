@@ -2,7 +2,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Platform.CashOut.Service.Repository;
-using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using RabbitMQ.Client.Events;
@@ -243,15 +242,15 @@ namespace Platform.CashOut.Service
             {
                 try
                 {
-                    Console.WriteLine("Starting");
                     var config = MtsSdk.GetConfiguration();
 
                     _mts = new MtsSdk(config);
                     _mts.Open();
+                    _logger.LogInformation("The application has started");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    _logger.LogError(ex, "An error occurred while starting the application");
                 }
             }
 
@@ -267,10 +266,11 @@ namespace Platform.CashOut.Service
                     _mts.Close();
 
                     _messageBroker.Dispose();
+                    _logger.LogInformation("The application has stopped");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    _logger.LogError(ex, "An error occurred while stopping the application");
                 }
             }
 

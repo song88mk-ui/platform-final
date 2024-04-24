@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
@@ -10,7 +11,6 @@ using Platform.Shared.Utility;
 using Sportradar.MTS.SDK.API;
 using Sportradar.MTS.SDK.Entities.Builders;
 using Sportradar.MTS.SDK.Entities.Enums;
-using Sportradar.MTS.SDK.Entities.Internal.REST;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,17 +18,18 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Transactions;
-using static App.Metrics.Health.HealthCheck;
 
 namespace Platform.CashOut.Service.Repository
 {
     public class BettingRepository : IBettingRepository
     {
+        private readonly ILogger<BettingRepository> _logger;
         private IBuilderFactory _factory;
         private readonly IConfiguration _configuration;
-        public BettingRepository(IConfiguration configuration)
+        public BettingRepository(IConfiguration configuration, ILogger<BettingRepository> logger)
         {
             _configuration = configuration;
+            _logger = logger;
         }
 
         private void ProcessCashOutSettlement(OnCashoutBetSettlement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
@@ -206,6 +207,8 @@ namespace Platform.CashOut.Service.Repository
                                 //    ClientId = message.ClientId.ToString().ToUpper(),
                                 //    Endpoint = message.Endpoint
                                 //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
+
+                                _logger.LogWarning("{@betId} - Cashout request has been declined - MTS Result : {@payload}", message.BetId ,result);
                             }
                         }
                     }
@@ -213,7 +216,6 @@ namespace Platform.CashOut.Service.Repository
             }
             catch (Exception ex)
             {
-
                 var errorMessage = new
                 {
                     Message = ex.Message,
@@ -239,6 +241,7 @@ namespace Platform.CashOut.Service.Repository
                     Message = "Cashout request has been declined"
                 }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
+                _logger.LogError(ex, "Payload : {@payload}", message);
                 //messageBroker.Publish(new OnCashOutResult
                 //{
                 //    ClientCode = message.ClientCode.ToUpper(),
@@ -678,8 +681,7 @@ namespace Platform.CashOut.Service.Repository
                                 //    ClientId = payload.ClientId,
                                 //    Endpoint = message.Endpoint
                                 //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
-
-                                Console.WriteLine($"{DateTime.UtcNow} : Live Cashout declined - {message.BetId}");
+                                _logger.LogWarning("{@betId} - Live Cashout declined", message.BetId);
                                 isSuccess = false;
                                 break;
                             }
@@ -710,7 +712,7 @@ namespace Platform.CashOut.Service.Repository
                                     //    Endpoint = message.Endpoint
                                     //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
 
-                                    Console.WriteLine($"{DateTime.UtcNow} : Live Cashout declined - {message.BetId}");//
+                                    _logger.LogWarning("{@betId} - Live Cashout declined", message.BetId);
                                     isSuccess = false;
                                     break;
                                 }
@@ -720,8 +722,6 @@ namespace Platform.CashOut.Service.Repository
                         if (isSuccess == true)
                         {
                             ProcessCashOutSettlement(payload, mts, messageBroker, correlationId);
-
-                            Console.WriteLine($"{DateTime.UtcNow} : Live Cashout successful - {result.Result.BetId}");
                         }
                     }
                     else
@@ -749,14 +749,12 @@ namespace Platform.CashOut.Service.Repository
                         //    Endpoint = message.Endpoint
                         //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
 
-                        Console.WriteLine($"{DateTime.UtcNow} : Live Cashout declined - {message.BetId}");
+                        _logger.LogWarning("{@betId} - Live Cashout declined", message.BetId);
                     }
                 }
                 else
                 {
                     ProcessCashOutSettlement(message, mts, messageBroker, correlationId);
-
-                    Console.WriteLine($"{DateTime.UtcNow} : Prematch Cashout successful - {message.BetId}");
                 }
 
             }
@@ -774,8 +772,8 @@ namespace Platform.CashOut.Service.Repository
                 //    ClientId = message.ClientId,
                 //    Endpoint = message.Endpoint
                 //}, "OnBetCashOutResult", $"r.bet.operator.cashout.{message.ClientCode.ToUpper()}", correlationId);
-
-                Console.WriteLine($"{DateTime.UtcNow} : Error: {ex.Message} -> Payload: {JsonSerializer.Serialize(message)}");
+                
+                _logger.LogError(ex, "Payload : {@payload}", message);
             }
         }
     }

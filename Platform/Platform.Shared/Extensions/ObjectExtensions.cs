@@ -55,7 +55,7 @@ namespace Platform.Shared.Extensions
             if(obj != null && (((JsonElement)obj).ValueKind == JsonValueKind.Object || ((JsonElement)obj).ValueKind == JsonValueKind.Array))
                 return obj.ToString().Replace("/", @"\/");
             else
-                return obj?.ToString() ?? "null";
+                return obj?.ToString() ?? "";
         }
 
         //private static string ConvertObjectToKeyValue(object obj)

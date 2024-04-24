@@ -44,6 +44,7 @@ namespace Platform.CashOut.Service
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .UseSerilog()
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddSingleton<IMessageBroker, MessageBroker>();

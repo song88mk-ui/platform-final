@@ -52,7 +52,7 @@ namespace Platform.Shared.Extensions
 
         private static string ConvertObjectToString(this object? obj)
         {
-            if(obj != null && ((JsonElement)obj).ValueKind == JsonValueKind.Object)
+            if(obj != null && (((JsonElement)obj).ValueKind == JsonValueKind.Object || ((JsonElement)obj).ValueKind == JsonValueKind.Array))
                 return obj.ToString().Replace("/", @"\/");
             else
                 return obj?.ToString() ?? "null";

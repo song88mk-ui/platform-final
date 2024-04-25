@@ -22,7 +22,7 @@ namespace Platform.API.ActionFilters
         {
             var apiKey = context.HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
 
-            if (string.IsNullOrEmpty(apiKey) || string.IsNullOrWhiteSpace(apiKey) || _configuration["Custom:APIKey"] != apiKey)
+            if (string.IsNullOrEmpty(apiKey) || string.IsNullOrWhiteSpace(apiKey) || (_configuration["Custom:APIKey"] != apiKey && _configuration["Custom:WebSocketAPIKey"] != apiKey))
             {
                 context.Result = new BadRequestObjectResult(new
                 {
@@ -32,6 +32,9 @@ namespace Platform.API.ActionFilters
 
                 return;
             }
+
+            if (_configuration["Custom:WebSocketAPIKey"] == apiKey)
+                return;
 
             var ogClientIds = _configuration["Custom:OrientalGaming:ClientIds"].Split(',');
             var clientId = context.HttpContext.Request.Headers["x-client-id"].FirstOrDefault();

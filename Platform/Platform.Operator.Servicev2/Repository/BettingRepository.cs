@@ -837,7 +837,7 @@ namespace Platform.Operator.Servicev2.Repository
                            amount = Convert.ToDouble(betData.TrueStake),
                            bet_place = betSelectionData.Count > 1 ? "multiple" : "single",
                            transaction_id = betData.BetId.ToString().ToLower().Replace("-",""),
-                           secondary_info = new { bet_amount = Convert.ToDouble(betData.TrueStake), detain_amount = 0 },
+                           secondary_info = new { bet_amount = Convert.ToDouble(betData.TrueStake.ToString("0.00")), detain_amount = 0 },
                            other_info = new { betSelectionData },
                            remark = (string)null
                         }};

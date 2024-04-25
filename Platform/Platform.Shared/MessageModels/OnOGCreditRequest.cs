@@ -23,9 +23,9 @@ namespace Platform.Shared.MessageModels
         [JsonPropertyName("currency")]
         public string Currency { get; set; }
         [JsonPropertyName("winlose_amount")]
-        public string WinloseAmount { get; set; }
+        public double WinloseAmount { get; set; }
         [JsonPropertyName("effective_amount")]
-        public string EffectiveAmount { get; set; }
+        public double EffectiveAmount { get; set; }
         [JsonPropertyName("result_url")]
         public string ResultUrl { get; set; }
         [JsonPropertyName("secondary_info")]

@@ -858,8 +858,8 @@ namespace Platform.Sportsbook.API.Repository
 
             var leagueSortOrder = GetTierLeagueOrder().Where(c => sportIds.Contains(c.SportId)).ToList();
             var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId && c.IsActive == true).ToList();
-            var segmentOrder = GetSegmentOrder().Where(c => c.ClientId == request.ClientId).ToList();
-            var leagueOrder = GetLeagueOrder().Where(c => c.ClientId == request.ClientId).ToList();
+            var segmentOrder = GetSegmentOrder(request.ClientId);
+            var leagueOrder = GetLeagueOrder(request.ClientId);
             var activeSportIds = sportSortOrder.Select(s => s.SportId).ToList();
             var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss => 
                                     new CountrySegment { 
@@ -7757,7 +7757,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var clientLeagueOrder = GetLeagueOrder();
+            var clientLeagueOrder = GetLeagueOrder(request.ClientId);
 
             var result = clientLeagueOrder == null ? new List<ClientFixtureSortOrderDTO>() : clientLeagueOrder.Where(c => c.ClientId == request.ClientId).Select(s => new ClientFixtureSortOrderDTO
             {
@@ -7797,13 +7797,15 @@ namespace Platform.Sportsbook.API.Repository
         {
             return _memCache.GetCache($"so", () => _sportsbookContext.ClientSportOrder.ToList(), 24);
         }
-        private List<ClientSegmentOrder> GetSegmentOrder()
-        {
-            return _memCache.GetCache($"seo", () => _sportsbookContext.ClientSegmentOrder.ToList(), 24);
+        private List<ClientSegmentOrder> GetSegmentOrder(Guid clientId)
+		{
+			var key = $"seo-{clientId.ToString().ToLower()}";
+			return _memCache.GetCache(key, () => _sportsbookContext.ClientSegmentOrder.Where(c => c.ClientId == clientId).ToList(), 24);
         }
-        private List<ClientLeagueOrder> GetLeagueOrder()
+        private List<ClientLeagueOrder> GetLeagueOrder(Guid clientId)
         {
-            return _memCache.GetCache($"leo", () => _sportsbookContext.ClientLeagueOrder.ToList(), 24);
+            var key = $"leo-{clientId.ToString().ToLower()}";
+			return _memCache.GetCache(key, () => _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == clientId).ToList(), 24);
         }
         private List<Country> GetSegmentCountry()
         {
@@ -9757,7 +9759,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var tierLeagueSortOrder = GetTierLeagueOrder().ToList();
             var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
-            var segmentSortOrder = GetSegmentOrder().Where(c => c.ClientId == request.ClientId).ToList();
+            var segmentSortOrder = GetSegmentOrder(request.ClientId);
 
             var result = fixtures.Select(s => new
             {
@@ -9854,7 +9856,7 @@ namespace Platform.Sportsbook.API.Repository
             var numSize = 5;
             var tierLeagueSortOrder = GetTierLeagueOrder().ToList();
             var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
-            var segmentSortOrder = GetSegmentOrder().Where(c => c.ClientId == request.ClientId).ToList();
+            var segmentSortOrder = GetSegmentOrder(request.ClientId);
 
             var tierLeagueFixtures = tierLeagueSortOrder.GroupBy(x => x.SportId)
                                 .Select(x => new

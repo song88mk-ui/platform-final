@@ -2714,7 +2714,10 @@ namespace Platform.Sportsbook.API.Repository
                                         SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
                                     }).ToList()).ToList();
 
-            Parallel.ForEach(initialResult, item =>
+            // avoid invalid operation exception due to foreach parallel feature
+            CacheClSeMaTeAndMaTePlPr();
+
+			Parallel.ForEach(initialResult, item =>
             {
                 finalResult.Add(new FixtureDTO
                 {
@@ -2889,7 +2892,10 @@ namespace Platform.Sportsbook.API.Repository
                                         SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
                                     }).ToList()).ToList();
 
-            Parallel.ForEach(initialResult, item =>
+			// avoid invalid operation exception due to foreach parallel feature
+			CacheClSeMaTeAndMaTePlPr();
+
+			Parallel.ForEach(initialResult, item =>
             {
                 finalResult.Add(new FixtureDTO
                 {
@@ -3120,7 +3126,10 @@ namespace Platform.Sportsbook.API.Repository
                                         SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
                                     }).ToList()).ToList();
 
-            Parallel.ForEach(initialResult, item =>
+			// avoid invalid operation exception due to foreach parallel feature
+			CacheClSeMaTeAndMaTePlPr();
+
+			Parallel.ForEach(initialResult, item =>
             {
                 tempFinalResult.Add(new FixtureDTO
                 {
@@ -3351,7 +3360,10 @@ namespace Platform.Sportsbook.API.Repository
                                         SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
                                     }).ToList()).ToList();
 
-            Parallel.ForEach(initialResult, item =>
+			// avoid invalid operation exception due to foreach parallel feature
+			CacheClSeMaTeAndMaTePlPr();
+
+			Parallel.ForEach(initialResult, item =>
             {
                 tempFinalResult.Add(new FixtureDTO
                 {
@@ -3584,7 +3596,10 @@ namespace Platform.Sportsbook.API.Repository
                                         SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
                                     }).ToList()).ToList();
 
-            Parallel.ForEach(initialResult, item =>
+			// avoid invalid operation exception due to foreach parallel feature
+			CacheClSeMaTeAndMaTePlPr();
+
+			Parallel.ForEach(initialResult, item =>
             {
                 tempFinalResult.Add(new FixtureDTO
                 {
@@ -3816,7 +3831,10 @@ namespace Platform.Sportsbook.API.Repository
                                         SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
                                     }).ToList()).ToList();
 
-            Parallel.ForEach(initialResult, item =>
+			// avoid invalid operation exception due to foreach parallel feature
+			CacheClSeMaTeAndMaTePlPr();
+
+			Parallel.ForEach(initialResult, item =>
             {
                 tempFinalResult.Add(new FixtureDTO
                 {
@@ -3999,7 +4017,10 @@ namespace Platform.Sportsbook.API.Repository
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
-            Parallel.ForEach(initialResult, item =>
+			// avoid invalid operation exception due to foreach parallel feature
+			CacheClSeMaTeAndMaTePlPr();
+
+			Parallel.ForEach(initialResult, item =>
             {
                 tempFinalResult.Add(new FixtureDTO
                 {
@@ -4186,7 +4207,10 @@ namespace Platform.Sportsbook.API.Repository
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
-            Parallel.ForEach(initialResult, item =>
+			// avoid invalid operation exception due to foreach parallel feature
+			CacheClSeMaTeAndMaTePlPr();
+
+			Parallel.ForEach(initialResult, item =>
             {
                 tempFinalResult.Add(new FixtureDTO
                 {
@@ -4690,7 +4714,7 @@ namespace Platform.Sportsbook.API.Repository
                                         SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
                                     }).ToList()).ToList();
 
-            var result = fixtures2.Select(s => new FixtureDTO
+			var result = fixtures2.Select(s => new FixtureDTO
             {
                 SportId = s.SpId,
                 SportName = GetSportName(s.SpNa, s.SpNaTr, request.LanguageCode),
@@ -7670,7 +7694,7 @@ namespace Platform.Sportsbook.API.Repository
         //}
         private List<ClientSelectorMarketTemplate> GetClientSelectorMarketTemplate()
         {
-            return _memCache.GetCache($"csmt", () => _sportsbookContext.ClientSelectorMarketTemplate.ToList(), 24);
+            return _memCache.GetCache($"csmt", () => _sportsbookContext.ClientSelectorMarketTemplate.AsNoTracking().ToList(), 24);
         }
         private Tuple<DateTime, DateTime> GetDateTimeRange(DateTime utcDate, int minuteUTCOffset)
         {
@@ -7706,7 +7730,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         private List<Shared.Data.Sportsbook.SQLEntities.MarketTemplateGroup> GetMarketTemplateGroup()
         {
-            return _memCache.GetCache($"mtg2", () => _sportsbookContext.MarketTemplateGroup.ToList(), 24);
+            return _memCache.GetCache($"mtg2", () => _sportsbookContext.MarketTemplateGroup.AsNoTracking().ToList(), 24);
         }
         private List<ClientMarketTemplateGroup> GetClientMarketTemplateGroups()
         {
@@ -11133,8 +11157,14 @@ namespace Platform.Sportsbook.API.Repository
             }
 
             return retval;
-        }
-    }
+		}
+
+		private void CacheClSeMaTeAndMaTePlPr()
+		{
+			GetClientSelectorMarketTemplate();
+			GetMarketTemplatePlayerProps();
+		}
+	}
 
     public static class CurrentPeriodHelper
     {

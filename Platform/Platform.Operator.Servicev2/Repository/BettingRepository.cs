@@ -788,57 +788,51 @@ namespace Platform.Operator.Servicev2.Repository
                 var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
                 var ogParam = message.Bet.OperatorToken.ToOGParam();
 
-                var betSelectionData = message.BetSelections.Select(s => new
+
+                var betSelectionData = new
                 {
-                    BetSelectionId = s.BetSelectionId,
-                    BetId = s.BetId,
-                    UserId = s.UserId,
-                    SportId = s.SportId,
-                    SportName = s.SportName,
-                    SegmentId = s.SegmentId,
-                    SegmentName = s.SegmentName,
-                    LeagueId = s.LeagueId,
-                    LeagueName = s.LeagueName,
-                    FixtureId = s.FixtureId.ToString(),
-                    FixtureName = s.FixtureName,
-                    FixtureTypeId = s.FixtureTypeId,
-                    FixtureTypeName = s.FixtureTypeName,
-                    MarketTemplateId = s.MarketTemplateId,
-                    MarketId = s.MarketId.ToString(),
-                    MarketName = s.MarketName,
-                    SelectionTemplateId = s.SelectionTemplateId,
-                    SelectionId = s.SelectionId.ToString(),
-                    SelectionName = s.SelectionName.ConvertToUnicodeEscape(),
-                    FixtureStatusId = s.FixtureStatusId,
-                    FixtureStatusName = s.FixtureStatusName,
-                    Line = s.Line,
-                    Odds = (double)s.Odds,
-                    BetSelectionStatusId = s.BetSelectionStatusId,
-                    BetSelectionStatusName = s.BetSelectionStatusName,
-                    IsSettled = s.IsSettled,
-                    IsResettled = s.IsResettled,
-                    FixtureSpecifier = s.FixtureSpecifier,
-                    FixtureStartDate = s.FixtureStartDate,
-                    BetScore = s.BetScore,
-                    SettlementScore = s.SettlementScore,
-                    Probability = s.Probability,
-                    WonProbability = s.WonProbability,
-                    LostProbability = s.LostProbability,
-                    VoidProbability = s.VoidProbability,
-                    HalfWonProbability = s.HalfWonProbability,
-                    HalfLostProbability = s.HalfLostProbability,
-                    CorrelationId = s.CorrelationId,
-                    DeadHeatFactor = (double)s.DeadHeatFactor,
-                    OddsRef = (double)s.OddsRef,
-                    IsBinary = s.IsBinary
-                }).ToList();
+                    BetId = message.Bet.BetId,
+                    UserId = message.Bet.UserId,
+                    CurrencyCode = message.Bet.CurrencyCode,
+                    BetStatus = message.Bet.BetStatusName,
+                    ParlayBonus = (double)message.Bet.ParlayBonus,
+                    ParlayBonusWinnings = (double)message.Bet.ParlayBonusWinnings,
+                    BetSelections = message.BetSelections.Select(s => new
+                    {
+                        BetSelectionId = s.BetSelectionId,
+                        BetSelectionStatus = s.BetSelectionStatusName,
+                        SportId = s.SportId,
+                        SportName = s.SportName,
+                        SegmentId = s.SegmentId,
+                        SegmentName = s.SegmentName,
+                        LeagueId = s.LeagueId,
+                        LeagueName = s.LeagueName,
+                        FixtureId = s.FixtureId.ToString(),
+                        FixtureName = s.FixtureName,
+                        FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                        FixtureStatus = s.FixtureStatusName,
+                        FixtureType = s.FixtureTypeName,
+                        Score = s.BetScore,
+                        SettlementScore = s.SettlementScore,
+                        MarketTemplateId = s.MarketTemplateId,
+                        MarketId = s.MarketId.ToString(),
+                        MarketName = s.MarketName,
+                        Line = s.Line,
+                        SelectionId = s.SelectionId.ToString(),
+                        SelectionName = s.SelectionName.ConvertToUnicodeEscape(),
+                        Odds = (double)s.Odds,
+                        HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
+                        AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty,
+                        DeadHeatFactor = (double)s.DeadHeatFactor,
+                    }).ToList()
+                };
 
                 var records = new[] { new {
                            amount = Convert.ToDouble(betData.TrueStake),
-                           bet_place = betSelectionData.Count > 1 ? "multiple" : "single",
+                           bet_place = message.BetSelections.Count > 1 ? "multiple" : "single",
                            transaction_id = betData.BetId.ToString().ToLower().Replace("-",""),
                            secondary_info = new { bet_amount = Convert.ToDouble(betData.TrueStake.ToString("0.00")), detain_amount = 0 },
-                           other_info = new { betSelectionData },
+                           other_info = betSelectionData,
                            remark = (string)null
                         }};
 
@@ -1196,50 +1190,44 @@ namespace Platform.Operator.Servicev2.Repository
                 var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
                 var transType = "credit";
 
-                var betSelectionData = message.BetSelections.Select(s => new
+
+                var betSelectionData = new
                 {
-                    BetSelectionId = s.BetSelectionId,
-                    BetId = s.BetId,
-                    UserId = s.UserId,
-                    SportId = s.SportId,
-                    SportName = s.SportName,
-                    SegmentId = s.SegmentId,
-                    SegmentName = s.SegmentName,
-                    LeagueId = s.LeagueId,
-                    LeagueName = s.LeagueName,
-                    FixtureId = s.FixtureId.ToString(),
-                    FixtureName = s.FixtureName,
-                    FixtureTypeId = s.FixtureTypeId,
-                    FixtureTypeName = s.FixtureTypeName,
-                    MarketTemplateId = s.MarketTemplateId,
-                    MarketId = s.MarketId.ToString(),
-                    MarketName = s.MarketName,
-                    SelectionTemplateId = s.SelectionTemplateId,
-                    SelectionId = s.SelectionId.ToString(),
-                    SelectionName = s.SelectionName.ConvertToUnicodeEscape(),
-                    FixtureStatusId = s.FixtureStatusId,
-                    FixtureStatusName = s.FixtureStatusName,
-                    Line = s.Line,
-                    Odds = (double)s.Odds,
-                    BetSelectionStatusId = s.BetSelectionStatusId,
-                    BetSelectionStatusName = s.BetSelectionStatusName,
-                    IsSettled = s.IsSettled,
-                    IsResettled = s.IsResettled,
-                    FixtureSpecifier = s.FixtureSpecifier,
-                    FixtureStartDate = s.FixtureStartDate,
-                    BetScore = s.BetScore,
-                    SettlementScore = s.SettlementScore,
-                    Probability = s.Probability,
-                    WonProbability = s.WonProbability,
-                    LostProbability = s.LostProbability,
-                    VoidProbability = s.VoidProbability,
-                    HalfWonProbability = s.HalfWonProbability,
-                    HalfLostProbability = s.HalfLostProbability,
-                    CorrelationId = s.CorrelationId,
-                    DeadHeatFactor = (double)s.DeadHeatFactor,
-                    OddsRef = (double)s.OddsRef,
-                    IsBinary = s.IsBinary
-                }).ToList();
+                    BetId = message.Bet.BetId,
+                    UserId = message.Bet.UserId,
+                    CurrencyCode = message.Bet.CurrencyCode,
+                    BetStatus = message.Bet.BetStatusName,
+                    ParlayBonus = (double)message.Bet.ParlayBonus,
+                    ParlayBonusWinnings = (double)message.Bet.ParlayBonusWinnings,
+                    BetSelections = message.BetSelections.Select(s => new
+                    {
+                        BetSelectionId = s.BetSelectionId,
+                        BetSelectionStatus = s.BetSelectionStatusName,
+                        SportId = s.SportId,
+                        SportName = s.SportName,
+                        SegmentId = s.SegmentId,
+                        SegmentName = s.SegmentName,
+                        LeagueId = s.LeagueId,
+                        LeagueName = s.LeagueName,
+                        FixtureId = s.FixtureId.ToString(),
+                        FixtureName = s.FixtureName,
+                        FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                        FixtureStatus = s.FixtureStatusName,
+                        FixtureType = s.FixtureTypeName,
+                        Score = s.BetScore,
+                        SettlementScore = s.SettlementScore,
+                        MarketTemplateId = s.MarketTemplateId,
+                        MarketId = s.MarketId.ToString(),
+                        MarketName = s.MarketName,
+                        Line = s.Line,
+                        SelectionId = s.SelectionId.ToString(),
+                        SelectionName = s.SelectionName.ConvertToUnicodeEscape(),
+                        Odds = (double)s.Odds,
+                        HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
+                        AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty,
+                        DeadHeatFactor = (double)s.DeadHeatFactor,
+                    }).ToList()
+                };
 
 
                 var payload = new OnOGCreditRequest
@@ -1257,7 +1245,7 @@ namespace Platform.Operator.Servicev2.Repository
                     EffectiveAmount = Convert.ToDouble(message.Bet.TrueStake.ToString("0.00")),
                     ResultUrl = "https://preprod-platform.jmj.bet/play",
                     SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake.ToString("0.00")), detain_amount = 0 },
-                    OtherInfo = new { betSelectionData },
+                    OtherInfo = betSelectionData,
                     CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Signature = ""
                 };
@@ -1784,50 +1772,43 @@ namespace Platform.Operator.Servicev2.Repository
                 var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
                 var transType = "credit";
 
-                var betSelectionData = message.BetSelections.Select(s => new
+                var betSelectionData = new
                 {
-                    BetSelectionId = s.BetSelectionId,
-                    BetId = s.BetId,
-                    UserId = s.UserId,
-                    SportId = s.SportId,
-                    SportName = s.SportName,
-                    SegmentId = s.SegmentId,
-                    SegmentName = s.SegmentName,
-                    LeagueId = s.LeagueId,
-                    LeagueName = s.LeagueName,
-                    FixtureId = s.FixtureId.ToString(),
-                    FixtureName = s.FixtureName,
-                    FixtureTypeId = s.FixtureTypeId,
-                    FixtureTypeName = s.FixtureTypeName,
-                    MarketTemplateId = s.MarketTemplateId,
-                    MarketId = s.MarketId.ToString(),
-                    MarketName = s.MarketName,
-                    SelectionTemplateId = s.SelectionTemplateId,
-                    SelectionId = s.SelectionId.ToString(),
-                    SelectionName = s.SelectionName.ConvertToUnicodeEscape(),
-                    FixtureStatusId = s.FixtureStatusId,
-                    FixtureStatusName = s.FixtureStatusName,
-                    Line = s.Line,
-                    Odds = (double)s.Odds,
-                    BetSelectionStatusId = s.BetSelectionStatusId,
-                    BetSelectionStatusName = s.BetSelectionStatusName,
-                    IsSettled = s.IsSettled,
-                    IsResettled = s.IsResettled,
-                    FixtureSpecifier = s.FixtureSpecifier,
-                    FixtureStartDate = s.FixtureStartDate,
-                    BetScore = s.BetScore,
-                    SettlementScore = s.SettlementScore,
-                    Probability = s.Probability,
-                    WonProbability = s.WonProbability,
-                    LostProbability = s.LostProbability,
-                    VoidProbability = s.VoidProbability,
-                    HalfWonProbability = s.HalfWonProbability,
-                    HalfLostProbability = s.HalfLostProbability,
-                    CorrelationId = s.CorrelationId,
-                    DeadHeatFactor = (double)s.DeadHeatFactor,
-                    OddsRef = (double)s.OddsRef,
-                    IsBinary = s.IsBinary
-                }).ToList();
+                    BetId = message.Bet.BetId,
+                    UserId = message.Bet.UserId,
+                    CurrencyCode = message.Bet.CurrencyCode,
+                    BetStatus = message.Bet.BetStatusName,
+                    ParlayBonus = (double)message.Bet.ParlayBonus,
+                    ParlayBonusWinnings = (double)message.Bet.ParlayBonusWinnings,
+                    BetSelections = message.BetSelections.Select(s => new
+                    {
+                        BetSelectionId = s.BetSelectionId,
+                        BetSelectionStatus = s.BetSelectionStatusName,
+                        SportId = s.SportId,
+                        SportName = s.SportName,
+                        SegmentId = s.SegmentId,
+                        SegmentName = s.SegmentName,
+                        LeagueId = s.LeagueId,
+                        LeagueName = s.LeagueName,
+                        FixtureId = s.FixtureId.ToString(),
+                        FixtureName = s.FixtureName,
+                        FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                        FixtureStatus = s.FixtureStatusName,
+                        FixtureType = s.FixtureTypeName,
+                        Score = s.BetScore,
+                        SettlementScore = s.SettlementScore,
+                        MarketTemplateId = s.MarketTemplateId,
+                        MarketId = s.MarketId.ToString(),
+                        MarketName = s.MarketName,
+                        Line = s.Line,
+                        SelectionId = s.SelectionId.ToString(),
+                        SelectionName = s.SelectionName.ConvertToUnicodeEscape(),
+                        Odds = (double)s.Odds,
+                        HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
+                        AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty,
+                        DeadHeatFactor = (double)s.DeadHeatFactor,
+                    }).ToList()
+                };
 
                 var payload = new OnOGCreditRequest
                 {
@@ -1844,7 +1825,7 @@ namespace Platform.Operator.Servicev2.Repository
                     EffectiveAmount = Convert.ToDouble(message.Bet.TrueStake.ToString("0.00")),
                     ResultUrl = "https://preprod-platform.jmj.bet/play",
                     SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake.ToString("0.00")), detain_amount = 0 },
-                    OtherInfo = new { betSelectionData },
+                    OtherInfo = betSelectionData,
                     CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Signature = ""
                 };
@@ -2286,59 +2267,50 @@ namespace Platform.Operator.Servicev2.Repository
             var privateKey = _configuration["Custom:OrientalGaming:PrivateAPIKey"].ToString();
             var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
 
-
-            var betSelectionData = message.BetSelections.Select(s => new
+            var betSelectionData = new
             {
-                BetSelectionId = s.BetSelectionId,
-                BetId = s.BetId,
-                UserId = s.UserId,
-                SportId = s.SportId,
-                SportName = s.SportName,
-                SegmentId = s.SegmentId,
-                SegmentName = s.SegmentName,
-                LeagueId = s.LeagueId,
-                LeagueName = s.LeagueName,
-                FixtureId = s.FixtureId.ToString(),
-                FixtureName = s.FixtureName,
-                FixtureTypeId = s.FixtureTypeId,
-                FixtureTypeName = s.FixtureTypeName,
-                MarketTemplateId = s.MarketTemplateId,
-                MarketId = s.MarketId.ToString(),
-                MarketName = s.MarketName,
-                SelectionTemplateId = s.SelectionTemplateId,
-                SelectionId = s.SelectionId.ToString(),
-                SelectionName = s.SelectionName.ConvertToUnicodeEscape(),
-                FixtureStatusId = s.FixtureStatusId,
-                FixtureStatusName = s.FixtureStatusName,
-                Line = s.Line,
-                Odds = (double)s.Odds,
-                BetSelectionStatusId = s.BetSelectionStatusId,
-                BetSelectionStatusName = s.BetSelectionStatusName,
-                IsSettled = s.IsSettled,
-                IsResettled = s.IsResettled,
-                FixtureSpecifier = s.FixtureSpecifier,
-                FixtureStartDate = s.FixtureStartDate,
-                BetScore = s.BetScore,
-                SettlementScore = s.SettlementScore,
-                Probability = s.Probability,
-                WonProbability = s.WonProbability,
-                LostProbability = s.LostProbability,
-                VoidProbability = s.VoidProbability,
-                HalfWonProbability = s.HalfWonProbability,
-                HalfLostProbability = s.HalfLostProbability,
-                CorrelationId = s.CorrelationId,
-                DeadHeatFactor = (double)s.DeadHeatFactor,
-                OddsRef = (double)s.OddsRef,
-                IsBinary = s.IsBinary
-            }).ToList();
-
+                BetId = message.Bet.BetId,
+                UserId = message.Bet.UserId,
+                CurrencyCode = message.Bet.CurrencyCode,
+                BetStatus = message.Bet.BetStatusName,
+                ParlayBonus = (double)message.Bet.ParlayBonus,
+                ParlayBonusWinnings = (double)message.Bet.ParlayBonusWinnings,
+                BetSelections = message.BetSelections.Select(s => new
+                {
+                    BetSelectionId = s.BetSelectionId,
+                    BetSelectionStatus = s.BetSelectionStatusName,
+                    SportId = s.SportId,
+                    SportName = s.SportName,
+                    SegmentId = s.SegmentId,
+                    SegmentName = s.SegmentName,
+                    LeagueId = s.LeagueId,
+                    LeagueName = s.LeagueName,
+                    FixtureId = s.FixtureId.ToString(),
+                    FixtureName = s.FixtureName,
+                    FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                    FixtureStatus = s.FixtureStatusName,
+                    FixtureType = s.FixtureTypeName,
+                    Score = s.BetScore,
+                    SettlementScore = s.SettlementScore,
+                    MarketTemplateId = s.MarketTemplateId,
+                    MarketId = s.MarketId.ToString(),
+                    MarketName = s.MarketName,
+                    Line = s.Line,
+                    SelectionId = s.SelectionId.ToString(),
+                    SelectionName = s.SelectionName.ConvertToUnicodeEscape(),
+                    Odds = (double)s.Odds,
+                    HomeName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim() : string.Empty,
+                    AwayName = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim() : string.Empty,
+                    DeadHeatFactor = (double)s.DeadHeatFactor,
+                }).ToList()
+            };
 
             var records = new[] { new {
                            amount = Convert.ToDouble(message.Bet.TrueStake),
                            bet_place = message.BetSelections.Count > 1 ? "multiple" : "single",
                            transaction_id = message.Bet.BetId.ToString().ToLower().Replace("-",""),
                            secondary_info = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake), detain_amount = 0 },
-                           other_info = new { betSelectionData },
+                           other_info = betSelectionData,
                            remark = (string)null
                         }};
 

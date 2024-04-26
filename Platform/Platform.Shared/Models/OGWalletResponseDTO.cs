@@ -7,7 +7,7 @@ namespace Platform.Shared.Models
         [JsonPropertyName("player_code")]
         public string PlayerCode { get; set; }
         [JsonPropertyName("balance")]
-        public decimal Balance { get; set; }
+        public string Balance { get; set; }
         [JsonPropertyName("timestamp")]
         public long Timestamp { get; set; }
         [JsonPropertyName("currency")]

@@ -331,7 +331,7 @@ namespace Platform.API.Repository
                         };
                     }
 
-                    balance = walletResult.Balance;
+                    balance = Convert.ToDecimal(walletResult.Balance);
                     currencyCode = walletResult.CurrencyCode;
 
                     if (currencyCode.ToUpper() != request.CurrencyCode.ToUpper())

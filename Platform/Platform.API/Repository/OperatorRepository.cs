@@ -320,7 +320,7 @@ namespace Platform.API.Repository
 
                     var walletResponse = await _httpClient.GetAsync($"{endpoint}/api/v2/platform/player/balance?player_code={walletRequest.player_code}&timestamp={walletRequest.timestamp}&signature={signature}");
 
-                    var walletResult = JsonSerializer.Deserialize<OGWalletResponse>(await walletResponse.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = false });
+                    var walletResult = JsonSerializer.Deserialize<OGWalletResponseDTO>(await walletResponse.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = false });
                     
                     if (walletResult.Code != "S-100")
                     {

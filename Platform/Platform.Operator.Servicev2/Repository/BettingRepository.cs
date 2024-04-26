@@ -11,10 +11,13 @@ using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using System.Threading;
 using System.Transactions;
 
 namespace Platform.Operator.Servicev2.Repository
@@ -1847,7 +1850,7 @@ namespace Platform.Operator.Servicev2.Repository
                         SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake), detain_amount = 0 },
                         OtherInfo = new { betSelectionData },
                         CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                        Signature = ""                        
+                        Signature = ""
                     };
 
                     //signature generation
@@ -2373,21 +2376,21 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
+                    AddOperatorLog(new OperatorLog
+                    {
+                        Direction = "RESPONSE",
+                        ClientId = message.Bet.ClientId,
+                        ClientCode = message.Bet.ClientCode,
+                        URL = $"{message.Bet.Endpoint}{path}",
+                        BetId = message.Bet.BetId.ToString().ToUpper(),
+                        Info = JsonSerializer.Serialize(result),
+                        OperatorToken = message.Bet.OperatorToken,
+                        CorrelationId = correlationId,
+                        Timestamp = DateTime.UtcNow
+                    });
+
                     if (result.Code == "S-100")
                     {
-                        AddOperatorLog(new OperatorLog
-                        {
-                            Direction = "RESPONSE",
-                            ClientId = message.Bet.ClientId,
-                            ClientCode = message.Bet.ClientCode,
-                            URL = $"{message.Bet.Endpoint}{path}",
-                            BetId = message.Bet.BetId.ToString().ToUpper(),
-                            Info = JsonSerializer.Serialize(result),
-                            OperatorToken = message.Bet.OperatorToken,
-                            CorrelationId = correlationId,
-                            Timestamp = DateTime.UtcNow
-                        });
-
                         messageBroker.Publish(new OnWalletChange
                         {
                             ClientId = message.Bet.ClientId.ToUpper(),
@@ -2399,21 +2402,40 @@ namespace Platform.Operator.Servicev2.Repository
                     }
                     else
                     {
-                        AddOperatorLog(new OperatorLog
+                        var isRetry = true;
+                        if (result.Code == "S-101")
                         {
-                            Direction = "RESPONSE",
-                            ClientId = message.Bet.ClientId,
-                            ClientCode = message.Bet.ClientCode,
-                            URL = $"{message.Bet.Endpoint}{path}",
-                            BetId = message.Bet.BetId.ToString().ToUpper(),
-                            Info = JsonSerializer.Serialize(result),
-                            OperatorToken = message.Bet.OperatorToken,
-                            CorrelationId = correlationId,
-                            Timestamp = DateTime.UtcNow
-                        });
+                            var transactionStatus = GetOGTransactionStatus(message, "rollback", correlationId, threadId, publicKey, vendorName, privateKey);
+                            if (transactionStatus.TransactionStatus == "rollback")
+                            {
+                                // wallet endpoint
+                                var walletRequest = new
+                                {
+                                    player_code = payload.PlayerCode,
+                                    timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                                };
+                                var signatureEx = walletRequest.ToSignOG(privateKey);
+                                var walletResponse = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).GetAsync($"{message.Bet.Endpoint}/api/v2/platform/player/balance?player_code={walletRequest.player_code}&timestamp={walletRequest.timestamp}&signature={signatureEx}").Result;
+                                var walletResult = JsonSerializer.Deserialize<OGWalletResponseDTO>(walletResponse.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = false });
+                                if (walletResult.Code == "S-100")
+                                {
+                                    messageBroker.Publish(new OnWalletChange
+                                    {
+                                        ClientId = message.Bet.ClientId.ToUpper(),
+                                        UserId = message.Bet.UserId,
+                                        Balance = walletResult.Balance
+                                    }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+                                }
+                                AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetCancellation", correlationId, true);
+                                isRetry = false;
+                            }
+                        }
 
-                        messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
-                        AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetCancellation", correlationId, false);
+                        if(isRetry)
+                        {
+                            messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
+                            AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetCancellation", correlationId, false);
+                        }
                     }
                 }
                 else
@@ -2473,8 +2495,37 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
-                AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetCancellation", correlationId, false);
+                var isRetry = true;
+                var transactionStatus = GetOGTransactionStatus(message, "rollback", correlationId, threadId, publicKey, vendorName, privateKey);
+                if (transactionStatus.TransactionStatus == "rollback")
+                {
+                    // wallet endpoint
+                    var walletRequest = new
+                    {
+                        player_code = payload.PlayerCode,
+                        timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                    };
+                    var signatureEx = walletRequest.ToSignOG(privateKey);
+                    var walletResponse = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).GetAsync($"{message.Bet.Endpoint}/api/v2/platform/player/balance?player_code={walletRequest.player_code}&timestamp={walletRequest.timestamp}&signature={signatureEx}").Result;
+                    var walletResult = JsonSerializer.Deserialize<OGWalletResponseDTO>(walletResponse.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = false });
+                    if (walletResult.Code == "S-100")
+                    {
+                        messageBroker.Publish(new OnWalletChange
+                        {
+                            ClientId = message.Bet.ClientId.ToUpper(),
+                            UserId = message.Bet.UserId,
+                            Balance = walletResult.Balance
+                        }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+                    }
+                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { OnBetSettlement = message }, "OnBetCancellation", correlationId, true);
+                    isRetry = false;
+                }
+
+                if (isRetry)
+                {
+                    messageBroker.Publish(new OnBetBackofficeCancellation { BetId = message.Bet.BetId }, "OnBetBackofficeCancellation", "r.bet.cancellation", correlationId);
+                    AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetCancellation", correlationId, false);
+                }
             }
         }
 
@@ -2803,6 +2854,82 @@ namespace Platform.Operator.Servicev2.Repository
 
                 RetryBetCancellation(message, payload, messageType, messageBroker, correlationId, threadId);
             }
+        }
+
+        private OGTransactionResponseDTO GetOGTransactionStatus(OnBetSettlement message, string expectedStatus, string correlationId, string threadId, string publicKey, string vendorName, string privateKey)
+        {
+            var path = "/api/v2/platform/vendor/transaction-status";
+
+            var payload = new
+            {
+                player_code = message.Bet.UserId,
+                transaction_id = message.Bet.BetId.ToString().ToLower().Replace("-", "")
+            };
+
+
+            AddOperatorLog(new OperatorLog
+            {
+                Direction = "REQUEST",
+                ClientId = message.Bet.ClientId,
+                ClientCode = message.Bet.ClientCode,
+                URL = $"{message.Bet.Endpoint}{path}",
+                BetId = message.Bet.BetId.ToString().ToUpper(),
+                Info = JsonSerializer.Serialize(payload),
+                OperatorToken = message.Bet.OperatorToken,
+                CorrelationId = correlationId,
+                Timestamp = DateTime.UtcNow
+            });
+
+            var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+            if (response.IsSuccessStatusCode)
+            {
+                var result = JsonSerializer.Deserialize<OGTransactionResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                if (result.Code == "S-100" && result.TransactionStatus == expectedStatus)
+                {
+                    AddOperatorLog(new OperatorLog
+                    {
+                        Direction = "RESPONSE",
+                        ClientId = message.Bet.ClientId,
+                        ClientCode = message.Bet.ClientCode,
+                        URL = $"{message.Bet.Endpoint}{path}",
+                        BetId = message.Bet.BetId.ToString().ToUpper(),
+                        Info = JsonSerializer.Serialize(result),
+                        OperatorToken = message.Bet.OperatorToken,
+                        CorrelationId = correlationId,
+                        Timestamp = DateTime.UtcNow
+                    });
+                    return result;
+                }
+
+                AddOperatorLog(new OperatorLog
+                {
+                    Direction = "RESPONSE",
+                    ClientId = message.Bet.ClientId,
+                    ClientCode = message.Bet.ClientCode,
+                    URL = $"{message.Bet.Endpoint}{path}",
+                    BetId = message.Bet.BetId.ToString().ToUpper(),
+                    Info = JsonSerializer.Serialize(result),
+                    OperatorToken = message.Bet.OperatorToken,
+                    CorrelationId = correlationId,
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+            else
+                AddOperatorLog(new OperatorLog
+                {
+                    Direction = "RESPONSE",
+                    ClientId = message.Bet.ClientId,
+                    ClientCode = message.Bet.ClientCode,
+                    URL = $"{message.Bet.Endpoint}{path}",
+                    BetId = message.Bet.BetId.ToString().ToUpper(),
+                    Info = JsonSerializer.Serialize(response),
+                    OperatorToken = message.Bet.OperatorToken,
+                    CorrelationId = correlationId,
+                    Timestamp = DateTime.UtcNow
+                });
+
+            return new OGTransactionResponseDTO();
         }
     }
 }

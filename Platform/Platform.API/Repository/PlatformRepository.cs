@@ -766,7 +766,7 @@ namespace Platform.API.Repository
                             WinLoss = s.WinLoss,
                             BetStatusId = s.BetStatusId,
                             BetStatusName = s.BetStatusName,
-                            TransactionDate = s.TransactionDate,
+                            TransactionDate =  s.TransactionDate,
                             Commission = s.Commission,
                             CurrencyCode = s.CurrencyCode,
                             OddsTypeId = s.OddsTypeId,

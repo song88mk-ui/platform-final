@@ -911,7 +911,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                         var operatorResponse = new OperatorBetResponseDTO
                         {
-                            Balance = result.Balance,
+                            Balance = Convert.ToDecimal(result.Balance),
                             IsFreeBet = false,
                             IsCashoutDisabled = false,
                             Message = JsonSerializer.Serialize(result.Message),
@@ -1246,7 +1246,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Currency = message.Bet.CurrencyCode,
                     WinloseAmount = Convert.ToDouble(message.Bet.WinLoss.ToString("0.00")),
                     EffectiveAmount = Convert.ToDouble(message.Bet.TrueStake.ToString("0.00")),
-                    ResultUrl = "https://preprod-platform.jmj.bet/play",
+                    ResultUrl = Uri.EscapeDataString($"https://preprod-platform.jmj.bet/result?client_id={message.Bet.ClientId}&transaction_id={message.Bet.BetId}"),
                     SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake.ToString("0.00")), detain_amount = 0 },
                     OtherInfo = betSelectionData,
                     CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
@@ -1826,7 +1826,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Currency = message.Bet.CurrencyCode,
                     WinloseAmount = Convert.ToDouble(message.Bet.WinLoss.ToString("0.00")),
                     EffectiveAmount = Convert.ToDouble(message.Bet.TrueStake.ToString("0.00")),
-                    ResultUrl = "https://preprod-platform.jmj.bet/play",
+                    ResultUrl = Uri.EscapeDataString($"https://preprod-platform.jmj.bet/result?client_id={message.Bet.ClientId}&transaction_id={message.Bet.BetId}"),
                     SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake.ToString("0.00")), detain_amount = 0 },
                     OtherInfo = betSelectionData,
                     CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),

@@ -7,8 +7,8 @@ namespace Platform.Shared.Models
         [JsonPropertyName("player_code")]
         public string PlayerCode { get; set; }
         [JsonPropertyName("total_amount")]
-        public decimal TotalAmount { get; set; }
+        public string TotalAmount { get; set; }
         [JsonPropertyName("updated_balance")]
-        public decimal Balance { get; set; }
+        public string Balance { get; set; }
     }
 }

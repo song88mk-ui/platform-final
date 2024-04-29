@@ -9,9 +9,9 @@ namespace Platform.Shared.Models
         [JsonPropertyName("transaction_id")]
         public string TransactionId { get; set; }
         [JsonPropertyName("amount")]
-        public decimal Amount { get; set; }
+        public string Amount { get; set; }
         [JsonPropertyName("updated_balance")]
-        public decimal Balance { get; set; }
+        public string Balance { get; set; }
         [JsonPropertyName("billing_at")]
         public long BillingAt { get; set; }
     }

@@ -705,8 +705,29 @@ namespace Platform.Operator.Servicev2.Repository
                         });
 
                         AcceptBet(message.Bet.BetId, correlationId, messageBroker, result, message.IsBoosted, message.IsBetBuilder, message.UserAgent);
-                    }
 
+                        foreach (var selection in betSelectionData)
+                        {
+                            messageBroker.Publish(new OnClientTopMarketBetPlacement
+                            {
+                                ClientId = betData.ClientId.ToUpper(),
+                                ClientCode = betData.ClientCode.ToUpper(),
+                                ClientName = betData.ClientName,
+                                SportId = selection.SportId,
+                                SportName = selection.SportName,
+                                SegmentId = selection.SegmentId,
+                                SegmentName = selection.SegmentName,
+                                LeagueId = selection.LeagueId,
+                                LeagueName = selection.LeagueName,
+                                FixtureId = selection.FixtureId,
+                                FixtureName = selection.FixtureName,
+                                MarketId = selection.MarketId,
+                                MarketName = selection.MarketName,
+                                MarketStatusId = (int)MarketStatus.Active,
+                                MarketStatusName = MarketStatus.Active.ToString()
+                            }, "OnBetPlacement", $"r.client.topmarket.{message.Bet.ClientCode.ToString().ToLower()}", correlationId);
+                        }
+                    }
                 }
                 else
                 {
@@ -921,8 +942,29 @@ namespace Platform.Operator.Servicev2.Repository
                         };
 
                         AcceptBet(message.Bet.BetId, correlationId, messageBroker, operatorResponse, message.IsBoosted, message.IsBetBuilder, message.UserAgent);
-                    }
 
+                        foreach (var selection in betSelectionData)
+                        {
+                            messageBroker.Publish(new OnClientTopMarketBetPlacement
+                            {
+                                ClientId = betData.ClientId.ToUpper(),
+                                ClientCode = betData.ClientCode.ToUpper(),
+                                ClientName = betData.ClientName,
+                                SportId = selection.SportId,
+                                SportName = selection.SportName,
+                                SegmentId = selection.SegmentId,
+                                SegmentName = selection.SegmentName,
+                                LeagueId = selection.LeagueId,
+                                LeagueName = selection.LeagueName,
+                                FixtureId = selection.FixtureId,
+                                FixtureName = selection.FixtureName,
+                                MarketId = selection.MarketId,
+                                MarketName = selection.MarketName,
+                                MarketStatusId = (int)MarketStatus.Active,
+                                MarketStatusName = MarketStatus.Active.ToString()
+                            }, "OnBetPlacement", $"r.client.topmarket.{message.Bet.ClientCode.ToString().ToLower()}", correlationId);
+                        }
+                    }
                 }
                 else
                 {

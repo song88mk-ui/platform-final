@@ -20,6 +20,9 @@
         PT = 16,    //Portuguese
         AM = 17,     //Amharic
         ES = 18,
-        BR = 19     // Brazilian Portuguese
+        BR = 19,     // Brazilian Portuguese
+        DE = 20,     // German
+        NL = 21,     // Dutch
+        FI = 22      // Finnish
     }
 }

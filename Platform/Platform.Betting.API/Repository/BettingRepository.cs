@@ -2739,30 +2739,17 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            if (request.IsPartialCashout == false && Math.Round(request.CashOutStake, 2) != Math.Round(cashOut.CashOutStake, 2))
+            var requestCashoutStakeFull = request.IsPartialCashout ? request.CashOutStake / request.CashOutStakePercent : request.CashOutStake;
+
+            if (Math.Round(requestCashoutStakeFull, 2) != Math.Round(cashOut.CashOutStake, 2))
             {
-                var requestCashOutStake = request.CashOutStake % 1 == 0 ? request.CashOutStake.ToString().TrimEnd('0').TrimEnd('.') : request.CashOutStake.ToString().TrimEnd('0').TrimEnd('.');
+                var requestCashOutStake = requestCashoutStakeFull % 1 == 0 ? requestCashoutStakeFull.ToString().TrimEnd('0').TrimEnd('.') : requestCashoutStakeFull.ToString().TrimEnd('0').TrimEnd('.');
                 var resultCashOutStake = cashOut.CashOutStake % 1 == 0 ? cashOut.CashOutStake.ToString().TrimEnd('0').TrimEnd('.') : cashOut.CashOutStake.ToString().TrimEnd('0').TrimEnd('.');
 
                 return new BaseResponseDTO<BetCashOutResponseDTO>
                 {
                     StatusCode = StatusCode.CashOut_Stake_Changed_From_X_To_Y,
                     Message = StatusCode.CashOut_Stake_Changed_From_X_To_Y.ToString().Replace('_', ' ').Replace("X", requestCashOutStake).Replace("Y", resultCashOutStake),
-                    Result = new BetCashOutResponseDTO
-                    {
-                        BetId = bet.BetId.ToString().ToUpper(),
-                        BetStatus = (BetStatus)bet.BetStatusId,
-                        UserId = bet.UserId,
-                        CashOutStake = cashOut.CashOutStake
-                    }
-                };
-            }
-            else if (request.IsPartialCashout && Math.Round(request.CashOutStake, 2) >= Math.Round(cashOut.CashOutStake, 2))
-            {
-                return new BaseResponseDTO<BetCashOutResponseDTO>
-                {
-                    StatusCode = StatusCode.Partial_CashOut_Cannot_Be_Greater_Than_Full_Cashout_Amount,
-                    Message = StatusCode.Partial_CashOut_Cannot_Be_Greater_Than_Full_Cashout_Amount.ToString(),
                     Result = new BetCashOutResponseDTO
                     {
                         BetId = bet.BetId.ToString().ToUpper(),
@@ -2785,10 +2772,10 @@ namespace Platform.Betting.API.Repository
                         ClientId = bet.ClientId.ToUpper(),
                         CashoutType = CashoutType.Partial,
                         CashOutStake = request.CashOutStake,
-                        CashOutStakePercent = request.CashOutStake / cashOut.CashOutStake,
-                        TaxedStake = cashOut.TaxedStake * (request.CashOutStake / cashOut.CashOutStake),
-                        TaxedWinnings = cashOut.TaxedWinnings * (request.CashOutStake / cashOut.CashOutStake),
-                        NonTaxedPayout = cashOut.NonTaxedPayout * (request.CashOutStake / cashOut.CashOutStake),
+                        CashOutStakePercent = request.CashOutStakePercent,
+                        TaxedStake = cashOut.TaxedStake * request.CashOutStakePercent,
+                        TaxedWinnings = cashOut.TaxedWinnings * request.CashOutStakePercent,
+                        NonTaxedPayout = cashOut.NonTaxedPayout * request.CashOutStakePercent,
                         HasLive = cashOut.HasLive,
                         Endpoint = bet.Endpoint,
                         Probabilities = cashOut.Probabilities.Select(s => new CashedOutProbabilities

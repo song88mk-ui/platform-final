@@ -282,15 +282,6 @@ namespace Platform.API.Repository
 
                 authenticationPayload.Signature = authenticationPayload.ToSignOG(privateKey);
 
-                //if (request.Signature != authenticationPayload.Signature)
-                //{
-                //    return new BaseResponseDTO<AuthenticationResponseDTO>
-                //    {
-                //        StatusCode = StatusCode.Signature_Mismatch,
-                //        Message = StatusCode.Signature_Mismatch.ToString().Replace('_', ' '),
-                //    };
-                //}
-
                 var authenticationResponse = await _httpClient.PostAsync($"{endpoint}/api/v2/platform/security/authenticate", new StringContent(JsonSerializer.Serialize(authenticationPayload), System.Text.Encoding.UTF8, "application/json"));
 
                 var authenticationResult = JsonSerializer.Deserialize<OGAuthenticationResponse>(await authenticationResponse.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = false });
@@ -305,7 +296,7 @@ namespace Platform.API.Repository
                 }
 
                 var balance = 0m;
-                var currencyCode = string.Empty;
+                var currencyCode = string.Empty; 
 
                 if (!request.IsSBLaunch)
                 {

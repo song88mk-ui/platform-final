@@ -12,7 +12,6 @@ namespace Platform.Sportsbook.API.Controllers
         private readonly ISportsbookRepository _sportsbookRepository;
         public SportsbookController(ISportsbookRepository sportsbookRepository)
         {
-            //
             _sportsbookRepository = sportsbookRepository;
         }
 

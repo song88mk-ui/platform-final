@@ -18,7 +18,7 @@ namespace Platform.ClientSportsbook.API.ActionFilters
         private readonly IMemCache _cache;
 
         public AuthorizationFilter(IConfiguration configuration, PlatformContext platformContext, IMemCache cache)
-        {
+        {//
             _configuration = configuration;
             _platformContext = platformContext;
             _cache = cache;

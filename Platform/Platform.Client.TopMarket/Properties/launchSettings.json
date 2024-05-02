@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "Platform.Client.TopMarket": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

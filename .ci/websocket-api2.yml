@@ -1,0 +1,77 @@
+name: Platform-WebSocket-API2
+
+pr: none
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+      - test/*
+  paths:
+    include:
+      - Platform/Platform.WebSocket.API2
+    exclude:
+      - README.md
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  APP_NAME: Platform-WebSocket-MessagePack-API
+  IMAGE_NAME: platform-websocket-msgpack-api
+  DOCKER_CONNECTION: 'd9ff7663-ca22-49ae-be23-83dd308dcef4'
+
+stages:
+  - stage: build
+    displayName: Build
+    jobs:
+      - job: docker
+        displayName: Build
+        steps:
+          - task: Bash@3
+            displayName: Set Build Id
+            inputs:
+              workingDirectory: '$(Build.SourcesDirectory)/Platform/Platform.Websocket.API2'
+              targetType: inline
+              script: |
+                APP_VERSION="0.0.0"
+                if [ -f .version ]; then
+                  APP_VERSION=$(jq -r '.version' .version)
+                elif [ -f ../.version ]; then
+                  APP_VERSION=$(jq -r '.version' ../.version)
+                elif [ -f ../../.version ]; then
+                  APP_VERSION=$(jq -r '.version' ../../.version)
+                fi
+                PROJECT_NAME=`echo $APP_NAME | sed 's|/|-|g'`
+                echo "##vso[task.setvariable variable=appversion;]${APP_VERSION}.${BUILD_BUILDID}"
+                echo "##vso[build.updatebuildnumber]${PROJECT_NAME}-v${APP_VERSION}.${BUILD_BUILDID}"
+
+          - task: Docker@2
+            displayName: Login to ACR
+            inputs:
+              command: login
+              containerRegistry: $(DOCKER_CONNECTION)
+
+          - task: Docker@2
+            displayName: Docker Build
+            inputs:
+              command: build
+              repository: $(IMAGE_NAME)
+              Dockerfile: Platform/Platform.Websocket.API2/Dockerfile
+              buildContext: Platform/Platform.Websocket.API2
+              arguments: --build-context shared=Platform
+              containerRegistry: $(DOCKER_CONNECTION)
+              tags: |
+                $(appversion)
+                latest
+
+          - task: Docker@2
+            displayName: Push to ACR
+            inputs:
+              command: push
+              repository: $(IMAGE_NAME)
+              containerRegistry: $(DOCKER_CONNECTION)
+              tags: |
+                $(appversion)
+                latest

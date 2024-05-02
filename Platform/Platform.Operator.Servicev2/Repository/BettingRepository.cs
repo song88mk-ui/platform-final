@@ -706,7 +706,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                         AcceptBet(message.Bet.BetId, correlationId, messageBroker, result, message.IsBoosted, message.IsBetBuilder, message.UserAgent);
 
-                        foreach (var selection in betSelectionData)
+                        foreach (var selection in message.BetSelections)
                         {
                             messageBroker.Publish(new OnClientTopMarketBetPlacement
                             {
@@ -943,7 +943,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                         AcceptBet(message.Bet.BetId, correlationId, messageBroker, operatorResponse, message.IsBoosted, message.IsBetBuilder, message.UserAgent);
 
-                        foreach (var selection in betSelectionData)
+                        foreach (var selection in message.BetSelections)
                         {
                             messageBroker.Publish(new OnClientTopMarketBetPlacement
                             {

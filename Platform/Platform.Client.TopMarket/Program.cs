@@ -1,9 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Platform.Client.TopMarket.Repository;
+using Platform.ClientTopMarket.Service.Repository;
 using Platform.Shared.Utility;
 
-namespace Platform.Client.TopMarket
+namespace Platform.ClientTopMarket.Service
 {
     public class Program
     {

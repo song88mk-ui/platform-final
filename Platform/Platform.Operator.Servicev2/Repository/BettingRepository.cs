@@ -725,7 +725,7 @@ namespace Platform.Operator.Servicev2.Repository
                                 MarketName = selection.MarketName,
                                 MarketStatusId = (int)MarketStatus.Active,
                                 MarketStatusName = MarketStatus.Active.ToString()
-                            }, "OnBetPlacement", $"r.client.topmarket.{message.Bet.ClientCode.ToString().ToLower()}", correlationId);
+                            }, "OnBetPlacement", $"r.client.topmarket.placement", correlationId);
                         }
                     }
                 }
@@ -962,7 +962,7 @@ namespace Platform.Operator.Servicev2.Repository
                                 MarketName = selection.MarketName,
                                 MarketStatusId = (int)MarketStatus.Active,
                                 MarketStatusName = MarketStatus.Active.ToString()
-                            }, "OnBetPlacement", $"r.client.topmarket.{message.Bet.ClientCode.ToString().ToLower()}", correlationId);
+                            }, "OnBetPlacement", $"r.client.topmarket.placement", correlationId);
                         }
                     }
                 }

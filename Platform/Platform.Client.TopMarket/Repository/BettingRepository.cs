@@ -2,12 +2,13 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Platform.Shared.Data.Betting;
-using Platform.Shared.Data.Betting.Entities;
+using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.MessageModels;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
-namespace Platform.Client.TopMarket.Repository
+namespace Platform.ClientTopMarket.Service.Repository
 {
     public class BettingRepository : IBettingRepository
     {
@@ -27,7 +28,7 @@ namespace Platform.Client.TopMarket.Repository
 
                 using (var context = new BettingContext(optionsBuilder.Options))
                 {
-                    var market = await context.ClientTopMarket.FindAsync(message.ClientId, message.FixtureId, message.MarketId);
+                    var market = await context.ClientTopMarket.FindAsync(message.FixtureId, message.MarketId, message.ClientId);
 
                     if (market != null)
                     {
@@ -36,7 +37,7 @@ namespace Platform.Client.TopMarket.Repository
                     }
                     else
                     {
-                        market = new ClientTopMarket()
+                        market = new Shared.Data.Betting.Entities.ClientTopMarket()
                         {
                             ClientId = message.ClientId,
                             ClientCode = message.ClientCode,
@@ -67,7 +68,7 @@ namespace Platform.Client.TopMarket.Repository
             }
         }
 
-        public async Task ProcessBetSettlement(OnClientTopMarketBetSettlement message)
+        public Task ProcessBetSettlement(OnClientTopMarketBetSettlement message)
         {
             try
             {
@@ -75,21 +76,27 @@ namespace Platform.Client.TopMarket.Repository
 
                 using (var context = new BettingContext(optionsBuilder.Options))
                 {
-                    var market = await context.ClientTopMarket.FirstOrDefaultAsync(c => c.FixtureId == message.FixtureId && c.MarketId == message.MarketId);
+                    var markets = context.ClientTopMarket.Where(c => c.FixtureId == message.FixtureId && c.MarketId == message.MarketId);
 
-                    if (market != null)
+                    if (markets != null && markets.Any())
                     {
-                        market.MarketStatusId = message.MarketStatusId;
-                        market.MarketStatusName = message.MarketStatusName;
-                        context.Update(market);
+                        foreach (var market in markets)
+                        {
+                            market.MarketStatusId = message.MarketStatusId;
+                            market.MarketStatusName = message.MarketStatusName;
+                            context.Update(market);
+                        }
 
                         context.SaveChanges();
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error");
             }
+
+            return Task.CompletedTask;
         }
     }
 }

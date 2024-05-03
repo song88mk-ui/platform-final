@@ -1,7 +1,7 @@
 ﻿using Platform.Shared.MessageModels;
 using System.Threading.Tasks;
 
-namespace Platform.Client.TopMarket.Repository
+namespace Platform.ClientTopMarket.Service.Repository
 {
     public interface IBettingRepository
     {

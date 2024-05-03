@@ -1,24 +1,24 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Platform.Client.TopMarket.Repository;
+using Platform.ClientTopMarket.Service.Repository;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using RabbitMQ.Client.Events;
 using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Platform.Client.TopMarket
+namespace Platform.ClientTopMarket.Service
 {
     public class Worker : BackgroundService
     {
         private readonly ILogger<Worker> _logger;
         private readonly IMessageBroker _messageBroker;
         private readonly IBettingRepository _bettingRepository;
+
+        // 2 blockers
 
         public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository)
         {

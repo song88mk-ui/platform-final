@@ -23,7 +23,7 @@ namespace Platform.Shared.Data.Betting
             modelBuilder.Entity<UserBetConfig>().HasKey(k => new { k.UserId });
             modelBuilder.Entity<BetInfo>().HasKey(k => new { k.Id });
             modelBuilder.Entity<PartialCashoutAudit>().HasKey(k => new { k.Id });
-            modelBuilder.Entity<ClientTopMarket>().HasKey(k => new { k.ClientId, k.FixtureId, k.MarketId });
+            modelBuilder.Entity<ClientTopMarket>().HasKey(k => new { k.FixtureId, k.MarketId, k.ClientId });
         }
 
         public DbSet<Bet> Bet { get; set; }

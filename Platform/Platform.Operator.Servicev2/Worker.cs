@@ -397,7 +397,6 @@ namespace Platform.Operator.Servicev2
                         if (ogParamFC == null)
                             _bettingRepository.ProcessBetFullCashOut(onBetFullCashout, _messageBroker, correlationId, threadId);
                         else
-                            //
                             _bettingRepository.ProcessBetFullCashOutOG(onBetFullCashout, _messageBroker, correlationId, threadId, ogParamFC);
                         break;
 

@@ -5,6 +5,7 @@ using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using RabbitMQ.Client.Events;
 using System;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -18,8 +19,11 @@ namespace Platform.ClientTopMarket.Service
         private readonly IMessageBroker _messageBroker;
         private readonly IBettingRepository _bettingRepository;
 
-        // 2 blockers
+        private Thread _threadBetPlacement;
+        private Thread _threadBetSettlement;
 
+        private readonly BlockingCollection<OnClientTopMarketBetPlacement> _messagesBetPlacement = new BlockingCollection<OnClientTopMarketBetPlacement>();
+        private readonly BlockingCollection<OnClientTopMarketBetSettlement> _messagesBetSettlement = new BlockingCollection<OnClientTopMarketBetSettlement>();
         public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository)
         {
             _logger = logger;
@@ -42,7 +46,13 @@ namespace Platform.ClientTopMarket.Service
         {
             _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
 
-            _messageBroker.ConnectWithManualAck();
+            _threadBetPlacement = new Thread(ThreadBetPlacement);
+            _threadBetSettlement = new Thread(ThreadBetSettlement);
+
+            _threadBetPlacement.Start();
+            _threadBetSettlement.Start();
+
+            _messageBroker.Connect();
             _messageBroker.MessageReceived += MessageReceivedEvent;
 
             return Task.CompletedTask;
@@ -60,24 +70,34 @@ namespace Platform.ClientTopMarket.Service
                 {
                     case "OnBetPlacement":
                         var onBetPlacement = JsonSerializer.Deserialize<OnClientTopMarketBetPlacement>(payload);
-                        await _bettingRepository.ProcessBetPlacement(onBetPlacement);
-
-                        _messageBroker.Acknowledge(e);
+                        _messagesBetPlacement.Add(onBetPlacement);
                         break;
                     case "OnBetSettlement":
                         var onBetSettlement = JsonSerializer.Deserialize<OnClientTopMarketBetSettlement>(payload);
-                        await _bettingRepository.ProcessBetSettlement(onBetSettlement);
-
-                        _messageBroker.Acknowledge(e);
-                        break;
-                    default:
-                        _messageBroker.Acknowledge(e);
+                        _messagesBetSettlement.Add(onBetSettlement);
                         break;
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error");
+            }
+        }
+
+        private async void ThreadBetPlacement()
+        {
+            while (true)
+            {
+                var message = _messagesBetPlacement.Take();
+                await _bettingRepository.ProcessBetPlacement(message);
+            }
+        }
+        private async void ThreadBetSettlement()
+        {
+            while (true)
+            {
+                var message = _messagesBetSettlement.Take();
+                await _bettingRepository.ProcessBetSettlement(message);
             }
         }
     }

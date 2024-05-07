@@ -70,11 +70,13 @@ namespace Platform.ClientTopMarket.Service
                 {
                     case "OnBetPlacement":
                         var onBetPlacement = JsonSerializer.Deserialize<OnClientTopMarketBetPlacement>(payload);
-                        _messagesBetPlacement.Add(onBetPlacement);
+                        if (onBetPlacement.SportId < 1000)
+                            _messagesBetPlacement.Add(onBetPlacement);
                         break;
                     case "OnBetSettlement":
                         var onBetSettlement = JsonSerializer.Deserialize<OnClientTopMarketBetSettlement>(payload);
-                        _messagesBetSettlement.Add(onBetSettlement);
+                        if (onBetSettlement.SportId < 1000)
+                            _messagesBetSettlement.Add(onBetSettlement);
                         break;
                 }
             }

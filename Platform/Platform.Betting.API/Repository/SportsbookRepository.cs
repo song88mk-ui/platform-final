@@ -586,6 +586,37 @@ namespace Platform.Betting.API.Repository
                 };
             }
         }
+        public async Task<BaseResponseDTO<TGResponseDTO>> GetBetRecommendationDetails(BetRecommendationDetailRequestDTO request)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"v2/sportsbook/betrecommendations", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                    return JsonSerializer.Deserialize<BaseResponseDTO<TGResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                        return JsonSerializer.Deserialize<BaseResponseDTO<TGResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    else
+                    {
+                        return new BaseResponseDTO<TGResponseDTO>
+                        {
+                            StatusCode = StatusCode.Error,
+                            Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<TGResponseDTO>()
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
+            }
+        }
 
         private decimal GetTotalOdds(List<Tuple<BetStatus, decimal, decimal>> selections)
         {

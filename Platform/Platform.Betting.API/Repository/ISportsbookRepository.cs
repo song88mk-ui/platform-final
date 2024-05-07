@@ -10,5 +10,6 @@ namespace Platform.Betting.API.Repository
     {
         Task<BaseResponseDTO<List<CashOutDetailsReponse>>> GetCashOut(List<Bet> bets, List<BetSelection> betSelections, List<Guid> boostedList);
         Task<BaseResponseDTO<BetSettlementScoreResponseDTO>> GetBetSettlementScore(BetSettlementScoreRequestDTO request);
+        Task<BaseResponseDTO<TGResponseDTO>> GetBetRecommendationDetails(BetRecommendationDetailRequestDTO request);
     }
 }

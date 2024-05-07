@@ -1,4 +1,5 @@
 ﻿using Microsoft.ApplicationInsights;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting;
@@ -1504,7 +1505,7 @@ namespace Platform.Betting.API.Repository
                 IQueryable<Bet> raw = null;
 
                 var betTypeFilter = Enum.GetValues(typeof(BetType)).Cast<int>().ToList();
-                if(request.BetType.Any())
+                if (request.BetType.Any())
                     betTypeFilter = request.BetType.ToList();
 
                 if (request.IsCurrent)
@@ -1534,7 +1535,7 @@ namespace Platform.Betting.API.Repository
                     {
                         BetStatusFilter.All => betStatuses.Where(c => !(new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Rejected }).Contains(c)),
                         BetStatusFilter.Open => betStatuses.Where(c => (new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running }).Contains(c)),
-                        BetStatusFilter.Settled => betStatuses.Where(c=> !(new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running, (int)BetStatus.Rejected }).Contains(c)),
+                        BetStatusFilter.Settled => betStatuses.Where(c => !(new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running, (int)BetStatus.Rejected }).Contains(c)),
                         _ => null
                     };
 
@@ -2948,6 +2949,31 @@ namespace Platform.Betting.API.Repository
                     Message = ex.Message
                 };
             }
+        }
+        public async Task<BaseResponseDTO<TGResponseDTO>> GetBetRecommenations(BetRecommendationRequestDTO request)
+        {
+            var clientTopMarkets = _bettingContext.ClientTopMarket
+                .Where(c => c.ClientId == request.ClientId.ToString() && c.MarketStatusId == (int)MarketStatus.Active);
+
+            var subquery = clientTopMarkets
+                .GroupBy(c => c.FixtureId)
+                .Select(s => new
+                {
+                    FixtureId = s.Key,
+                    BetCount = s.Sum(c => c.BetCount)
+                })
+                .OrderByDescending(o => o.BetCount);
+
+            var fixtureIds = (from a in subquery
+                              orderby a.BetCount descending
+                              select (long)a.FixtureId).Take(10).ToList();
+
+            return await _sportsbookRepository.GetBetRecommendationDetails(new BetRecommendationDetailRequestDTO()
+            {
+                ClientId = request.ClientId,
+                ClientCode = request.ClientCode,
+                FixtureIds = fixtureIds
+            });
         }
 
         public async Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request)

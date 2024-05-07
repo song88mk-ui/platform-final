@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Platform.Betting.API.Repository;
 using Platform.Shared.Models;
+using System;
 using System.Threading.Tasks;
 
 namespace Platform.Betting.API.Controllers
@@ -227,5 +228,19 @@ namespace Platform.Betting.API.Controllers
             }
         }
 
+        [HttpPost("v1/bet/recommendations")]
+        public async Task<IActionResult> GetBetRecommendations([FromBody] BetRecommendationRequestDTO request)
+        {
+            var result = await _bettingRepository.GetBetRecommenations(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

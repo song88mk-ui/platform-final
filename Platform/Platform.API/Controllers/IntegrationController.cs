@@ -21,7 +21,6 @@ namespace Platform.API.Controllers
         private readonly IPlatformRepository _platformRepository;
         private readonly TelemetryClient _telemetryClient;
 
-        //
         public IntegrationController(IPlatformRepository platformRepository, TelemetryClient telemetryClient)
         {
             _platformRepository = platformRepository;
@@ -2228,6 +2227,35 @@ namespace Platform.API.Controllers
             {
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
+                                { "requestParameters", JsonSerializer.Serialize(OGParameters)},
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/authentication/og", properties);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/sportsbook/betrecommendations")]
+        public async Task<IActionResult> GetBetRecommendations()
+        {
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
+
+            var result = await _platformRepository.GetBetRecommendations(clientId, languageCode);
+
+            var properties = new Dictionary<string, string>
+            {
+                                { "x-client-id", clientId },
                                 { "requestParameters", JsonSerializer.Serialize(OGParameters)},
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },

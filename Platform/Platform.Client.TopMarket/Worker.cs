@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 
 namespace Platform.ClientTopMarket.Service
 {
+    //
     public class Worker : BackgroundService
     {
         private readonly ILogger<Worker> _logger;

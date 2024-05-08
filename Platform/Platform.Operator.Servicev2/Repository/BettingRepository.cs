@@ -726,8 +726,6 @@ namespace Platform.Operator.Servicev2.Repository
                                 MarketStatusId = (int)MarketStatus.Active,
                                 MarketStatusName = MarketStatus.Active.ToString()
                             }, "OnBetPlacement", $"r.client.topmarket.placement", correlationId);
-
-                            Console.WriteLine("Message Sent");
                         }
                     }
                 }
@@ -965,8 +963,6 @@ namespace Platform.Operator.Servicev2.Repository
                                 MarketStatusId = (int)MarketStatus.Active,
                                 MarketStatusName = MarketStatus.Active.ToString()
                             }, "OnBetPlacement", $"r.client.topmarket.placement", correlationId);
-
-                            Console.WriteLine("Message Sent");
                         }
                     }
                 }

@@ -1,11 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
-using MongoDB.Driver.Core.Misc;
 using MongoDB.Driver.Linq;
-using Platform.Shared.Data.Betting.Entities;
-using Platform.Shared.Data.CasinoBetting.Entities;
 using Platform.Shared.Data.Sportsbook;
 using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Data.Sportsbook.SQLEntities;
@@ -14,11 +10,9 @@ using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using Platform.Sportsbook.API.Models;
-using RabbitMQ.Client.Apigen.Attributes;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -9774,7 +9768,7 @@ namespace Platform.Sportsbook.API.Repository
                             ClCoMa = market.ClCoMa,
                             IsBo = market.IsBo,
                             MaNaTr = market.MaNaTr,
-                            SoOr = selector.EuroSortOrder
+                            SoOr = selector.AsiaSortOrder
                         });
 
                     var market = query.OrderBy(o => o.SoOr).ThenBy(o => o.Li).ThenBy(o => o.MaNa).FirstOrDefault();
@@ -9844,7 +9838,7 @@ namespace Platform.Sportsbook.API.Repository
                             ClCoMa = market.ClCoMa,
                             IsBo = market.IsBo,
                             MaNaTr = market.MaNaTr,
-                            SoOr = selector.EuroSortOrder
+                            SoOr = selector.AsiaSortOrder
                         });
 
                     var market = query.OrderBy(o => o.SoOr).ThenBy(o => o.Li).ThenBy(o => o.MaNa).FirstOrDefault();
@@ -9957,7 +9951,7 @@ namespace Platform.Sportsbook.API.Repository
                         ClCoMa = market.ClCoMa,
                         IsBo = market.IsBo,
                         MaNaTr = market.MaNaTr,
-                        SoOr = selector.EuroSortOrder
+                        SoOr = selector.AsiaSortOrder
                     });
 
                 var market = query.OrderBy(o => o.SoOr).ThenBy(o => o.Li).ThenBy(o => o.MaNa).FirstOrDefault();
@@ -10023,8 +10017,10 @@ namespace Platform.Sportsbook.API.Repository
 
             var clientTopFixtures = _sportsbookContext.ClientTopFixture.Where(c => c.ClientId == request.ClientId);
 
-            var fixtureIds = clientTopFixtures.OrderBy(o => o.SortOrder).Select(s => s.FixtureId).ToList();
-            fixtureIds.AddRange(request.FixtureIds);
+            var clientTopFixtureIds = clientTopFixtures.OrderBy(o => o.SortOrder).Take(10).Select(s => s.FixtureId).ToList() ?? new List<long>();
+            var requestFixtureIds = request.Markets.GroupBy(g => g.FixtureId).Select(s => s.Key).ToList() ?? new List<long>();
+
+            var fixtureIds = clientTopFixtureIds.Union(requestFixtureIds).ToList();
 
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 1 && c.FiTyId == (int)FixtureType.Match && c.SpId < 1000);
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
@@ -10038,7 +10034,7 @@ namespace Platform.Sportsbook.API.Repository
             if (IsOEEnable(request.ClientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase)).ToList();
 
-            fixtures = fixtures.Where(f => request.FixtureIds.Contains(f.FiId)).ToList();
+            fixtures = fixtures.Where(f => fixtureIds.Contains(f.FiId)).ToList();
 
             var bettingStatus = tempBettingStatus.Result == null ? new BettingStatus { IsBeSo = false } : tempBettingStatus.Result;
 
@@ -10067,52 +10063,122 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(markets, selections);
             var result = new TGResponseDTO();
 
-            foreach (var s in fixtures)
+            var sortOrder = 0;
+            if(clientTopFixtureIds.Any())
             {
-                var clientInitial = GetClientMarketTemplateGroups().Where(c => c.SportId == s.SpId && c.ClientId == request.ClientId).ToList();
-                var marketTemplateGroups = GetSportMarketTemplateGroup(s.SpId, request.ClientId, clientInitial);
-
-                var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
-                var filteredBetBuilderMarketTemplates = new List<BetBuilderMarketTemplates>();
-
-                if (betBuilderSportIds.Contains(s.SpId) && s.FiTyId == (int)FixtureType.Match)
+                foreach (var fixtureId in clientTopFixtureIds)
                 {
-                    if (s.FiStId == (int)FixtureStatus.Prematch)
-                        filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == s.SpId && c.Prematch == true).ToList();
-                    else if (s.FiStId == (int)FixtureStatus.Live)
-                        filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == s.SpId && c.Live == true).ToList();
+                    var fixture = fixtures.FirstOrDefault(c => c.FiId == fixtureId);
+
+                    var clientInitial = GetClientMarketTemplateGroups().Where(c => c.SportId == fixture.SpId && c.ClientId == request.ClientId).ToList();
+                    var marketTemplateGroups = GetSportMarketTemplateGroup(fixture.SpId, request.ClientId, clientInitial);
+
+                    var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
+                    var filteredBetBuilderMarketTemplates = new List<BetBuilderMarketTemplates>();
+
+                    if (betBuilderSportIds.Contains(fixture.SpId) && fixture.FiTyId == (int)FixtureType.Match)
+                    {
+                        if (fixture.FiStId == (int)FixtureStatus.Prematch)
+                            filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SpId && c.Prematch == true).ToList();
+                        else if (fixture.FiStId == (int)FixtureStatus.Live)
+                            filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SpId && c.Live == true).ToList();
+                    }
+
+                    result.Fxitures.Add(new TGFixtureResponseDTO
+                    {
+                        SportId = fixture.SpId,
+                        SportName = GetSportName(fixture.SpNa, fixture.SpNaTr, request.LanguageCode),
+                        SegmentId = fixture.SegId,
+                        SegmentName = GetSegmentName(fixture.SegNa, fixture.SegNaTr, request.LanguageCode),
+                        LeagueId = fixture.LeId,
+                        LeagueName = GetLeagueName(fixture.LeNa, fixture.LeNaTr, request.LanguageCode),
+                        ProviderFixtureId = fixture.PrFiId,
+                        FixtureId = fixture.FiId.ToString(),
+                        FixtureName = GetFixtureName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode),
+                        IsHomeFavorite = fixture.IsHoFa,
+                        HomeName = GetHomeName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
+                        AwayName = GetAwayName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
+                        FixtureStartDate = fixture.FiStDa,
+                        IsLive = fixture.IsOfLi,
+                        IsLiveStream = IsLiveStream(fixture.LiId, fixture.GeAl, request.IpCountryCode),
+                        FixtureStatusId = fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStId : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStId : (int)FixtureStatus.Closed,
+                        FixtureStatusName = fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStNa : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
+                        FixtureTypeId = fixture.FiTyId,
+                        Score = fixture.Sc,
+                        CurrentPeriod = CurrentPeriodHelper.ToShortName(fixture.CuPe),
+                        CurrentMinute = fixture.CuMi.ToString(),
+                        BetStop = fixture.IsSu ? new List<int> { 1 } : new List<int> { },
+                        IsBetStop = fixture.IsSu,
+                        IsBetStopGlobal = bettingStatus.IsBeSo,
+                        IsBetBuilder = IsBetBuilder(fixture.SpId, fixture.FiTyId, fixture.FiStId, betBuilderMarketTemplates),
+                        Market = GetTopGameMarket(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), request.LanguageCode, request.ClientId, request.ClientCode, fixture.SpId, fixture.FiTyId, fixture.FiStId, clientInitial, betBuilderMarketTemplates),
+                        SortOrder = ++sortOrder
+                    });
+
+                    if (result.Fxitures.Count == 10)
+                        break;
                 }
+            }
 
-                result.Fxitures.Add(new TGFixtureResponseDTO
+            if(request.Markets.Any())
+            {
+                foreach (var requestMarket in request.Markets)
                 {
-                    SportId = s.SpId,
-                    SportName = GetSportName(s.SpNa, s.SpNaTr, request.LanguageCode),
-                    SegmentId = s.SegId,
-                    SegmentName = GetSegmentName(s.SegNa, s.SegNaTr, request.LanguageCode),
-                    LeagueId = s.LeId,
-                    LeagueName = GetLeagueName(s.LeNa, s.LeNaTr, request.LanguageCode),
-                    ProviderFixtureId = s.PrFiId,
-                    FixtureId = s.FiId.ToString(),
-                    FixtureName = GetFixtureName(s.FiNa, s.FiNaTr, request.LanguageCode),
-                    IsHomeFavorite = s.IsHoFa,
-                    HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                    AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                    FixtureStartDate = s.FiStDa,
-                    IsLive = s.IsOfLi,
-                    IsLiveStream = IsLiveStream(s.LiId, s.GeAl, request.IpCountryCode),
-                    FixtureStatusId = s.SpId > 1000 || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
-                    FixtureStatusName = s.SpId > 1000 || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
-                    FixtureTypeId = s.FiTyId,
-                    Score = s.Sc,
-                    CurrentPeriod = CurrentPeriodHelper.ToShortName(s.CuPe),
-                    CurrentMinute = s.CuMi.ToString(),
-                    BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
-                    IsBetStop = s.IsSu,
-                    IsBetStopGlobal = bettingStatus.IsBeSo,
-                    IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
-                    Market = GetTopGameMarket(markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientId, request.ClientCode, s.SpId, s.FiTyId, s.FiStId, clientInitial, betBuilderMarketTemplates),
-                    SortOrder = request.FixtureIds.IndexOf(s.FiId) + 1
-                });
+                    var fixture = fixtures.FirstOrDefault(c => c.FiId == requestMarket.FixtureId);
+
+                    var clientInitial = GetClientMarketTemplateGroups().Where(c => c.SportId == fixture.SpId && c.ClientId == request.ClientId).ToList();
+                    var marketTemplateGroups = GetSportMarketTemplateGroup(fixture.SpId, request.ClientId, clientInitial);
+
+                    var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
+                    var filteredBetBuilderMarketTemplates = new List<BetBuilderMarketTemplates>();
+
+                    if (betBuilderSportIds.Contains(fixture.SpId) && fixture.FiTyId == (int)FixtureType.Match)
+                    {
+                        if (fixture.FiStId == (int)FixtureStatus.Prematch)
+                            filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SpId && c.Prematch == true).ToList();
+                        else if (fixture.FiStId == (int)FixtureStatus.Live)
+                            filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SpId && c.Live == true).ToList();
+                    }
+
+                    var market = GetTopGameMarket(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), request.LanguageCode, request.ClientId, request.ClientCode, fixture.SpId, fixture.FiTyId, fixture.FiStId, clientInitial, betBuilderMarketTemplates);
+
+                    if (market.Selections.Count > 3)
+                        continue;
+                    
+                    result.Fxitures.Add(new TGFixtureResponseDTO
+                    {
+                        SportId = fixture.SpId,
+                        SportName = GetSportName(fixture.SpNa, fixture.SpNaTr, request.LanguageCode),
+                        SegmentId = fixture.SegId,
+                        SegmentName = GetSegmentName(fixture.SegNa, fixture.SegNaTr, request.LanguageCode),
+                        LeagueId = fixture.LeId,
+                        LeagueName = GetLeagueName(fixture.LeNa, fixture.LeNaTr, request.LanguageCode),
+                        ProviderFixtureId = fixture.PrFiId,
+                        FixtureId = fixture.FiId.ToString(),
+                        FixtureName = GetFixtureName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode),
+                        IsHomeFavorite = fixture.IsHoFa,
+                        HomeName = GetHomeName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
+                        AwayName = GetAwayName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
+                        FixtureStartDate = fixture.FiStDa,
+                        IsLive = fixture.IsOfLi,
+                        IsLiveStream = IsLiveStream(fixture.LiId, fixture.GeAl, request.IpCountryCode),
+                        FixtureStatusId = fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStId : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStId : (int)FixtureStatus.Closed,
+                        FixtureStatusName = fixture.SpId > 1000 || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStNa : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
+                        FixtureTypeId = fixture.FiTyId,
+                        Score = fixture.Sc,
+                        CurrentPeriod = CurrentPeriodHelper.ToShortName(fixture.CuPe),
+                        CurrentMinute = fixture.CuMi.ToString(),
+                        BetStop = fixture.IsSu ? new List<int> { 1 } : new List<int> { },
+                        IsBetStop = fixture.IsSu,
+                        IsBetStopGlobal = bettingStatus.IsBeSo,
+                        IsBetBuilder = IsBetBuilder(fixture.SpId, fixture.FiTyId, fixture.FiStId, betBuilderMarketTemplates),
+                        Market = GetTopGameMarket(markets.Result.Where(c => c.FiId == requestMarket.FixtureId && c.MaId == requestMarket.MarketId).ToList(), selections.Result.Where(c => c.FiId == requestMarket.FixtureId && c.MaId == requestMarket.MarketId).ToList(), request.LanguageCode, request.ClientId, request.ClientCode, fixture.SpId, fixture.FiTyId, fixture.FiStId, clientInitial, betBuilderMarketTemplates),
+                        SortOrder = ++sortOrder
+                    });
+
+                    if (result.Fxitures.Count == 10)
+                        break;
+                }
             }
 
             if (result.Fxitures.Any())

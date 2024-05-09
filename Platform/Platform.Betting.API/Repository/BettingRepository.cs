@@ -1,5 +1,4 @@
 ﻿using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting;
@@ -13,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Security.AccessControl;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -2956,23 +2954,30 @@ namespace Platform.Betting.API.Repository
                 .Where(c => c.ClientId == request.ClientId.ToString() && c.MarketStatusId == (int)MarketStatus.Active);
 
             var subquery = clientTopMarkets
-                .GroupBy(c => c.FixtureId)
+                .GroupBy(c => new { FixtureId = c.FixtureId, MarketId = c.MarketId })
                 .Select(s => new
                 {
-                    FixtureId = s.Key,
+                    FixtureId = s.Key.FixtureId,
+                    MarketId = s.Key.MarketId,
                     BetCount = s.Sum(c => c.BetCount)
                 })
                 .OrderByDescending(o => o.BetCount);
 
-            var fixtureIds = (from a in subquery
-                              orderby a.BetCount descending
-                              select (long)a.FixtureId).Take(10).ToList();
+            var markets = (from s in subquery
+                              orderby s.BetCount descending
+                              select new BetRecommendationMarketDTO()
+                              {
+                                  FixtureId = s.FixtureId,
+                                  MarketId = s.MarketId,
+                              })
+                              //.Take(10)
+                              .ToList();
 
             return await _sportsbookRepository.GetBetRecommendationDetails(new BetRecommendationDetailRequestDTO()
             {
                 ClientId = request.ClientId,
                 ClientCode = request.ClientCode,
-                FixtureIds = fixtureIds
+                Markets = markets
             });
         }
 

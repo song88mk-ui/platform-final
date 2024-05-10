@@ -363,7 +363,12 @@ namespace Platform.Operator.Servicev2.Repository
                             betSelection.BetSelectionStatusName = betEntity.BetStatusName;
 
                             var betSelectionEntity = context.BetSelection.Update(betSelection).Entity;
-                            payload.BetSelections.Add(betSelectionEntity);
+                            //payload.BetSelections.Add(betSelectionEntity); 
+                            payload.BetSelections.Add(new BetSelectionMessageExtenstion()
+                            {
+                                BetSelection = betSelectionEntity,
+                                //MarketSelectionCoumt = message.BetSelections.FirstOrDefault(c => c.BetSelection.BetId == betSelection.BetId && c.BetSelection.BetSelectionId == betSelection.BetSelectionId).MarketSelectionCoumt
+                            });
 
                             context.BetSelectionAudit.Add(new BetSelectionAudit
                             {
@@ -625,7 +630,7 @@ namespace Platform.Operator.Servicev2.Repository
                     IsBetBuilder = message.IsBetBuilder,
                     BonusId = message.BonusId,
                     OddsRef = betData.OddsRef,
-                    BetSelections = betSelectionData.Select(s => new OperatorBetSelectionRequestDTO
+                    BetSelections = betSelectionData.Select(s => s.BetSelection).Select(s => new OperatorBetSelectionRequestDTO
                     {
                         BetSelectionId = s.BetSelectionId.ToString().ToUpper(),
                         BetSelectionStatus = BetStatus.Running.ToString(),
@@ -706,19 +711,22 @@ namespace Platform.Operator.Servicev2.Repository
 
                         AcceptBet(message.Bet.BetId, correlationId, messageBroker, result, message.IsBoosted, message.IsBetBuilder, message.UserAgent);
 
-                        foreach (var selection in message.BetSelections)
+                        foreach (var selection in message.BetSelections.Where(c => c.MarketSelectionCoumt <= 3))
                         {
                             messageBroker.Publish(new OnClientTopMarketBetPlacement
                             {
                                 ClientId = betData.ClientId.ToUpper(),
                                 ClientCode = betData.ClientCode.ToUpper(),
                                 ClientName = betData.ClientName,
-                                FixtureId = selection.FixtureId,
-                                FixtureName = selection.FixtureName,
-                                MarketId = selection.MarketId,
-                                MarketName = selection.MarketName,
+                                SportId = selection.BetSelection.SportId,
+                                SportName = selection.BetSelection.SportName,
+                                FixtureId = selection.BetSelection.FixtureId,
+                                FixtureName = selection.BetSelection.FixtureName,
+                                MarketId = selection.BetSelection.MarketId,
+                                MarketName = selection.BetSelection.MarketName,
                                 MarketStatusId = (int)MarketStatus.Active,
-                                MarketStatusName = MarketStatus.Active.ToString()
+                                MarketStatusName = MarketStatus.Active.ToString(),
+                                MarketSelectionCount = selection.MarketSelectionCoumt
                             }, "OnBetPlacement", $"r.client.topmarket.placement", correlationId);
                         }
                     }
@@ -815,7 +823,7 @@ namespace Platform.Operator.Servicev2.Repository
                     BetStatus = message.Bet.BetStatusName,
                     ParlayBonus = (double)message.Bet.ParlayBonus,
                     ParlayBonusWinnings = (double)message.Bet.ParlayBonusWinnings,
-                    BetSelections = message.BetSelections.Select(s => new
+                    BetSelections = message.BetSelections.Select(s => s.BetSelection).Select(s => new
                     {
                         BetSelectionId = s.BetSelectionId,
                         BetSelectionStatus = s.BetSelectionStatusName,
@@ -937,19 +945,22 @@ namespace Platform.Operator.Servicev2.Repository
 
                         AcceptBet(message.Bet.BetId, correlationId, messageBroker, operatorResponse, message.IsBoosted, message.IsBetBuilder, message.UserAgent);
 
-                        foreach (var selection in message.BetSelections)
+                        foreach (var selection in message.BetSelections.Where(c => c.MarketSelectionCoumt <= 3))
                         {
                             messageBroker.Publish(new OnClientTopMarketBetPlacement
                             {
                                 ClientId = betData.ClientId.ToUpper(),
                                 ClientCode = betData.ClientCode.ToUpper(),
                                 ClientName = betData.ClientName,
-                                FixtureId = selection.FixtureId,
-                                FixtureName = selection.FixtureName,
-                                MarketId = selection.MarketId,
-                                MarketName = selection.MarketName,
+                                SportId = selection.BetSelection.SportId,
+                                SportName = selection.BetSelection.SportName,
+                                FixtureId = selection.BetSelection.FixtureId,
+                                FixtureName = selection.BetSelection.FixtureName,
+                                MarketId = selection.BetSelection.MarketId,
+                                MarketName = selection.BetSelection.MarketName,
                                 MarketStatusId = (int)MarketStatus.Active,
-                                MarketStatusName = MarketStatus.Active.ToString()
+                                MarketStatusName = MarketStatus.Active.ToString(),
+                                MarketSelectionCount = selection.MarketSelectionCoumt
                             }, "OnBetPlacement", $"r.client.topmarket.placement", correlationId);
                         }
                     }

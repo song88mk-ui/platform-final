@@ -1193,5 +1193,20 @@ namespace Platform.Sportsbook.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("v2/sportsbook/betrecommendations")]
+        public async Task<IActionResult> GetBetRecommendations([FromBody] BetRecommendationDetailRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetBetRecommendationDetails(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

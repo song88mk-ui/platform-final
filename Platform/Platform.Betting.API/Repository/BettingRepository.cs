@@ -12,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Security.AccessControl;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -306,7 +305,8 @@ namespace Platform.Betting.API.Repository
             }
 
             var betData = new Bet();
-            var betSelectionData = new List<BetSelection>();
+            //var betSelectionData = new List<BetSelection>();
+            var betSelectionData = new List<BetSelectionMessageExtenstion>();
 
             try
             {
@@ -518,7 +518,12 @@ namespace Platform.Betting.API.Repository
                             IsBinary = selection.IsBinary
                         }).Entity;
 
-                        betSelectionData.Add(betSelectionEntity);
+                        //betSelectionData.Add(betSelectionEntity);
+                        betSelectionData.Add(new BetSelectionMessageExtenstion()
+                        {
+                            BetSelection = betSelectionEntity,
+                            MarketSelectionCoumt = selection.MarketSelectionCount
+                        });
 
                         var betSelectionId = betSelectionEntity.BetSelectionId;
                         selection.BetSelectionId = betSelectionId;
@@ -945,7 +950,7 @@ namespace Platform.Betting.API.Repository
             }
 
             var betData = new Bet();
-            var betSelectionData = new List<BetSelection>();
+            var betSelectionData = new List<BetSelectionMessageExtenstion>();
 
             try
             {
@@ -1158,7 +1163,11 @@ namespace Platform.Betting.API.Repository
                             IsBinary = selection.IsBinary
                         }).Entity;
 
-                        betSelectionData.Add(betSelectionEntity);
+                        betSelectionData.Add(new BetSelectionMessageExtenstion()
+                        {
+                            BetSelection = betSelectionEntity,
+                            MarketSelectionCoumt = selection.MarketSelectionCount
+                        });
 
                         var betSelectionId = betSelectionEntity.BetSelectionId;
                         selection.BetSelectionId = betSelectionId;
@@ -1504,7 +1513,7 @@ namespace Platform.Betting.API.Repository
                 IQueryable<Bet> raw = null;
 
                 var betTypeFilter = Enum.GetValues(typeof(BetType)).Cast<int>().ToList();
-                if(request.BetType.Any())
+                if (request.BetType.Any())
                     betTypeFilter = request.BetType.ToList();
 
                 if (request.IsCurrent)
@@ -1534,7 +1543,7 @@ namespace Platform.Betting.API.Repository
                     {
                         BetStatusFilter.All => betStatuses.Where(c => !(new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Rejected }).Contains(c)),
                         BetStatusFilter.Open => betStatuses.Where(c => (new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running }).Contains(c)),
-                        BetStatusFilter.Settled => betStatuses.Where(c=> !(new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running, (int)BetStatus.Rejected }).Contains(c)),
+                        BetStatusFilter.Settled => betStatuses.Where(c => !(new List<int> { (int)BetStatus.Waiting, (int)BetStatus.Running, (int)BetStatus.Rejected }).Contains(c)),
                         _ => null
                     };
 
@@ -2948,6 +2957,29 @@ namespace Platform.Betting.API.Repository
                     Message = ex.Message
                 };
             }
+        }
+        public async Task<BaseResponseDTO<TGResponseDTO>> GetBetRecommenations(BetRecommendationRequestDTO request)
+        {
+            var clientTopMarkets = _bettingContext.ClientTopMarket.AsNoTracking()
+                                            .Where(c => c.ClientId == request.ClientId.ToString() && c.MarketStatusId == (int)MarketStatus.Active)
+                                            .ToList();
+
+            var markets = clientTopMarkets.OrderByDescending(o => o.BetCount)
+                                            .Take(10)
+                                            .Select((s, i) => new BetRecommendationMarketDTO()
+                                            {
+                                                FixtureId = s.FixtureId,
+                                                MarketId = s.MarketId,
+                                                SortOrder = i + 1
+                                            })
+                                            .ToList();
+
+            return await _sportsbookRepository.GetBetRecommendationDetails(new BetRecommendationDetailRequestDTO()
+            {
+                ClientId = request.ClientId,
+                ClientCode = request.ClientCode,
+                Markets = markets
+            });
         }
 
         public async Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request)

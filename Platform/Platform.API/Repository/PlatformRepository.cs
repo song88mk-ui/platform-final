@@ -407,7 +407,8 @@ namespace Platform.API.Repository
                     VoidProbability = initialSelection.VoidProbability,
                     HalfWonProbability = initialSelection.HalfWonProbability,
                     HalfLostProbability = initialSelection.HalfLostProbability,
-                    IsBinary = initialSelection.SelectionCount > 2 ? false : true
+                    IsBinary = initialSelection.SelectionCount > 2 ? false : true,
+                    MarketSelectionCount = initialSelection.SelectionCount
                 });
             }
 
@@ -4474,6 +4475,25 @@ namespace Platform.API.Repository
             });
         }
 
+        public async Task<BaseResponseDTO<TGResponseDTO>> GetBetRecommendations(string clientId, string langCode)
+        {
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<TGResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _bettingRepository.GetBetRecommendations(new BetRecommendationRequestDTO()
+            {
+                ClientId = clientResponse.Result.ClientId,
+                ClientCode = clientResponse.Result.ClientCode
+            });
+        }
 
         public async Task<BaseResponseDTO<string>> AuthenticateOG(string clientId, string operatorToken, OGClientRequest ogParameters)
         {

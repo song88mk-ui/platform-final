@@ -161,7 +161,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 OddsTypeId = message.Bet.OddsTypeId
             };
 
-            var betSelections = message.BetSelections.Select(s => new BetSelectionMemory
+            var betSelections = message.BetSelections.Select(s => s.BetSelection).Select(s => new BetSelectionMemory
             {
                 BetId = s.BetId,
                 BetSelectionId = s.BetSelectionId,

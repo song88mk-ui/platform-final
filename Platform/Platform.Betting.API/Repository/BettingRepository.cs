@@ -2980,7 +2980,7 @@ namespace Platform.Betting.API.Repository
                                   FixtureId = s.FixtureId,
                                   MarketId = s.MarketId,
                               })
-                              //.Take(10)
+                              .Take(10)
                               .ToList();
 
             return await _sportsbookRepository.GetBetRecommendationDetails(new BetRecommendationDetailRequestDTO()

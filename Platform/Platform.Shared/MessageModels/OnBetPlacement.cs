@@ -1,6 +1,4 @@
 ﻿using Platform.Shared.Data.Betting.Entities;
-using Platform.Shared.Models;
-using System;
 using System.Collections.Generic;
 
 namespace Platform.Shared.MessageModels
@@ -9,7 +7,7 @@ namespace Platform.Shared.MessageModels
     {
         public OnBetPlacement()
         {
-            BetSelections = new List<BetSelection>();
+            BetSelections = new List<BetSelectionMessageExtenstion>();
         }
         public Bet Bet { get; set; }
         public bool IsBoosted { get; set; }
@@ -18,9 +16,14 @@ namespace Platform.Shared.MessageModels
         public decimal Odds { get; set; }
         public string UserAgent { get; set; } = string.Empty;
         public bool IsOGClient { get; set; }
-        public List<BetSelection> BetSelections { get; set; }
+        public bool WillRecordTopMarket { get; set; }
+        public List<BetSelectionMessageExtenstion> BetSelections { get; set; }
     }
-
+    public class BetSelectionMessageExtenstion
+    {
+        public BetSelection BetSelection { get; set; }
+        public int MarketSelectionCoumt { get;set; }
+    }
     public class OnBetPlacementError
     {
         public string BetId { get; set; }

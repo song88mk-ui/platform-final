@@ -79,5 +79,6 @@ namespace Platform.Shared.Models
         public double HalfWonProbability { get; set; }
         public double HalfLostProbability { get; set; }
         public bool IsBinary { get; set; }
+        public int MarketSelectionCount { get; set; } = 0;
     }
 }

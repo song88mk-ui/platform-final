@@ -11,6 +11,11 @@ namespace Platform.Shared.Models
         public string ClientCode { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string IpCountryCode { get; set; }
-        public List<long> FixtureIds { get; set; }
+        public List<BetRecommendationMarketDTO> Markets { get; set; }
+    }
+    public class BetRecommendationMarketDTO
+    {
+        public long FixtureId { get; set; }
+        public long MarketId { get; set; }
     }
 }

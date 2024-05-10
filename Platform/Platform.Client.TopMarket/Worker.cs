@@ -71,7 +71,7 @@ namespace Platform.ClientTopMarket.Service
                 {
                     case "OnBetPlacement":
                         var onBetPlacement = JsonSerializer.Deserialize<OnClientTopMarketBetPlacement>(payload);
-                        if (onBetPlacement.SportId < 1000)
+                        if (onBetPlacement.SportId < 1000 && onBetPlacement.MarketSelectionCount <= 3)
                             _messagesBetPlacement.Add(onBetPlacement);
                         break;
                     case "OnBetSettlement":

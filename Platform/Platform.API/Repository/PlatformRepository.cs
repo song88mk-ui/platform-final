@@ -407,7 +407,8 @@ namespace Platform.API.Repository
                     VoidProbability = initialSelection.VoidProbability,
                     HalfWonProbability = initialSelection.HalfWonProbability,
                     HalfLostProbability = initialSelection.HalfLostProbability,
-                    IsBinary = initialSelection.SelectionCount > 2 ? false : true
+                    IsBinary = initialSelection.SelectionCount > 2 ? false : true,
+                    MarketSelectionCount = initialSelection.SelectionCount
                 });
             }
 

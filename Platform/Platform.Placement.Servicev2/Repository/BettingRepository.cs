@@ -4,7 +4,6 @@ using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
-using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using Sportradar.MTS.SDK.API;
 using Sportradar.MTS.SDK.Entities.Builders;
@@ -15,10 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
-using System.Threading;
 using System.Transactions;
-using System.Xml.Linq;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Platform.Placement.Servicev2.Repository
 {
@@ -41,7 +37,7 @@ namespace Platform.Placement.Servicev2.Repository
             payload.IsOGClient = message.IsOGClient;
 
             var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
-                message.BetSelections.Any(c => c.SportId > 1000) ? new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled for VS)") :
+                message.BetSelections.Any(c => c.BetSelection.SportId > 1000) ? new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled for VS)") :
                 ValidateToMTS(message, mts) : new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled)");
 
             if (result.Item1 == TicketAcceptance.Accepted)
@@ -124,7 +120,11 @@ namespace Platform.Placement.Servicev2.Repository
                                     betSelection.BetSelectionStatusName = betEntity.BetStatusName;
 
                                     var betSelectionEntity = context.BetSelection.Update(betSelection).Entity;
-                                    payload.BetSelections.Add(betSelectionEntity);
+                                    payload.BetSelections.Add(new BetSelectionMessageExtenstion()
+                                    {
+                                        BetSelection = betSelectionEntity,
+                                        MarketSelectionCoumt = message.BetSelections.FirstOrDefault(c => c.BetSelection.BetId == betSelection.BetId && c.BetSelection.BetSelectionId == betSelection.BetSelectionId).MarketSelectionCoumt
+                                    });
 
                                     context.BetSelectionAudit.Add(new BetSelectionAudit
                                     {
@@ -306,7 +306,12 @@ namespace Platform.Placement.Servicev2.Repository
                                     betSelection.IsSettled = true;
 
                                     var betSelectionEntity = context.BetSelection.Update(betSelection).Entity;
-                                    payload.BetSelections.Add(betSelectionEntity);
+                                    //payload.BetSelections.Add(betSelectionEntity);
+                                    payload.BetSelections.Add(new BetSelectionMessageExtenstion()
+                                    {
+                                        BetSelection = betSelectionEntity,
+                                        MarketSelectionCoumt = message.BetSelections.FirstOrDefault(c => c.BetSelection.BetId == betSelection.BetId && c.BetSelection.BetSelectionId == betSelection.BetSelectionId).MarketSelectionCoumt
+                                    });
 
                                     context.BetSelectionAudit.Add(new BetSelectionAudit
                                     {
@@ -370,7 +375,10 @@ namespace Platform.Placement.Servicev2.Repository
 
                                 scope.Complete();
 
-                                messageBroker.Publish(payload, "OnBetTimeout", "r.bet.cancellation", correlationId);
+                                messageBroker.Publish(new OnBetTimeout()
+                                {
+                                    BetId = bet.BetId
+                                }, "OnBetTimeout", "r.bet.cancellation", correlationId);
 
                                 //publish to reports
                                 messageBroker.Publish(payload, "OnBetRejection", "r.bet.reports", correlationId);
@@ -403,7 +411,7 @@ namespace Platform.Placement.Servicev2.Repository
                                     var selectionSpecifier = split[0].Replace(" Selection: ", string.Empty);
                                     var fixtureSpecifier = split[1].Replace(" Match: ", string.Empty);
 
-                                    var betSelection = message.BetSelections.FirstOrDefault(c => c.FixtureSpecifier == fixtureSpecifier && c.SelectionSpecifier == selectionSpecifier);
+                                    var betSelection = message.BetSelections.Select(s => s.BetSelection).FirstOrDefault(c => c.FixtureSpecifier == fixtureSpecifier && c.SelectionSpecifier == selectionSpecifier);
 
                                     messageBroker.Publish(new OnMarketDeactivationMesssage
                                     {
@@ -535,7 +543,12 @@ namespace Platform.Placement.Servicev2.Repository
                                 betSelection.IsSettled = true;
 
                                 var betSelectionEntity = context.BetSelection.Update(betSelection).Entity;
-                                rejectionPayload.BetSelections.Add(betSelectionEntity);
+                                //rejectionPayload.BetSelections.Add(betSelectionEntity);
+                                rejectionPayload.BetSelections.Add(new BetSelectionMessageExtenstion()
+                                {
+                                    BetSelection = betSelectionEntity,
+                                    MarketSelectionCoumt = message.BetSelections.FirstOrDefault(c => c.BetSelection.BetId == betSelection.BetId && c.BetSelection.BetSelectionId == betSelection.BetSelectionId).MarketSelectionCoumt
+                                });
 
                                 context.BetSelectionAudit.Add(new BetSelectionAudit
                                 {
@@ -590,7 +603,10 @@ namespace Platform.Placement.Servicev2.Repository
 
                             scope.Complete();
 
-                            messageBroker.Publish(rejectionPayload, "OnBetTimeout", "r.bet.cancellation", correlationId);
+                            messageBroker.Publish(new OnBetTimeout()
+                            {
+                                BetId = bet.BetId
+                            }, "OnBetTimeout", "r.bet.cancellation", correlationId);
 
                             //publish to reports
                             messageBroker.Publish(rejectionPayload, "OnBetRejection", "r.bet.reports", correlationId);
@@ -615,7 +631,7 @@ namespace Platform.Placement.Servicev2.Repository
         {
             if (payload.BetSelections.Count == 1)
             {
-                var stakeLimitFixture = context.StakeLimitFixture.Find($"{payload.Bet.ClientCode}-{payload.Bet.UserId}", payload.BetSelections.First().FixtureId);
+                var stakeLimitFixture = context.StakeLimitFixture.Find($"{payload.Bet.ClientCode}-{payload.Bet.UserId}", payload.BetSelections.First().BetSelection.FixtureId);
 
                 if (stakeLimitFixture != null)
                 {
@@ -654,7 +670,7 @@ namespace Platform.Placement.Servicev2.Repository
                     .SetDeviceId($"{message.Bet.ClientCode}{message.Bet.UserId.Replace("-", "")}")
                     .Build())
                     .Build())
-                    .AddBet(BuildBet(message.Bet, message.BetSelections, message.IsBetBuilder, message.Odds))
+                    .AddBet(BuildBet(message.Bet, message.BetSelections.Select(s => s.BetSelection).ToList(), message.IsBetBuilder, message.Odds))
                     .BuildTicket();
 
                 var response = mts.SendTicketBlocking(bet);
@@ -713,8 +729,8 @@ namespace Platform.Placement.Servicev2.Repository
                     bonusDescription = BetBonusDescription.AccaBonus;
                 }
             }
-            
-            if(betData.BetTypeId == (int)BetType.PriceBoost) //boosted bonus
+
+            if (betData.BetTypeId == (int)BetType.PriceBoost) //boosted bonus
             {
                 var totalBoostedPayout = betData.Odds * stake;
                 var totalOriginalPayout = betData.OddsRef * stake;
@@ -767,7 +783,7 @@ namespace Platform.Placement.Servicev2.Repository
                                                .SetOdds(Convert.ToInt32(betSelection.Odds * 10000))
                                                .Build());
                 }
-                    
+
             }
 
             return selection.Build();

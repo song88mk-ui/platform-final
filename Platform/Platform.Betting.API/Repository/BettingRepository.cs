@@ -305,7 +305,8 @@ namespace Platform.Betting.API.Repository
             }
 
             var betData = new Bet();
-            var betSelectionData = new List<BetSelection>();
+            //var betSelectionData = new List<BetSelection>();
+            var betSelectionData = new List<BetSelectionMessageExtenstion>();
 
             try
             {
@@ -517,7 +518,12 @@ namespace Platform.Betting.API.Repository
                             IsBinary = selection.IsBinary
                         }).Entity;
 
-                        betSelectionData.Add(betSelectionEntity);
+                        //betSelectionData.Add(betSelectionEntity);
+                        betSelectionData.Add(new BetSelectionMessageExtenstion()
+                        {
+                            BetSelection = betSelectionEntity,
+                            MarketSelectionCoumt = selection.MarketSelectionCount
+                        });
 
                         var betSelectionId = betSelectionEntity.BetSelectionId;
                         selection.BetSelectionId = betSelectionId;
@@ -944,7 +950,7 @@ namespace Platform.Betting.API.Repository
             }
 
             var betData = new Bet();
-            var betSelectionData = new List<BetSelection>();
+            var betSelectionData = new List<BetSelectionMessageExtenstion>();
 
             try
             {
@@ -1157,7 +1163,11 @@ namespace Platform.Betting.API.Repository
                             IsBinary = selection.IsBinary
                         }).Entity;
 
-                        betSelectionData.Add(betSelectionEntity);
+                        betSelectionData.Add(new BetSelectionMessageExtenstion()
+                        {
+                            BetSelection = betSelectionEntity,
+                            MarketSelectionCoumt = selection.MarketSelectionCount
+                        });
 
                         var betSelectionId = betSelectionEntity.BetSelectionId;
                         selection.BetSelectionId = betSelectionId;

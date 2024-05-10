@@ -1,23 +1,21 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Protocols;
-using Platform.Shared.Data.Reports.Entities;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Platform.AgentReports.Service.Enums;
+using Platform.AgentReports.Service.Models;
 using Platform.Shared.Data.Reports;
+using Platform.Shared.Data.Reports.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Transactions;
-using System;
-using Platform.AgentReports.Service.Models;
-using Platform.Shared.Data.Betting.Entities;
-using System.Linq;
-using Newtonsoft.Json;
-using Microsoft.Extensions.Configuration;
-using Platform.AgentReports.Service.Enums;
 using Platform.Shared.Models;
-using System.Text.Json;
-using Microsoft.Extensions.Logging;
 using Platform.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Net.Http;
+using System.Text.Json;
+using System.Transactions;
 
 namespace Platform.AgentReports.Service.Repository
 {
@@ -62,7 +60,7 @@ namespace Platform.AgentReports.Service.Repository
 
                         context.BetTransaction.Add(ConvertToBetTransactionEntityInsertFinal(message, agent));
 
-                        foreach (var selection in message.BetSelections)
+                        foreach (var selection in message.BetSelections.Select(s => s.BetSelection))
                         {
                             var betSelection = context.BetSelection.Find(agent.AgentId, selection.BetId, selection.BetSelectionId);
 
@@ -333,18 +331,20 @@ namespace Platform.AgentReports.Service.Repository
             var subCategoryId = 0;
             var betSelectionCount = 0;
 
+            var betSelection = message.BetSelections.Select(s => s.BetSelection).ToList();
+
             if (message.BetSelections.Count == 1)
             {
-                if (message.BetSelections[0].SportId == 1)
+                if (betSelection[0].SportId == 1)
                 {
                     categoryId = (int)Category.Soccer;
-                    subCategoryId = message.BetSelections[0].FixtureStatusId == (int)FixtureStatus.Live ? 2 : 1;
+                    subCategoryId = betSelection[0].FixtureStatusId == (int)FixtureStatus.Live ? 2 : 1;
                     betSelectionCount = message.BetSelections.Count;
                 }
-                else if (message.BetSelections[0].SportId == 21)
+                else if (betSelection[0].SportId == 21)
                 {
                     categoryId = (int)Category.Cricket;
-                    subCategoryId = message.BetSelections[0].FixtureStatusId == (int)FixtureStatus.Live ? 2 : 1;
+                    subCategoryId = betSelection[0].FixtureStatusId == (int)FixtureStatus.Live ? 2 : 1;
                     betSelectionCount = message.BetSelections.Count;
                 }
                 else
@@ -443,6 +443,8 @@ namespace Platform.AgentReports.Service.Repository
         {
             var agentId = agents.Where(c => c.UserType == Shared.Enums.UserType.Player).Select(s => s.UplineUserId).FirstOrDefault();
 
+            var betSelections = message.BetSelections.Select(s => s.BetSelection).ToList();
+
             return new Shared.Data.Reports.Entities.Bet
             {
                 ParentUserId = agent.AgentId,
@@ -468,27 +470,27 @@ namespace Platform.AgentReports.Service.Repository
                 ExchangeRate = message.Bet.ExchangeRate,
                 IPAddress = message.Bet.IPAddress,
                 Count = message.BetSelections.Count,
-                SportId = message.BetSelections.First().SportId,
-                SportName = message.BetSelections.First().SportName,
-                SegmentId = message.BetSelections.First().SegmentId,
-                SegmentName = message.BetSelections.First().SegmentName,
-                LeagueId = message.BetSelections.First().LeagueId,
-                LeagueName = message.BetSelections.First().LeagueName,
-                FixtureId = message.BetSelections.First().FixtureId,
-                FixtureName = message.BetSelections.First().FixtureName,
-                FixtureStatusId = message.BetSelections.First().FixtureStatusId,
-                FixtureStatusName = message.BetSelections.First().FixtureStatusName,
-                FixtureStartDate = message.BetSelections.First().FixtureStartDate,
-                Score = message.BetSelections.First().BetScore,
+                SportId = betSelections.First().SportId,
+                SportName = betSelections.First().SportName,
+                SegmentId = betSelections.First().SegmentId,
+                SegmentName = betSelections.First().SegmentName,
+                LeagueId = betSelections.First().LeagueId,
+                LeagueName = betSelections.First().LeagueName,
+                FixtureId = betSelections.First().FixtureId,
+                FixtureName = betSelections.First().FixtureName,
+                FixtureStatusId = betSelections.First().FixtureStatusId,
+                FixtureStatusName = betSelections.First().FixtureStatusName,
+                FixtureStartDate = betSelections.First().FixtureStartDate,
+                Score = betSelections.First().BetScore,
                 MarketTemplateGroupId = string.Empty,
                 MarketTemplateGroupName = string.Empty,
-                MarketTemplateId = message.BetSelections.First().MarketTemplateId,
-                MarketId = message.BetSelections.First().MarketId,
-                MarketName = message.BetSelections.First().MarketName,
-                Line = message.BetSelections.First().Line,
-                SelectionTemplateId = message.BetSelections.First().SelectionTemplateId,
-                SelectionId = message.BetSelections.First().SelectionId,
-                SelectionName = message.BetSelections.First().SelectionName,
+                MarketTemplateId = betSelections.First().MarketTemplateId,
+                MarketId = betSelections.First().MarketId,
+                MarketName = betSelections.First().MarketName,
+                Line = betSelections.First().Line,
+                SelectionTemplateId = betSelections.First().SelectionTemplateId,
+                SelectionId = betSelections.First().SelectionId,
+                SelectionName = betSelections.First().SelectionName,
                 ProductId = (int)Shared.Enums.Product.Sportsbook,
                 ProductName = Shared.Enums.Product.Sportsbook.ToString(),
                 ReceivePositionTaking = GetReceivePTFinal(message.Bet.Stake, message.Bet.Payout, message.Bet.BetStatusId, agent),

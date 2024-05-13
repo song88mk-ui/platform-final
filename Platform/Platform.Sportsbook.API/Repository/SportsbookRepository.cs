@@ -9758,7 +9758,7 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             MaId = market.MaId,
                             FiId = market.FiId,
-                            MaTeId = market.MaTeId,
+                            MaTeId = market.MaTeId, 
                             MaNa = market.MaNa,
                             Li = market.Li,
                             MaStId = market.MaStId,
@@ -9772,6 +9772,29 @@ namespace Platform.Sportsbook.API.Repository
                         });
 
                     var market = query.OrderBy(o => o.SoOr).ThenBy(o => o.Li).ThenBy(o => o.MaNa).FirstOrDefault();
+
+                    if(market == null)
+                    {
+                        if(markets.Count == 1)
+                        {
+                            market = markets.Select(market => new
+                            {
+                                MaId = market.MaId,
+                                FiId = market.FiId,
+                                MaTeId = market.MaTeId,
+                                MaNa = market.MaNa,
+                                Li = market.Li,
+                                MaStId = market.MaStId,
+                                MaStNa = market.MaStNa,
+                                CaStId = market.CaStId,
+                                ClCo = market.ClCo,
+                                ClCoMa = market.ClCoMa,
+                                IsBo = market.IsBo,
+                                MaNaTr = market.MaNaTr,
+                                SoOr = 1
+                            }).FirstOrDefault();
+                        }
+                    }
 
                     var filteredSelections = selections.Where(c => c.MaId == market.MaId).ToList();
                     var isBinary = filteredSelections.Count > 2 ? false : true;
@@ -9842,6 +9865,29 @@ namespace Platform.Sportsbook.API.Repository
                         });
 
                     var market = query.OrderBy(o => o.SoOr).ThenBy(o => o.Li).ThenBy(o => o.MaNa).FirstOrDefault();
+
+                    if (market == null)
+                    {
+                        if (markets.Count == 1)
+                        {
+                            market = markets.Select(market => new
+                            {
+                                MaId = market.MaId,
+                                FiId = market.FiId,
+                                MaTeId = market.MaTeId,
+                                MaNa = market.MaNa,
+                                Li = market.Li,
+                                MaStId = market.MaStId,
+                                MaStNa = market.MaStNa,
+                                CaStId = market.CaStId,
+                                ClCo = market.ClCo,
+                                ClCoMa = market.ClCoMa,
+                                IsBo = market.IsBo,
+                                MaNaTr = market.MaNaTr,
+                                SoOr = 1
+                            }).FirstOrDefault();
+                        }
+                    }
 
                     var clientOdds = new List<ClientOdds>();
 
@@ -9955,6 +10001,29 @@ namespace Platform.Sportsbook.API.Repository
                     });
 
                 var market = query.OrderBy(o => o.SoOr).ThenBy(o => o.Li).ThenBy(o => o.MaNa).FirstOrDefault();
+
+                if (market == null)
+                {
+                    if (markets.Count == 1)
+                    {
+                        market = markets.Select(market => new
+                        {
+                            MaId = market.MaId,
+                            FiId = market.FiId,
+                            MaTeId = market.MaTeId,
+                            MaNa = market.MaNa,
+                            Li = market.Li,
+                            MaStId = market.MaStId,
+                            MaStNa = market.MaStNa,
+                            CaStId = market.CaStId,
+                            ClCo = market.ClCo,
+                            ClCoMa = market.ClCoMa,
+                            IsBo = market.IsBo,
+                            MaNaTr = market.MaNaTr,
+                            SoOr = 1
+                        }).FirstOrDefault();
+                    }
+                }
 
                 var isBetBuilder = false;
                 var betBuilderMarketTemplate = betBuilderMarketTemplates.FirstOrDefault(c => c.SportId == sportId && c.MarketTemplateId == market.MaTeId);

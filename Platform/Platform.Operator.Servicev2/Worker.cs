@@ -379,7 +379,7 @@ namespace Platform.Operator.Servicev2
 
                         if (!onBetPlacement.IsOGClient)
                             _bettingRepository.ProcesssBetPlacement(onBetPlacement, _messageBroker, correlationId, threadId);
-                        else//
+                        else
                             _bettingRepository.ProcesssBetPlacementOG(onBetPlacement, _messageBroker, correlationId, threadId);
                         break;
                     case "OnBetPartialCashOut":

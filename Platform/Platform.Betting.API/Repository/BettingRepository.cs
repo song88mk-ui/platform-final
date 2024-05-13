@@ -2958,7 +2958,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<TGResponseDTO>> GetBetRecommenations(BetRecommendationRequestDTO request)
+        public async Task<BaseResponseDTO<BetRecommendationsResponseDTO>> GetBetRecommenations(BetRecommendationRequestDTO request)
         {
             var clientTopMarkets = _bettingContext.ClientTopMarket.AsNoTracking()
                                             .Where(c => c.ClientId == request.ClientId.ToString() && c.MarketStatusId == (int)MarketStatus.Active)

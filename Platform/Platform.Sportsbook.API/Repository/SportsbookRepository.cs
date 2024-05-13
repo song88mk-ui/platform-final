@@ -1,5 +1,4 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
@@ -22,7 +21,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
 using System.Xml;
-using static System.Net.Mime.MediaTypeNames;
 using BettingStatus = Platform.Shared.Data.Sportsbook.Entities.BettingStatus;
 
 namespace Platform.Sportsbook.API.Repository
@@ -10004,13 +10002,13 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
         }
-        public async Task<BaseResponseDTO<TGResponseDTO>> GetBetRecommendationDetails(BetRecommendationDetailRequestDTO request)
+        public async Task<BaseResponseDTO<BetRecommendationsResponseDTO>> GetBetRecommendationDetails(BetRecommendationDetailRequestDTO request)
         {
             var maintenance = GetMaintenance();
 
             if (maintenance.isMa)
             {
-                return new BaseResponseDTO<TGResponseDTO>
+                return new BaseResponseDTO<BetRecommendationsResponseDTO>
                 {
                     StatusCode = StatusCode.Maintenance,
                     Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
@@ -10074,11 +10072,11 @@ namespace Platform.Sportsbook.API.Repository
 
             if (fixtures.Count == 0)
             {
-                return new BaseResponseDTO<TGResponseDTO>
+                return new BaseResponseDTO<BetRecommendationsResponseDTO>
                 {
                     StatusCode = StatusCode.Success,
                     Message = StatusCode.Success.ToString(),
-                    Result = new TGResponseDTO()
+                    Result = new BetRecommendationsResponseDTO()
                 };
             }
 
@@ -10128,7 +10126,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
 
-            var result = new TGResponseDTO();
+            var result = new BetRecommendationsResponseDTO();
 
             var sortOrder = 0;
             foreach (var topFixture in newFixtureSortOrder)
@@ -10153,7 +10151,7 @@ namespace Platform.Sportsbook.API.Repository
                 if (market == null)
                     continue;
 
-                result.Fxitures.Add(new TGFixtureResponseDTO
+                result.Fxitures.Add(new BetRecommendationFixtureResponseDTO
                 {
                     SportId = fixture.SpId,
                     SportName = GetSportName(fixture.SpNa, fixture.SpNaTr, request.LanguageCode),
@@ -10191,7 +10189,7 @@ namespace Platform.Sportsbook.API.Repository
             if (result.Fxitures.Any())
                 result.Fxitures = result.Fxitures.OrderBy(o => o.SortOrder).ToList();
 
-            return new BaseResponseDTO<TGResponseDTO>()
+            return new BaseResponseDTO<BetRecommendationsResponseDTO>()
             {
                 StatusCode = StatusCode.Success,
                 Message = StatusCode.Success.ToString(),

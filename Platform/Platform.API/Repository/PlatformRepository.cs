@@ -4475,13 +4475,13 @@ namespace Platform.API.Repository
             });
         }
 
-        public async Task<BaseResponseDTO<TGResponseDTO>> GetBetRecommendations(string clientId, string langCode)
+        public async Task<BaseResponseDTO<BetRecommendationsResponseDTO>> GetBetRecommendations(string clientId, string langCode)
         {
             var clientResponse = await GetClient(clientId);
 
             if (clientResponse.StatusCode != StatusCode.Success)
             {
-                return new BaseResponseDTO<TGResponseDTO>
+                return new BaseResponseDTO<BetRecommendationsResponseDTO>
                 {
                     StatusCode = clientResponse.StatusCode,
                     Message = clientResponse.Message

@@ -1,5 +1,4 @@
-﻿using Platform.API.Models;
-using Platform.Shared.Enums;
+﻿using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System.Threading.Tasks;
 
@@ -24,6 +23,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<StatusCode>> ProcessParlayBonus(ParlayBonusRequestDTO request);
         Task<BaseResponseDTO<ParlayBonusResponseDTO>> GetParlayBonus(GetParlayBonusRequestDTO request);
         Task<BaseResponseDTO<BetStatus>> GetBetStatus(BetStatusRequestDTO request);
-        Task<BaseResponseDTO<TGResponseDTO>> GetBetRecommendations(BetRecommendationRequestDTO request);
+        Task<BaseResponseDTO<BetRecommendationsResponseDTO>> GetBetRecommendations(BetRecommendationRequestDTO request);
     }
 }

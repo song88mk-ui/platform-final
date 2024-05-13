@@ -3,15 +3,15 @@ using System.Collections.Generic;
 
 namespace Platform.Shared.Models
 {
-    public class TGResponseDTO
+    public class BetRecommendationsResponseDTO
     {
-        public TGResponseDTO()
+        public BetRecommendationsResponseDTO()
         {
-            Fxitures = new List<TGFixtureResponseDTO>();
+            Fxitures = new List<BetRecommendationFixtureResponseDTO>();
         }
-        public List<TGFixtureResponseDTO> Fxitures { get; set; }
+        public List<BetRecommendationFixtureResponseDTO> Fxitures { get; set; }
     }
-    public class TGFixtureResponseDTO
+    public class BetRecommendationFixtureResponseDTO
     {
         public int SportId { get; set; }
         public string SportName { get; set; }

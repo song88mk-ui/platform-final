@@ -1,7 +1,10 @@
 ﻿using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.API.Models;
+using Platform.Shared.Data.Platform;
+using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Extensions;
 using Platform.Shared.Models;
@@ -13,6 +16,7 @@ using System.Net.Http;
 using System.Security.Cryptography.Xml;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Transactions;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Platform.API.Repository
@@ -168,7 +172,7 @@ namespace Platform.API.Repository
         public async Task<BaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string clientId, string operatorToken, string endpoint, bool isAgent, OGClientRequest request)
         {
             if (request != null)
-                return await AuthenticateOGPlayer(operatorToken, endpoint, request);
+                return await AuthenticateOGPlayer(clientId, operatorToken, endpoint, request);
 
             return await AuthenticatePlayer(clientId, operatorToken, endpoint, isAgent);
         }
@@ -223,7 +227,7 @@ namespace Platform.API.Repository
             }
         }
 
-        private async Task<BaseResponseDTO<AuthenticationResponseDTO>> AuthenticateOGPlayer(string operatorToken, string endpoint, OGClientRequest request)
+        private async Task<BaseResponseDTO<AuthenticationResponseDTO>> AuthenticateOGPlayer(string clientId, string operatorToken, string endpoint, OGClientRequest request)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
@@ -282,6 +286,20 @@ namespace Platform.API.Repository
 
                 authenticationPayload.Signature = authenticationPayload.ToSignOG(privateKey);
 
+
+                AddOperatorLog(new OperatorLog
+                {
+                    Direction = "REQUEST",
+                    ClientId = clientId,
+                    ClientCode = "OGS",
+                    URL = $"{endpoint}/api/v2/platform/security/authenticate",
+                    BetId = "-",
+                    Info = JsonSerializer.Serialize(authenticationPayload),
+                    OperatorToken = operatorToken,
+                    CorrelationId = DateTime.UtcNow.ToString(),
+                    Timestamp = DateTime.UtcNow
+                });
+
                 var authenticationResponse = await _httpClient.PostAsync($"{endpoint}/api/v2/platform/security/authenticate", new StringContent(JsonSerializer.Serialize(authenticationPayload), System.Text.Encoding.UTF8, "application/json"));
 
                 var authenticationResult = JsonSerializer.Deserialize<OGAuthenticationResponse>(await authenticationResponse.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = false });
@@ -294,6 +312,20 @@ namespace Platform.API.Repository
                         Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({authenticationResult.Code}: {authenticationResult.Message})",
                     };
                 }
+
+                AddOperatorLog(new OperatorLog
+                {
+                    Direction = "RESPONSE",
+                    ClientId = clientId,
+                    ClientCode = "OGS",
+                    URL = $"{endpoint}/api/v2/platform/security/authenticate",
+                    BetId = "-",
+                    Info = JsonSerializer.Serialize(authenticationPayload),
+                    OperatorToken = operatorToken,
+                    CorrelationId = DateTime.UtcNow.ToString(),
+                    Timestamp = DateTime.UtcNow
+                });
+
 
                 var balance = 0m;
                 var currencyCode = string.Empty; 
@@ -465,6 +497,26 @@ namespace Platform.API.Repository
                     StatusCode = StatusCode.Operator_Error,
                     Message = $"{StatusCode.Operator_Error.ToString().Replace('_', ' ')} ({ex.Message})",
                 };
+            }
+        }
+
+        private void AddOperatorLog(OperatorLog operatorLog)
+        {
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]);
+
+                using var context = new PlatformContext(optionsBuilder.Options);
+                try
+                {
+                    context.OperatorLog.Add(operatorLog);
+
+                    context.SaveChanges();
+                    scope.Complete();
+                }
+                catch (Exception)
+                {
+                }
             }
         }
     }

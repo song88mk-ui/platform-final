@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Platform.Shared.Data.Betting;
-using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.MessageModels;
 using System;
 using System.Linq;
@@ -70,7 +69,7 @@ namespace Platform.ClientTopMarket.Service.Repository
 
                 using (var context = new BettingContext(optionsBuilder.Options))
                 {
-                    var markets = context.ClientTopMarket.Where(c => c.FixtureId == message.FixtureId && c.MarketId == message.MarketId);
+                    var markets = context.ClientTopMarket.Where(c => c.FixtureId == message.FixtureId && c.MarketId == message.MarketId && c.MarketStatusId != message.MarketStatusId);
 
                     if (markets != null && markets.Any())
                     {

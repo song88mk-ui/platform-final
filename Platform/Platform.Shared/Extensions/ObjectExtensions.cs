@@ -132,7 +132,7 @@ namespace Platform.Shared.Extensions
 
         public static string ConvertToUnicodeEscape(this string input)
         {
-            return input.Replace("+", @"\u002B");
+            return input.Replace("+", @"\u002B").Replace("/", @"\u002F");
         }
     }
 }

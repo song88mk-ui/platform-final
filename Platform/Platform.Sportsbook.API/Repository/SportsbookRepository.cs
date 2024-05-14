@@ -9771,11 +9771,11 @@ namespace Platform.Sportsbook.API.Repository
                             SoOr = selector.AsiaSortOrder
                         });
 
-                    var market = query?.OrderBy(o => o.SoOr).ThenBy(o => o.Li).ThenBy(o => o.MaNa).FirstOrDefault();
+                    var market = query.OrderBy(o => o.SoOr).ThenBy(o => o.Li).ThenBy(o => o.MaNa).FirstOrDefault();
 
                     if(market == null)
                     {
-                        if (markets.Count == 1)
+                        if(markets.Count == 1)
                         {
                             market = markets.Select(market => new
                             {
@@ -9794,8 +9794,6 @@ namespace Platform.Sportsbook.API.Repository
                                 SoOr = 1
                             }).FirstOrDefault();
                         }
-                        else
-                            return null;
                     }
 
                     var filteredSelections = selections.Where(c => c.MaId == market.MaId).ToList();
@@ -9866,7 +9864,7 @@ namespace Platform.Sportsbook.API.Repository
                             SoOr = selector.AsiaSortOrder
                         });
 
-                    var market = query?.OrderBy(o => o.SoOr).ThenBy(o => o.Li).ThenBy(o => o.MaNa).FirstOrDefault();
+                    var market = query.OrderBy(o => o.SoOr).ThenBy(o => o.Li).ThenBy(o => o.MaNa).FirstOrDefault();
 
                     if (market == null)
                     {
@@ -9889,8 +9887,6 @@ namespace Platform.Sportsbook.API.Repository
                                 SoOr = 1
                             }).FirstOrDefault();
                         }
-                        else
-                            return null;
                     }
 
                     var clientOdds = new List<ClientOdds>();
@@ -10205,10 +10201,6 @@ namespace Platform.Sportsbook.API.Repository
             foreach (var topFixture in newFixtureSortOrder)
             {
                 var fixture = fixtures.FirstOrDefault(c => c.FiId == topFixture.FiId);
-                var fixtureMarket = markets.Where(c => c.FiId == Convert.ToInt64(fixture.FiId) && c.MaId == topFixture.MaId).ToList();
-
-                if (fixtureMarket.Count == 0)
-                    continue;
 
                 var clientInitial = GetClientMarketTemplateGroups().Where(c => c.SportId == fixture.SpId && c.ClientId == request.ClientId).ToList();
                 var marketTemplateGroups = GetSportMarketTemplateGroup(fixture.SpId, request.ClientId, clientInitial);
@@ -10223,8 +10215,10 @@ namespace Platform.Sportsbook.API.Repository
                     else if (fixture.FiStId == (int)FixtureStatus.Live)
                         filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SpId && c.Live == true).ToList();
                 }
+                var market = GetTopGameMarket(markets.Where(c => c.FiId == Convert.ToInt64(fixture.FiId) && c.MaId == topFixture.MaId).ToList(), selections.Where(c => c.FiId == Convert.ToInt64(fixture.FiId) && c.MaId == topFixture.MaId).ToList(), request.LanguageCode, request.ClientId, request.ClientCode, fixture.SpId, fixture.FiTyId, fixture.FiStId, clientInitial, betBuilderMarketTemplates);
 
-                var market = GetTopGameMarket(fixtureMarket, selections.Where(c => c.FiId == Convert.ToInt64(fixture.FiId) && c.MaId == topFixture.MaId).ToList(), request.LanguageCode, request.ClientId, request.ClientCode, fixture.SpId, fixture.FiTyId, fixture.FiStId, clientInitial, betBuilderMarketTemplates);
+                if (market == null)
+                    continue;
 
                 result.Fxitures.Add(new BetRecommendationFixtureResponseDTO
                 {

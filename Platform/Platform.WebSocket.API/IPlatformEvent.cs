@@ -9,8 +9,8 @@ namespace Platform.WebSocket.API
         Task OnBetStopFixture(BetStopFixture message);
         Task OnBetStopGlobal(OutgoingBetStopGlobal message);
         Task OnBetslipOddsChange(OddsChangeFixture message);
-        Task OnBetslipBetStopFixture(BetStopFixture message);
         Task OnTopMarketsOddsChange(OddsChangeFixture message);
+        Task OnBetslipBetStopFixture(BetStopFixture message);
         Task OnTopMarketsBetStopFixture(BetStopFixture message);
         Task OnBetStatus(OutgoingBetStatus message);
         Task OnCashOutChange(OutgoingCashOutChange message);

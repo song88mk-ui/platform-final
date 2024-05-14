@@ -135,36 +135,6 @@ namespace Platform.WebSocket.API2.Repository
                 }
             }
         }
-        public async Task SubscribeToTopMarkets(BetslipRequest request)
-        {
-            var client = await GetClient(request.ClientId);
-
-            if (client.Item1 == true)
-            {
-                var isLong = long.TryParse(request.FixtureId, out long fixtureId);
-
-                if (isLong)
-                {
-                    await Groups.AddToGroupAsync(Context.ConnectionId, $"ontopmarketsoddschange:{client.Item2}:{fixtureId}");
-                    await Groups.AddToGroupAsync(Context.ConnectionId, $"ontopmarketsbetstopfixture:{client.Item2}:{fixtureId}");
-                }
-            }
-        }
-        public async Task UnsubscribeToTopMarkets(BetslipRequest request)
-        {
-            var client = await GetClient(request.ClientId);
-
-            if (client.Item1 == true)
-            {
-                var isLong = long.TryParse(request.FixtureId, out long fixtureId);
-
-                if (isLong)
-                {
-                    await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"ontopmarketsoddschange:{client.Item2}:{fixtureId}");
-                    await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"ontopmarketsbetstopfixture:{client.Item2}:{fixtureId}");
-                }
-            }
-        }
         public async Task SubscribeToBetStatus(BetStatusRequest request)
         {
             var client = await GetClient(request.ClientId);
@@ -242,13 +212,11 @@ namespace Platform.WebSocket.API2.Repository
         public async Task PublishOddsChangeForAllMarkets(string clientCode, OutgoingOddsChange message)
         {
             await Clients.Group($"onbetslipoddschange:{clientCode}:{message.Pa.FiId}").OnBetslipOddsChange(message.Pa);
-            await Clients.Group($"ontopmarketsoddschange:{clientCode}:{message.Pa.FiId}").OnTopMarketsOddsChange(message.Pa);
             await Clients.Groups(message.Gr).OnOddsChange(message.Pa);
         }
         public async Task PublishBetStopFixture(string clientCode, OutgoingBetStopFixture message)
         {
             await Clients.Group($"onbetslipbetstopfixture:{clientCode}:{message.Pa.FiId}").OnBetslipBetStopFixture(message.Pa);
-            await Clients.Group($"ontopmarketsbetstopfixture:{clientCode}:{message.Pa.FiId}").OnTopMarketsBetStopFixture(message.Pa);
             await Clients.Groups(message.Gr).OnBetStopFixture(message.Pa);
         }
         public async Task PublishBetStopGlobal(string clientCode, OutgoingBetStopGlobal message)

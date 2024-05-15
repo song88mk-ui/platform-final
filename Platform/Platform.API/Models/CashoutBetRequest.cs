@@ -8,7 +8,7 @@ namespace Platform.API.Models
         public Channel Channel { get; set; }
         public string IPAddress { get; set; }
         public decimal CashoutStake { get; set; }
-        public decimal CashoutStakePercent { get; set; }
+        public decimal? CashoutStakePercent { get; set; }
         public bool IsPartialCashout { get; set; }
     }
 }

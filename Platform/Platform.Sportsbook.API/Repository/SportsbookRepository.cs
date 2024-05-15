@@ -10205,6 +10205,9 @@ namespace Platform.Sportsbook.API.Repository
             foreach (var topFixture in newFixtureSortOrder)
             {
                 var fixture = fixtures.FirstOrDefault(c => c.FiId == topFixture.FiId);
+                if (fixture == null)
+                    continue;
+
                 var fixtureMarket = markets.Where(c => c.FiId == Convert.ToInt64(fixture.FiId) && c.MaId == topFixture.MaId).ToList();
 
                 if (fixtureMarket.Count == 0)
@@ -10225,6 +10228,9 @@ namespace Platform.Sportsbook.API.Repository
                 }
 
                 var market = GetTopGameMarket(fixtureMarket, selections.Where(c => c.FiId == Convert.ToInt64(fixture.FiId) && c.MaId == topFixture.MaId).ToList(), request.LanguageCode, request.ClientId, request.ClientCode, fixture.SpId, fixture.FiTyId, fixture.FiStId, clientInitial, betBuilderMarketTemplates);
+
+                if (market == null)
+                    continue;
 
                 result.Fxitures.Add(new BetRecommendationFixtureResponseDTO
                 {

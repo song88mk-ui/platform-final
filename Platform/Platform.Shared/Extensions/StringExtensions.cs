@@ -13,10 +13,12 @@ namespace Platform.Shared.Extensions
                 return null;
 
             var gameCode = ogParam.Length >= 2 ? ogParam[1] : string.Empty;
+            var ogCurrencyCode = ogParam.Length >= 3 ? ogParam[2] : string.Empty;
 
             return new OGRequestDTO
             {
-                GameCode = gameCode
+                GameCode = gameCode,
+                OGCurrencyCode = ogCurrencyCode
             };
         }
     }

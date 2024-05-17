@@ -7,9 +7,9 @@ namespace Platform.Shared.Models
     {
         public BetRecommendationsResponseDTO()
         {
-            Fxitures = new List<BetRecommendationFixtureResponseDTO>();
+            Fixtures = new List<BetRecommendationFixtureResponseDTO>();
         }
-        public List<BetRecommendationFixtureResponseDTO> Fxitures { get; set; }
+        public List<BetRecommendationFixtureResponseDTO> Fixtures { get; set; }
     }
     public class BetRecommendationFixtureResponseDTO
     {

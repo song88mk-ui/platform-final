@@ -2262,7 +2262,7 @@ namespace Platform.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/authentication/og", properties);
+            _telemetryClient.TrackEvent("e:v1/betrecommendations", properties);
 
             switch (result.StatusCode)
             {

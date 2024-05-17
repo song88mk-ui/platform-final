@@ -10232,7 +10232,7 @@ namespace Platform.Sportsbook.API.Repository
                 if (market == null)
                     continue;
 
-                result.Fxitures.Add(new BetRecommendationFixtureResponseDTO
+                result.Fixtures.Add(new BetRecommendationFixtureResponseDTO
                 {
                     SportId = fixture.SpId,
                     SportName = GetSportName(fixture.SpNa, fixture.SpNaTr, request.LanguageCode),
@@ -10263,12 +10263,12 @@ namespace Platform.Sportsbook.API.Repository
                     SortOrder = ++sortOrder
                 });
 
-                if (result.Fxitures.Count == 10)
+                if (result.Fixtures.Count == 10)
                     break;
             }
 
-            if (result.Fxitures.Any())
-                result.Fxitures = result.Fxitures.OrderBy(o => o.SortOrder).ToList();
+            if (result.Fixtures.Any())
+                result.Fixtures = result.Fixtures.OrderBy(o => o.SortOrder).ToList();
 
             return new BaseResponseDTO<BetRecommendationsResponseDTO>()
             {

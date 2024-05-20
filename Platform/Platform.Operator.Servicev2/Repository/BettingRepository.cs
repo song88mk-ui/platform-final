@@ -872,7 +872,7 @@ namespace Platform.Operator.Servicev2.Repository
                     TransactionType = "debit",
                     GameCode = ogParam.GameCode,
                     RoundId = "testround",
-                    Currency = betData.CurrencyCode,
+                    Currency = ogParam.OGCurrencyCode,
                     CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Records = records,
                     Signature = ""

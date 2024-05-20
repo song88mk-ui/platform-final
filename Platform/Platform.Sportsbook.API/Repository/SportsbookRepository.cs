@@ -9758,7 +9758,7 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             MaId = market.MaId,
                             FiId = market.FiId,
-                            MaTeId = market.MaTeId, 
+                            MaTeId = market.MaTeId,
                             MaNa = market.MaNa,
                             Li = market.Li,
                             MaStId = market.MaStId,
@@ -9773,7 +9773,7 @@ namespace Platform.Sportsbook.API.Repository
 
                     var market = query?.OrderBy(o => o.SoOr).ThenBy(o => o.Li).ThenBy(o => o.MaNa).FirstOrDefault();
 
-                    if(market == null)
+                    if (market == null)
                     {
                         if (markets.Count == 1)
                         {
@@ -10089,7 +10089,7 @@ namespace Platform.Sportsbook.API.Repository
             }
 
             var clientTopFixtures = _sportsbookContext.ClientTopFixture.AsNoTracking().Where(c => c.ClientId == request.ClientId).ToList();
-            
+
             var fixtureSortOrder = clientTopFixtures.OrderBy(o => o.SortOrder)
                     .Select((s, index) => new { FiId = s.FixtureId, MaId = (long)-1, SoOr = index })
                     .Concat(request.Markets.Select((s, index) => new { FiId = s.FixtureId, MaId = s.MarketId, SoOr = 1000 + s.SortOrder }))
@@ -10167,23 +10167,42 @@ namespace Platform.Sportsbook.API.Repository
             var refClientTopFixtures = fixtures.Where(c => clientTopFixtureIds.Contains(c.FiId)).Select(s => new
             {
                 FixtureId = s.FiId,
-                MarketTemplateId = clientSelectorMarketTemplate.FirstOrDefault(c => c.SportId == s.SpId && c.AsiaSortOrder == 1)?.MarketTemplateId ?? string.Empty
+                MarketTemplate = clientSelectorMarketTemplate.Where(c => c.SportId == s.SpId && c.Identifier == "FT")
+                .Select(s => new
+                {
+                    MaTeId = s.MarketTemplateId,
+                    SoOr = s.AsiaSortOrder
+                })
             }).ToList();
 
-
-            var filteredTopFixtureMarkets = refClientTopFixtures.GroupJoin(markets,
-                fi => new { FiId = fi.FixtureId, MaTeId = fi.MarketTemplateId },
-                ma => new { ma.FiId, ma.MaTeId },
-                (fi, ma) => new
-                {
-                    ToFi = fi,
-                    Ma = ma.FirstOrDefault()
-                }).ToList();
+            var filteredTopFixtureMarkets = refClientTopFixtures.Select(s => new
+            {
+                Markets = s.MarketTemplate.Join(markets,
+                    fi => new { FiId = s.FixtureId, MaTeId = fi.MaTeId },
+                    ma => new { ma.FiId, ma.MaTeId },
+                    (fi, ma) => new
+                    {
+                        Fi = s.FixtureId,
+                        Ma = ma,
+                        SoOr = fi.SoOr
+                    })
+                .OrderBy(o => o.SoOr)
+                .FirstOrDefault()
+            }).Select(s => s.Markets);
+                //.SelectMany(s => s.Markets).ToList();
+            //var filteredTopFixtureMarkets = refClientTopFixtures.Join(markets,
+            //    fi => new { FiId = fi.FixtureId, MaTeId = fi.MarketTemplate },
+            //    ma => new { ma.FiId, ma.MaTeId },
+            //    (fi, ma) => new
+            //    {
+            //        ToFi = fi,
+            //        Ma = ma
+            //    }).ToList();
 
             var newFixtureSortOrder = fixtureSortOrder.Select(s => new
             {
                 FiId = s.FiId,
-                MaId = s.MaId == -1 ? filteredTopFixtureMarkets.FirstOrDefault(c => c.ToFi.FixtureId == s.FiId).Ma.MaId : s.MaId,
+                MaId = s.MaId == -1 ? filteredTopFixtureMarkets.FirstOrDefault(c => c.Fi == s.FiId).Ma.MaId : s.MaId,
                 SoOr = s.SoOr
             });
 
@@ -10209,6 +10228,7 @@ namespace Platform.Sportsbook.API.Repository
                     continue;
 
                 var fixtureMarket = markets.Where(c => c.FiId == Convert.ToInt64(fixture.FiId) && c.MaId == topFixture.MaId).ToList();
+                //var fixtureMarket = markets.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList();
 
                 if (fixtureMarket.Count == 0)
                     continue;
@@ -10228,6 +10248,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
 
                 var market = GetTopGameMarket(fixtureMarket, selections.Where(c => c.FiId == Convert.ToInt64(fixture.FiId) && c.MaId == topFixture.MaId).ToList(), request.LanguageCode, request.ClientId, request.ClientCode, fixture.SpId, fixture.FiTyId, fixture.FiStId, clientInitial, betBuilderMarketTemplates);
+                //var market = GetTopGameMarket(fixtureMarket, selections.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), request.LanguageCode, request.ClientId, request.ClientCode, fixture.SpId, fixture.FiTyId, fixture.FiStId, clientInitial, betBuilderMarketTemplates);
 
                 if (market == null)
                     continue;

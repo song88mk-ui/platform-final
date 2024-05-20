@@ -7,6 +7,7 @@
         public decimal Balance { get; set; }
         public decimal Payable { get; set; }
         public string CurrencyCode { get; set; }
+        public string RefCurrencyCode { get; set; }
         public string LanguageCode { get; set; }
     }
 }

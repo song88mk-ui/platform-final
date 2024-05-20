@@ -1,5 +1,4 @@
 ﻿using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Platform.API.Models;
 using Platform.Shared.Enums;
@@ -7,10 +6,8 @@ using Platform.Shared.Extensions;
 using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Security.Cryptography.Xml;
 using System.Text.Json;
 using System.Threading.Tasks;
 using JsonSerializer = System.Text.Json.JsonSerializer;
@@ -22,6 +19,8 @@ namespace Platform.API.Repository
         private readonly HttpClient _httpClient;
         private readonly TelemetryClient _telemetryClient;
         private readonly IConfiguration _configuration;
+
+        private static List<string> _ogHighCurrencies = new List<string> { "IDRK", "VNDK", "MMKK", "INRK" };
 
         public OperatorRepository(HttpClient httpClient, TelemetryClient telemetryClient, IConfiguration configuration)
         {
@@ -344,7 +343,8 @@ namespace Platform.API.Repository
                     {
                         UserId = request.PlayerCode,
                         Balance = balance,
-                        CurrencyCode = currencyCode,
+                        CurrencyCode = _ogHighCurrencies.Contains(currencyCode) ? currencyCode.Substring(0, currencyCode.Length - 1) : currencyCode,
+                        RefCurrencyCode = currencyCode,
                         StatusId = 1000,
                         LanguageCode = request.LanguageCode,
                     }

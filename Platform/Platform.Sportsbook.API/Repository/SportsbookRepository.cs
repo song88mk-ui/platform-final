@@ -10202,7 +10202,7 @@ namespace Platform.Sportsbook.API.Repository
             var newFixtureSortOrder = fixtureSortOrder.Select(s => new
             {
                 FiId = s.FiId,
-                MaId = s.MaId == -1 ? filteredTopFixtureMarkets.FirstOrDefault(c => c.Fi == s.FiId).Ma.MaId : s.MaId,
+                MaId = s.MaId == -1 ? filteredTopFixtureMarkets.FirstOrDefault(c => c.Fi == s.FiId)?.Ma.MaId : s.MaId,
                 SoOr = s.SoOr
             });
 
@@ -10223,6 +10223,9 @@ namespace Platform.Sportsbook.API.Repository
             var sortOrder = 0;
             foreach (var topFixture in newFixtureSortOrder)
             {
+                if (topFixture.MaId == null)
+                    continue;
+
                 var fixture = fixtures.FirstOrDefault(c => c.FiId == topFixture.FiId);
                 if (fixture == null)
                     continue;

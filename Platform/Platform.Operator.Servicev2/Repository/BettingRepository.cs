@@ -911,7 +911,7 @@ namespace Platform.Operator.Servicev2.Repository
                             ClientCode = betData.ClientCode,
                             URL = $"{betData.Endpoint}{path}",
                             BetId = betData.BetId.ToString().ToUpper(),
-                            Info = JsonSerializer.Serialize(response.ReasonPhrase),
+                            Info = JsonSerializer.Serialize(result),
                             OperatorToken = betData.OperatorToken,
                             CorrelationId = correlationId,
                             Timestamp = DateTime.UtcNow

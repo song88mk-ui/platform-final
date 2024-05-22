@@ -21,5 +21,15 @@ namespace Platform.Shared.Extensions
                 OGCurrencyCode = ogCurrencyCode
             };
         }
+
+        public static string ConvertToUnicodeEscape(this string input)
+        {
+            return input.Replace("+", @"\u002B"); //.Replace("/", @"\u002F")'
+        }
+
+        public static string ConvertAccuteToUnicodeEscape(this string input)
+        {
+            return input.Replace("´", @"\u00B4");
+        }
     }
 }

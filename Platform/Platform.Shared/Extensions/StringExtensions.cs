@@ -32,4 +32,13 @@ namespace Platform.Shared.Extensions
             return input.Replace("´", @"\u00B4");
         }
     }
+
+    public static class DateTimeExtensions
+    {
+        public static long GetEpochTimestamp(this DateTime dateTime)
+        {
+            DateTimeOffset dto = new DateTimeOffset(dateTime);
+            return dto.ToUnixTimeMilliseconds();
+        }
+    }
 }

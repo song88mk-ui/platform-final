@@ -2978,6 +2978,7 @@ namespace Platform.Betting.API.Repository
             {
                 ClientId = request.ClientId,
                 ClientCode = request.ClientCode,
+                LanguageCode = request.LanguageCode,
                 Markets = markets
             });
         }

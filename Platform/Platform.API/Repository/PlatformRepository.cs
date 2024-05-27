@@ -4478,6 +4478,18 @@ namespace Platform.API.Repository
 
         public async Task<BaseResponseDTO<BetRecommendationsResponseDTO>> GetBetRecommendations(string clientId, string langCode)
         {
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<BetRecommendationsResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
             var clientResponse = await GetClient(clientId);
 
             if (clientResponse.StatusCode != StatusCode.Success)
@@ -4492,7 +4504,8 @@ namespace Platform.API.Repository
             return await _bettingRepository.GetBetRecommendations(new BetRecommendationRequestDTO()
             {
                 ClientId = clientResponse.Result.ClientId,
-                ClientCode = clientResponse.Result.ClientCode
+                ClientCode = clientResponse.Result.ClientCode,
+                LanguageCode = languageCode
             });
         }
 

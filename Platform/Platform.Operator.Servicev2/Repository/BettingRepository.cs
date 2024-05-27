@@ -825,52 +825,52 @@ namespace Platform.Operator.Servicev2.Repository
                     BetStatus = message.Bet.BetStatusName,
                     ParlayBonus = (double)message.Bet.ParlayBonus,
                     ParlayBonusWinnings = (double)RedenominateOG(message.Bet.ParlayBonusWinnings, ogParam.OGCurrencyCode),
-                    BetSelections = message.BetSelections.Select(s => s.BetSelection).Select(s => new
+                    bet_list = message.BetSelections.Select(s => s.BetSelection).Select(s => new
                     {
-                        BetSelectionId = s.BetSelectionId,
-                        BetSelectionStatus = s.BetSelectionStatusName,
                         sport_code = s.SportId.ToString(),
-                        sport_name = new 
+                        sport_name = new
                         {
                             en = s.SportName
                         },
+                        play_name = new
+                        {
+                            en = s.MarketName.ConvertToUnicodeEscape()
+                        },
+                        score = s.BetScore,
+                        odds = (double)s.Odds,
+                        bet_item = new
+                        {
+                            en = s.SelectionName.ConvertToUnicodeEscape()
+                        },
+                        away_team = new
+                        {
+                            en = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim().ConvertToUnicodeEscape() : (string)null
+                        },
+                        home_team = new
+                        {
+                            en = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim().ConvertToUnicodeEscape() : (string)null
+                        },
+                        league_name = new
+                        {
+                            en = s.LeagueName
+                        },
+                        game_date_time = s.FixtureStartDate.GetEpochTimestamp(),
+                        BetSelectionId = s.BetSelectionId,
+                        BetSelectionStatus = s.BetSelectionStatusName,
                         SegmentId = s.SegmentId,
                         SegmentName = s.SegmentName,
                         LeagueId = s.LeagueId,
-                        league_name = new
-                        { 
-                            en = s.LeagueName 
-                        },
                         FixtureId = s.FixtureId.ToString(),
-                        FixtureName = s.FixtureName.ConvertAccuteToUnicodeEscape(),
+                        FixtureName = s.FixtureName.ConvertToUnicodeEscape(),
                         FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                         FixtureStatus = s.FixtureStatusName,
                         FixtureType = s.FixtureTypeName,
-                        score = s.BetScore,
                         SettlementScore = s.SettlementScore,
                         MarketTemplateId = s.MarketTemplateId,
                         MarketId = s.MarketId.ToString(),
-                        play_name = new
-                        {
-                            en = s.MarketName.ConvertAccuteToUnicodeEscape()
-                        },
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
-                        bet_item = new 
-                        { 
-                            en = s.SelectionName.ConvertToUnicodeEscape().ConvertAccuteToUnicodeEscape()
-                        },
-                        Odds = (double)s.Odds,
-                        home_team = new
-                        {
-                            en = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim().ConvertAccuteToUnicodeEscape() : (string)null
-                        },
-                        away_team = new 
-                        {
-                            en = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim().ConvertAccuteToUnicodeEscape() : (string)null
-                        },
-                        DeadHeatFactor = (double)s.DeadHeatFactor,
-                        game_date_time = s.FixtureStartDate.GetEpochTimestamp()
+                        DeadHeatFactor = (double)s.DeadHeatFactor
                     }).ToList()
                 };
 
@@ -1255,7 +1255,6 @@ namespace Platform.Operator.Servicev2.Repository
                 var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
                 var transType = "credit";
 
-
                 var betSelectionData = new
                 {
                     BetId = message.Bet.BetId,
@@ -1264,52 +1263,52 @@ namespace Platform.Operator.Servicev2.Repository
                     BetStatus = message.Bet.BetStatusName,
                     ParlayBonus = (double)message.Bet.ParlayBonus,
                     ParlayBonusWinnings = (double)RedenominateOG(message.Bet.ParlayBonusWinnings, ogParam.OGCurrencyCode),
-                    BetSelections = message.BetSelections.Select(s => new
+                    bet_list = message.BetSelections.Select(s => new
                     {
-                        BetSelectionId = s.BetSelectionId,
-                        BetSelectionStatus = s.BetSelectionStatusName,
                         sport_code = s.SportId.ToString(),
                         sport_name = new
                         {
                             en = s.SportName
                         },
-                        SegmentId = s.SegmentId,
-                        SegmentName = s.SegmentName,
-                        LeagueId = s.LeagueId,
+                        play_name = new
+                        {
+                            en = s.MarketName.ConvertToUnicodeEscape()
+                        },
+                        score = s.BetScore,
+                        odds = (double)s.Odds,
+                        bet_item = new
+                        {
+                            en = s.SelectionName.ConvertToUnicodeEscape()
+                        },
+                        away_team = new
+                        {
+                            en = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim().ConvertToUnicodeEscape() : (string)null
+                        },
+                        home_team = new
+                        {
+                            en = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim().ConvertToUnicodeEscape() : (string)null
+                        },
                         league_name = new
                         {
                             en = s.LeagueName
                         },
+                        game_date_time = s.FixtureStartDate.GetEpochTimestamp(),
+                        BetSelectionId = s.BetSelectionId,
+                        BetSelectionStatus = s.BetSelectionStatusName,
+                        SegmentId = s.SegmentId,
+                        SegmentName = s.SegmentName,
+                        LeagueId = s.LeagueId,
                         FixtureId = s.FixtureId.ToString(),
-                        FixtureName = s.FixtureName.ConvertAccuteToUnicodeEscape(),
+                        FixtureName = s.FixtureName.ConvertToUnicodeEscape(),
                         FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                         FixtureStatus = s.FixtureStatusName,
                         FixtureType = s.FixtureTypeName,
-                        score = s.BetScore,
                         SettlementScore = s.SettlementScore,
                         MarketTemplateId = s.MarketTemplateId,
                         MarketId = s.MarketId.ToString(),
-                        play_name = new
-                        {
-                            en = s.MarketName.ConvertAccuteToUnicodeEscape()
-                        },
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
-                        bet_item = new
-                        {
-                            en = s.SelectionName.ConvertToUnicodeEscape().ConvertAccuteToUnicodeEscape()
-                        },
-                        Odds = (double)s.Odds,
-                        home_team = new
-                        {
-                            en = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim().ConvertAccuteToUnicodeEscape() : (string)null
-                        },
-                        away_team = new
-                        {
-                            en = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim().ConvertAccuteToUnicodeEscape() : (string)null
-                        },
-                        DeadHeatFactor = (double)s.DeadHeatFactor,
-                        game_date_time = s.FixtureStartDate.GetEpochTimestamp()
+                        DeadHeatFactor = (double)s.DeadHeatFactor
                     }).ToList()
                 };
 
@@ -1864,54 +1863,55 @@ namespace Platform.Operator.Servicev2.Repository
                     BetStatus = message.Bet.BetStatusName,
                     ParlayBonus = (double)message.Bet.ParlayBonus,
                     ParlayBonusWinnings = (double)RedenominateOG(message.Bet.ParlayBonusWinnings, ogParam.OGCurrencyCode),
-                    BetSelections = message.BetSelections.Select(s => new
+                    bet_list = message.BetSelections.Select(s => new
                     {
-                        BetSelectionId = s.BetSelectionId,
-                        BetSelectionStatus = s.BetSelectionStatusName,
                         sport_code = s.SportId.ToString(),
                         sport_name = new
                         {
                             en = s.SportName
                         },
-                        SegmentId = s.SegmentId,
-                        SegmentName = s.SegmentName,
-                        LeagueId = s.LeagueId,
+                        play_name = new
+                        {
+                            en = s.MarketName.ConvertToUnicodeEscape()
+                        },
+                        score = s.BetScore,
+                        odds = (double)s.Odds,
+                        bet_item = new
+                        {
+                            en = s.SelectionName.ConvertToUnicodeEscape()
+                        },
+                        away_team = new
+                        {
+                            en = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim().ConvertToUnicodeEscape() : (string)null
+                        },
+                        home_team = new
+                        {
+                            en = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim().ConvertToUnicodeEscape() : (string)null
+                        },
                         league_name = new
                         {
                             en = s.LeagueName
                         },
+                        game_date_time = s.FixtureStartDate.GetEpochTimestamp(),
+                        BetSelectionId = s.BetSelectionId,
+                        BetSelectionStatus = s.BetSelectionStatusName,
+                        SegmentId = s.SegmentId,
+                        SegmentName = s.SegmentName,
+                        LeagueId = s.LeagueId,
                         FixtureId = s.FixtureId.ToString(),
-                        FixtureName = s.FixtureName.ConvertAccuteToUnicodeEscape(),
+                        FixtureName = s.FixtureName.ConvertToUnicodeEscape(),
                         FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                         FixtureStatus = s.FixtureStatusName,
                         FixtureType = s.FixtureTypeName,
-                        score = s.BetScore,
                         SettlementScore = s.SettlementScore,
                         MarketTemplateId = s.MarketTemplateId,
                         MarketId = s.MarketId.ToString(),
-                        play_name = new
-                        {
-                            en = s.MarketName.ConvertAccuteToUnicodeEscape()
-                        },
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
-                        bet_item = new
-                        {
-                            en = s.SelectionName.ConvertToUnicodeEscape().ConvertAccuteToUnicodeEscape()
-                        },
-                        Odds = (double)s.Odds,
-                        home_team = new
-                        {
-                            en = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim().ConvertAccuteToUnicodeEscape() : (string)null
-                        },
-                        away_team = new
-                        {
-                            en = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim().ConvertAccuteToUnicodeEscape() : (string)null
-                        },
-                        DeadHeatFactor = (double)s.DeadHeatFactor,
-                        game_date_time = s.FixtureStartDate.GetEpochTimestamp()
+                        DeadHeatFactor = (double)s.DeadHeatFactor
                     }).ToList()
                 };
+
 
                 var payload = new OnOGCreditRequest
                 {
@@ -2370,6 +2370,7 @@ namespace Platform.Operator.Servicev2.Repository
             var privateKey = _configuration["Custom:OrientalGaming:PrivateAPIKey"].ToString();
             var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
 
+
             var betSelectionData = new
             {
                 BetId = message.Bet.BetId,
@@ -2378,52 +2379,52 @@ namespace Platform.Operator.Servicev2.Repository
                 BetStatus = message.Bet.BetStatusName,
                 ParlayBonus = (double)message.Bet.ParlayBonus,
                 ParlayBonusWinnings = (double)RedenominateOG(message.Bet.ParlayBonusWinnings, ogParam.OGCurrencyCode),
-                BetSelections = message.BetSelections.Select(s => new
+                bet_list = message.BetSelections.Select(s => new
                 {
-                    BetSelectionId = s.BetSelectionId,
-                    BetSelectionStatus = s.BetSelectionStatusName,
                     sport_code = s.SportId.ToString(),
                     sport_name = new
                     {
                         en = s.SportName
                     },
-                    SegmentId = s.SegmentId,
-                    SegmentName = s.SegmentName,
-                    LeagueId = s.LeagueId,
+                    play_name = new
+                    {
+                        en = s.MarketName.ConvertToUnicodeEscape()
+                    },
+                    score = s.BetScore,
+                    odds = (double)s.Odds,
+                    bet_item = new
+                    {
+                        en = s.SelectionName.ConvertToUnicodeEscape()
+                    },
+                    away_team = new
+                    {
+                        en = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim().ConvertToUnicodeEscape() : (string)null
+                    },
+                    home_team = new
+                    {
+                        en = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim().ConvertToUnicodeEscape() : (string)null
+                    },
                     league_name = new
                     {
                         en = s.LeagueName
                     },
+                    game_date_time = s.FixtureStartDate.GetEpochTimestamp(),
+                    BetSelectionId = s.BetSelectionId,
+                    BetSelectionStatus = s.BetSelectionStatusName,
+                    SegmentId = s.SegmentId,
+                    SegmentName = s.SegmentName,
+                    LeagueId = s.LeagueId,
                     FixtureId = s.FixtureId.ToString(),
-                    FixtureName = s.FixtureName.ConvertAccuteToUnicodeEscape(),
+                    FixtureName = s.FixtureName.ConvertToUnicodeEscape(),
                     FixtureStartDate = s.FixtureStartDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                     FixtureStatus = s.FixtureStatusName,
                     FixtureType = s.FixtureTypeName,
-                    score = s.BetScore,
                     SettlementScore = s.SettlementScore,
                     MarketTemplateId = s.MarketTemplateId,
                     MarketId = s.MarketId.ToString(),
-                    play_name = new
-                    {
-                        en = s.MarketName.ConvertAccuteToUnicodeEscape()
-                    },
                     Line = s.Line,
                     SelectionId = s.SelectionId.ToString(),
-                    bet_item = new
-                    {
-                        en = s.SelectionName.ConvertToUnicodeEscape().ConvertAccuteToUnicodeEscape()
-                    },
-                    Odds = (double)s.Odds,
-                    home_team = new
-                    {
-                        en = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").First().Trim().ConvertAccuteToUnicodeEscape() : (string)null
-                    },
-                    away_team = new
-                    {
-                        en = s.FixtureTypeId == (int)FixtureType.Match ? s.FixtureName.Split(" vs. ").Last().Trim().ConvertAccuteToUnicodeEscape() : (string)null
-                    },
-                    DeadHeatFactor = (double)s.DeadHeatFactor,
-                    game_date_time = s.FixtureStartDate.GetEpochTimestamp()
+                    DeadHeatFactor = (double)s.DeadHeatFactor
                 }).ToList()
             };
 

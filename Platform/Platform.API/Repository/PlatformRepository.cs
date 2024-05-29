@@ -414,12 +414,17 @@ namespace Platform.API.Repository
             }
 
             var isV4 = Convert.ToInt32(request.IPAddress.Split(".").First()) >= 240 ? false : true;
+            
+            if (ogParameters != null)
+                operatorToken = $"{operatorToken}|{ogParameters.CurrencyCode}|{ogParameters.GameCode}";
+            else if (authenticationResponse.Result.CurrencyCode.ToUpper() == "USDT")
+                operatorToken = $"{operatorToken}|{authenticationResponse.Result.CurrencyCode.ToUpper()}";
 
             var payload = new BetRequestDTO
             {
                 APIKey = apiKey,
                 IsAgent = clientResponse.Result.IsAgent,
-                OperatorToken = ogParameters != null ? $"{operatorToken}|{ogParameters.CurrencyCode}|{ogParameters.GameCode}" : operatorToken,
+                OperatorToken = operatorToken,
                 ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
                 ClientIdRef = clientResponse.Result.ClientIdRef,
                 ClientCode = clientResponse.Result.ClientCode,
@@ -432,7 +437,7 @@ namespace Platform.API.Repository
                 Stake = request.Stake,
                 BetDate = DateTime.UtcNow,
                 OddsType = request.OddsType,
-                CurrencyCode = (CurrencyCode)Enum.Parse(typeof(CurrencyCode), authenticationResponse.Result.CurrencyCode),
+                CurrencyCode = authenticationResponse.Result.CurrencyCode.ToUpper() == "USDT" ? CurrencyCode.USD : (CurrencyCode)Enum.Parse(typeof(CurrencyCode), authenticationResponse.Result.CurrencyCode),
                 LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode.ToUpper()) == LanguageCode.ZHT ? LanguageCode.ZH : (LanguageCode)Enum.Parse(typeof(LanguageCode), authenticationResponse.Result.LanguageCode.ToUpper()),
                 Channel = request.Channel,
                 IPAddressV4 = request.IPAddress,

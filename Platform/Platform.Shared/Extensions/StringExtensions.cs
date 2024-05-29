@@ -21,6 +21,14 @@ namespace Platform.Shared.Extensions
                 OGCurrencyCode = ogCurrencyCode
             };
         }
+        public static string GetCurrencyCode(this string input)
+        {
+            var result = input.Split('|');
+            if (result.Length <= 1)
+                return null;
+
+            return result.Length >= 2 ? result[1] : string.Empty;
+        }
 
         public static string ConvertToUnicodeEscape(this string input)
         {

@@ -616,12 +616,14 @@ namespace Platform.Operator.Servicev2.Repository
 
             try
             {
+                var currencyFromOperatorToken = message.Bet.OperatorToken.GetCurrencyCode();
+
                 var payload = new OperatorBetRequestDTO
                 {
                     TransactionId = correlationId,
                     BetId = betData.BetId.ToString().ToUpper(),
                     UserId = betData.UserId,
-                    CurrencyCode = betData.CurrencyCode,
+                    CurrencyCode = string.IsNullOrEmpty(currencyFromOperatorToken) ? betData.CurrencyCode : currencyFromOperatorToken,
                     Stake = betData.TrueStake,
                     Odds = betData.Odds,
                     BetStatus = BetStatus.Running.ToString(),
@@ -1070,13 +1072,14 @@ namespace Platform.Operator.Servicev2.Repository
             }
 
             var path = "/v1/bet/full/cashout";
+            var currencyFromOperatorToken = message.Bet.OperatorToken.GetCurrencyCode();
 
             var payload = new OperatorBetSettlementRequestDTO
             {
                 TransactionId = correlationId,
                 BetId = message.Bet.BetId.ToString().ToUpper(),
                 UserId = message.Bet.UserId,
-                CurrencyCode = message.Bet.CurrencyCode,
+                CurrencyCode = string.IsNullOrEmpty(currencyFromOperatorToken) ? message.Bet.CurrencyCode : currencyFromOperatorToken,
                 Payout = message.Bet.Payout,
                 NonTaxedPayout = message.NonTaxedPayout,
                 Stake = message.Bet.Stake,
@@ -1470,13 +1473,14 @@ namespace Platform.Operator.Servicev2.Repository
             }
 
             var path = "/v1/bet/partial/cashout";
+            var currencyFromOperatorToken = message.Bet.OperatorToken.GetCurrencyCode();
 
             var payload = new OperatorBetSettlementRequestDTO
             {
                 TransactionId = correlationId,
                 BetId = message.Bet.BetId.ToString().ToUpper(),
                 UserId = message.Bet.UserId,
-                CurrencyCode = message.Bet.CurrencyCode,
+                CurrencyCode = string.IsNullOrEmpty(currencyFromOperatorToken) ? message.Bet.CurrencyCode : currencyFromOperatorToken,
                 Payout = message.CashoutStake,
                 NonTaxedPayout = message.NonTaxedPayout,
                 Stake = message.Stake,
@@ -1639,13 +1643,14 @@ namespace Platform.Operator.Servicev2.Repository
             }
 
             var path = "/v1/bet/settlement";
+            var currencyFromOperatorToken = message.Bet.OperatorToken.GetCurrencyCode();
 
             var payload = new OperatorBetSettlementRequestDTO
             {
                 TransactionId = correlationId,
                 BetId = message.Bet.BetId.ToString().ToUpper(),
                 UserId = message.Bet.UserId,
-                CurrencyCode = message.Bet.CurrencyCode,
+                CurrencyCode = string.IsNullOrEmpty(currencyFromOperatorToken) ? message.Bet.CurrencyCode : currencyFromOperatorToken,
                 Payout = message.Bet.Payout,
                 NonTaxedPayout = message.NonTaxedPayout,
                 Stake = message.Bet.TrueStake,
@@ -2184,13 +2189,14 @@ namespace Platform.Operator.Servicev2.Repository
             }
 
             var path = "/v1/bet/cancellation";
+            var currencyFromOperatorToken = message.Bet.OperatorToken.GetCurrencyCode();
 
             var payload = new OperatorBetSettlementRequestDTO
             {
                 TransactionId = correlationId,
                 BetId = message.Bet.BetId.ToString().ToUpper(),
                 UserId = message.Bet.UserId,
-                CurrencyCode = message.Bet.CurrencyCode,
+                CurrencyCode = string.IsNullOrEmpty(currencyFromOperatorToken) ? message.Bet.CurrencyCode : currencyFromOperatorToken,
                 Payout = message.Bet.Payout,
                 Stake = message.Bet.TrueStake,
                 Odds = message.Bet.Odds,

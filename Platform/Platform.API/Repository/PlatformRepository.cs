@@ -419,7 +419,7 @@ namespace Platform.API.Repository
             {
                 APIKey = apiKey,
                 IsAgent = clientResponse.Result.IsAgent,
-                OperatorToken = ogParameters != null ? $"{operatorToken}|{ogParameters.GameCode}|{ogParameters.CurrencyCode}" : operatorToken,
+                OperatorToken = ogParameters != null ? $"{operatorToken}|{ogParameters.CurrencyCode}|{ogParameters.GameCode}" : operatorToken,
                 ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
                 ClientIdRef = clientResponse.Result.ClientIdRef,
                 ClientCode = clientResponse.Result.ClientCode,

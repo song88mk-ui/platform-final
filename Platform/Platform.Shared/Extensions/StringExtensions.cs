@@ -12,8 +12,8 @@ namespace Platform.Shared.Extensions
             if (ogParam.Length <= 1)
                 return null;
 
-            var gameCode = ogParam.Length >= 2 ? ogParam[1] : string.Empty;
-            var ogCurrencyCode = ogParam.Length >= 3 ? ogParam[2] : string.Empty;
+            var ogCurrencyCode = ogParam.Length >= 2 ? ogParam[1] : string.Empty;
+            var gameCode = ogParam.Length >= 3 ? ogParam[2] : string.Empty;
 
             return new OGRequestDTO
             {

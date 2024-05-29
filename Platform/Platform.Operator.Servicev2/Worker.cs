@@ -370,7 +370,7 @@ namespace Platform.Operator.Servicev2
             var correlationId = e.BasicProperties.CorrelationId;
 
             try
-            {
+            {//
                 switch (messageType)
                 {
                     case "OnBetPlacement":
@@ -411,7 +411,7 @@ namespace Platform.Operator.Servicev2
                             _bettingRepository.ProcesssBetSettlementOG(onBetSettlement, _messageBroker, correlationId, threadId, ogParam, false);
                         break;
 
-                    case "OnBetCancellation":
+                    case "OnBetCancellation":                    
                         var onBetCancellation = JsonSerializer.Deserialize<OnBetSettlement>(payload);
                         Console.WriteLine($"{DateTime.UtcNow} {onBetCancellation.Bet.BetId} - OnBetCancellation");
 

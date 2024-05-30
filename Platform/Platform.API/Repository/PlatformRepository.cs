@@ -4555,6 +4555,9 @@ namespace Platform.API.Repository
 
         private async Task<ForexEURResponse> GetExchangeRate(string currencyCode)
         {
+            if(currencyCode.ToUpper() == "USDT")
+                currencyCode = "USD";
+
             var result = await _platformContext.ForexEUR.FindAsync(currencyCode);
 
             if (result == null)

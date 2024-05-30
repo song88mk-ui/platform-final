@@ -38,7 +38,7 @@ namespace Platform.Operator.Servicev2.Repository
         private HttpClient GetHttpClient(string threadId, string endpoint, string operatorToken, string clientId, bool isAgent, string ogPublicKey = "", string ogVendorName = "")
         {
             if (string.IsNullOrEmpty(ogPublicKey))
-                return GetHttpClientSW(threadId, endpoint, operatorToken, clientId, isAgent);
+                return GetHttpClientSW(threadId, endpoint, operatorToken.GetActualValue(), clientId, isAgent);
             else
                 return GetHttpClientOGS(threadId, endpoint, ogPublicKey, ogVendorName);
         }

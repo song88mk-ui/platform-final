@@ -30,6 +30,15 @@ namespace Platform.Shared.Extensions
             return result.Length >= 2 ? result[1] : string.Empty;
         }
 
+        public static string GetActualValue(this string input)
+        {
+            var result = input.Split('|');
+            if (result.Length <= 0)
+                return null;
+
+            return result.Length >= 1 ? result[0] : string.Empty;
+        }
+
         public static string ConvertToUnicodeEscape(this string input)
         {
             return input.Replace("+", @"\u002B").Replace("´", @"\u00B4");

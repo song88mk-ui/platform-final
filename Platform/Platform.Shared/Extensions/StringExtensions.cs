@@ -9,7 +9,7 @@ namespace Platform.Shared.Extensions
         public static OGRequestDTO ToOGParam(this string input)
         {
             var ogParam = input.Split('|');
-            if (ogParam.Length <= 1)
+            if (ogParam.Length <= 2)
                 return null;
 
             var ogCurrencyCode = ogParam.Length >= 2 ? ogParam[1] : string.Empty;

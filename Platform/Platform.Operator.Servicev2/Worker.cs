@@ -370,7 +370,7 @@ namespace Platform.Operator.Servicev2
             var correlationId = e.BasicProperties.CorrelationId;
 
             try
-            {//
+            {
                 switch (messageType)
                 {
                     case "OnBetPlacement":

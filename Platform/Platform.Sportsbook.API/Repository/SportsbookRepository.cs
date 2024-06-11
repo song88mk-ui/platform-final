@@ -4505,6 +4505,11 @@ namespace Platform.Sportsbook.API.Repository
 
             Parallel.ForEach(initialResult, item =>
             {
+                var itemMarkets = markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList();
+
+                if (!itemMarkets.Any())
+                    return;
+
                 finalResult.Add(new FixtureDTO
                 {
                     SportId = item.SportId,
@@ -4534,7 +4539,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStop = item.IsBetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
-                    Markets = GetOutrightMarkets(markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.SportId, item.FixtureTypeId)
+                    Markets = GetOutrightMarkets(itemMarkets, selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.SportId, item.FixtureTypeId)
                 });
             });
 

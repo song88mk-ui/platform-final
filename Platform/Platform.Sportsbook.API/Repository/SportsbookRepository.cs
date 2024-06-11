@@ -841,6 +841,16 @@ namespace Platform.Sportsbook.API.Repository
             if (request.SportGroup == Shared.Enums.SportGroup.SimulatedRealitySports)
                 fixtures = fixtures.Where(c => c.SegNa.ToLower().Contains("simulated")).OrderBy(o => o.FiTyId).ThenBy(o => o.FiStDa).ToList();
 
+            var fixtureIds = fixtures.Select(s => s.FiId).Distinct().ToList();
+
+            var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
+
+            var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
+            var marketProjection = Builders<Market>.Projection.Include(c => c.MaId).Include(c => c.MaId).Include(c => c.FiId);
+            var markets = primaryMarketCollection.Find(marketFilter).Project<MarketCount>(marketProjection).ToList();
+
+            fixtures = fixtures.Where(c => markets.Any(market => market.FiId == c.FiId)).ToList();
+
             if (fixtures.Count == 0)
             {
                 return new BaseResponseDTO<SportsResponseDTO>

@@ -730,7 +730,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/markettemplategroups", properties);
+            _telemetryClient.TrackEvent("e:v1/sportsbook/selectormarkettemplates", properties);
 
             switch (result.StatusCode)
             {
@@ -2247,7 +2247,7 @@ namespace Platform.API.Controllers
 
         [HttpGet("v1/sportsbook/betrecommendations")]
         public async Task<IActionResult> GetBetRecommendations()
-        {//
+        {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 

@@ -231,8 +231,8 @@ namespace Platform.Betting.API.Controllers
 
         [HttpPost("v1/bet/recommendations")]
         public async Task<IActionResult> GetBetRecommendations([FromBody] BetRecommendationRequestDTO request)
-        {//
-            var result = await _bettingRepository.GetBetRecommenations(request);
+        {
+            var result = await _bettingRepository.GetBetRecommendations(request);
 
             switch (result.StatusCode)
             {

@@ -21,7 +21,7 @@ namespace Platform.Betting.API.Repository
         Task<BaseResponseDTO<BetCashOutResponseDTO>> CashOutBet(CashoutBetRequestDTO request);
         Task<BaseResponseDTO<CashoutStateResponseDTO>> GetCashOut(CashoutStateRequestDTO request);
         Task<BaseResponseDTO<BetStatus>> GetBetStatus(BetStatusRequestDTO request);
-        Task<BaseResponseDTO<BetRecommendationsResponseDTO>> GetBetRecommenations(BetRecommendationRequestDTO request);
+        Task<BaseResponseDTO<BetRecommendationsResponseDTO>> GetBetRecommendations(BetRecommendationRequestDTO request);
         Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request);
     }
 }

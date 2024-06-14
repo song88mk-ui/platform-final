@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Platform.ClientTopMarket.Service.Repository;
+using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using RabbitMQ.Client.Events;
@@ -71,7 +72,7 @@ namespace Platform.ClientTopMarket.Service
                 {
                     case "OnBetPlacement":
                         var onBetPlacement = JsonSerializer.Deserialize<OnClientTopMarketBetPlacement>(payload);
-                        if (onBetPlacement.SportId < 1000 && onBetPlacement.MarketSelectionCount <= 3)
+                        if (onBetPlacement.SportId < 1000 && onBetPlacement.MarketSelectionCount <= 3 && onBetPlacement.FixtureTypeId != (int)FixtureType.Outright)
                             _messagesBetPlacement.Add(onBetPlacement);
                         break;
                     case "OnBetSettlement":

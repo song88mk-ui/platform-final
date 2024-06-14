@@ -13,6 +13,8 @@ namespace Platform.Shared.MessageModels
         public string SportName { get; set; }
         public long FixtureId { get; set; }
         public string FixtureName { get; set; }
+        public int FixtureTypeId { get; set; }
+        public string FixtureTypeName { get; set; }
         public long MarketId { get; set; }
         public string MarketName { get; set; }
         public int MarketStatusId { get; set; }

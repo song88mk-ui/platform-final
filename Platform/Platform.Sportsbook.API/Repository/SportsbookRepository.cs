@@ -801,6 +801,7 @@ namespace Platform.Sportsbook.API.Repository
             if (mCache != null)
                 return mCache;
 
+
             FilterDefinition<Fixture> fixtureFilter;
 
             if (request.FixtureScope == null)
@@ -831,7 +832,7 @@ namespace Platform.Sportsbook.API.Repository
                 var sportGroup = GetSportGroups(request.SportGroup);
                 var selectedSportIds = sportGroup != null ? sportGroup.Sports.Split(',').Select(int.Parse).Distinct().ToList() : new List<int>();
 
-                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId < 3 && selectedSportIds.Contains(c.SpId));
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId < 2 && selectedSportIds.Contains(c.SpId));
             }
 
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
@@ -846,7 +847,7 @@ namespace Platform.Sportsbook.API.Repository
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.MaId).Include(c => c.MaId).Include(c => c.FiId);
+            var marketProjection = Builders<Market>.Projection.Include(c => c.MaId).Include(c => c.FiId);
             var markets = primaryMarketCollection.Find(marketFilter).Project<MarketCount>(marketProjection).ToList();
 
             fixtures = fixtures.Where(c => markets.Any(market => market.FiId == c.FiId)).ToList();
@@ -7745,7 +7746,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         private List<TierLeagueOrder> GetTierLeagueOrder()
         {
-            return _memCache.GetCache($"tlo", () => _sportsbookContext.TierLeagueOrder.ToList(), 24);
+            return _memCache.GetCache($"tlo", () => _sportsbookContext.TierLeagueOrder.AsNoTracking().ToList(), 24);
         }
         private List<Shared.Data.Sportsbook.SQLEntities.MarketTemplateGroup> GetMarketTemplateGroup()
         {
@@ -7753,7 +7754,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         private List<ClientMarketTemplateGroup> GetClientMarketTemplateGroups()
         {
-            return _memCache.GetCache($"cmtg", () => _sportsbookContext.ClientMarketTemplateGroup.ToList(), 24);
+            return _memCache.GetCache($"cmtg", () => _sportsbookContext.ClientMarketTemplateGroup.AsNoTracking().ToList(), 24);
         }
         public async Task<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>> GetClientMarketSortOrder(MarketSortOrderRequestDTO request)
         {
@@ -7838,25 +7839,25 @@ namespace Platform.Sportsbook.API.Repository
         }
         private List<ClientSportOrder> GetSportOrder()
         {
-            return _memCache.GetCache($"so", () => _sportsbookContext.ClientSportOrder.ToList(), 24);
+            return _memCache.GetCache($"so", () => _sportsbookContext.ClientSportOrder.AsNoTracking().ToList(), 24);
         }
         private List<ClientSegmentOrder> GetSegmentOrder(Guid clientId)
         {
             var key = $"seo-{clientId.ToString().ToLower()}";
-            return _memCache.GetCache(key, () => _sportsbookContext.ClientSegmentOrder.Where(c => c.ClientId == clientId).ToList(), 24);
+            return _memCache.GetCache(key, () => _sportsbookContext.ClientSegmentOrder.AsNoTracking().Where(c => c.ClientId == clientId).ToList(), 24);
         }
         private List<ClientLeagueOrder> GetLeagueOrder(Guid clientId)
         {
             var key = $"leo-{clientId.ToString().ToLower()}";
-            return _memCache.GetCache(key, () => _sportsbookContext.ClientLeagueOrder.Where(c => c.ClientId == clientId).ToList(), 24);
+            return _memCache.GetCache(key, () => _sportsbookContext.ClientLeagueOrder.AsNoTracking().Where(c => c.ClientId == clientId).ToList(), 24);
         }
         private List<Country> GetSegmentCountry()
         {
-            return _memCache.GetCache($"sc", () => _sportsbookContext.Country.ToList(), 24);
+            return _memCache.GetCache($"sc", () => _sportsbookContext.Country.AsNoTracking().ToList(), 24);
         }
         private Shared.Data.Sportsbook.SQLEntities.SportGroup GetSportGroups(Shared.Enums.SportGroup sportGroup)
         {
-            var result = _memCache.GetCache($"sg", () => _sportsbookContext.SportGroup.ToList(), 24);
+            var result = _memCache.GetCache($"sg", () => _sportsbookContext.SportGroup.AsNoTracking().ToList(), 24);
 
             return result == null ? null : result.Where(c => c.SportGroupId == (int)sportGroup).FirstOrDefault();
         }

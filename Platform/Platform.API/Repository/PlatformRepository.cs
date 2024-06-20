@@ -795,6 +795,7 @@ namespace Platform.API.Repository
                             StakeRealPayout = s.StakeRealPayout,
                             TaxedStake = s.TaxedStake,
                             TaxedWinnings = s.TaxedWinnings,
+                            PartialCashout = s.PartialCashout,
                             Selections = GetTranslatedBetSelectionHistory(s.Selections, translations.Result.Selections)
                         }).ToList()
                     }

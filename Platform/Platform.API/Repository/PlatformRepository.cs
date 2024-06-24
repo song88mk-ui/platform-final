@@ -3189,8 +3189,7 @@ namespace Platform.API.Repository
                 BetId = betId,
                 UserId = authenticationResponse.Result.UserId,
                 CashOutStake = request.CashoutStake,
-                CashOutStakePercent = request.CashoutStakePercent ?? 0,
-                IsPartialCashout = request.IsPartialCashout
+                CashOutStakePercent = request.CashoutStakePercent,
             });
         }
 

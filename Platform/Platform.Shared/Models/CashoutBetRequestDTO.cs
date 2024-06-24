@@ -18,6 +18,5 @@ namespace Platform.Shared.Models
         public string UserId { get; set; }
         public decimal CashOutStake { get; set; }
         public decimal CashOutStakePercent { get; set; }
-        public bool IsPartialCashout { get; set; }
     }
 }

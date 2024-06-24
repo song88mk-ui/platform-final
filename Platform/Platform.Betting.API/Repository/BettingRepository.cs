@@ -2703,6 +2703,15 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
+            if (request.CashOutStakePercent <= 0 && request.CashOutStakePercent > 1)
+            {
+                return new BaseResponseDTO<BetCashOutResponseDTO>
+                {
+                    StatusCode = StatusCode.CashOut_Is_Unavailable,
+                    Message = StatusCode.CashOut_Is_Unavailable.ToString().Replace('_', ' ')
+                };
+            }
+
             if (bet.BetTypeId == (int)BetType.BetBuilder)
             {
                 return new BaseResponseDTO<BetCashOutResponseDTO>
@@ -2748,12 +2757,12 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            var requestCashoutStakeFull = request.IsPartialCashout ? request.CashOutStake / request.CashOutStakePercent : request.CashOutStake;
+            var newCashoutStake = request.CashOutStakePercent * request.CashOutStake;
 
-            if (Math.Round(requestCashoutStakeFull, 2) != Math.Round(cashOut.CashOutStake, 2))
+            if (Math.Round(request.CashOutStake, 2) != Math.Round(cashOut.CashOutStake, 2))
             {
-                var requestCashOutStake = requestCashoutStakeFull % 1 == 0 ? requestCashoutStakeFull.ToString().TrimEnd('0').TrimEnd('.') : requestCashoutStakeFull.ToString().TrimEnd('0').TrimEnd('.');
-                var resultCashOutStake = cashOut.CashOutStake % 1 == 0 ? cashOut.CashOutStake.ToString().TrimEnd('0').TrimEnd('.') : cashOut.CashOutStake.ToString().TrimEnd('0').TrimEnd('.');
+                var requestCashOutStake = request.CashOutStake.ToString().TrimEnd('0').TrimEnd('.');
+                var resultCashOutStake = cashOut.CashOutStake.ToString().TrimEnd('0').TrimEnd('.');
 
                 return new BaseResponseDTO<BetCashOutResponseDTO>
                 {
@@ -2771,7 +2780,7 @@ namespace Platform.Betting.API.Repository
             else
             {
                 var correlationId = Guid.NewGuid().ToString().ToUpper();
-                if (request.IsPartialCashout)
+                if (request.CashOutStakePercent < 1)
                 {
                     var payload = new OnCashoutBetSettlement
                     {
@@ -2780,7 +2789,7 @@ namespace Platform.Betting.API.Repository
                         ClientCode = bet.ClientCode,
                         ClientId = bet.ClientId.ToUpper(),
                         CashoutType = CashoutType.Partial,
-                        CashOutStake = request.CashOutStake,
+                        CashOutStake = newCashoutStake,
                         CashOutStakePercent = request.CashOutStakePercent,
                         TaxedStake = cashOut.TaxedStake * request.CashOutStakePercent,
                         TaxedWinnings = cashOut.TaxedWinnings * request.CashOutStakePercent,

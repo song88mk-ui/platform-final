@@ -498,7 +498,7 @@ namespace Platform.API.Controllers
             {
                 request.IPAddress = ipAddressV4;
             }
-
+            //
             var result = await _platformRepository.CashoutBet(apiKey, clientId, operatorToken, request, OGParameters);
 
             var parameters = request;

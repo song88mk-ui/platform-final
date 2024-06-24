@@ -2703,7 +2703,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            if (request.CashOutStakePercent <= 0 && request.CashOutStakePercent > 1)
+            if (request.CashOutStakePercent <= 0 || request.CashOutStakePercent > 1)
             {
                 return new BaseResponseDTO<BetCashOutResponseDTO>
                 {

@@ -16,7 +16,11 @@ namespace Platform.Operator.API.Controllers
         [HttpPost("bet/status/placement")]
         public async Task<IActionResult> BetStatusPlacement([FromBody] OddsFeedBetRequest request)
         {
-            return Ok();
+            return Ok(new OddsFeedBetResponse
+            {
+                StatusId = 1000,
+                Message = "Success"
+            });
         }
     }
 }

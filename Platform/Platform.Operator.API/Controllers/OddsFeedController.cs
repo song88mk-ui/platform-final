@@ -13,8 +13,8 @@ namespace Platform.Operator.API.Controllers
                 
         }
 
-        [HttpPost("v1/bet/placement")]
-        public async Task<IActionResult> BetPlacement([FromBody] OddsFeedBetRequest request)
+        [HttpPost("bet/status/placement")]
+        public async Task<IActionResult> BetStatusPlacement([FromBody] OddsFeedBetRequest request)
         {
             return Ok();
         }

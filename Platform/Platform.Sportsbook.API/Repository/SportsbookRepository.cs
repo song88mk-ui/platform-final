@@ -805,7 +805,12 @@ namespace Platform.Sportsbook.API.Repository
             FilterDefinition<Fixture> fixtureFilter;
 
             if (request.FixtureScope == null)
-                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
+            {
+                var fixtureTypeIds = new int[] { (int)FixtureType.Match, (int)FixtureType.Outright };
+
+                fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && fixtureTypeIds.Contains(c.FiTyId));
+                //fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2);
+            }
             else
             {
                 switch (request.FixtureScope.Value)
@@ -836,13 +841,14 @@ namespace Platform.Sportsbook.API.Repository
             }
 
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+
             if (IsOEEnable(request.ClientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId > 1000 || f.FiTyId == (int)FixtureType.Outright).OrderBy(o => o.FiTyId).ThenByDescending(o => o.FiStId).ThenBy(o => o.FiStDa).ToList();
 
             if (request.SportGroup == Shared.Enums.SportGroup.SimulatedRealitySports)
                 fixtures = fixtures.Where(c => c.SegNa.ToLower().Contains("simulated")).OrderBy(o => o.FiTyId).ThenBy(o => o.FiStDa).ToList();
 
-            var fixtureIds = fixtures.Select(s => s.FiId).Distinct().ToList();
+            var fixtureIds = fixtures.Select(s => s.FiId).ToList();
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
@@ -850,9 +856,10 @@ namespace Platform.Sportsbook.API.Repository
             var marketProjection = Builders<Market>.Projection.Include(c => c.MaId).Include(c => c.FiId);
             var markets = primaryMarketCollection.Find(marketFilter).Project<MarketCount>(marketProjection).ToList();
 
-            fixtures = fixtures.Where(c => markets.Any(market => market.FiId == c.FiId)).ToList();
+            fixtureIds = markets.Select(s => s.FiId).Distinct().ToList();
+			fixtures = fixtures.Where(c => fixtureIds.Contains(c.FiId)).ToList();
 
-            if (fixtures.Count == 0)
+			if (fixtures.Count == 0)
             {
                 return new BaseResponseDTO<SportsResponseDTO>
                 {
@@ -865,11 +872,11 @@ namespace Platform.Sportsbook.API.Repository
             var sportIds = fixtures.Select(s => s.SpId).Distinct().ToList();
 
             var leagueSortOrder = GetTierLeagueOrder().Where(c => sportIds.Contains(c.SportId)).ToList();
-            var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId && c.IsActive == true).ToList();
+			var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId && c.IsActive == true).ToList();
             var segmentOrder = GetSegmentOrder(request.ClientId);
             var leagueOrder = GetLeagueOrder(request.ClientId);
             var activeSportIds = sportSortOrder.Select(s => s.SportId).ToList();
-            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+			var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
                                     new CountrySegment
                                     {
                                         CountryId = s.Id,
@@ -877,8 +884,7 @@ namespace Platform.Sportsbook.API.Repository
                                         SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
                                     }).ToList()).ToList();
 
-
-            var result = fixtures.Where(c => activeSportIds.Contains(c.SpId) && c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
+			var result = fixtures.Where(c => activeSportIds.Contains(c.SpId) && c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
             {
                 SportId = s.SpId,
                 SportName = GetSportName(s.SpNa, s.SpNaTr, request.LanguageCode),

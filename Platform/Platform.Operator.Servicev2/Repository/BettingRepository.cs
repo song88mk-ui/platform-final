@@ -3064,10 +3064,11 @@ namespace Platform.Operator.Servicev2.Repository
 
         private decimal RedenominateOG(decimal input, string currencyCode)
         {
-            if (_highCurrencies.Contains(currencyCode.ToUpper()))
-                return input / 1000;
-            else
-                return input;
+            return input;
+            //if (_highCurrencies.Contains(currencyCode.ToUpper()))
+            //    return input / 1000;
+            //else
+            //    return input;
         }
     }
 }

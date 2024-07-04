@@ -41,8 +41,19 @@ namespace Platform.Shared.Extensions
 
         public static string ConvertToUnicodeEscape(this string input)
         {
-            return input.Replace("+", @"\u002B").Replace("´", @"\u00B4");
+            var charArrays = new char[] { '+', '\'', '´', '&' };
+
+            foreach (var item in charArrays)
+            {
+                input = input.Replace($"{item}", item.EscapeSequence());
+            }
+
+            return input;
+
+            //return input.Replace("+", @"\u002B").Replace("´", @"\u00B4");
         }
+
+        private static string EscapeSequence(this char c) => $@"\u{(int)c:X4}";
 
     }
 

@@ -27,6 +27,7 @@ namespace Platform.Operator.Servicev2.Repository
 
         public BettingRepository(IConfiguration configuration)
         {
+            //
             _configuration = configuration;
         }
 

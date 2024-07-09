@@ -6481,6 +6481,7 @@ namespace Platform.Sportsbook.API.Repository
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
                             MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            EnMarketName = market.MaNa,
                             Line = market.Li,
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
@@ -6507,6 +6508,7 @@ namespace Platform.Sportsbook.API.Repository
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
                             MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            EnMarketName = market.MaNa,
                             Line = market.Li,
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
@@ -6543,6 +6545,7 @@ namespace Platform.Sportsbook.API.Repository
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
                             MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            EnMarketName = market.MaNa,
                             Line = market.Li,
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
@@ -6569,6 +6572,7 @@ namespace Platform.Sportsbook.API.Repository
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
                             MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            EnMarketName = market.MaNa,
                             Line = market.Li,
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
@@ -6592,7 +6596,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
             }
 
-            return result.OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+            return result.OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.EnMarketName).ToList();
         }
 
         private BetSelectionState GetBetSelectionStatus(OddsChangeType oddsChangeType, BetFixtureSelectionRequestDTO current, Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>> result, string clientCode, bool isBetBuilder, int selectionCount)

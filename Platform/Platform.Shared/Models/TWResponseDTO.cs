@@ -287,6 +287,7 @@ namespace Platform.Shared.Models
         public string MarketTemplateId { get; set; }
         public string MarketId { get; set; }
         public string MarketName { get; set; }
+        public string EnMarketName { get; set; }
         public string Line { get; set; }
         public bool IsCashout { get; set; }
         public int MarketStatusId { get; set; }

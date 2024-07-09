@@ -9956,19 +9956,22 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         var odds = clientOdds.FirstOrDefault(c => c.SelectionId == item.SeId);
 
-                        selectionsToAdd.Add(new SelectionDTO
+                        if (odds != null)
                         {
-                            SelectionTemplateId = item.SeTeId,
-                            SelectionId = item.SeId.ToString(),
-                            SelectionName = GetComputedSelectionName(item.SeNa, item.SeNaTr, languageCode, sportId, market.MaTeId, item.SeTeId, market.Li),
-                            DecimalOdds = odds.DecimalOdds.ToString("0.00"),
-                            MalaysianOdds = odds.MalaysianOdds.ToString("0.00"),
-                            HongkongOdds = odds.HongkongOdds.ToString("0.00"),
-                            IndonesianOdds = odds.IndonesianOdds.ToString("0.00"),
-                            IsActive = odds.DecimalOdds > 1m && item.IsAc,
-                            CorrelationId = item.CoId,
-                            SortOrder = item.SeSoOr
-                        });
+                            selectionsToAdd.Add(new SelectionDTO
+                            {
+                                SelectionTemplateId = item.SeTeId,
+                                SelectionId = item.SeId.ToString(),
+                                SelectionName = GetComputedSelectionName(item.SeNa, item.SeNaTr, languageCode, sportId, market.MaTeId, item.SeTeId, market.Li),
+                                DecimalOdds = odds.DecimalOdds.ToString("0.00"),
+                                MalaysianOdds = odds.MalaysianOdds.ToString("0.00"),
+                                HongkongOdds = odds.HongkongOdds.ToString("0.00"),
+                                IndonesianOdds = odds.IndonesianOdds.ToString("0.00"),
+                                IsActive = odds.DecimalOdds > 1m && item.IsAc,
+                                CorrelationId = item.CoId,
+                                SortOrder = item.SeSoOr
+                            });
+                        }
                     }
 
                     var isBetBuilder = false;
@@ -10286,7 +10289,7 @@ namespace Platform.Sportsbook.API.Repository
 
                 var market = GetTopGameMarket(fixtureMarket, selections.Where(c => c.FiId == Convert.ToInt64(fixture.FiId) && c.MaId == topFixture.MaId).ToList(), request.LanguageCode, request.ClientId, request.ClientCode, fixture.SpId, fixture.FiTyId, fixture.FiStId, clientInitial, betBuilderMarketTemplates);
 
-                if (market == null)
+                if (market == null || !market.Selections.Any())
                     continue;
 
                 result.Fixtures.Add(new BetRecommendationFixtureResponseDTO

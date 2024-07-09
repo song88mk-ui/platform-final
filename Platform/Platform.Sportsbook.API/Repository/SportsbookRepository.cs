@@ -4356,7 +4356,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-            }).OrderBy(o => o.SortOrder).ThenBy(o => o.EnSegmentName).ThenBy(o => o.EnLeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+            }).OrderBy(o => o.SortOrder).ThenBy(o => o.EnSegmentName).ThenBy(o => o.EnLeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.EnFixtureName).ToList();
 
             var initialResult = new List<TempFixtureDTO>();
 
@@ -4400,11 +4400,12 @@ namespace Platform.Sportsbook.API.Repository
                     EnSegmentName = item.EnSegmentName,
                     LeagueId = item.LeagueId,
                     LeagueName = item.LeagueName,
-                    EnLeagueName = item.LeagueName,
+                    EnLeagueName = item.EnLeagueName,
                     FixtureId = item.FixtureId,
                     ProviderFixtureId = item.ProviderFixtureId,
                     fixtureTypeId = item.FixtureTypeId,
                     FixtureName = item.FixtureName,
+                    EnFixtureName = item.EnFixtureName,
                     HomeName = item.HomeName,
                     AwayName = item.AwayName,
                     FixtureStartDate = item.FixtureStartDate,
@@ -4432,7 +4433,7 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new TWResponseDTO
                 {
-                    Fixtures = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.EnSegmentName).ThenBy(o => o.EnLeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList()
+                    Fixtures = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.EnSegmentName).ThenBy(o => o.EnLeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.EnFixtureName).ToList()
                 }
             };
         }

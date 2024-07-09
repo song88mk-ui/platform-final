@@ -244,8 +244,10 @@ namespace Platform.Shared.Models
         public string SportName { get; set; }
         public int SegmentId { get; set; }
         public string SegmentName { get; set; }
+        public string EnSegmentName { get; set; }
         public int LeagueId { get; set; }
         public string LeagueName { get; set; }
+        public string EnLeagueName { get; set; }
         public string FixtureId { get; set; }
         public string ProviderFixtureId { get; set; }
         public int fixtureTypeId { get; set; }
@@ -315,8 +317,10 @@ namespace Platform.Shared.Models
         public string SportName { get; set; }
         public int SegmentId { get; set; }
         public string SegmentName { get; set; }
+        public string EnSegmentName { get; set; }
         public int LeagueId { get; set; }
         public string LeagueName { get; set; }
+        public string EnLeagueName { get; set; }
         public string FixtureId { get; set; }
         public string ProviderFixtureId { get; set; }
         public string FixtureName { get; set; }

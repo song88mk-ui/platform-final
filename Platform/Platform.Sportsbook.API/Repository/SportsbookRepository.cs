@@ -4329,8 +4329,10 @@ namespace Platform.Sportsbook.API.Repository
                 SportName = GetSportName(s.SpNa, s.SpNaTr, request.LanguageCode),
                 SegmentId = s.SegId,
                 SegmentName = GetSegmentName(s.SegNa, s.SegNaTr, request.LanguageCode),
+                EnSegmentName = s.SegNa,
                 LeagueId = s.LeId,
                 LeagueName = GetLeagueName(s.LeNa, s.LeNaTr, request.LanguageCode),
+                EnLeagueName = s.LeNa,
                 ProviderFixtureId = s.PrFiId,
                 FixtureId = s.FiId.ToString(),
                 FixtureName = GetFixtureName(s.FiNa, s.FiNaTr, request.LanguageCode),
@@ -4394,8 +4396,10 @@ namespace Platform.Sportsbook.API.Repository
                     SportName = item.SportName,
                     SegmentId = item.SegmentId,
                     SegmentName = item.SegmentName,
+                    EnSegmentName = item.EnSegmentName,
                     LeagueId = item.LeagueId,
                     LeagueName = item.LeagueName,
+                    EnLeagueName = item.LeagueName,
                     FixtureId = item.FixtureId,
                     ProviderFixtureId = item.ProviderFixtureId,
                     fixtureTypeId = item.FixtureTypeId,
@@ -4427,7 +4431,7 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new TWResponseDTO
                 {
-                    Fixtures = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList()
+                    Fixtures = finalResult.OrderBy(o => o.SortOrder).ThenBy(o => o.EnSegmentName).ThenBy(o => o.EnLeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList()
                 }
             };
         }

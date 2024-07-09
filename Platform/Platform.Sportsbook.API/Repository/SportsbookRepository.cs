@@ -4336,6 +4336,7 @@ namespace Platform.Sportsbook.API.Repository
                 ProviderFixtureId = s.PrFiId,
                 FixtureId = s.FiId.ToString(),
                 FixtureName = GetFixtureName(s.FiNa, s.FiNaTr, request.LanguageCode),
+                EnFixtureName = s.FiNa,
                 HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                 AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
@@ -4355,7 +4356,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
                 == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-            }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
+            }).OrderBy(o => o.SortOrder).ThenBy(o => o.EnSegmentName).ThenBy(o => o.EnLeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             var initialResult = new List<TempFixtureDTO>();
 

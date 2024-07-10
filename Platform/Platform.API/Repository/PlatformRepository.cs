@@ -3229,6 +3229,29 @@ namespace Platform.API.Repository
             }
         }
 
+        public async Task<BaseResponseDTO<ExchangeRatesResponseDTO>> GetCurrentExchangeRates()
+        {
+            var result = _platformContext.ForexEUR.AsNoTracking().Select(c => new ExchangeRateResponseDTO
+            {
+                CurrencyCode = c.CurrencyCode,
+                ExchangeRate = c.ExchangeRate
+            }).ToList();
+
+            var usd = result.FirstOrDefault(r => r.CurrencyCode == "USD");
+            if (usd != null)
+                result.Add(new ExchangeRateResponseDTO { CurrencyCode = "USDT", ExchangeRate = usd.ExchangeRate });
+
+            return new BaseResponseDTO<ExchangeRatesResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new ExchangeRatesResponseDTO
+                {
+                    ExchangeRates = result
+                }
+            };
+        }
+
         public async Task<BaseResponseDTO<StatusCode>> ProcessBetConfig(BackOfficeBetConfigPayloadDTO request)
         {
             return await _bettingRepository.ProcessBetConfig(request);
@@ -4546,16 +4569,9 @@ namespace Platform.API.Repository
             };
         }
 
-        private DateTime GetFirstDayOfNextMonth()
-        {
-            DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
-
-            return ss.AddMonths(1);
-        }
-
         private async Task<ForexEURResponse> GetExchangeRate(string currencyCode)
         {
-            if(currencyCode.ToUpper() == "USDT")
+            if (currencyCode.ToUpper() == "USDT")
                 currencyCode = "USD";
 
             var result = await _platformContext.ForexEUR.FindAsync(currencyCode);
@@ -4569,6 +4585,14 @@ namespace Platform.API.Repository
                 ExchangeRate = result.ExchangeRate
             };
         }
+
+        private DateTime GetFirstDayOfNextMonth()
+        {
+            DateTime ss = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+
+            return ss.AddMonths(1);
+        }
+
         private bool IsMatchCurrencyCode(CurrencyCode requestCurrencyCode, string userCurrencyCode)
         {
             return requestCurrencyCode.ToString().ToUpper() == userCurrencyCode.ToUpper() ? true : false;

@@ -261,6 +261,21 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpGet("v1/client/exchangerates")]
+        public async Task<IActionResult> GetExchangeRates()
+        {
+            var result = await _platformRepository.GetCurrentExchangeRates();
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/config/client")]
         public async Task<IActionResult> ProcessBackOfficeClientBetConfig([FromBody] BackOfficeBetConfigPayloadDTO payload)
         {

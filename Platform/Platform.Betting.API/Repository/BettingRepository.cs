@@ -2969,19 +2969,20 @@ namespace Platform.Betting.API.Repository
         }
         public async Task<BaseResponseDTO<BetRecommendationsResponseDTO>> GetBetRecommendations(BetRecommendationRequestDTO request)
         {
-            var clientTopMarkets = _bettingContext.ClientTopMarket.AsNoTracking()
-                                            .Where(c => c.ClientId == request.ClientId.ToString() && c.MarketStatusId == (int)MarketStatus.Active)
-                                            .ToList();
+            var take = 50;
 
-            var markets = clientTopMarkets.OrderByDescending(o => o.BetCount)
-                                            .Take(10)
-                                            .Select((s, i) => new BetRecommendationMarketDTO()
-                                            {
-                                                FixtureId = s.FixtureId,
-                                                MarketId = s.MarketId,
-                                                SortOrder = i + 1
-                                            })
-                                            .ToList();
+            var markets = _bettingContext.ClientTopMarket.AsNoTracking()
+                            .Where(m => m.MarketStatusId == 1).ToList()
+                            .OrderBy(m => m.ClientId == request.ClientId.ToString().ToUpper() ? 0 : 1)
+                            .ThenByDescending(m => m.BetCount)
+                            .Take(take)
+                            .Select((s, i) => new BetRecommendationMarketDTO()
+                            {
+                                FixtureId = s.FixtureId,
+                                MarketId = s.MarketId,
+                                SortOrder = i + 1
+                            })
+                            .ToList();
 
             return await _sportsbookRepository.GetBetRecommendationDetails(new BetRecommendationDetailRequestDTO()
             {

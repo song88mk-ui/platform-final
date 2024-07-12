@@ -10124,6 +10124,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<BetRecommendationsResponseDTO>> GetBetRecommendationDetails(BetRecommendationDetailRequestDTO request)
         {
+            var take = 10;
             var maintenance = GetMaintenance();
 
             if (maintenance.isMa)
@@ -10323,7 +10324,7 @@ namespace Platform.Sportsbook.API.Repository
                     SortOrder = ++sortOrder
                 });
 
-                if (result.Fixtures.Count == 10)
+                if (result.Fixtures.Count == take)
                     break;
             }
 

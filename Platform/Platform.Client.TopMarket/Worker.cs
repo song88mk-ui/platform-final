@@ -23,9 +23,11 @@ namespace Platform.ClientTopMarket.Service
 
         private Thread _threadBetPlacement;
         private Thread _threadBetSettlement;
+        private Thread _threadBetCancellation;
 
         private readonly BlockingCollection<OnClientTopMarketBetPlacement> _messagesBetPlacement = new BlockingCollection<OnClientTopMarketBetPlacement>();
         private readonly BlockingCollection<OnClientTopMarketBetSettlement> _messagesBetSettlement = new BlockingCollection<OnClientTopMarketBetSettlement>();
+        private readonly BlockingCollection<OnClientTopMarketBetSettlement> _messagesBetCancellation = new BlockingCollection<OnClientTopMarketBetSettlement>();
         public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository)
         {
             _logger = logger;
@@ -50,9 +52,11 @@ namespace Platform.ClientTopMarket.Service
 
             _threadBetPlacement = new Thread(ThreadBetPlacement);
             _threadBetSettlement = new Thread(ThreadBetSettlement);
+            _threadBetCancellation = new Thread(ThreadBetCancellation);
 
             _threadBetPlacement.Start();
             _threadBetSettlement.Start();
+            _threadBetCancellation.Start();
 
             _messageBroker.Connect();
             _messageBroker.MessageReceived += MessageReceivedEvent;
@@ -80,6 +84,11 @@ namespace Platform.ClientTopMarket.Service
                         if (onBetSettlement.SportId < 1000)
                             _messagesBetSettlement.Add(onBetSettlement);
                         break;
+                    case "OnBetCancellation":
+                        var onBetCancellation = JsonSerializer.Deserialize<OnClientTopMarketBetSettlement>(payload);
+                        if (onBetCancellation.SportId < 1000)
+                            _messagesBetSettlement.Add(onBetCancellation);
+                        break;
                 }
             }
             catch (Exception ex)
@@ -101,6 +110,14 @@ namespace Platform.ClientTopMarket.Service
             while (true)
             {
                 var message = _messagesBetSettlement.Take();
+                await _bettingRepository.ProcessBetSettlement(message);
+            }
+        }
+        private async void ThreadBetCancellation()
+        {
+            while (true)
+            {
+                var message = _messagesBetCancellation.Take();
                 await _bettingRepository.ProcessBetSettlement(message);
             }
         }

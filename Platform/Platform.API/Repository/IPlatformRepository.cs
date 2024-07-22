@@ -18,6 +18,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<BetHistoryResponseDTO>> GetBetHistorySettled(string apiKey, string clientId, string langCode, BetHistorySettledRequest request);
         Task<BaseResponseDTO<BetHistoryRunningFilteredResponseDTO>> GetBetHistoryRunning(string clientId, string langCode, string operatorToken, OGClientRequest ogParameters);
         Task<BaseResponseDTO<BetConfigFEResponseDTO>> GetBetConfig(string apiKey, string clientId, BetConfigRequest request);
+        Task<BaseResponseDTO<BetFixtureResponseDTO>> GetBetFixture(BetFixtureRequestDTO request);
         Task<BaseResponseDTO<VerticalConfig>> GetUserBetConfig(string apiKey, string clientId, UserBetConfigDetailsRequest request, string operatorToken, OGClientRequest ogParameters);
         Task<BaseResponseDTO<ClientResponseDTO>> AddOrUpdateClient(ClientRequestDTO request);
         Task<BaseResponseDTO<bool>> ProcessStatusUpdate(ClientStatusRequestDTO request);

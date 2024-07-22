@@ -291,6 +291,24 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpPost("v1/bet/fixture")]
+        public async Task<IActionResult> GetBetFixture([FromBody] BetFixtureRequestDTO request)
+        {
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
+
+            var result = await _platformRepository.GetBetFixture(request);
+
+            switch (((dynamic)result).StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
         [HttpPost("v1/bet/cancel")]
         public async Task<IActionResult> CancelBets([FromBody] BetModifyRequestDTO request)
         {

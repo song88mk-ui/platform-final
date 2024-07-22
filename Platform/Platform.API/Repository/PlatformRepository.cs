@@ -414,7 +414,7 @@ namespace Platform.API.Repository
             }
 
             var isV4 = Convert.ToInt32(request.IPAddress.Split(".").First()) >= 240 ? false : true;
-            
+
             if (ogParameters != null)
                 operatorToken = $"{operatorToken}|{ogParameters.CurrencyCode}|{ogParameters.GameCode}";
             else if (authenticationResponse.Result.CurrencyCode.ToUpper() == "USDT")
@@ -773,7 +773,7 @@ namespace Platform.API.Repository
                             WinLoss = s.WinLoss,
                             BetStatusId = s.BetStatusId,
                             BetStatusName = s.BetStatusName,
-                            TransactionDate =  s.TransactionDate,
+                            TransactionDate = s.TransactionDate,
                             Commission = s.Commission,
                             CurrencyCode = s.CurrencyCode,
                             OddsTypeId = s.OddsTypeId,
@@ -1132,6 +1132,21 @@ namespace Platform.API.Repository
             };
 
             return await _bettingRepository.BetConfig(payload);
+        }
+        public async Task<BaseResponseDTO<BetFixtureResponseDTO>> GetBetFixture(BetFixtureRequestDTO request)
+        {
+            try
+            {
+                return await _sportsbookRepository.GetBetFixture(request);
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<BetFixtureResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
+            }
         }
         public async Task<BaseResponseDTO<VerticalConfig>> GetUserBetConfig(string apiKey, string clientId, UserBetConfigDetailsRequest request, string operatorToken, OGClientRequest ogParameters)
         {

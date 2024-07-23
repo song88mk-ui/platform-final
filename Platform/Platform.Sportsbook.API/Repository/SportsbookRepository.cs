@@ -6148,7 +6148,7 @@ namespace Platform.Sportsbook.API.Repository
                         });
                     }
 
-                    return result.Where(m => m.Selections.Any()).OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                    return result.Where(m => m.Selections.Any(s => Convert.ToDecimal(s.DecimalOdds) < Convert.ToDecimal(s.BoostedOdds))).OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
                 else
                 {
@@ -6211,7 +6211,7 @@ namespace Platform.Sportsbook.API.Repository
                         });
                     }
 
-                    return result.Where(m => m.Selections.Any()).OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                    return result.Where(m => m.Selections.Any(s => Convert.ToDecimal(s.DecimalOdds) < Convert.ToDecimal(s.BoostedOdds))).OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
                 }
             }
             else
@@ -6260,7 +6260,7 @@ namespace Platform.Sportsbook.API.Repository
                     });
                 }
 
-                return result.Where(m => m.Selections.Any()).OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
+                return result.Where(m => m.Selections.Any(s => Convert.ToDecimal(s.DecimalOdds) < Convert.ToDecimal(s.BoostedOdds))).OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
 
         }

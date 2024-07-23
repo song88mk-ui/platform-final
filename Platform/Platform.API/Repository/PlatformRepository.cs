@@ -1133,10 +1133,21 @@ namespace Platform.API.Repository
 
             return await _bettingRepository.BetConfig(payload);
         }
-        public async Task<BaseResponseDTO<BetFixtureResponseDTO>> GetBetFixture(BetFixtureRequestDTO request)
+        public async Task<BaseResponseDTO<BetFixtureResponseDTO>> GetBetFixture(BetFixtureRequestDTO request, string clientId)
         {
             try
             {
+                var clientResponse = await GetClient(clientId);
+
+                if (clientResponse.StatusCode != StatusCode.Success)
+                {
+                    return new BaseResponseDTO<BetFixtureResponseDTO>
+                    {
+                        StatusCode = clientResponse.StatusCode,
+                        Message = clientResponse.Message
+                    };
+                }
+
                 return await _sportsbookRepository.GetBetFixture(request);
             }
             catch (Exception ex)

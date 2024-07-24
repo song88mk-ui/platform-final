@@ -186,7 +186,7 @@ namespace Platform.Betting.API.Repository
                     SportId = request.Selections.FirstOrDefault().SportId
                 });
 
-                var selection = request.Selections.FirstOrDefault();
+                var selection = request.Selections.FirstOrDefault(); ;
 
                 List<OverrideSportConfig> overrideSportConfig = JsonSerializer.Deserialize<List<OverrideSportConfig>>(betConfig.OverrideConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 var checkOverride = overrideSportConfig.Where(a => a.SportId == selection.SportId).FirstOrDefault();
@@ -3176,7 +3176,6 @@ namespace Platform.Betting.API.Repository
                 return BetType.BetBuilder;
 
             return selections.Count > 1 ? BetType.Parlay : BetType.Single;
-
         }
 
         private decimal GetStake(List<BetSelection> selections, decimal taxedStake, decimal trueStake)

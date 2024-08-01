@@ -22,5 +22,15 @@ namespace Platform.Operator.API.Controllers
                 Message = "Success"
             });
         }
+
+        [HttpPost("bet/status/cancellation")]
+        public async Task<IActionResult> BetStatusCancellation([FromBody] OddsFeedBetCancellationRequest request)
+        {
+            return Ok(new OddsFeedBetResponse
+            {
+                StatusId = 1000,
+                Message = "Success"
+            });
+        }
     }
 }

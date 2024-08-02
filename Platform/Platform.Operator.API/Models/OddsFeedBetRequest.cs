@@ -15,7 +15,7 @@ namespace Platform.Operator.API.Models
         public string Reason { get; set; }
         public string Action { get; set; }
         public DateTime Timestamp { get; set; }
-        public List<OddsFeedBetSelectionRequest> BetSelections { get; set; } = new List<BetSelectionRequest>();
+        public List<OddsFeedBetSelectionRequest> BetSelections { get; set; }
     }
 
     public class OddsFeedBetSelectionRequest

@@ -20,7 +20,7 @@ namespace Platform.API.Repository
         private readonly TelemetryClient _telemetryClient;
         private readonly OrientalGamingConfigDTO _ogConfig;
 
-        private static List<string> _ogHighCurrencies = new List<string> { "IDRK", "VNDK", "MMKK", "INRK" };
+        private static List<string> _ogHighCurrencies = new List<string> { "IDRK", "VNDK", "MMKK", "INRK", "UZSK" };
 
         public OperatorRepository(HttpClient httpClient, TelemetryClient telemetryClient, IConfiguration configuration)
         {

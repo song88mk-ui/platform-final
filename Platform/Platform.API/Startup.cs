@@ -9,7 +9,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.API.ActionFilters;
 using Platform.API.Repository;
-using Platform.Shared.Data;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Utility;
 using System.IO.Compression;

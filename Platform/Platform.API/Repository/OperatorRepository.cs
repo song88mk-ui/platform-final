@@ -18,7 +18,7 @@ namespace Platform.API.Repository
     {
         private readonly HttpClient _httpClient;
         private readonly TelemetryClient _telemetryClient;
-        private readonly IConfiguration _configuration;
+        private readonly OrientalGamingConfigDTO _ogConfig;
 
         private static List<string> _ogHighCurrencies = new List<string> { "IDRK", "VNDK", "MMKK", "INRK" };
 
@@ -26,7 +26,7 @@ namespace Platform.API.Repository
         {
             _httpClient = httpClient;
             _telemetryClient = telemetryClient;
-            _configuration = configuration;
+            _ogConfig = configuration.GetSection("Custom").GetSection("OrientalGaming").Get<OrientalGamingConfigDTO>(); ;
             _httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
 
@@ -242,8 +242,8 @@ namespace Platform.API.Repository
                 };
             }
 
-            var key = _configuration["Custom:OrientalGaming:PublicAPIKey"].ToString();
-            var vendorName = _configuration["Custom:OrientalGaming:VendorName"].ToString();
+            var key = _ogConfig.PublicAPIKey;
+            var vendorName = _ogConfig.VendorName;
 
             _httpClient.BaseAddress = new Uri(endpoint);
 
@@ -265,7 +265,7 @@ namespace Platform.API.Repository
 
             try
             {
-                var privateKey = _configuration["Custom:OrientalGaming:PrivateAPIKey"].ToString();
+                var privateKey = _ogConfig.PrivateAPIKey;
 
                 // authenticate endpoint
                 var authenticationPayload = new OGAuthenticationRequest

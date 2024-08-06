@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Platform.API.Controllers;
 using Platform.API.Models;
 using Platform.Shared.Enums;
+using Platform.Shared.Models;
 using System;
 using System.Linq;
 
@@ -13,10 +14,12 @@ namespace Platform.API.ActionFilters
     public class APIKeyFilter : ActionFilterAttribute
     {
         private readonly IConfiguration _configuration;
+        private readonly OrientalGamingConfigDTO _ogConfig;
 
         public APIKeyFilter(IConfiguration configuration)
         {
             _configuration = configuration;
+            var ogConfig = configuration["Custom:OrientalGaming"];
         }
         public override void OnActionExecuting(ActionExecutingContext context)
         {

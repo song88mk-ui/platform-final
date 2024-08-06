@@ -827,7 +827,6 @@ namespace Platform.Operator.Servicev2.Repository
                     CurrencyCode = ogParam.OGCurrencyCode,
                     bet_status = message.Bet.BetStatusName,
                     ParlayBonus = (double)message.Bet.ParlayBonus,
-                    //ParlayBonusWinnings = (double)message.Bet.ParlayBonusWinnings, // will redenominate
                     ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
                     bet_list = message.BetSelections.Select(s => s.BetSelection).Select(s => new
                     {
@@ -879,12 +878,10 @@ namespace Platform.Operator.Servicev2.Repository
                 };
 
                 var records = new[] { new {
-                           //amount = Convert.ToDouble(betData.TrueStake.Truncate()), // will redenominate
-                           amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, betData.TrueStake).Truncate()), // will redenominate
+                           amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, betData.TrueStake).Truncate()),
                            bet_place = message.BetSelections.Count > 1 ? "multiple" : "single",
                            transaction_id = betData.BetId.ToString().ToLower().Replace("-",""),
-                           //secondary_info = new { bet_amount = Convert.ToDouble(betData.TrueStake.Truncate()), detain_amount = 0 }, // will redenominate
-                           secondary_info = new { bet_amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, betData.TrueStake).Truncate()), detain_amount = 0 }, // will redenominate
+                           secondary_info = new { bet_amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, betData.TrueStake).Truncate()), detain_amount = 0 },
                            other_info = betSelectionData,
                            remark = (string)null
                         }};
@@ -1271,7 +1268,6 @@ namespace Platform.Operator.Servicev2.Repository
                     CurrencyCode = ogParam.OGCurrencyCode,
                     bet_status = message.Bet.BetStatusName,
                     ParlayBonus = (double)message.Bet.ParlayBonus,
-                    //ParlayBonusWinnings = (double)message.Bet.ParlayBonusWinnings, // will redenominate
                     ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
                     bet_list = message.BetSelections.Select(s => new
                     {
@@ -1327,21 +1323,17 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     PlayerCode = message.Bet.UserId,
                     TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    //Amount = Convert.ToDouble(message.Bet.Payout.Truncate()), // will redenominate
-                    Amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.Payout).Truncate()), // will redenominate
+                    Amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.Payout).Truncate()),
                     TransactionId = message.Bet.BetId.ToString().ToLower().Replace("-", ""),
                     TransactionType = transType,
                     GameCode = ogParam.GameCode,
                     RoundId = "testround",
                     BetPlace = message.BetSelections.Count > 1 ? "multiple" : "single",
                     Currency = ogParam.OGCurrencyCode,
-                    //WinloseAmount = Convert.ToDouble(message.Bet.WinLoss.Truncate()), // will redenominate
-                    //EffectiveAmount = Convert.ToDouble(message.Bet.TrueStake.Truncate()), // will redenominate
-                    WinloseAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.WinLoss).Truncate()), // will redenominate
-                    EffectiveAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), // will redenominate
+                    WinloseAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.WinLoss).Truncate()),
+                    EffectiveAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), 
                     ResultUrl = Uri.EscapeDataString($"result?client_id={message.Bet.ClientId}&transaction_id={message.Bet.BetId}"),
-                    //SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake.Truncate()), detain_amount = 0 }, // will redenominate
-                    SecondaryInfo = new { bet_amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), detain_amount = 0 }, // will redenominate
+                    SecondaryInfo = new { bet_amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), detain_amount = 0 },
                     OtherInfo = betSelectionData,
                     CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Signature = ""
@@ -1878,7 +1870,6 @@ namespace Platform.Operator.Servicev2.Repository
                     CurrencyCode = ogParam.OGCurrencyCode,
                     bet_status = message.Bet.BetStatusName,
                     ParlayBonus = (double)message.Bet.ParlayBonus,
-                    //ParlayBonusWinnings = (double)message.Bet.ParlayBonusWinnings, // will redenominate
                     ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
                     bet_list = message.BetSelections.Select(s => new
                     {
@@ -1934,21 +1925,17 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     PlayerCode = message.Bet.UserId,
                     TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    //Amount = Convert.ToDouble(message.Bet.Payout.Truncate()), // will redenominate
-                    Amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.Payout).Truncate()), // will redenominate
+                    Amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.Payout).Truncate()),
                     TransactionId = message.Bet.BetId.ToString().ToLower().Replace("-", ""),
                     TransactionType = transType,
                     GameCode = ogParam.GameCode,
                     RoundId = "testround",
                     BetPlace = message.BetSelections.Count > 1 ? "multiple" : "single",
                     Currency = ogParam.OGCurrencyCode,
-                    //WinloseAmount = Convert.ToDouble(message.Bet.WinLoss.Truncate()), // will redenominate
-                    //EffectiveAmount = Convert.ToDouble(message.Bet.TrueStake.Truncate()), // will redenominate
-                    WinloseAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.WinLoss).Truncate()), // will redenominate
-                    EffectiveAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), // will redenominate
+                    WinloseAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.WinLoss).Truncate()),
+                    EffectiveAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()),
                     ResultUrl = Uri.EscapeDataString($"/result?client_id={message.Bet.ClientId}&transaction_id={message.Bet.BetId}"),
-                    //SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake.Truncate()), detain_amount = 0 }, // will redenominate
-                    SecondaryInfo = new { bet_amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), detain_amount = 0 }, // will redenominate
+                    SecondaryInfo = new { bet_amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), detain_amount = 0 },
                     OtherInfo = betSelectionData,
                     CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Signature = ""
@@ -1968,8 +1955,7 @@ namespace Platform.Operator.Servicev2.Repository
                         TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                         TransactionId = message.Bet.BetId.ToString().ToLower().Replace("-", ""),
                         TransactionType = transType,
-                        //SecondaryInfo = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake.Truncate()), detain_amount = 0 }, // will redenominate
-                        SecondaryInfo = new { bet_amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), detain_amount = 0 }, // will redenominate
+                        SecondaryInfo = new { bet_amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), detain_amount = 0 },
                         OtherInfo = new { betSelectionData },
                         CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                         Signature = ""
@@ -2400,7 +2386,6 @@ namespace Platform.Operator.Servicev2.Repository
                 CurrencyCode = ogParam.OGCurrencyCode,
                 bet_status = message.Bet.BetStatusName,
                 ParlayBonus = (double)message.Bet.ParlayBonus,
-                //ParlayBonusWinnings = (double)message.Bet.ParlayBonusWinnings, // will redenominate
                 ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
                 bet_list = message.BetSelections.Select(s => new
                 {
@@ -2452,12 +2437,10 @@ namespace Platform.Operator.Servicev2.Repository
             };
 
             var records = new[] { new {
-                           //amount = Convert.ToDouble(message.Bet.TrueStake.Truncate()), // will redenominate
-                           amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), // will redenominate
+                           amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()),
                            bet_place = message.BetSelections.Count > 1 ? "multiple" : "single",
                            transaction_id = message.Bet.BetId.ToString().ToLower().Replace("-",""),
-                           //secondary_info = new { bet_amount = Convert.ToDouble(message.Bet.TrueStake.Truncate()), detain_amount = 0 }, // will redenominate
-                           secondary_info = new { bet_amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), detain_amount = 0 }, // will redenominate
+                           secondary_info = new { bet_amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), detain_amount = 0 },
                            other_info = betSelectionData,
                            remark = (string)null
                         }};
@@ -2466,8 +2449,7 @@ namespace Platform.Operator.Servicev2.Repository
             {
                 PlayerCode = message.Bet.UserId,
                 TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                //TotalAmount = Convert.ToDouble(message.Bet.TrueStake.Truncate()), // will redenominate
-                TotalAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), // will redenominate
+                TotalAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()),
                 TransactionType = "rollback",
                 GameCode = ogParam.GameCode,
                 RoundId = "testround",

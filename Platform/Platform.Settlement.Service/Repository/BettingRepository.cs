@@ -831,7 +831,7 @@ namespace Platform.Settlement.Service.Repository
         private Tuple<bool, bool> ApplyLost(BettingContext context, OnUOFBetSettlement message, OnBetSettlement payload, Bet bet, List<BetSelection> selections, BetSelection betSelection, DateTime settledDate, bool isPublish, bool isManualSettle, string reason)
         {
             var isInsertToBetAudit = true;
-            isPublish = true;
+            isPublish = !string.IsNullOrEmpty(bet.BetIdRef) ? true : false; // don't publish if BetIdRef available (means bet is placed via OddsFeed integration)
 
             var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
@@ -933,7 +933,7 @@ namespace Platform.Settlement.Service.Repository
         private Tuple<bool, bool> ApplyAllSettled(BettingContext context, OnUOFBetSettlement message, OnBetSettlement payload, Bet bet, List<BetSelection> selections, BetSelection betSelection, DateTime settledDate, bool isPublish, bool isManualSettle, string reason, bool isResettle)
         {
             var isInsertToBetAudit = true;
-            isPublish = true;
+            isPublish = !string.IsNullOrEmpty(bet.BetIdRef) ? true : false; // don't publish if BetIdRef available (means bet is placed via OddsFeed integration)
 
             var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
@@ -1220,6 +1220,12 @@ namespace Platform.Settlement.Service.Repository
                             var bet = context.Bet.Find(betItem.BetId);
 
                             if (bet == null || bet.BetStatusId == (int)BetStatus.Waiting || bet.BetStatusId == (int)BetStatus.Cancelled || bet.BetStatusId == (int)BetStatus.Rejected || bet.BetStatusId == (int)BetStatus.CashedOut)
+                            {
+                                scope.Complete();
+                                continue;
+                            }
+
+                            if (!string.IsNullOrEmpty(bet.BetIdRef))
                             {
                                 scope.Complete();
                                 continue;

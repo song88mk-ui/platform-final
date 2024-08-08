@@ -943,6 +943,7 @@ namespace Platform.API.Repository
 
             return result;
         }
+
         private async Task<BaseResponseDTO<ClientResponse>> GetClient(string clientId)
         {
             var isGuid = Guid.TryParse(clientId, out Guid guid);
@@ -4535,6 +4536,11 @@ namespace Platform.API.Repository
                 ClientCode = clientResponse.Result.ClientCode,
                 LanguageCode = languageCode
             });
+        }
+
+        public async Task<BaseResponseDTO<ClientResponse>> GetClientInformation(string clientId)
+        {
+            return await GetClient(clientId);
         }
 
         public async Task<BaseResponseDTO<string>> AuthenticateOG(string clientId, string operatorToken, OGClientRequest ogParameters)

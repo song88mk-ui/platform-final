@@ -70,5 +70,6 @@ namespace Platform.Shared.Data.Betting.Entities
         [Column(TypeName = "decimal(26,12)")]
         public decimal OddsRef { get; set; }
         public bool IsAgent { get; set; }
+        public string BetIdRef { get; set; }
     }
 }

@@ -26,7 +26,7 @@ namespace Platform.API.Repository
         {
             _httpClient = httpClient;
             _telemetryClient = telemetryClient;
-            _ogConfig = configuration.GetSection("Custom").GetSection("OrientalGaming").Get<OrientalGamingConfigDTO>(); ;
+            _ogConfig = configuration.GetSection("Custom").GetSection("OrientalGaming").Get<OrientalGamingConfigDTO>();
             _httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
 

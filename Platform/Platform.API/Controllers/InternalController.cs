@@ -426,5 +426,25 @@ namespace Platform.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpGet("v1/client")]
+        public async Task<IActionResult> GetClient([FromQuery] string clientId)
+        {
+            var result = await _platformRepository.GetClientInformation(clientId);
+
+            return Result(result);
+        }
+
+        private IActionResult Result<T>(BaseResponseDTO<T> result)
+        {
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

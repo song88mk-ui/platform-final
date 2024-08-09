@@ -94,5 +94,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<TWResponseDTO>> GetLeagueHighlightsFixtures(string clientId, string langCode);
         Task<BaseResponseDTO<string>> AuthenticateOG(string clientId, string operatorToken, OGClientRequest ogParameters);
         Task<BaseResponseDTO<BetRecommendationsResponseDTO>> GetBetRecommendations(string clientId, string langCode);
+        Task<BaseResponseDTO<ClientResponse>> GetClientInformation(string clientId);
     }
 }

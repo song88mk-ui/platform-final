@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Platform.Operator.API.Controllers
 {
-    [ApiController, Route("oddsfeed"), EnableCors("AllowAllOrigins")]
+    [ApiController, EnableCors("AllowAllOrigins")]
     public class OddsFeedController : ControllerBase
     {
         public OddsFeedController()

@@ -15,7 +15,8 @@ namespace Platform.Job.Resettlement.Repository
                 var payload = JsonSerializer.Deserialize<OnBetSettlement>(bet.Info);
                 payload.IsRetry = true;
 
-                messageBroker.Publish(payload, bet.MessageType, "r.bet.operator", bet.CorrelationId);
+                if (string.IsNullOrEmpty(payload.Bet.BetIdRef))
+                    messageBroker.Publish(payload, bet.MessageType, "r.bet.operator", bet.CorrelationId);
             }
         }
     }

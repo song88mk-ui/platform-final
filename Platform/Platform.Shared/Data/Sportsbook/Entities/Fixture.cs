@@ -68,6 +68,13 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public List<SegmentTranslationMDB> SegNaTr { get; set; }
         public List<LeagueTranslationMDB> LeNaTr { get; set; }
         public List<FixtureTranslationMDB> FiNaTr { get; set; }
+        public string HoId { get; set; }
+        public int HoBeId { get; set; }
+        public string AwId { get; set; }
+        public int AwBeId { get; set; }
+        public int LeBeId { get; set; }
+        public List<PeriodScoreMDB> PeSc { get; set; }
+        public int CuSe { get; set; }
     }
 
     public class FixtureFilter
@@ -196,6 +203,15 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public int FiStId { get; set; }
         public string FiSp { get; set; }
         public int SpId { get; set; }
+    }
+
+    public class PeriodScoreMDB
+    {
+        [BsonId]
+        public string MaStCo { get; set; }
+        public int Ho { get; set; }
+        public int Aw { get; set; }
+        public string PeTy { get; set; }
     }
 
 }

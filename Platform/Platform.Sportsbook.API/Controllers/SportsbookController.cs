@@ -1196,7 +1196,7 @@ namespace Platform.Sportsbook.API.Controllers
 
         [HttpPost("v2/sportsbook/betrecommendations")]
         public async Task<IActionResult> GetBetRecommendations([FromBody] BetRecommendationDetailRequestDTO request)
-        {//
+        {
             var result = await _sportsbookRepository.GetBetRecommendationDetails(request);
 
             switch (result.StatusCode)

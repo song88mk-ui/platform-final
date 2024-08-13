@@ -921,7 +921,8 @@ namespace Platform.Settlement.Service.Repository
                     BetTypeId = betEntity.BetTypeId,
                     BetTypeName = betEntity.BetTypeName,
                     OddsRef = betEntity.OddsRef,
-                    IsAgent = betEntity.IsAgent
+                    IsAgent = betEntity.IsAgent,
+                    BetIdRef = betEntity.BetIdRef
                 });
             }
 
@@ -1068,7 +1069,8 @@ namespace Platform.Settlement.Service.Repository
                     BetTypeId = betEntity.BetTypeId,
                     BetTypeName = betEntity.BetTypeName,
                     OddsRef = betEntity.OddsRef,
-                    IsAgent = betEntity.IsAgent
+                    IsAgent = betEntity.IsAgent,
+                    BetIdRef = betEntity.BetIdRef
                 });
 
                 if (isResettle == false)
@@ -1168,7 +1170,8 @@ namespace Platform.Settlement.Service.Repository
                 BetTypeId = betEntity.BetTypeId,
                 BetTypeName = betEntity.BetTypeName,
                 OddsRef = betEntity.OddsRef,
-                IsAgent = betEntity.IsAgent
+                IsAgent = betEntity.IsAgent,
+                BetIdRef = betEntity.BetIdRef
             });
         }
 
@@ -1315,7 +1318,8 @@ namespace Platform.Settlement.Service.Repository
                                 BetTypeId = betEntity.BetTypeId,
                                 BetTypeName = betEntity.BetTypeName,
                                 OddsRef = betEntity.OddsRef,
-                                IsAgent = betEntity.IsAgent
+                                IsAgent = betEntity.IsAgent,
+                                BetIdRef = betEntity.BetIdRef
                             });
 
                             foreach (var betSelection in betSelections)

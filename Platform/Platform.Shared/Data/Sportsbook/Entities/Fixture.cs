@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace Platform.Shared.Data.Sportsbook.Entities
 {
+    [BsonIgnoreExtraElements]
     public class Fixture
     {
         [BsonId]

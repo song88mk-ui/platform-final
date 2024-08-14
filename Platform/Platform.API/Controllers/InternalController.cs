@@ -435,7 +435,7 @@ namespace Platform.API.Controllers
             return ReturnResult(result);
         }
 
-        [HttpPost("v1/sportsbook/translation/recovery")]
+        [HttpPost("v1/translation/recovery")]
         public async Task<IActionResult> TranslationRecovery([FromBody] TranslationRecoveryRequest request)
         {
             var result = await _platformRepository.TranslationRecovery(request);

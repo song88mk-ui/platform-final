@@ -6,6 +6,7 @@ using Platform.Shared.Data.Sportsbook;
 using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Data.Sportsbook.SQLEntities;
 using Platform.Shared.Enums;
+using Platform.Shared.Extensions;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
@@ -10628,6 +10629,71 @@ namespace Platform.Sportsbook.API.Repository
 
             return result;
         }
+
+        public async Task<BaseResponseDTO<bool>> TranslationRecovery(TranslationRecoveryRequestDTO request)
+        {
+            var validURNs = new string[] { "sr:competitor:", "sr:player:", "sr:tournament:" };
+            var specifier = request.Specifier.Replace(request.Specifier.Split(':').Last(), "");
+
+            if (!validURNs.Contains(specifier))
+            {
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Error.ToString()
+                };
+            }
+
+            var messageType = string.Empty;
+            var payload = string.Empty;
+
+            if (request.Specifier.Contains("sr:competitor:"))
+            {
+                messageType = "OnCompetitorTranslation";
+
+                payload = JsonSerializer.Serialize(new
+                {
+                    LanguageCode = request.LanguageCode,
+                    CompetitorSpecifier = request.Specifier
+                });
+            }
+            else if (request.Specifier.Contains("sr:player:"))
+            {
+                messageType = "OnPlayerTranslation";
+
+                payload = JsonSerializer.Serialize(new
+                {
+                    LanguageCode = request.LanguageCode,
+                    CompetitorSpecifier = request.Specifier
+                });
+            }
+            else if (request.Specifier.Contains("sr:tournament:"))
+            {
+                messageType = "OnLeagueTranslation";
+
+                payload = JsonSerializer.Serialize(new
+                {
+                    LanguageCode = request.LanguageCode,
+                    CompetitorSpecifier = request.Specifier
+                });
+            }
+
+            await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO
+            {
+                CorrelationId = $"{DateTime.UtcNow.GetEpochTimestamp()}",
+                MessageType = messageType,
+                RoutingKey = $"r.oe.sportsbook.{messageType.ToLower()}",
+                Payload = payload
+            });
+
+            return new BaseResponseDTO<bool>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = true
+            };
+        }
+
         private async Task<List<UserFavoriteDTO>> GetUserFavorite(string clientCode, string userId, LanguageCode languageCode)
         {
             var result = new List<UserFavoriteDTO>();

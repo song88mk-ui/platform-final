@@ -1,5 +1,4 @@
 ﻿using Platform.Shared.Models;
-using System;
 
 namespace Platform.Shared.Extensions
 {
@@ -55,14 +54,5 @@ namespace Platform.Shared.Extensions
 
         private static string EscapeSequence(this char c) => $@"\u{(int)c:X4}";
 
-    }
-
-    public static class DateTimeExtensions
-    {
-        public static long GetEpochTimestamp(this DateTime dateTime)
-        {
-            DateTimeOffset dto = new DateTimeOffset(dateTime);
-            return dto.ToUnixTimeMilliseconds();
-        }
     }
 }

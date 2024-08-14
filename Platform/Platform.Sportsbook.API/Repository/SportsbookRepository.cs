@@ -10664,7 +10664,7 @@ namespace Platform.Sportsbook.API.Repository
                 payload = JsonSerializer.Serialize(new
                 {
                     LanguageCode = request.LanguageCode,
-                    CompetitorSpecifier = request.Specifier
+                    PlayerSpecifier = request.Specifier
                 });
             }
             else if (request.Specifier.Contains("sr:tournament:"))
@@ -10674,7 +10674,7 @@ namespace Platform.Sportsbook.API.Repository
                 payload = JsonSerializer.Serialize(new
                 {
                     LanguageCode = request.LanguageCode,
-                    CompetitorSpecifier = request.Specifier
+                    LeagueSpecifier = request.Specifier
                 });
             }
 

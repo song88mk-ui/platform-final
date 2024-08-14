@@ -4575,6 +4575,26 @@ namespace Platform.API.Repository
             };
         }
 
+        public async Task<BaseResponseDTO<bool>> TranslationRecovery(TranslationRecoveryRequest request)
+        {
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            return await _sportsbookRepository.TranslationRecovery(new TranslationRecoveryRequestDTO
+            {
+                LanguageCode = languageCode,
+                Specifier = request.Specifier
+            });
+        }
+
         private async Task<ForexEURResponse> GetExchangeRate(string currencyCode)
         {
             if (currencyCode.ToUpper() == "USDT")

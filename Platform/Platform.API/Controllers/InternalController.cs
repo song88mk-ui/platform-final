@@ -432,10 +432,18 @@ namespace Platform.API.Controllers
         {
             var result = await _platformRepository.GetClientInformation(clientId);
 
-            return Result(result);
+            return ReturnResult(result);
         }
 
-        private IActionResult Result<T>(BaseResponseDTO<T> result)
+        [HttpPost("v1/sportsbook/translation/recovery")]
+        public async Task<IActionResult> TranslationRecovery([FromBody] TranslationRecoveryRequest request)
+        {
+            var result = await _platformRepository.TranslationRecovery(request);
+
+            return ReturnResult(result);
+        }
+
+        private IActionResult ReturnResult<T>(BaseResponseDTO<T> result)
         {
             switch (result.StatusCode)
             {

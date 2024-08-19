@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.VisualStudio.Web.CodeGeneration.Contracts.Messaging;
 using Platform.API.Models;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Platform.Entities;
@@ -26,6 +27,8 @@ namespace Platform.API.Repository
         private readonly PlatformContext _platformContext;
         private readonly IMemCache _memCache;
         private readonly IConfiguration _configuration;
+
+        private static List<string> _ogHighCurrencies = new List<string> { "IDRK", "VNDK", "MMKK", "INRK", "UZSK" };
 
         public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, ICasinoRepository casinoRepository, PlatformContext platformContext, IMemCache memCache, IConfiguration configuration)
         {
@@ -290,7 +293,13 @@ namespace Platform.API.Repository
                 };
             }
 
-            if (authenticationResponse.Result.Balance < request.Stake)
+            var stakeRequest = request.Stake;
+            if (ogParameters != null && _ogHighCurrencies.Contains(ogParameters.CurrencyCode))
+            {
+                stakeRequest = request.Stake / 1000;
+            }
+
+            if (authenticationResponse.Result.Balance < stakeRequest)
             {
                 return new BaseResponseDTO<BetResponseDTO>
                 {

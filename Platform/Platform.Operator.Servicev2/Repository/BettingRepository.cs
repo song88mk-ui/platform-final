@@ -825,7 +825,7 @@ namespace Platform.Operator.Servicev2.Repository
                     BetId = message.Bet.BetId,
                     UserId = message.Bet.UserId,
                     CurrencyCode = ogParam.OGCurrencyCode,
-                    bet_status = message.Bet.BetStatusName,
+                    bet_status = BetStatus.Running.ToString(),
                     ParlayBonus = (double)message.Bet.ParlayBonus,
                     ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
                     bet_list = message.BetSelections.Select(s => s.BetSelection).Select(s => new
@@ -859,7 +859,7 @@ namespace Platform.Operator.Servicev2.Repository
                         },
                         game_date_time = s.FixtureStartDate.GetEpochTimestamp(),
                         BetSelectionId = s.BetSelectionId,
-                        bet_selection_status = s.BetSelectionStatusName,
+                        bet_selection_status = BetStatus.Running.ToString(),
                         SegmentId = s.SegmentId,
                         SegmentName = s.SegmentName,
                         LeagueId = s.LeagueId,

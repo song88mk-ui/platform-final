@@ -7,6 +7,9 @@ namespace Platform.Shared.Extensions
 
         public static OGRequestDTO ToOGParam(this string input)
         {
+            if(string.IsNullOrEmpty(input)) 
+                return null;
+
             var ogParam = input.Split('|');
             if (ogParam.Length <= 2)
                 return null;
@@ -22,6 +25,9 @@ namespace Platform.Shared.Extensions
         }
         public static string GetCurrencyCode(this string input)
         {
+            if (string.IsNullOrEmpty(input))
+                return null;
+
             var result = input.Split('|');
             if (result.Length <= 1)
                 return null;

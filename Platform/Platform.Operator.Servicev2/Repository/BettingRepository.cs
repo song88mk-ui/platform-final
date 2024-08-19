@@ -1343,6 +1343,11 @@ namespace Platform.Operator.Servicev2.Repository
                 var signature = payload.ToSignOG(privateKey);
                 payload.Signature = signature;
 
+                var options = new JsonSerializerOptions
+                {
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+
                 AddOperatorLog(new OperatorLog
                 {
                     Direction = "REQUEST",
@@ -1350,13 +1355,13 @@ namespace Platform.Operator.Servicev2.Repository
                     ClientCode = message.Bet.ClientCode,
                     URL = $"{message.Bet.Endpoint}{path}",
                     BetId = message.Bet.BetId.ToString().ToUpper(),
-                    Info = JsonSerializer.Serialize(payload),
+                    Info = JsonSerializer.Serialize(payload, options),
                     OperatorToken = message.Bet.OperatorToken,
                     CorrelationId = correlationId,
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload, options), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -2037,6 +2042,11 @@ namespace Platform.Operator.Servicev2.Repository
                     }
                 }
 
+                var options = new JsonSerializerOptions
+                {
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+
                 if (message.IsAudit)
                     AddOperatorLog(new OperatorLog
                     {
@@ -2045,13 +2055,13 @@ namespace Platform.Operator.Servicev2.Repository
                         ClientCode = message.Bet.ClientCode,
                         URL = $"{message.Bet.Endpoint}{path}",
                         BetId = message.Bet.BetId.ToString().ToUpper(),
-                        Info = JsonSerializer.Serialize(payload),
+                        Info = JsonSerializer.Serialize(payload, options),
                         OperatorToken = message.Bet.OperatorToken,
                         CorrelationId = correlationId,
                         Timestamp = DateTime.UtcNow
                     });
 
-                var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload, options), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {

@@ -1516,7 +1516,7 @@ namespace Platform.Betting.API.Repository
                 if (request.BetType.Any())
                     betTypeFilter = request.BetType.ToList();
 
-                if (request.IsCurrent)
+                if (request.IsCurrent || request.BetStatusFilter == BetStatusFilter.Open)
                 {
                     var openBets = new List<int> { (int)BetStatus.Running };
 

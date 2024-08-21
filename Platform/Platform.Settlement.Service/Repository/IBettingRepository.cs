@@ -9,5 +9,6 @@ namespace Platform.Settlement.Service.Repository
         void ProcessBetCancellation(OnUOFBetCancellation message, IMessageBroker messageBroker, string correlationId);
         void ProcessBackOfficeBetCancellation(OnBOBetCancellaton message, IMessageBroker messageBroker, string correlationId);
         void ProcessBackOfficeManualSettlement(OnBOBetManualSettlement message, IMessageBroker messageBroker, string correlationId);
+        void ProcessOddsFeedBetCancellation(OnOddsFeedBetCancellation message, IMessageBroker messageBroker, string correlationId);
     }
 }

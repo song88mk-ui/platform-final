@@ -115,7 +115,8 @@ namespace Platform.Settlement.Service
                         _bettingRepository.ProcessBackOfficeManualSettlement(onBOBetManualSettlement, _messageBroker, correlationId);
                         break;
                     case "OnOddsFeedBetCancellation":
-                        //TODO
+                        var onOFBetCancellation = JsonSerializer.Deserialize<OnOddsFeedBetCancellation>(payload);
+                        _bettingRepository.ProcessOddsFeedBetCancellation(onOFBetCancellation, _messageBroker, correlationId);
                         break;
                 }
                 activity?.SetStatus(ActivityStatusCode.Ok);

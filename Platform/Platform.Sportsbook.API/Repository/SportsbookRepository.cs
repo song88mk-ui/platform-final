@@ -448,8 +448,10 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (finalResult.Any(c => c.SegmentId == item.SegmentId && c.LeagueId == item.LeagueId)) continue;
-                if (finalResult.Count == 15) break;
+                if (finalResult.Any(c => c.SegmentId == item.SegmentId && c.LeagueId == item.LeagueId))
+                    continue;
+                if (finalResult.Count == 15)
+                    break;
 
                 finalResult.Add(new TopLeague
                 {
@@ -544,7 +546,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (finalResult.Any(c => c.SegmentId == item.SegmentId && c.LeagueId == item.LeagueId)) continue;
+                if (finalResult.Any(c => c.SegmentId == item.SegmentId && c.LeagueId == item.LeagueId))
+                    continue;
 
                 finalResult.Add(new TopLeague
                 {
@@ -617,7 +620,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (finalResult.Any(c => c.SegmentId == item.SegmentId && c.LeagueId == item.LeagueId)) continue;
+                if (finalResult.Any(c => c.SegmentId == item.SegmentId && c.LeagueId == item.LeagueId))
+                    continue;
 
                 finalResult.Add(new TopLeague
                 {
@@ -689,8 +693,10 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (finalResult.Any(c => c.FixtureId == item.FixtureId)) continue;
-                if (finalResult.Count == 10) break;
+                if (finalResult.Any(c => c.FixtureId == item.FixtureId))
+                    continue;
+                if (finalResult.Count == 10)
+                    break;
 
                 finalResult.Add(item);
             }
@@ -754,8 +760,10 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (finalResult.Contains(item.FixtureId)) continue;
-                if (finalResult.Count == 10) break;
+                if (finalResult.Contains(item.FixtureId))
+                    continue;
+                if (finalResult.Count == 10)
+                    break;
 
                 finalResult.Add(item.FixtureId);
             }
@@ -858,9 +866,9 @@ namespace Platform.Sportsbook.API.Repository
             var markets = primaryMarketCollection.Find(marketFilter).Project<MarketCount>(marketProjection).ToList();
 
             fixtureIds = markets.Select(s => s.FiId).Distinct().ToList();
-			fixtures = fixtures.Where(c => fixtureIds.Contains(c.FiId)).ToList();
+            fixtures = fixtures.Where(c => fixtureIds.Contains(c.FiId)).ToList();
 
-			if (fixtures.Count == 0)
+            if (fixtures.Count == 0)
             {
                 return new BaseResponseDTO<SportsResponseDTO>
                 {
@@ -873,11 +881,11 @@ namespace Platform.Sportsbook.API.Repository
             var sportIds = fixtures.Select(s => s.SpId).Distinct().ToList();
 
             var leagueSortOrder = GetTierLeagueOrder().Where(c => sportIds.Contains(c.SportId)).ToList();
-			var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId && c.IsActive == true).ToList();
+            var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId && c.IsActive == true).ToList();
             var segmentOrder = GetSegmentOrder(request.ClientId);
             var leagueOrder = GetLeagueOrder(request.ClientId);
             var activeSportIds = sportSortOrder.Select(s => s.SportId).ToList();
-			var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
+            var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
                                     new CountrySegment
                                     {
                                         CountryId = s.Id,
@@ -885,7 +893,7 @@ namespace Platform.Sportsbook.API.Repository
                                         SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
                                     }).ToList()).ToList();
 
-			var result = fixtures.Where(c => activeSportIds.Contains(c.SpId) && c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
+            var result = fixtures.Where(c => activeSportIds.Contains(c.SpId) && c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
             {
                 SportId = s.SpId,
                 SportName = GetSportName(s.SpNa, s.SpNaTr, request.LanguageCode),
@@ -910,7 +918,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in sportResult)
             {
-                if (finalResult.Any(c => c.SportId == item.SportId)) continue;
+                if (finalResult.Any(c => c.SportId == item.SportId))
+                    continue;
 
                 var refFixtures = fixtures.Where(c => c.SpId == item.SportId).ToList();
                 //var fixture = refFixtures.FirstOrDefault(c => c.SpId == item.SportId);
@@ -1760,7 +1769,8 @@ namespace Platform.Sportsbook.API.Repository
                             });
                         }
 
-                        if (result.Any(c => c.FixtureId == item.FiId.ToString())) continue;
+                        if (result.Any(c => c.FixtureId == item.FiId.ToString()))
+                            continue;
 
                         var filteredBetBuilderMarketTemplates = new List<BetBuilderMarketTemplates>();
                         var isBetBuilder = false;
@@ -1865,7 +1875,8 @@ namespace Platform.Sportsbook.API.Repository
                             });
                         }
 
-                        if (result.Any(c => c.FixtureId == item.FiId.ToString())) continue;
+                        if (result.Any(c => c.FixtureId == item.FiId.ToString()))
+                            continue;
 
                         var filteredBetBuilderMarketTemplates = new List<BetBuilderMarketTemplates>();
                         var isBetBuilder = false;
@@ -1983,7 +1994,8 @@ namespace Platform.Sportsbook.API.Repository
 
                 foreach (var item in leagueResult)
                 {
-                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.LeId.ToString())) continue;
+                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.LeId.ToString()))
+                        continue;
 
                     result.Add(new UserFavoriteDTO
                     {
@@ -2008,7 +2020,8 @@ namespace Platform.Sportsbook.API.Repository
 
                 foreach (var item in fixtureResult)
                 {
-                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.FiId.ToString())) continue;
+                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.FiId.ToString()))
+                        continue;
 
                     result.Add(new UserFavoriteDTO
                     {
@@ -2325,7 +2338,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (initialResult.Count == limit) break;
+                if (initialResult.Count == limit)
+                    break;
 
                 initialResult.Add(item);
             }
@@ -2341,7 +2355,8 @@ namespace Platform.Sportsbook.API.Repository
 
                 foreach (var template in templates)
                 {
-                    if (marketTemplateIds.Any(c => c == template)) continue;
+                    if (marketTemplateIds.Any(c => c == template))
+                        continue;
 
                     marketTemplateIds.Add(template);
                 }
@@ -2414,7 +2429,8 @@ namespace Platform.Sportsbook.API.Repository
                     CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0
                 });
 
-                if (finalResult.Count == 10) break;
+                if (finalResult.Count == 10)
+                    break;
             }
 
             var returnResult = new BaseResponseDTO<TWResponseDTO>
@@ -2485,7 +2501,8 @@ namespace Platform.Sportsbook.API.Repository
                 var count = initialList.Count();
                 var sport = initialList.FirstOrDefault();
 
-                if (count == 0) continue;
+                if (count == 0)
+                    continue;
 
                 result.Add(new FixtureCount
                 {
@@ -2565,7 +2582,8 @@ namespace Platform.Sportsbook.API.Repository
                 var count = initialList.Count();
                 var sport = initialList.FirstOrDefault();
 
-                if (count == 0) continue;
+                if (count == 0)
+                    continue;
 
                 if (initialList.Count > 300)
                     count = 300;
@@ -2694,7 +2712,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
+                if (initialResult.Any(c => c.FixtureId == item.FixtureId))
+                    continue;
 
                 initialResult.Add(item);
             }
@@ -2872,7 +2891,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
+                if (initialResult.Any(c => c.FixtureId == item.FixtureId))
+                    continue;
 
                 initialResult.Add(item);
             }
@@ -3099,7 +3119,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
+                if (initialResult.Any(c => c.FixtureId == item.FixtureId))
+                    continue;
 
 
                 initialResult.Add(item);
@@ -3340,7 +3361,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
+                if (initialResult.Any(c => c.FixtureId == item.FixtureId))
+                    continue;
 
                 initialResult.Add(item);
             }
@@ -3573,7 +3595,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
+                if (initialResult.Any(c => c.FixtureId == item.FixtureId))
+                    continue;
 
                 initialResult.Add(item);
 
@@ -3811,7 +3834,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
+                if (initialResult.Any(c => c.FixtureId == item.FixtureId))
+                    continue;
 
                 initialResult.Add(item);
             }
@@ -4005,7 +4029,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
+                if (initialResult.Any(c => c.FixtureId == item.FixtureId))
+                    continue;
 
                 initialResult.Add(item);
             }
@@ -4195,7 +4220,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
+                if (initialResult.Any(c => c.FixtureId == item.FixtureId))
+                    continue;
 
                 initialResult.Add(item);
             }
@@ -4363,7 +4389,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
+                if (initialResult.Any(c => c.FixtureId == item.FixtureId))
+                    continue;
 
                 initialResult.Add(item);
             }
@@ -4518,7 +4545,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (initialResult.Any(c => c.FixtureId == item.FixtureId)) continue;
+                if (initialResult.Any(c => c.FixtureId == item.FixtureId))
+                    continue;
 
                 initialResult.Add(item);
             }
@@ -4702,8 +4730,10 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in resultInitial)
             {
-                if (finalResult.Any(c => c.SegmentId == item.SegmentId && c.LeagueId == item.LeagueId)) continue;
-                if (finalResult.Count == 15) break;
+                if (finalResult.Any(c => c.SegmentId == item.SegmentId && c.LeagueId == item.LeagueId))
+                    continue;
+                if (finalResult.Count == 15)
+                    break;
 
                 finalResult.Add(new TopLeague
                 {
@@ -5157,8 +5187,10 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var league in finalLeagues)
             {
-                if (leagueListStartsWith.Any(c => c.SportId == league.SpId && c.SegmentId == league.SegId && c.LeagueId == league.LeId)) continue;
-                if (leagueListNotStartsWith.Any(c => c.SportId == league.SpId && c.SegmentId == league.SegId && c.LeagueId == league.LeId)) continue;
+                if (leagueListStartsWith.Any(c => c.SportId == league.SpId && c.SegmentId == league.SegId && c.LeagueId == league.LeId))
+                    continue;
+                if (leagueListNotStartsWith.Any(c => c.SportId == league.SpId && c.SegmentId == league.SegId && c.LeagueId == league.LeId))
+                    continue;
 
                 if (request.LanguageCode == LanguageCode.EN)
                 {
@@ -5274,8 +5306,10 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var fixture in finalFixtures)
             {
-                if (fixtureListStartsWith.Any(c => c.FixtureId == fixture.FiId.ToString())) continue;
-                if (fixtureListNotStartsWith.Any(c => c.FixtureId == fixture.FiId.ToString())) continue;
+                if (fixtureListStartsWith.Any(c => c.FixtureId == fixture.FiId.ToString()))
+                    continue;
+                if (fixtureListNotStartsWith.Any(c => c.FixtureId == fixture.FiId.ToString()))
+                    continue;
 
                 if (request.LanguageCode == LanguageCode.EN)
                 {
@@ -7068,7 +7102,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in fixtures)
             {
-                if (finalResult.Any(c => c.SportId == item.SpId)) continue;
+                if (finalResult.Any(c => c.SportId == item.SpId))
+                    continue;
 
                 finalResult.Add(new SportLookup { SportId = item.SpId, SportName = GetSportName(item.SpNa, item.SpNaTr, request.LanguageCode) });
             }
@@ -7116,7 +7151,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in fixtures)
             {
-                if (finalResult.Any(c => c.SportId == item.SpId && c.SegmentId == item.SegId)) continue;
+                if (finalResult.Any(c => c.SportId == item.SpId && c.SegmentId == item.SegId))
+                    continue;
 
                 finalResult.Add(new SegmentLookup
                 {
@@ -7170,7 +7206,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in fixtures)
             {
-                if (finalResult.Any(c => c.SportId == item.SpId && c.SegmentId == item.SegId && c.LeagueId == item.LeId)) continue;
+                if (finalResult.Any(c => c.SportId == item.SpId && c.SegmentId == item.SegId && c.LeagueId == item.LeId))
+                    continue;
 
                 finalResult.Add(new LeagueLookup
                 {
@@ -8851,7 +8888,8 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var item in result)
             {
-                if (finalResult.Any(c => c.SportId == item.SportId)) continue;
+                if (finalResult.Any(c => c.SportId == item.SportId))
+                    continue;
 
                 finalResult.Add(item);
             }
@@ -9108,7 +9146,8 @@ namespace Platform.Sportsbook.API.Repository
 
             var sportIds = new List<int>() { request.SportId };
 
-            if (hasVirtualSports) sportIds.Add(1000 + request.SportId);
+            if (hasVirtualSports)
+                sportIds.Add(1000 + request.SportId);
 
             foreach (var sportId in sportIds)
             {
@@ -9338,7 +9377,8 @@ namespace Platform.Sportsbook.API.Repository
 
             var sportIds = new List<int>();
 
-            if (hasVirtualSports) sportIds.Add(1000 + request.SportId);
+            if (hasVirtualSports)
+                sportIds.Add(1000 + request.SportId);
 
             sportIds.Add(request.SportId);
 
@@ -9478,7 +9518,8 @@ namespace Platform.Sportsbook.API.Repository
 
             var sportIds = new List<int>();
 
-            if (hasVirtualSports) sportIds.Add(1000 + request.SportId);
+            if (hasVirtualSports)
+                sportIds.Add(1000 + request.SportId);
 
             sportIds.Add(request.SportId);
 
@@ -10632,7 +10673,7 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<bool>> TranslationRecovery(TranslationRecoveryRequestDTO request)
         {
-            var validURNs = new string[] { "sr:competitor:", "sr:player:", "sr:tournament:" };
+            var validURNs = new string[] { "sr:competitor:", "sr:player:", "sr:tournament:", "sr:sport:" };
             var specifier = request.Specifier.Replace(request.Specifier.Split(':').Last(), "");
 
             if (!validURNs.Contains(specifier))
@@ -10677,6 +10718,27 @@ namespace Platform.Sportsbook.API.Repository
                     LeagueSpecifier = request.Specifier
                 });
             }
+            else if (request.Specifier.Contains("sr:sport:"))
+            {
+                var tempSportId = request.Specifier.Split(":").LastOrDefault();
+
+                if (!int.TryParse(tempSportId, out int sportId))
+                {
+                    return new BaseResponseDTO<bool>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = StatusCode.Error.ToString()
+                    };
+                }
+
+                messageType = "OnSportTranslation";
+
+                payload = JsonSerializer.Serialize(new
+                {
+                    LanguageCode = request.LanguageCode,
+                    SportId = sportId
+                });
+            }
 
             await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO
             {
@@ -10719,7 +10781,8 @@ namespace Platform.Sportsbook.API.Repository
 
                 foreach (var item in leagueResult)
                 {
-                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.LeId.ToString())) continue;
+                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.LeId.ToString()))
+                        continue;
 
                     result.Add(new UserFavoriteDTO
                     {
@@ -10744,7 +10807,8 @@ namespace Platform.Sportsbook.API.Repository
 
                 foreach (var item in fixtureResult)
                 {
-                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.FiId.ToString())) continue;
+                    if (result.Any(c => c.HierarchyId == (int)UserFavoriteHierarchy.League && c.SportId == item.SpId && c.Id == item.FiId.ToString()))
+                        continue;
 
                     result.Add(new UserFavoriteDTO
                     {

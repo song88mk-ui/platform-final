@@ -10765,10 +10765,12 @@ namespace Platform.Sportsbook.API.Repository
             if (translations == null)
                 return name;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
+            var translation = GetTranslations(languageCode);
+            //var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
+            var result = translation.Where(c => c.Name == name.ToLower().Replace(' ', '_').Trim()).FirstOrDefault();
 
             if (result != null)
-                return result.SpNa;
+                return result.Value;
             else
                 return name;
         }
@@ -11712,27 +11714,19 @@ namespace Platform.Sportsbook.API.Repository
             return result;
         }
 
-        private List<MarketTemplatePlayerProps> GetMarketTemplatePlayerProps()
-        {
-            return _memCache.GetCache("mtpp", () => _sportsbookContext.MarketTemplatePlayerProps.AsNoTracking().ToList(), 24);
-        }
+        private List<MarketTemplatePlayerProps> GetMarketTemplatePlayerProps() => _memCache.GetCache("mtpp", () => _sportsbookContext.MarketTemplatePlayerProps.AsNoTracking().ToList(), 24);
 
-        private List<Translation> GetTranslations()
-        {
-            return _memCache.GetCache("tr", () => _sportsbookContext.Translation.AsNoTracking().ToList(), 24);
-        }
+        private List<Translation> GetTranslations() => _memCache.GetCache("tr", () => _sportsbookContext.Translation.AsNoTracking().ToList(), 24);
+        private List<Translation> GetTranslations(LanguageCode languageCode) => _memCache.GetCache($"tr-{languageCode.ToString().ToLower()}", () => _sportsbookContext.Translation.AsNoTracking().Where(c => c.LanguageCode == languageCode.ToString().ToUpper()).ToList(), 24);
 
-        private Maintenance GetMaintenance()
-        {
-            return _memCache.GetCache("mtnn", () =>
-            {
+        private Maintenance GetMaintenance() => _memCache.GetCache("mtnn", () =>
+                                                         {
 
-                var maintenanceFilter = Builders<Maintenance>.Filter.Where(c => c.ma == "maintenance");
-                var maintenance = primaryMaintenanceCollection.Find(maintenanceFilter).FirstOrDefault();
+                                                             var maintenanceFilter = Builders<Maintenance>.Filter.Where(c => c.ma == "maintenance");
+                                                             var maintenance = primaryMaintenanceCollection.Find(maintenanceFilter).FirstOrDefault();
 
-                return maintenance;
-            }, 24);
-        }
+                                                             return maintenance;
+                                                         }, 24);
 
         private bool IsBetBuilder(int sportId, int fixtureTypeId, int fixtureStatusId, List<BetBuilderMarketTemplates> betBuilderMarketTemplates)
         {

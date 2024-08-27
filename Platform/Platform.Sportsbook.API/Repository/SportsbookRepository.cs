@@ -10720,23 +10720,12 @@ namespace Platform.Sportsbook.API.Repository
             }
             else if (request.Specifier.Contains("sr:sport:"))
             {
-                var tempSportId = request.Specifier.Split(":").LastOrDefault();
-
-                if (!int.TryParse(tempSportId, out int sportId))
-                {
-                    return new BaseResponseDTO<bool>
-                    {
-                        StatusCode = StatusCode.Error,
-                        Message = StatusCode.Error.ToString()
-                    };
-                }
-
                 messageType = "OnSportTranslation";
 
                 payload = JsonSerializer.Serialize(new
                 {
                     LanguageCode = request.LanguageCode,
-                    SportId = sportId
+                    SportSpecifier = request.Specifier
                 });
             }
 

@@ -1,0 +1,28 @@
+#FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+#FROM mcr.microsoft.com/dotnet/sdk:3.1 AS build
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+
+WORKDIR /source
+
+COPY Platform.Placement.Servicev2 Platform.Placement.Servicev2
+COPY Platform.Shared Platform.Shared
+
+RUN cd Platform.Placement.Servicev2 && \
+  dotnet restore
+
+RUN cd Platform.Placement.Servicev2 && \
+  dotnet build --configuration Release \
+  --framework netcoreapp3.1 \
+  --runtime linux-x64
+  #--self-contained true \
+
+RUN cd Platform.Placement.Servicev2 && \
+  dotnet publish -o publish && \
+  cd publish && rm -f appsettings.Development.json
+
+FROM mcr.microsoft.com/dotnet/aspnet:3.1
+WORKDIR /app
+
+COPY --from=build /source/Platform.Placement.Servicev2/publish .
+CMD ["/usr/bin/dotnet", "Platform.Placement.Servicev2.dll"]
+

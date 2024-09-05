@@ -10673,7 +10673,7 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<bool>> TranslationRecovery(TranslationRecoveryRequestDTO request)
         {
-            var validURNs = new string[] { "sr:competitor:", "sr:player:", "sr:tournament:", "sr:sport:" };
+            var validURNs = new string[] { "sr:competitor:", "sr:player:", "sr:tournament:", "sr:sport:", "sr:category:" };
             var specifier = request.Specifier.Replace(request.Specifier.Split(':').Last(), "");
 
             if (!validURNs.Contains(specifier))
@@ -10689,45 +10689,21 @@ namespace Platform.Sportsbook.API.Repository
             var payload = string.Empty;
 
             if (request.Specifier.Contains("sr:competitor:"))
-            {
                 messageType = "OnCompetitorTranslation";
-
-                payload = JsonSerializer.Serialize(new
-                {
-                    LanguageCode = request.LanguageCode,
-                    CompetitorSpecifier = request.Specifier
-                });
-            }
             else if (request.Specifier.Contains("sr:player:"))
-            {
                 messageType = "OnPlayerTranslation";
-
-                payload = JsonSerializer.Serialize(new
-                {
-                    LanguageCode = request.LanguageCode,
-                    PlayerSpecifier = request.Specifier
-                });
-            }
             else if (request.Specifier.Contains("sr:tournament:"))
-            {
                 messageType = "OnLeagueTranslation";
-
-                payload = JsonSerializer.Serialize(new
-                {
-                    LanguageCode = request.LanguageCode,
-                    LeagueSpecifier = request.Specifier
-                });
-            }
             else if (request.Specifier.Contains("sr:sport:"))
-            {
                 messageType = "OnSportTranslation";
+            else if (request.Specifier.Contains("sr:category:"))
+                messageType = "OnSegmentTranslation";
 
-                payload = JsonSerializer.Serialize(new
-                {
-                    LanguageCode = request.LanguageCode,
-                    SportSpecifier = request.Specifier
-                });
-            }
+            payload = JsonSerializer.Serialize(new
+            {
+                LanguageCode = request.LanguageCode,
+                SportSpecifier = request.Specifier
+            });
 
             await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO
             {

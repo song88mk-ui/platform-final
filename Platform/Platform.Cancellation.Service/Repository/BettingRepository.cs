@@ -1,10 +1,12 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using Sportradar.MTS.SDK.API;
 using Sportradar.MTS.SDK.Entities.Builders;
 using Sportradar.MTS.SDK.Entities.Enums;
 using System;
+using System.Text.Json;
 
 namespace Platform.Cancellation.Service.Repository
 {
@@ -12,9 +14,11 @@ namespace Platform.Cancellation.Service.Repository
     {
         private IBuilderFactory _factory;
         private readonly IConfiguration _configuration;
-        public BettingRepository(IConfiguration configuration)
+        private ILogger<BettingRepository> _logger;
+        public BettingRepository(IConfiguration configuration, ILogger<BettingRepository> logger)
         {
             _configuration = configuration;
+            _logger = logger;
         }
         public void ProcessMTSTimeout(OnBetTimeout message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
         {
@@ -26,7 +30,15 @@ namespace Platform.Cancellation.Service.Repository
 
                     var betCancel = _factory.CreateTicketCancelBuilder().BuildTicket(message.BetId.ToString().ToUpper(), Convert.ToInt32(_configuration["Custom:BookmakerId"]), TicketCancellationReason.TimeoutTriggered);
 
+                    var payload = new
+                    {
+                        message = JsonSerializer.Serialize(message),
+                        payload = JsonSerializer.Serialize(betCancel)
+                    };
+
+                    _logger.LogInformation($"ProcessMTSTimeout (Request)- {payload}");
                     var response = mts.SendTicketCancelBlocking(betCancel);
+                    _logger.LogInformation($"ProcessMTSTimeout (Response)- {payload}");
                 }
                 catch (Exception ex)
                 {

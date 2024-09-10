@@ -37,11 +37,14 @@ namespace Platform.Cancellation.Service
             {
                 try
                 {
-                    Console.WriteLine("Starting");
+                    _logger.LogInformation("Application Starting");
+
+#if (!DEBUG)
                     var config = MtsSdk.GetConfiguration();
 
                     _mts = new MtsSdk(config);
                     _mts.Open();
+#endif
                 }
                 catch (Exception ex)
                 {
@@ -57,9 +60,12 @@ namespace Platform.Cancellation.Service
         {
             if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
             {
+                _logger.LogInformation("Application Stopped");
                 try
                 {
+#if (!DEBUG)
                     _mts.Close();
+#endif
                 }
                 catch (Exception ex)
                 {

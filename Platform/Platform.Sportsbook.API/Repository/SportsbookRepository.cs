@@ -10166,7 +10166,7 @@ namespace Platform.Sportsbook.API.Repository
         }
         public async Task<BaseResponseDTO<BetRecommendationsResponseDTO>> GetBetRecommendationDetails(BetRecommendationDetailRequestDTO request)
         {
-            var take = 3;
+            var take = 10;
             var maintenance = GetMaintenance();
 
             if (maintenance.isMa)

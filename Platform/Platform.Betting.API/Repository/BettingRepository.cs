@@ -2974,7 +2974,8 @@ namespace Platform.Betting.API.Repository
 
             var query = _bettingContext.ClientTopMarket.AsNoTracking()
                             .Where(c => c.MarketStatusId == 1).ToList()
-                            .GroupBy(g => new { g.MarketId, g.CurrencyCode})
+                            //.GroupBy(g => new { g.MarketId, g.CurrencyCode})
+                            .GroupBy(g => g.MarketId)
                             .Select(g => g.OrderByDescending(o => o.BetCount).First())
                             .OrderBy(o => o.ClientId == request.ClientId.ToString().ToUpper() ? 0 : 1)
                             .ThenBy(o => o.CurrencyCode == request.CurrencyCode.ToUpper() ? 0 : 1)

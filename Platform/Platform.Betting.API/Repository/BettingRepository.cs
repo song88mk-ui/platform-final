@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
+using Platform.Shared.Data.Sportsbook.SQLEntities;
+using Platform.Shared.Data.Sportsbook;
 using Platform.Shared.Enums;
 using Platform.Shared.Helpers;
 using Platform.Shared.MessageModels;
@@ -2972,16 +2974,21 @@ namespace Platform.Betting.API.Repository
         {
             var take = 50;
 
-            var query = _bettingContext.ClientTopMarket.AsNoTracking()
-                            .Where(c => c.MarketStatusId == 1).ToList()
-                            //.GroupBy(g => new { g.MarketId, g.CurrencyCode})
-                            .GroupBy(g => g.MarketId)
-                            .Select(g => g.OrderByDescending(o => o.BetCount).First())
-                            .OrderBy(o => o.ClientId == request.ClientId.ToString().ToUpper() ? 0 : 1)
-                            .ThenBy(o => o.CurrencyCode == request.CurrencyCode.ToUpper() ? 0 : 1)
-                            .ThenBy(o => o.CurrencyCode == "-" ? 1 : 0)
-                            .ThenByDescending(o => o.BetCount)
-                            .Take(take);
+            // Converted to stored proc
+            //var query = _bettingContext.ClientTopMarket.AsNoTracking()
+            //                .Where(c => c.MarketStatusId == 1).ToList()
+            //                .GroupBy(o => o.MarketId)
+            //                .Select(g => g.OrderBy(o => o.ClientId == request.ClientId.ToString().ToUpper() ? 0 : 1)
+            //                            .ThenBy(o => o.CurrencyCode == request.CurrencyCode.ToUpper() ? 0 : 1)
+            //                            .ThenBy(o => o.CurrencyCode == "-" ? 1 : 0)
+            //                            .ThenByDescending(o => o.BetCount).First())
+            //                .OrderBy(o => o.ClientId == request.ClientId.ToString().ToUpper() ? 0 : 1)
+            //                .ThenBy(o => o.CurrencyCode == request.CurrencyCode.ToUpper() ? 0 : 1)
+            //                .ThenBy(o => o.CurrencyCode == "-" ? 1 : 0)
+            //                .ThenByDescending(o => o.BetCount)
+            //                .Take(take);
+
+            var query = _bettingContext.ClientTopMarket.FromSqlRaw("GetTopMarketBets {0}, {1}, {2}", request.ClientId.ToString().ToUpper(), request.CurrencyCode, take).ToList();
 
             var markets = query.Select((s, i) => new BetRecommendationMarketDTO()
             {
@@ -2991,7 +2998,7 @@ namespace Platform.Betting.API.Repository
             }).ToList();
 
             // Used to validate the query
-            //var testMarket = query.Select((s, i) => new
+            //var testMarket = query.Select((s,i) => new
             //{
             //    s.ClientCode,
             //    s.FixtureId,

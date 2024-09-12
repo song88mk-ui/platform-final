@@ -2246,12 +2246,12 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/betrecommendations")]
-        public async Task<IActionResult> GetBetRecommendations()
+        public async Task<IActionResult> GetBetRecommendations([FromQuery] string currencyCode = "-")
         {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetBetRecommendations(clientId, languageCode);
+            var result = await _platformRepository.GetBetRecommendations(clientId, languageCode, currencyCode);
 
             var properties = new Dictionary<string, string>
             {

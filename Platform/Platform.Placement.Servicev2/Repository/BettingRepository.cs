@@ -26,7 +26,7 @@ namespace Platform.Placement.Servicev2.Repository
         {
             _configuration = configuration;
         }
-        public void ProcesssBetPlacement(OnBetPlacement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
+        public void ProcesssBetPlacement(OnBetPlacement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId, int reprocessAttempt = 0)
         {
             var payload = new OnBetPlacement();
             payload.IsBoosted = message.IsBoosted;
@@ -195,8 +195,8 @@ namespace Platform.Placement.Servicev2.Repository
 
                     //Console.WriteLine($"{DateTime.UtcNow} - END - Accepted - {message.Bet.BetId.ToString().ToUpper()}");
 
-                    if (isReprocess)
-                        ProcesssBetPlacement(message, mts, messageBroker, correlationId);
+                    if (isReprocess && reprocessAttempt < 1)
+                        ProcesssBetPlacement(message, mts, messageBroker, correlationId, reprocessAttempt++);
                 }
                 catch (Exception ex)
                 {

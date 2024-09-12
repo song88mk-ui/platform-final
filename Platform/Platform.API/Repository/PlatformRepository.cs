@@ -15,6 +15,7 @@ using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Platform.API.Repository
 {
@@ -748,7 +749,8 @@ namespace Platform.API.Repository
                 {
                     foreach (var selection in bet.Selections)
                     {
-                        if (betFixtureTranslation.Selections.Any(c => c.SelectionId == Convert.ToInt64(selection.SelectionId))) continue;
+                        if (betFixtureTranslation.Selections.Any(c => c.SelectionId == Convert.ToInt64(selection.SelectionId)))
+                            continue;
 
                         betFixtureTranslation.Selections.Add(new BetFixtureSelectionTranslationRequestDTO
                         {
@@ -4514,7 +4516,7 @@ namespace Platform.API.Repository
             });
         }
 
-        public async Task<BaseResponseDTO<BetRecommendationsResponseDTO>> GetBetRecommendations(string clientId, string langCode)
+        public async Task<BaseResponseDTO<BetRecommendationsResponseDTO>> GetBetRecommendations(string clientId, string langCode, string currencyCode)
         {
 
             var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
@@ -4525,6 +4527,15 @@ namespace Platform.API.Repository
                 {
                     StatusCode = StatusCode.Unsupported_LanguageCode,
                     Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            if (currencyCode != "-" && !IsValidCurrencyCode(currencyCode))
+            {
+                return new BaseResponseDTO<BetRecommendationsResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_CurrencyCode,
+                    Message = StatusCode.Unsupported_CurrencyCode.ToString().Replace('_', ' ')
                 };
             }
 
@@ -4543,7 +4554,8 @@ namespace Platform.API.Repository
             {
                 ClientId = clientResponse.Result.ClientId,
                 ClientCode = clientResponse.Result.ClientCode,
-                LanguageCode = languageCode
+                LanguageCode = languageCode,
+                CurrencyCode = currencyCode
             });
         }
 
@@ -4634,6 +4646,10 @@ namespace Platform.API.Repository
             return requestCurrencyCode.ToString().ToUpper() == userCurrencyCode.ToUpper() ? true : false;
         }
         private bool IsValidCurrencyCode(CurrencyCode currencyCode)
+        {
+            return Enum.IsDefined(typeof(CurrencyCode), currencyCode) ? true : false;
+        }
+        private bool IsValidCurrencyCode(string currencyCode)
         {
             return Enum.IsDefined(typeof(CurrencyCode), currencyCode) ? true : false;
         }

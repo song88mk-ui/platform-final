@@ -20,5 +20,6 @@ namespace Platform.Shared.MessageModels
         public int MarketStatusId { get; set; }
         public string MarketStatusName { get; set; }
         public int MarketSelectionCount { get; set; }
+        public string CurrencyCode { get; set; }
     }
 }

@@ -18,5 +18,6 @@ namespace Platform.Shared.Models
         public long FixtureId { get; set; }
         public long MarketId { get; set; }
         public int SortOrder { get; set; }
+        public string CurrencyCode { get; set; }
     }
 }

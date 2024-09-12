@@ -186,7 +186,8 @@ namespace Platform.Betting.API.Repository
                     SportId = request.Selections.FirstOrDefault().SportId
                 });
 
-                var selection = request.Selections.FirstOrDefault(); ;
+                var selection = request.Selections.FirstOrDefault();
+                ;
 
                 List<OverrideSportConfig> overrideSportConfig = JsonSerializer.Deserialize<List<OverrideSportConfig>>(betConfig.OverrideConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 var checkOverride = overrideSportConfig.Where(a => a.SportId == selection.SportId).FirstOrDefault();
@@ -2977,11 +2978,13 @@ namespace Platform.Betting.API.Repository
                             .Select(g => g.OrderByDescending(o => o.BetCount).First())
                             .OrderBy(o => o.ClientId == request.ClientId.ToString().ToUpper() ? 0 : 1)
                             .ThenByDescending(o => o.BetCount)
+                            //.ThenBy(o => o.CurrencyCode == request.CurrencyCode.ToUpper() ? 0 : 1)
                             .Take(take)
                             .Select((s, i) => new BetRecommendationMarketDTO()
                             {
                                 FixtureId = s.FixtureId,
                                 MarketId = s.MarketId,
+                                CurrencyCode = s.CurrencyCode,
                                 SortOrder = i + 1
                             })
                             .ToList();

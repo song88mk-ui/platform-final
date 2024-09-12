@@ -9,6 +9,7 @@ namespace Platform.Shared.Data.Betting.Entities
         public string ClientId { get; set; }
         public string ClientCode { get; set; }
         public string ClientName { get; set; }
+        public string CurrencyCode { get; set; }
         public long FixtureId { get; set; }
         public string FixtureName { get; set; }
         public long MarketId { get; set; }

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Platform.Shared.Data.Betting;
+using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using System;
 using System.Linq;
@@ -27,7 +28,7 @@ namespace Platform.ClientTopMarket.Service.Repository
 
                 using (var context = new BettingContext(optionsBuilder.Options))
                 {
-                    var market = await context.ClientTopMarket.FindAsync(message.FixtureId, message.MarketId, message.ClientId);
+                    var market = await context.ClientTopMarket.FindAsync(message.FixtureId, message.MarketId, message.ClientId, message.CurrencyCode);
 
                     if (market != null)
                     {
@@ -41,6 +42,7 @@ namespace Platform.ClientTopMarket.Service.Repository
                             ClientId = message.ClientId,
                             ClientCode = message.ClientCode,
                             ClientName = message.ClientName,
+                            CurrencyCode = message.CurrencyCode.ToUpper(),
                             FixtureId = message.FixtureId,
                             FixtureName = message.FixtureName,
                             MarketId = message.MarketId,

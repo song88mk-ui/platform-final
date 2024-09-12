@@ -10734,13 +10734,23 @@ namespace Platform.Sportsbook.API.Repository
             }
             else if (request.Specifier.Contains("sr:category:"))
             {
+                if (request.SportId == 0)
+                {
+                    return new BaseResponseDTO<bool>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = StatusCode.Error.ToString()
+                    };
+                }
+
                 messageType = "OnSegmentTranslation";
 
 
                 payload = JsonSerializer.Serialize(new
                 {
                     LanguageCode = request.LanguageCode,
-                    SegmentSpecifier = request.Specifier
+                    SegmentSpecifier = request.Specifier,
+                    SportId = request.SportId
                 });
             }
 

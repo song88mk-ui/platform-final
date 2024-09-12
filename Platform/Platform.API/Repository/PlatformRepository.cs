@@ -4600,7 +4600,8 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.TranslationRecovery(new TranslationRecoveryRequestDTO
             {
                 LanguageCode = request.LanguageCode,
-                Specifier = request.Specifier
+                Specifier = request.Specifier,
+                SportId = request.SportId
             });
         }
 

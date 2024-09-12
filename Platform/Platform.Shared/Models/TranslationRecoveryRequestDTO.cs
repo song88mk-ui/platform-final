@@ -6,5 +6,6 @@ namespace Platform.Shared.Models
     {
         public string LanguageCode { get; set; }
         public string Specifier { get; set; }
+        public int SportId { get; set; }
     }
 }

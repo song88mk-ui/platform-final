@@ -2972,22 +2972,33 @@ namespace Platform.Betting.API.Repository
         {
             var take = 50;
 
-            var markets = _bettingContext.ClientTopMarket.AsNoTracking()
+            var query = _bettingContext.ClientTopMarket.AsNoTracking()
                             .Where(c => c.MarketStatusId == 1).ToList()
-                            .GroupBy(g => g.MarketId)
+                            .GroupBy(g => new { g.MarketId, g.CurrencyCode})
                             .Select(g => g.OrderByDescending(o => o.BetCount).First())
                             .OrderBy(o => o.ClientId == request.ClientId.ToString().ToUpper() ? 0 : 1)
+                            .ThenBy(o => o.CurrencyCode == request.CurrencyCode.ToUpper() ? 0 : 1)
+                            .ThenBy(o => o.CurrencyCode == "-" ? 1 : 0)
                             .ThenByDescending(o => o.BetCount)
-                            //.ThenBy(o => o.CurrencyCode == request.CurrencyCode.ToUpper() ? 0 : 1)
-                            .Take(take)
-                            .Select((s, i) => new BetRecommendationMarketDTO()
-                            {
-                                FixtureId = s.FixtureId,
-                                MarketId = s.MarketId,
-                                CurrencyCode = s.CurrencyCode,
-                                SortOrder = i + 1
-                            })
-                            .ToList();
+                            .Take(take);
+
+            var markets = query.Select((s, i) => new BetRecommendationMarketDTO()
+            {
+                FixtureId = s.FixtureId,
+                MarketId = s.MarketId,
+                SortOrder = i + 1
+            }).ToList();
+
+            // Used to validate the query
+            //var testMarket = query.Select((s, i) => new
+            //{
+            //    s.ClientCode,
+            //    s.FixtureId,
+            //    s.MarketId,
+            //    s.CurrencyCode,
+            //    s.BetCount,
+            //    SortOrder = i + 1
+            //}).ToList();
 
             return await _sportsbookRepository.GetBetRecommendationDetails(new BetRecommendationDetailRequestDTO()
             {

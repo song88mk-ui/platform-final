@@ -4530,7 +4530,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            if (currencyCode != "-" && !IsValidCurrencyCode(currencyCode))
+            if (!IsValidCurrencyCode(currencyCode))
             {
                 return new BaseResponseDTO<BetRecommendationsResponseDTO>
                 {

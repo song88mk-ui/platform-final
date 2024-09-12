@@ -2246,7 +2246,7 @@ namespace Platform.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/betrecommendations")]
-        public async Task<IActionResult> GetBetRecommendations([FromQuery] string currencyCode = "-")
+        public async Task<IActionResult> GetBetRecommendations([FromQuery] string currencyCode = "")
         {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();

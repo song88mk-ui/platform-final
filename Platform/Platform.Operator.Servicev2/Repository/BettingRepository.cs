@@ -86,7 +86,7 @@ namespace Platform.Operator.Servicev2.Repository
                 var newHttpClient = new HttpClient
                 {
                     BaseAddress = new Uri(endpoint),
-                    Timeout = TimeSpan.FromSeconds(20)
+                    Timeout = TimeSpan.FromSeconds(5)
                 };
 
                 newHttpClient.DefaultRequestHeaders.Add("key", key);
@@ -829,6 +829,7 @@ namespace Platform.Operator.Servicev2.Repository
                     bet_status = BetStatus.Running.ToString(),
                     ParlayBonus = (double)message.Bet.ParlayBonus,
                     ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
+                    odds_type = message.Bet.OddsTypeName,
                     bet_list = message.BetSelections.Select(s => s.BetSelection).Select(s => new
                     {
                         sport_code = s.SportId.ToString(),
@@ -1271,6 +1272,7 @@ namespace Platform.Operator.Servicev2.Repository
                     bet_status = message.Bet.BetStatusName,
                     ParlayBonus = (double)message.Bet.ParlayBonus,
                     ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
+                    odds_type = message.Bet.OddsTypeName,
                     bet_list = message.BetSelections.Select(s => new
                     {
                         sport_code = s.SportId.ToString(),
@@ -1878,6 +1880,7 @@ namespace Platform.Operator.Servicev2.Repository
                     bet_status = message.Bet.BetStatusName,
                     ParlayBonus = (double)message.Bet.ParlayBonus,
                     ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
+                    odds_type = message.Bet.OddsTypeName,
                     bet_list = message.BetSelections.Select(s => new
                     {
                         sport_code = s.SportId.ToString(),
@@ -2399,6 +2402,7 @@ namespace Platform.Operator.Servicev2.Repository
                 bet_status = message.Bet.BetStatusName,
                 ParlayBonus = (double)message.Bet.ParlayBonus,
                 ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
+                odds_type = message.Bet.OddsTypeName,
                 bet_list = message.BetSelections.Select(s => new
                 {
                     sport_code = s.SportId.ToString(),

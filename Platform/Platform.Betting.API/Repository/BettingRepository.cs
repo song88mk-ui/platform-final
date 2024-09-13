@@ -189,8 +189,7 @@ namespace Platform.Betting.API.Repository
                 });
 
                 var selection = request.Selections.FirstOrDefault();
-                ;
-
+                
                 List<OverrideSportConfig> overrideSportConfig = JsonSerializer.Deserialize<List<OverrideSportConfig>>(betConfig.OverrideConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 var checkOverride = overrideSportConfig.Where(a => a.SportId == selection.SportId).FirstOrDefault();
                 if (checkOverride != null)

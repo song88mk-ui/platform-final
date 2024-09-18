@@ -2987,7 +2987,7 @@ namespace Platform.Betting.API.Repository
             //                .ThenByDescending(o => o.BetCount)
             //                .Take(take);
 
-            var query = _bettingContext.ClientTopMarket.FromSqlRaw("GetTopMarketBets {0}, {1}, {2}", request.ClientId.ToString().ToUpper(), request.CurrencyCode, take).ToList();
+            var query = _bettingContext.ClientTopMarket.FromSqlRaw("GetTopMarketBets {0}, {1}, {2}", request.ClientId.ToString().ToUpper(), request.CurrencyCode.Substring(0, 3).ToUpper(), take).ToList();
 
             var markets = query.Select((s, i) => new BetRecommendationMarketDTO()
             {

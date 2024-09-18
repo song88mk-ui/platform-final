@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Localization.Internal;
 using Microsoft.VisualStudio.Web.CodeGeneration.Contracts.Messaging;
 using Platform.API.Models;
 using Platform.Shared.Data.Platform;
@@ -4651,6 +4652,10 @@ namespace Platform.API.Repository
         }
         private bool IsValidCurrencyCode(string currencyCode)
         {
+            var otherCurrencies = new string[] { "USDT" };
+            if (otherCurrencies.Contains(currencyCode.ToUpper()))
+                return true;
+
             return Enum.IsDefined(typeof(CurrencyCode), currencyCode) ? true : false;
         }
         private bool IsValidLanguageCode(LanguageCode languageCode)

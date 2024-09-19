@@ -1,4 +1,5 @@
 ﻿using Microsoft.ApplicationInsights;
+using Microsoft.AspNetCore.Components.RenderTree;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -51,6 +52,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "user-agent", userAgent },
+                                { "referer", HttpContext.Request.Headers["referer"].FirstOrDefault()},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },
@@ -172,6 +174,7 @@ namespace Platform.API.Controllers
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
                                 { "x-connection-id", connectionId },
+                                { "referer", HttpContext.Request.Headers["referer"].FirstOrDefault()},
                                 { "user-agent", userAgent },
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
@@ -486,7 +489,7 @@ namespace Platform.API.Controllers
         [HttpPost("v1/bet/cashout")]
         public async Task<IActionResult> CashoutBet([FromBody] CashoutBetRequest request)
         {
-            
+
             var ipAddressV4 = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
@@ -587,6 +590,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["referer"].FirstOrDefault()},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1093,6 +1097,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["referer"].FirstOrDefault()},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1176,6 +1181,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["referer"].FirstOrDefault()},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }

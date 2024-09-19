@@ -127,6 +127,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -172,6 +173,7 @@ namespace Platform.API.Controllers
                                 { "ipAddressV6", ipAddressV6 },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "x-operator-token", operatorToken },
                                 { "x-connection-id", connectionId },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
@@ -219,6 +221,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -253,6 +256,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -287,6 +291,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() }
                             };
@@ -351,6 +356,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", ((dynamic)result).StatusCode.ToString() },
                                 { "message", ((dynamic)result).Message.ToString() }
@@ -397,6 +403,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", ((dynamic)result).StatusCode.ToString() },
                                 { "message", ((dynamic)result).Message.ToString() }
@@ -431,6 +438,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -469,6 +477,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -512,6 +521,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -555,6 +565,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -626,6 +637,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -661,6 +673,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -695,6 +708,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -729,6 +743,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -763,6 +778,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -797,6 +813,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -835,6 +852,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -873,6 +891,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -910,6 +929,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -947,6 +967,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -984,6 +1005,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1019,6 +1041,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1057,6 +1080,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1140,6 +1164,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1225,6 +1250,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1266,6 +1292,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1309,6 +1336,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1351,6 +1379,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1395,6 +1424,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1435,6 +1465,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1477,6 +1508,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1517,6 +1549,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1558,6 +1591,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1600,6 +1634,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1638,6 +1673,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1676,6 +1712,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1716,6 +1753,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1758,6 +1796,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1794,6 +1833,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1830,6 +1870,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1870,6 +1911,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1904,6 +1946,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1939,6 +1982,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -1973,6 +2017,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
@@ -2007,6 +2052,7 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", operatorToken },
                                 { "cf-ipcountry", countryCode },
                                 { "x-language-code", languageCode },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(new { IsMobile = isMobile }) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },
@@ -2041,6 +2087,7 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", operatorToken },
                                 { "cf-ipcountry", countryCode },
                                 { "x-language-code", languageCode },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(new { IsMobile = isMobile }) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },
@@ -2075,6 +2122,7 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", operatorToken },
                                 { "cf-ipcountry", countryCode },
                                 { "x-language-code", languageCode },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(new { IsMobile = isMobile }) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },
@@ -2107,6 +2155,7 @@ namespace Platform.API.Controllers
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
                                 { "x-language-code", languageCode },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },
                                 { "response", JsonSerializer.Serialize(result) }
@@ -2137,6 +2186,7 @@ namespace Platform.API.Controllers
             {
                                 { "x-client-id", clientId },
                                 { "x-language-code", languageCode },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },
                                 { "response", JsonSerializer.Serialize(result) }
@@ -2172,6 +2222,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
                             };
@@ -2205,6 +2256,7 @@ namespace Platform.API.Controllers
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() }
                             };
@@ -2233,6 +2285,7 @@ namespace Platform.API.Controllers
             {
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(OGParameters)},
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },
@@ -2262,6 +2315,7 @@ namespace Platform.API.Controllers
             var properties = new Dictionary<string, string>
             {
                                 { "x-client-id", clientId },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(OGParameters)},
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },

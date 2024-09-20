@@ -3345,7 +3345,7 @@ namespace Platform.API.Repository
             if (string.IsNullOrEmpty(request.LanguageCode))
                 request.LanguageCode = LanguageCode.EN.ToString();
 
-            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), request.LanguageCode) ? true : false;
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), request.LanguageCode.ToUpper()) ? true : false;
 
             if (!isValidLanguageCode)
             {
@@ -3356,7 +3356,7 @@ namespace Platform.API.Repository
                 };
             }
 
-            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode);
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode.ToUpper());
 
             if (!IsValidLanguageCode(languageCode))
             {

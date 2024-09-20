@@ -2504,6 +2504,8 @@ namespace Platform.Betting.API.Repository
                                     TrueStake = s.TrueStake,
                                     WinLoss = s.WinLoss,
                                     WinningsTax = s.WinningsTax,
+                                    BetTypeId = s.BetTypeId,
+                                    BetTypeName = s.BetTypeName
                                 }
                            );
 

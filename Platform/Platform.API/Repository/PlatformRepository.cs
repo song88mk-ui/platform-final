@@ -3448,6 +3448,8 @@ namespace Platform.API.Repository
                             SettlementDate = s.SettlementDate,
                             SettlementDateOffset = s.SettlementDateOffset,
                             TrueStake = s.TrueStake,
+                            BetTypeId = s.BetTypeId,
+                            BetTypeName = s.BetTypeName,
                             Selections = GetTranslatedBetSelectionDetails(s.Selections, translations.Result.Selections)
                         }).ToList()
                     }

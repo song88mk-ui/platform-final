@@ -956,6 +956,62 @@ namespace Platform.API.Repository
             return result;
         }
 
+        private List<BetSelectionDetailsDTO> GetTranslatedBetSelectionDetails(List<BetSelectionDetailsDTO> selections, List<BetFixtureSelectionTranslationResponseDTO> translations)
+        {
+            var result = new List<BetSelectionDetailsDTO>();
+
+            foreach (var selection in selections)
+            {
+                var translation = translations.Where(c => c.FixtureId == Convert.ToInt64(selection.FixtureId) && c.MarketId == Convert.ToInt64(selection.MarketId) && c.SelectionId == Convert.ToInt64(selection.SelectionId)).FirstOrDefault();
+
+                result.Add(new BetSelectionDetailsDTO
+                {
+                    SportId = selection.SportId,
+                    SportName = translation == null ? selection.SportName : translation.SportName,
+                    SegmentId = selection.SegmentId,
+                    SegmentName = translation == null ? selection.SegmentName : translation.SegmentName,
+                    LeagueId = selection.LeagueId,
+                    LeagueName = translation == null ? selection.LeagueName : translation.LeagueName,
+                    FixtureId = selection.FixtureId.ToString(),
+                    FixtureName = translation == null ? selection.FixtureName : translation.FixtureName,
+                    MarketId = selection.MarketId.ToString(),
+                    MarketName = translation == null ? selection.MarketName : translation.MarketName,
+                    Line = selection.Line,
+                    SelectionId = selection.SelectionId.ToString(),
+                    SelectionName = translation == null ? selection.SelectionName : translation.SelectionName,
+                    Odds = Convert.ToDecimal(GetSelectionOdds(selection.Odds)),
+                    DeadHeatFactor = selection.DeadHeatFactor,
+                    HalfLostProbability = selection.HalfLostProbability,
+                    HalfWonProbability = selection.HalfWonProbability,
+                    LostProbability = selection.LostProbability,
+                    BetScore = selection.BetScore,
+                    SettlementScore = selection.SettlementScore,
+                    BetSelectionId = Guid.Parse(selection.BetSelectionId.ToString()),
+                    FixtureStartDate = selection.FixtureStartDate,
+                    FixtureStatusId = selection.FixtureStatusId,
+                    FixtureStatusName = selection.FixtureStatusName,
+                    MarketTemplateId = selection.MarketTemplateId,
+                    SelectionTemplateId = selection.SelectionTemplateId,
+                    BetSelectionStatusId = selection.BetSelectionStatusId,
+                    BetSelectionStatusName = selection.BetSelectionStatusName,
+                    BetId = selection.BetId,
+                    FixtureSpecifier = selection.FixtureSpecifier,
+                    CorrelationId = selection.CorrelationId,
+                    FixtureTypeId = selection.FixtureTypeId,
+                    FixtureTypeName = selection.FixtureTypeName,
+                    IsResettled = selection.IsResettled,
+                    IsSettled = selection.IsSettled,
+                    Probability = selection.Probability,
+                    SelectionSpecifier = selection.SelectionSpecifier,
+                    UserId = selection.UserId,
+                    VoidProbability = selection.VoidProbability,
+                    WonProbability = selection.WonProbability
+                });
+            }
+
+            return result;
+        }
+
         private async Task<BaseResponseDTO<ClientResponse>> GetClient(string clientId)
         {
             var isGuid = Guid.TryParse(clientId, out Guid guid);
@@ -3286,7 +3342,117 @@ namespace Platform.API.Repository
 
         public async Task<BaseResponseDTO<ManualBetDetailsResponseDTO>> GetManualBetDetails(ManualBetDetailsRequest request)
         {
-            return await _bettingRepository.GetManualBetDetails(request);
+            if (string.IsNullOrEmpty(request.LanguageCode))
+                request.LanguageCode = LanguageCode.EN.ToString();
+
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), request.LanguageCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<ManualBetDetailsResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), request.LanguageCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<ManualBetDetailsResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            if (languageCode == LanguageCode.EN)
+                return await _bettingRepository.GetManualBetDetails(request);
+            else
+            {
+                var response = await _bettingRepository.GetManualBetDetails(request);
+
+                if (response.Result.Bets.Count == 0)
+                    return response;
+
+                var betFixtureTranslation = new BetFixtureTranslationRequestDTO();
+                betFixtureTranslation.LanguageCode = languageCode;
+
+                foreach (var bet in response.Result.Bets)
+                {
+                    foreach (var selection in bet.Selections)
+                    {
+                        if (betFixtureTranslation.Selections.Any(c => c.SelectionId == Convert.ToInt64(selection.SelectionId)))
+                            continue;
+
+                        betFixtureTranslation.Selections.Add(new BetFixtureSelectionTranslationRequestDTO
+                        {
+                            FixtureId = Convert.ToInt64(selection.FixtureId),
+                            MarketId = Convert.ToInt64(selection.MarketId),
+                            SelectionId = Convert.ToInt64(selection.SelectionId)
+                        });
+                    }
+                }
+
+                var translations = await _sportsbookRepository.GetBetFixtureTranslation(betFixtureTranslation);
+
+                return new BaseResponseDTO<ManualBetDetailsResponseDTO>
+                {
+                    Message = response.Message,
+                    StatusCode = response.StatusCode,
+                    Result = new ManualBetDetailsResponseDTO
+                    {
+                        Bets = response.Result.Bets.Select(s => new ManualBetDetailsDTO
+                        {
+                            BetId = s.BetId,
+                            Stake = s.Stake,
+                            Odds = s.Odds,
+                            Payout = s.Payout,
+                            WinLoss = s.WinLoss,
+                            BetStatusId = s.BetStatusId,
+                            BetStatusName = s.BetStatusName,
+                            CurrencyCode = s.CurrencyCode,
+                            OddsTypeId = s.OddsTypeId,
+                            StakeTax = s.StakeTax,
+                            WinningsTax = s.WinningsTax,
+                            ParlayBonus = s.ParlayBonus,
+                            ParlayBonusWinnings = s.ParlayBonusWinnings,
+                            UserId = s.UserId,
+                            IsBoosted = s.IsBoosted,
+                            IsFreeBet = s.IsFreeBet,
+                            StakeBonus = s.StakeBonus,
+                            StakeBonusPayout = s.StakeBonus,
+                            StakeReal = s.StakeReal,
+                            StakeRealPayout = s.StakeRealPayout,
+                            TaxedStake = s.TaxedStake,
+                            TaxedWinnings = s.TaxedWinnings,
+                            LanguageCode = s.LanguageCode,
+                            BetDate = s.BetDate,
+                            BetDateOffset = s.BetDateOffset,
+                            Channel = s.Channel,
+                            ClientId = s.ClientId,
+                            ClientCode = s.ClientCode,
+                            ClientIdRef = s.ClientIdRef,
+                            ClientName = s.ClientName,
+                            CompanyShare = s.CompanyShare,
+                            Endpoint = s.Endpoint,
+                            ExchangeRate = s.ExchangeRate,
+                            IPAddress = s.IPAddress,
+                            IsCashout = s.IsCashout,
+                            IsResettled = s.IsResettled,
+                            LimitId = s.LimitId,
+                            OddsTypeName = s.OddsTypeName,
+                            OperatorToken = s.OperatorToken,
+                            Reason = s.Reason,
+                            SettlementDate = s.SettlementDate,
+                            SettlementDateOffset = s.SettlementDateOffset,
+                            TrueStake = s.TrueStake,
+                            Selections = GetTranslatedBetSelectionDetails(s.Selections, translations.Result.Selections)
+                        }).ToList()
+                    }
+                };
+            }
         }
 
         public async Task<BaseResponseDTO<ResendSettlementResponseDTO>> ResendSettlement(ResendSettlementRequestDTO request)

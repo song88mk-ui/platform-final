@@ -1613,7 +1613,7 @@ namespace Platform.Betting.API.Repository
 
                     var parlayBonusWinnings = 0m;
                     var parlayBonus = 0m;
-                    if (isBetBuilder == false && hasVirtualSport == false && wonOrRunningSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
+                    if (bet.BetStatusId == (int)BetStatus.Running && isBetBuilder == false && hasVirtualSport == false && wonOrRunningSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
                     {
                         var parlayConfig = GetParlayBetConfig(_bettingContext, Guid.Parse(bet.ClientId), bet.CurrencyCode, bet.BetDate, filteredSelections, bet.Payout, ref parlayBonusWinnings);
 
@@ -1669,7 +1669,7 @@ namespace Platform.Betting.API.Repository
                         WinningsTax = bet.WinningsTax,
                         TaxedStake = bet.BetStatusId == (int)BetStatus.Running ? runningTaxedStake : bet.TaxedStake,
                         TaxedWinnings = bet.BetStatusId == (int)BetStatus.Running ? runningTaxedWinnings : bet.TaxedWinnings,
-                        ParlayBonus = parlayBonus,
+                        ParlayBonus = bet.BetStatusId == (int)BetStatus.Running ? parlayBonus : bet.ParlayBonus,
                         ParlayBonusWinnings = bet.BetStatusId == (int)BetStatus.Running ? parlayBonusWinnings : bet.ParlayBonusWinnings,
                         StakeReal = bet.StakeReal,
                         StakeRealPayout = bet.StakeRealPayout,

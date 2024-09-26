@@ -502,7 +502,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (request.FixtureStatusGroup == FixtureStatusGroup.Prematch)
             {
-                var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset);
+                var dateTimeRange = GetDateTimeRange2(DateTime.UtcNow, request.MinuteUTCOffset);
 
                 var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
 
@@ -825,12 +825,12 @@ namespace Platform.Sportsbook.API.Repository
                 switch (request.FixtureScope.Value)
                 {
                     case FixtureScope.Early:
-                        var earlyDateUTC = GetDateTimeRange(request.DateUTC.Value, request.MinuteUTCOffset.Value);
+                        var earlyDateUTC = GetDateTimeRange2(request.DateUTC.Value, request.MinuteUTCOffset.Value);
 
                         fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 0 && c.FiStDa > earlyDateUTC.Item1 && c.FiStDa < earlyDateUTC.Item2);
                         break;
                     case FixtureScope.Today:
-                        var todayDateUTC = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset.Value);
+                        var todayDateUTC = GetDateTimeRange2(DateTime.UtcNow, request.MinuteUTCOffset.Value);
 
                         //fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 0 && c.FiStDa > todayDateUTC.Item1 && c.FiStDa < todayDateUTC.Item2);
                         fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 0 && c.FiStDa < todayDateUTC.Item2);
@@ -2547,7 +2547,7 @@ namespace Platform.Sportsbook.API.Repository
             if (mCache != null)
                 return mCache;
 
-            var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset);
+            var dateTimeRange = GetDateTimeRange2(DateTime.UtcNow, request.MinuteUTCOffset);
 
             FilterDefinition<Fixture> fixtureFilter;
             if (request.SportGroupId != 0)
@@ -3004,7 +3004,7 @@ namespace Platform.Sportsbook.API.Repository
             if (mCache != null)
                 return mCache;
 
-            var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset);
+            var dateTimeRange = GetDateTimeRange2(DateTime.UtcNow, request.MinuteUTCOffset);
 
             FilterDefinition<Fixture> fixtureFilter;
 
@@ -3246,7 +3246,7 @@ namespace Platform.Sportsbook.API.Repository
             if (mCache != null)
                 return mCache;
 
-            var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset);
+            var dateTimeRange = GetDateTimeRange2(DateTime.UtcNow, request.MinuteUTCOffset);
 
             FilterDefinition<Fixture> fixtureFilter;
 
@@ -3481,7 +3481,7 @@ namespace Platform.Sportsbook.API.Repository
             if (mCache != null)
                 return mCache;
 
-            var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset);
+            var dateTimeRange = GetDateTimeRange2(DateTime.UtcNow, request.MinuteUTCOffset);
 
             FilterDefinition<Fixture> fixtureFilter;
 
@@ -3719,7 +3719,7 @@ namespace Platform.Sportsbook.API.Repository
             if (mCache != null)
                 return mCache;
 
-            var dateTimeRange = GetDateTimeRange(DateTime.UtcNow, request.MinuteUTCOffset);
+            var dateTimeRange = GetDateTimeRange2(DateTime.UtcNow, request.MinuteUTCOffset);
 
             FilterDefinition<Fixture> fixtureFilter;
 
@@ -3955,7 +3955,7 @@ namespace Platform.Sportsbook.API.Repository
             if (mCache != null)
                 return mCache;
 
-            var dateTimeRange = GetDateTimeRange(request.DateUTC, request.MinuteUTCOffset);
+            var dateTimeRange = GetDateTimeRange2(request.DateUTC, request.MinuteUTCOffset);
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
 
@@ -4146,7 +4146,7 @@ namespace Platform.Sportsbook.API.Repository
             if (mCache != null)
                 return mCache;
 
-            var dateTimeRange = GetDateTimeRange(request.DateUTC, request.MinuteUTCOffset);
+            var dateTimeRange = GetDateTimeRange2(request.DateUTC, request.MinuteUTCOffset);
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.SegId == request.SegmentId && c.LeId == request.LeagueId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
 
@@ -7776,34 +7776,46 @@ namespace Platform.Sportsbook.API.Repository
         {
             return _memCache.GetCache($"csmt", () => _sportsbookContext.ClientSelectorMarketTemplate.AsNoTracking().ToList(), 24);
         }
-        private Tuple<DateTime, DateTime> GetDateTimeRange(DateTime utcDate, int minuteUTCOffset)
+
+        //private Tuple<DateTime, DateTime> GetDateTimeRange(DateTime utcDate, int minuteUTCOffset)
+        //{
+        //    var hours = minuteUTCOffset / 60;
+        //    var remainderMinutes = minuteUTCOffset % 60;
+
+        //    if (hours >= 0)
+        //    {
+        //        var utc = utcDate.Date;
+        //        var startTime = utc.AddHours(hours * -1).AddMinutes(remainderMinutes * -1).AddMilliseconds(-1);
+        //        var endTime = startTime.AddDays(1).AddMilliseconds(1);
+
+        //        if (endTime < utcDate)
+        //        {
+        //            startTime = startTime.AddDays(1);
+        //            endTime = endTime.AddDays(1);
+        //        }
+
+        //        return new Tuple<DateTime, DateTime>(startTime, endTime);
+        //    }
+        //    else
+        //    {
+        //        var utc = utcDate.Date;
+        //        var startTime = utc.AddHours(hours * -1).AddMinutes(remainderMinutes * -1).AddMilliseconds(-1);
+        //        var endTime = startTime.AddDays(1).AddMilliseconds(1);
+
+        //        return new Tuple<DateTime, DateTime>(startTime, endTime);
+        //    }
+        //}
+
+        private Tuple<DateTime, DateTime> GetDateTimeRange2(DateTime utcDate, int minuteUTCOffset)
         {
-            var hours = minuteUTCOffset / 60;
-            var remainderMinutes = minuteUTCOffset % 60;
+            var localDate = utcDate.AddMinutes(minuteUTCOffset);
+            var startTime = new DateTime(localDate.Date.Year, localDate.Date.Month, localDate.Date.Day).AddMilliseconds(-1);
+            var endTime = new DateTime(localDate.Date.AddDays(1).Year, localDate.Date.AddDays(1).Month, localDate.Date.AddDays(1).Day);
 
-            if (hours >= 0)
-            {
-                var utc = utcDate.Date;
-                var startTime = utc.AddHours(hours * -1).AddMinutes(remainderMinutes * -1).AddMilliseconds(-1);
-                var endTime = startTime.AddDays(1).AddMilliseconds(1);
-
-                if (endTime < utcDate)
-                {
-                    startTime = startTime.AddDays(1);
-                    endTime = endTime.AddDays(1);
-                }
-
-                return new Tuple<DateTime, DateTime>(startTime, endTime);
-            }
-            else
-            {
-                var utc = utcDate.Date;
-                var startTime = utc.AddHours(hours * -1).AddMinutes(remainderMinutes * -1).AddMilliseconds(-1);
-                var endTime = startTime.AddDays(1).AddMilliseconds(1);
-
-                return new Tuple<DateTime, DateTime>(startTime, endTime);
-            }
+            return new Tuple<DateTime, DateTime>(startTime.AddMinutes(minuteUTCOffset * -1), endTime.AddMinutes(minuteUTCOffset * -1));
         }
+
+
         private List<TierLeagueOrder> GetTierLeagueOrder()
         {
             return _memCache.GetCache($"tlo", () => _sportsbookContext.TierLeagueOrder.AsNoTracking().ToList(), 24);

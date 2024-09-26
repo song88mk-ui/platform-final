@@ -825,7 +825,7 @@ namespace Platform.Sportsbook.API.Repository
                 switch (request.FixtureScope.Value)
                 {
                     case FixtureScope.Early:
-                        var earlyDateUTC = GetDateTimeRange2(request.DateUTC.Value, request.MinuteUTCOffset.Value);
+                        var earlyDateUTC = GetDateTimeRange2(request.DateUTC.Value, request.MinuteUTCOffset.Value, true);
 
                         fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == 0 && c.FiStDa > earlyDateUTC.Item1 && c.FiStDa < earlyDateUTC.Item2);
                         break;
@@ -3955,7 +3955,7 @@ namespace Platform.Sportsbook.API.Repository
             if (mCache != null)
                 return mCache;
 
-            var dateTimeRange = GetDateTimeRange2(request.DateUTC, request.MinuteUTCOffset);
+            var dateTimeRange = GetDateTimeRange2(request.DateUTC, request.MinuteUTCOffset, true);
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
 
@@ -4146,7 +4146,7 @@ namespace Platform.Sportsbook.API.Repository
             if (mCache != null)
                 return mCache;
 
-            var dateTimeRange = GetDateTimeRange2(request.DateUTC, request.MinuteUTCOffset);
+            var dateTimeRange = GetDateTimeRange2(request.DateUTC, request.MinuteUTCOffset, true);
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId == (int)FixtureStatus.Prematch && c.FiTyId == (int)FixtureType.Match && c.SpId == request.SportId && c.SegId == request.SegmentId && c.LeId == request.LeagueId && c.FiStDa > dateTimeRange.Item1 && c.FiStDa < dateTimeRange.Item2);
             var tempFixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
 
@@ -7806,9 +7806,9 @@ namespace Platform.Sportsbook.API.Repository
         //    }
         //}
 
-        private Tuple<DateTime, DateTime> GetDateTimeRange2(DateTime utcDate, int minuteUTCOffset)
+        private Tuple<DateTime, DateTime> GetDateTimeRange2(DateTime utcDate, int minuteUTCOffset, bool dateIsFromRequest = false)
         {
-            var localDate = utcDate.AddMinutes(minuteUTCOffset);
+            var localDate = dateIsFromRequest ? utcDate : utcDate.AddMinutes(minuteUTCOffset);
             var startTime = new DateTime(localDate.Date.Year, localDate.Date.Month, localDate.Date.Day).AddMilliseconds(-1);
             var endTime = new DateTime(localDate.Date.AddDays(1).Year, localDate.Date.AddDays(1).Month, localDate.Date.AddDays(1).Day);
 

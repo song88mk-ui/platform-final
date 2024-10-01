@@ -2336,7 +2336,7 @@ namespace Platform.API.Controllers
 
         [HttpGet("v1/sportsbook/announcements")]
         public async Task<IActionResult> GetAnnouncements()
-        {
+        {//
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();

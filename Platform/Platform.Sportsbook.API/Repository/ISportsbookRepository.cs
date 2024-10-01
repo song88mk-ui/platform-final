@@ -89,5 +89,6 @@ namespace Platform.Sportsbook.API.Repository
         Task<BaseResponseDTO<TWResponseDTO>> GetLeagueHighlightsFixtures(LeagueHighlightsFixturesRequestDTO request);
         Task<BaseResponseDTO<BetRecommendationsResponseDTO>> GetBetRecommendationDetails(BetRecommendationDetailRequestDTO request);
         Task<BaseResponseDTO<bool>> TranslationRecovery(TranslationRecoveryRequestDTO request);
+        Task<BaseResponseDTO<AnnouncementResponseDTO>> GetAnnouncements(AnnouncementRequestDTO request);
     }
 }

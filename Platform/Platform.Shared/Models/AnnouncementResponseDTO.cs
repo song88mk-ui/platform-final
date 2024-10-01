@@ -10,6 +10,7 @@ namespace Platform.Shared.Models
         {
             Announcements = new List<AnnouncementDTO>();
         }
+        public int Count { get; set; }
         public List<AnnouncementDTO> Announcements { get; set; }
     }
 

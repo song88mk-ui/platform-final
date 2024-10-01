@@ -7757,6 +7757,46 @@ namespace Platform.Sportsbook.API.Repository
             }
         }
 
+        public async Task<BaseResponseDTO<AnnouncementResponseDTO>> GetAnnouncements(AnnouncementRequestDTO request)
+        {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<AnnouncementResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
+            var announcements = _sportsbookContext.ClientAnnouncements.AsNoTracking()
+                .Where(a => a.ClientId == request.ClientId
+                    && a.Announcements.StartDate <= DateTime.UtcNow 
+                    && a.Announcements.EndDate >= DateTime.UtcNow
+                    && a.Announcements.LangCode == request.LanguageCode.ToString()
+                    && a.Announcements.IsActive
+                    ).Select(s => s.Announcements).ToList();
+
+            var result = announcements.Select(s => new AnnouncementDTO
+            {
+                Title = s.Title,
+                StartDate = s.StartDate,
+                EndDate = s.EndDate,
+                Message = s.Description,
+            }).Take(10).ToList();
+
+            return new BaseResponseDTO<AnnouncementResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new AnnouncementResponseDTO
+                {
+                    Announcements = result,
+                    Count = result.Count
+                }
+            };
+        }
 
         private List<string> GetMainMarketTemplates(int sportId, Guid clientId)
         {

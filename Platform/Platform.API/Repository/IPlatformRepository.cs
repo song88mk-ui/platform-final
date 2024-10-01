@@ -96,5 +96,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<BetRecommendationsResponseDTO>> GetBetRecommendations(string clientId, string langCode, string currencyCode);
         Task<BaseResponseDTO<ClientResponse>> GetClientInformation(string clientId);
         Task<BaseResponseDTO<bool>> TranslationRecovery(TranslationRecoveryRequest request);
+        Task<BaseResponseDTO<AnnouncementResponseDTO>> GetAnnouncements(string clientId, string langCode);
     }
 }

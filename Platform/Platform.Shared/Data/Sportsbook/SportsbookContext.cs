@@ -29,6 +29,7 @@ namespace Platform.Shared.Data.Sportsbook
             modelBuilder.Entity<MarketTemplatePlayerProps>().HasKey(k => new { k.SportId, k.FixtureStatusId });
             modelBuilder.Entity<Translation>().HasKey(k => new { k.LanguageCode, k.Name });
             modelBuilder.Entity<Country>().HasKey(k => new { k.Id });
+            modelBuilder.Entity<Announcements>().HasKey(k => new { k.Id });
         }
 
         public DbSet<ClientSportOrder> ClientSportOrder { get; set; }
@@ -48,5 +49,6 @@ namespace Platform.Shared.Data.Sportsbook
         public DbSet<ClientSelectorMarketTemplate> ClientSelectorMarketTemplate { get; set; }
         public DbSet<Translation> Translation { get; set; }
         public DbSet<Country> Country { get; set; }
+        public DbSet<Announcements> Announcements { get; set; }
     }
 }

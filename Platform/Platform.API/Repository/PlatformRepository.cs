@@ -4786,6 +4786,49 @@ namespace Platform.API.Repository
             });
         }
 
+        public async Task<BaseResponseDTO<AnnouncementResponseDTO>> GetAnnouncements(string clientId, string langCode)
+        {
+            var isValidLanguageCode = Enum.IsDefined(typeof(LanguageCode), langCode) ? true : false;
+
+            if (!isValidLanguageCode)
+            {
+                return new BaseResponseDTO<AnnouncementResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<AnnouncementResponseDTO>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<AnnouncementResponseDTO>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            return await _sportsbookRepository.GetAnnouncements(new AnnouncementRequestDTO
+            {
+                ClientId = clientResponse.Result.ClientId,
+                ClientCode = clientResponse.Result.ClientCode,
+                LanguageCode = languageCode
+            });
+        }
+
         private async Task<ForexEURResponse> GetExchangeRate(string currencyCode)
         {
             if (currencyCode.ToUpper() == "USDT")

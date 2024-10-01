@@ -7776,15 +7776,14 @@ namespace Platform.Sportsbook.API.Repository
                     && a.Announcements.EndDate >= DateTime.UtcNow
                     && a.Announcements.LangCode == request.LanguageCode.ToString()
                     && a.Announcements.IsActive
-                    ).Select(s => s.Announcements).ToList();
-
-            var result = announcements.Select(s => new AnnouncementDTO
-            {
-                Title = s.Title,
-                StartDate = s.StartDate,
-                EndDate = s.EndDate,
-                Message = s.Description,
-            }).Take(10).ToList();
+                    )
+                .Select(s => new AnnouncementDTO
+                    {
+                        Title = s.Announcements.Title,
+                        StartDate = s.Announcements.StartDate,
+                        EndDate = s.Announcements.EndDate,
+                        Message = s.Announcements.Description,
+                    }).Take(10).ToList();
 
             return new BaseResponseDTO<AnnouncementResponseDTO>
             {
@@ -7792,8 +7791,8 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new AnnouncementResponseDTO
                 {
-                    Announcements = result,
-                    Count = result.Count
+                    Announcements = announcements,
+                    Count = announcements.Count
                 }
             };
         }

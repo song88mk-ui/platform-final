@@ -4833,11 +4833,11 @@ namespace Platform.API.Repository
         public async Task<BaseResponseDTO<BackofficeAnnouncementResponseDTO>> GetAnnouncements(BackofficeAnnouncementRequestDTO request)
         {
             
-            var clientIds = string.IsNullOrEmpty(request.ClientIds) ? new List<Guid>() : request.ClientIds.Split(',').ToList().ConvertAll(Guid.Parse);
-
-            if(clientIds.Any())
+            var clientCodes = string.IsNullOrEmpty(request.ClientIds) ? new List<string>() : request.ClientIds.Split(',').ToList();
+            var clientIds = string.Empty;
+            if(clientCodes.Any())
             {
-                var clientResult = await _platformContext.Client.Where(c => clientIds.Contains(c.ClientId)).ToListAsync();
+                var clientResult = await _platformContext.Client.Where(c => clientCodes.Contains(c.ClientCode)).ToListAsync();
                 if (clientResult == null || clientResult.Count == 0)
                 {
                     return new BaseResponseDTO<BackofficeAnnouncementResponseDTO>
@@ -4846,8 +4846,9 @@ namespace Platform.API.Repository
                         Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
                     };
                 }
+                clientIds = string.Join(',', clientResult.Select(c => c.ClientId).ToList());
             }
-
+            request.ClientIds = clientIds;
             return await _sportsbookRepository.GetAnnouncements(request);
         }
 

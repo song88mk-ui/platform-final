@@ -445,7 +445,7 @@ namespace Platform.API.Controllers
 
 
         [HttpPost("v1/client/announcements")]
-        public async Task<IActionResult> GetAnnouncements([FromBody] BackofficeAnnouncementRequestDTO request)
+        public async Task<IActionResult> GetAnnouncements([FromBody] BackofficeAnnouncementRequest request)
         {
             var result = await _platformRepository.GetAnnouncements(request);
 

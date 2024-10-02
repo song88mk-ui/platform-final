@@ -97,6 +97,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<ClientResponse>> GetClientInformation(string clientId);
         Task<BaseResponseDTO<bool>> TranslationRecovery(TranslationRecoveryRequest request);
         Task<BaseResponseDTO<AnnouncementResponseDTO>> GetAnnouncements(string clientId, string langCode);
-        Task<BaseResponseDTO<BackofficeAnnouncementResponseDTO>> GetAnnouncements(BackofficeAnnouncementRequestDTO request);
+        Task<BaseResponseDTO<BackofficeAnnouncementResponseDTO>> GetAnnouncements(BackofficeAnnouncementRequest request);
     }
 }

@@ -7772,9 +7772,9 @@ namespace Platform.Sportsbook.API.Repository
 
             var announcements = _sportsbookContext.ClientAnnouncements.AsNoTracking()
                 .Where(a => a.ClientId == request.ClientId
+                    && a.Announcements.LangCode == request.LanguageCode.ToString()
                     && a.Announcements.StartDate <= DateTime.UtcNow 
                     && a.Announcements.EndDate >= DateTime.UtcNow
-                    && a.Announcements.LangCode == request.LanguageCode.ToString()
                     && a.Announcements.IsActive
                     )
                 .Select(s => new AnnouncementDTO
@@ -7793,6 +7793,53 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     Announcements = announcements,
                     Count = announcements.Count
+                }
+            };
+        }
+
+        public async Task<BaseResponseDTO<BackofficeAnnouncementResponseDTO>> GetAnnouncements(BackofficeAnnouncementRequestDTO request)
+        {
+            var maintenance = GetMaintenance();
+
+            if (maintenance.isMa)
+            {
+                return new BaseResponseDTO<BackofficeAnnouncementResponseDTO>
+                {
+                    StatusCode = StatusCode.Maintenance,
+                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientIds = string.IsNullOrEmpty(request.ClientIds) ? new List<Guid>() : request.ClientIds.Split(',').ToList().ConvertAll(Guid.Parse);
+
+            var clientAnnouncements = _sportsbookContext.ClientAnnouncements.AsNoTracking();
+
+            var clientAnnouncementIds = clientAnnouncements.Where(a => !clientIds.Any() || clientIds.Contains(a.ClientId))
+                                        .Select(s => s.AnnouncementId).ToList();
+
+            var announcementsList = _sportsbookContext.Announcements.AsNoTracking()
+                .Where(a => clientAnnouncementIds.Contains(a.Id) && a.LangCode == request.LanguageCode.ToString()
+                    && (a.Title.Contains(request.SearchText) || a.Description.Contains(request.SearchText)))
+                .Select(s => new BackofficeAnnouncementDTO
+                    {
+                        Title = s.Title,
+                        StartDate = s.StartDate,
+                        EndDate = s.EndDate,
+                        Message = s.Description,
+                        IsActive = s.IsActive,
+                        ClientIds = clientAnnouncements.Where(c => c.AnnouncementId == s.Id).Select(ca => ca.ClientId.ToString()).ToList()
+                }).ToList();
+
+            var announcements = announcementsList
+                .ToList();
+
+            return new BaseResponseDTO<BackofficeAnnouncementResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new BackofficeAnnouncementResponseDTO
+                {
+                    Announcements = announcements,
                 }
             };
         }

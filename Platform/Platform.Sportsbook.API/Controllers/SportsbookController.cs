@@ -1226,6 +1226,14 @@ namespace Platform.Sportsbook.API.Controllers
             return ReturnResult(result);
         }
 
+        [HttpPost("v1/sportsbook/client/announcements")]
+        public async Task<IActionResult> GetClientAnnouncements([FromBody] BackofficeAnnouncementRequestDTO request)
+        {
+            var result = await _sportsbookRepository.GetAnnouncements(request);
+
+            return ReturnResult(result);
+        }
+
 
         #region Utilities
 

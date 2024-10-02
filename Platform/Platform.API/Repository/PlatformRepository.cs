@@ -4829,6 +4829,29 @@ namespace Platform.API.Repository
             });
         }
 
+
+        public async Task<BaseResponseDTO<BackofficeAnnouncementResponseDTO>> GetAnnouncements(BackofficeAnnouncementRequestDTO request)
+        {
+            
+            var clientIds = string.IsNullOrEmpty(request.ClientIds) ? new List<Guid>() : request.ClientIds.Split(',').ToList().ConvertAll(Guid.Parse);
+
+            if(clientIds.Any())
+            {
+                var clientResult = await _platformContext.Client.Where(c => clientIds.Contains(c.ClientId)).ToListAsync();
+                if (clientResult == null || clientResult.Count == 0)
+                {
+                    return new BaseResponseDTO<BackofficeAnnouncementResponseDTO>
+                    {
+                        StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                        Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                    };
+                }
+            }
+
+            return await _sportsbookRepository.GetAnnouncements(request);
+        }
+
+
         private async Task<ForexEURResponse> GetExchangeRate(string currencyCode)
         {
             if (currencyCode.ToUpper() == "USDT")

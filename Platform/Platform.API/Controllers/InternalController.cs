@@ -443,6 +443,22 @@ namespace Platform.API.Controllers
             return ReturnResult(result);
         }
 
+
+        [HttpPost("v1/client/announcements")]
+        public async Task<IActionResult> GetAnnouncements([FromBody] BackofficeAnnouncementRequestDTO request)
+        {
+            var result = await _platformRepository.GetAnnouncements(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         private IActionResult ReturnResult<T>(BaseResponseDTO<T> result)
         {
             switch (result.StatusCode)

@@ -65,5 +65,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<TWResponseDTO>> GetLeagueHighlightsFixtures(LeagueHighlightsRequestDTO request);
         Task<BaseResponseDTO<bool>> TranslationRecovery(TranslationRecoveryRequestDTO request);
         Task<BaseResponseDTO<AnnouncementResponseDTO>> GetAnnouncements(AnnouncementRequestDTO request);
+        Task<BaseResponseDTO<BackofficeAnnouncementResponseDTO>> GetAnnouncements(BackofficeAnnouncementRequestDTO request);
     }
 }

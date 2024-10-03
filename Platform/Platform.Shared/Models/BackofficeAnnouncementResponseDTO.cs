@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Platform.Shared.Enums;
+using System;
 using System.Collections.Generic;
 
 namespace Platform.Shared.Models
@@ -15,7 +16,9 @@ namespace Platform.Shared.Models
 
     public class BackofficeAnnouncementDTO : AnnouncementDTO
     {
-        public List<string> ClientCodes { get; set; }
+        public int Id { get; set; }
+        public LanguageCode LanguageCode { get; set; }
+        public List<ClientInfo> Clients { get; set; }
         public bool IsActive { get; set; }
     }
 

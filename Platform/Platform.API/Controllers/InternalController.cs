@@ -459,6 +459,21 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpPost("v1/client/announcements/post")]
+        public async Task<IActionResult> AddOrUpdateAnnouncements([FromBody] BackofficeAnnouncement request)
+        {
+            var result = await _platformRepository.AddOrUpdateAnnouncements(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         private IActionResult ReturnResult<T>(BaseResponseDTO<T> result)
         {
             switch (result.StatusCode)

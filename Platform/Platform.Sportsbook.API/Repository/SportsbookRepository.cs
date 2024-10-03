@@ -7827,11 +7827,8 @@ namespace Platform.Sportsbook.API.Repository
                         EndDate = s.EndDate,
                         Message = s.Description,
                         IsActive = s.IsActive,
-                        ClientIds = clientAnnouncements.Where(c => c.AnnouncementId == s.Id).Select(ca => ca.ClientId.ToString()).ToList()
+                        ClientCodes = clientAnnouncements.Where(c => c.AnnouncementId == s.Id).Select(ca => ca.ClientCode).ToList()
                 }).ToList();
-
-            var announcements = announcementsList
-                .ToList();
 
             return new BaseResponseDTO<BackofficeAnnouncementResponseDTO>
             {
@@ -7839,7 +7836,7 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new BackofficeAnnouncementResponseDTO
                 {
-                    Announcements = announcements,
+                    Announcements = announcementsList,
                 }
             };
         }

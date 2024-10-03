@@ -15,7 +15,7 @@ namespace Platform.Shared.Models
 
     public class BackofficeAnnouncementDTO : AnnouncementDTO
     {
-        public List<string> ClientIds { get; set; }
+        public List<string> ClientCodes { get; set; }
         public bool IsActive { get; set; }
     }
 

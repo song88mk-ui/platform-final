@@ -66,7 +66,7 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<bool>> TranslationRecovery(TranslationRecoveryRequestDTO request);
         Task<BaseResponseDTO<AnnouncementResponseDTO>> GetAnnouncements(AnnouncementRequestDTO request);
         Task<BaseResponseDTO<BackofficeAnnouncementResponseDTO>> GetAnnouncements(BackofficeAnnouncementRequestDTO request);
-        Task<BaseResponseDTO<BackofficeAnnouncementDTO>> AddOrUpdateAnnouncements(BackofficeAnnouncementDTO request);
+        Task<BaseResponseDTO<BackofficeAnnouncementResponseDTO>> AddOrUpdateAnnouncements(AddOrUpdateBackofficeAnnouncementRequestDTO request);
         Task<BaseResponseDTO<bool>> DeleteClientAnnouncements(DeleteBackofficeAnnouncementDTO request);
     }
 }

@@ -4854,7 +4854,7 @@ namespace Platform.API.Repository
             });
         }
 
-        public async Task<BaseResponseDTO<BackofficeAnnouncementDTO>> AddOrUpdateAnnouncements(BackofficeAnnouncement request)
+        public async Task<BaseResponseDTO<BackofficeAnnouncementResponseDTO>> AddOrUpdateAnnouncements(AddOrUpdateBackofficeAnnouncementRequest request)
         {
             var clients = new List<ClientInfo>();
 
@@ -4863,7 +4863,7 @@ namespace Platform.API.Repository
                 var clientResult = await _platformContext.Client.Where(c => request.ClientCodes.Contains(c.ClientCode)).ToListAsync();
                 if (clientResult == null || clientResult.Count == 0)
                 {
-                    return new BaseResponseDTO<BackofficeAnnouncementDTO>
+                    return new BaseResponseDTO<BackofficeAnnouncementResponseDTO>
                     {
                         StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
                         Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
@@ -4872,16 +4872,15 @@ namespace Platform.API.Repository
                 clients = clientResult.Select(c => new ClientInfo { ClientId = c.ClientId, ClientCode = c.ClientCode }).ToList();
             }
 
-            return await _sportsbookRepository.AddOrUpdateAnnouncements(new BackofficeAnnouncementDTO
+            return await _sportsbookRepository.AddOrUpdateAnnouncements(new AddOrUpdateBackofficeAnnouncementRequestDTO
             {
                 Id = request.Id,
                 Title = request.Title,
-                Message = request.Message,
                 StartDate = request.StartDate,
                 EndDate = request.EndDate,
-                LanguageCode = request.LanguageCode,
                 IsActive = request.IsActive,
-                Clients = clients
+                AnnouncementMessages = request.AnnouncementMessages,
+                Clients = clients,
             });
         }
 

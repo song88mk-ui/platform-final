@@ -460,7 +460,7 @@ namespace Platform.API.Controllers
         }
 
         [HttpPost("v1/client/announcements/post")]
-        public async Task<IActionResult> AddOrUpdateAnnouncements([FromBody] BackofficeAnnouncement request)
+        public async Task<IActionResult> AddOrUpdateAnnouncements([FromBody] AddOrUpdateBackofficeAnnouncementRequest request)
         {
             var result = await _platformRepository.AddOrUpdateAnnouncements(request);
 

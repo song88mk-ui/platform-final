@@ -1235,7 +1235,7 @@ namespace Platform.Sportsbook.API.Controllers
         }
 
         [HttpPost("v1/sportsbook/client/announcements/post")]
-        public async Task<IActionResult> AddOrUpdateClientAnnouncements([FromBody] BackofficeAnnouncementDTO request)
+        public async Task<IActionResult> AddOrUpdateClientAnnouncements([FromBody] AddOrUpdateBackofficeAnnouncementRequestDTO request)
         {
             var result = await _sportsbookRepository.AddOrUpdateAnnouncements(request);
 

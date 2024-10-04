@@ -22,9 +22,4 @@ namespace Platform.Shared.Models
         public string Message { get; set; }
     }
 
-    public class DescriptionTranslation
-    {
-        public string LangCode { get; set; }
-        public string Message { get; set; }
-    }
 }

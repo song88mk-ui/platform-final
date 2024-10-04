@@ -1,7 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Localization.Internal;
-using Microsoft.VisualStudio.Web.CodeGeneration.Contracts.Messaging;
 using Platform.API.Models;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Platform.Entities;
@@ -16,7 +14,6 @@ using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Platform.API.Repository
 {
@@ -4886,6 +4883,11 @@ namespace Platform.API.Repository
                 IsActive = request.IsActive,
                 Clients = clients
             });
+        }
+
+        public async Task<BaseResponseDTO<bool>> DeleteClientAnnouncements(DeleteBackofficeAnnouncementDTO request)
+        {
+            return await _sportsbookRepository.DeleteClientAnnouncements(request);
         }
 
 

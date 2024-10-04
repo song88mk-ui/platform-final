@@ -1242,6 +1242,14 @@ namespace Platform.Sportsbook.API.Controllers
             return ReturnResult(result);
         }
 
+        [HttpPost("v1/sportsbook/client/announcements/delete")]
+        public async Task<IActionResult> DeleteClientAnnouncements([FromBody] DeleteBackofficeAnnouncementDTO request)
+        {
+            var result = await _sportsbookRepository.DeleteAnnouncements(request);
+
+            return ReturnResult(result);
+        }
+
         #region Utilities
 
         private IActionResult ReturnResult<T>(BaseResponseDTO<T> result)

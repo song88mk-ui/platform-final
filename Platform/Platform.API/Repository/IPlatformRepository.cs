@@ -99,5 +99,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<AnnouncementResponseDTO>> GetAnnouncements(string clientId, string langCode);
         Task<BaseResponseDTO<BackofficeAnnouncementResponseDTO>> GetAnnouncements(BackofficeAnnouncementRequest request);
         Task<BaseResponseDTO<BackofficeAnnouncementDTO>> AddOrUpdateAnnouncements(BackofficeAnnouncement request);
+        Task<BaseResponseDTO<bool>> DeleteClientAnnouncements(DeleteBackofficeAnnouncementDTO request);
     }
 }

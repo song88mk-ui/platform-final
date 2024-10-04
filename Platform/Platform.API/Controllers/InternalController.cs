@@ -474,6 +474,21 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpPost("v1/client/announcements/delete")]
+        public async Task<IActionResult> DeleteClientAnnouncements([FromBody] DeleteBackofficeAnnouncementDTO request)
+        {
+            var result = await _platformRepository.DeleteClientAnnouncements(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         private IActionResult ReturnResult<T>(BaseResponseDTO<T> result)
         {
             switch (result.StatusCode)

@@ -7818,7 +7818,7 @@ namespace Platform.Sportsbook.API.Repository
                                         .Select(s => s.AnnouncementId).ToList();
 
             var announcementsList = _sportsbookContext.Announcements.AsNoTracking()
-                .Where(a => clientAnnouncementIds.Contains(a.Id) && a.LangCode == request.LanguageCode.ToString()
+                .Where(a => clientAnnouncementIds.Contains(a.Id) && a.LangCode == request.LanguageCode.ToString() && a.IsDeleted == false
                     && (a.Title.Contains(request.SearchText) || a.Description.Contains(request.SearchText)))
                 .Select(s => new BackofficeAnnouncementDTO
                 {
@@ -7883,7 +7883,8 @@ namespace Platform.Sportsbook.API.Repository
                         StartDate = request.StartDate,
                         EndDate = request.EndDate,
                         Title = request.Title,
-                        IsActive = request.IsActive
+                        IsActive = request.IsActive,
+                        IsDeleted = false
                     }).Entity;
                     _sportsbookContext.SaveChanges();
                 }
@@ -7921,6 +7922,48 @@ namespace Platform.Sportsbook.API.Repository
                     IsActive = announcement.IsActive,
                     Clients = request.Clients
                 }
+            };
+        }
+
+        public async Task<BaseResponseDTO<bool>> DeleteAnnouncements(DeleteBackofficeAnnouncementDTO request)
+        {
+            try
+            {
+                var maintenance = GetMaintenance();
+
+                if (maintenance.isMa)
+                {
+                    return new BaseResponseDTO<bool>
+                    {
+                        StatusCode = StatusCode.Maintenance,
+                        Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                    };
+                }
+
+                var announcement = await _sportsbookContext.Announcements.FirstOrDefaultAsync(a => a.Id == request.AnnouncementId);
+
+                if (announcement != null)
+                {
+                    announcement.IsDeleted = true;
+                    _sportsbookContext.SaveChanges();
+                }
+
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = true
+                };
+            }
+            catch (Exception)
+            {
+            }
+
+            return new BaseResponseDTO<bool>
+            {
+                StatusCode = StatusCode.Error,
+                Message = StatusCode.Error.ToString(),
+                Result = false
             };
         }
 

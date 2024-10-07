@@ -7771,12 +7771,11 @@ namespace Platform.Sportsbook.API.Repository
             }
 
             var announcements = _sportsbookContext.ClientAnnouncements.AsNoTracking()
-                .Where(a => a.ClientId == request.ClientId
-                    && a.Announcements.LangCode == request.LanguageCode.ToString()
+                .Where(a => a.Announcements.LangCode == request.LanguageCode.ToString()
                     && a.Announcements.StartDate <= DateTime.UtcNow
                     && a.Announcements.EndDate >= DateTime.UtcNow
                     && a.Announcements.IsActive
-                    )
+                    && a.ClientId == request.ClientId)
                 .Select(s => new AnnouncementDTO
                 {
                     Title = s.Announcements.Title,
@@ -7815,11 +7814,14 @@ namespace Platform.Sportsbook.API.Repository
             var clientAnnouncements = _sportsbookContext.ClientAnnouncements.AsNoTracking();
 
             var clientAnnouncementIds = clientAnnouncements.Where(a => !clientIds.Any() || clientIds.Contains(a.ClientId))
-                                        .Select(s => s.AnnouncementId).ToList();
+                                        .Select(s => s.AnnouncementId).Distinct().ToList();
 
             var announcementsList = _sportsbookContext.Announcements.AsNoTracking()
-                .Where(a => (clientAnnouncementIds.Contains(a.Id) || !clientIds.Any()) && a.LangCode == request.LanguageCode.ToString() && a.IsDeleted == false
+                .Where(a => a.LangCode == request.LanguageCode.ToString()
+                    && a.IsDeleted == false
+                    && (clientAnnouncementIds.Contains(a.Id) || !clientIds.Any())
                     && (a.Title.Contains(request.SearchText) || a.Description.Contains(request.SearchText)))
+                .ToList()
                 .Select(s => new BackofficeAnnouncementDTO
                 {
                     Id = s.Id,
@@ -7828,6 +7830,7 @@ namespace Platform.Sportsbook.API.Repository
                     EndDate = s.EndDate,
                     Message = s.Description,
                     IsActive = s.IsActive,
+                    LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), s.LangCode),
                     Clients = clientAnnouncements.Where(c => c.AnnouncementId == s.Id).Select(ca => new ClientInfo { ClientId = ca.ClientId, ClientCode = ca.ClientCode }).ToList()
                 }).ToList();
 

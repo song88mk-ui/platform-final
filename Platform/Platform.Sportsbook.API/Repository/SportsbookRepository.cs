@@ -7871,6 +7871,8 @@ namespace Platform.Sportsbook.API.Repository
                 Result = new BackofficeAnnouncementResponseDTO
                 {
                     Announcements = announcementsList,
+                    TotalCount = totalCount,
+                    TotalPage = totalPage,
                 }
             };
         }

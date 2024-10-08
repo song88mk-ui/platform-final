@@ -12,6 +12,8 @@ namespace Platform.Shared.Models
             Announcements = new List<BackofficeAnnouncementDTO>();
         }
         public List<BackofficeAnnouncementDTO> Announcements { get; set; }
+        public int TotalCount { get; set; }
+        public int TotalPage { get; set; }
     }
 
     public class BackofficeAnnouncementDTO : AnnouncementDTO

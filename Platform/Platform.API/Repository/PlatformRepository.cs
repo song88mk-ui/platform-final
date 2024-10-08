@@ -4850,7 +4850,9 @@ namespace Platform.API.Repository
             {
                 ClientIds = clientIds,
                 LanguageCode = request.LanguageCode,
-                SearchText = request.SearchText
+                SearchText = request.SearchText,
+                Page = request.Page,
+                PageSize = request.PageSize,
             });
         }
 

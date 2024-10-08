@@ -7842,6 +7842,11 @@ namespace Platform.Sportsbook.API.Repository
                                                 select new { LanguageCode = la.LangCode, Message = la.Description }).ToList(),
                                  }).ToList();
 
+            var totalCount = announcements.Count();
+
+            var skip = (request.Page - 1) * request.PageSize;
+            var totalPage = ((totalCount - 1) / request.PageSize) + 1;
+
             var announcementsList = announcements
                 .Select(s => new BackofficeAnnouncementDTO
                 {
@@ -7857,7 +7862,7 @@ namespace Platform.Sportsbook.API.Repository
                         LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), l.LanguageCode),
                         Message = l.Message
                     }).ToList()
-                }).ToList();
+                }).Skip(skip).Take(request.PageSize).ToList();
 
             return new BaseResponseDTO<BackofficeAnnouncementResponseDTO>
             {

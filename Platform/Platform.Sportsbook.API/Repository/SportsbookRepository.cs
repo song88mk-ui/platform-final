@@ -7771,23 +7771,23 @@ namespace Platform.Sportsbook.API.Repository
             }
 
             var announcements = (from announcement in _sportsbookContext.Announcements
-                          join clientAnnouncement in _sportsbookContext.ClientAnnouncements
-                              on announcement.Id equals clientAnnouncement.AnnouncementId
-                          join languageAnnouncement in _sportsbookContext.LanguageAnnouncements
-                              on announcement.Id equals languageAnnouncement.AnnouncementId
-                          where clientAnnouncement.ClientId == request.ClientId
-                              && languageAnnouncement.LangCode == request.LanguageCode.ToString()
-                              && announcement.StartDate <= DateTime.Now
-                              && announcement.EndDate >= DateTime.Now
-                              && announcement.IsActive == true
-                              && announcement.IsDeleted == false
-                          select new AnnouncementDTO
-                          {
-                              Title = announcement.Title,
-                              Message = languageAnnouncement.Description,
-                              StartDate = announcement.StartDate,
-                              EndDate = announcement.EndDate
-                          }).Take(10).ToList();
+                                 join clientAnnouncement in _sportsbookContext.ClientAnnouncements
+                                     on announcement.Id equals clientAnnouncement.AnnouncementId
+                                 join languageAnnouncement in _sportsbookContext.LanguageAnnouncements
+                                     on announcement.Id equals languageAnnouncement.AnnouncementId
+                                 where clientAnnouncement.ClientId == request.ClientId
+                                     && languageAnnouncement.LangCode == request.LanguageCode.ToString()
+                                     && announcement.StartDate <= DateTime.Now
+                                     && announcement.EndDate >= DateTime.Now
+                                     && announcement.IsActive == true
+                                     && announcement.IsDeleted == false
+                                 select new AnnouncementDTO
+                                 {
+                                     Title = announcement.Title,
+                                     Message = languageAnnouncement.Description,
+                                     StartDate = announcement.StartDate,
+                                     EndDate = announcement.EndDate
+                                 }).Take(10).ToList();
 
             return new BaseResponseDTO<AnnouncementResponseDTO>
             {
@@ -7838,16 +7838,31 @@ namespace Platform.Sportsbook.API.Repository
                                                 where ca.AnnouncementId == announcement.Id
                                                 select new ClientInfo { ClientId = ca.ClientId, ClientCode = ca.ClientCode }).ToList(),
                                      Languages = (from la in _sportsbookContext.LanguageAnnouncements
-                                                where la.AnnouncementId == announcement.Id
-                                                select new { LanguageCode = la.LangCode, Message = la.Description }).ToList(),
+                                                  where la.AnnouncementId == announcement.Id
+                                                  select new { LanguageCode = la.LangCode, Message = la.Description }).ToList(),
                                  }).ToList();
 
-            var totalCount = announcements.Count();
+            var groupedAnnouncements = announcements
+                        .GroupBy(a => new { a.Id, a.Title, a.StartDate, a.EndDate, a.Message, a.LanguageCode, a.IsActive })
+                        .Select(g => new
+                        {
+                            Id = g.Key.Id,
+                            Title = g.Key.Title,
+                            StartDate = g.Key.StartDate,
+                            EndDate = g.Key.EndDate,
+                            IsActive = g.Key.IsActive,
+                            Message = g.Key.Message,
+                            LanguageCode = g.Key.LanguageCode,
+                            Clients = g.FirstOrDefault().Clients.Distinct().ToList(),
+                            Languages = g.FirstOrDefault().Languages.Distinct().ToList()
+                        }).ToList();
+
+            var totalCount = groupedAnnouncements.Count();
 
             var skip = (request.Page - 1) * request.PageSize;
             var totalPage = ((totalCount - 1) / request.PageSize) + 1;
 
-            var announcementsList = announcements
+            var announcementsList = groupedAnnouncements
                 .Select(s => new BackofficeAnnouncementDTO
                 {
                     Id = s.Id,
@@ -7858,7 +7873,8 @@ namespace Platform.Sportsbook.API.Repository
                     IsActive = s.IsActive,
                     LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), s.LanguageCode),
                     Clients = s.Clients,
-                    Languages = s.Languages.Select(l => new AnnouncementMessage { 
+                    Languages = s.Languages.Select(l => new AnnouncementMessage
+                    {
                         LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), l.LanguageCode),
                         Message = l.Message
                     }).ToList()

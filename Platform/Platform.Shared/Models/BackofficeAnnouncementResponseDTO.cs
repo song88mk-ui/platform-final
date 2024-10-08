@@ -16,9 +16,15 @@ namespace Platform.Shared.Models
 
     public class BackofficeAnnouncementDTO : AnnouncementDTO
     {
+        public BackofficeAnnouncementDTO()
+        {
+            Languages = new List<LanguageCode>();
+        }
+
         public int Id { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public List<ClientInfo> Clients { get; set; }
+        public List<LanguageCode> Languages { get; set; }
         public bool IsActive { get; set; }
     }
 

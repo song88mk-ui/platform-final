@@ -830,6 +830,8 @@ namespace Platform.Operator.Servicev2.Repository
                     ParlayBonus = (double)message.Bet.ParlayBonus,
                     ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
                     odds_type = message.Bet.OddsTypeName,
+                    total_odds = message.Bet.Odds,
+                    parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                     bet_list = message.BetSelections.Select(s => s.BetSelection).Select(s => new
                     {
                         sport_code = s.SportId.ToString(),
@@ -1273,6 +1275,8 @@ namespace Platform.Operator.Servicev2.Repository
                     ParlayBonus = (double)message.Bet.ParlayBonus,
                     ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
                     odds_type = message.Bet.OddsTypeName,
+                    total_odds = message.Bet.Odds,
+                    parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                     bet_list = message.BetSelections.Select(s => new
                     {
                         sport_code = s.SportId.ToString(),
@@ -1881,6 +1885,8 @@ namespace Platform.Operator.Servicev2.Repository
                     ParlayBonus = (double)message.Bet.ParlayBonus,
                     ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
                     odds_type = message.Bet.OddsTypeName,
+                    total_odds = message.Bet.Odds,
+                    parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                     bet_list = message.BetSelections.Select(s => new
                     {
                         sport_code = s.SportId.ToString(),
@@ -2403,6 +2409,8 @@ namespace Platform.Operator.Servicev2.Repository
                 ParlayBonus = (double)message.Bet.ParlayBonus,
                 ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
                 odds_type = message.Bet.OddsTypeName,
+                total_odds = message.Bet.Odds,
+                parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                 bet_list = message.BetSelections.Select(s => new
                 {
                     sport_code = s.SportId.ToString(),
@@ -3082,6 +3090,17 @@ namespace Platform.Operator.Servicev2.Repository
                 return value / 1000;
 
             return value;
+        }
+
+        private string GetParlayCountLabel(int selectionCount)
+        {
+            return selectionCount switch
+            {
+                1 => string.Empty,
+                2 => "Double (1 Bet)",
+                3 => "Treble (1 Bet)",
+                _ => $"{selectionCount}-Folds"
+            };
         }
 
     }

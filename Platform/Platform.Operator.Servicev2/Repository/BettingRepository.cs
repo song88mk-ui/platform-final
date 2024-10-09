@@ -3096,7 +3096,7 @@ namespace Platform.Operator.Servicev2.Repository
         {
             return selectionCount switch
             {
-                1 => string.Empty,
+                1 => (string)null,
                 2 => "Double (1 Bet)",
                 3 => "Treble (1 Bet)",
                 _ => $"{selectionCount}-Folds"

@@ -4883,6 +4883,8 @@ namespace Platform.API.Repository
                 IsActive = request.IsActive,
                 AnnouncementMessages = request.AnnouncementMessages,
                 Clients = clients,
+                UserId = request.UserId,
+                UserRoleId = request.UserRoleId
             });
         }
 

@@ -7826,6 +7826,8 @@ namespace Platform.Sportsbook.API.Repository
                              StartDate = announcement.StartDate,
                              EndDate = announcement.EndDate,
                              IsActive = announcement.IsActive,
+                             UserId = announcement.UserId,
+                             UserRoleId = announcement.UserRoleId,
                              Clients = (from ca in _sportsbookContext.ClientAnnouncements
                                         where ca.AnnouncementId == announcement.Id && (!clientIds.Any() || clientIds.Contains(ca.ClientId))
                                         select new ClientInfo { ClientId = ca.ClientId, ClientCode = ca.ClientCode }).ToList(),
@@ -7844,6 +7846,8 @@ namespace Platform.Sportsbook.API.Repository
                             IsActive = s.IsActive,
                             Message = s.Languages.FirstOrDefault(l => l.LanguageCode ==  request.LanguageCode.ToString())?.Message ?? string.Empty,
                             LanguageCode = s.Languages.FirstOrDefault(l => l.LanguageCode == request.LanguageCode.ToString())?.LanguageCode ?? string.Empty,
+                            UserId = s.UserId,
+                            UserRoleId = s.UserRoleId,
                             Clients = s.Clients.ToList(),
                             Languages = s.Languages.ToList()
                         }).ToList();
@@ -7862,6 +7866,8 @@ namespace Platform.Sportsbook.API.Repository
                     EndDate = s.EndDate,
                     Message = s.Message,
                     IsActive = s.IsActive,
+                    UserId = s.UserId,
+                    UserRoleId = s.UserRoleId,
                     LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), s.LanguageCode),
                     Clients = s.Clients,
                     Languages = s.Languages.Select(l => new AnnouncementMessage
@@ -7939,7 +7945,9 @@ namespace Platform.Sportsbook.API.Repository
                         LanguageCode = request.AnnouncementMessages.FirstOrDefault().LanguageCode,
                         IsActive = announcement.IsActive,
                         Clients = request.Clients,
-                        Languages = request.AnnouncementMessages
+                        Languages = request.AnnouncementMessages,
+                        UserId = request.UserId,
+                        UserRoleId = request.UserRoleId
                     });
 
                     clientAnnouncements.AddRange(request.Clients.Select(s => new ClientAnnouncements
@@ -7964,7 +7972,9 @@ namespace Platform.Sportsbook.API.Repository
                         EndDate = request.EndDate,
                         Title = request.Title,
                         IsActive = request.IsActive,
-                        IsDeleted = false
+                        IsDeleted = false,
+                        UserId = request.UserId,
+                        UserRoleId = request.UserRoleId
                     }).Entity;
 
                     _sportsbookContext.SaveChanges();
@@ -7979,7 +7989,9 @@ namespace Platform.Sportsbook.API.Repository
                         LanguageCode = request.AnnouncementMessages.FirstOrDefault().LanguageCode,
                         IsActive = announcement.IsActive,
                         Clients = request.Clients,
-                        Languages = request.AnnouncementMessages
+                        Languages = request.AnnouncementMessages,
+                        UserId = request.UserId,
+                        UserRoleId = request.UserRoleId
                     });
 
                     clientAnnouncements.AddRange(request.Clients.Select(s => new ClientAnnouncements

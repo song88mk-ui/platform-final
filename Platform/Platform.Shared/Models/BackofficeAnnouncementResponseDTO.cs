@@ -28,6 +28,8 @@ namespace Platform.Shared.Models
         public List<ClientInfo> Clients { get; set; }
         public List<AnnouncementMessage> Languages { get; set; }
         public bool IsActive { get; set; }
+        public string UserId { get; set; }
+        public string UserRoleId { get; set; }
     }
 
 }

@@ -12,5 +12,7 @@ namespace Platform.Shared.Data.Sportsbook.SQLEntities
         public string Title { get; set; }
         public bool IsActive { get; set; }
         public bool IsDeleted { get; set; } = false;
+        public string UserId { get; set; }
+        public string UserRoleId { get; set; }
     }
 }

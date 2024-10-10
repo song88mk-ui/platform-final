@@ -7770,17 +7770,17 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
+            var clientAnnouncementIds = _sportsbookContext.ClientAnnouncements.Where(ca => ca.ClientId == request.ClientId).Select(s => s.AnnouncementId).ToList();
+
             var announcements = (from announcement in _sportsbookContext.Announcements
-                                 join clientAnnouncement in _sportsbookContext.ClientAnnouncements
-                                     on announcement.Id equals clientAnnouncement.AnnouncementId
                                  join languageAnnouncement in _sportsbookContext.LanguageAnnouncements
-                                     on announcement.Id equals languageAnnouncement.AnnouncementId
-                                 where clientAnnouncement.ClientId == request.ClientId
-                                     && languageAnnouncement.LangCode == request.LanguageCode.ToString()
-                                     && announcement.StartDate <= DateTime.Now
+                                     on announcement.Id equals languageAnnouncement.AnnouncementId 
+                                 where announcement.StartDate <= DateTime.Now
                                      && announcement.EndDate >= DateTime.Now
                                      && announcement.IsActive == true
                                      && announcement.IsDeleted == false
+                                     && languageAnnouncement.LangCode == request.LanguageCode.ToString()
+                                     && clientAnnouncementIds.Contains(announcement.Id)
                                  select new AnnouncementDTO
                                  {
                                      Title = announcement.Title,
@@ -7816,45 +7816,36 @@ namespace Platform.Sportsbook.API.Repository
 
             var clientIds = string.IsNullOrEmpty(request.ClientIds) ? new List<Guid>() : request.ClientIds.Split(',').ToList().ConvertAll(Guid.Parse);
 
-            var announcements = (from announcement in _sportsbookContext.Announcements
-                                 join clientAnnouncement in _sportsbookContext.ClientAnnouncements
-                                     on announcement.Id equals clientAnnouncement.AnnouncementId
-                                 join languageAnnouncement in _sportsbookContext.LanguageAnnouncements
-                                     on announcement.Id equals languageAnnouncement.AnnouncementId
-                                 where (!clientIds.Any() || clientIds.Contains(clientAnnouncement.ClientId))
-                                     && languageAnnouncement.LangCode == request.LanguageCode.ToString()
-                                     && (announcement.Title.Contains(request.SearchText) || languageAnnouncement.Description.Contains(request.SearchText))
-                                     && announcement.IsDeleted == false
-                                 select new
-                                 {
-                                     Id = announcement.Id,
-                                     Title = announcement.Title,
-                                     LanguageCode = languageAnnouncement.LangCode,
-                                     Message = languageAnnouncement.Description,
-                                     StartDate = announcement.StartDate,
-                                     EndDate = announcement.EndDate,
-                                     IsActive = announcement.IsActive,
-                                     Clients = (from ca in _sportsbookContext.ClientAnnouncements
-                                                where ca.AnnouncementId == announcement.Id
-                                                select new ClientInfo { ClientId = ca.ClientId, ClientCode = ca.ClientCode }).ToList(),
-                                     Languages = (from la in _sportsbookContext.LanguageAnnouncements
-                                                  where la.AnnouncementId == announcement.Id
-                                                  select new { LanguageCode = la.LangCode, Message = la.Description }).ToList(),
-                                 }).ToList();
+            var query = (from announcement in _sportsbookContext.Announcements
+                         where announcement.Title.Contains(request.SearchText)
+                             && announcement.IsDeleted == false
+                         select new
+                         {
+                             Id = announcement.Id,
+                             Title = announcement.Title,
+                             StartDate = announcement.StartDate,
+                             EndDate = announcement.EndDate,
+                             IsActive = announcement.IsActive,
+                             Clients = (from ca in _sportsbookContext.ClientAnnouncements
+                                        where ca.AnnouncementId == announcement.Id && (!clientIds.Any() || clientIds.Contains(ca.ClientId))
+                                        select new ClientInfo { ClientId = ca.ClientId, ClientCode = ca.ClientCode }).ToList(),
+                             Languages = (from la in _sportsbookContext.LanguageAnnouncements
+                                          where la.AnnouncementId == announcement.Id && (la.Description.Contains(request.SearchText) || string.IsNullOrEmpty(request.SearchText))
+                                          select new { LanguageCode = la.LangCode, Message = la.Description }).ToList(),
+                         }).ToList();
 
-            var groupedAnnouncements = announcements
-                        .GroupBy(a => new { a.Id, a.Title, a.StartDate, a.EndDate, a.Message, a.LanguageCode, a.IsActive })
-                        .Select(g => new
+            var groupedAnnouncements = query.Where(s => s.Languages.Any(l => l.LanguageCode == request.LanguageCode.ToString()) && s.Clients.Any())
+                        .Select(s => new
                         {
-                            Id = g.Key.Id,
-                            Title = g.Key.Title,
-                            StartDate = g.Key.StartDate,
-                            EndDate = g.Key.EndDate,
-                            IsActive = g.Key.IsActive,
-                            Message = g.Key.Message,
-                            LanguageCode = g.Key.LanguageCode,
-                            Clients = g.FirstOrDefault().Clients.Distinct().ToList(),
-                            Languages = g.FirstOrDefault().Languages.Distinct().ToList()
+                            Id = s.Id,
+                            Title = s.Title,
+                            StartDate = s.StartDate,
+                            EndDate = s.EndDate,
+                            IsActive = s.IsActive,
+                            Message = s.Languages.FirstOrDefault(l => l.LanguageCode ==  request.LanguageCode.ToString())?.Message ?? string.Empty,
+                            LanguageCode = s.Languages.FirstOrDefault(l => l.LanguageCode == request.LanguageCode.ToString())?.LanguageCode ?? string.Empty,
+                            Clients = s.Clients.ToList(),
+                            Languages = s.Languages.ToList()
                         }).ToList();
 
             var totalCount = groupedAnnouncements.Count();

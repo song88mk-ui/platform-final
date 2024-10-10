@@ -30,8 +30,8 @@ namespace Platform.Shared.Data.Sportsbook
             modelBuilder.Entity<Translation>().HasKey(k => new { k.LanguageCode, k.Name });
             modelBuilder.Entity<Country>().HasKey(k => new { k.Id });
             modelBuilder.Entity<Announcement>().HasKey(k => new { k.Id });
-            modelBuilder.Entity<ClientAnnouncements>().HasKey(k => new { k.ClientId, k.AnnouncementId });
-            modelBuilder.Entity<LanguageAnnouncements>().HasKey(k => new { k.LangCode, k.AnnouncementId });
+            modelBuilder.Entity<ClientAnnouncements>().HasKey(k => new { k.AnnouncementId, k.ClientId });
+            modelBuilder.Entity<LanguageAnnouncements>().HasKey(k => new { k.AnnouncementId, k.LangCode });
         }
 
         public DbSet<ClientSportOrder> ClientSportOrder { get; set; }

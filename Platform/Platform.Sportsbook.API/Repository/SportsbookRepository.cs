@@ -7775,8 +7775,8 @@ namespace Platform.Sportsbook.API.Repository
             var announcements = (from announcement in _sportsbookContext.Announcements
                                  join languageAnnouncement in _sportsbookContext.LanguageAnnouncements
                                      on announcement.Id equals languageAnnouncement.AnnouncementId 
-                                 where announcement.StartDate <= DateTime.Now
-                                     && announcement.EndDate >= DateTime.Now
+                                 where announcement.StartDate <= DateTime.UtcNow
+                                     && announcement.EndDate >= DateTime.UtcNow
                                      && announcement.IsActive == true
                                      && announcement.IsDeleted == false
                                      && languageAnnouncement.LangCode == request.LanguageCode.ToString()

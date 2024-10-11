@@ -7774,7 +7774,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var announcements = (from announcement in _sportsbookContext.Announcements
                                  join languageAnnouncement in _sportsbookContext.LanguageAnnouncements
-                                     on announcement.Id equals languageAnnouncement.AnnouncementId 
+                                     on announcement.Id equals languageAnnouncement.AnnouncementId
                                  where announcement.StartDate <= DateTime.UtcNow
                                      && announcement.EndDate >= DateTime.UtcNow
                                      && announcement.IsActive == true
@@ -7816,66 +7816,59 @@ namespace Platform.Sportsbook.API.Repository
 
             var clientIds = string.IsNullOrEmpty(request.ClientIds) ? new List<Guid>() : request.ClientIds.Split(',').ToList().ConvertAll(Guid.Parse);
 
-            var query = (from announcement in _sportsbookContext.Announcements
-                         where announcement.Title.Contains(request.SearchText)
-                             && announcement.IsDeleted == false
-                         select new
-                         {
-                             Id = announcement.Id,
-                             Title = announcement.Title,
-                             StartDate = announcement.StartDate,
-                             EndDate = announcement.EndDate,
-                             IsActive = announcement.IsActive,
-                             UserId = announcement.UserId,
-                             UserRoleId = announcement.UserRoleId,
-                             Clients = (from ca in _sportsbookContext.ClientAnnouncements
-                                        where ca.AnnouncementId == announcement.Id && (!clientIds.Any() || clientIds.Contains(ca.ClientId))
-                                        select new ClientInfo { ClientId = ca.ClientId, ClientCode = ca.ClientCode }).ToList(),
-                             Languages = (from la in _sportsbookContext.LanguageAnnouncements
-                                          where la.AnnouncementId == announcement.Id && (la.Description.Contains(request.SearchText) || string.IsNullOrEmpty(request.SearchText))
-                                          select new { LanguageCode = la.LangCode, Message = la.Description }).ToList(),
-                         }).ToList();
+            var announcements = await _sportsbookContext.Announcements
+                                .Join(_sportsbookContext.LanguageAnnouncements,
+                                      a => a.Id,
+                                      la => la.AnnouncementId,
+                                      (a, la) => new { Announcement = a, LanguageAnnouncement = la })
+                                .Where(x => x.LanguageAnnouncement.LangCode == request.LanguageCode.ToString() 
+                                        && (x.Announcement.Title.ToLower().Contains(request.SearchText) 
+                                         || x.LanguageAnnouncement.Description.ToLower().Contains(request.SearchText))
+                                        && x.Announcement.IsDeleted == false)
+                                .Select(x => x.Announcement)
+                                .Distinct()
+                                .ToListAsync();
 
-            var groupedAnnouncements = query.Where(s => s.Languages.Any(l => l.LanguageCode == request.LanguageCode.ToString()) && s.Clients.Any())
-                        .Select(s => new
+            var announce = announcements.Select(s => new
+            {
+                Id = s.Id,
+                Title = s.Title,
+                StartDate = s.StartDate,
+                EndDate = s.EndDate,
+                IsActive = s.IsActive,
+                UserId = s.UserId,
+                UserRoleId = s.UserRoleId,
+                Clients = (from ca in _sportsbookContext.ClientAnnouncements
+                           where ca.AnnouncementId == s.Id && (!clientIds.Any() || clientIds.Contains(ca.ClientId))
+                           select new ClientInfo { ClientId = ca.ClientId, ClientCode = ca.ClientCode }).ToList(),
+                Languages = (from la in _sportsbookContext.LanguageAnnouncements
+                             where la.AnnouncementId == s.Id && (la.Description.Contains(request.SearchText) || string.IsNullOrEmpty(request.SearchText))
+                             select new { LanguageCode = la.LangCode, Message = la.Description }).ToList(),
+            }).Where(s => s.Languages.Any() && s.Clients.Any()).ToList();
+
+            var skip = (request.Page - 1) * request.PageSize;
+            var totalCount = announce.Count();
+            var totalPage = ((totalCount - 1) / request.PageSize) + 1;
+
+            var final = announce
+                        .Select(s => new BackofficeAnnouncementDTO
                         {
                             Id = s.Id,
                             Title = s.Title,
                             StartDate = s.StartDate,
                             EndDate = s.EndDate,
                             IsActive = s.IsActive,
-                            Message = s.Languages.FirstOrDefault(l => l.LanguageCode ==  request.LanguageCode.ToString())?.Message ?? string.Empty,
-                            LanguageCode = s.Languages.FirstOrDefault(l => l.LanguageCode == request.LanguageCode.ToString())?.LanguageCode ?? string.Empty,
+                            Message = s.Languages.FirstOrDefault(l => l.LanguageCode == request.LanguageCode.ToString())?.Message ?? string.Empty,
+                            LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), s.Languages.FirstOrDefault(l => l.LanguageCode == request.LanguageCode.ToString())?.LanguageCode ?? "EN"),
                             UserId = s.UserId,
                             UserRoleId = s.UserRoleId,
                             Clients = s.Clients.ToList(),
-                            Languages = s.Languages.ToList()
-                        }).ToList();
-
-            var totalCount = groupedAnnouncements.Count();
-
-            var skip = (request.Page - 1) * request.PageSize;
-            var totalPage = ((totalCount - 1) / request.PageSize) + 1;
-
-            var announcementsList = groupedAnnouncements
-                .Select(s => new BackofficeAnnouncementDTO
-                {
-                    Id = s.Id,
-                    Title = s.Title,
-                    StartDate = s.StartDate,
-                    EndDate = s.EndDate,
-                    Message = s.Message,
-                    IsActive = s.IsActive,
-                    UserId = s.UserId,
-                    UserRoleId = s.UserRoleId,
-                    LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), s.LanguageCode),
-                    Clients = s.Clients,
-                    Languages = s.Languages.Select(l => new AnnouncementMessage
-                    {
-                        LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), l.LanguageCode),
-                        Message = l.Message
-                    }).ToList()
-                }).Skip(skip).Take(request.PageSize).ToList();
+                            Languages = s.Languages.Select(l => new AnnouncementMessage
+                            {
+                                LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), l.LanguageCode),
+                                Message = l.Message
+                            }).ToList()
+                        }).Skip(skip).Take(request.PageSize).ToList();
 
             return new BaseResponseDTO<BackofficeAnnouncementResponseDTO>
             {
@@ -7883,7 +7876,7 @@ namespace Platform.Sportsbook.API.Repository
                 Message = StatusCode.Success.ToString(),
                 Result = new BackofficeAnnouncementResponseDTO
                 {
-                    Announcements = announcementsList,
+                    Announcements = final,
                     TotalCount = totalCount,
                     TotalPage = totalPage,
                 }

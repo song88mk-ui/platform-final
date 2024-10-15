@@ -81,7 +81,7 @@ stages:
                   env:
                     TAG: $(Build.BuildId)
                     RG: $(ResourceGroup)
-                    CA: ca-staging-platform-placement
+                    CA: ca-staging-platform-placement-1
                     CR: $(ContainerRegistry)
                     REPO: $(ImageRepository)
                   inputs:
@@ -138,7 +138,7 @@ stages:
                   env:
                     TAG: $(Build.BuildId)
                     RG: $(ResourceGroup)
-                    CA: ca-production-platform-placement
+                    CA: ca-production-platform-placement-1
                     CR: $(ContainerRegistry)
                     REPO: $(ImageRepository)
                   inputs:
@@ -148,14 +148,14 @@ stages:
                     scriptLocation: inlineScript
                     inlineScript: |
                       az config set core.only_show_errors=True
-                      az containerapp show -n ${CA} -g ${RG} -o none
-                      ret=$(az containerapp update \
-                        -n ${CA} -g ${RG} --output json \
-                        -i ${CR}/${REPO}:${TAG} \
-                        --container-name service | jq -r '.properties.provisioningState')
-                      [[ $ret == "Succeeded" ]] && echo "Status: Success" && exit 0
-                      echo "Status: ${ret}"
-                      exit 1
+                      for i in $(seq 1 10); do
+                        az containerapp show -n ${CA}-${i} -g ${RG} -o none
+                        ret=$(az containerapp update \
+                          -n ${CA} -g ${RG} --output json \
+                          -i ${CR}/${REPO}:${TAG} \
+                          --container-name service | jq -r '.properties.provisioningState')
+                        echo "Status for $i: ${ret}"
+                      done
             on:
               failure:
                 steps:

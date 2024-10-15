@@ -172,7 +172,7 @@ namespace Platform.CashOut.Service.Repository
                                     Message = "Cashout request has been declined"
                                 }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
 
-                                _logger.LogWarning("{@betId} - Cashout request has been declined - MTS Result : {@payload}", message.BetId, result);
+                                _logger.LogWarning("{@betId} - Cashout request has been declined - MTS Result : {@payload} - {@message}", message.BetId, result, JsonSerializer.Serialize(message));
                             }
                         }
                     }

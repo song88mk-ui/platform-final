@@ -138,7 +138,7 @@ stages:
                   env:
                     TAG: $(Build.BuildId)
                     RG: $(ResourceGroup)
-                    CA: ca-production-platform-placement-1
+                    CA: ca-production-platform-placement
                     CR: $(ContainerRegistry)
                     REPO: $(ImageRepository)
                   inputs:
@@ -151,7 +151,7 @@ stages:
                       for i in $(seq 1 10); do
                         az containerapp show -n ${CA}-${i} -g ${RG} -o none
                         ret=$(az containerapp update \
-                          -n ${CA} -g ${RG} --output json \
+                          -n ${CA}-${i} -g ${RG} --output json \
                           -i ${CR}/${REPO}:${TAG} \
                           --container-name service | jq -r '.properties.provisioningState')
                         echo "Status for $i: ${ret}"

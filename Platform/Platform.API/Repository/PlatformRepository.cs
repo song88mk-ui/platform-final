@@ -4924,9 +4924,6 @@ namespace Platform.API.Repository
         }
         private bool IsValidCurrencyCode(CurrencyCode currencyCode)
         {
-            if (currencyCode == CurrencyCode.PHP)
-                return false;
-
             return Enum.IsDefined(typeof(CurrencyCode), currencyCode) ? true : false;
         }
         private bool IsValidCurrencyCode(string currencyCode)

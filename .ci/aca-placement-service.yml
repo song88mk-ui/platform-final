@@ -81,7 +81,7 @@ stages:
                   env:
                     TAG: $(Build.BuildId)
                     RG: $(ResourceGroup)
-                    CA: ca-staging-platform-placement-1
+                    CA: ca-staging-plt-placement-1
                     CR: $(ContainerRegistry)
                     REPO: $(ImageRepository)
                   inputs:
@@ -138,7 +138,7 @@ stages:
                   env:
                     TAG: $(Build.BuildId)
                     RG: $(ResourceGroup)
-                    CA: ca-production-platform-placement
+                    CA: ca-production-plt-placement
                     CR: $(ContainerRegistry)
                     REPO: $(ImageRepository)
                   inputs:

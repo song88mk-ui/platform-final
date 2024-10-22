@@ -10,38 +10,43 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace Platform.Betting.API.Repository
 {
     public class BetConfigRepository : IBetConfigRepository
     {
         private readonly BettingContext _bettingContext;
-        public BetConfigRepository(BettingContext bettingContext)
+        private readonly IConfiguration _configuration;
+
+        public BetConfigRepository(BettingContext bettingContext, IConfiguration configuration)
         {
             _bettingContext = bettingContext;
+            _configuration = configuration;
         }
 
         public async Task<BaseResponseDTO<StatusCode>> ProcessBetConfig(BackOfficeBetConfigPayloadDTO payload)
         {
-            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
+            try
             {
-                try
+                var clientID = payload.ClientId;
+                var dateCreated = DateTime.UtcNow;
+
+                var options = new ParallelOptions()
                 {
-                    var clientID = payload.ClientId;
-                    var dateCreated = DateTime.UtcNow;
+                    MaxDegreeOfParallelism = 50
+                };
 
-                    List<ParlayBonusConfig> defaultParlayConfig = null;
-
-                    foreach (var config in payload.BetConfigPayload)
+                Parallel.ForEach(payload.BetConfigPayload, options, config =>
+                {
+                    var defaultJSON = JsonSerializer.Serialize(new DefaultSportConfig
                     {
-                        var defaultJSON = JsonSerializer.Serialize(new DefaultSportConfig
-                        {
-                            MinStake = config.OtherSports.MinBet,
-                            MaxStake = config.OtherSports.MaxBet,
-                            StakeLimitFixture = config.OtherSports.MaxFixtureBet
-                        });
-                        var overrideJSON = JsonSerializer.Serialize(new List<OverrideSportConfig>
-                        {
+                        MinStake = config.OtherSports.MinBet,
+                        MaxStake = config.OtherSports.MaxBet,
+                        StakeLimitFixture = config.OtherSports.MaxFixtureBet
+                    });
+                    var overrideJSON = JsonSerializer.Serialize(new List<OverrideSportConfig>
+                    {
                             new OverrideSportConfig
                             {
                                 SportId = 1,
@@ -58,113 +63,124 @@ namespace Platform.Betting.API.Repository
                                 MaxStake = config.Cricket.MaxBet,
                                 StakeLimitFixture = config.Cricket.MaxFixtureBet
                             }
-                        });
+                    });
 
-                        var taxJSON = JsonSerializer.Serialize(config.TaxConfig);
-                        var priceboostJson = JsonSerializer.Serialize(config.Priceboost);
-                        var betBuilderJson = JsonSerializer.Serialize(config.BetBuilder);
-                        var parleyJSON = JsonSerializer.Serialize(new List<ParlayBonusConfig>());
+                    var taxJSON = JsonSerializer.Serialize(config.TaxConfig);
+                    var priceboostJson = JsonSerializer.Serialize(config.Priceboost);
+                    var betBuilderJson = JsonSerializer.Serialize(config.BetBuilder);
+                    var parleyJSON = JsonSerializer.Serialize(new List<ParlayBonusConfig>());
 
-                        var betconfig = _bettingContext.BetConfig.FirstOrDefault(b => b.ClientId == clientID && b.CurrencyCode == config.CurrencyCode);
-                        if (betconfig != null)
+
+                    using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
+                    {
+                        var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
+
+                        using (var context = new BettingContext(optionsBuilder.Options))
                         {
-                            //retain existing ParlayBonus config
-                            var parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betconfig.ParlayConfig);
-                            if (parlayConfig != null)
+                            var betconfig = context.BetConfig.FirstOrDefault(b => b.ClientId == clientID && b.CurrencyCode == config.CurrencyCode);
+                            if (betconfig != null)
                             {
+                                //retain existing ParlayBonus config
+                                var parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(betconfig.ParlayConfig);
+                                if (parlayConfig != null)
+                                {
+                                    parleyJSON = JsonSerializer.Serialize(new ParlayConfig
+                                    {
+                                        MinStake = config.Parlay.MinBet,
+                                        MaxStake = config.Parlay.MaxBet,
+                                        MaxPayout = config.Parlay.MaxPayout,
+                                        ParlayBonusMaxWinnings = config.Parlay.ParlayBonusMaxWinnings,
+                                        ParlayBonusMinOdds = parlayConfig.ParlayBonusMinOdds,
+                                        ParlayBonusConfig = parlayConfig.ParlayBonusConfig ?? new List<ParlayBonusConfig>()
+                                    });
+                                }
+
+                                betconfig.DefaultConfig = defaultJSON;
+                                betconfig.OverrideConfig = overrideJSON;
+                                betconfig.ParlayConfig = parleyJSON;
+                                betconfig.CreatedDate = dateCreated;
+                                betconfig.TaxConfig = taxJSON;
+                                betconfig.PriceboostConfig = priceboostJson;
+                                betconfig.BetBuilderConfig = betBuilderJson;
+                                context.BetConfig.Update(betconfig);
+                            }
+                            else
+                            {
+                                List<ParlayBonusConfig> defaultParlayConfig = null;
+
+                                if (!(defaultParlayConfig?.Any() ?? false))
+                                {
+                                    var tempConfig = context.BetConfig.Where(b => b.ClientId == clientID && !string.IsNullOrEmpty(b.ParlayConfig));
+
+                                    foreach (var item in tempConfig)
+                                    {
+                                        var parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(item.ParlayConfig);
+
+                                        if (parlayConfig?.ParlayBonusConfig?.Any() ?? false)
+                                        {
+                                            config.Parlay.ParlayBonusMinOdds = parlayConfig.ParlayBonusMinOdds;
+                                            defaultParlayConfig = parlayConfig.ParlayBonusConfig;
+                                            break;
+                                        }
+                                    }
+                                }
+
                                 parleyJSON = JsonSerializer.Serialize(new ParlayConfig
                                 {
                                     MinStake = config.Parlay.MinBet,
                                     MaxStake = config.Parlay.MaxBet,
                                     MaxPayout = config.Parlay.MaxPayout,
                                     ParlayBonusMaxWinnings = config.Parlay.ParlayBonusMaxWinnings,
-                                    ParlayBonusMinOdds = parlayConfig.ParlayBonusMinOdds,
-                                    ParlayBonusConfig = parlayConfig.ParlayBonusConfig ?? new List<ParlayBonusConfig>()
+                                    ParlayBonusMinOdds = config.Parlay.ParlayBonusMinOdds,
+                                    ParlayBonusConfig = defaultParlayConfig ?? new List<ParlayBonusConfig>()
+                                });
+
+                                context.BetConfig.Add(new BetConfig
+                                {
+                                    ClientId = clientID,
+                                    CurrencyCode = config.CurrencyCode,
+                                    DefaultConfig = defaultJSON,
+                                    OverrideConfig = overrideJSON,
+                                    ParlayConfig = parleyJSON,
+                                    CreatedDate = dateCreated,
+                                    TaxConfig = taxJSON,
+                                    PriceboostConfig = priceboostJson,
+                                    BetBuilderConfig = betBuilderJson
                                 });
                             }
 
-                            betconfig.DefaultConfig = defaultJSON;
-                            betconfig.OverrideConfig = overrideJSON;
-                            betconfig.ParlayConfig = parleyJSON;
-                            betconfig.CreatedDate = dateCreated;
-                            betconfig.TaxConfig = taxJSON;
-                            betconfig.PriceboostConfig = priceboostJson;
-                            betconfig.BetBuilderConfig = betBuilderJson;
-                            _bettingContext.BetConfig.Update(betconfig);
-                        }
-                        else
-                        {
-                            if (!(defaultParlayConfig?.Any() ?? false))
+                            //update paylayBonusAudit
+                            var parlayAudit = context.ParlayBonusAudit.AsNoTracking().Where(c => c.ClientId == clientID && c.CurrencyCode == config.CurrencyCode)
+                                    .OrderByDescending(o => o.TimeStamp).FirstOrDefault();
+
+                            if (parlayAudit != null)
                             {
-                                var tempConfig = _bettingContext.BetConfig.Where(b => b.ClientId == clientID && !string.IsNullOrEmpty(b.ParlayConfig));
+                                var parlayBonusAudit = context.ParlayBonusAudit.Where(c => c.ClientId == clientID && c.CurrencyCode == config.CurrencyCode && c.TimeStamp == parlayAudit.TimeStamp);
 
-                                foreach(var item in tempConfig)
+                                foreach (var parlay in parlayBonusAudit)
                                 {
-                                    var parlayConfig = JsonSerializer.Deserialize<ParlayConfig>(item.ParlayConfig);
-
-                                    if(parlayConfig?.ParlayBonusConfig?.Any() ?? false)
-                                    {
-                                        config.Parlay.ParlayBonusMinOdds = parlayConfig.ParlayBonusMinOdds;
-                                        defaultParlayConfig = parlayConfig.ParlayBonusConfig;
-                                        break;
-                                    }
+                                    parlay.ParlayBonusMaxWinnings = config.Parlay.ParlayBonusMaxWinnings;
+                                    context.ParlayBonusAudit.Update(parlay);
                                 }
                             }
 
-                            parleyJSON = JsonSerializer.Serialize(new ParlayConfig
-                            {
-                                MinStake = config.Parlay.MinBet,
-                                MaxStake = config.Parlay.MaxBet,
-                                MaxPayout = config.Parlay.MaxPayout,
-                                ParlayBonusMaxWinnings = config.Parlay.ParlayBonusMaxWinnings,
-                                ParlayBonusMinOdds = config.Parlay.ParlayBonusMinOdds,
-                                ParlayBonusConfig = defaultParlayConfig ?? new List<ParlayBonusConfig>()
-                            });
-
-                            _bettingContext.BetConfig.Add(new BetConfig
-                            {
-                                ClientId = clientID,
-                                CurrencyCode = config.CurrencyCode,
-                                DefaultConfig = defaultJSON,
-                                OverrideConfig = overrideJSON,
-                                ParlayConfig = parleyJSON,
-                                CreatedDate = dateCreated,
-                                TaxConfig = taxJSON,
-                                PriceboostConfig = priceboostJson,
-                                BetBuilderConfig = betBuilderJson
-                            });
+                            context.SaveChanges();
                         }
 
-                        //update paylayBonusAudit
-                        var parlayAudit = _bettingContext.ParlayBonusAudit.Where(c => c.ClientId == clientID && c.CurrencyCode == config.CurrencyCode)
-                                .OrderByDescending(o => o.TimeStamp).FirstOrDefault();
-
-                        if (parlayAudit != null)
-                        {
-                            var parlayBonusAudit = _bettingContext.ParlayBonusAudit.Where(c => c.ClientId == clientID && c.CurrencyCode == config.CurrencyCode && c.TimeStamp == parlayAudit.TimeStamp);
-
-                            foreach (var parlay in parlayBonusAudit)
-                            {
-                                parlay.ParlayBonusMaxWinnings = config.Parlay.ParlayBonusMaxWinnings;
-                                _bettingContext.ParlayBonusAudit.Update(parlay);
-                            }
-                        }
+                        scope.Complete();
                     }
+                });
 
-                    await _bettingContext.SaveChangesAsync();
-
-                    scope.Complete();
-                }
-                catch (Exception ex)
-                {
-                    scope.Dispose();
-                    return new BaseResponseDTO<StatusCode>
-                    {
-                        StatusCode = StatusCode.Error,
-                        Message = ex.Message
-                    };
-                }
             }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<StatusCode>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = ex.Message
+                };
+            }
+
             return new BaseResponseDTO<StatusCode>
             {
                 StatusCode = StatusCode.Success,

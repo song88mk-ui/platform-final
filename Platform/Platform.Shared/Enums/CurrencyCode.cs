@@ -42,6 +42,14 @@
         MXN = 37,
         BDT = 38,
         LKR = 39,
-        UZS = 40
+        UZS = 40,
+        MNT = 41,
+        SGD = 42,
+        NPR = 43,
+        EGP = 44,
+        AUD = 45,
+        CAD = 46,
+        COP = 47,
+        ARS = 48
     }
 }

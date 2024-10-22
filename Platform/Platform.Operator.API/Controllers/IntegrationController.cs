@@ -247,6 +247,7 @@ namespace Platform.Operator.API.Controllers
                     return BadRequest(result);
             }
         }
+
         [HttpPost("v1/casino/bet/settlement")]
         public async Task<IActionResult> CasinoBetSettlement([FromBody] OperatorCasinoBetSettlementRequestDTO request)
         {
@@ -262,6 +263,7 @@ namespace Platform.Operator.API.Controllers
                     return BadRequest(result);
             }
         }
+
         [HttpPost("v1/esports/debit")]
         public async Task<IActionResult> ESportsDebit([FromBody] OperatorESportsDebitRequestDTO request)
         {

@@ -368,7 +368,7 @@ namespace Platform.AgentReports.API.Controllers
 
         [HttpGet("v1/reports/products")]
         public async Task<IActionResult> GetProducts()
-        {//
+        {
             var result = await _reportsRepository.GetProducts();
 
             switch (result.StatusCode)

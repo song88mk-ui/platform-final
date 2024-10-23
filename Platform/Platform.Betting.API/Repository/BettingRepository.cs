@@ -1422,19 +1422,20 @@ namespace Platform.Betting.API.Repository
                 if (checkOverride != null)
                 {
                     maxStake = GetMaxStakeForSingleBetWithoutMTS(checkOverride.MaxStake, tierMaxStake.MaxStake, request.ExchangeRate, odds);
-                    maxPerGame = tierMaxStake.MaxPerGame * request.ExchangeRate;
+                    maxPerGame = request.IsBoosted == true ? priceboostConfig.MaxStake : tierMaxStake.MaxPerGame * request.ExchangeRate;
                     stakeFixtureLimit = checkOverride.StakeLimitFixture < maxPerGame ? checkOverride.StakeLimitFixture : maxPerGame;
                 }
                 else
                 {
                     DefaultSportConfig defaultSportConfig = JsonSerializer.Deserialize<DefaultSportConfig>(betConfig.DefaultConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     maxStake = GetMaxStakeForSingleBetWithoutMTS(defaultSportConfig.MaxStake, tierMaxStake.MaxStake, request.ExchangeRate, odds);
-                    maxPerGame = tierMaxStake.MaxPerGame * request.ExchangeRate;
+                    maxPerGame = request.IsBoosted == true ? priceboostConfig.MaxStake : tierMaxStake.MaxPerGame * request.ExchangeRate;
                     stakeFixtureLimit = defaultSportConfig.StakeLimitFixture < maxPerGame ? defaultSportConfig.StakeLimitFixture : maxPerGame;
                 }
 
                 if (request.IsBoosted == true)
                 {
+                    stakeFixtureLimit = priceboostConfig.MaxStake;
                     maxStake = priceboostConfig.MaxStake;
                 }
 

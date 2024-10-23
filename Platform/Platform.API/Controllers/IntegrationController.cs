@@ -163,11 +163,13 @@ namespace Platform.API.Controllers
                 request.IPAddressV6 = ipAddressV6;
             }
 
-            var result = await _platformRepository.PlaceBet(apiKey, clientId, operatorToken, request, OGParameters, userAgent);
+            try
+            {
+                var result = await _platformRepository.PlaceBet(apiKey, clientId, operatorToken, request, OGParameters, userAgent);
 
-            var parameters = request;
+                var parameters = request;
 
-            var properties = new Dictionary<string, string>
+                var properties = new Dictionary<string, string>
                             {
                                 { "ipAddress", ipAddressV4 },
                                 { "ipAddressV6", ipAddressV6 },
@@ -183,15 +185,51 @@ namespace Platform.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            _telemetryClient.TrackEvent("e:v2/bet/placement", properties);
+                _telemetryClient.TrackEvent("e:v2/bet/placement", properties);
 
-            switch (result.StatusCode)
+                switch (result.StatusCode)
+                {
+                    case Shared.Enums.StatusCode.Success:
+                    case Shared.Enums.StatusCode.Maintenance:
+                        return Ok(result);
+                    default:
+                        return BadRequest(result);
+                }
+            }
+            catch (Exception ex)
             {
-                case Shared.Enums.StatusCode.Success:
-                case Shared.Enums.StatusCode.Maintenance:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
+                var result = new BaseResponseDTO<BetErrorResponse>
+                {
+                    StatusCode = Shared.Enums.StatusCode.Error,
+                    Message = Shared.Enums.StatusCode.Error.ToString().Replace('_', ' '),
+                    Result = new BetErrorResponse
+                    {
+                        Message = ex.Message,
+                        StackTrace = ex.StackTrace
+                    }
+                };
+
+                var parameters = request;
+
+                var properties = new Dictionary<string, string>
+                            {
+                                { "ipAddress", ipAddressV4 },
+                                { "ipAddressV6", ipAddressV6 },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "x-operator-token", operatorToken },
+                                { "user-agent", userAgent },
+                                { "x-connection-id", connectionId },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+                _telemetryClient.TrackEvent("e:v2/bet/placement/error", properties);
+
+                return BadRequest(result);
             }
         }
 

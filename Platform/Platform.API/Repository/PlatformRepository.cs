@@ -421,7 +421,14 @@ namespace Platform.API.Repository
                 });
             }
 
-            var isV4 = Convert.ToInt32(request.IPAddress.Split(".").First()) >= 240 ? false : true;
+            var isV4 = true;
+
+            if (request.IPAddress.IndexOf('.') > 0)
+            {
+                isV4 = Convert.ToInt32(request.IPAddress.Split(".").First()) >= 240 ? false : true;
+            }
+            else
+                request.IPAddress = IPAddress.Loopback.ToString();
 
             if (ogParameters != null)
                 operatorToken = $"{operatorToken}|{ogParameters.CurrencyCode}|{ogParameters.GameCode}";

@@ -9,8 +9,10 @@ using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Utility;
 using Platform.WebSocket.API.Data;
 using Platform.WebSocket.API.Messages;
+using Platform.WebSocket.API.Telemetry;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
@@ -24,12 +26,14 @@ namespace Platform.WebSocket.API.Repository
         private PlatformContext _platformContext;
         private readonly IMemCache _memCache;
         private readonly TelemetryClient _telemetryClient;
+        private readonly ActivitySource _activitySource;
 
-        public WebSocketRepository(IServiceProvider provider, IMemCache memCache, TelemetryClient telemetryClient)
+        public WebSocketRepository(IServiceProvider provider, IMemCache memCache, TelemetryClient telemetryClient, Instrumentation instrumentation)
         {
             _provider = provider;
             _memCache = memCache;
             _telemetryClient = telemetryClient;
+            _activitySource = instrumentation.ActivitySource;
         }
         public override async Task OnConnectedAsync()
         {
@@ -70,6 +74,14 @@ namespace Platform.WebSocket.API.Repository
 
             _telemetryClient.TrackEvent("e:OnConnectedAsync", properties);
 
+            using (var activity = _activitySource.StartActivity("websocket.connect"))
+            {
+                activity.SetTag("ip.address", ipAddress);
+                activity.SetTag("connection.id", connectionId);
+                activity.SetTag("user.agent", userAgent);
+                activity.SetStatus(ActivityStatusCode.Ok);
+            }
+
             await base.OnConnectedAsync();
         }
         public override async Task OnDisconnectedAsync(Exception exception)
@@ -100,6 +112,12 @@ namespace Platform.WebSocket.API.Repository
                             };
 
             _telemetryClient.TrackEvent("e:OnDisconnectedAsync", properties);
+
+            using (var activity = _activitySource.StartActivity("websocket.disconnect"))
+            {
+                activity.SetTag("connection.id", connectionId);
+                activity.SetStatus(ActivityStatusCode.Ok);
+            }
 
             await base.OnDisconnectedAsync(exception);
         }

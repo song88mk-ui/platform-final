@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.Shared.Utility;
 using Platform.WebSocket.API.Data;
+using Platform.WebSocket.API.Extensions;
 using Platform.WebSocket.API.Repository;
 using System;
 using System.Linq;
@@ -26,6 +27,7 @@ namespace Platform.WebSocket.API
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddTelemetry(Configuration);
             services.Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;

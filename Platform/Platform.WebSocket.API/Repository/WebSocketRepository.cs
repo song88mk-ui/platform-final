@@ -79,6 +79,7 @@ namespace Platform.WebSocket.API.Repository
                 activity.SetTag("ip.address", ipAddress);
                 activity.SetTag("connection.id", connectionId);
                 activity.SetTag("user.agent", userAgent);
+                activity.SetTag("ip.country", ipCountry);
                 activity.SetStatus(ActivityStatusCode.Ok);
             }
 

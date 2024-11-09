@@ -39,17 +39,6 @@ namespace Platform.WebSocket.API.Extensions
                             exporter.Protocol = OtlpExportProtocol.HttpProtobuf;
                             exporter.Endpoint = new Uri(_configuration["Telemetry:Collector"]+"/v1/traces");
                         });
-                    })
-                    .WithMetrics(metrics =>
-                    {
-                        metrics
-                        .AddMeter(Instrumentation.MeterName)
-                        .AddRuntimeInstrumentation()
-                        .AddOtlpExporter(exporter =>
-                        {
-                            exporter.Protocol = OtlpExportProtocol.HttpProtobuf;
-                            exporter.Endpoint = new Uri(_configuration["Telemetry:Collector"]+"/v1/metrics");
-                        });
                     });
             }
 

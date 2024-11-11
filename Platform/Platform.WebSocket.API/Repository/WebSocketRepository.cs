@@ -76,7 +76,7 @@ namespace Platform.WebSocket.API.Repository
 
             using (var activity = _activitySource.StartActivity("websocket.connect"))
             {
-                activity.SetTag("ip.address", ipAddress);
+                activity.SetTag("source.address", ipAddress);
                 activity.SetTag("connection.id", connectionId);
                 activity.SetTag("user.agent", userAgent);
                 activity.SetTag("ip.country", ipCountry);

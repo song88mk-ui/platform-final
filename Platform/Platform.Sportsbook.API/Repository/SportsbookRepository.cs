@@ -7911,7 +7911,7 @@ namespace Platform.Sportsbook.API.Repository
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new System.Transactions.TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
             {
-                if (request.Id > 0)
+                if (request.Id > 0 && !request.ToRemoveClients.Any())
                 {
                     var announcement = _sportsbookContext.Announcements.Find(request.Id);
 
@@ -7920,8 +7920,9 @@ namespace Platform.Sportsbook.API.Repository
                     announcement.IsActive = request.IsActive;
                     announcement.Title = request.Title;
 
-                    var toDeleteClientAnnouncements = _sportsbookContext.ClientAnnouncements.Where(c => c.AnnouncementId == announcement.Id);
-                    _sportsbookContext.ClientAnnouncements.RemoveRange(toDeleteClientAnnouncements);
+                    var toDeleteClientAnnouncements = _sportsbookContext.ClientAnnouncements.Where(c => c.AnnouncementId == announcement.Id && request.ToRemoveClients.Any(t => t.ClientId == c.ClientId));
+                    if (toDeleteClientAnnouncements.Any())
+                        _sportsbookContext.ClientAnnouncements.RemoveRange(toDeleteClientAnnouncements);
 
                     var toDeleteLanguageAnnouncements = _sportsbookContext.LanguageAnnouncements.Where(c => c.AnnouncementId == announcement.Id);
                     _sportsbookContext.LanguageAnnouncements.RemoveRange(toDeleteLanguageAnnouncements);
@@ -7959,47 +7960,61 @@ namespace Platform.Sportsbook.API.Repository
                 }
                 else
                 {
-                    var announcement = _sportsbookContext.Announcements.Add(new Announcement
+                    var applyInsert = true;
+                    if (request.Id > 0 && request.ToRemoveClients.Any())
                     {
-                        StartDate = request.StartDate,
-                        EndDate = request.EndDate,
-                        Title = request.Title,
-                        IsActive = request.IsActive,
-                        IsDeleted = false,
-                        UserId = request.UserId,
-                        UserRoleId = request.UserRoleId
-                    }).Entity;
+                        var toDeleteClientAnnouncements = _sportsbookContext.ClientAnnouncements.Where(c => c.AnnouncementId == request.Id && request.ToRemoveClients.Any(t => t.ClientId == c.ClientId));
+                        if (toDeleteClientAnnouncements.Any())
+                            _sportsbookContext.ClientAnnouncements.RemoveRange(toDeleteClientAnnouncements);
 
-                    _sportsbookContext.SaveChanges();
+                        if (!request.Clients.Any())
+                            applyInsert = false;
+                    }
 
-                    response.Announcements.Add(new BackofficeAnnouncementDTO
+                    if(applyInsert)
                     {
-                        Id = announcement.Id,
-                        Title = announcement.Title,
-                        StartDate = announcement.StartDate,
-                        EndDate = announcement.EndDate,
-                        Message = request.AnnouncementMessages.FirstOrDefault().Message,
-                        LanguageCode = request.AnnouncementMessages.FirstOrDefault().LanguageCode,
-                        IsActive = announcement.IsActive,
-                        Clients = request.Clients,
-                        Languages = request.AnnouncementMessages,
-                        UserId = request.UserId,
-                        UserRoleId = request.UserRoleId
-                    });
+                        var announcement = _sportsbookContext.Announcements.Add(new Announcement
+                        {
+                            StartDate = request.StartDate,
+                            EndDate = request.EndDate,
+                            Title = request.Title,
+                            IsActive = request.IsActive,
+                            IsDeleted = false,
+                            UserId = request.UserId,
+                            UserRoleId = request.UserRoleId
+                        }).Entity;
 
-                    clientAnnouncements.AddRange(request.Clients.Select(s => new ClientAnnouncements
-                    {
-                        AnnouncementId = announcement.Id,
-                        ClientId = s.ClientId,
-                        ClientCode = s.ClientCode,
-                    }).ToList());
+                        _sportsbookContext.SaveChanges();
 
-                    languageAnnouncements.AddRange(request.AnnouncementMessages.Select(s => new LanguageAnnouncements
-                    {
-                        AnnouncementId = announcement.Id,
-                        LangCode = s.LanguageCode.ToString(),
-                        Description = s.Message
-                    }).ToList());
+                        response.Announcements.Add(new BackofficeAnnouncementDTO
+                        {
+                            Id = announcement.Id,
+                            Title = announcement.Title,
+                            StartDate = announcement.StartDate,
+                            EndDate = announcement.EndDate,
+                            Message = request.AnnouncementMessages.FirstOrDefault().Message,
+                            LanguageCode = request.AnnouncementMessages.FirstOrDefault().LanguageCode,
+                            IsActive = announcement.IsActive,
+                            Clients = request.Clients,
+                            Languages = request.AnnouncementMessages,
+                            UserId = request.UserId,
+                            UserRoleId = request.UserRoleId
+                        });
+
+                        clientAnnouncements.AddRange(request.Clients.Select(s => new ClientAnnouncements
+                        {
+                            AnnouncementId = announcement.Id,
+                            ClientId = s.ClientId,
+                            ClientCode = s.ClientCode,
+                        }).ToList());
+
+                        languageAnnouncements.AddRange(request.AnnouncementMessages.Select(s => new LanguageAnnouncements
+                        {
+                            AnnouncementId = announcement.Id,
+                            LangCode = s.LanguageCode.ToString(),
+                            Description = s.Message
+                        }).ToList());
+                    }
                 }
 
                 if (clientAnnouncements.Any() && languageAnnouncements.Any())

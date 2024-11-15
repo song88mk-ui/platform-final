@@ -4866,6 +4866,7 @@ namespace Platform.API.Repository
         public async Task<BaseResponseDTO<BackofficeAnnouncementResponseDTO>> AddOrUpdateAnnouncements(AddOrUpdateBackofficeAnnouncementRequest request)
         {
             var clients = new List<ClientInfo>();
+            var toRemoveClients = new List<ClientInfo>();
 
             if (request.ClientCodes.Any())
             {
@@ -4881,6 +4882,20 @@ namespace Platform.API.Repository
                 clients = clientResult.Select(c => new ClientInfo { ClientId = c.ClientId, ClientCode = c.ClientCode }).ToList();
             }
 
+            if (request.ToRemoveClientCodes.Any())
+            {
+                var clientResult = await _platformContext.Client.Where(c => request.ToRemoveClientCodes.Contains(c.ClientCode)).ToListAsync();
+                if (clientResult == null || clientResult.Count == 0)
+                {
+                    return new BaseResponseDTO<BackofficeAnnouncementResponseDTO>
+                    {
+                        StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                        Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' ')
+                    };
+                }
+                toRemoveClients = clientResult.Select(c => new ClientInfo { ClientId = c.ClientId, ClientCode = c.ClientCode }).ToList();
+            }
+
             return await _sportsbookRepository.AddOrUpdateAnnouncements(new AddOrUpdateBackofficeAnnouncementRequestDTO
             {
                 Id = request.Id,
@@ -4890,6 +4905,7 @@ namespace Platform.API.Repository
                 IsActive = request.IsActive,
                 AnnouncementMessages = request.AnnouncementMessages,
                 Clients = clients,
+                ToRemoveClients = toRemoveClients,
                 UserId = request.UserId,
                 UserRoleId = request.UserRoleId
             });

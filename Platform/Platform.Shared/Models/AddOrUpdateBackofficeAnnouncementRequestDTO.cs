@@ -8,6 +8,7 @@ namespace Platform.Shared.Models
     {
         public int Id { get; set; }
         public List<ClientInfo> Clients { get; set; }
+        public List<ClientInfo> ToRemoveClients { get; set; }
         public List<AnnouncementMessage> AnnouncementMessages { get; set; }
         public bool IsActive { get; set; }
         public string Title { get; set; }

@@ -7963,7 +7963,8 @@ namespace Platform.Sportsbook.API.Repository
                     var applyInsert = true;
                     if (request.Id > 0 && request.ToRemoveClients.Any())
                     {
-                        var toDeleteClientAnnouncements = _sportsbookContext.ClientAnnouncements.Where(c => c.AnnouncementId == request.Id && request.ToRemoveClients.Any(t => t.ClientId == c.ClientId));
+                        var toDeleteClientCodes = request.ToRemoveClients.Select(s => s.ClientId).ToList();
+                        var toDeleteClientAnnouncements = _sportsbookContext.ClientAnnouncements.Where(c => c.AnnouncementId == request.Id && toDeleteClientCodes.Contains(c.ClientId));
                         if (toDeleteClientAnnouncements.Any())
                             _sportsbookContext.ClientAnnouncements.RemoveRange(toDeleteClientAnnouncements);
 

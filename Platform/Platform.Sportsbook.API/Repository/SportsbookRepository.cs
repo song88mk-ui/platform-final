@@ -7920,7 +7920,7 @@ namespace Platform.Sportsbook.API.Repository
                     announcement.IsActive = request.IsActive;
                     announcement.Title = request.Title;
 
-                    var toDeleteClientAnnouncements = _sportsbookContext.ClientAnnouncements.Where(c => c.AnnouncementId == announcement.Id && request.ToRemoveClients.Any(t => t.ClientId == c.ClientId));
+                    var toDeleteClientAnnouncements = _sportsbookContext.ClientAnnouncements.Where(c => c.AnnouncementId == announcement.Id);
                     if (toDeleteClientAnnouncements.Any())
                         _sportsbookContext.ClientAnnouncements.RemoveRange(toDeleteClientAnnouncements);
 

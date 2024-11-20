@@ -23,6 +23,21 @@ namespace Platform.Shared.Extensions
                 OGCurrencyCode = ogCurrencyCode
             };
         }
+
+        public static string ToOGStatus(this string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return string.Empty;
+
+            if(input.ToUpper().Equals("CANCELLED"))
+                return "Rollbacked";
+
+            if (input.ToUpper().Equals("VOID"))
+                return "Cancelled";
+
+            return input;
+        }
+
         public static string GetCurrencyCode(this string input)
         {
             if (string.IsNullOrEmpty(input))

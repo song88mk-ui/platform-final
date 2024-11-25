@@ -423,12 +423,13 @@ namespace Platform.API.Repository
 
             var isV4 = true;
 
-            if (request.IPAddress.IndexOf('.') > 0)
+            // if we have IPv6
+            if (request.IPAddressV6.IndexOf(':') > 0)
             {
-                isV4 = Convert.ToInt32(request.IPAddress.Split(".").First()) >= 240 ? false : true;
-            }
-            else
+                isV4 = false;
+                // set IPv4 to loopback
                 request.IPAddress = IPAddress.Loopback.ToString();
+            };
 
             if (ogParameters != null)
                 operatorToken = $"{operatorToken}|{ogParameters.CurrencyCode}|{ogParameters.GameCode}";

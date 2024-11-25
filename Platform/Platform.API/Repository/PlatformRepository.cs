@@ -424,7 +424,7 @@ namespace Platform.API.Repository
             var isV4 = true;
 
             // if we have IPv6
-            if (request.IPAddressV6.IndexOf(':') > 0)
+            if (request.IPAddressV6 != null && request.IPAddressV6.IndexOf(':') > 0)
             {
                 isV4 = false;
                 // set IPv4 to loopback

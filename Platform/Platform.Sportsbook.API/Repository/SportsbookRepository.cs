@@ -7928,8 +7928,6 @@ namespace Platform.Sportsbook.API.Repository
                     var toDeleteLanguageAnnouncements = _sportsbookContext.LanguageAnnouncements.Where(c => c.AnnouncementId == announcement.Id);
                     _sportsbookContext.LanguageAnnouncements.RemoveRange(toDeleteLanguageAnnouncements);
 
-                    _sportsbookContext.SaveChanges();
-
                     response.Announcements.Add(new BackofficeAnnouncementDTO
                     {
                         Id = announcement.Id,
@@ -7945,12 +7943,16 @@ namespace Platform.Sportsbook.API.Repository
                         UserRoleId = request.UserRoleId
                     });
 
-                    clientAnnouncements.AddRange(request.Clients.Select(s => new ClientAnnouncements
-                    {
-                        AnnouncementId = announcement.Id,
-                        ClientId = s.ClientId,
-                        ClientCode = s.ClientCode,
-                    }).ToList());
+                    if(request.Clients.Any())
+                        clientAnnouncements.AddRange(request.Clients.Select(s => new ClientAnnouncements
+                        {
+                            AnnouncementId = announcement.Id,
+                            ClientId = s.ClientId,
+                            ClientCode = s.ClientCode,
+                        }).ToList());
+                    else
+                        announcement.IsDeleted = true;
+
 
                     languageAnnouncements.AddRange(request.AnnouncementMessages.Select(s => new LanguageAnnouncements
                     {
@@ -7958,6 +7960,9 @@ namespace Platform.Sportsbook.API.Repository
                         LangCode = s.LanguageCode.ToString(),
                         Description = s.Message
                     }).ToList());
+
+                    _sportsbookContext.SaveChanges();
+
                 }
                 else
                 {

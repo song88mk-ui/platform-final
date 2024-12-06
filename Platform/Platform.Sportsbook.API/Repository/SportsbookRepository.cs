@@ -7822,8 +7822,8 @@ namespace Platform.Sportsbook.API.Repository
                                       a => a.Id,
                                       la => la.AnnouncementId,
                                       (a, la) => new { Announcement = a, LanguageAnnouncement = la })
-                                .Where(x => x.LanguageAnnouncement.LangCode == request.LanguageCode.ToString() 
-                                        && (x.Announcement.Title.ToLower().Contains(request.SearchText) 
+                                .Where(x => x.LanguageAnnouncement.LangCode == request.LanguageCode.ToString()
+                                        && (x.Announcement.Title.ToLower().Contains(request.SearchText)
                                          || x.LanguageAnnouncement.Description.ToLower().Contains(request.SearchText))
                                         && x.Announcement.IsDeleted == false)
                                 .Select(x => x.Announcement)
@@ -7978,7 +7978,7 @@ namespace Platform.Sportsbook.API.Repository
                             applyInsert = false;
                     }
 
-                    if(applyInsert)
+                    if (applyInsert)
                     {
                         var announcement = _sportsbookContext.Announcements.Add(new Announcement
                         {
@@ -8083,6 +8083,31 @@ namespace Platform.Sportsbook.API.Repository
                 StatusCode = StatusCode.Error,
                 Message = StatusCode.Error.ToString(),
                 Result = false
+            };
+        }
+        public async Task<BaseResponseDTO<NoMarginClientsResponseDTO>> GetClientsWithouMargin()
+        {
+            try
+            {
+                return new BaseResponseDTO<NoMarginClientsResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = new NoMarginClientsResponseDTO()
+                    {
+                        ClientCodes = _asianClientCodes,
+                        MarketTemplateIds = _marketTemplateIds
+                    }
+                };
+            }
+            catch (Exception)
+            {
+            }
+
+            return new BaseResponseDTO<NoMarginClientsResponseDTO>
+            {
+                StatusCode = StatusCode.Error,
+                Message = StatusCode.Error.ToString()
             };
         }
 

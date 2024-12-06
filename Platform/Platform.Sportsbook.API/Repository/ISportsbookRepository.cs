@@ -93,5 +93,6 @@ namespace Platform.Sportsbook.API.Repository
         Task<BaseResponseDTO<BackofficeAnnouncementResponseDTO>> GetAnnouncements(BackofficeAnnouncementRequestDTO request);
         Task<BaseResponseDTO<BackofficeAnnouncementResponseDTO>> AddOrUpdateAnnouncements(AddOrUpdateBackofficeAnnouncementRequestDTO request);
         Task<BaseResponseDTO<bool>> DeleteAnnouncements(DeleteBackofficeAnnouncementDTO request);
+        Task<BaseResponseDTO<NoMarginClientsResponseDTO>> GetClientsWithouMargin();
     }
 }

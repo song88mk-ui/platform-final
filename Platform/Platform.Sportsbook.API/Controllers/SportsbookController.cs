@@ -1249,6 +1249,13 @@ namespace Platform.Sportsbook.API.Controllers
 
             return ReturnResult(result);
         }
+        [HttpGet("v1/sportsbook/client/asian")]
+        public async Task<IActionResult> GetAsianClients()
+        {
+            var result = await _sportsbookRepository.GetClientsWithouMargin();
+
+            return ReturnResult(result);
+        }
 
         #region Utilities
 

@@ -1339,7 +1339,7 @@ namespace Platform.Operator.Servicev2.Repository
                     BetPlace = message.BetSelections.Count > 1 ? "multiple" : "single",
                     Currency = ogParam.OGCurrencyCode,
                     WinloseAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.WinLoss).Truncate()),
-                    EffectiveAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), 
+                    EffectiveAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()),
                     ResultUrl = $"result?client_id={message.Bet.ClientId}&transaction_id={message.Bet.BetId}",
                     SecondaryInfo = new { bet_amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), detain_amount = 0 },
                     OtherInfo = betSelectionData,
@@ -2051,6 +2051,12 @@ namespace Platform.Operator.Servicev2.Repository
                         AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetSettlement", correlationId, false);
                         return;
                     }
+                }
+
+                if (message.IsResettle == false && message.Bet.BetStatusId == (int)BetStatus.Void)
+                {
+                    transType = "rollback";
+                    payload.TransactionType = transType;
                 }
 
                 var options = new JsonSerializerOptions

@@ -297,5 +297,19 @@ namespace Platform.Operator.API.Controllers
             }
         }
 
+        [HttpPost("/og/api/v2/platform/security/authenticate")]
+        public async Task<IActionResult> AuthenticateOG([FromBody] OGAuthenticationRequest request)
+        {
+            var result = await _platformRepository.Authenticate(request.Token);
+
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return new BadRequestObjectResult(result.StatusId);
+            }
+        }
+
     }
 }

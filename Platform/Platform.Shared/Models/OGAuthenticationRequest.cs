@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Platform.API.Models
+namespace Platform.Shared.Models
 {
     public class OGAuthenticationRequest
     {

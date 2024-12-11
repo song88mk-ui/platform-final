@@ -20,7 +20,7 @@ namespace Platform.API.ActionFilters
         {
             _configuration = configuration;
             var ogConfig = configuration["Custom:OrientalGaming"];
-        }
+        }//
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             var apiKey = context.HttpContext.Request.Headers["x-api-key"].FirstOrDefault();

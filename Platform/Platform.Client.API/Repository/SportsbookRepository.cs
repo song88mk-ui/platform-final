@@ -329,6 +329,9 @@ namespace Platform.Client.API.Repository
                 if (clientId.ToUpper() == "7322EC66-07B9-4E0D-C528-08D9711147D0" || clientId.ToUpper() == "6FA4D6C4-3093-4ABB-4853-08D9711DA854")
                     clientCode = "10E";
 
+                if (clientId.ToUpper() == "D91EE02B-D725-4EDB-3AE5-08DC9A3424D6" || clientId.ToUpper() == "F2BA550E-0E17-4230-150B-08DCC7C94045")
+                    clientCode = "OBS";
+
             }
 
             var result = await _platformContext.ConfidenceFactor.Where(c => c.UserId == $"{clientCode}{userId.Replace("-", string.Empty)}").ToListAsync();

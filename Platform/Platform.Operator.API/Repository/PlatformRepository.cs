@@ -520,6 +520,50 @@ namespace Platform.Operator.API.Repository
                 }
             }
         }
+        
+        public async Task<OperatorBetResponseDTO> BetSettlementOG(OnOGCreditRequest request)
+        {
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                try
+                {
+                    var result = _platformContext.Operator.Where(c => c.UserId.ToString().ToLower() == request.PlayerCode.ToLower()).FirstOrDefault();
+
+                    if (result == null)
+                    {
+                        return new OperatorBetResponseDTO
+                        {
+                            StatusId = 1003
+                        };
+                    }
+
+                    var records = JsonSerializer.Deserialize<List<OGRecord>>(request.OtherInfo.ToString()).FirstOrDefault();
+
+                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.TransactionId, Convert.ToDecimal(request.Amount), 0, records.OtherInfo.BetStatus);
+
+                    result.Balance = operatorAudit.PostBalance;
+                    _platformContext.Operator.Update(result);
+
+                    _platformContext.SaveChanges();
+                    scope.Complete();
+
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1000,
+                        Balance = result.Balance
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1003
+                    };
+                }
+            }
+        }
+
         public async Task<OperatorBetResponseDTO> BetCancellation(OperatorBetCancellationRequestDTO request, string clientId)
         {
             Guid.TryParse(clientId, out Guid id);

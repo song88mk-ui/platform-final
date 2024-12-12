@@ -335,15 +335,35 @@ namespace Platform.Operator.API.Controllers
         [HttpPost("/og/api/v2/platform/transaction/bulk/debit")]
         public async Task<IActionResult> BetPlacementOG([FromBody] OnOGDebitRequest request)
         {
-            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
-            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-
             var result = await _platformRepository.BetPlacementOG(request);
 
             switch (result.StatusId)
             {
                 case 1000:
-                    return Ok(result);
+                    return Ok(new OGDebitResponseDTO
+                    {
+                        Code = "S-100",
+                        Message = result.Message,
+                        Balance = result.Balance.ToString(),
+                        PlayerCode = request.PlayerCode
+                    });
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("/og/api/v2/platform/transaction/credit")]
+        public async Task<IActionResult> BetSettlementOG([FromBody] OnOGCreditRequest request)
+        {
+            var result = await _platformRepository.BetSettlementOG(request);
+
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(new OGCreditResponseDTO
+                    {
+                        Code = "S-100",
+                    });
                 default:
                     return BadRequest(result);
             }

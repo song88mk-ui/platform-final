@@ -18,6 +18,7 @@ namespace Platform.Operator.API.Repository
         Task<OperatorBetResponseDTO> BetFullCashOut(OperatorBetSettlementRequestDTO request, string clientId);
         Task<OperatorBetResponseDTO> BetPartialCashOut(OperatorBetSettlementRequestDTO request, string clientId);
         Task<OperatorBetResponseDTO> BetSettlement(OperatorBetSettlementRequestDTO request, string clientId);
+        Task<OperatorBetResponseDTO> BetSettlementOG(OnOGCreditRequest request);
         Task<OperatorBetResponseDTO> BetCancellation(OperatorBetCancellationRequestDTO request, string clientId);
         Task<FixtureScoreResponseDTO> FixtureScore(FixtureScoreRequestDTO request);
         Task<BaseResponseDTO<GenerateUserResponseDTO>> AddUser(GenerateUserRequestDTO request);

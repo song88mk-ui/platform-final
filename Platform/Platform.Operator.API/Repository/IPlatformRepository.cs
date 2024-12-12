@@ -11,6 +11,7 @@ namespace Platform.Operator.API.Repository
         Task<AuthenticationResponseDTO> Authenticate(string operatorToken);
         Task<CashoutResultResponseDTO> CashOutResult(CashoutResultRequestDTO request);
         Task<OperatorBetResponseDTO> WalletBalance(string operatorToken);
+        Task<OGWalletResponseDTO> WalletBalanceOG(string userId);
         Task<OperatorBetResponseDTO> BetPlacement(OperatorBetRequestDTO request, string operatorToken, string clientId);
         Task<OperatorBetResponseDTO> BetFullCashOut(OperatorBetSettlementRequestDTO request, string clientId);
         Task<OperatorBetResponseDTO> BetPartialCashOut(OperatorBetSettlementRequestDTO request, string clientId);

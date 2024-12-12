@@ -107,6 +107,35 @@ namespace Platform.Operator.API.Repository
             };
 
         }
+
+        public async Task<OGWalletResponseDTO> WalletBalanceOG(string userId)
+        {
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrWhiteSpace(userId))
+                return new OGWalletResponseDTO
+                {
+                    Code = "S-101" //Internal Error
+                };
+
+            var result = await _platformContext.Operator.Where(c => c.UserId.ToString().ToLower() == userId.ToLower()).FirstOrDefaultAsync();
+
+            if (result == null)
+            {
+                return new OGWalletResponseDTO
+                {
+                    Code = "S-102" //Invalid Token
+                };
+            }
+
+            return new OGWalletResponseDTO
+            {
+                Code = "S-100",
+                Balance = result.Balance.ToString(),
+                CurrencyCode = result.CurrencyCode,
+                PlayerCode = userId
+            };
+
+        }
+
         public async Task<OperatorBetResponseDTO> BetPlacement(OperatorBetRequestDTO request, string operatorToken, string clientId)
         {
             //

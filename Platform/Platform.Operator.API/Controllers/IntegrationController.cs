@@ -305,11 +305,30 @@ namespace Platform.Operator.API.Controllers
             switch (result.StatusId)
             {
                 case 1000:
-                    return Ok(result);
+                    return Ok(new OGAuthenticationResponse
+                    {
+                        Code = "S-100"
+                    });
                 default:
-                    return new BadRequestObjectResult(result.StatusId);
+                    return new BadRequestObjectResult(new OGAuthenticationResponse
+                    {
+                        Code = "S-101"
+                    });
             }
         }
 
+        [HttpGet("/og/api/v2/platform/player/balance")]
+        public async Task<IActionResult> GetWalletBalanceOG([FromQuery] OGWalletRequestDTO request)
+        {
+            var result = await _platformRepository.WalletBalanceOG(request.player_code);
+
+            switch (result.Code)
+            {
+                case "S-100":
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
     }
 }

@@ -14,5 +14,6 @@ namespace Platform.ClientPlatform.API.Repository
         Task<BaseResponseDTO<SettlementHistoryResponseDTO>> GetBetHistorySettled(string apiKey, string clientId, string languageCode, string ipAddress, BetHistorySettledRequest request);
         Task<BaseResponseDTO<BetHistoryRunningFilteredResponseDTO>> GetBetHistoryRunning(string apiKey, string clientId, string operatorToken, string ipAddress);
         Task<BaseResponseDTO<BetCashOutResponseFilteredDTO>> CashoutBet(string apiKey, string clientId, string operatorToken, string ipAddress, CashoutBetRequest request);
+        Task<BaseResponseDTO<CustomerConfidenceFactorResponseDTO>> GetCustomerConfidenceFactor(string apiKey, string clientId, string userId, string ipAddress);
     }
 }

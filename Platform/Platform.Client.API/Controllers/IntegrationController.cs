@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Platform.Client.API.ActionFilters;
 using Platform.Client.API.Repository;
 using Platform.Shared.Enums;
-using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Platform.Client.API.Controllers
 {
-    [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(APIKeyFilter))]
+    [ApiController, ApiExplorerSettings(IgnoreApi = true), EnableCors("AllowAllOrigins"), ServiceFilter(typeof(APIKeyFilter))]
     public class IntegrationController : ControllerBase
     {
         private readonly ISportsbookRepository _sportsbookRepository;

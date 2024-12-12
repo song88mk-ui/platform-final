@@ -4917,6 +4917,48 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.DeleteClientAnnouncements(request);
         }
 
+        public async Task<BaseResponseDTO<CustomerConfidenceFactorResponseDTO>> GetCustomerConfidenceFactor(string apiKey, string clientId, string userId)
+        {
+            var clientCode = string.Empty;
+
+            if (!string.IsNullOrEmpty(clientId))
+            {
+                var client = await GetClient(clientId);
+
+                if (client.StatusCode == StatusCode.Success)
+                    clientCode = client.Result.ClientCode;
+            }
+
+            var result = await _platformContext.ConfidenceFactor.Where(c => c.UserId == $"{clientCode}{userId.Replace("-", string.Empty)}").ToListAsync();
+
+            if (result.Count == 0)
+            {
+                return new BaseResponseDTO<CustomerConfidenceFactorResponseDTO>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.No_Record_Found.ToString().Replace('_', ' ')
+                };
+            }
+
+            return new BaseResponseDTO<CustomerConfidenceFactorResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new CustomerConfidenceFactorResponseDTO
+                {
+                    Values = result.Select(s => new CustomerConfidenceFactor
+                    {
+                        Timestamp = s.Timestamp,
+                        CurrentCCF = s.CurrentCCF,
+                        PreviousCCF = s.PreviousCCF,
+                        IsSpecificSport = s.IsSpecificSport,
+                        SportId = s.SportId,
+                        SportName = s.SportName,
+                        AppliedTo = s.AppliedTo
+                    }).ToList()
+                }
+            };
+        }
 
         private async Task<ForexEURResponse> GetExchangeRate(string currencyCode)
         {

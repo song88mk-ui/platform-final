@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Platform.ClientPlatform.API.ActionFilters;
 using Platform.ClientPlatform.API.Models;
 using Platform.ClientPlatform.API.Repository;
+using Platform.Shared.Models;
 using System.Linq;
 using System.Threading.Tasks;
-using Platform.Shared.Models;
 
 namespace Platform.ClientPlatform.API.Controllers
 {
@@ -116,6 +116,20 @@ namespace Platform.ClientPlatform.API.Controllers
             }
 
             var result = await _platformRepository.CashoutBet(ApiKey, ClientId, OperatorToken, IPAddress, request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/sportsbook/ccf")]
+        public async Task<IActionResult> GetCCF([FromQuery] string userId)
+        {
+            var result = await _platformRepository.GetCustomerConfidenceFactor(ApiKey, ClientId, userId, IPAddress);
 
             switch (result.StatusCode)
             {

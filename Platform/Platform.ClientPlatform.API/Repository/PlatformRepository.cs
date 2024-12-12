@@ -93,6 +93,11 @@ namespace Platform.ClientPlatform.API.Repository
             }
         }
 
+        public async Task<BaseResponseDTO<CustomerConfidenceFactorResponseDTO>> GetCustomerConfidenceFactor(string apiKey, string clientId, string userId, string ipAddress)
+        {
+            return await _readOnlyRepository.GetCustomerConfidenceFactor(apiKey, clientId, userId, ipAddress);
+        }
+
         private async Task<string> FormUrlEncoded<T>(T parameter)
         {
             var urlEncodedString = new StringBuilder();

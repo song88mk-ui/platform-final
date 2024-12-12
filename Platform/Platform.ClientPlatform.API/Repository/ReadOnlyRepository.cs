@@ -263,6 +263,43 @@ namespace Platform.ClientPlatform.API.Repository
                 };
             }
         }
+
+        public async Task<BaseResponseDTO<CustomerConfidenceFactorResponseDTO>> GetCustomerConfidenceFactor(string apiKey, string clientId, string userId, string ipAddress)
+        {
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
+                _httpClient.DefaultRequestHeaders.Add("X-Forwarded-For", ipAddress);
+                _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
+
+                var response = await _httpClient.GetAsync($"v1/sportsbook/ccf");
+
+                if (response.IsSuccessStatusCode)
+                    return JsonSerializer.Deserialize<BaseResponseDTO<CustomerConfidenceFactorResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                        return JsonSerializer.Deserialize<BaseResponseDTO<CustomerConfidenceFactorResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    else
+                    {
+                        return new BaseResponseDTO<CustomerConfidenceFactorResponseDTO>
+                        {
+                            StatusCode = StatusCode.Error,
+                            Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({response.ReasonPhrase})"
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<CustomerConfidenceFactorResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
+                };
+            }
+        }
+
         private async Task<string> FormUrlEncoded<T>(T parameter)
         {
             var urlEncodedString = new StringBuilder();

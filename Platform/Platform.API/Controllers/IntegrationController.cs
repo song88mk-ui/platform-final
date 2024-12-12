@@ -11,6 +11,7 @@ using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -2402,6 +2403,36 @@ namespace Platform.API.Controllers
             {
                 case Shared.Enums.StatusCode.Success:
                 case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/sportsbook/ccf")]
+        public async Task<IActionResult> GetCCF([FromQuery] string userId)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+
+            var result = await _platformRepository.GetCustomerConfidenceFactor(apiKey, clientId, userId);
+
+            var properties = new Dictionary<string, string>
+            {
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "requestParameters", userId },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/sportsbook/ccf", properties);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
                     return Ok(result);
                 default:
                     return BadRequest(result);

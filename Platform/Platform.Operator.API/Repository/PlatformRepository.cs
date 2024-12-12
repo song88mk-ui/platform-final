@@ -538,9 +538,9 @@ namespace Platform.Operator.API.Repository
                         };
                     }
 
-                    var records = JsonSerializer.Deserialize<List<OGRecord>>(request.OtherInfo.ToString()).FirstOrDefault();
+                    var records = JsonSerializer.Deserialize<List<OtherInfo>>(request.OtherInfo.ToString()).FirstOrDefault();
 
-                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.TransactionId, Convert.ToDecimal(request.Amount), 0, records.OtherInfo.BetStatus);
+                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.TransactionId, Convert.ToDecimal(request.Amount), 0, records.BetStatus);
 
                     result.Balance = operatorAudit.PostBalance;
                     _platformContext.Operator.Update(result);

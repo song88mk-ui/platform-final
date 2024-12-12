@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Platform.Operator.API.ActionFilters;
 using Platform.Operator.API.Repository;
+using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using System.Linq;
 using System.Threading.Tasks;
@@ -330,5 +331,23 @@ namespace Platform.Operator.API.Controllers
                     return BadRequest(result);
             }
         }
+
+        [HttpPost("/og/api/v2/platform/transaction/bulk/debit")]
+        public async Task<IActionResult> BetPlacementOG([FromBody] OnOGDebitRequest request)
+        {
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+            var result = await _platformRepository.BetPlacementOG(request);
+
+            switch (result.StatusId)
+            {
+                case 1000:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
     }
 }

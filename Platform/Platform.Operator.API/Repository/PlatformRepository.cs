@@ -1,12 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.Web.CodeGeneration.Contracts.Messaging;
+using Newtonsoft.Json.Linq;
 using Platform.Operator.API.Models;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Enums;
+using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
 
@@ -252,6 +257,54 @@ namespace Platform.Operator.API.Repository
                             StakeBonus = 0m
                         };
                     }
+
+                }
+                catch (Exception ex)
+                {
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1003
+                    };
+                }
+            }
+        }
+
+        public async Task<OperatorBetResponseDTO> BetPlacementOG(OnOGDebitRequest request)
+        {
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                try
+                {
+                    var result = _platformContext.Operator.Where(c => c.UserId.ToString().ToLower() == request.PlayerCode.ToLower()).FirstOrDefault();
+
+                    if (result == null)
+                    {
+                        return new OperatorBetResponseDTO
+                        {
+                            StatusId = 1002
+                        };
+                    }
+                    
+                    var records = JsonSerializer.Deserialize<List<OGRecord>>(request.Records.ToString()).FirstOrDefault();
+
+                    var operatorAudit = AddOrUpdateOperatorAudit(result, records.TransactionId, 0, Convert.ToDecimal(request.TotalAmount), records.OtherInfo.BetStatus);
+
+                    result.Balance = operatorAudit.PostBalance;
+                    _platformContext.Operator.Update(result);
+
+                    _platformContext.SaveChanges();
+
+                    scope.Complete();
+
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1000,
+                        Balance = result.Balance,
+                        IsFreeBet = false,
+                        StakeReal = Convert.ToDecimal(request.TotalAmount),
+                        StakeBonus = 0m
+                    };
 
                 }
                 catch (Exception ex)

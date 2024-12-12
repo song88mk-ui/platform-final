@@ -27,4 +27,28 @@ namespace Platform.Shared.MessageModels
         [JsonPropertyName("records")]
         public object Records { get; set; }
     }
+
+    public class OGRecord
+    {
+        [JsonPropertyName("amount")]
+        public double Amount { get; set; }
+        [JsonPropertyName("secondary_info")]
+        public SecondaryInfo SecondaryInfo { get; set; }
+        [JsonPropertyName("transaction_id")]
+        public string TransactionId { get; set; }
+        [JsonPropertyName("other_info")]
+        public OtherInfo OtherInfo { get; set; }
+    }
+
+    public class SecondaryInfo
+    {
+        [JsonPropertyName("bet_amount")]
+        public double BetAmount { get; set; }
+    }
+    public class OtherInfo
+    {
+
+        [JsonPropertyName("bet_status")]
+        public string BetStatus { get; set; }
+    }
 }

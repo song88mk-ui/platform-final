@@ -1958,7 +1958,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 if (message.IsResettle == false && message.Bet.BetStatusId == (int)BetStatus.Void)
                 {
-                    transType = "rollback";
+                    transType = "cancel";
                     payload.TransactionType = transType;
                 }
 
@@ -1966,7 +1966,7 @@ namespace Platform.Operator.Servicev2.Repository
                 var signature = payload.ToSignOG(privateKey);
                 payload.Signature = signature;
 
-                if (message.IsResettle && isOGResettle == false)
+                if (message.IsResettle && isOGResettle == false && message.Bet.BetStatusId != (int)BetStatus.Void)
                 {
                     transType = "cancel";
 

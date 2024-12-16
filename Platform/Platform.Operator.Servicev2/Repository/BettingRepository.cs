@@ -1936,7 +1936,6 @@ namespace Platform.Operator.Servicev2.Repository
                     }).ToList()
                 };
 
-
                 var payload = new OnOGCreditRequest
                 {
                     PlayerCode = message.Bet.UserId,
@@ -1956,6 +1955,12 @@ namespace Platform.Operator.Servicev2.Repository
                     CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Signature = ""
                 };
+
+                if (message.IsResettle == false && message.Bet.BetStatusId == (int)BetStatus.Void)
+                {
+                    transType = "rollback";
+                    payload.TransactionType = transType;
+                }
 
                 //signature generation
                 var signature = payload.ToSignOG(privateKey);
@@ -2051,12 +2056,6 @@ namespace Platform.Operator.Servicev2.Repository
                         AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetSettlement", correlationId, false);
                         return;
                     }
-                }
-
-                if (message.IsResettle == false && message.Bet.BetStatusId == (int)BetStatus.Void)
-                {
-                    transType = "rollback";
-                    payload.TransactionType = transType;
                 }
 
                 var options = new JsonSerializerOptions

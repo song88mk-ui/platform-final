@@ -1960,7 +1960,7 @@ namespace Platform.Operator.Servicev2.Repository
                 var signature = payload.ToSignOG(privateKey);
                 payload.Signature = signature;
 
-                if ((message.IsResettle && isOGResettle == false) || (message.IsResettle == false && message.Bet.BetStatusId == (int)BetStatus.Void))
+                if (message.IsResettle && isOGResettle == false)
                 {
                     transType = "cancel";
 
@@ -2024,26 +2024,6 @@ namespace Platform.Operator.Servicev2.Repository
                                 CorrelationId = correlationId,
                                 Timestamp = DateTime.UtcNow
                             });
-
-                            if(message.Bet.BetStatusId == (int)BetStatus.Void)
-                            {
-                                messageBroker.Publish(new OnBetStatus
-                                {
-                                    ClientId = message.Bet.ClientId.ToUpper(),
-                                    UserId = message.Bet.UserId,
-                                    BetId = message.Bet.BetId.ToString().ToUpper(),
-                                    BetStatus = (BetStatus)message.Bet.BetStatusId,
-                                    Message = message.Message
-                                }, "OnBetStatus", $"r.bet.betstatus.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
-
-                                messageBroker.Publish(new OnWalletChange
-                                {
-                                    ClientId = message.Bet.ClientId.ToUpper(),
-                                    UserId = message.Bet.UserId,
-                                    Balance = Convert.ToDecimal(result.Balance)
-                                }, "OnWalletChange", $"r.wallet.{message.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
-
-                            }
                         }
                     }
                     else
@@ -2065,11 +2045,7 @@ namespace Platform.Operator.Servicev2.Repository
                         }
                     }
 
-                    if(transType == "cancel" && message.Bet.BetStatusId == (int)BetStatus.Void)
-                    {
-                        return;
-                    }
-                    else if (transType == "cancel")
+                    if (transType == "cancel")
                     {
                         AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetSettlement", correlationId, false);
                         return;

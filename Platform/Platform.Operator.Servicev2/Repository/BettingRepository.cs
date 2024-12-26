@@ -1,9 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
+using Platform.Operator.Servicev2.Telemetry;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Platform.Entities;
+using Platform.Shared.Data.Sportsbook.SQLEntities;
 using Platform.Shared.Enums;
 using Platform.Shared.Extensions;
 using Platform.Shared.MessageModels;
@@ -11,6 +15,7 @@ using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -27,11 +32,15 @@ namespace Platform.Operator.Servicev2.Repository
         private readonly string _bettingConnectionString;
         private readonly string _platformConnectionString;
 
-        public BettingRepository(IConfiguration configuration)
+        private readonly ActivitySource _activitySource;
+        private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
+
+        public BettingRepository(IConfiguration configuration, Instrumentation instrumentation)
         {
             _bettingConnectionString = configuration.GetConnectionString("Betting");
             _platformConnectionString = configuration.GetConnectionString("Platform");
             _ogConfig = configuration.GetSection("Custom").GetSection("OrientalGaming").Get<OrientalGamingConfigDTO>();
+            _activitySource = instrumentation.ActivitySource;
         }
 
         private HttpClient GetHttpClient(string threadId, string endpoint, string operatorToken, string clientId, bool isAgent, string ogPublicKey = "", string ogVendorName = "")
@@ -1846,6 +1855,13 @@ namespace Platform.Operator.Servicev2.Repository
 
         public void ProcesssBetSettlementOG(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId, OGRequestDTO ogParam, bool isOGResettle)
         {
+            using var activity = this._activitySource.StartActivity("ProcesssBetSettlementOG");
+
+            activity?.SetTag("BetId", message.Bet.BetId);
+            activity?.SetTag("message.isretry", message.IsRetry);
+            activity?.SetTag("message.isresettle", message.IsResettle);
+            activity?.SetTag("message.isaudit", message.IsAudit);
+
             if (message.IsRetry)
             {
                 var initialMessage = IsProcess(message.Bet.BetId);
@@ -2073,9 +2089,15 @@ namespace Platform.Operator.Servicev2.Repository
 
                 var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload, options), System.Text.Encoding.UTF8, "application/json")).Result;
 
+                activity?.SetTag("Response Status", response.IsSuccessStatusCode);
+
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var responsePayload = response.Content.ReadAsStringAsync().Result;
+
+                    var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    activity?.SetTag("Response Payload", responsePayload);
 
                     if (result.Code == "S-100")
                     {
@@ -2133,14 +2155,20 @@ namespace Platform.Operator.Servicev2.Repository
                         }
                         AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetSettlementOG", correlationId, false);
                     }
+
+                    activity?.SetStatus(ActivityStatusCode.Ok);
                 }
                 else
                 {
+                    activity?.SetStatus(ActivityStatusCode.Error, response.StatusCode.ToString());
+
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
                         if (message.IsAudit)
                         {
                             var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                            activity?.SetTag("Response Payload (Bad Request)", JsonSerializer.Serialize(result));
 
                             AddOperatorLog(new OperatorLog
                             {
@@ -2155,6 +2183,9 @@ namespace Platform.Operator.Servicev2.Repository
                                 Timestamp = DateTime.UtcNow
                             });
                         }
+                        else
+                            activity?.SetTag("Response Payload (Error)", JsonSerializer.Serialize(response.ReasonPhrase));
+
                     }
                     else
                     {
@@ -2173,12 +2204,16 @@ namespace Platform.Operator.Servicev2.Repository
                                 Timestamp = DateTime.UtcNow
                             });
                         }
+                        activity?.SetTag("Response Payload (Error)", JsonSerializer.Serialize(response.ReasonPhrase));
                     }
                     AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetSettlementOG", correlationId, false);
                 }
+
             }
             catch (Exception ex)
             {
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+
                 if (message.IsAudit)
                 {
                     AddOperatorLog(new OperatorLog
@@ -2194,7 +2229,11 @@ namespace Platform.Operator.Servicev2.Repository
                         Timestamp = DateTime.UtcNow
                     });
                 }
-                AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, isCancelSuccess ? "OnBetSettlementOG" : "OnBetSettlement", correlationId, false);
+                AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, isCancelSuccess ? "OnBetSettlementOG" : "OnBetSettlement", correlationId, false);           
+            }
+            finally
+            {
+                activity?.Stop();
             }
         }
 

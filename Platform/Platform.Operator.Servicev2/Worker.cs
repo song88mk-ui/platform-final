@@ -11,6 +11,14 @@ using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using Platform.Shared.Extensions;
 using RabbitMQ.Client.Events;
+using OpenTelemetry.Context.Propagation;
+using System.Diagnostics;
+using Platform.Operator.Servicev2.Telemetry;
+using OpenTelemetry;
+using RabbitMQ.Client;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Platform.Operator.Servicev2
 {
@@ -19,6 +27,9 @@ namespace Platform.Operator.Servicev2
         private readonly ILogger<Worker> _logger;
         private readonly IMessageBroker _messageBroker;
         private readonly IBettingRepository _bettingRepository;
+
+        private readonly ActivitySource _activitySource;
+        private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
 
         private Thread _thread0;
         private Thread _thread1;
@@ -96,11 +107,12 @@ namespace Platform.Operator.Servicev2
         private readonly BlockingCollection<BasicDeliverEventArgs> _messagesY = new BlockingCollection<BasicDeliverEventArgs>();
         private readonly BlockingCollection<BasicDeliverEventArgs> _messagesZ = new BlockingCollection<BasicDeliverEventArgs>();
 
-        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository)
+        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository, Instrumentation instrumentation)
         {
             _logger = logger;
             _messageBroker = messageBroker;
             _bettingRepository = bettingRepository;
+            _activitySource = instrumentation.ActivitySource;
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
@@ -363,6 +375,23 @@ namespace Platform.Operator.Servicev2
             }
         }
 
+        private IEnumerable<string> ExtractTraceFromBasicProperties(IBasicProperties props, string key)
+        {
+            try
+            {
+                if (props.Headers.TryGetValue(key, out var value))
+                {
+                    var bytes = value as byte[];
+                    return new[] { Encoding.UTF8.GetString(bytes) };
+                }
+            }
+            catch (Exception)
+            {
+                // trace not available
+            }
+            return Enumerable.Empty<string>();
+        }
+
         private void ProcessMessage(BasicDeliverEventArgs e, string threadId)
         {
             var payload = Encoding.UTF8.GetString(e.Body);
@@ -371,6 +400,14 @@ namespace Platform.Operator.Servicev2
 
             try
             {
+
+                var parentContext = Propagator.Extract(default, e.BasicProperties, this.ExtractTraceFromBasicProperties);
+                Baggage.Current = parentContext.Baggage;
+
+                var activityName = $"{messageType} receive {e.RoutingKey}";
+
+                using var activity = _activitySource.StartActivity(activityName, ActivityKind.Consumer, parentContext.ActivityContext);
+
                 switch (messageType)
                 {//
                     case "OnBetPlacement":
@@ -424,7 +461,8 @@ namespace Platform.Operator.Servicev2
 
                     case "OnBetSettlementOG":
                         var onBetSettlementOG = JsonSerializer.Deserialize<OnBetSettlement>(payload);
-                        Console.WriteLine($"{DateTime.UtcNow} {onBetSettlementOG.Bet.BetId} - OnBetSettlementOG");
+
+                        activity?.SetTag("OnBetSettlementOG", onBetSettlementOG.Bet.BetId);
 
                         var ogParam2 = onBetSettlementOG.Bet.OperatorToken.ToOGParam();
                         if (ogParam2 != null)

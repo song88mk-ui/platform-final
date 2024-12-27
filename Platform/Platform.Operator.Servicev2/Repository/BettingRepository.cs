@@ -1857,7 +1857,7 @@ namespace Platform.Operator.Servicev2.Repository
         {
             using var activity = this._activitySource.StartActivity("ProcesssBetSettlementOG");
 
-            activity?.SetTag("BetId", message.Bet.BetId);
+            activity?.SetTag("bet.id", message.Bet.BetId);
             activity?.SetTag("message.isretry", message.IsRetry);
             activity?.SetTag("message.isresettle", message.IsResettle);
             activity?.SetTag("message.isaudit", message.IsAudit);
@@ -2089,7 +2089,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload, options), System.Text.Encoding.UTF8, "application/json")).Result;
 
-                activity?.SetTag("Response Status", response.IsSuccessStatusCode);
+                activity?.SetTag("response.status", response.IsSuccessStatusCode);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -2097,7 +2097,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                     var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                    activity?.SetTag("Response Payload", responsePayload);
+                    activity?.SetTag("response.payload", responsePayload);
 
                     if (result.Code == "S-100")
                     {
@@ -2168,7 +2168,7 @@ namespace Platform.Operator.Servicev2.Repository
                         {
                             var result = JsonSerializer.Deserialize<OGCreditResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                            activity?.SetTag("Response Payload (Bad Request)", JsonSerializer.Serialize(result));
+                            activity?.SetTag("response.bad.request.payload", JsonSerializer.Serialize(result));
 
                             AddOperatorLog(new OperatorLog
                             {
@@ -2184,7 +2184,7 @@ namespace Platform.Operator.Servicev2.Repository
                             });
                         }
                         else
-                            activity?.SetTag("Response Payload (Error)", JsonSerializer.Serialize(response.ReasonPhrase));
+                            activity?.SetTag("response.error.payload", JsonSerializer.Serialize(response.ReasonPhrase));
 
                     }
                     else
@@ -2204,7 +2204,7 @@ namespace Platform.Operator.Servicev2.Repository
                                 Timestamp = DateTime.UtcNow
                             });
                         }
-                        activity?.SetTag("Response Payload (Error)", JsonSerializer.Serialize(response.ReasonPhrase));
+                        activity?.SetTag("response.error.payload", JsonSerializer.Serialize(response.ReasonPhrase));
                     }
                     AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, "OnBetSettlementOG", correlationId, false);
                 }

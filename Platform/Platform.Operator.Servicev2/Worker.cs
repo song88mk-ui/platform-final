@@ -398,95 +398,103 @@ namespace Platform.Operator.Servicev2
             var messageType = e.BasicProperties.Type;
             var correlationId = e.BasicProperties.CorrelationId;
 
-            try
+            var parentContext = Propagator.Extract(default, e.BasicProperties, this.ExtractTraceFromBasicProperties);
+            Baggage.Current = parentContext.Baggage;
+
+            var activityName = $"{messageType} receive {e.RoutingKey}";
+
+            using(var activity = _activitySource.StartActivity(activityName, ActivityKind.Consumer, parentContext.ActivityContext))
             {
+                activity.SetTag("correlation.id", correlationId);
+                activity.SetTag("message.type", messageType);
 
-                var parentContext = Propagator.Extract(default, e.BasicProperties, this.ExtractTraceFromBasicProperties);
-                Baggage.Current = parentContext.Baggage;
-
-                var activityName = $"{messageType} receive {e.RoutingKey}";
-
-                using var activity = _activitySource.StartActivity(activityName, ActivityKind.Consumer, parentContext.ActivityContext);
-
-                switch (messageType)
-                {//
-                    case "OnBetPlacement":
-                        var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
-                        Console.WriteLine($"{DateTime.UtcNow} {onBetPlacement.Bet.BetId} - OnBetPlacement");
-
-                        if (!onBetPlacement.IsOGClient)
-                            _bettingRepository.ProcesssBetPlacement(onBetPlacement, _messageBroker, correlationId, threadId);
-                        else
-                            _bettingRepository.ProcesssBetPlacementOG(onBetPlacement, _messageBroker, correlationId, threadId);
-                        break;
-                    case "OnBetPartialCashOut":
-                        var onBetPartialCashout = JsonSerializer.Deserialize<OnBetSettlementPartial>(payload);
-                        Console.WriteLine($"{DateTime.UtcNow} {onBetPartialCashout.Bet.BetId} - OnBetPartialCashOut");
-
-                        _bettingRepository.ProcessBetPartialCashOut(onBetPartialCashout, _messageBroker, correlationId, threadId);
-                        break;
-
-                    case "OnBetFullCashOut":
-                        var onBetFullCashout = JsonSerializer.Deserialize<OnBetSettlement>(payload);
-                        Console.WriteLine($"{DateTime.UtcNow} {onBetFullCashout.Bet.BetId} - OnBetFullCashOut");
-
-                        var ogParamFC = onBetFullCashout.Bet.OperatorToken.ToOGParam();
-                        if (ogParamFC == null)
-                            _bettingRepository.ProcessBetFullCashOut(onBetFullCashout, _messageBroker, correlationId, threadId);
-                        else
-                            _bettingRepository.ProcessBetFullCashOutOG(onBetFullCashout, _messageBroker, correlationId, threadId, ogParamFC);
-                        break;
-
-                    case "OnBetSettlement":
-                        var onBetSettlement = JsonSerializer.Deserialize<OnBetSettlement>(payload);
-                        Console.WriteLine($"{DateTime.UtcNow} {onBetSettlement.Bet.BetId} - OnBetSettlement");
-
-                        var ogParam = onBetSettlement.Bet.OperatorToken.ToOGParam();
-                        if (ogParam == null)
-                            _bettingRepository.ProcesssBetSettlement(onBetSettlement, _messageBroker, correlationId, threadId);
-                        else
-                            _bettingRepository.ProcesssBetSettlementOG(onBetSettlement, _messageBroker, correlationId, threadId, ogParam, false);
-                        break;
-
-                    case "OnBetCancellation":                    
-                        var onBetCancellation = JsonSerializer.Deserialize<OnBetSettlement>(payload);
-                        Console.WriteLine($"{DateTime.UtcNow} {onBetCancellation.Bet.BetId} - OnBetCancellation");
-
-                        var ogParamC = onBetCancellation.Bet.OperatorToken.ToOGParam();
-                        if (ogParamC == null)
-                            _bettingRepository.ProcesssBetCancellation(onBetCancellation, _messageBroker, correlationId, threadId);
-                        else
-                            _bettingRepository.ProcesssBetCancellationOG(onBetCancellation, _messageBroker, correlationId, threadId, ogParamC);
-                        break;
-
-                    case "OnBetSettlementOG":
-                        var onBetSettlementOG = JsonSerializer.Deserialize<OnBetSettlement>(payload);
-
-                        activity?.SetTag("OnBetSettlementOG", onBetSettlementOG.Bet.BetId);
-
-                        var ogParam2 = onBetSettlementOG.Bet.OperatorToken.ToOGParam();
-                        if (ogParam2 != null)
-                            _bettingRepository.ProcesssBetSettlementOG(onBetSettlementOG, _messageBroker, correlationId, threadId, ogParam2, true);
-                        break;
-
-                }
-
-                _messageBroker.Acknowledge(e);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"{DateTime.UtcNow} {ex.Message}");
-
-                var error = new
+                try
                 {
-                    ErrorMessage = ex.Message,
-                    StackTrace = ex.StackTrace,
-                    Payload = payload
-                };
+                    switch (messageType)
+                    {
+                        case "OnBetPlacement":
+                            var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
+                            activity.SetTag("bet.id", onBetPlacement.Bet.BetId);
+                            Console.WriteLine($"{DateTime.UtcNow} {onBetPlacement.Bet.BetId} - OnBetPlacement");
 
-                _messageBroker.Publish(JsonSerializer.Serialize(error), $"{messageType}Error", "r.bet.error.operator", Guid.NewGuid().ToString());
+                            if (!onBetPlacement.IsOGClient)
+                                _bettingRepository.ProcesssBetPlacement(onBetPlacement, _messageBroker, correlationId, threadId);
+                            else
+                                _bettingRepository.ProcesssBetPlacementOG(onBetPlacement, _messageBroker, correlationId, threadId);
+                            break;
+                        case "OnBetPartialCashOut":
+                            var onBetPartialCashout = JsonSerializer.Deserialize<OnBetSettlementPartial>(payload);
+                            activity.SetTag("bet.id", onBetPartialCashout.Bet.BetId);
+                            Console.WriteLine($"{DateTime.UtcNow} {onBetPartialCashout.Bet.BetId} - OnBetPartialCashOut");
 
-                _messageBroker.Acknowledge(e);
+                            _bettingRepository.ProcessBetPartialCashOut(onBetPartialCashout, _messageBroker, correlationId, threadId);
+                            break;
+
+                        case "OnBetFullCashOut":
+                            var onBetFullCashout = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+                            activity.SetTag("bet.id", onBetFullCashout.Bet.BetId);
+                            Console.WriteLine($"{DateTime.UtcNow} {onBetFullCashout.Bet.BetId} - OnBetFullCashOut");
+
+                            var ogParamFC = onBetFullCashout.Bet.OperatorToken.ToOGParam();
+                            if (ogParamFC == null)
+                                _bettingRepository.ProcessBetFullCashOut(onBetFullCashout, _messageBroker, correlationId, threadId);
+                            else
+                                _bettingRepository.ProcessBetFullCashOutOG(onBetFullCashout, _messageBroker, correlationId, threadId, ogParamFC);
+                            break;
+
+                        case "OnBetSettlement":
+                            var onBetSettlement = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+                            activity.SetTag("bet.id", onBetSettlement.Bet.BetId);
+                            Console.WriteLine($"{DateTime.UtcNow} {onBetSettlement.Bet.BetId} - OnBetSettlement");
+
+                            var ogParam = onBetSettlement.Bet.OperatorToken.ToOGParam();
+                            if (ogParam == null)
+                                _bettingRepository.ProcesssBetSettlement(onBetSettlement, _messageBroker, correlationId, threadId);
+                            else
+                                _bettingRepository.ProcesssBetSettlementOG(onBetSettlement, _messageBroker, correlationId, threadId, ogParam, false);
+                            break;
+
+                        case "OnBetCancellation":
+                            var onBetCancellation = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+                            activity.SetTag("bet.id", onBetCancellation.Bet.BetId);
+                            Console.WriteLine($"{DateTime.UtcNow} {onBetCancellation.Bet.BetId} - OnBetCancellation");
+
+                            var ogParamC = onBetCancellation.Bet.OperatorToken.ToOGParam();
+                            if (ogParamC == null)
+                                _bettingRepository.ProcesssBetCancellation(onBetCancellation, _messageBroker, correlationId, threadId);
+                            else
+                                _bettingRepository.ProcesssBetCancellationOG(onBetCancellation, _messageBroker, correlationId, threadId, ogParamC);
+                            break;
+
+                        case "OnBetSettlementOG":
+                            var onBetSettlementOG = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+                            activity.SetTag("bet.id", onBetSettlementOG.Bet.BetId);
+
+                            var ogParam2 = onBetSettlementOG.Bet.OperatorToken.ToOGParam();
+                            if (ogParam2 != null)
+                                _bettingRepository.ProcesssBetSettlementOG(onBetSettlementOG, _messageBroker, correlationId, threadId, ogParam2, true);
+                            break;
+                    }
+
+                    _messageBroker.Acknowledge(e);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"{DateTime.UtcNow} {ex.Message}");
+
+                    activity.SetStatus(ActivityStatusCode.Error, ex.Message);
+
+                    var error = new
+                    {
+                        ErrorMessage = ex.Message,
+                        StackTrace = ex.StackTrace,
+                        Payload = payload
+                    };
+
+                    _messageBroker.Publish(JsonSerializer.Serialize(error), $"{messageType}Error", "r.bet.error.operator", Guid.NewGuid().ToString());
+
+                    _messageBroker.Acknowledge(e);
+                }
             }
         }
 

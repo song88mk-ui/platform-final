@@ -478,6 +478,11 @@ namespace Platform.Operator.Servicev2.Repository
         }
         private void AddOrUpdateOperatorSettlementRetry(OnBetSettlementRetry message, string messageType, string correlationId, bool isSuccess)
         {
+            using var activity = this._activitySource.StartActivity("AddOrUpdateOperatorSettlementRetry");
+
+            activity?.SetTag("bet.id", message.OnBetSettlement.Bet.BetId);
+            activity?.SetTag("message.issuccess", isSuccess);
+
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
                 var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_platformConnectionString);
@@ -492,6 +497,8 @@ namespace Platform.Operator.Servicev2.Repository
                         {
                             if (bet != null)
                             {
+                                activity?.SetTag("bet.isnull", false);
+
                                 bet.MessageType = messageType;
                                 bet.Info = JsonSerializer.Serialize(message.OnBetSettlement);
                                 bet.IsRetry = false;
@@ -504,6 +511,8 @@ namespace Platform.Operator.Servicev2.Repository
                         {
                             if (bet == null)
                             {
+                                activity?.SetTag("bet.isnull", true);
+
                                 context.OperatorSettlementRetry.Add(new OperatorSettlementRetry
                                 {
                                     BetId = message.OnBetSettlement.Bet.BetId,
@@ -523,6 +532,8 @@ namespace Platform.Operator.Servicev2.Repository
                             else
                             {
                                 var isRetry = bet.RetryCount < 8 ? true : false;
+
+                                activity?.SetTag("bet.isretry", isRetry);
 
                                 bet.MessageType = messageType;
                                 bet.Info = JsonSerializer.Serialize(message.OnBetSettlement);

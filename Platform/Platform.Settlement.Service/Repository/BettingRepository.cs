@@ -1291,7 +1291,10 @@ namespace Platform.Settlement.Service.Repository
             var betStatus = GetStatus(selections.Where(c => c.SelectionId != betSelection.SelectionId).Select(s => (BetStatus)s.BetSelectionStatusId).ToList(), message.SelectionStatus, payout, bet.TrueStake, isBetBuilder);
 
             if (betStatus == (BetStatus)bet.BetStatusId)
+            {
                 isInsertToBetAudit = false;
+                isPublish = false; //fix settlement issue in parlay bets when all selections settled as Lost simultaneously
+            }
             else
             {
                 bet.SettlementDate = settledDate;

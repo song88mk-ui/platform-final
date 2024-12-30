@@ -1293,7 +1293,11 @@ namespace Platform.Settlement.Service.Repository
             if (betStatus == (BetStatus)bet.BetStatusId)
             {
                 isInsertToBetAudit = false;
-                isPublish = false; //fix settlement issue in parlay bets when all selections settled as Lost simultaneously
+
+                if(bet.ClientCode == "OGS")
+                {
+                    isPublish = false; //fix settlement issue in parlay bets when all selections settled as Lost simultaneously
+                }
             }
             else
             {

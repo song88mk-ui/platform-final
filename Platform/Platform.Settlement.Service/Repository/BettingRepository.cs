@@ -1449,7 +1449,14 @@ namespace Platform.Settlement.Service.Repository
             nonTaxedPayout = nonTaxedPayout + nonTaxedParlayBonusWinnings;
 
             if (betStatus == (BetStatus)bet.BetStatusId && totalPayout == bet.Payout)
+            {
                 isInsertToBetAudit = false;
+
+                if (bet.ClientCode == "OGS")
+                {
+                    isPublish = false; //fix settlement issue in parlay bets when all selections settled as Lost simultaneously
+                }
+            }
             else
             {
                 bet.SettlementDate = settledDate;

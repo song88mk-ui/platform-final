@@ -1587,6 +1587,7 @@ namespace Platform.Settlement.Service.Repository
             bet.ParlayBonusWinnings = 0m;
             bet.StakeRealPayout = 0m;
             bet.StakeBonusPayout = 0m;
+            bet.IsResettled = true;
 
             var betEntity = context.Bet.Update(bet).Entity;
 

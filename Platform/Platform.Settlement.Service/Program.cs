@@ -9,7 +9,6 @@ using Platform.Settlement.Service.Repository;
 using Platform.Settlement.Service.Telemetry;
 using Platform.Shared.Utility;
 using System;
-using System.Reflection;
 
 namespace Platform.Settlement.Service
 {
@@ -28,8 +27,7 @@ namespace Platform.Settlement.Service
 
                     Action<ResourceBuilder> resource = r => r.AddService(
                         serviceName: "Platform.Settlement.Service",
-                        serviceNamespace: configuration["Telemetry:Environment"],
-                        serviceVersion: Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "latest",
+                        serviceVersion: "latest",
                         serviceInstanceId: Environment.MachineName);
 
                     services.AddSingleton<Instrumentation>();
@@ -39,28 +37,20 @@ namespace Platform.Settlement.Service
                       services
                         .AddOpenTelemetry()
                         .ConfigureResource(resource)
-                        .WithTracing(t =>
+                        .WithTracing(tracing =>
                         {
-                          t
+                            tracing
                             .AddSource(Instrumentation.ActivitySourceName)
                             .SetSampler(new AlwaysOnSampler())
                             .AddSqlClientInstrumentation()
-                            .AddOtlpExporter(o =>
-                            {
-                              o.Protocol = OtlpExportProtocol.HttpProtobuf;
-                              o.Endpoint = new Uri(configuration["Telemetry:Collector"]+"/v1/traces");
-                            });
+                            .AddOtlpExporter();
                         })
-                        .WithMetrics(m =>
+                        .WithMetrics(metrics =>
                         {
-                          m
+                            metrics
                             .AddMeter(Instrumentation.MeterName)
                             .AddRuntimeInstrumentation()
-                            .AddOtlpExporter(o =>
-                            {
-                              o.Protocol = OtlpExportProtocol.HttpProtobuf;
-                              o.Endpoint = new Uri(configuration["Telemetry:Collector"]+"/v1/metrics");
-                            });
+                            .AddOtlpExporter();
                         });
                     }
 

@@ -27,7 +27,7 @@ namespace Platform.Operator.Servicev2
 
                     Action<ResourceBuilder> resource = r => r.AddService(
                         serviceName: "Platform.Operator.Servicev2",
-                        serviceVersion: "latest";
+                        serviceVersion: "latest",
                         serviceInstanceId: Environment.MachineName);
 
                     services.AddSingleton<Instrumentation>();

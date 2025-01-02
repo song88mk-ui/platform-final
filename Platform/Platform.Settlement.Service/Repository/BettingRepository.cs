@@ -1133,7 +1133,7 @@ namespace Platform.Settlement.Service.Repository
                 if (!isBetRunning && finalResult.Item1 == true)
                     payload.IsResettle = true;
 
-                if (bet.ClientCode == "OGS" && bet.IsResettled && !isBetRunning)
+                if (bet.ClientCode == "OGS" && bet.IsResettled && finalResult.Item1 == true)
                     payload.IsResettle = true;
             }
 
@@ -1278,7 +1278,7 @@ namespace Platform.Settlement.Service.Repository
                 if (!isBetRunning && finalResult.Item1 == true)
                     payload.IsResettle = true;
 
-                if (bet.ClientCode == "OGS" && bet.IsResettled && !isBetRunning)
+                if (bet.ClientCode == "OGS" && bet.IsResettled && finalResult.Item1 == true)
                     payload.IsResettle = true;
             }
 

@@ -50,6 +50,7 @@ namespace Platform.Operator.Servicev2
                               metrics
                               .AddMeter(Instrumentation.MeterName)
                               .AddRuntimeInstrumentation()
+                              .AddProcessInstrumentation()
                               .AddOtlpExporter();
                           });
                     }

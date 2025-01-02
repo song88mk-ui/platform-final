@@ -1166,7 +1166,7 @@ namespace Platform.Settlement.Service.Repository
 
             var bet = context.Bet.Find(betSelection.BetId);
             if (bet != null)
-                if (bet.IsResettled && isManualSettle == false)
+                if (bet.IsResettled && bet.BetStatusId != (int)BetStatus.Running && isManualSettle == false)
                     return new Tuple<bool, bool>(false, false);
 
             if (bet.IsAgent)

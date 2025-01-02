@@ -1110,6 +1110,7 @@ namespace Platform.Settlement.Service.Repository
             if (bet != null)
             {
                 var isBetRunning = bet.BetStatusId == (int)BetStatus.Running;
+                var isResettled = bet.IsResettled;
 
                 if (message.SelectionStatus == BetStatus.Lost)
                 {
@@ -1133,7 +1134,7 @@ namespace Platform.Settlement.Service.Repository
                 if (!isBetRunning && finalResult.Item1 == true)
                     payload.IsResettle = true;
 
-                if (bet.ClientCode == "OGS" && bet.IsResettled && finalResult.Item1 == true)
+                if (bet.ClientCode == "OGS" && isResettled && finalResult.Item1 == true)
                     payload.IsResettle = true;
             }
 
@@ -1248,6 +1249,8 @@ namespace Platform.Settlement.Service.Repository
             if (bet != null)
             {
                 var isBetRunning = bet.BetStatusId == (int)BetStatus.Running;
+                var isResettled = bet.IsResettled;
+
                 if (message.SelectionStatus == BetStatus.Lost)
                 {
                     finalResult = ApplyLost(context, message, payload, bet, selections, betSelection, settledDate, isPublish, isManualSettle, reason);
@@ -1278,7 +1281,7 @@ namespace Platform.Settlement.Service.Repository
                 if (!isBetRunning && finalResult.Item1 == true)
                     payload.IsResettle = true;
 
-                if (bet.ClientCode == "OGS" && bet.IsResettled && finalResult.Item1 == true)
+                if (bet.ClientCode == "OGS" && isResettled && finalResult.Item1 == true)
                     payload.IsResettle = true;
             }
 

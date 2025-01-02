@@ -1,8 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 
@@ -42,6 +45,9 @@ namespace Platform.Shared.Utility
         private string _externalQueue = string.Empty;
         private string _externalConsumerName = string.Empty;
         private string _externalRoutingKey = string.Empty;
+
+        private static readonly ActivitySource _activitySource = new ActivitySource(nameof(MessageBroker));
+        private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
 
         public MessageBroker(IConfiguration configuration)
         {
@@ -264,7 +270,7 @@ namespace Platform.Shared.Utility
         private void HandleMessage(object sender, BasicDeliverEventArgs e)
         {
             try
-            {   
+            {
                 MessageReceived(sender, e);
 
                 _consumer.Model.BasicAck(e.DeliveryTag, false);
@@ -277,27 +283,57 @@ namespace Platform.Shared.Utility
 
         public void Publish<T>(T payload, string messageType, string routingKey, string correlationId)
         {
-            var properties = _model.CreateBasicProperties();
-            properties.CorrelationId = correlationId;
-            properties.DeliveryMode = 2;
-            properties.Type = messageType;
+            using (var activity = _activitySource.StartActivity($"{routingKey} send", ActivityKind.Producer))
+            {
+                var properties = _model.CreateBasicProperties();
+                properties.CorrelationId = correlationId;
+                properties.DeliveryMode = 2;
+                properties.Type = messageType;
 
-            var payloadBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload));
+                ActivityContext contextToInject = default;
+                if (activity != null)
+                {
+                    contextToInject = activity.Context;
+                } else if (Activity.Current != null)
+                {
+                    contextToInject = Activity.Current.Context;
+                }
 
-            _model.BasicPublish(_exchange, routingKey, properties, payloadBytes);
+                Propagator.Inject(new PropagationContext(contextToInject, Baggage.Current), properties, this.InjectTraceContextIntoBasicProperties);
+
+                var payloadBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload));
+
+                _model.BasicPublish(_exchange, routingKey, properties, payloadBytes);
+            }
         }
+
         public void Publish<T>(T payload, string messageType, string routingKey, string correlationId, int priority)
         {
-            var properties = _model.CreateBasicProperties();
-            properties.CorrelationId = correlationId;
-            properties.DeliveryMode = 2;
-            properties.Type = messageType;
-            properties.Priority = Convert.ToByte(priority);
+            using (var activity = _activitySource.StartActivity($"{routingKey} send", ActivityKind.Producer))
+            {
+                var properties = _model.CreateBasicProperties();
+                properties.CorrelationId = correlationId;
+                properties.DeliveryMode = 2;
+                properties.Type = messageType;
+                properties.Priority = Convert.ToByte(priority);
 
-            var payloadBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload));
+                ActivityContext contextToInject = default;
+                if (activity != null)
+                {
+                    contextToInject = activity.Context;
+                } else if (Activity.Current != null)
+                {
+                    contextToInject = Activity.Current.Context;
+                }
 
-            _model.BasicPublish(_exchange, routingKey, properties, payloadBytes);
+                Propagator.Inject(new PropagationContext(contextToInject, Baggage.Current), properties, this.InjectTraceContextIntoBasicProperties);
+
+                var payloadBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload));
+
+                _model.BasicPublish(_exchange, routingKey, properties, payloadBytes);
+            }
         }
+
         public void ExternalPublish<T>(T payload, string messageType, string routingKey, string correlationId)
         {
             var properties = _externalModel.CreateBasicProperties();
@@ -312,14 +348,39 @@ namespace Platform.Shared.Utility
 
         public void Publish(string payload, string messageType, string routingKey, string correlationId)
         {
-            var properties = _model.CreateBasicProperties();
-            properties.CorrelationId = correlationId;
-            properties.DeliveryMode = 2;
-            properties.Type = messageType;
+            using (var activity = _activitySource.StartActivity($"{routingKey} send", ActivityKind.Producer))
+            {
+                var properties = _model.CreateBasicProperties();
+                properties.CorrelationId = correlationId;
+                properties.DeliveryMode = 2;
+                properties.Type = messageType;
 
-            var payloadBytes = Encoding.UTF8.GetBytes(payload);
+                ActivityContext contextToInject = default;
+                if (activity != null)
+                {
+                    contextToInject = activity.Context;
+                } else if (Activity.Current != null)
+                {
+                    contextToInject = Activity.Current.Context;
+                }
 
-            _model.BasicPublish(_exchange, routingKey, properties, payloadBytes);
+                Propagator.Inject(new PropagationContext(contextToInject, Baggage.Current), properties, this.InjectTraceContextIntoBasicProperties);
+
+
+                var payloadBytes = Encoding.UTF8.GetBytes(payload);
+
+                _model.BasicPublish(_exchange, routingKey, properties, payloadBytes);
+            }
+        }
+
+        private void InjectTraceContextIntoBasicProperties(IBasicProperties props, string key, string value)
+        {
+            try
+            {
+                if (props.Headers == null)
+                    props.Headers = new Dictionary<string, object>();
+                props.Headers[key] = value;
+            } catch (Exception) {}
         }
 
         public void Dispose()

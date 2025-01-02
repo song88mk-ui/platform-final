@@ -84,50 +84,52 @@ namespace Platform.Settlement.Service
 
             var activityName = $"{e.RoutingKey} receive";
 
-            using var activity = _activitySource.StartActivity(activityName, ActivityKind.Consumer, parentContext.ActivityContext);
-
-            try
+            using (var activity = _activitySource.StartActivity(activityName, ActivityKind.Consumer, parentContext.ActivityContext))
             {
-                activity?.SetTag("messaging.system", "rabbitmq");
-                activity?.SetTag("messaging.destination_kind", "queue");
-                activity?.SetTag("messaging.rabbitmq.routing_key", e.RoutingKey);
-                activity?.SetTag("messaging.rabbitmq.type", messageType);
-
-                switch (messageType)
+                try
                 {
-                    case "OnBetSettlement":
-                        var onBetSettlement = JsonSerializer.Deserialize<OnUOFBetSettlement>(payload);
-                        _bettingRepository.ProcessBetSettlement(onBetSettlement, _messageBroker, correlationId);
-                        break;
+                    activity?.SetTag("messaging.system", "rabbitmq");
+                    activity?.SetTag("messaging.destination_kind", "queue");
+                    activity?.SetTag("messaging.rabbitmq.routing_key", e.RoutingKey);
+                    activity?.SetTag("messaging.rabbitmq.type", messageType);
 
-                    case "OnBetCancellation":
-                        var onBetCancellation = JsonSerializer.Deserialize<OnUOFBetCancellation>(payload);
-                        _bettingRepository.ProcessBetCancellation(onBetCancellation, _messageBroker, correlationId);
-                        break;
+                    switch (messageType)
+                    {
+                        case "OnBetSettlement":
+                            var onBetSettlement = JsonSerializer.Deserialize<OnUOFBetSettlement>(payload);
+                            activity.SetTag("selection.id", onBetSettlement.SelectionId);
+                            _bettingRepository.ProcessBetSettlement(onBetSettlement, _messageBroker, correlationId);
+                            break;
 
-                    case "OnBetBackOfficeCancellation":
-                        var onBOBetCancellation = JsonSerializer.Deserialize<OnBOBetCancellaton>(payload);
-                        _bettingRepository.ProcessBackOfficeBetCancellation(onBOBetCancellation, _messageBroker, correlationId);
-                        break;
+                        case "OnBetCancellation":
+                            var onBetCancellation = JsonSerializer.Deserialize<OnUOFBetCancellation>(payload);
+                            activity.SetTag("market.id", onBetCancellation.MarketId);
+                            _bettingRepository.ProcessBetCancellation(onBetCancellation, _messageBroker, correlationId);
+                            break;
 
-                    case "OnBetBackOfficeManualSettlement":
-                        var onBOBetManualSettlement = JsonSerializer.Deserialize<OnBOBetManualSettlement>(payload);
-                        _bettingRepository.ProcessBackOfficeManualSettlement(onBOBetManualSettlement, _messageBroker, correlationId);
-                        break;
-                    case "OnOddsFeedBetCancellation":
-                        var onOFBetCancellation = JsonSerializer.Deserialize<OnOddsFeedBetCancellation>(payload);
-                        _bettingRepository.ProcessOddsFeedBetCancellation(onOFBetCancellation, _messageBroker, correlationId);
-                        break;
+                        case "OnBetBackOfficeCancellation":
+                            var onBOBetCancellation = JsonSerializer.Deserialize<OnBOBetCancellaton>(payload);
+                            _bettingRepository.ProcessBackOfficeBetCancellation(onBOBetCancellation, _messageBroker, correlationId);
+                            break;
+
+                        case "OnBetBackOfficeManualSettlement":
+                            var onBOBetManualSettlement = JsonSerializer.Deserialize<OnBOBetManualSettlement>(payload);
+                            _bettingRepository.ProcessBackOfficeManualSettlement(onBOBetManualSettlement, _messageBroker, correlationId);
+                            break;
+                        case "OnOddsFeedBetCancellation":
+                            var onOFBetCancellation = JsonSerializer.Deserialize<OnOddsFeedBetCancellation>(payload);
+                            activity.SetTag("client.id", onOFBetCancellation.ClientId);
+                            activity.SetTag("bet.id", onOFBetCancellation.BetId);
+                            _bettingRepository.ProcessOddsFeedBetCancellation(onOFBetCancellation, _messageBroker, correlationId);
+                            break;
+                    }
+                    activity?.SetStatus(ActivityStatusCode.Ok);
                 }
-                activity?.SetStatus(ActivityStatusCode.Ok);
-            }
-            catch (Exception ex)
-            {
-              activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-            }
-            finally
-            {
-              activity?.Stop();
+                catch (Exception ex)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                    _logger.LogError($"error processing message: {ex.Message}");
+                }
             }
         }
     }

@@ -50,6 +50,7 @@ namespace Platform.Settlement.Service
                             metrics
                             .AddMeter(Instrumentation.MeterName)
                             .AddRuntimeInstrumentation()
+                            .AddProcessInstrumentation()
                             .AddOtlpExporter();
                         });
                     }

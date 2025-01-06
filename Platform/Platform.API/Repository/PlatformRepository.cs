@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.API.Models;
+using Platform.API.Telemetry;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Enums;
@@ -9,6 +10,7 @@ using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
@@ -27,9 +29,11 @@ namespace Platform.API.Repository
         private readonly IMemCache _memCache;
         private readonly IConfiguration _configuration;
 
+        private readonly ActivitySource _activitySource;
+
         private static List<string> _ogHighCurrencies = new List<string> { "IDRK", "VNDK", "MMKK", "INRK", "UZSK" };
 
-        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, ICasinoRepository casinoRepository, PlatformContext platformContext, IMemCache memCache, IConfiguration configuration)
+        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, ICasinoRepository casinoRepository, PlatformContext platformContext, IMemCache memCache, IConfiguration configuration, Instrumentation instrumentation)
         {
             _operatorRepository = operatorRepository;
             _bettingRepository = bettingRepository;
@@ -38,6 +42,8 @@ namespace Platform.API.Repository
             _platformContext = platformContext;
             _memCache = memCache;
             _configuration = configuration;
+
+            _activitySource = instrumentation.ActivitySource;
         }
 
         public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string clientId, LoginRequest request, Dictionary<string, string> headers = null)
@@ -153,143 +159,91 @@ namespace Platform.API.Repository
         }
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(string apiKey, string clientId, string operatorToken, BetRequest request, OGClientRequest ogParameters, string userAgent = "")
         {
+            using var activity = _activitySource.StartActivity("bet.placement");
+
+            activity?.AddEvent(new ActivityEvent("validate.bet.request"));
+
             if (request.Selections.Count >= 2 && request.Selections.Any(c => c.SportId > 1000) && request.Selections.Any(c => c.SportId < 1000))
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Virtuals_Cannot_Be_Added_As_Part_Of_Parlay_With_Other_Sports,
-                    Message = StatusCode.Virtuals_Cannot_Be_Added_As_Part_Of_Parlay_With_Other_Sports.ToString().Replace('_', ' '),
-                };
+                return ReturnErrorBetResponse(StatusCode.Virtuals_Cannot_Be_Added_As_Part_Of_Parlay_With_Other_Sports, activity);
             }
 
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers,
-                    Message = StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers.ToString().Replace('_', ' '),
-                };
+                return ReturnErrorBetResponse(StatusCode.Missing_Or_Unsupported_OperatorToken_In_Request_Headers, activity);
             }
 
             if (!IsValidIPAddress(request.IPAddress))
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.IPAddress_Must_Be_IPv4,
-                    Message = StatusCode.IPAddress_Must_Be_IPv4.ToString().Replace('_', ' '),
-                };
+                return ReturnErrorBetResponse(StatusCode.IPAddress_Must_Be_IPv4, activity);
             }
 
             if (request.Stake <= 0)
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Stake_Must_Be_Greater_Than_Zero,
-                    Message = StatusCode.Stake_Must_Be_Greater_Than_Zero.ToString().Replace('_', ' '),
-                };
+                return ReturnErrorBetResponse(StatusCode.Stake_Must_Be_Greater_Than_Zero, activity);
             }
 
             if (!IsValidOddsType(request.OddsType))
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Unsupported_OddsType,
-                    Message = StatusCode.Unsupported_OddsType.ToString().Replace('_', ' '),
-                };
+                return ReturnErrorBetResponse(StatusCode.Unsupported_OddsType, activity);
             }
 
             if (!IsValidChannel(request.Channel))
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Unsupported_Channel,
-                    Message = StatusCode.Unsupported_Channel.ToString().Replace('_', ' '),
-                };
+                return ReturnErrorBetResponse(StatusCode.Unsupported_Channel, activity);
             }
 
             if (request.IsBetBuilder == false && !IsValidOdds(request.Selections.Select(s => s.Odds).ToList()))
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1,
-                    Message = StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1.ToString().Replace('_', ' '),
-                };
+                return ReturnErrorBetResponse(StatusCode.Odds_Must_Be_Greater_Or_Higher_To_1, activity);
             }
 
             if (request.IsBetBuilder == true && request.TotalOdds <= 1m)
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Total_Odds_Must_Be_Greater_Or_Higher_To_1,
-                    Message = StatusCode.Total_Odds_Must_Be_Greater_Or_Higher_To_1.ToString().Replace('_', ' '),
-                };
+                return ReturnErrorBetResponse(StatusCode.Total_Odds_Must_Be_Greater_Or_Higher_To_1, activity);
             }
 
             if (request.IsBoosted && request.Selections.Count >= 2)
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Boosted_Odds_Cannot_Be_Parlayed,
-                    Message = StatusCode.Boosted_Odds_Cannot_Be_Parlayed.ToString().Replace('_', ' '),
-                };
+                return ReturnErrorBetResponse(StatusCode.Boosted_Odds_Cannot_Be_Parlayed, activity);
             }
 
             if (request.IsBoosted && request.IsBetBuilder)
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Boosted_Odds_Cannot_Be_Combined_With_Bet_Builder,
-                    Message = StatusCode.Boosted_Odds_Cannot_Be_Combined_With_Bet_Builder.ToString().Replace('_', ' '),
-                };
+                return ReturnErrorBetResponse(StatusCode.Boosted_Odds_Cannot_Be_Combined_With_Bet_Builder, activity);
             }
 
             if (request.IsBoosted && request.OddsType != OddsType.Decimal)
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Boosted_Odds_Is_Only_Applicable_With_Decimal_Odds_Type_Format,
-                    Message = StatusCode.Boosted_Odds_Is_Only_Applicable_With_Decimal_Odds_Type_Format.ToString().Replace('_', ' '),
-                };
+                return ReturnErrorBetResponse(StatusCode.Boosted_Odds_Is_Only_Applicable_With_Decimal_Odds_Type_Format, activity);
             }
 
             if (request.IsBetBuilder && request.Selections.Count < 2)
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Bet_Builder_Must_Have_2_Or_More_Selections,
-                    Message = StatusCode.Bet_Builder_Must_Have_2_Or_More_Selections.ToString().Replace('_', ' '),
-                };
+                return ReturnErrorBetResponse(StatusCode.Bet_Builder_Must_Have_2_Or_More_Selections, activity);
             }
 
             if (request.IsBetBuilder && request.Selections.Count > 10)
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Bet_Builder_Cannot_Be_More_Than_10_Selections,
-                    Message = StatusCode.Bet_Builder_Cannot_Be_More_Than_10_Selections.ToString().Replace('_', ' '),
-                };
+                return ReturnErrorBetResponse(StatusCode.Bet_Builder_Cannot_Be_More_Than_10_Selections, activity);
             }
+
+            activity?.AddEvent(new ActivityEvent("sql.get.client"));
 
             var clientResponse = await GetClient(clientId);
 
             if (clientResponse.StatusCode != StatusCode.Success)
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = clientResponse.StatusCode,
-                    Message = clientResponse.Message
-                };
+                return ReturnErrorBetResponse(clientResponse.StatusCode, activity, clientResponse.Message);
             }
+
+            activity?.AddEvent(new ActivityEvent("api.authenticate.operator.token"));
 
             var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent, ogParameters);
 
             if (authenticationResponse.StatusCode != StatusCode.Success)
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = authenticationResponse.StatusCode,
-                    Message = authenticationResponse.Message,
-                };
+                return ReturnErrorBetResponse(authenticationResponse.StatusCode, activity, authenticationResponse.Message);
             }
 
             var stakeRequest = request.Stake;
@@ -300,14 +254,14 @@ namespace Platform.API.Repository
 
             if (authenticationResponse.Result.Balance < stakeRequest)
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Insufficient_Funds,
-                    Message = StatusCode.Insufficient_Funds.ToString().Replace('_', ' '),
-                };
+                return ReturnErrorBetResponse(StatusCode.Insufficient_Funds, activity);
             }
 
+            activity?.AddEvent(new ActivityEvent("sql.get.exchange.rate"));
+
             var rate = await GetExchangeRate(authenticationResponse.Result.CurrencyCode);
+
+            activity?.AddEvent(new ActivityEvent("api.get.sportsbook.fixture"));
 
             var result = await _sportsbookRepository.GetBetFixture(new BetFixtureRequestDTO
             {
@@ -331,48 +285,34 @@ namespace Platform.API.Repository
             {
                 if (request.IsBetBuilder)
                 {
-                    return new BaseResponseDTO<BetResponseDTO>
+                    var response = new BetResponseDTO
                     {
-                        StatusCode = result.StatusCode,
-                        Message = result.StatusCode.ToString().Replace('_', ' '),
-                        Result = new BetResponseDTO
-                        {
-                            TotalOdds = result.Result.TotalOdds
-                        }
+                        TotalOdds = result.Result.TotalOdds
                     };
+
+                    return ReturnErrorBetResponse(result.StatusCode, activity, result: response);
                 }
                 else
                 {
-                    return new BaseResponseDTO<BetResponseDTO>
-                    {
-                        StatusCode = StatusCode.Error,
-                        Message = StatusCode.Error.ToString().Replace('_', ' '),
-                    };
+                    return ReturnErrorBetResponse(StatusCode.Error, activity);
                 }
             }
 
             if (result.Result.Selections.Any(s => s.BetSelectionState.StatusCode != StatusCode.Success))
             {
-                return new BaseResponseDTO<BetResponseDTO>
+                var response = new BetResponseDTO
                 {
-                    StatusCode = StatusCode.Error,
-                    Message = StatusCode.Error.ToString().Replace('_', ' '),
-                    Result = new BetResponseDTO
-                    {
-                        BetId = string.Empty,
-                        UserId = string.Empty,
-                        BetSelections = result.Result.Selections.Select(s => s.BetSelectionState).ToList()
-                    }
+                    BetId = string.Empty,
+                    UserId = string.Empty,
+                    BetSelections = result.Result.Selections.Select(s => s.BetSelectionState).ToList()
                 };
+
+                return ReturnErrorBetResponse(StatusCode.Error, activity, result: response);
             }
 
             if (request.IsBoosted && result.Result.Selections.Any(s => s.FixtureStatus >= FixtureStatus.Live))
             {
-                return new BaseResponseDTO<BetResponseDTO>
-                {
-                    StatusCode = StatusCode.Boosted_Odds_Not_Allowed_Once_Fixture_Transitions_To_Live,
-                    Message = StatusCode.Boosted_Odds_Not_Allowed_Once_Fixture_Transitions_To_Live.ToString().Replace('_', ' '),
-                };
+                return ReturnErrorBetResponse(StatusCode.Boosted_Odds_Not_Allowed_Once_Fixture_Transitions_To_Live, activity);
             }
 
             var selections = new List<BetSelectionRequestDTO>();
@@ -468,6 +408,9 @@ namespace Platform.API.Repository
                 IsOGClient = ogParameters != null ? true : false,
             };
 
+            activity?.AddEvent(new ActivityEvent("api.place.bet"));
+
+            activity.SetStatus(ActivityStatusCode.Ok);
             return await _bettingRepository.PlaceBet(payload);
         }
         public async Task<BaseResponseDTO<MaxStakeResponseDTO>> GetMaxStake(string apiKey, string clientId, string operatorToken, BetRequest request, OGClientRequest ogParameters)
@@ -5070,6 +5013,18 @@ namespace Platform.API.Repository
                 return Convert.ToDecimal(odds.ToString()).ToString("0.00");
             else
                 return Convert.ToDecimal(odds.ToString());
+        }
+
+        private BaseResponseDTO<BetResponseDTO> ReturnErrorBetResponse(StatusCode statusCode, Activity activity, string message = "", BetResponseDTO result = null)
+        {
+            activity.SetStatus(ActivityStatusCode.Error, statusCode.ToString());
+
+            return new BaseResponseDTO<BetResponseDTO>
+            {
+                StatusCode = statusCode,
+                Message = !string.IsNullOrEmpty(message) ? message : statusCode.ToString().Replace('_', ' '),
+                Result = result
+            };
         }
     }
 }

@@ -56,7 +56,7 @@ namespace Platform.Job.Resettlement
                     using var scope = _provider.CreateScope();
                     var context = scope.ServiceProvider.GetRequiredService<PlatformContext>();
 
-                    var bets = context.OperatorSettlementRetry.Where(c => c.IsRetry == true).AsNoTracking().ToList();
+                    var bets = context.OperatorSettlementRetry.Where(c => c.IsRetry == true && c.RetryCount < 8).AsNoTracking().ToList();
 
                     if (bets.Count > 0)
                     {

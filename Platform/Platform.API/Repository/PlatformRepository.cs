@@ -157,9 +157,15 @@ namespace Platform.API.Repository
                 }
             };
         }
+
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(string apiKey, string clientId, string operatorToken, BetRequest request, OGClientRequest ogParameters, string userAgent = "")
         {
             using var activity = _activitySource.StartActivity("bet.placement");
+
+            activity?.SetTag("operator.token", operatorToken);
+            activity?.SetTag("client.id", clientId);
+            activity?.SetTag("odds.type", request.OddsType.ToString());
+            activity?.SetTag("stake", request.Stake);
 
             activity?.AddEvent(new ActivityEvent("validate.bet.request"));
 
@@ -315,6 +321,8 @@ namespace Platform.API.Repository
                 return ReturnErrorBetResponse(StatusCode.Boosted_Odds_Not_Allowed_Once_Fixture_Transitions_To_Live, activity);
             }
 
+            activity?.AddEvent(new ActivityEvent("prepare.bet"));
+
             var selections = new List<BetSelectionRequestDTO>();
 
             foreach (var selection in request.Selections)
@@ -410,9 +418,18 @@ namespace Platform.API.Repository
 
             activity?.AddEvent(new ActivityEvent("api.place.bet"));
 
-            activity.SetStatus(ActivityStatusCode.Ok);
-            return await _bettingRepository.PlaceBet(payload);
+            var betResponse = await _bettingRepository.PlaceBet(payload);
+
+            if (betResponse.StatusCode != StatusCode.Success)
+            {
+                return ReturnErrorBetResponse(betResponse.StatusCode, activity, betResponse.Message, betResponse.Result);
+            }
+
+            activity?.SetStatus(ActivityStatusCode.Ok);
+
+            return betResponse;
         }
+
         public async Task<BaseResponseDTO<MaxStakeResponseDTO>> GetMaxStake(string apiKey, string clientId, string operatorToken, BetRequest request, OGClientRequest ogParameters)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))

@@ -5034,7 +5034,7 @@ namespace Platform.API.Repository
 
         private BaseResponseDTO<BetResponseDTO> ReturnErrorBetResponse(StatusCode statusCode, Activity activity, string message = "", BetResponseDTO result = null)
         {
-            activity.SetStatus(ActivityStatusCode.Error, statusCode.ToString());
+            activity?.SetStatus(ActivityStatusCode.Error, statusCode.ToString());
 
             return new BaseResponseDTO<BetResponseDTO>
             {

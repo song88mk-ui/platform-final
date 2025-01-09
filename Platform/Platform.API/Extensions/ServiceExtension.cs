@@ -31,16 +31,16 @@ namespace Platform.API.Extensions
                         tracing
                         .AddSource(Instrumentation.ACTIVITY_SOURCE_NAME)
                         .SetSampler(new AlwaysOnSampler())
-                        .AddHttpClientInstrumentation(
-                            (opts) => opts.FilterHttpRequestMessage =
-                                (req) =>
-                                {
-                                    var uriString = req.RequestUri.ToString();
-                                    var isAzureReq = uriString.Contains("azure.com") ||
-                                                     uriString.Contains("visualstudio.com");
-                                    return !isAzureReq;
-                                }
-                        )
+                        //.AddHttpClientInstrumentation(
+                        //    (opts) => opts.FilterHttpRequestMessage =
+                        //        (req) =>
+                        //        {
+                        //            var uriString = req.RequestUri.ToString();
+                        //            var isAzureReq = uriString.Contains("azure.com") ||
+                        //                             uriString.Contains("visualstudio.com");
+                        //            return !isAzureReq;
+                        //        }
+                        //)
                         .AddOtlpExporter();
                     })
                     .WithMetrics(metrics =>
@@ -48,7 +48,7 @@ namespace Platform.API.Extensions
                         metrics
                         .AddMeter(Instrumentation.METER_NAME)
                         .AddRuntimeInstrumentation()
-                        .AddHttpClientInstrumentation()
+                        //.AddHttpClientInstrumentation()
                         .AddProcessInstrumentation()
                         .AddOtlpExporter();
                     });

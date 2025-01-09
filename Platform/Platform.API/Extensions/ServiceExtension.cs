@@ -16,7 +16,6 @@ namespace Platform.API.Extensions
         {
             Action<ResourceBuilder> resource = r => r.AddService(
                     serviceName: "Platform.API",
-                    serviceNamespace: configuration["Telemetry:Environment"] ?? "dev",
                     serviceVersion: "latest",
                     serviceInstanceId: Environment.MachineName);
 
@@ -42,11 +41,7 @@ namespace Platform.API.Extensions
                                     return !isAzureReq;
                                 }
                         )
-                        .AddOtlpExporter(o =>
-                        {
-                            o.Protocol = OtlpExportProtocol.HttpProtobuf;
-                            o.Endpoint = new Uri(configuration["Telemetry:Collector"] + "/v1/traces");
-                        });
+                        .AddOtlpExporter();
                     })
                     .WithMetrics(metrics =>
                     {
@@ -55,11 +50,7 @@ namespace Platform.API.Extensions
                         .AddRuntimeInstrumentation()
                         .AddHttpClientInstrumentation()
                         .AddProcessInstrumentation()
-                        .AddOtlpExporter(o =>
-                        {
-                            o.Protocol = OtlpExportProtocol.HttpProtobuf;
-                            o.Endpoint = new Uri(configuration["Telemetry:Collector"] + "/v1/metrics");
-                        });
+                        .AddOtlpExporter();
                     });
             }
 

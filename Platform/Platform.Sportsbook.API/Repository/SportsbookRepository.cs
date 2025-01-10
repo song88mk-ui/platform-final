@@ -21,6 +21,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
+using System.Web;
 using System.Xml;
 using BettingStatus = Platform.Shared.Data.Sportsbook.Entities.BettingStatus;
 
@@ -181,7 +182,7 @@ namespace Platform.Sportsbook.API.Repository
                         Message = StatusCode.Success.ToString(),
                         Result = new LivestreamResponseDTO
                         {
-                            LiveStreamURL = result.Url
+                            LiveStreamURL = HttpUtility.UrlEncode(result.Url)
                         }
                     };
                 }

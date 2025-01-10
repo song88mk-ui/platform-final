@@ -869,6 +869,7 @@ namespace Platform.Operator.Servicev2.Repository
                         },
                         score = s.BetScore,
                         odds = (double)s.Odds,
+                        original_odds = (double)GetOriginalOdds(message.Bet.OddsTypeId, s.Odds, s.IsBinary),
                         bet_item = new
                         {
                             en = s.SelectionName.ConvertToUnicodeEscape()
@@ -1314,6 +1315,7 @@ namespace Platform.Operator.Servicev2.Repository
                         },
                         score = s.BetScore,
                         odds = (double)s.Odds,
+                        original_odds = (double)GetOriginalOdds(message.Bet.OddsTypeId, s.Odds, s.IsBinary),
                         bet_item = new
                         {
                             en = s.SelectionName.ConvertToUnicodeEscape()
@@ -1931,6 +1933,7 @@ namespace Platform.Operator.Servicev2.Repository
                         },
                         score = s.BetScore,
                         odds = (double)s.Odds,
+                        original_odds = (double)GetOriginalOdds(message.Bet.OddsTypeId, s.Odds, s.IsBinary),
                         bet_item = new
                         {
                             en = s.SelectionName.ConvertToUnicodeEscape()
@@ -2477,6 +2480,7 @@ namespace Platform.Operator.Servicev2.Repository
                     },
                     score = s.BetScore,
                     odds = (double)s.Odds,
+                    original_odds = (double)GetOriginalOdds(message.Bet.OddsTypeId, s.Odds, s.IsBinary),
                     bet_item = new
                     {
                         en = s.SelectionName.ConvertToUnicodeEscape()
@@ -3156,5 +3160,67 @@ namespace Platform.Operator.Servicev2.Repository
             };
         }
 
+        private static decimal GetOriginalOdds(int oddsType, decimal odds, bool isBinary)
+        {
+            if(oddsType == (int)OddsType.Decimal)
+                return odds;
+
+            if (oddsType == (int)OddsType.Malaysian)
+                return GetMalayOdds(odds, isBinary);
+
+            if (oddsType == (int)OddsType.Indonesian)
+                return GetIndoOdds(odds, isBinary);
+
+            if (oddsType == (int)OddsType.HongKong)
+                return GetHongkongOdds(odds, isBinary);
+
+            return odds;
+        }
+
+        private static decimal GetMalayOdds(decimal odds, bool isBinary)
+        {
+            // add binary condition if more than 2 value is decimal
+            if (isBinary == false)
+                return odds;
+
+            if (odds == 1m)
+                return 0;
+
+            if (odds <= 2.00m)
+                return odds - 1m;
+
+            var retval = -1m / (odds - 1m);
+
+            return Math.Truncate(retval * 100) / 100;
+        }
+
+        private static decimal GetHongkongOdds(decimal odds, bool isBinary)
+        {
+            // add binary condition if more than 2 value is decimal
+            if (isBinary == false)
+                return odds;
+
+            if (odds == 1m)
+                return 0;
+
+            return odds - 1m;
+        }
+
+        private static decimal GetIndoOdds(decimal odds, bool isBinary)
+        {
+            // add binary condition if more than 2 value is decimal
+            if (isBinary == false)
+                return odds;
+
+            if (odds == 1m)
+                return 0;
+
+            if (odds >= 2.00m)
+                return odds - 1m;
+
+            var retval = -1m / (odds - 1m);
+
+            return Math.Truncate(retval * 100) / 100;
+        }
     }
 }

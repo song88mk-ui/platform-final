@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Platform.BetInfo.Service.Repository;
 using Platform.Shared.Utility;
 
@@ -14,6 +15,11 @@ namespace Platform.BetInfo.Service
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    logging.AddSimpleConsole(opts => { opts.SingleLine = true; });
+                })
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddSingleton<IMessageBroker, MessageBroker>();

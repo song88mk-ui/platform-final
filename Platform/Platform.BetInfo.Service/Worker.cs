@@ -14,13 +14,15 @@ namespace Platform.BetInfo.Service
 {
     public class Worker : BackgroundService
     {
+        private readonly ILogger<Worker> _logger;
         private readonly IMessageBroker _messageBroker;
         private readonly IBettingRepository _bettingRepository;
 
-        public Worker(IMessageBroker messageBroker, IBettingRepository bettingRepository)
+        public Worker(IMessageBroker messageBroker, IBettingRepository bettingRepository, ILogger<Worker> logger)
         {
             _messageBroker = messageBroker;
             _bettingRepository = bettingRepository;
+            _logger = logger;
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
@@ -61,7 +63,7 @@ namespace Platform.BetInfo.Service
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _logger.LogError($"error processing message: {ex.Message}, stacktrace: {ex.StackTrace}");
             }
         }
     }

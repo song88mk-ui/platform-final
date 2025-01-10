@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -21,6 +22,11 @@ namespace Platform.Operator.Servicev2
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    logging.AddSimpleConsole(opts => { opts.SingleLine = true; });
+                })
                 .ConfigureServices((hostContext, services) =>
                 {
                     var configuration = services.BuildServiceProvider().GetService<IConfiguration>();

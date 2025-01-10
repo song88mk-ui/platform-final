@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Context.Propagation;
 using Platform.Operator.Servicev2.Telemetry;
@@ -31,16 +32,18 @@ namespace Platform.Operator.Servicev2.Repository
         private readonly OrientalGamingConfigDTO _ogConfig;
         private readonly string _bettingConnectionString;
         private readonly string _platformConnectionString;
+        private readonly ILogger<BettingRepository> _logger;
 
         private readonly ActivitySource _activitySource;
         private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
 
-        public BettingRepository(IConfiguration configuration, Instrumentation instrumentation)
+        public BettingRepository(IConfiguration configuration, Instrumentation instrumentation, ILogger<BettingRepository> logger)
         {
             _bettingConnectionString = configuration.GetConnectionString("Betting");
             _platformConnectionString = configuration.GetConnectionString("Platform");
             _ogConfig = configuration.GetSection("Custom").GetSection("OrientalGaming").Get<OrientalGamingConfigDTO>();
             _activitySource = instrumentation.ActivitySource;
+            _logger = logger;
         }
 
         private HttpClient GetHttpClient(string threadId, string endpoint, string operatorToken, string clientId, bool isAgent, string ogPublicKey = "", string ogVendorName = "")
@@ -262,6 +265,7 @@ namespace Platform.Operator.Servicev2.Repository
                     }
                     catch (Exception ex)
                     {
+                        _logger.LogError($"error during cancel bet: {ex.Message}. stack trace: {ex.StackTrace}");
                     }
                 }
             }

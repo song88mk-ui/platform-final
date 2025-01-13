@@ -843,8 +843,7 @@ namespace Platform.Operator.Servicev2.Repository
                 using var activity = this._activitySource.StartActivity("ProcesssBetPlacementOG");
 
                 activity?.SetTag("bet.id", message.Bet.BetId);
-                activity?.SetTag("bet.odds", (double)message.Bet.Odds);
-                
+
                 var publicKey = _ogConfig.PublicAPIKey;
                 var privateKey = _ogConfig.PrivateAPIKey;
                 var vendorName = _ogConfig.VendorName;
@@ -910,8 +909,6 @@ namespace Platform.Operator.Servicev2.Repository
                     }).ToList()
                 };
 
-                activity?.SetTag("bet.selection.data", JsonSerializer.Serialize(betSelectionData));
-
                 var records = new[] { new {
                            amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, betData.TrueStake).Truncate()),
                            bet_place = message.BetSelections.Count > 1 ? "multiple" : "single",
@@ -920,8 +917,6 @@ namespace Platform.Operator.Servicev2.Repository
                            other_info = betSelectionData,
                            remark = (string)null
                         }};
-
-                activity?.SetTag("bet.records", JsonSerializer.Serialize(records));
 
                 var payload = new OnOGDebitRequest
                 {
@@ -937,15 +932,12 @@ namespace Platform.Operator.Servicev2.Repository
                     Signature = ""
                 };
 
-                activity?.SetTag("bet.payload.before.signature", JsonSerializer.Serialize(payload));
-
                 //signature generation
                 var signature = payload.ToSignOG(privateKey);
                 payload.Signature = signature;
 
                 activity?.SetTag("bet.payload.after.signature", JsonSerializer.Serialize(payload));
-
-                AddOperatorLog(new OperatorLog
+                var operatorPayload = new OperatorLog
                 {
                     Direction = "REQUEST",
                     ClientId = betData.ClientId,
@@ -956,7 +948,11 @@ namespace Platform.Operator.Servicev2.Repository
                     OperatorToken = betData.OperatorToken,
                     CorrelationId = correlationId,
                     Timestamp = DateTime.UtcNow
-                });
+                };
+
+                AddOperatorLog(operatorPayload);
+
+                activity?.SetTag("bet.after.operator.log", operatorPayload.Info);
 
                 var response = GetHttpClient(threadId, betData.Endpoint, betData.OperatorToken, betData.ClientId, betData.IsAgent, publicKey, vendorName).PostAsync($"{betData.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 

@@ -11,6 +11,7 @@ using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Data.Sportsbook.SQLEntities;
 using Platform.Shared.Enums;
 using Platform.Shared.Extensions;
+using Platform.Shared.Helpers;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
@@ -855,10 +856,10 @@ namespace Platform.Operator.Servicev2.Repository
                     UserId = message.Bet.UserId,
                     CurrencyCode = ogParam.OGCurrencyCode,
                     bet_status = BetStatus.Running.ToString(),
-                    ParlayBonus = message.Bet.ParlayBonus,
-                    ParlayBonusWinnings = GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
+                    ParlayBonus = message.Bet.ParlayBonus.Parse(),
+                    ParlayBonusWinnings = GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings).Parse(),
                     odds_type = message.Bet.OddsTypeName,
-                    total_odds = message.Bet.Odds,
+                    total_odds = message.Bet.Odds.Parse(),
                     parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                     bet_list = message.BetSelections.Select(s => s.BetSelection).Select(s => new
                     {
@@ -872,7 +873,7 @@ namespace Platform.Operator.Servicev2.Repository
                             en = s.MarketName.ConvertToUnicodeEscape()
                         },
                         score = s.BetScore,
-                        odds = (double)s.Odds,
+                        odds = s.Odds.Parse(),
                         bet_item = new
                         {
                             en = s.SelectionName.ConvertToUnicodeEscape()
@@ -905,7 +906,7 @@ namespace Platform.Operator.Servicev2.Repository
                         MarketId = s.MarketId.ToString(),
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
-                        DeadHeatFactor = s.DeadHeatFactor
+                        DeadHeatFactor = s.DeadHeatFactor.Parse()
                     }).ToList()
                 };
 
@@ -936,7 +937,12 @@ namespace Platform.Operator.Servicev2.Repository
                 var signature = payload.ToSignOG(privateKey);
                 payload.Signature = signature;
 
-                var info = JsonSerializer.Serialize(payload);
+                var options = new JsonSerializerOptions
+                {
+                    Converters = { new DecimalJsonConverter() },
+                };
+
+                var info = JsonSerializer.Serialize(payload, options);
 
                 var operatorPayload = new OperatorLog
                 {
@@ -1303,10 +1309,10 @@ namespace Platform.Operator.Servicev2.Repository
                     UserId = message.Bet.UserId,
                     CurrencyCode = ogParam.OGCurrencyCode,
                     bet_status = message.Bet.BetStatusName,
-                    ParlayBonus = (double)message.Bet.ParlayBonus,
-                    ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
+                    ParlayBonus = message.Bet.ParlayBonus.Parse(),
+                    ParlayBonusWinnings = GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings).Parse(),
                     odds_type = message.Bet.OddsTypeName,
-                    total_odds = (double)message.Bet.Odds,
+                    total_odds = message.Bet.Odds.Parse(),
                     parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                     bet_list = message.BetSelections.Select(s => new
                     {
@@ -1320,7 +1326,7 @@ namespace Platform.Operator.Servicev2.Repository
                             en = s.MarketName.ConvertToUnicodeEscape()
                         },
                         score = s.BetScore,
-                        odds = (double)s.Odds,
+                        odds = s.Odds.Parse(),
                         bet_item = new
                         {
                             en = s.SelectionName.ConvertToUnicodeEscape()
@@ -1353,7 +1359,7 @@ namespace Platform.Operator.Servicev2.Repository
                         MarketId = s.MarketId.ToString(),
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
-                        DeadHeatFactor = (double)s.DeadHeatFactor
+                        DeadHeatFactor = s.DeadHeatFactor.Parse()
                     }).ToList()
                 };
 
@@ -1384,6 +1390,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 var options = new JsonSerializerOptions
                 {
+                    Converters = { new DecimalJsonConverter() },
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
                 };
 
@@ -1920,10 +1927,10 @@ namespace Platform.Operator.Servicev2.Repository
                     UserId = message.Bet.UserId,
                     CurrencyCode = ogParam.OGCurrencyCode,
                     bet_status = message.Bet.BetStatusName.ToOGStatus(),
-                    ParlayBonus = (double)message.Bet.ParlayBonus,
-                    ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
+                    ParlayBonus = message.Bet.ParlayBonus.Parse(),
+                    ParlayBonusWinnings = GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings).Parse(),
                     odds_type = message.Bet.OddsTypeName,
-                    total_odds = (double)message.Bet.Odds,
+                    total_odds = message.Bet.Odds.Parse(),
                     parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                     bet_list = message.BetSelections.Select(s => new
                     {
@@ -1937,7 +1944,7 @@ namespace Platform.Operator.Servicev2.Repository
                             en = s.MarketName.ConvertToUnicodeEscape()
                         },
                         score = s.BetScore,
-                        odds = (double)s.Odds,
+                        odds = s.Odds.Parse(),
                         bet_item = new
                         {
                             en = s.SelectionName.ConvertToUnicodeEscape()
@@ -1970,7 +1977,7 @@ namespace Platform.Operator.Servicev2.Repository
                         MarketId = s.MarketId.ToString(),
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
-                        DeadHeatFactor = (double)s.DeadHeatFactor
+                        DeadHeatFactor = s.DeadHeatFactor.Parse()
                     }).ToList()
                 };
 
@@ -2032,7 +2039,12 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                    var cancelResponse = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(cancelPayload), System.Text.Encoding.UTF8, "application/json")).Result;
+                    var cancelOptions = new JsonSerializerOptions
+                    {
+                        Converters = { new DecimalJsonConverter() }
+                    };
+
+                    var cancelResponse = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(cancelPayload, cancelOptions), System.Text.Encoding.UTF8, "application/json")).Result;
                     if (cancelResponse.IsSuccessStatusCode)
                     {
                         if (message.IsAudit)
@@ -2092,6 +2104,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 var options = new JsonSerializerOptions
                 {
+                    Converters = { new DecimalJsonConverter() },
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
                 };
 
@@ -2466,10 +2479,10 @@ namespace Platform.Operator.Servicev2.Repository
                 UserId = message.Bet.UserId,
                 CurrencyCode = ogParam.OGCurrencyCode,
                 bet_status = message.Bet.BetStatusName.ToOGStatus(),
-                ParlayBonus = (double)message.Bet.ParlayBonus,
-                ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
+                ParlayBonus = message.Bet.ParlayBonus.Parse(),
+                ParlayBonusWinnings = GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings).Parse(),
                 odds_type = message.Bet.OddsTypeName,
-                total_odds = (double)message.Bet.Odds,
+                total_odds = message.Bet.Odds.Parse(),
                 parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                 bet_list = message.BetSelections.Select(s => new
                 {
@@ -2483,7 +2496,7 @@ namespace Platform.Operator.Servicev2.Repository
                         en = s.MarketName.ConvertToUnicodeEscape()
                     },
                     score = s.BetScore,
-                    odds = (double)s.Odds,
+                    odds = s.Odds.Parse(),
                     bet_item = new
                     {
                         en = s.SelectionName.ConvertToUnicodeEscape()
@@ -2516,7 +2529,7 @@ namespace Platform.Operator.Servicev2.Repository
                     MarketId = s.MarketId.ToString(),
                     Line = s.Line,
                     SelectionId = s.SelectionId.ToString(),
-                    DeadHeatFactor = (double)s.DeadHeatFactor
+                    DeadHeatFactor = s.DeadHeatFactor.Parse()
                 }).ToList()
             };
 
@@ -2582,7 +2595,12 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var options = new JsonSerializerOptions
+                {
+                    Converters = { new DecimalJsonConverter() }
+                };
+
+                var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload, options), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {

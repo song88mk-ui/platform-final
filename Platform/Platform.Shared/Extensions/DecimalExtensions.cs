@@ -21,5 +21,17 @@ namespace Platform.Shared.Extensions
                 return "0";
             }
         }
+
+        public static decimal Parse(this decimal value)
+        {
+            try
+            {
+                return decimal.Parse(value.ToString("G29"));
+            }
+            catch
+            {
+                return 0m;
+            }
+        }
     }
 }

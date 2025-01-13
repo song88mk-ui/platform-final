@@ -844,8 +844,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 activity?.SetTag("bet.id", message.Bet.BetId);
                 activity?.SetTag("bet.odds", (double)message.Bet.Odds);
-                activity?.SetTag("bet.odds2", double.Parse(message.Bet.Odds.ToString()));
-
+                
                 var publicKey = _ogConfig.PublicAPIKey;
                 var privateKey = _ogConfig.PrivateAPIKey;
                 var vendorName = _ogConfig.VendorName;
@@ -911,6 +910,8 @@ namespace Platform.Operator.Servicev2.Repository
                     }).ToList()
                 };
 
+                activity?.SetTag("bet.selection.data", JsonSerializer.Serialize(betSelectionData));
+
                 var records = new[] { new {
                            amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, betData.TrueStake).Truncate()),
                            bet_place = message.BetSelections.Count > 1 ? "multiple" : "single",
@@ -919,6 +920,8 @@ namespace Platform.Operator.Servicev2.Repository
                            other_info = betSelectionData,
                            remark = (string)null
                         }};
+
+                activity?.SetTag("bet.records", JsonSerializer.Serialize(records));
 
                 var payload = new OnOGDebitRequest
                 {
@@ -934,10 +937,13 @@ namespace Platform.Operator.Servicev2.Repository
                     Signature = ""
                 };
 
+                activity?.SetTag("bet.payload.before.signature", JsonSerializer.Serialize(payload));
+
                 //signature generation
                 var signature = payload.ToSignOG(privateKey);
                 payload.Signature = signature;
 
+                activity?.SetTag("bet.payload.after.signature", JsonSerializer.Serialize(payload));
 
                 AddOperatorLog(new OperatorLog
                 {

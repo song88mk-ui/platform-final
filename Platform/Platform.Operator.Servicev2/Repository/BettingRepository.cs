@@ -843,8 +843,7 @@ namespace Platform.Operator.Servicev2.Repository
                 using var activity = this._activitySource.StartActivity("ProcesssBetPlacementOG");
 
                 activity?.SetTag("bet.id", message.Bet.BetId);
-                messageBroker.Publish(message.Bet.Odds, "OnTestingOdds", "test.operator.service", Guid.NewGuid().ToString());
-
+                
                 var publicKey = _ogConfig.PublicAPIKey;
                 var privateKey = _ogConfig.PrivateAPIKey;
                 var vendorName = _ogConfig.VendorName;
@@ -856,10 +855,10 @@ namespace Platform.Operator.Servicev2.Repository
                     UserId = message.Bet.UserId,
                     CurrencyCode = ogParam.OGCurrencyCode,
                     bet_status = BetStatus.Running.ToString(),
-                    ParlayBonus = (double)message.Bet.ParlayBonus,
-                    ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
+                    ParlayBonus = message.Bet.ParlayBonus,
+                    ParlayBonusWinnings = GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
                     odds_type = message.Bet.OddsTypeName,
-                    total_odds = (double)message.Bet.Odds,
+                    total_odds = message.Bet.Odds,
                     parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                     bet_list = message.BetSelections.Select(s => s.BetSelection).Select(s => new
                     {
@@ -906,7 +905,7 @@ namespace Platform.Operator.Servicev2.Repository
                         MarketId = s.MarketId.ToString(),
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
-                        DeadHeatFactor = (double)s.DeadHeatFactor
+                        DeadHeatFactor = s.DeadHeatFactor
                     }).ToList()
                 };
 
@@ -933,20 +932,11 @@ namespace Platform.Operator.Servicev2.Repository
                     Signature = ""
                 };
 
-
-                messageBroker.Publish(JsonSerializer.Serialize(betSelectionData), "OnTestingBetSelection", "test.operator.service", Guid.NewGuid().ToString());
-
                 //signature generation
                 var signature = payload.ToSignOG(privateKey);
                 payload.Signature = signature;
 
-                activity?.SetTag("bet.payload.after.signature", JsonSerializer.Serialize(payload));
-
                 var info = JsonSerializer.Serialize(payload);
-
-                activity?.SetTag("bet.info", info);
-
-                messageBroker.Publish(info, "OnTestingInfo", "test.operator.service", Guid.NewGuid().ToString());
 
                 var operatorPayload = new OperatorLog
                 {
@@ -961,11 +951,7 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 };
 
-                activity?.SetTag("bet.before.operator.log", operatorPayload.Info);
-
                 AddOperatorLog(operatorPayload);
-
-                activity?.SetTag("bet.after.operator.log", operatorPayload.Info);
 
                 var response = GetHttpClient(threadId, betData.Endpoint, betData.OperatorToken, betData.ClientId, betData.IsAgent, publicKey, vendorName).PostAsync($"{betData.Endpoint}{path}", new StringContent(info, System.Text.Encoding.UTF8, "application/json")).Result;
 

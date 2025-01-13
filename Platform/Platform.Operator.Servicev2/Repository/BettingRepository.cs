@@ -843,6 +843,7 @@ namespace Platform.Operator.Servicev2.Repository
                 using var activity = this._activitySource.StartActivity("ProcesssBetPlacementOG");
 
                 activity?.SetTag("bet.id", message.Bet.BetId);
+                messageBroker.Publish(message.Bet.Odds, "OnTestingOdds", "test.operator.service", Guid.NewGuid().ToString());
 
                 var publicKey = _ogConfig.PublicAPIKey;
                 var privateKey = _ogConfig.PrivateAPIKey;
@@ -932,6 +933,9 @@ namespace Platform.Operator.Servicev2.Repository
                     Signature = ""
                 };
 
+
+                messageBroker.Publish(JsonSerializer.Serialize(betSelectionData), "OnTestingBetSelection", "test.operator.service", Guid.NewGuid().ToString());
+
                 //signature generation
                 var signature = payload.ToSignOG(privateKey);
                 payload.Signature = signature;
@@ -941,6 +945,8 @@ namespace Platform.Operator.Servicev2.Repository
                 var info = JsonSerializer.Serialize(payload);
 
                 activity?.SetTag("bet.info", info);
+
+                messageBroker.Publish(info, "OnTestingInfo", "test.operator.service", Guid.NewGuid().ToString());
 
                 var operatorPayload = new OperatorLog
                 {

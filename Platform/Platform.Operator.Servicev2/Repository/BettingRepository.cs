@@ -937,6 +937,11 @@ namespace Platform.Operator.Servicev2.Repository
                 payload.Signature = signature;
 
                 activity?.SetTag("bet.payload.after.signature", JsonSerializer.Serialize(payload));
+
+                var info = JsonSerializer.Serialize(payload);
+
+                activity?.SetTag("bet.info", info);
+
                 var operatorPayload = new OperatorLog
                 {
                     Direction = "REQUEST",
@@ -944,17 +949,19 @@ namespace Platform.Operator.Servicev2.Repository
                     ClientCode = betData.ClientCode,
                     URL = $"{betData.Endpoint}{path}",
                     BetId = betData.BetId.ToString().ToUpper(),
-                    Info = JsonSerializer.Serialize(payload),
+                    Info = info,
                     OperatorToken = betData.OperatorToken,
                     CorrelationId = correlationId,
                     Timestamp = DateTime.UtcNow
                 };
 
+                activity?.SetTag("bet.before.operator.log", operatorPayload.Info);
+
                 AddOperatorLog(operatorPayload);
 
                 activity?.SetTag("bet.after.operator.log", operatorPayload.Info);
 
-                var response = GetHttpClient(threadId, betData.Endpoint, betData.OperatorToken, betData.ClientId, betData.IsAgent, publicKey, vendorName).PostAsync($"{betData.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var response = GetHttpClient(threadId, betData.Endpoint, betData.OperatorToken, betData.ClientId, betData.IsAgent, publicKey, vendorName).PostAsync($"{betData.Endpoint}{path}", new StringContent(info, System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {

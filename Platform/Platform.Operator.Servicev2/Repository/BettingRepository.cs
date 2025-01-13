@@ -840,6 +840,12 @@ namespace Platform.Operator.Servicev2.Repository
 
             try
             {
+                using var activity = this._activitySource.StartActivity("ProcesssBetPlacementOG");
+
+                activity?.SetTag("bet.id", message.Bet.BetId);
+                activity?.SetTag("bet.odds", (double)message.Bet.Odds);
+                activity?.SetTag("bet.odds2", double.Parse(message.Bet.Odds.ToString()));
+
                 var publicKey = _ogConfig.PublicAPIKey;
                 var privateKey = _ogConfig.PrivateAPIKey;
                 var vendorName = _ogConfig.VendorName;
@@ -851,10 +857,10 @@ namespace Platform.Operator.Servicev2.Repository
                     UserId = message.Bet.UserId,
                     CurrencyCode = ogParam.OGCurrencyCode,
                     bet_status = BetStatus.Running.ToString(),
-                    ParlayBonus = double.Parse(message.Bet.ParlayBonus.ToString()),
-                    ParlayBonusWinnings = double.Parse(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings).ToString()),
+                    ParlayBonus = (double)message.Bet.ParlayBonus,
+                    ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
                     odds_type = message.Bet.OddsTypeName,
-                    total_odds = double.Parse(message.Bet.Odds.ToString()),
+                    total_odds = (double)message.Bet.Odds,
                     parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                     bet_list = message.BetSelections.Select(s => s.BetSelection).Select(s => new
                     {
@@ -868,7 +874,7 @@ namespace Platform.Operator.Servicev2.Repository
                             en = s.MarketName.ConvertToUnicodeEscape()
                         },
                         score = s.BetScore,
-                        odds = double.Parse(s.Odds.ToString()),
+                        odds = (double)s.Odds,
                         bet_item = new
                         {
                             en = s.SelectionName.ConvertToUnicodeEscape()
@@ -901,7 +907,7 @@ namespace Platform.Operator.Servicev2.Repository
                         MarketId = s.MarketId.ToString(),
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
-                        DeadHeatFactor = double.Parse(s.DeadHeatFactor.ToString())
+                        DeadHeatFactor = (double)s.DeadHeatFactor
                     }).ToList()
                 };
 
@@ -1296,10 +1302,10 @@ namespace Platform.Operator.Servicev2.Repository
                     UserId = message.Bet.UserId,
                     CurrencyCode = ogParam.OGCurrencyCode,
                     bet_status = message.Bet.BetStatusName,
-                    ParlayBonus = double.Parse(message.Bet.ParlayBonus.ToString()),
-                    ParlayBonusWinnings = double.Parse(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings).ToString()),
+                    ParlayBonus = (double)message.Bet.ParlayBonus,
+                    ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
                     odds_type = message.Bet.OddsTypeName,
-                    total_odds = double.Parse(message.Bet.Odds.ToString()),
+                    total_odds = (double)message.Bet.Odds,
                     parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                     bet_list = message.BetSelections.Select(s => new
                     {
@@ -1313,7 +1319,7 @@ namespace Platform.Operator.Servicev2.Repository
                             en = s.MarketName.ConvertToUnicodeEscape()
                         },
                         score = s.BetScore,
-                        odds = double.Parse(s.Odds.ToString()),
+                        odds = (double)s.Odds,
                         bet_item = new
                         {
                             en = s.SelectionName.ConvertToUnicodeEscape()
@@ -1346,7 +1352,7 @@ namespace Platform.Operator.Servicev2.Repository
                         MarketId = s.MarketId.ToString(),
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
-                        DeadHeatFactor = double.Parse(s.DeadHeatFactor.ToString())
+                        DeadHeatFactor = (double)s.DeadHeatFactor
                     }).ToList()
                 };
 
@@ -1913,10 +1919,10 @@ namespace Platform.Operator.Servicev2.Repository
                     UserId = message.Bet.UserId,
                     CurrencyCode = ogParam.OGCurrencyCode,
                     bet_status = message.Bet.BetStatusName.ToOGStatus(),
-                    ParlayBonus = double.Parse(message.Bet.ParlayBonus.ToString()),
-                    ParlayBonusWinnings = double.Parse(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings).ToString()),
+                    ParlayBonus = (double)message.Bet.ParlayBonus,
+                    ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
                     odds_type = message.Bet.OddsTypeName,
-                    total_odds = double.Parse(message.Bet.Odds.ToString()),
+                    total_odds = (double)message.Bet.Odds,
                     parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                     bet_list = message.BetSelections.Select(s => new
                     {
@@ -1963,7 +1969,7 @@ namespace Platform.Operator.Servicev2.Repository
                         MarketId = s.MarketId.ToString(),
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
-                        DeadHeatFactor = double.Parse(s.DeadHeatFactor.ToString())
+                        DeadHeatFactor = (double)s.DeadHeatFactor
                     }).ToList()
                 };
 
@@ -2459,10 +2465,10 @@ namespace Platform.Operator.Servicev2.Repository
                 UserId = message.Bet.UserId,
                 CurrencyCode = ogParam.OGCurrencyCode,
                 bet_status = message.Bet.BetStatusName.ToOGStatus(),
-                ParlayBonus = double.Parse(message.Bet.ParlayBonus.ToString()),
-                ParlayBonusWinnings = double.Parse(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings).ToString()),
+                ParlayBonus = (double)message.Bet.ParlayBonus,
+                ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
                 odds_type = message.Bet.OddsTypeName,
-                total_odds = double.Parse(message.Bet.Odds.ToString()),
+                total_odds = (double)message.Bet.Odds,
                 parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                 bet_list = message.BetSelections.Select(s => new
                 {
@@ -2509,7 +2515,7 @@ namespace Platform.Operator.Servicev2.Repository
                     MarketId = s.MarketId.ToString(),
                     Line = s.Line,
                     SelectionId = s.SelectionId.ToString(),
-                    DeadHeatFactor = double.Parse(s.DeadHeatFactor.ToString())
+                    DeadHeatFactor = (double)s.DeadHeatFactor
                 }).ToList()
             };
 

@@ -223,6 +223,7 @@ namespace Platform.Client.API.Controllers
         [HttpGet("v1/sportsbook/ccf")]
         public async Task<IActionResult> GetCCF([FromQuery] string userId)
         {
+            //
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();

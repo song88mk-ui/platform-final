@@ -425,6 +425,8 @@ namespace Platform.API.Repository
                 return ReturnErrorBetResponse(betResponse.StatusCode, activity, betResponse.Message, betResponse.Result);
             }
 
+            activity.SetTag("bet.id", betResponse.Result.BetId);
+
             activity?.SetStatus(ActivityStatusCode.Ok);
 
             return betResponse;

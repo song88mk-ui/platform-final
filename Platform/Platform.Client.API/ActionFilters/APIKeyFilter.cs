@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Enums;
@@ -12,13 +13,16 @@ namespace Platform.Client.API.ActionFilters
     public class APIKeyFilter : ActionFilterAttribute
     {
         private readonly IConfiguration _configuration;
+        private readonly TelemetryClient _telemetryClient;
         private List<Tuple<string, string, List<string>>> _allowed = new List<Tuple<string, string, List<string>>>();
 
-        public APIKeyFilter(IConfiguration configuration)
+        public APIKeyFilter(IConfiguration configuration, TelemetryClient telemetryClient)
         {
             _configuration = configuration;
+            _telemetryClient = telemetryClient;
             _allowed = GetAllowedIPs();
         }
+
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             var passKey = context.HttpContext.Request.Headers["x-pass-key"].FirstOrDefault();
@@ -44,6 +48,20 @@ namespace Platform.Client.API.ActionFilters
             {
                 if (string.IsNullOrEmpty(apiKey) || string.IsNullOrWhiteSpace(apiKey) || IsNotAllowed(ipAddress, apiKey))
                 {
+                    var clientId = context.HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+
+                    var properties = new Dictionary<string, string>
+                            {
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "requestParameters", "" },
+                                { "statusCode", StatusCode.Not_Authorized.ToString() },
+                                { "message", StatusCode.Not_Authorized.ToString().Replace('_', ' ') }
+                            };
+
+                    _telemetryClient.TrackEvent($"e:{context.ActionDescriptor.AttributeRouteInfo.Template}", properties);
+
                     context.Result = new UnauthorizedObjectResult(new
                     {
                         StatusCode = StatusCode.Not_Authorized,

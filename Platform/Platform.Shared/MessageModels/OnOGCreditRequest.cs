@@ -9,7 +9,7 @@ namespace Platform.Shared.MessageModels
         [JsonPropertyName("timestamp")]
         public long TimeStamp { get; set; }
         [JsonPropertyName("amount")]
-        public double Amount { get; set; }
+        public decimal Amount { get; set; }
         [JsonPropertyName("transaction_id")]
         public string TransactionId { get; set; }
         [JsonPropertyName("transaction_type")]
@@ -23,9 +23,9 @@ namespace Platform.Shared.MessageModels
         [JsonPropertyName("currency")]
         public string Currency { get; set; }
         [JsonPropertyName("winlose_amount")]
-        public double WinloseAmount { get; set; }
+        public decimal WinloseAmount { get; set; }
         [JsonPropertyName("effective_amount")]
-        public double EffectiveAmount { get; set; }
+        public decimal EffectiveAmount { get; set; }
         [JsonPropertyName("result_url")]
         public string ResultUrl { get; set; }
         [JsonPropertyName("secondary_info")]

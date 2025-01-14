@@ -354,7 +354,7 @@ namespace Platform.Operator.API.Controllers
 
         [HttpPost("/og/api/v2/platform/transaction/credit")]
         public async Task<IActionResult> BetSettlementOG([FromBody] OnOGCreditRequest request)
-        {
+        {//
             var result = await _platformRepository.BetSettlementOG(request);
 
             switch (result.StatusId)

@@ -11,6 +11,7 @@ using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.Data.Sportsbook.SQLEntities;
 using Platform.Shared.Enums;
 using Platform.Shared.Extensions;
+using Platform.Shared.Helpers;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
@@ -843,7 +844,6 @@ namespace Platform.Operator.Servicev2.Repository
                 using var activity = this._activitySource.StartActivity("ProcesssBetPlacementOG");
 
                 activity?.SetTag("bet.id", message.Bet.BetId);
-                activity?.SetTag("bet.odds", (double)message.Bet.Odds);
                 
                 var publicKey = _ogConfig.PublicAPIKey;
                 var privateKey = _ogConfig.PrivateAPIKey;
@@ -856,10 +856,10 @@ namespace Platform.Operator.Servicev2.Repository
                     UserId = message.Bet.UserId,
                     CurrencyCode = ogParam.OGCurrencyCode,
                     bet_status = BetStatus.Running.ToString(),
-                    ParlayBonus = (double)message.Bet.ParlayBonus,
-                    ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
+                    ParlayBonus = message.Bet.ParlayBonus.Parse(),
+                    ParlayBonusWinnings = GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings).Parse(),
                     odds_type = message.Bet.OddsTypeName,
-                    total_odds = (double)message.Bet.Odds,
+                    total_odds = message.Bet.Odds.Parse(),
                     parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                     bet_list = message.BetSelections.Select(s => s.BetSelection).Select(s => new
                     {
@@ -873,7 +873,7 @@ namespace Platform.Operator.Servicev2.Repository
                             en = s.MarketName.ConvertToUnicodeEscape()
                         },
                         score = s.BetScore,
-                        odds = (double)s.Odds,
+                        odds = s.Odds.Parse(),
                         bet_item = new
                         {
                             en = s.SelectionName.ConvertToUnicodeEscape()
@@ -906,11 +906,9 @@ namespace Platform.Operator.Servicev2.Repository
                         MarketId = s.MarketId.ToString(),
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
-                        DeadHeatFactor = (double)s.DeadHeatFactor
+                        DeadHeatFactor = s.DeadHeatFactor.Parse()
                     }).ToList()
                 };
-
-                activity?.SetTag("bet.selection.data", JsonSerializer.Serialize(betSelectionData));
 
                 var records = new[] { new {
                            amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, betData.TrueStake).Truncate()),
@@ -920,8 +918,6 @@ namespace Platform.Operator.Servicev2.Repository
                            other_info = betSelectionData,
                            remark = (string)null
                         }};
-
-                activity?.SetTag("bet.records", JsonSerializer.Serialize(records));
 
                 var payload = new OnOGDebitRequest
                 {
@@ -937,28 +933,33 @@ namespace Platform.Operator.Servicev2.Repository
                     Signature = ""
                 };
 
-                activity?.SetTag("bet.payload.before.signature", JsonSerializer.Serialize(payload));
-
                 //signature generation
                 var signature = payload.ToSignOG(privateKey);
                 payload.Signature = signature;
 
-                activity?.SetTag("bet.payload.after.signature", JsonSerializer.Serialize(payload));
+                var options = new JsonSerializerOptions
+                {
+                    Converters = { new DecimalJsonConverter() },
+                };
 
-                AddOperatorLog(new OperatorLog
+                var info = JsonSerializer.Serialize(payload, options);
+
+                var operatorPayload = new OperatorLog
                 {
                     Direction = "REQUEST",
                     ClientId = betData.ClientId,
                     ClientCode = betData.ClientCode,
                     URL = $"{betData.Endpoint}{path}",
                     BetId = betData.BetId.ToString().ToUpper(),
-                    Info = JsonSerializer.Serialize(payload),
+                    Info = info,
                     OperatorToken = betData.OperatorToken,
                     CorrelationId = correlationId,
                     Timestamp = DateTime.UtcNow
-                });
+                };
 
-                var response = GetHttpClient(threadId, betData.Endpoint, betData.OperatorToken, betData.ClientId, betData.IsAgent, publicKey, vendorName).PostAsync($"{betData.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                AddOperatorLog(operatorPayload);
+
+                var response = GetHttpClient(threadId, betData.Endpoint, betData.OperatorToken, betData.ClientId, betData.IsAgent, publicKey, vendorName).PostAsync($"{betData.Endpoint}{path}", new StringContent(info, System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -1308,10 +1309,10 @@ namespace Platform.Operator.Servicev2.Repository
                     UserId = message.Bet.UserId,
                     CurrencyCode = ogParam.OGCurrencyCode,
                     bet_status = message.Bet.BetStatusName,
-                    ParlayBonus = (double)message.Bet.ParlayBonus,
-                    ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
+                    ParlayBonus = message.Bet.ParlayBonus.Parse(),
+                    ParlayBonusWinnings = GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings).Parse(),
                     odds_type = message.Bet.OddsTypeName,
-                    total_odds = (double)message.Bet.Odds,
+                    total_odds = message.Bet.Odds.Parse(),
                     parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                     bet_list = message.BetSelections.Select(s => new
                     {
@@ -1325,7 +1326,7 @@ namespace Platform.Operator.Servicev2.Repository
                             en = s.MarketName.ConvertToUnicodeEscape()
                         },
                         score = s.BetScore,
-                        odds = (double)s.Odds,
+                        odds = s.Odds.Parse(),
                         bet_item = new
                         {
                             en = s.SelectionName.ConvertToUnicodeEscape()
@@ -1358,7 +1359,7 @@ namespace Platform.Operator.Servicev2.Repository
                         MarketId = s.MarketId.ToString(),
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
-                        DeadHeatFactor = (double)s.DeadHeatFactor
+                        DeadHeatFactor = s.DeadHeatFactor.Parse()
                     }).ToList()
                 };
 
@@ -1367,17 +1368,17 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     PlayerCode = message.Bet.UserId,
                     TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    Amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.Payout).Truncate()),
+                    Amount = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.Payout).Truncate()).Parse(),
                     TransactionId = message.Bet.BetId.ToString().ToLower().Replace("-", ""),
                     TransactionType = transType,
                     GameCode = ogParam.GameCode,
                     RoundId = "na",
                     BetPlace = message.BetSelections.Count > 1 ? "multiple" : "single",
                     Currency = ogParam.OGCurrencyCode,
-                    WinloseAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.WinLoss).Truncate()),
-                    EffectiveAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()),
+                    WinloseAmount = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.WinLoss).Truncate()).Parse(),
+                    EffectiveAmount = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()).Parse(),
                     ResultUrl = $"result?client_id={message.Bet.ClientId}&transaction_id={message.Bet.BetId}",
-                    SecondaryInfo = new { bet_amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), detain_amount = 0 },
+                    SecondaryInfo = new { bet_amount = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()).Parse(), detain_amount = 0 },
                     OtherInfo = betSelectionData,
                     CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Signature = ""
@@ -1389,6 +1390,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 var options = new JsonSerializerOptions
                 {
+                    Converters = { new DecimalJsonConverter() },
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
                 };
 
@@ -1925,10 +1927,10 @@ namespace Platform.Operator.Servicev2.Repository
                     UserId = message.Bet.UserId,
                     CurrencyCode = ogParam.OGCurrencyCode,
                     bet_status = message.Bet.BetStatusName.ToOGStatus(),
-                    ParlayBonus = (double)message.Bet.ParlayBonus,
-                    ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
+                    ParlayBonus = message.Bet.ParlayBonus.Parse(),
+                    ParlayBonusWinnings = GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings).Parse(),
                     odds_type = message.Bet.OddsTypeName,
-                    total_odds = (double)message.Bet.Odds,
+                    total_odds = message.Bet.Odds.Parse(),
                     parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                     bet_list = message.BetSelections.Select(s => new
                     {
@@ -1942,7 +1944,7 @@ namespace Platform.Operator.Servicev2.Repository
                             en = s.MarketName.ConvertToUnicodeEscape()
                         },
                         score = s.BetScore,
-                        odds = (double)s.Odds,
+                        odds = s.Odds.Parse(),
                         bet_item = new
                         {
                             en = s.SelectionName.ConvertToUnicodeEscape()
@@ -1975,7 +1977,7 @@ namespace Platform.Operator.Servicev2.Repository
                         MarketId = s.MarketId.ToString(),
                         Line = s.Line,
                         SelectionId = s.SelectionId.ToString(),
-                        DeadHeatFactor = (double)s.DeadHeatFactor
+                        DeadHeatFactor = s.DeadHeatFactor.Parse()
                     }).ToList()
                 };
 
@@ -1983,17 +1985,17 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     PlayerCode = message.Bet.UserId,
                     TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    Amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.Payout).Truncate()),
+                    Amount = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.Payout).Truncate()).Parse(),
                     TransactionId = message.Bet.BetId.ToString().ToLower().Replace("-", ""),
                     TransactionType = transType,
                     GameCode = ogParam.GameCode,
                     RoundId = "na",
                     BetPlace = message.BetSelections.Count > 1 ? "multiple" : "single",
                     Currency = ogParam.OGCurrencyCode,
-                    WinloseAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.WinLoss).Truncate()),
-                    EffectiveAmount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()),
+                    WinloseAmount = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.WinLoss).Truncate()).Parse(),
+                    EffectiveAmount = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()).Parse(),
                     ResultUrl = $"/result?client_id={message.Bet.ClientId}&transaction_id={message.Bet.BetId}",
-                    SecondaryInfo = new { bet_amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()), detain_amount = 0 },
+                    SecondaryInfo = new { bet_amount = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()).Parse(), detain_amount = 0 },
                     OtherInfo = betSelectionData,
                     CalledAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     Signature = ""
@@ -2037,7 +2039,12 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                    var cancelResponse = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(cancelPayload), System.Text.Encoding.UTF8, "application/json")).Result;
+                    var cancelOptions = new JsonSerializerOptions
+                    {
+                        Converters = { new DecimalJsonConverter() }
+                    };
+
+                    var cancelResponse = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(cancelPayload, cancelOptions), System.Text.Encoding.UTF8, "application/json")).Result;
                     if (cancelResponse.IsSuccessStatusCode)
                     {
                         if (message.IsAudit)
@@ -2097,6 +2104,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                 var options = new JsonSerializerOptions
                 {
+                    Converters = { new DecimalJsonConverter() },
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
                 };
 
@@ -2471,10 +2479,10 @@ namespace Platform.Operator.Servicev2.Repository
                 UserId = message.Bet.UserId,
                 CurrencyCode = ogParam.OGCurrencyCode,
                 bet_status = message.Bet.BetStatusName.ToOGStatus(),
-                ParlayBonus = (double)message.Bet.ParlayBonus,
-                ParlayBonusWinnings = (double)GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings),
+                ParlayBonus = message.Bet.ParlayBonus.Parse(),
+                ParlayBonusWinnings = GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.ParlayBonusWinnings).Parse(),
                 odds_type = message.Bet.OddsTypeName,
-                total_odds = (double)message.Bet.Odds,
+                total_odds = message.Bet.Odds.Parse(),
                 parlay_type = GetParlayCountLabel(message.BetSelections.Count),
                 bet_list = message.BetSelections.Select(s => new
                 {
@@ -2488,7 +2496,7 @@ namespace Platform.Operator.Servicev2.Repository
                         en = s.MarketName.ConvertToUnicodeEscape()
                     },
                     score = s.BetScore,
-                    odds = (double)s.Odds,
+                    odds = s.Odds.Parse(),
                     bet_item = new
                     {
                         en = s.SelectionName.ConvertToUnicodeEscape()
@@ -2521,7 +2529,7 @@ namespace Platform.Operator.Servicev2.Repository
                     MarketId = s.MarketId.ToString(),
                     Line = s.Line,
                     SelectionId = s.SelectionId.ToString(),
-                    DeadHeatFactor = (double)s.DeadHeatFactor
+                    DeadHeatFactor = s.DeadHeatFactor.Parse()
                 }).ToList()
             };
 
@@ -2587,7 +2595,12 @@ namespace Platform.Operator.Servicev2.Repository
                     Timestamp = DateTime.UtcNow
                 });
 
-                var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                var options = new JsonSerializerOptions
+                {
+                    Converters = { new DecimalJsonConverter() }
+                };
+
+                var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent, publicKey, vendorName).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload, options), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {

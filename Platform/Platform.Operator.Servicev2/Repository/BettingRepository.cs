@@ -912,7 +912,7 @@ namespace Platform.Operator.Servicev2.Repository
                 };
 
                 var records = new[] { new {
-                           amount = Convert.ToDouble(GetOgRedenominatedValue(ogParam.OGCurrencyCode, betData.TrueStake).Truncate()),
+                           amount = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, betData.TrueStake).Truncate()).Parse(),
                            bet_place = message.BetSelections.Count > 1 ? "multiple" : "single",
                            transaction_id = betData.BetId.ToString().ToLower().Replace("-",""),
                            secondary_info = new { bet_amount = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()).Parse(), detain_amount = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.Stake).Truncate()).Parse() },

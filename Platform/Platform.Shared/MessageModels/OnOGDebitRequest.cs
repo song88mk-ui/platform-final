@@ -11,7 +11,7 @@ namespace Platform.Shared.MessageModels
         [JsonPropertyName("timestamp")]
         public long TimeStamp { get; set; }
         [JsonPropertyName("total_amount")]
-        public double TotalAmount { get; set; }
+        public decimal TotalAmount { get; set; }
         [JsonPropertyName("transaction_type")]
         public string TransactionType { get; set; }
         [JsonPropertyName("game_code")]

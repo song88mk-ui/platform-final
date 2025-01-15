@@ -874,6 +874,7 @@ namespace Platform.Operator.Servicev2.Repository
                         },
                         score = s.BetScore,
                         odds = s.Odds.Parse(),
+                        original_odds = OddsTypeHelper.GetOddsByOddsType(message.Bet.OddsTypeId, s.Odds, s.IsBinary).Parse(),
                         bet_item = new
                         {
                             en = s.SelectionName.ConvertToUnicodeEscape()
@@ -1327,6 +1328,7 @@ namespace Platform.Operator.Servicev2.Repository
                         },
                         score = s.BetScore,
                         odds = s.Odds.Parse(),
+                        original_odds = OddsTypeHelper.GetOddsByOddsType(message.Bet.OddsTypeId, s.Odds, s.IsBinary).Parse(),
                         bet_item = new
                         {
                             en = s.SelectionName.ConvertToUnicodeEscape()
@@ -1945,6 +1947,7 @@ namespace Platform.Operator.Servicev2.Repository
                         },
                         score = s.BetScore,
                         odds = s.Odds.Parse(),
+                        original_odds = OddsTypeHelper.GetOddsByOddsType(message.Bet.OddsTypeId, s.Odds, s.IsBinary).Parse(),
                         bet_item = new
                         {
                             en = s.SelectionName.ConvertToUnicodeEscape()
@@ -2497,6 +2500,7 @@ namespace Platform.Operator.Servicev2.Repository
                     },
                     score = s.BetScore,
                     odds = s.Odds.Parse(),
+                    original_odds = OddsTypeHelper.GetOddsByOddsType(message.Bet.OddsTypeId, s.Odds, s.IsBinary).Parse(),
                     bet_item = new
                     {
                         en = s.SelectionName.ConvertToUnicodeEscape()

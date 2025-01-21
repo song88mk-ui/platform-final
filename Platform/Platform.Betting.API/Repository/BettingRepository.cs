@@ -2548,7 +2548,7 @@ namespace Platform.Betting.API.Repository
                     Line = s.Line,
                     SelectionId = s.SelectionId.ToString(),
                     SelectionName = s.SelectionName,
-                    Odds = s.Odds,
+                    Odds = Convert.ToDecimal(GetSelectionOdds(bet.OddsTypeId, s.Odds, false, s.IsBinary)),
                     BetScore = s.BetScore,
                     SettlementScore = s.SettlementScore,
                     BetSelectionId = s.BetSelectionId,

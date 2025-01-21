@@ -633,6 +633,10 @@ namespace Platform.Operator.Servicev2.Repository
 
         public void ProcesssBetPlacement(OnBetPlacement message, IMessageBroker messageBroker, string correlationId, string threadId)
         {
+            using var activity = this._activitySource.StartActivity("ProcesssBetPlacement");
+
+            activity?.SetTag("bet.id", message.Bet.BetId);
+
             var path = "/v1/bet/placement";
 
             var betData = message.Bet;
@@ -687,6 +691,8 @@ namespace Platform.Operator.Servicev2.Repository
                     }).ToList()
                 };
 
+                var payloadString = JsonSerializer.Serialize(payload);
+
                 AddOperatorLog(new OperatorLog
                 {
                     Direction = "REQUEST",
@@ -694,17 +700,23 @@ namespace Platform.Operator.Servicev2.Repository
                     ClientCode = betData.ClientCode,
                     URL = $"{betData.Endpoint}{path}",
                     BetId = betData.BetId.ToString().ToUpper(),
-                    Info = JsonSerializer.Serialize(payload),
+                    Info = payloadString,
                     OperatorToken = betData.OperatorToken,
                     CorrelationId = correlationId,
                     Timestamp = DateTime.UtcNow
                 });
 
+                activity?.SetTag("request.payload", payloadString);
+
                 var response = GetHttpClient(threadId, betData.Endpoint, betData.OperatorToken, betData.ClientId, betData.IsAgent).PostAsync($"{betData.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var responsePayload = response.Content.ReadAsStringAsync().Result;
+
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    activity?.SetTag("response.payload", responsePayload);
 
                     if (result.IsFreeBet == true && message.IsBetBuilder)
                     {
@@ -767,7 +779,11 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var responsePayload = response.Content.ReadAsStringAsync().Result;
+                        
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                        activity?.SetTag("response.bad.request.payload", responsePayload);
 
                         AddOperatorLog(new OperatorLog
                         {
@@ -797,6 +813,8 @@ namespace Platform.Operator.Servicev2.Repository
                     }
                     else
                     {
+                        activity?.SetTag("response.error.payload", JsonSerializer.Serialize(response.ReasonPhrase));
+                        
                         AddOperatorLog(new OperatorLog
                         {
                             Direction = "RESPONSE",
@@ -1106,6 +1124,10 @@ namespace Platform.Operator.Servicev2.Repository
 
         public void ProcessBetFullCashOut(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId)
         {
+            using var activity = this._activitySource.StartActivity("ProcessBetFullCashOut");
+
+            activity?.SetTag("bet.id", message.Bet.BetId);
+
             if (message.IsRetry)
             {
                 var initialMessage = IsProcess(message.Bet.BetId);
@@ -1174,6 +1196,8 @@ namespace Platform.Operator.Servicev2.Repository
                         messageBroker.Publish(message, "OnBetFullCashOut", "r.bet.reports", correlationId);
                 }
 
+                var payloadString = JsonSerializer.Serialize(payload);
+
                 AddOperatorLog(new OperatorLog
                 {
                     Direction = "REQUEST",
@@ -1181,17 +1205,23 @@ namespace Platform.Operator.Servicev2.Repository
                     ClientCode = message.Bet.ClientCode,
                     URL = $"{message.Bet.Endpoint}{path}",
                     BetId = message.Bet.BetId.ToString().ToUpper(),
-                    Info = JsonSerializer.Serialize(payload),
+                    Info = payloadString,
                     OperatorToken = message.Bet.OperatorToken,
                     CorrelationId = correlationId,
                     Timestamp = DateTime.UtcNow
                 });
 
+                activity?.SetTag("request.payload", payloadString);
+
                 var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var responsePayload = response.Content.ReadAsStringAsync().Result;
+
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    activity?.SetTag("response.payload", responsePayload);
 
                     AddOperatorLog(new OperatorLog
                     {
@@ -1219,7 +1249,11 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var responsePayload = response.Content.ReadAsStringAsync().Result;
+                        
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                        activity?.SetTag("response.bad.request.payload", responsePayload);
 
                         AddOperatorLog(new OperatorLog
                         {
@@ -1238,6 +1272,8 @@ namespace Platform.Operator.Servicev2.Repository
                     }
                     else
                     {
+                        activity?.SetTag("response.error.payload", JsonSerializer.Serialize(response.ReasonPhrase));
+                        
                         AddOperatorLog(new OperatorLog
                         {
                             Direction = "RESPONSE",
@@ -1687,6 +1723,10 @@ namespace Platform.Operator.Servicev2.Repository
 
         public void ProcesssBetSettlement(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId)
         {
+            using var activity = this._activitySource.StartActivity("ProcesssBetSettlement");
+
+            activity?.SetTag("bet.id", message.Bet.BetId);
+
             if (message.IsRetry)
             {
                 var initialMessage = IsProcess(message.Bet.BetId);
@@ -1762,6 +1802,8 @@ namespace Platform.Operator.Servicev2.Repository
                         messageBroker.Publish(message, "OnBetSettlement", "r.bet.reports", correlationId);
                 }
 
+                var payloadString = JsonSerializer.Serialize(payload);
+
                 if (message.IsAudit)
                     AddOperatorLog(new OperatorLog
                     {
@@ -1770,17 +1812,23 @@ namespace Platform.Operator.Servicev2.Repository
                         ClientCode = message.Bet.ClientCode,
                         URL = $"{message.Bet.Endpoint}{path}",
                         BetId = message.Bet.BetId.ToString().ToUpper(),
-                        Info = JsonSerializer.Serialize(payload),
+                        Info = payloadString,
                         OperatorToken = message.Bet.OperatorToken,
                         CorrelationId = correlationId,
                         Timestamp = DateTime.UtcNow
                     });
 
-                var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
+                activity?.SetTag("request.payload", payloadString);
+
+                var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(payloadString, System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var responsePayload = response.Content.ReadAsStringAsync().Result;
+
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    activity?.SetTag("response.payload", responsePayload);
 
                     if (message.IsAudit)
                     {
@@ -1820,7 +1868,11 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var responsePayload = response.Content.ReadAsStringAsync().Result;
+
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                        activity?.SetTag("response.bad.request.payload", responsePayload);
 
                         if (message.IsAudit)
                         {
@@ -1842,6 +1894,8 @@ namespace Platform.Operator.Servicev2.Repository
                     }
                     else
                     {
+                        activity?.SetTag("response.error.payload", JsonSerializer.Serialize(response.ReasonPhrase));
+
                         if (message.IsAudit)
                         {
                             AddOperatorLog(new OperatorLog
@@ -2277,6 +2331,10 @@ namespace Platform.Operator.Servicev2.Repository
 
         public void ProcesssBetCancellation(OnBetSettlement message, IMessageBroker messageBroker, string correlationId, string threadId)
         {
+            using var activity = this._activitySource.StartActivity("ProcesssBetCancellation");
+
+            activity?.SetTag("bet.id", message.Bet.BetId);
+
             if (message.IsRetry)
             {
                 var initialMessage = IsProcess(message.Bet.BetId);
@@ -2333,6 +2391,7 @@ namespace Platform.Operator.Servicev2.Repository
 
             try
             {
+                var payloadString = JsonSerializer.Serialize(payload);
 
                 messageBroker.Publish(new OnBetStatus
                 {
@@ -2361,17 +2420,23 @@ namespace Platform.Operator.Servicev2.Repository
                     ClientCode = message.Bet.ClientCode,
                     URL = $"{message.Bet.Endpoint}{path}",
                     BetId = message.Bet.BetId.ToString().ToUpper(),
-                    Info = JsonSerializer.Serialize(payload),
+                    Info = payloadString,
                     OperatorToken = message.Bet.OperatorToken,
                     CorrelationId = correlationId,
                     Timestamp = DateTime.UtcNow
                 });
 
+                activity?.SetTag("request.payload", payloadString);
+
                 var response = GetHttpClient(threadId, message.Bet.Endpoint, message.Bet.OperatorToken, message.Bet.ClientId, message.Bet.IsAgent).PostAsync($"{message.Bet.Endpoint}{path}", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json")).Result;
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var responsePayload = response.Content.ReadAsStringAsync().Result;
+                    
+                    var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    activity?.SetTag("response.payload", responsePayload);
 
                     AddOperatorLog(new OperatorLog
                     {
@@ -2399,7 +2464,11 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var responsePayload = response.Content.ReadAsStringAsync().Result;
+
+                        var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                        activity?.SetTag("response.bad.request.payload", responsePayload);
 
                         AddOperatorLog(new OperatorLog
                         {
@@ -2419,6 +2488,8 @@ namespace Platform.Operator.Servicev2.Repository
                     }
                     else
                     {
+                        activity?.SetTag("response.error.payload", JsonSerializer.Serialize(response.ReasonPhrase));
+                        
                         AddOperatorLog(new OperatorLog
                         {
                             Direction = "RESPONSE",

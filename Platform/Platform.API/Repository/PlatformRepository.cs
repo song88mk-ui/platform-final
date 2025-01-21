@@ -313,7 +313,9 @@ namespace Platform.API.Repository
                     BetSelections = result.Result.Selections.Select(s => s.BetSelectionState).ToList()
                 };
 
-                return ReturnErrorBetResponse(StatusCode.Error, activity, result: response);
+                var firstSelection = result.Result.Selections.FirstOrDefault(c => c.BetSelectionState.StatusCode != StatusCode.Success);
+
+                return ReturnErrorBetResponse(StatusCode.Error, activity, firstSelection.BetSelectionState.Message, response);
             }
 
             if (request.IsBoosted && result.Result.Selections.Any(s => s.FixtureStatus >= FixtureStatus.Live))

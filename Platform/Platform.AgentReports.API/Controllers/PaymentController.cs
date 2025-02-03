@@ -11,7 +11,6 @@ namespace Platform.AgentReports.API.Controllers
     [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(APIKeyFilter))]
     public class PaymentController : ControllerBase
     {
-        //
         private readonly IPaymentsRepository _paymentsRepository;
 
         public PaymentController(IPaymentsRepository paymentsRepository)

@@ -1,9 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Platform;
+using Platform.Shared.Data.Platform.Entities;
+using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
+using Platform.Shared.Utility;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -16,14 +20,16 @@ namespace Platform.Client.API.Repository
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
+        private readonly IMemCache _memCache;
 
         private readonly IMTSAuthRepository _mtsAuthRepository;
         private readonly IMTSCCFRepository _mtsCCFRepository;
 
         private readonly PlatformContext _platformContext;
 
-        public SportsbookRepository(HttpClient httpClient, IConfiguration configuration, IMTSAuthRepository mtsAuthRepository, IMTSCCFRepository mtsCCFRepository, PlatformContext platformContext)
+        public SportsbookRepository(HttpClient httpClient, IConfiguration configuration, IMemCache memCache, IMTSAuthRepository mtsAuthRepository, IMTSCCFRepository mtsCCFRepository, PlatformContext platformContext)
         {
+            _memCache = memCache;
             _configuration = configuration;
             _mtsAuthRepository = mtsAuthRepository;
             _mtsCCFRepository = mtsCCFRepository;
@@ -369,6 +375,43 @@ namespace Platform.Client.API.Repository
                     }).ToList()
                 }
             };
+        }
+
+
+        public async Task<BaseResponseDTO<ForexResponseDTO>> GetForex(string currCode)
+        {
+            var key = $"fx:{currCode}";
+
+            var result = _memCache.GetCache<List<ForexEUR>>(key);
+
+            if (result == null)
+            {
+                result = GetForexFromDB(currCode);
+
+                var expiration = DateTime.UtcNow.AddMinutes(10);
+                _memCache.AddOrUpdateCache(key, result, expiration);
+            }
+
+            return new BaseResponseDTO<ForexResponseDTO>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = new ForexResponseDTO
+                {
+                    Values = result.Select(s => new Forex
+                    {
+                        CurrCode = s.CurrencyCode,
+                        ExchangeRate = s.ExchangeRate,
+                    }).ToList()
+                }
+            };
+        }
+
+        private List<ForexEUR> GetForexFromDB(string currCode)
+        {
+            return string.IsNullOrEmpty(currCode)
+                ? _platformContext.ForexEUR.ToList()
+                : _platformContext.ForexEUR.Where(c => c.CurrencyCode == currCode).ToList();
         }
 
         private async Task<BaseResponseDTO<string>> GetClient(string clientId)

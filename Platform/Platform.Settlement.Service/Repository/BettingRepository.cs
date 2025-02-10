@@ -621,7 +621,7 @@ namespace Platform.Settlement.Service.Repository
             }
         }
 
-        public void ProcessOddsFeedBetCancellation(OnOddsFeedBetCancellation message, IMessageBroker messageBroker, string correlationId)
+        public void ProcessOddsFeedBetCancellation(OnOddsFeedBetCancellation message, IMessageBroker messageBroker, string correlationId, bool isToOperator = true)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
@@ -707,12 +707,21 @@ namespace Platform.Settlement.Service.Repository
 
                         scope.Complete();
 
-                        messageBroker.Publish(new OnBetCancellation
-                        {
-                            IsSuccess = isSuccess,
-                            Bet = betData,
-                            BetSelections = betSelectionData
-                        }, "OnBetCancellation", $"r.of.operator.onbetcancellation.{betData.ClientCode.ToLower()}", correlationId);
+                        if (isToOperator)
+                            messageBroker.Publish(new OnBetCancellation
+                            {
+                                IsSuccess = isSuccess,
+                                Bet = betData,
+                                BetSelections = betSelectionData
+                            }, "OnBetCancellation", $"r.of.operator.onbetcancellation.{betData.ClientCode.ToLower()}", correlationId);
+                        else
+                            messageBroker.Publish(new
+                            {
+                                message.BetId,
+                                message.ClientId,
+                                message.Reason
+                            }, "OnBetBackOfficeCancellation", "r.of.bet.cancellation", correlationId);
+
                     }
                     catch (Exception ex)
                     {
@@ -1303,7 +1312,7 @@ namespace Platform.Settlement.Service.Repository
             {
                 isInsertToBetAudit = false;
 
-                if(bet.ClientCode == "OGS")
+                if (bet.ClientCode == "OGS")
                 {
                     isPublish = false; //fix settlement issue in parlay bets when all selections settled as Lost simultaneously
                 }

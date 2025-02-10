@@ -122,6 +122,12 @@ namespace Platform.Settlement.Service
                             activity.SetTag("bet.id", onOFBetCancellation.BetId);
                             _bettingRepository.ProcessOddsFeedBetCancellation(onOFBetCancellation, _messageBroker, correlationId);
                             break;
+                        case "OnOddsFeedBetCancellationRetry":
+                            var onOFBetCancellationRetry = JsonSerializer.Deserialize<OnOddsFeedBetCancellation>(payload);
+                            activity.SetTag("client.id", onOFBetCancellationRetry.ClientId);
+                            activity.SetTag("bet.id", onOFBetCancellationRetry.BetId);
+                            _bettingRepository.ProcessOddsFeedBetCancellation(onOFBetCancellationRetry, _messageBroker, correlationId, false);
+                            break;
                     }
                     activity?.SetStatus(ActivityStatusCode.Ok);
                 }

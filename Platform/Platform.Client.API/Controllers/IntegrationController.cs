@@ -24,7 +24,7 @@ namespace Platform.Client.API.Controllers
             _telemetryClient = telemetryClient;
         }
 
-        [HttpGet("v1/sportsbook/activefixtures")]
+        [HttpGet("v1/sportsbook/activefixtures"), ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> GetActiveFixtures()
         {
             var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
@@ -58,7 +58,7 @@ namespace Platform.Client.API.Controllers
             }
         }
 
-        [HttpGet("v1/sportsbook/activefixtures/details")]
+        [HttpGet("v1/sportsbook/activefixtures/details"), ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> GetFixtureDetails([FromQuery] string fixtureId)
         {
             var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
@@ -92,7 +92,7 @@ namespace Platform.Client.API.Controllers
             }
         }
 
-        [HttpGet("v1/sportsbook/activefixtures/count")]
+        [HttpGet("v1/sportsbook/activefixtures/count"), ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> GetActiveFixtureCount()
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
@@ -124,7 +124,7 @@ namespace Platform.Client.API.Controllers
             }
         }
 
-        [HttpGet("v1/sportsbook/lookup/sports")]
+        [HttpGet("v1/sportsbook/lookup/sports"), ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> GetSportsLookup()
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
@@ -156,7 +156,7 @@ namespace Platform.Client.API.Controllers
             }
         }
 
-        [HttpGet("v1/sportsbook/lookup/segments")]
+        [HttpGet("v1/sportsbook/lookup/segments"), ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> GetSegmentsLookup()
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
@@ -188,7 +188,7 @@ namespace Platform.Client.API.Controllers
             }
         }
 
-        [HttpGet("v1/sportsbook/lookup/leagues")]
+        [HttpGet("v1/sportsbook/lookup/leagues"), ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> GetLeaguesLookup()
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
@@ -241,6 +241,36 @@ namespace Platform.Client.API.Controllers
                             };
 
             _telemetryClient.TrackEvent("e:v1/sportsbook/ccf", properties);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpGet("v1/sportsbook/forex")]
+        public async Task<IActionResult> GetForex([FromQuery] string currCode)
+        {
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+
+            var result = await _sportsbookRepository.GetForex(currCode);
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "requestParameters", JsonSerializer.Serialize("") },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() }
+                            };
+
+            _telemetryClient.TrackEvent("e:v1/sportsbook/forex", properties);
 
             switch (result.StatusCode)
             {

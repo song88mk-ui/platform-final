@@ -252,13 +252,13 @@ namespace Platform.Client.API.Controllers
         }
 
         [HttpGet("v1/sportsbook/forex")]
-        public async Task<IActionResult> GetForex([FromQuery] string currCode)
+        public async Task<IActionResult> GetForex([FromQuery] string currencyCode)
         {
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
 
-            var result = await _sportsbookRepository.GetForex(currCode);
+            var result = await _sportsbookRepository.GetForex(currencyCode);
 
             var properties = new Dictionary<string, string>
                             {

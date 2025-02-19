@@ -76,6 +76,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Websocket.API2", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.ClientTopMarket.Service", "Platform.Client.TopMarket\Platform.ClientTopMarket.Service.csproj", "{4E67FD5B-83F5-4AA0-A1C5-079263E6AA23}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.RedCat.API", "Platform.RedCat.API\Platform.RedCat.API.csproj", "{88A0CF29-1427-4F8C-9375-A01A677D5B41}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -222,6 +224,10 @@ Global
 		{4E67FD5B-83F5-4AA0-A1C5-079263E6AA23}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E67FD5B-83F5-4AA0-A1C5-079263E6AA23}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E67FD5B-83F5-4AA0-A1C5-079263E6AA23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88A0CF29-1427-4F8C-9375-A01A677D5B41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88A0CF29-1427-4F8C-9375-A01A677D5B41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88A0CF29-1427-4F8C-9375-A01A677D5B41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88A0CF29-1427-4F8C-9375-A01A677D5B41}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

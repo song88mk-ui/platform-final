@@ -1,4 +1,5 @@
 ﻿using Platform.RedCat.API.Models;
+using Platform.Shared.Models.RedCat;
 using System.Threading.Tasks;
 using WalletBalanceResponseDTO = Platform.RedCat.API.Models.WalletBalanceResponseDTO;
 
@@ -9,5 +10,6 @@ namespace Platform.RedCat.API.Repositories
         Task<RedCatBaseResponseDTO<ValidateTokenResponseDTO>> ValidateToken(ValidateTokenRequestDTO request);
         Task<RedCatBaseResponseDTO<WalletBalanceResponseDTO>> GetWalletBalance(WalletBalanceRequestDTO request, bool isInternalCall = false);
         Task<RedCatBaseResponseDTO<ApprovalResponseDTO>> GetApproval(ApprovalRequestDTO request, bool isInternalCall = false);
+        Task<RedCatBaseResponseDTO<StakeResponseDTO>> Stake(StakeRequestDTO request);
     }
 }

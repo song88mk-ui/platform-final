@@ -62,7 +62,15 @@ namespace Platform.RedCat.API.Controllers
         [HttpPost("stake")]
         public async Task<IActionResult> Stake([FromBody] StakeRequestDTO request)
         {
-            return Ok();
+            var result = await _transactionRepository.Stake(request);
+
+            switch (result.StatusCode)
+            {
+                case RedCatStatusCode.Success:
+                    return Ok(result.Result);
+                default:
+                    return BadRequest(result.Result);
+            }
         }
 
         [HttpPost("settle")]

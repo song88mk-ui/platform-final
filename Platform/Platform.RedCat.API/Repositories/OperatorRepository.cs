@@ -1,7 +1,6 @@
-﻿using Platform.RedCat.API.Enums;
-using Platform.RedCat.API.Extensions;
-using Platform.RedCat.API.Models;
+﻿using Platform.RedCat.API.Models;
 using Platform.Shared.Enums;
+using Platform.Shared.Extensions;
 using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;

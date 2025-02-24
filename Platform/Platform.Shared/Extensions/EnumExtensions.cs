@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Reflection;
 
-namespace Platform.RedCat.API.Extensions
+namespace Platform.Shared.Extensions
 {
     public static class EnumExtensions
     {

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace Platform.RedCat.API.Enums
+namespace Platform.Shared.Enums
 {
     public enum RedCatStatusCode
     {

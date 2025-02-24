@@ -1,11 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Platform.RedCat.API.Enums;
-using Platform.RedCat.API.Extensions;
 using Platform.RedCat.API.Models;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
+using Platform.Shared.Extensions;
 using Platform.Shared.Models;
+using Platform.Shared.Models.RedCat;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -22,13 +23,15 @@ namespace Platform.RedCat.API.Repositories
     {
         private readonly IMemCache _memCache;
         private readonly PlatformContext _platformContext;
+        private readonly IBettingRepository _bettingRepository;
         private readonly IOperatorRepository _operatorRepository;
         private readonly string _sharedKey;
 
-        public TransactionRepository(IMemCache memCache, PlatformContext platformContext, IOperatorRepository operatorRepository, IConfiguration configuration)
+        public TransactionRepository(IMemCache memCache, PlatformContext platformContext, IOperatorRepository operatorRepository, IBettingRepository bettingRepository, IConfiguration configuration)
         {
             _memCache = memCache;
             _platformContext = platformContext;
+            _bettingRepository = bettingRepository;
             _operatorRepository = operatorRepository;
             _sharedKey = configuration["Custom:SharedKey"];
         }
@@ -85,7 +88,7 @@ namespace Platform.RedCat.API.Repositories
                 };
             }
 
-            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), request.AuthToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
 
             if (authenticationResponse.StatusCode != RedCatStatusCode.Success)
             {
@@ -114,7 +117,7 @@ namespace Platform.RedCat.API.Repositories
             };
         }
 
-        public async Task<RedCatBaseResponseDTO<WalletBalanceResponseDTO>> GetWalletBalance(WalletBalanceRequestDTO request)
+        public async Task<RedCatBaseResponseDTO<WalletBalanceResponseDTO>> GetWalletBalance(WalletBalanceRequestDTO request, bool isInternalCall = false)
         {
             var result = new WalletBalanceResponseDTO()
             {
@@ -123,7 +126,7 @@ namespace Platform.RedCat.API.Repositories
 
             try
             {
-                if (!IsValidSecurity<WalletBalanceRequestDTO>(request, request.Security))
+                if (!isInternalCall && !IsValidSecurity<WalletBalanceRequestDTO>(request, request.Security))
                 {
                     var statusCode = RedCatStatusCode.Invalid_Security_Hash;
                     return new RedCatBaseResponseDTO<WalletBalanceResponseDTO>
@@ -156,7 +159,7 @@ namespace Platform.RedCat.API.Repositories
                         Result = result
                     };
 
-                var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), request.AuthToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+                var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
 
                 if (authenticationResponse.StatusCode != RedCatStatusCode.Success)
                     return new RedCatBaseResponseDTO<WalletBalanceResponseDTO>()
@@ -187,9 +190,9 @@ namespace Platform.RedCat.API.Repositories
             }
         }
 
-        public async Task<RedCatBaseResponseDTO<ApprovalResponseDTO>> GetApproval(ApprovalRequestDTO request)
+        public async Task<RedCatBaseResponseDTO<ApprovalResponseDTO>> GetApproval(ApprovalRequestDTO request, bool isInternalCall = false)
         {
-            if (!IsValidSecurity<ApprovalRequestDTO>(request, request.Security))
+            if (!isInternalCall && !IsValidSecurity<ApprovalRequestDTO>(request, request.Security))
             {
                 var statusCode = RedCatStatusCode.Invalid_Security_Hash;
                 return new RedCatBaseResponseDTO<ApprovalResponseDTO>
@@ -210,7 +213,7 @@ namespace Platform.RedCat.API.Repositories
                 Currency = request.Currency,
                 MemberCode = request.MemberCode,
                 OperatorId = request.OperatorId
-            });
+            }, true);
 
             if (walletBalance.StatusCode != RedCatStatusCode.Success)
                 return new RedCatBaseResponseDTO<ApprovalResponseDTO>()
@@ -223,7 +226,7 @@ namespace Platform.RedCat.API.Repositories
                     }
                 };
 
-            if(walletBalance.Result.Balance < request.TransactionAmt)
+            if (walletBalance.Result.Balance < request.TransactionAmt)
                 return new RedCatBaseResponseDTO<ApprovalResponseDTO>()
                 {
                     StatusCode = RedCatStatusCode.Insufficient_Funds,
@@ -245,6 +248,81 @@ namespace Platform.RedCat.API.Repositories
             };
         }
 
+        public async Task<RedCatBaseResponseDTO<StakeResponseDTO>> Stake(StakeRequestDTO request)
+        {
+            if (!IsValidSecurity<StakeRequestDTO>(request, request.Security))
+            {
+                var statusCode = RedCatStatusCode.Invalid_Security_Hash;
+                return new RedCatBaseResponseDTO<StakeResponseDTO>
+                {
+                    StatusCode = statusCode,
+                    Message = statusCode.GetDescription(),
+                    Result = new StakeResponseDTO()
+                    {
+                        StatusCode = (int)statusCode
+                    }
+                };
+            }
+
+            var extractedToken = request.AuthToken.Split(":");
+            var clientId = extractedToken.FirstOrDefault();
+            var operatorToken = extractedToken.LastOrDefault();
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+                return new RedCatBaseResponseDTO<StakeResponseDTO>()
+                {
+                    StatusCode = RedCatStatusCode.Unknown_Operator_Id,
+                    Message = RedCatStatusCode.Unknown_Operator_Id.GetDescription(),
+                    Result = new StakeResponseDTO()
+                    {
+                        StatusCode = (int)RedCatStatusCode.Unknown_Operator_Id
+                    }
+                };
+
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+
+            if (authenticationResponse.StatusCode != RedCatStatusCode.Success)
+                return new RedCatBaseResponseDTO<StakeResponseDTO>()
+                {
+                    StatusCode = RedCatStatusCode.Unknown_Operator_Id,
+                    Message = RedCatStatusCode.Unknown_Operator_Id.GetDescription(),
+                    Result = new StakeResponseDTO()
+                    {
+                        StatusCode = authenticationResponse.StatusCode
+                    }
+                };
+
+            var bettingResponse = await _bettingRepository.PlaceBet(new RedCatBetRequest()
+            {
+                BetId = request.BetId,
+                ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
+                ClientCode = clientResponse.Result.ClientCode,
+                Endpoint = clientResponse.Result.Endpoint,
+                OperatorToken = operatorToken,
+                Currency = request.Currency,
+                MemberCode = request.MemberCode,
+                OperatorId = request.OperatorId,
+                EventDate = request.EventDate,
+                BetMarketId = request.BetMarketId,
+                TransactionAmt = request.TransactionAmt,
+                TransactionId = request.TransactionId,
+                GameId = request.GameId,
+            });
+
+            return new RedCatBaseResponseDTO<StakeResponseDTO>()
+            {
+                StatusCode = RedCatStatusCode.Success,
+                Message = RedCatStatusCode.Success.GetDescription(),
+                Result = new StakeResponseDTO()
+                {
+                    StatusCode = (int)RedCatStatusCode.Success,
+                    Balance = bettingResponse.Result.Balance,
+                    TransactionRefId = bettingResponse.Result.TransactionRefId
+                }
+            };
+        }
 
         private bool IsValidSecurity<T>(T request, string providedSecurity)
         {
@@ -377,6 +455,5 @@ namespace Platform.RedCat.API.Repositories
                 }
             }
         }
-
     }
 }

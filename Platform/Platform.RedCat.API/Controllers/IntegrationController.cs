@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Platform.RedCat.API.Enums;
 using Platform.RedCat.API.Models;
 using Platform.RedCat.API.Repositories;
+using Platform.Shared.Enums;
 using System.Threading.Tasks;
 
 namespace Platform.RedCat.API.Controllers
@@ -60,7 +60,7 @@ namespace Platform.RedCat.API.Controllers
         }
 
         [HttpPost("stake")]
-        public async Task<IActionResult> Stake()
+        public async Task<IActionResult> Stake([FromBody] StakeRequestDTO request)
         {
             return Ok();
         }

@@ -1,6 +1,6 @@
-﻿namespace Platform.RedCat.API.Models
+﻿namespace Platform.Shared.Models
 {
-    public class BaseRequest
+    public class RedCatBaseRequestDTO
     {
         public string AuthToken { get; set; }
         public string Security { get; set; }

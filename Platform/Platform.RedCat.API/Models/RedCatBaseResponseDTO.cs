@@ -1,4 +1,4 @@
-﻿using Platform.RedCat.API.Enums;
+﻿using Platform.Shared.Enums;
 
 namespace Platform.RedCat.API.Models
 {

@@ -1,6 +1,8 @@
-﻿namespace Platform.RedCat.API.Models
+﻿using Platform.Shared.Models;
+
+namespace Platform.RedCat.API.Models
 {
-    public class ValidateTokenRequestDTO : BaseRequest
+    public class ValidateTokenRequestDTO : RedCatBaseRequestDTO
     {
     }
 }

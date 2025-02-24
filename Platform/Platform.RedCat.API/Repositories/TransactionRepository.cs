@@ -290,7 +290,7 @@ namespace Platform.RedCat.API.Repositories
                     Message = RedCatStatusCode.Unknown_Operator_Id.GetDescription(),
                     Result = new StakeResponseDTO()
                     {
-                        StatusCode = authenticationResponse.StatusCode
+                        StatusCode = authenticationResponse.Result.StatusId
                     }
                 };
 

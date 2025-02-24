@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Platform.RedCatBetting.API.Controllers
 {
-    [Route("api/vs/bet")]
+    [Route("v1/vs/bet")]
     [ApiController]
     public class BettingController : ControllerBase
     {

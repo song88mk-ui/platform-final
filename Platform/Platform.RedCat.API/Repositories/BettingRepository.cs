@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Platform.RedCat.API.Repositories
 {
-    public class BettingRepository
+    public class BettingRepository : IBettingRepository
     {
         private readonly HttpClient _httpClient;
 

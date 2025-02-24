@@ -16,7 +16,7 @@ namespace Platform.RedCatOperator.API.Controllers
             _operatorRepository = operatorRepository;
         }
 
-        [HttpPost("api/vs/bet/placement")]
+        [HttpPost("bet/placement")]
         public async Task<IActionResult> PlaceBet([FromBody] RedCatBetRequest request)
         {
             var result = await _operatorRepository.ProcessBetPlacement(request);

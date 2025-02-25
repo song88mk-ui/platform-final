@@ -134,7 +134,7 @@ namespace Platform.RedCatOperator.API.Repositories
                 };
             }
         }
-        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> SettleBet(RedCatOperatorBetTransactionRequest request)
+        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessSettleBet(RedCatOperatorBetTransactionRequest request)
         {
             var path = $"/vs/bet/settle";
             var endpointUrl = $"{request.Endpoint}{path}";

@@ -77,12 +77,20 @@ namespace Platform.RedCat.API.Controllers
         [HttpPost("settle")]
         public async Task<IActionResult> Settle([FromBody] RedCatBetTransactionRequestDTO request)
         {
-            return Ok();
+            var result = await _transactionRepository.Settle(request);
+
+            switch (result.StatusCode)
+            {
+                case RedCatStatusCode.Success:
+                    return Ok(result.Result);
+                default:
+                    return BadRequest(result.Result);
+            }
         }
 
 
         [HttpPost("voidstake")]
-        public async Task<IActionResult> VoidStake()
+        public async Task<IActionResult> VoidStake([FromBody] RedCatVoidBetTransactionRequestDTO request)
         {
             return Ok();
         }

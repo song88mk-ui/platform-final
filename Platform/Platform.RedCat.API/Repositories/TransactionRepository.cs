@@ -370,7 +370,34 @@ namespace Platform.RedCat.API.Repositories
                     }
                 };
 
+            var bettingResponse = await _bettingRepository.SettleBet(new RedCatBetRequest()
+            {
+                BetId = request.BetId,
+                ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
+                ClientCode = clientResponse.Result.ClientCode,
+                Endpoint = clientResponse.Result.Endpoint,
+                OperatorToken = operatorToken,
+                Currency = request.Currency,
+                MemberCode = request.MemberCode,
+                OperatorId = request.OperatorId,
+                EventDate = request.EventDate,
+                BetMarketId = request.BetMarketId,
+                TransactionAmt = request.TransactionAmt,
+                TransactionId = request.TransactionId,
+                GameId = request.GameId,
+            });
 
+            return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+            {
+                StatusCode = RedCatStatusCode.Success,
+                Message = RedCatStatusCode.Success.GetDescription(),
+                Result = new RedCatBetTransactionResponseDTO()
+                {
+                    StatusCode = (int)RedCatStatusCode.Success,
+                    Balance = bettingResponse.Result.Balance,
+                    TransactionRefId = bettingResponse.Result.TransactionRefId
+                }
+            };
 
             return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
             {

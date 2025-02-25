@@ -7,5 +7,6 @@ namespace Platform.RedCat.API.Repositories
     public interface IBettingRepository
     {
         Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> PlaceBet(RedCatBetRequest request);
+        Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> SettleBet(RedCatBetRequest request);
     }
 }

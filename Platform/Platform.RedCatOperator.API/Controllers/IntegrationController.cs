@@ -33,7 +33,7 @@ namespace Platform.RedCatOperator.API.Controllers
         [HttpPost("bet/settle")]
         public async Task<IActionResult> SettleBet([FromBody] RedCatOperatorBetTransactionRequest request)
         {
-            var result = await _operatorRepository.ProcessBetPlacement(request);
+            var result = await _operatorRepository.ProcessSettleBet(request);
 
             switch (result.StatusCode)
             {

@@ -6,6 +6,6 @@ namespace Platform.RedCatOperator.API.Repositories
 {
     public interface IOperatorRepository
     {
-        Task<BaseResponseDTO<StakeResponseDTO>> ProcessBetPlacement(RedCatBetRequest request);
+        Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessBetPlacement(RedCatOperatorBetTransactionRequest request);
     }
 }

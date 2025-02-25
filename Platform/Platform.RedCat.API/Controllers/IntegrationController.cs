@@ -2,6 +2,7 @@
 using Platform.RedCat.API.Models;
 using Platform.RedCat.API.Repositories;
 using Platform.Shared.Enums;
+using Platform.Shared.Models.RedCat;
 using System.Threading.Tasks;
 
 namespace Platform.RedCat.API.Controllers
@@ -60,7 +61,7 @@ namespace Platform.RedCat.API.Controllers
         }
 
         [HttpPost("stake")]
-        public async Task<IActionResult> Stake([FromBody] StakeRequestDTO request)
+        public async Task<IActionResult> Stake([FromBody] RedCatBetTransactionRequestDTO request)
         {
             var result = await _transactionRepository.Stake(request);
 
@@ -74,7 +75,7 @@ namespace Platform.RedCat.API.Controllers
         }
 
         [HttpPost("settle")]
-        public async Task<IActionResult> Settle()
+        public async Task<IActionResult> Settle([FromBody] RedCatBetTransactionRequestDTO request)
         {
             return Ok();
         }

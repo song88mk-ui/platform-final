@@ -1,9 +1,8 @@
-﻿using Platform.Shared.Models;
-using System;
+﻿using System;
 
-namespace Platform.RedCat.API.Models
+namespace Platform.Shared.Models.RedCat
 {
-    public class StakeRequestDTO : RedCatBaseRequestDTO
+    public class RedCatBetTransactionRequestDTO : RedCatBaseRequestDTO
     {
         public string Currency { get; set; }
         public string MemberCode { get; set; }

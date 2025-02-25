@@ -19,21 +19,21 @@ namespace Platform.RedCatBetting.API.Repositories
             _httpClient = httpClient;
         }
 
-        public async Task<BaseResponseDTO<StakeResponseDTO>> ProcessBetPlacement(RedCatBetRequest request)
+        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessBetPlacement(RedCatOperatorBetTransactionRequest request)
         {
             try
             {
                 var response = await _httpClient.PostAsync($"/v1/vs/bet/placement", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<StakeResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<BaseResponseDTO<RedCatBetTransactionResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<StakeResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<BaseResponseDTO<RedCatBetTransactionResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     else
                     {
-                        return new BaseResponseDTO<StakeResponseDTO>
+                        return new BaseResponseDTO<RedCatBetTransactionResponseDTO>
                         {
                             StatusCode = StatusCode.Error,
                             Message = $"{StatusCode.Error.GetDescription()} ({response.ReasonPhrase})"
@@ -43,7 +43,38 @@ namespace Platform.RedCatBetting.API.Repositories
             }
             catch (Exception ex)
             {
-                return new BaseResponseDTO<StakeResponseDTO>
+                return new BaseResponseDTO<RedCatBetTransactionResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.GetDescription()}"
+                };
+            }
+        }
+        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessBetSettlement(RedCatOperatorBetTransactionRequest request)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"/v1/vs/bet/settle", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                    return JsonSerializer.Deserialize<BaseResponseDTO<RedCatBetTransactionResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                        return JsonSerializer.Deserialize<BaseResponseDTO<RedCatBetTransactionResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    else
+                    {
+                        return new BaseResponseDTO<RedCatBetTransactionResponseDTO>
+                        {
+                            StatusCode = StatusCode.Error,
+                            Message = $"{StatusCode.Error.GetDescription()} ({response.ReasonPhrase})"
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponseDTO<RedCatBetTransactionResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
                     Message = $"{StatusCode.Error.GetDescription()}"

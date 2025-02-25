@@ -13,6 +13,8 @@ namespace Platform.Shared.Data.RedCatBetting.Entities
         public string Endpoint { get; set; }
         public string OperatorToken { get; set; }
         public string CurrencyCode { get; set; }
+        public int BetStatusId { get; set; }
+        public string BetStatusName { get; set; }
         public string GameId { get; set; }
         public long BetMarketId { get; set; }
         [Column(TypeName = "decimal(26,12)")]

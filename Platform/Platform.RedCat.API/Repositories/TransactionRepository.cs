@@ -248,16 +248,16 @@ namespace Platform.RedCat.API.Repositories
             };
         }
 
-        public async Task<RedCatBaseResponseDTO<StakeResponseDTO>> Stake(StakeRequestDTO request)
+        public async Task<RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>> Stake(RedCatBetTransactionRequestDTO request)
         {
-            if (!IsValidSecurity<StakeRequestDTO>(request, request.Security))
+            if (!IsValidSecurity<RedCatBetTransactionRequestDTO>(request, request.Security))
             {
                 var statusCode = RedCatStatusCode.Invalid_Security_Hash;
-                return new RedCatBaseResponseDTO<StakeResponseDTO>
+                return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>
                 {
                     StatusCode = statusCode,
                     Message = statusCode.GetDescription(),
-                    Result = new StakeResponseDTO()
+                    Result = new RedCatBetTransactionResponseDTO()
                     {
                         StatusCode = (int)statusCode
                     }
@@ -271,11 +271,11 @@ namespace Platform.RedCat.API.Repositories
             var clientResponse = await GetClient(clientId);
 
             if (clientResponse.StatusCode != StatusCode.Success)
-                return new RedCatBaseResponseDTO<StakeResponseDTO>()
+                return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
                 {
                     StatusCode = RedCatStatusCode.Unknown_Operator_Id,
                     Message = RedCatStatusCode.Unknown_Operator_Id.GetDescription(),
-                    Result = new StakeResponseDTO()
+                    Result = new RedCatBetTransactionResponseDTO()
                     {
                         StatusCode = (int)RedCatStatusCode.Unknown_Operator_Id
                     }
@@ -284,11 +284,11 @@ namespace Platform.RedCat.API.Repositories
             var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
 
             if (authenticationResponse.StatusCode != RedCatStatusCode.Success)
-                return new RedCatBaseResponseDTO<StakeResponseDTO>()
+                return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
                 {
                     StatusCode = RedCatStatusCode.Unknown_Operator_Id,
                     Message = RedCatStatusCode.Unknown_Operator_Id.GetDescription(),
-                    Result = new StakeResponseDTO()
+                    Result = new RedCatBetTransactionResponseDTO()
                     {
                         StatusCode = authenticationResponse.Result.StatusId
                     }
@@ -311,16 +311,72 @@ namespace Platform.RedCat.API.Repositories
                 GameId = request.GameId,
             });
 
-            return new RedCatBaseResponseDTO<StakeResponseDTO>()
+            return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
             {
                 StatusCode = RedCatStatusCode.Success,
                 Message = RedCatStatusCode.Success.GetDescription(),
-                Result = new StakeResponseDTO()
+                Result = new RedCatBetTransactionResponseDTO()
                 {
                     StatusCode = (int)RedCatStatusCode.Success,
                     Balance = bettingResponse.Result.Balance,
                     TransactionRefId = bettingResponse.Result.TransactionRefId
                 }
+            };
+        }
+
+        public async Task<RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>> Settle(RedCatBetTransactionRequestDTO request)
+        {
+            if (!IsValidSecurity<RedCatBetTransactionRequestDTO>(request, request.Security))
+            {
+                var statusCode = RedCatStatusCode.Invalid_Security_Hash;
+                return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>
+                {
+                    StatusCode = statusCode,
+                    Message = statusCode.GetDescription(),
+                    Result = new RedCatBetTransactionResponseDTO()
+                    {
+                        StatusCode = (int)statusCode
+                    }
+                };
+            }
+
+            var extractedToken = request.AuthToken.Split(":");
+            var clientId = extractedToken.FirstOrDefault();
+            var operatorToken = extractedToken.LastOrDefault();
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+                return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                {
+                    StatusCode = RedCatStatusCode.Unknown_Operator_Id,
+                    Message = RedCatStatusCode.Unknown_Operator_Id.GetDescription(),
+                    Result = new RedCatBetTransactionResponseDTO()
+                    {
+                        StatusCode = (int)RedCatStatusCode.Unknown_Operator_Id
+                    }
+                };
+
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+
+            if (authenticationResponse.StatusCode != RedCatStatusCode.Success)
+                return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                {
+                    StatusCode = RedCatStatusCode.Unknown_Operator_Id,
+                    Message = RedCatStatusCode.Unknown_Operator_Id.GetDescription(),
+                    Result = new RedCatBetTransactionResponseDTO()
+                    {
+                        StatusCode = authenticationResponse.Result.StatusId
+                    }
+                };
+
+
+
+            return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+            {
+                StatusCode = RedCatStatusCode.Success,
+                Message = RedCatStatusCode.Success.GetDescription(),
+                Result = new RedCatBetTransactionResponseDTO()
             };
         }
 

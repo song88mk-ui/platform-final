@@ -20,21 +20,21 @@ namespace Platform.RedCat.API.Repositories
             _httpClient = httpClient;
         }
 
-        public async Task<BaseResponseDTO<StakeResponseDTO>> PlaceBet(RedCatBetRequest request)
+        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> PlaceBet(RedCatBetRequest request)
         {
             try
             {
                 var response = await _httpClient.PostAsync($"/v1/vs/bet/placement", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<StakeResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return JsonSerializer.Deserialize<BaseResponseDTO<RedCatBetTransactionResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<StakeResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return JsonSerializer.Deserialize<BaseResponseDTO<RedCatBetTransactionResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     else
                     {
-                        return new BaseResponseDTO<StakeResponseDTO>
+                        return new BaseResponseDTO<RedCatBetTransactionResponseDTO>
                         {
                             StatusCode = StatusCode.Error,
                             Message = $"{StatusCode.Error.GetDescription()} ({response.ReasonPhrase})"
@@ -44,7 +44,7 @@ namespace Platform.RedCat.API.Repositories
             }
             catch (Exception ex)
             {
-                return new BaseResponseDTO<StakeResponseDTO>
+                return new BaseResponseDTO<RedCatBetTransactionResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
                     Message = $"{StatusCode.Error.GetDescription()}"

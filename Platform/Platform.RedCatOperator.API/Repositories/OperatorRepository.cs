@@ -41,14 +41,14 @@ namespace Platform.RedCatOperator.API.Repositories
 
             var action = "VSBetPlacement";
 
-            var operatorRequest = new
+            var operatorRequest = new OperatorRedCatBetRequestDTO()
             {
-
                 BetId = request.BetIdRef,
-                MarktId = request.BetMarketId,
+                MarketId = request.BetMarketId,
                 GameId = request.GameId,
-                BetStatusId = request.BetStatusId,
-                BetStatusName = request.BetStatusName,
+                BetStatus = request.BetStatusName,
+                //BetStatusId = request.BetStatusId,
+                //BetStatusName = request.BetStatusName,
                 Stake = request.Stake,
                 Reason = string.Empty
             };
@@ -141,13 +141,14 @@ namespace Platform.RedCatOperator.API.Repositories
 
             var action = "VSBetPlacement";
 
-            var operatorRequest = new
+            var operatorRequest = new OperatorRedCatBetRequestDTO()
             {
                 BetId = request.BetIdRef,
-                MarktId = request.BetMarketId,
+                MarketId = request.BetMarketId,
                 GameId = request.GameId,
-                BetStatusId = request.BetStatusId,
-                BetStatusName = request.BetStatusName,
+                BetStatus = request.BetStatusName,
+                //BetStatusId = request.BetStatusId,
+                //BetStatusName = request.BetStatusName,
                 Stake = request.Stake,
                 Reason = string.Empty
             };
@@ -237,15 +238,16 @@ namespace Platform.RedCatOperator.API.Repositories
             var path = $"/vs/bet/void/placement";
             var endpointUrl = $"{request.Endpoint}{path}";
 
-            var action = "VSBetPlacement";
+            var action = "VSVoidPlacement";
 
-            var operatorRequest = new
+            var operatorRequest = new OperatorRedCatBetRequestDTO()
             {
                 BetId = request.BetIdRef,
-                MarktId = request.BetMarketId,
+                MarketId = request.BetMarketId,
                 GameId = request.GameId,
-                BetStatusId = request.BetStatusId,
-                BetStatusName = request.BetStatusName,
+                BetStatus = request.BetStatusName,
+                //BetStatusId = request.BetStatusId,
+                //BetStatusName = request.BetStatusName,
                 Stake = request.Stake,
                 Reason = string.Empty
             };
@@ -335,15 +337,16 @@ namespace Platform.RedCatOperator.API.Repositories
             var path = $"/vs/bet/void/settle";
             var endpointUrl = $"{request.Endpoint}{path}";
 
-            var action = "VSBetPlacement";
+            var action = "VSVoidSettlement";
 
-            var operatorRequest = new
+            var operatorRequest = new OperatorRedCatBetRequestDTO()
             {
                 BetId = request.BetIdRef,
-                MarktId = request.BetMarketId,
+                MarketId = request.BetMarketId,
                 GameId = request.GameId,
-                BetStatusId = request.BetStatusId,
-                BetStatusName = request.BetStatusName,
+                BetStatus = request.BetStatusName,
+                //BetStatusId = request.BetStatusId,
+                //BetStatusName = request.BetStatusName,
                 Stake = request.Stake,
                 Reason = string.Empty
             };

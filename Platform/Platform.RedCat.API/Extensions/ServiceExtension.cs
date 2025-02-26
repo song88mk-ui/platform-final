@@ -18,7 +18,7 @@ namespace Platform.RedCat.API.Extensions
         public static IServiceCollection AddRepositories(this IServiceCollection services)
         {
             services.AddScoped<IOperatorRepository, OperatorRepository>();
-            services.AddScoped<ITransactionRepository, TransactionRepository>();
+            services.AddScoped<IPlatformRepository, PlatformRepository>();
 
             return services;
         }

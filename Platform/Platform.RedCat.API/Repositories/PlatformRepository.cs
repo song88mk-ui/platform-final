@@ -18,7 +18,7 @@ using WalletBalanceResponseDTO = Platform.RedCat.API.Models.WalletBalanceRespons
 
 namespace Platform.RedCat.API.Repositories
 {
-    public class TransactionRepository : ITransactionRepository
+    public class PlatformRepository : IPlatformRepository
     {
         private readonly IMemCache _memCache;
         private readonly PlatformContext _platformContext;
@@ -26,7 +26,7 @@ namespace Platform.RedCat.API.Repositories
         private readonly IOperatorRepository _operatorRepository;
         private readonly string _sharedKey;
 
-        public TransactionRepository(IMemCache memCache, PlatformContext platformContext, IOperatorRepository operatorRepository, IBettingRepository bettingRepository, IConfiguration configuration)
+        public PlatformRepository(IMemCache memCache, PlatformContext platformContext, IOperatorRepository operatorRepository, IBettingRepository bettingRepository, IConfiguration configuration)
         {
             _memCache = memCache;
             _platformContext = platformContext;
@@ -293,6 +293,8 @@ namespace Platform.RedCat.API.Repositories
                     }
                 };
 
+            var rate = await GetExchangeRate(authenticationResponse.Result.CurrencyCode);
+
             var bettingResponse = await _bettingRepository.PlaceBet(new RedCatBetRequest()
             {
                 BetId = request.BetId,
@@ -300,7 +302,8 @@ namespace Platform.RedCat.API.Repositories
                 ClientCode = clientResponse.Result.ClientCode,
                 Endpoint = clientResponse.Result.Endpoint,
                 OperatorToken = operatorToken,
-                Currency = request.Currency,
+                ExhangeRate = rate.ExchangeRate,
+                Currency = Formatting.GetCurrencyCode(authenticationResponse.Result.CurrencyCode),
                 MemberCode = request.MemberCode,
                 OperatorId = request.OperatorId,
                 EventDate = request.EventDate,
@@ -376,7 +379,7 @@ namespace Platform.RedCat.API.Repositories
                 ClientCode = clientResponse.Result.ClientCode,
                 Endpoint = clientResponse.Result.Endpoint,
                 OperatorToken = operatorToken,
-                Currency = request.Currency,
+                Currency = Formatting.GetCurrencyCode(authenticationResponse.Result.CurrencyCode),
                 MemberCode = request.MemberCode,
                 OperatorId = request.OperatorId,
                 EventDate = request.EventDate,
@@ -451,7 +454,83 @@ namespace Platform.RedCat.API.Repositories
                 ClientCode = clientResponse.Result.ClientCode,
                 Endpoint = clientResponse.Result.Endpoint,
                 OperatorToken = operatorToken,
-                Currency = request.Currency,
+                Currency = Formatting.GetCurrencyCode(authenticationResponse.Result.CurrencyCode),
+                MemberCode = request.MemberCode,
+                OperatorId = request.OperatorId,
+                EventDate = request.EventDate,
+                BetMarketId = request.BetMarketId,
+                TransactionAmt = request.TransactionAmt,
+                TransactionId = request.TransactionId,
+                GameId = request.GameId,
+                RollbackTransactionId = request.RollbackTransactionId
+            });
+
+            return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+            {
+                StatusCode = RedCatStatusCode.Success,
+                Message = RedCatStatusCode.Success.GetDescription(),
+                Result = new RedCatBetTransactionResponseDTO()
+                {
+                    StatusCode = (int)RedCatStatusCode.Success,
+                    Balance = bettingResponse.Result.Balance,
+                    TransactionRefId = bettingResponse.Result.TransactionRefId
+                }
+            };
+        }
+        public async Task<RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>> VoidSettle(RedCatVoidBetTransactionRequestDTO request)
+        {
+            if (!IsValidSecurity<RedCatBetTransactionRequestDTO>(request, request.Security))
+            {
+                var statusCode = RedCatStatusCode.Invalid_Security_Hash;
+                return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>
+                {
+                    StatusCode = statusCode,
+                    Message = statusCode.GetDescription(),
+                    Result = new RedCatBetTransactionResponseDTO()
+                    {
+                        StatusCode = (int)statusCode
+                    }
+                };
+            }
+
+            var extractedToken = request.AuthToken.Split(":");
+            var clientId = extractedToken.FirstOrDefault();
+            var operatorToken = extractedToken.LastOrDefault();
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+                return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                {
+                    StatusCode = RedCatStatusCode.Unknown_Operator_Id,
+                    Message = RedCatStatusCode.Unknown_Operator_Id.GetDescription(),
+                    Result = new RedCatBetTransactionResponseDTO()
+                    {
+                        StatusCode = (int)RedCatStatusCode.Unknown_Operator_Id
+                    }
+                };
+
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+
+            if (authenticationResponse.StatusCode != RedCatStatusCode.Success)
+                return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                {
+                    StatusCode = RedCatStatusCode.Unknown_Operator_Id,
+                    Message = RedCatStatusCode.Unknown_Operator_Id.GetDescription(),
+                    Result = new RedCatBetTransactionResponseDTO()
+                    {
+                        StatusCode = authenticationResponse.Result.StatusId
+                    }
+                };
+
+            var bettingResponse = await _bettingRepository.VoidSettle(new RedCatVoidBetRequest()
+            {
+                BetId = request.BetId,
+                ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
+                ClientCode = clientResponse.Result.ClientCode,
+                Endpoint = clientResponse.Result.Endpoint,
+                OperatorToken = operatorToken,
+                Currency = Formatting.GetCurrencyCode(authenticationResponse.Result.CurrencyCode),
                 MemberCode = request.MemberCode,
                 OperatorId = request.OperatorId,
                 EventDate = request.EventDate,
@@ -605,6 +684,24 @@ namespace Platform.RedCat.API.Repositories
                     };
                 }
             }
+        }
+
+
+        private async Task<ForexEURResponse> GetExchangeRate(string currencyCode)
+        {
+            if (currencyCode.ToUpper() == "USDT")
+                currencyCode = "USD";
+
+            var result = await _platformContext.ForexEUR.FindAsync(currencyCode);
+
+            if (result == null)
+                return new ForexEURResponse();
+
+            return new ForexEURResponse
+            {
+                CurrencyCode = result.CurrencyCode,
+                ExchangeRate = result.ExchangeRate
+            };
         }
     }
 }

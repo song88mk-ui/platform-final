@@ -5,12 +5,14 @@ using WalletBalanceResponseDTO = Platform.RedCat.API.Models.WalletBalanceRespons
 
 namespace Platform.RedCat.API.Repositories
 {
-    public interface ITransactionRepository
+    public interface IPlatformRepository
     {
         Task<RedCatBaseResponseDTO<ValidateTokenResponseDTO>> ValidateToken(ValidateTokenRequestDTO request);
         Task<RedCatBaseResponseDTO<WalletBalanceResponseDTO>> GetWalletBalance(WalletBalanceRequestDTO request, bool isInternalCall = false);
         Task<RedCatBaseResponseDTO<ApprovalResponseDTO>> GetApproval(ApprovalRequestDTO request, bool isInternalCall = false);
         Task<RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>> Stake(RedCatBetTransactionRequestDTO request);
         Task<RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>> Settle(RedCatBetTransactionRequestDTO request);
+        Task<RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>> VoidStake(RedCatVoidBetTransactionRequestDTO request);
+        Task<RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>> VoidSettle(RedCatVoidBetTransactionRequestDTO request);
     }
 }

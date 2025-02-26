@@ -12,6 +12,7 @@ namespace Platform.Shared.Data.RedCatBetting.Entities
         public string Endpoint { get; set; }
         public string OperatorToken { get; set; }
         public string CurrencyCode { get; set; }
+        public decimal ExchangeRate { get; set; }
         public int BetStatusId { get; set; }
         public string BetStatusName { get; set; }
         public string GameId { get; set; }

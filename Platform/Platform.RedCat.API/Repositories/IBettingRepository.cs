@@ -9,5 +9,6 @@ namespace Platform.RedCat.API.Repositories
         Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> PlaceBet(RedCatBetRequest request);
         Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> SettleBet(RedCatBetRequest request);
         Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> VoidStake(RedCatVoidBetRequest request);
+        Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> VoidSettle(RedCatVoidBetRequest request);
     }
 }

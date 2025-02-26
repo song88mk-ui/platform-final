@@ -35,7 +35,8 @@ namespace Platform.RedCatBetting.API.Repositories
                         ClientCode = request.ClientCode,
                         Endpoint = request.Endpoint,
                         OperatorToken = request.OperatorToken,
-                        CurrencyCode = request.Currency,
+                        CurrencyCode = request.Currency.ToString(),
+                        ExchangeRate = request.ExhangeRate,
                         BetStatusId = (int)BetStatus.Running,
                         BetStatusName = BetStatus.Running.GetDescription(),
                         GameId = request.GameId,
@@ -54,6 +55,7 @@ namespace Platform.RedCatBetting.API.Repositories
                         Endpoint = betEntity.Endpoint,
                         OperatorToken = betEntity.OperatorToken,
                         CurrencyCode = betEntity.CurrencyCode,
+                        ExchangeRate = betEntity.ExchangeRate,
                         BetStatusId = betEntity.BetStatusId,
                         BetStatusName = betEntity.BetStatusName,
                         GameId = betEntity.GameId,
@@ -196,6 +198,7 @@ namespace Platform.RedCatBetting.API.Repositories
                         Endpoint = bet.Endpoint,
                         OperatorToken = bet.OperatorToken,
                         CurrencyCode = bet.CurrencyCode,
+                        ExchangeRate = bet.ExchangeRate,
                         BetStatusId = bet.BetStatusId,
                         BetStatusName = bet.BetStatusName,
                         GameId = bet.GameId,
@@ -305,6 +308,7 @@ namespace Platform.RedCatBetting.API.Repositories
                         Endpoint = bet.Endpoint,
                         OperatorToken = bet.OperatorToken,
                         CurrencyCode = bet.CurrencyCode,
+                        ExchangeRate = bet.ExchangeRate,
                         BetStatusId = bet.BetStatusId,
                         BetStatusName = bet.BetStatusName,
                         GameId = bet.GameId,
@@ -366,7 +370,7 @@ namespace Platform.RedCatBetting.API.Repositories
 
                 var betTransaction = _redCatBettingContext.BetAudit.FirstOrDefault(c => c.BetId == bet.BetId && c.TransactionId == request.RollbackTransactionId);
 
-                if(betTransaction == null)
+                if (betTransaction == null)
                     return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                     {
                         StatusCode = StatusCode.Bet_Not_Found,
@@ -425,6 +429,7 @@ namespace Platform.RedCatBetting.API.Repositories
                         Endpoint = bet.Endpoint,
                         OperatorToken = bet.OperatorToken,
                         CurrencyCode = bet.CurrencyCode,
+                        ExchangeRate = bet.ExchangeRate,
                         BetStatusId = bet.BetStatusId,
                         BetStatusName = bet.BetStatusName,
                         GameId = bet.GameId,

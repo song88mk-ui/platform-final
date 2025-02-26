@@ -1,7 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.Web.CodeGeneration.Contracts.Messaging;
-using Newtonsoft.Json.Linq;
 using Platform.Operator.API.Models;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Platform.Entities;
@@ -27,7 +25,8 @@ namespace Platform.Operator.API.Repository
         }
         public async Task<AuthenticationResponseDTO> Authenticate(string operatorToken)
         {
-            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken)) return null;
+            if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
+                return null;
 
             var isGuid = Guid.TryParse(operatorToken, out Guid guid);
 
@@ -193,7 +192,7 @@ namespace Platform.Operator.API.Repository
 
                     if (request.IsBetBuilder == false && testConfig != null && testConfig.ClientId == id)
                     {
-                        
+
                         if (request.IsBetBuilder == true && (testConfig.StakeBonusPercent > 0 || testConfig.IsFreeBet))
                         {
                             return new OperatorBetResponseDTO
@@ -268,7 +267,81 @@ namespace Platform.Operator.API.Repository
                 }
             }
         }
+        public async Task<OperatorBetResponseDTO> BetPlacementRedCat(OperatorRedCatBetRequestDTO request, string operatorToken, string clientId)
+        {
+            Guid.TryParse(clientId, out Guid id);
 
+            var res = _platformContext.NegativeTest.Find(id);
+
+            if (res != null && res.ClientId == id)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1002
+                };
+            }
+
+            var isGuid = Guid.TryParse(operatorToken, out Guid guid);
+
+            if (!isGuid)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1002
+                };
+            }
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                try
+                {
+                    var result = _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefault();
+
+                    if (result == null)
+                    {
+                        return new OperatorBetResponseDTO
+                        {
+                            StatusId = 1002
+                        };
+                    }
+
+                    if (result.Balance < request.Amount)
+                    {
+                        return new OperatorBetResponseDTO
+                        {
+                            StatusId = 1001
+                        };
+                    }
+
+                    var testConfig = _platformContext.TestConfig.Find(id);
+
+                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, 0, request.Amount, request.BetStatus);
+
+                    result.Balance = operatorAudit.PostBalance;
+                    _platformContext.Operator.Update(result);
+
+                    _platformContext.SaveChanges();
+
+                    scope.Complete();
+
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1000,
+                        Balance = result.Balance,
+                        IsFreeBet = false,
+                        StakeReal = request.Amount,
+                        StakeBonus = 0m
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1003
+                    };
+                }
+            }
+        }
         public async Task<OperatorBetResponseDTO> BetPlacementOG(OnOGDebitRequest request)
         {
 
@@ -285,7 +358,7 @@ namespace Platform.Operator.API.Repository
                             StatusId = 1002
                         };
                     }
-                    
+
                     var records = JsonSerializer.Deserialize<List<OGRecord>>(request.Records.ToString()).FirstOrDefault();
 
                     var operatorAudit = AddOrUpdateOperatorAudit(result, records.TransactionId, 0, Convert.ToDecimal(request.TotalAmount), records.OtherInfo.BetStatus);
@@ -520,7 +593,68 @@ namespace Platform.Operator.API.Repository
                 }
             }
         }
-        
+        public async Task<OperatorBetResponseDTO> BetSettlementRedCat(OperatorRedCatBetSettlementRequestDTO request, string clientId)
+        {
+            Guid.TryParse(clientId, out Guid id);
+
+            var res = _platformContext.NegativeTest.Find(id);
+
+            if (res != null && res.ClientId == id)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003
+                };
+            }
+
+            var isGuid = Guid.TryParse(request.UserId, out Guid guid);
+
+            if (!isGuid)
+            {
+                return new OperatorBetResponseDTO
+                {
+                    StatusId = 1003
+                };
+            }
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            {
+                try
+                {
+                    var result = _platformContext.Operator.Where(c => c.UserId == guid).FirstOrDefault();
+
+                    if (result == null)
+                    {
+                        return new OperatorBetResponseDTO
+                        {
+                            StatusId = 1003
+                        };
+                    }
+
+                    var operatorAudit = AddOrUpdateOperatorAudit(result, request.BetId, request.Payout, request.Amount, request.BetStatus);
+
+                    result.Balance = operatorAudit.PostBalance;
+                    _platformContext.Operator.Update(result);
+
+                    _platformContext.SaveChanges();
+                    scope.Complete();
+
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1000,
+                        Balance = result.Balance
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new OperatorBetResponseDTO
+                    {
+                        StatusId = 1003
+                    };
+                }
+            }
+        }
+
         public async Task<OperatorBetResponseDTO> BetSettlementOG(OnOGCreditRequest request)
         {
 
@@ -797,7 +931,7 @@ namespace Platform.Operator.API.Repository
                     };
                 }
             }
-            
+
         }
         public async Task<BetSettlementResponseDTO> BetSettlementCasino(OperatorCasinoBetSettlementRequestDTO request, string clientId)
         {
@@ -1043,7 +1177,7 @@ namespace Platform.Operator.API.Repository
                     amount = 0;
                 else
                     amount = stake * -1;
-            } 
+            }
 
             var postBalance = _operator.Balance;
             var prevOperatorAudit = _platformContext.OperatorAudit.AsNoTracking().FirstOrDefault(o => o.UserId == _operator.UserId && o.BetId == Guid.Parse(betId));

@@ -35,8 +35,6 @@ namespace Platform.RedCat.API
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection();
-
             app.UseRouting();
 
             app.UseAuthorization();

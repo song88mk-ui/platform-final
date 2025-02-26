@@ -27,8 +27,7 @@ namespace Platform.RedCatBetting.API
             services.AddHealthChecks();
             services.AddDbContextPool<RedCatBettingContext>(o => o.UseSqlServer(Configuration.GetConnectionString("RedCatBetting")));
             services.AddHttpClient<IOperatorRepository, OperatorRepository>(client =>
-
-                client.BaseAddress = new Uri(Configuration["API:RedCatOperatorAPI"])
+                client.BaseAddress = new Uri(Configuration["API:RedCatOperatorURI"])
             );
             services.AddScoped<IBettingRepository, BettingRepository>();
             services.AddControllers();

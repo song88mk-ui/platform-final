@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Platform.RedCatBetting.API.Extensions;
 using Platform.RedCatBetting.API.Repositories;
 using Platform.Shared.Data.RedCatBetting;
 using System;
@@ -28,6 +29,7 @@ namespace Platform.RedCatBetting.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddTelemetry(Configuration);
             services.AddHealthChecks();
             services.AddDbContextPool<RedCatBettingContext>(o => o.UseSqlServer(Configuration.GetConnectionString("RedCatBetting")));
             services.AddScoped<IBettingRepository, BettingRepository>();

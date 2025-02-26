@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,7 @@ namespace Platform.RedCatBetting.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHealthChecks();
             services.AddDbContext<RedCatBettingContext>(o => o.UseSqlServer(Configuration.GetConnectionString("RedCatBetting")));
             services.AddScoped<IBettingRepository, BettingRepository>();
             services.AddScoped<IOperatorRepository, OperatorRepository>();
@@ -48,6 +50,7 @@ namespace Platform.RedCatBetting.API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthChecks("/healthz");
             });
         }
     }

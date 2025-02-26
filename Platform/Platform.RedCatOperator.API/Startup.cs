@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,7 @@ namespace Platform.RedCatOperator.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHealthChecks();
             services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Platform")));
             services.AddScoped<IOperatorRepository, OperatorRepository>();
             services.AddControllers();
@@ -48,6 +50,7 @@ namespace Platform.RedCatOperator.API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthChecks("/healthz");
             });
         }
     }

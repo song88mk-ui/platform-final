@@ -29,7 +29,7 @@ namespace Platform.RedCatBetting.API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddHealthChecks();
-            services.AddDbContext<RedCatBettingContext>(o => o.UseSqlServer(Configuration.GetConnectionString("RedCatBetting")));
+            services.AddDbContextPool<RedCatBettingContext>(o => o.UseSqlServer(Configuration.GetConnectionString("RedCatBetting")));
             services.AddScoped<IBettingRepository, BettingRepository>();
             services.AddScoped<IOperatorRepository, OperatorRepository>();
             services.AddControllers();

@@ -10,7 +10,7 @@ namespace Platform.RedCat.API.Extensions
     {
         public static IServiceCollection AddContexts(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddDbContext<PlatformContext>(o => o.UseSqlServer(configuration.GetConnectionString("Platform")));
+            services.AddDbContextPool<PlatformContext>(o => o.UseSqlServer(configuration.GetConnectionString("Platform")));
 
             return services;
         }

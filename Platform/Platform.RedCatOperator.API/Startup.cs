@@ -30,7 +30,7 @@ namespace Platform.RedCatOperator.API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddHealthChecks();
-            services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Platform")));
+            services.AddDbContextPool<PlatformContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Platform")));
             services.AddScoped<IOperatorRepository, OperatorRepository>();
             services.AddControllers();
         }

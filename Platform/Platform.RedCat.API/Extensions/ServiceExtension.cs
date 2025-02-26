@@ -28,8 +28,7 @@ namespace Platform.RedCat.API.Extensions
         public static IServiceCollection AddHttpClients(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddHttpClient<IBettingRepository, BettingRepository>(client =>
-
-                client.BaseAddress = new Uri(configuration["API:RedCatBettingAPI"])
+                client.BaseAddress = new Uri(configuration["API:RedCatBettingURI"])
             );
 
             return services;

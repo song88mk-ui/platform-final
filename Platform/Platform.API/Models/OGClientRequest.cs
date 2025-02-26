@@ -1,6 +1,4 @@
-﻿using Platform.Shared.Models;
-
-namespace Platform.API.Models
+﻿namespace Platform.API.Models
 {
     public class OGClientRequest
     {

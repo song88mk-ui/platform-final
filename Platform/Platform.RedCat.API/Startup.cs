@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Platform.RedCat.API.Extensions;
+using Platform.RedCat.API.Repositories;
+using Platform.Shared.Data.Platform;
 
 namespace Platform.RedCat.API
 {
@@ -23,9 +26,10 @@ namespace Platform.RedCat.API
             services.AddHealthChecks();
             services.AddControllers();
 
-            services.AddTelemetry(Configuration);
-            services.AddContexts(Configuration);
-            services.AddRepositories();
+            services
+                .AddContexts(Configuration)
+                .AddHttpClients(Configuration)
+                .AddRepositories();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

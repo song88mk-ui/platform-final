@@ -1,10 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Platform.RedCatBetting.API.Telemetry;
-using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Platform.RedCatBetting.API.Telemetry;
 using System;
 
 namespace Platform.RedCatBetting.API.Extensions

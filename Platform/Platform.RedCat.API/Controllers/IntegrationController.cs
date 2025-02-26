@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using Platform.RedCat.API.ActionFilters;
 using Platform.RedCat.API.Models;
 using Platform.RedCat.API.Repositories;
 using Platform.Shared.Enums;
@@ -9,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Platform.RedCat.API.Controllers
 {
-    [ApiController, EnableCors("AllowAllOrigins"), ServiceFilter(typeof(APIKeyFilter))]
+    [ApiController, EnableCors("AllowAllOrigins")]
     [Route("api/redcat")]
     public class IntegrationController : ControllerBase
     {

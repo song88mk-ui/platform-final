@@ -1,19 +1,13 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Platform.RedCatBetting.API.Extensions;
 using Platform.RedCatBetting.API.Repositories;
 using Platform.Shared.Data.RedCatBetting;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Platform.RedCatBetting.API
 {
@@ -32,8 +26,11 @@ namespace Platform.RedCatBetting.API
             services.AddTelemetry(Configuration);
             services.AddHealthChecks();
             services.AddDbContextPool<RedCatBettingContext>(o => o.UseSqlServer(Configuration.GetConnectionString("RedCatBetting")));
+            services.AddHttpClient<IOperatorRepository, OperatorRepository>(client =>
+
+                client.BaseAddress = new Uri(Configuration["API:RedCatOperatorAPI"])
+            );
             services.AddScoped<IBettingRepository, BettingRepository>();
-            services.AddScoped<IOperatorRepository, OperatorRepository>();
             services.AddControllers();
         }
 

@@ -1,0 +1,175 @@
+---
+name: Platform-Platform.RedCatBetting.API-$(Build.BuildId)
+
+pr: none
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - Platform/Platform.RedCatBetting.API
+    exclude:
+      - .ci
+      - .github
+      - '**/README.md'
+
+variables:
+  SLACK_URL: "https://hooks.slack.com/services/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"  # ci-cd
+  DOCKER_BUILDKIT: 1
+  ImageRepository: plt-rc-betting-api
+  ResourceGroup: rg-production-song88
+  ContainerRegistry: song88.azurecr.io
+  AzureConnection: azurerm-song88-prod-service
+
+stages:
+  - stage: build
+    displayName: Docker Build
+    jobs:
+      - job: docker_build
+        displayName: Build App via Docker
+        steps:
+          - checkout: self
+            clean: true
+            persistCredentials: true
+            fetchDepth: 2
+
+          - task: Bash@3
+            displayName: Set Build Name
+            inputs:
+              targetType: inline
+              script: |
+                PKG_VERSION=v$(jq -r '.version' .version)
+                BUILD_NUMBER="Platform-Platform.RedCatBetting.API-${PKG_VERSION}.${BUILD_BUILDID}"
+                echo "##vso[task.setvariable variable=VERSION]${PKG_VERSION}"
+                echo "##vso[build.updatebuildnumber]${BUILD_NUMBER}"
+
+          - task: Docker@2
+            displayName: Login to ACR
+            inputs:
+              command: login
+              containerRegistry: $(ContainerRegistry)
+
+          - task: Docker@2
+            displayName: Docker Build
+            inputs:
+              command: buildAndPush
+              buildContext: $(Build.SourcesDirectory)/Platform
+              repository: $(ImageRepository)
+              containerRegistry: $(ContainerRegistry)
+              Dockerfile: Platform/Platform.RedCatBetting.API/Dockerfile
+              tags: $(Build.BuildId)
+
+  - stage: stage_staging_release
+    dependsOn: build
+    displayName: Staging - Deploy ACA
+    jobs:
+      - deployment: Deployment
+        displayName: Deploy to ACA
+        pool:
+          vmImage: "ubuntu-latest"
+        environment:
+          name: PREPROD_HK_WEB
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: none
+                - task: AzureCLI@2
+                  env:
+                    TAG: $(Build.BuildId)
+                    RG: $(ResourceGroup)
+                    CA: ca-staging-plt-rc-betting-api
+                    CR: $(ContainerRegistry)
+                    REPO: $(ImageRepository)
+                  inputs:
+                    azureSubscription: $(AzureConnection)
+                    visibleAzLogin: false
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az config set core.only_show_errors=True
+                      az containerapp show -n ${CA} -g ${RG} -o none
+                      ret=$(az containerapp update \
+                        -n ${CA} -g ${RG} --output json \
+                        -i ${CR}/${REPO}:${TAG} \
+                        --container-name api | jq -r '.properties.provisioningState')
+                      [[ $ret == "Succeeded" ]] && echo "Status: Success" && exit 0
+                      echo "Status: ${ret}"
+                      exit 1
+            on:
+              failure:
+                steps:
+                  - task: Bash@3
+                    displayName: Notify CI/CD
+                    inputs:
+                      targetType: inline
+                      script: |
+                        curl -sd "{\"text\": \"Deployment Platform.RedCatBetting.API, Build: ${BUILD_BUILDID} to STAGING failed.\"}" ${SLACK_URL}
+              success:
+                steps:
+                  - task: Bash@3
+                    displayName: Notify CI/CD
+                    inputs:
+                      targetType: inline
+                      script: |
+                        curl -sd "{\"text\": \"Deployment Platform.RedCatBetting.API, Build: ${BUILD_BUILDID} to STAGING succeeded.\"}" ${SLACK_URL}
+
+  - stage: stage_production_release
+    dependsOn: stage_staging_release
+    displayName: Production - Deploy ACA
+    variables:
+      - group: PRODUCTION_TRIGGER_STAGE1 # requires approval
+    jobs:
+      - deployment: Deployment
+        displayName: Deploy to ACA
+        pool:
+          vmImage: "ubuntu-latest"
+        environment:
+          name: PRODUCTION_HK_ACA
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: none
+                - task: AzureCLI@2
+                  env:
+                    TAG: $(Build.BuildId)
+                    RG: $(ResourceGroup)
+                    CA: ca-production-plt-rc-betting-api
+                    CR: $(ContainerRegistry)
+                    REPO: $(ImageRepository)
+                  inputs:
+                    azureSubscription: $(AzureConnection)
+                    visibleAzLogin: false
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az config set core.only_show_errors=True
+                      az containerapp show -n ${CA} -g ${RG} -o none
+                      ret=$(az containerapp update \
+                        -n ${CA} -g ${RG} --output json \
+                        -i ${CR}/${REPO}:${TAG} \
+                        --container-name api | jq -r '.properties.provisioningState')
+                      [[ $ret == "Succeeded" ]] && echo "Status: Success" && exit 0
+                      echo "Status: ${ret}"
+                      exit 1
+            on:
+              failure:
+                steps:
+                  - task: Bash@3
+                    displayName: Notify CI/CD
+                    inputs:
+                      targetType: inline
+                      script: |
+                        curl -sd "{\"text\": \"Deployment Platform.RedCatBetting.API, Build: ${BUILD_BUILDID} to PRODUCTION failed.\"}" ${SLACK_URL}
+              success:
+                steps:
+                  - task: Bash@3
+                    displayName: Notify CI/CD
+                    inputs:
+                      targetType: inline
+                      script: |
+                        curl -sd "{\"text\": \"Deployment Platform.RedCatBetting.API, Build: ${BUILD_BUILDID} to PRODUCTION succeeded.\"}" ${SLACK_URL}

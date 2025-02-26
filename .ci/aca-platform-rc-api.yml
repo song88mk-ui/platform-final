@@ -19,7 +19,7 @@ trigger:
 variables:
   SLACK_URL: "https://hooks.slack.com/services/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"  # ci-cd
   DOCKER_BUILDKIT: 1
-  ImageRepository: platform-rc-api
+  ImageRepository: plt-rc-api
   ResourceGroup: rg-production-song88
   ContainerRegistry: song88.azurecr.io
   AzureConnection: azurerm-song88-prod-service
@@ -81,7 +81,7 @@ stages:
                   env:
                     TAG: $(Build.BuildId)
                     RG: $(ResourceGroup)
-                    CA: ca-staging-platform-rc-api
+                    CA: ca-staging-plt-rc-api
                     CR: $(ContainerRegistry)
                     REPO: $(ImageRepository)
                   inputs:
@@ -138,7 +138,7 @@ stages:
                   env:
                     TAG: $(Build.BuildId)
                     RG: $(ResourceGroup)
-                    CA: ca-production-platform-rc-api
+                    CA: ca-production-plt-rc-api
                     CR: $(ContainerRegistry)
                     REPO: $(ImageRepository)
                   inputs:

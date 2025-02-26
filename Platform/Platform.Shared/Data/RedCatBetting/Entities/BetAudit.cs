@@ -20,6 +20,7 @@ namespace Platform.Shared.Data.RedCatBetting.Entities
         [Column(TypeName = "decimal(26,12)")]
         public decimal Stake { get; set; }
         public string BetIdRef { get; set; }
+        public long? RollbackTransactionId { get; set; } = null;
         public DateTime BetDate { get; set; }
         public DateTime Timestamp { get; set; }
     }

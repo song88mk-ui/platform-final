@@ -232,6 +232,202 @@ namespace Platform.RedCatOperator.API.Repositories
                 };
             }
         }
+        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessVoidPlacement(RedCatOperatorBetTransactionRequest request)
+        {
+            var path = $"/vs/bet/void/placement";
+            var endpointUrl = $"{request.Endpoint}{path}";
+
+            var action = "VSBetPlacement";
+
+            var operatorRequest = new
+            {
+                BetId = request.BetIdRef,
+                MarktId = request.BetMarketId,
+                GameId = request.GameId,
+                BetStatusId = request.BetStatusId,
+                BetStatusName = request.BetStatusName,
+                Stake = request.Stake,
+                Reason = string.Empty
+            };
+            var payload = JsonSerializer.Serialize(operatorRequest, _jsonOptions);
+
+            try
+            {
+                var httpContent = new StringContent(payload, Encoding.UTF8, "application/json");
+
+                AddOperatorLog(request, "REQUEST", endpointUrl, payload, request.CorrelationId);
+
+                try
+                {
+                    var response = await HttpClient(endpointUrl).PostAsync(endpointUrl, httpContent);
+                    var responsePayload = response.IsSuccessStatusCode ? response.Content.ReadAsStringAsync().Result : response.ReasonPhrase;
+
+                    AddOperatorLog(request, "RESPONSE", endpointUrl, responsePayload, request.CorrelationId);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        //await RetryBetPlacement(request, payload, endpointUrl, request.CorrelationId, action, 0);
+
+                        return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                        {
+                            StatusCode = StatusCode.Operator_Error,
+                            Message = StatusCode.Operator_Error.GetDescription(),
+                            Result = new RedCatBetTransactionResponseDTO()
+                            {
+                                StatusCode = (int)RedCatStatusCode.Operator_Error
+                            }
+                        };
+                    }
+
+                    var operatorResponse = JsonSerializer.Deserialize<OperatorRedCatBetResponseDTO>(responsePayload);
+
+                    return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.GetDescription(),
+                        Result = new RedCatBetTransactionResponseDTO()
+                        {
+                            StatusCode = (int)RedCatStatusCode.Success,
+                            Balance = operatorResponse.Balance
+                        }
+                    };
+                }
+                catch (Exception ex)
+                {
+                    AddOperatorLog(request, "RESPONSE", endpointUrl, ex.Message, request.CorrelationId);
+
+                    //await RetryBetPlacement(request, payload, endpointUrl, endpoint, request.CorrelationId, 0);
+
+                    return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                    {
+                        StatusCode = StatusCode.Operator_Error,
+                        Message = ex.Message,
+                        Result = new RedCatBetTransactionResponseDTO()
+                        {
+                            StatusCode = (int)RedCatStatusCode.Operator_Error
+                        }
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                var errorPayload = JsonSerializer.Serialize(new
+                {
+                    ex.Message,
+                    ex.StackTrace
+                });
+
+                AddOperatorLog(request, "RESPONSE", endpointUrl, errorPayload, request.CorrelationId);
+
+                return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                {
+                    StatusCode = StatusCode.Operator_Error,
+                    Message = ex.Message,
+                    Result = new RedCatBetTransactionResponseDTO()
+                    {
+                        StatusCode = (int)RedCatStatusCode.Operator_Error
+                    }
+                };
+            }
+        }
+        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessVoidSettlement(RedCatOperatorBetTransactionRequest request)
+        {
+            var path = $"/vs/bet/void/settle";
+            var endpointUrl = $"{request.Endpoint}{path}";
+
+            var action = "VSBetPlacement";
+
+            var operatorRequest = new
+            {
+                BetId = request.BetIdRef,
+                MarktId = request.BetMarketId,
+                GameId = request.GameId,
+                BetStatusId = request.BetStatusId,
+                BetStatusName = request.BetStatusName,
+                Stake = request.Stake,
+                Reason = string.Empty
+            };
+            var payload = JsonSerializer.Serialize(operatorRequest, _jsonOptions);
+
+            try
+            {
+                var httpContent = new StringContent(payload, Encoding.UTF8, "application/json");
+
+                AddOperatorLog(request, "REQUEST", endpointUrl, payload, request.CorrelationId);
+
+                try
+                {
+                    var response = await HttpClient(endpointUrl).PostAsync(endpointUrl, httpContent);
+                    var responsePayload = response.IsSuccessStatusCode ? response.Content.ReadAsStringAsync().Result : response.ReasonPhrase;
+
+                    AddOperatorLog(request, "RESPONSE", endpointUrl, responsePayload, request.CorrelationId);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        //await RetryBetPlacement(request, payload, endpointUrl, request.CorrelationId, action, 0);
+
+                        return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                        {
+                            StatusCode = StatusCode.Operator_Error,
+                            Message = StatusCode.Operator_Error.GetDescription(),
+                            Result = new RedCatBetTransactionResponseDTO()
+                            {
+                                StatusCode = (int)RedCatStatusCode.Operator_Error
+                            }
+                        };
+                    }
+
+                    var operatorResponse = JsonSerializer.Deserialize<OperatorRedCatBetResponseDTO>(responsePayload);
+
+                    return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.GetDescription(),
+                        Result = new RedCatBetTransactionResponseDTO()
+                        {
+                            StatusCode = (int)RedCatStatusCode.Success,
+                            Balance = operatorResponse.Balance
+                        }
+                    };
+                }
+                catch (Exception ex)
+                {
+                    AddOperatorLog(request, "RESPONSE", endpointUrl, ex.Message, request.CorrelationId);
+
+                    //await RetryBetPlacement(request, payload, endpointUrl, endpoint, request.CorrelationId, 0);
+
+                    return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                    {
+                        StatusCode = StatusCode.Operator_Error,
+                        Message = ex.Message,
+                        Result = new RedCatBetTransactionResponseDTO()
+                        {
+                            StatusCode = (int)RedCatStatusCode.Operator_Error
+                        }
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                var errorPayload = JsonSerializer.Serialize(new
+                {
+                    ex.Message,
+                    ex.StackTrace
+                });
+
+                AddOperatorLog(request, "RESPONSE", endpointUrl, errorPayload, request.CorrelationId);
+
+                return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                {
+                    StatusCode = StatusCode.Operator_Error,
+                    Message = ex.Message,
+                    Result = new RedCatBetTransactionResponseDTO()
+                    {
+                        StatusCode = (int)RedCatStatusCode.Operator_Error
+                    }
+                };
+            }
+        }
 
         private void AddOperatorLog(RedCatOperatorBetTransactionRequest bet, string direction, string endpointUrl, string payload, string correlationId)
         {

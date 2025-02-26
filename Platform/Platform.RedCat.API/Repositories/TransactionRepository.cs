@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.RedCat.API.Models;
 using Platform.Shared.Data.Platform;
@@ -398,12 +397,81 @@ namespace Platform.RedCat.API.Repositories
                     TransactionRefId = bettingResponse.Result.TransactionRefId
                 }
             };
+        }
+        public async Task<RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>> VoidStake(RedCatVoidBetTransactionRequestDTO request)
+        {
+            if (!IsValidSecurity<RedCatBetTransactionRequestDTO>(request, request.Security))
+            {
+                var statusCode = RedCatStatusCode.Invalid_Security_Hash;
+                return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>
+                {
+                    StatusCode = statusCode,
+                    Message = statusCode.GetDescription(),
+                    Result = new RedCatBetTransactionResponseDTO()
+                    {
+                        StatusCode = (int)statusCode
+                    }
+                };
+            }
+
+            var extractedToken = request.AuthToken.Split(":");
+            var clientId = extractedToken.FirstOrDefault();
+            var operatorToken = extractedToken.LastOrDefault();
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+                return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                {
+                    StatusCode = RedCatStatusCode.Unknown_Operator_Id,
+                    Message = RedCatStatusCode.Unknown_Operator_Id.GetDescription(),
+                    Result = new RedCatBetTransactionResponseDTO()
+                    {
+                        StatusCode = (int)RedCatStatusCode.Unknown_Operator_Id
+                    }
+                };
+
+            var authenticationResponse = await _operatorRepository.Authenticate(clientResponse.Result.ClientId.ToString(), operatorToken, clientResponse.Result.Endpoint, clientResponse.Result.IsAgent);
+
+            if (authenticationResponse.StatusCode != RedCatStatusCode.Success)
+                return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                {
+                    StatusCode = RedCatStatusCode.Unknown_Operator_Id,
+                    Message = RedCatStatusCode.Unknown_Operator_Id.GetDescription(),
+                    Result = new RedCatBetTransactionResponseDTO()
+                    {
+                        StatusCode = authenticationResponse.Result.StatusId
+                    }
+                };
+
+            var bettingResponse = await _bettingRepository.VoidStake(new RedCatVoidBetRequest()
+            {
+                BetId = request.BetId,
+                ClientId = clientResponse.Result.ClientId.ToString().ToUpper(),
+                ClientCode = clientResponse.Result.ClientCode,
+                Endpoint = clientResponse.Result.Endpoint,
+                OperatorToken = operatorToken,
+                Currency = request.Currency,
+                MemberCode = request.MemberCode,
+                OperatorId = request.OperatorId,
+                EventDate = request.EventDate,
+                BetMarketId = request.BetMarketId,
+                TransactionAmt = request.TransactionAmt,
+                TransactionId = request.TransactionId,
+                GameId = request.GameId,
+                RollbackTransactionId = request.RollbackTransactionId
+            });
 
             return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
             {
                 StatusCode = RedCatStatusCode.Success,
                 Message = RedCatStatusCode.Success.GetDescription(),
                 Result = new RedCatBetTransactionResponseDTO()
+                {
+                    StatusCode = (int)RedCatStatusCode.Success,
+                    Balance = bettingResponse.Result.Balance,
+                    TransactionRefId = bettingResponse.Result.TransactionRefId
+                }
             };
         }
 

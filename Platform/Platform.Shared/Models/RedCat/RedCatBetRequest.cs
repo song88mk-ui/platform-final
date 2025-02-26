@@ -17,6 +17,5 @@ namespace Platform.Shared.Models.RedCat
         public decimal TransactionAmt { get; set; }
         public long TransactionId { get; set; }
         public string GameId { get; set; }
-        public string CorrelationId { get; set; } = string.Empty;
     }
 }

@@ -29,10 +29,39 @@ namespace Platform.RedCatBetting.API.Controllers
                     return BadRequest(result);
             }
         }
+
         [HttpPost("settle")]
         public async Task<IActionResult> SettleBet(RedCatBetRequest request)
         {
             var result = await _bettingRepositories.SettleBet(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("void/placement")]
+        public async Task<IActionResult> VoidPlacement(RedCatVoidBetRequest request)
+        {
+            var result = await _bettingRepositories.VoidPlacement(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
+        [HttpPost("void/placement")]
+        public async Task<IActionResult> VoidSettlement(RedCatVoidBetRequest request)
+        {
+            var result = await _bettingRepositories.VoidSettlement(request);
 
             switch (result.StatusCode)
             {

@@ -23,6 +23,7 @@ namespace Platform.RedCat.API
             services.AddHealthChecks();
             services.AddControllers();
 
+            services.AddTelemetry(Configuration);
             services.AddContexts(Configuration);
             services.AddRepositories();
         }

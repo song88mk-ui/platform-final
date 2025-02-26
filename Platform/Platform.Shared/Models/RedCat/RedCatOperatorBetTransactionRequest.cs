@@ -15,7 +15,9 @@ namespace Platform.Shared.Models.RedCat
         public string GameId { get; set; }
         public int BetStatusId { get; set; }
         public string BetStatusName { get; set; }
+        public decimal Payout { get; set; }
         public decimal Stake { get; set; }
+        public bool IsAgent { get; set; }
         public DateTime BetDate { get; set; }
         public string CorrelationId { get; set; }
     }

@@ -18,7 +18,9 @@ namespace Platform.Shared.Data.RedCatBetting.Entities
         public string GameId { get; set; }
         public long BetMarketId { get; set; }
         [Column(TypeName = "decimal(26,12)")]
-        public decimal Stake { get; set; }
+        public decimal Amount { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal Payout { get; set; }
         public string BetIdRef { get; set; }
         public DateTime BetDate { get; set; }
     }

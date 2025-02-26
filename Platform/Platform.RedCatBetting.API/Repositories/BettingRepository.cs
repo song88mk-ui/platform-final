@@ -27,21 +27,35 @@ namespace Platform.RedCatBetting.API.Repositories
             {
                 var timestamp = DateTime.UtcNow;
 
+                var bet = _redCatBettingContext.Bet.FirstOrDefault(c => c.BetIdRef == request.BetId.ToString());
+
+                if (bet != null)
+                    return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                    {
+                        StatusCode = StatusCode.Betting_Restricted,
+                        Message = StatusCode.Betting_Restricted.GetDescription(),
+                        Result = new RedCatBetTransactionResponseDTO()
+                        {
+                            StatusCode = (int)StatusCode.Betting_Restricted
+                        }
+                    };
+
                 using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
                 {
                     var betEntity = _redCatBettingContext.Bet.Add(new Bet()
                     {
                         ClientId = request.ClientId,
-                        ClientCode = request.ClientCode,
+                        ClientCode = request.ClientCode.ToString(),
                         Endpoint = request.Endpoint,
                         OperatorToken = request.OperatorToken,
-                        CurrencyCode = request.Currency.ToString(),
+                        CurrencyCode = request.CurrencyCode.ToString(),
                         ExchangeRate = request.ExhangeRate,
                         BetStatusId = (int)BetStatus.Running,
                         BetStatusName = BetStatus.Running.GetDescription(),
                         GameId = request.GameId,
                         BetMarketId = request.BetMarketId,
-                        Stake = request.TransactionAmt,
+                        Amount = request.TransactionAmt,
+                        Payout = 0,
                         BetDate = request.EventDate,
                         BetIdRef = request.BetId.ToString()
                     }).Entity;
@@ -60,7 +74,8 @@ namespace Platform.RedCatBetting.API.Repositories
                         BetStatusName = betEntity.BetStatusName,
                         GameId = betEntity.GameId,
                         BetMarketId = betEntity.BetMarketId,
-                        Stake = betEntity.Stake,
+                        Amount = betEntity.Amount,
+                        Payout = betEntity.Payout,
                         BetDate = betEntity.BetDate,
                         BetIdRef = betEntity.BetIdRef,
                         Timestamp = timestamp
@@ -71,7 +86,7 @@ namespace Platform.RedCatBetting.API.Repositories
                         BetId = betEntity.BetId,
                         BetIdRef = betEntity.BetIdRef,
                         ClientId = request.ClientId,
-                        ClientCode = request.ClientCode,
+                        ClientCode = request.ClientCode.ToString(),
                         OperatorToken = request.OperatorToken,
                         Endpoint = request.Endpoint,
                         CurrencyCode = betEntity.CurrencyCode,
@@ -79,7 +94,7 @@ namespace Platform.RedCatBetting.API.Repositories
                         GameId = request.GameId,
                         BetStatusId = betEntity.BetStatusId,
                         BetStatusName = betEntity.BetStatusName,
-                        Stake = betEntity.Stake,
+                        Stake = betEntity.Amount,
                         BetDate = betEntity.BetDate,
                         CorrelationId = ConvertToEpochTimestamp(timestamp).ToString(),
                     });
@@ -133,7 +148,6 @@ namespace Platform.RedCatBetting.API.Repositories
             try
             {
                 var timestamp = DateTime.UtcNow;
-                var transactionIdRef = string.Empty;
 
                 var bet = _redCatBettingContext.Bet.FirstOrDefault(c => c.BetIdRef == request.BetId.ToString());
 
@@ -152,6 +166,7 @@ namespace Platform.RedCatBetting.API.Repositories
 
                 bet.BetStatusId = (int)betStatus;
                 bet.BetStatusName = betStatus.GetDescription();
+                bet.Payout = request.TransactionAmt;
 
                 using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
                 {
@@ -159,16 +174,17 @@ namespace Platform.RedCatBetting.API.Repositories
                     {
                         BetId = bet.BetId,
                         BetIdRef = bet.BetIdRef,
-                        ClientId = request.ClientId,
-                        ClientCode = request.ClientCode,
-                        OperatorToken = request.OperatorToken,
-                        Endpoint = request.Endpoint,
+                        ClientId = bet.ClientId,
+                        ClientCode = bet.ClientCode,
+                        OperatorToken = bet.OperatorToken,
+                        Endpoint = bet.Endpoint,
                         CurrencyCode = bet.CurrencyCode,
                         BetMarketId = request.BetMarketId,
                         GameId = request.GameId,
                         BetStatusId = bet.BetStatusId,
                         BetStatusName = bet.BetStatusName,
-                        Stake = bet.Stake,
+                        Payout = request.TransactionAmt,
+                        Stake = bet.Amount,
                         BetDate = bet.BetDate,
                         CorrelationId = ConvertToEpochTimestamp(timestamp).ToString(),
                     });
@@ -203,7 +219,8 @@ namespace Platform.RedCatBetting.API.Repositories
                         BetStatusName = bet.BetStatusName,
                         GameId = bet.GameId,
                         BetMarketId = bet.BetMarketId,
-                        Stake = bet.Stake,
+                        Amount = bet.Amount,
+                        Payout = bet.Payout,
                         BetDate = bet.BetDate,
                         BetIdRef = bet.BetIdRef,
                         Timestamp = timestamp
@@ -247,7 +264,7 @@ namespace Platform.RedCatBetting.API.Repositories
 
                 var bet = _redCatBettingContext.Bet.FirstOrDefault(c => c.BetIdRef == request.BetId.ToString());
 
-                if (bet == null || bet.BetStatusId == (int)BetStatus.Running)
+                if (bet == null || bet.BetStatusId != (int)BetStatus.Running)
                     return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                     {
                         StatusCode = StatusCode.Bet_Not_Found,
@@ -260,25 +277,27 @@ namespace Platform.RedCatBetting.API.Repositories
 
                 var betStatus = BetStatus.Void;
 
+                bet.Payout = bet.Amount;
                 bet.BetStatusId = (int)betStatus;
                 bet.BetStatusName = betStatus.GetDescription();
 
                 using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
                 {
-                    var operatorResponse = await _operatorRepository.ProcessVoidPlacement(new RedCatOperatorBetTransactionRequest()
+                    var operatorResponse = await _operatorRepository.ProcessBetSettlement(new RedCatOperatorBetTransactionRequest()
                     {
                         BetId = bet.BetId,
                         BetIdRef = bet.BetIdRef,
-                        ClientId = request.ClientId,
-                        ClientCode = request.ClientCode,
-                        OperatorToken = request.OperatorToken,
-                        Endpoint = request.Endpoint,
+                        ClientId = bet.ClientId,
+                        ClientCode = bet.ClientCode,
+                        OperatorToken = bet.OperatorToken,
+                        Endpoint = bet.Endpoint,
                         CurrencyCode = bet.CurrencyCode,
                         BetMarketId = request.BetMarketId,
                         GameId = request.GameId,
                         BetStatusId = bet.BetStatusId,
                         BetStatusName = bet.BetStatusName,
-                        Stake = bet.Stake,
+                        Payout = bet.Amount,
+                        Stake = bet.Amount,
                         BetDate = bet.BetDate,
                         CorrelationId = ConvertToEpochTimestamp(timestamp).ToString(),
                     });
@@ -313,7 +332,8 @@ namespace Platform.RedCatBetting.API.Repositories
                         BetStatusName = bet.BetStatusName,
                         GameId = bet.GameId,
                         BetMarketId = bet.BetMarketId,
-                        Stake = bet.Stake,
+                        Amount = bet.Amount,
+                        Payout = bet.Payout,
                         BetDate = bet.BetDate,
                         BetIdRef = bet.BetIdRef,
                         Timestamp = timestamp
@@ -357,7 +377,7 @@ namespace Platform.RedCatBetting.API.Repositories
 
                 var bet = _redCatBettingContext.Bet.FirstOrDefault(c => c.BetIdRef == request.BetId.ToString());
 
-                if (bet == null || bet.BetStatusId == (int)BetStatus.Running)
+                if (bet == null)
                     return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                     {
                         StatusCode = StatusCode.Bet_Not_Found,
@@ -381,25 +401,27 @@ namespace Platform.RedCatBetting.API.Repositories
                         }
                     };
 
+                bet.Payout = betTransaction.Payout;
                 bet.BetStatusId = betTransaction.BetStatusId;
                 bet.BetStatusName = betTransaction.BetStatusName;
 
                 using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
                 {
-                    var operatorResponse = await _operatorRepository.ProcessVoidSettlement(new RedCatOperatorBetTransactionRequest()
+                    var operatorResponse = await _operatorRepository.ProcessBetSettlement(new RedCatOperatorBetTransactionRequest()
                     {
                         BetId = bet.BetId,
                         BetIdRef = bet.BetIdRef,
-                        ClientId = request.ClientId,
-                        ClientCode = request.ClientCode,
-                        OperatorToken = request.OperatorToken,
-                        Endpoint = request.Endpoint,
+                        ClientId = bet.ClientId,
+                        ClientCode = bet.ClientCode,
+                        OperatorToken = bet.OperatorToken,
+                        Endpoint = bet.Endpoint,
                         CurrencyCode = bet.CurrencyCode,
                         BetMarketId = request.BetMarketId,
                         GameId = request.GameId,
                         BetStatusId = bet.BetStatusId,
                         BetStatusName = bet.BetStatusName,
-                        Stake = bet.Stake,
+                        Payout = bet.Payout,
+                        Stake = bet.Amount,
                         BetDate = bet.BetDate,
                         CorrelationId = ConvertToEpochTimestamp(timestamp).ToString(),
                     });
@@ -434,7 +456,8 @@ namespace Platform.RedCatBetting.API.Repositories
                         BetStatusName = bet.BetStatusName,
                         GameId = bet.GameId,
                         BetMarketId = bet.BetMarketId,
-                        Stake = bet.Stake,
+                        Amount = bet.Amount,
+                        Payout = bet.Payout,
                         BetDate = bet.BetDate,
                         BetIdRef = bet.BetIdRef,
                         RollbackTransactionId = request.RollbackTransactionId,

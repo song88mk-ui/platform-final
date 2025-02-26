@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Platform.Entities;
@@ -49,7 +50,7 @@ namespace Platform.RedCatOperator.API.Repositories
                 BetStatus = request.BetStatusName,
                 //BetStatusId = request.BetStatusId,
                 //BetStatusName = request.BetStatusName,
-                Stake = request.Stake,
+                Amount = request.Stake,
                 Reason = string.Empty
             };
 
@@ -63,7 +64,7 @@ namespace Platform.RedCatOperator.API.Repositories
 
                 try
                 {
-                    var response = await HttpClient(endpointUrl).PostAsync(endpointUrl, httpContent);
+                    var response = await HttpClient(request.Endpoint, request.OperatorToken, request.ClientId, request.IsAgent).PostAsync(path, httpContent);
                     var responsePayload = response.IsSuccessStatusCode ? response.Content.ReadAsStringAsync().Result : response.ReasonPhrase;
 
                     AddOperatorLog(request, "RESPONSE", endpointUrl, responsePayload, request.CorrelationId);
@@ -83,7 +84,29 @@ namespace Platform.RedCatOperator.API.Repositories
                         };
                     }
 
-                    var operatorResponse = JsonSerializer.Deserialize<OperatorRedCatBetResponseDTO>(responsePayload);
+                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload);
+
+                    if (operatorResponse == null)
+                        return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                        {
+                            StatusCode = StatusCode.Operator_Error,
+                            Message = StatusCode.Operator_Error.GetDescription(),
+                            Result = new RedCatBetTransactionResponseDTO()
+                            {
+                                StatusCode = (int)RedCatStatusCode.Operator_Error
+                            }
+                        };
+
+                    if (operatorResponse.StatusId != 100)
+                        return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                        {
+                            StatusCode = StatusCode.Operator_Error,
+                            Message = StatusCode.Operator_Error.GetDescription(),
+                            Result = new RedCatBetTransactionResponseDTO()
+                            {
+                                StatusCode = operatorResponse.StatusId
+                            }
+                        };
 
                     return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                     {
@@ -136,12 +159,12 @@ namespace Platform.RedCatOperator.API.Repositories
         }
         public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessSettleBet(RedCatOperatorBetTransactionRequest request)
         {
-            var path = $"/vs/bet/settle";
+            var path = $"/vs/bet/settlement";
             var endpointUrl = $"{request.Endpoint}{path}";
 
             var action = "VSBetPlacement";
 
-            var operatorRequest = new OperatorRedCatBetRequestDTO()
+            var operatorRequest = new OperatorRedCatBetSettlementRequestDTO()
             {
                 BetId = request.BetIdRef,
                 MarketId = request.BetMarketId,
@@ -149,7 +172,8 @@ namespace Platform.RedCatOperator.API.Repositories
                 BetStatus = request.BetStatusName,
                 //BetStatusId = request.BetStatusId,
                 //BetStatusName = request.BetStatusName,
-                Stake = request.Stake,
+                Payout = request.Payout,
+                Amount = request.Stake,
                 Reason = string.Empty
             };
             var payload = JsonSerializer.Serialize(operatorRequest, _jsonOptions);
@@ -162,7 +186,7 @@ namespace Platform.RedCatOperator.API.Repositories
 
                 try
                 {
-                    var response = await HttpClient(endpointUrl).PostAsync(endpointUrl, httpContent);
+                    var response = await HttpClient(request.Endpoint, request.OperatorToken, request.ClientId, request.IsAgent).PostAsync(path, httpContent);
                     var responsePayload = response.IsSuccessStatusCode ? response.Content.ReadAsStringAsync().Result : response.ReasonPhrase;
 
                     AddOperatorLog(request, "RESPONSE", endpointUrl, responsePayload, request.CorrelationId);
@@ -182,7 +206,29 @@ namespace Platform.RedCatOperator.API.Repositories
                         };
                     }
 
-                    var operatorResponse = JsonSerializer.Deserialize<OperatorRedCatBetResponseDTO>(responsePayload);
+                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload);
+
+                    if (operatorResponse == null)
+                        return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                        {
+                            StatusCode = StatusCode.Operator_Error,
+                            Message = StatusCode.Operator_Error.GetDescription(),
+                            Result = new RedCatBetTransactionResponseDTO()
+                            {
+                                StatusCode = (int)RedCatStatusCode.Operator_Error
+                            }
+                        };
+
+                    if (operatorResponse.StatusId != 100)
+                        return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                        {
+                            StatusCode = StatusCode.Operator_Error,
+                            Message = StatusCode.Operator_Error.GetDescription(),
+                            Result = new RedCatBetTransactionResponseDTO()
+                            {
+                                StatusCode = operatorResponse.StatusId
+                            }
+                        };
 
                     return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                     {
@@ -235,7 +281,7 @@ namespace Platform.RedCatOperator.API.Repositories
         }
         public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessVoidPlacement(RedCatOperatorBetTransactionRequest request)
         {
-            var path = $"/vs/bet/void/placement";
+            var path = $"/vs/bet/settlement";
             var endpointUrl = $"{request.Endpoint}{path}";
 
             var action = "VSVoidPlacement";
@@ -248,7 +294,7 @@ namespace Platform.RedCatOperator.API.Repositories
                 BetStatus = request.BetStatusName,
                 //BetStatusId = request.BetStatusId,
                 //BetStatusName = request.BetStatusName,
-                Stake = request.Stake,
+                Amount = request.Stake,
                 Reason = string.Empty
             };
             var payload = JsonSerializer.Serialize(operatorRequest, _jsonOptions);
@@ -261,7 +307,7 @@ namespace Platform.RedCatOperator.API.Repositories
 
                 try
                 {
-                    var response = await HttpClient(endpointUrl).PostAsync(endpointUrl, httpContent);
+                    var response = await HttpClient(request.Endpoint, request.OperatorToken, request.ClientId, request.IsAgent).PostAsync(path, httpContent);
                     var responsePayload = response.IsSuccessStatusCode ? response.Content.ReadAsStringAsync().Result : response.ReasonPhrase;
 
                     AddOperatorLog(request, "RESPONSE", endpointUrl, responsePayload, request.CorrelationId);
@@ -281,7 +327,29 @@ namespace Platform.RedCatOperator.API.Repositories
                         };
                     }
 
-                    var operatorResponse = JsonSerializer.Deserialize<OperatorRedCatBetResponseDTO>(responsePayload);
+                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload);
+
+                    if (operatorResponse == null)
+                        return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                        {
+                            StatusCode = StatusCode.Operator_Error,
+                            Message = StatusCode.Operator_Error.GetDescription(),
+                            Result = new RedCatBetTransactionResponseDTO()
+                            {
+                                StatusCode = (int)RedCatStatusCode.Operator_Error
+                            }
+                        };
+
+                    if (operatorResponse.StatusId != 100)
+                        return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                        {
+                            StatusCode = StatusCode.Operator_Error,
+                            Message = StatusCode.Operator_Error.GetDescription(),
+                            Result = new RedCatBetTransactionResponseDTO()
+                            {
+                                StatusCode = operatorResponse.StatusId
+                            }
+                        };
 
                     return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                     {
@@ -334,7 +402,7 @@ namespace Platform.RedCatOperator.API.Repositories
         }
         public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessVoidSettlement(RedCatOperatorBetTransactionRequest request)
         {
-            var path = $"/vs/bet/void/settle";
+            var path = $"/vs/bet/settlement";
             var endpointUrl = $"{request.Endpoint}{path}";
 
             var action = "VSVoidSettlement";
@@ -347,7 +415,7 @@ namespace Platform.RedCatOperator.API.Repositories
                 BetStatus = request.BetStatusName,
                 //BetStatusId = request.BetStatusId,
                 //BetStatusName = request.BetStatusName,
-                Stake = request.Stake,
+                Amount = request.Stake,
                 Reason = string.Empty
             };
             var payload = JsonSerializer.Serialize(operatorRequest, _jsonOptions);
@@ -360,7 +428,7 @@ namespace Platform.RedCatOperator.API.Repositories
 
                 try
                 {
-                    var response = await HttpClient(endpointUrl).PostAsync(endpointUrl, httpContent);
+                    var response = await HttpClient(request.Endpoint, request.OperatorToken, request.ClientId, request.IsAgent).PostAsync(path, httpContent);
                     var responsePayload = response.IsSuccessStatusCode ? response.Content.ReadAsStringAsync().Result : response.ReasonPhrase;
 
                     AddOperatorLog(request, "RESPONSE", endpointUrl, responsePayload, request.CorrelationId);
@@ -380,7 +448,29 @@ namespace Platform.RedCatOperator.API.Repositories
                         };
                     }
 
-                    var operatorResponse = JsonSerializer.Deserialize<OperatorRedCatBetResponseDTO>(responsePayload);
+                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload);
+
+                    if (operatorResponse == null)
+                        return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                        {
+                            StatusCode = StatusCode.Operator_Error,
+                            Message = StatusCode.Operator_Error.GetDescription(),
+                            Result = new RedCatBetTransactionResponseDTO()
+                            {
+                                StatusCode = (int)RedCatStatusCode.Operator_Error
+                            }
+                        };
+
+                    if (operatorResponse.StatusId != 100)
+                        return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                        {
+                            StatusCode = StatusCode.Operator_Error,
+                            Message = StatusCode.Operator_Error.GetDescription(),
+                            Result = new RedCatBetTransactionResponseDTO()
+                            {
+                                StatusCode = operatorResponse.StatusId
+                            }
+                        };
 
                     return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                     {
@@ -474,9 +564,11 @@ namespace Platform.RedCatOperator.API.Repositories
 
             try
             {
+                var httpContent = new StringContent(payload, Encoding.UTF8, "application/json");
+
                 AddOperatorLog(request, "REQUEST", endpointUrl, payload, correlationId);
 
-                var response = await HttpClient(endpoint).PostAsync(endpointUrl, new StringContent(payload, Encoding.UTF8, "application/json"));
+                var response = await HttpClient(request.Endpoint, request.OperatorToken, request.ClientId, request.IsAgent).PostAsync(path, httpContent);
                 var responsePayload = response.IsSuccessStatusCode ? response.Content.ReadAsStringAsync().Result : response.ReasonPhrase;
 
                 AddOperatorLog(request, "RESPONSE", endpointUrl, responsePayload, correlationId);
@@ -499,23 +591,29 @@ namespace Platform.RedCatOperator.API.Repositories
                 await RetryBetPlacement(request, payload, endpoint, correlationId, action, retries);
             }
         }
-        private HttpClient HttpClient(string endpoint)
+        private HttpClient HttpClient(string endpoint, string operatorToken, string clientId, bool isAgent)
         {
-            var client = _httpClients.Where(c => c.BaseAddress.OriginalString == endpoint).FirstOrDefault();
-
-            if (client == null)
+            lock (_lock)
             {
-                client = new HttpClient()
+                var client = _httpClients.Where(c => c.BaseAddress.OriginalString == endpoint).FirstOrDefault();
+
+                if (client == null)
                 {
-                    BaseAddress = new Uri(endpoint),
-                    Timeout = TimeSpan.FromSeconds(5)
-                };
+                    client = new HttpClient()
+                    {
+                        BaseAddress = new Uri(endpoint.TrimEnd('/')),
+                        Timeout = TimeSpan.FromSeconds(5)
+                    };
 
-                lock (_lock)
+                    client.DefaultRequestHeaders.Add("x-is-agent", isAgent.ToString());
+                    client.DefaultRequestHeaders.Add("x-client-id", clientId);
+                    client.DefaultRequestHeaders.Add("x-operator-token", operatorToken);
+
                     _httpClients.Add(client);
-            }
+                }
 
-            return client;
+                return client;
+            }
         }
     }
 }

@@ -1,13 +1,10 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
 using Platform.RedCat.API.Extensions;
-using Platform.RedCat.API.Repositories;
-using Platform.Shared.Data.Platform;
 
 namespace Platform.RedCat.API
 {
@@ -25,6 +22,9 @@ namespace Platform.RedCat.API
         {
             services.AddHealthChecks();
             services.AddControllers();
+            services.AddSwaggerGen(c =>
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "RedCat API", Version = "v1" })
+            );
 
             services
                 .AddContexts(Configuration)
@@ -41,6 +41,11 @@ namespace Platform.RedCat.API
             }
 
             app.UseRouting();
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "RedCat API V1")
+            );
 
             app.UseAuthorization();
 

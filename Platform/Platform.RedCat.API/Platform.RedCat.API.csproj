@@ -5,6 +5,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="ActionFilters\**" />
+    <Content Remove="ActionFilters\**" />
+    <EmbeddedResource Remove="ActionFilters\**" />
+    <None Remove="ActionFilters\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Platform.Shared\Platform.Shared.csproj" />
   </ItemGroup>
 
@@ -17,10 +24,9 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.9.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.9.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Process" Version="0.5.0-beta.7" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="ActionFilters\" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="5.6.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="5.6.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.3.0" />
   </ItemGroup>
 
 

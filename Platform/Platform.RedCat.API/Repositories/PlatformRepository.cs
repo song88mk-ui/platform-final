@@ -355,6 +355,21 @@ namespace Platform.RedCat.API.Repositories
                 GameId = request.GameId,
             });
 
+            if(bettingResponse.StatusCode != StatusCode.Success)
+            {
+                return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                {
+                    StatusCode = RedCatStatusCode.Error,
+                    Message = RedCatStatusCode.Error.GetDescription(),
+                    Result = new RedCatBetTransactionResponseDTO()
+                    {
+                        StatusCode = bettingResponse.Result.StatusCode,
+                        Balance = bettingResponse.Result.Balance,
+                        TransactionRefId = bettingResponse.Result.TransactionRefId,
+                    }
+                };
+            }
+
             return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
             {
                 StatusCode = RedCatStatusCode.Success,
@@ -459,6 +474,21 @@ namespace Platform.RedCat.API.Repositories
                 TransactionId = transactionId,
                 GameId = request.GameId,
             });
+
+            if (bettingResponse.StatusCode != StatusCode.Success)
+            {
+                return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                {
+                    StatusCode = RedCatStatusCode.Error,
+                    Message = RedCatStatusCode.Error.GetDescription(),
+                    Result = new RedCatBetTransactionResponseDTO()
+                    {
+                        StatusCode = bettingResponse.Result.StatusCode,
+                        Balance = bettingResponse.Result.Balance,
+                        TransactionRefId = bettingResponse.Result.TransactionRefId,
+                    }
+                };
+            }
 
             return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
             {
@@ -566,6 +596,21 @@ namespace Platform.RedCat.API.Repositories
                 RollbackTransactionId = rollbackTransactionId
             });
 
+            if (bettingResponse.StatusCode != StatusCode.Success)
+            {
+                return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                {
+                    StatusCode = RedCatStatusCode.Error,
+                    Message = RedCatStatusCode.Error.GetDescription(),
+                    Result = new RedCatBetTransactionResponseDTO()
+                    {
+                        StatusCode = bettingResponse.Result.StatusCode,
+                        Balance = bettingResponse.Result.Balance,
+                        TransactionRefId = bettingResponse.Result.TransactionRefId,
+                    }
+                };
+            }
+
             return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
             {
                 StatusCode = RedCatStatusCode.Success,
@@ -671,6 +716,21 @@ namespace Platform.RedCat.API.Repositories
                 GameId = request.GameId,
                 RollbackTransactionId = rollbackTransactionId
             });
+
+            if (bettingResponse.StatusCode != StatusCode.Success)
+            {
+                return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                {
+                    StatusCode = RedCatStatusCode.Error,
+                    Message = RedCatStatusCode.Error.GetDescription(),
+                    Result = new RedCatBetTransactionResponseDTO()
+                    {
+                        StatusCode = bettingResponse.Result.StatusCode,
+                        Balance = bettingResponse.Result.Balance,
+                        TransactionRefId = bettingResponse.Result.TransactionRefId,
+                    }
+                };
+            }
 
             return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
             {

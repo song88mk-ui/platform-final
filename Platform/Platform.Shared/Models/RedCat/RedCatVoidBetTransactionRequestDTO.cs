@@ -2,6 +2,6 @@
 {
     public class RedCatVoidBetTransactionRequestDTO : RedCatBetTransactionRequestDTO
     {
-        public long RollbackTransactionId { get; set; }
+        public string RollbackTransactionId { get; set; }
     }
 }

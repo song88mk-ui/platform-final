@@ -7,6 +7,7 @@ namespace Platform.Shared.Enums
         Success = 100,
         Insufficient_Funds = 104,
 
+
         Error = 1000,
         Operator_Error = 1001,
 

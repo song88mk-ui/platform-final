@@ -18,6 +18,7 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
+  SLACK_URL: "https://hooks.slack.com/services/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"  # ci-cd
   AppName: Platform-WebSocket-MessagePack-API
   ImageRepository: platform-websocket-msgpack-api
   ResourceGroup: rg-production-song88

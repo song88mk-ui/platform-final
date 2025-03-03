@@ -56,9 +56,7 @@ stages:
               buildContext: Platform/Platform.Websocket.API2
               arguments: --build-context shared=Platform
               containerRegistry: $(ContainerRegistry)
-              tags: |
-                $(appversion)
-                latest
+              tags: $(Build.BuildId)
 
           - task: Docker@2
             displayName: Push to ACR
@@ -66,9 +64,7 @@ stages:
               command: push
               repository: $(ImageRepository)
               containerRegistry: $(ContainerRegistry)
-              tags: |
-                $(appversion)
-                latest
+              tags: $(Build.BuildId)
 
   - stage: stage_staging_release
     dependsOn: build

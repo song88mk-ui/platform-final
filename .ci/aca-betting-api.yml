@@ -18,7 +18,6 @@ trigger:
 
 variables:
   SLACK_URL: "https://hooks.slack.com/services/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"  # ci-cd
-  DOCKER_BUILDKIT: 1
   ImageRepository: platform-betting-api
   ResourceGroup: rg-production-song88
   ContainerRegistry: song88.azurecr.io
@@ -81,7 +80,7 @@ stages:
                   env:
                     TAG: $(Build.BuildId)
                     RG: $(ResourceGroup)
-                    CA: ca-staging-platform-betting-api
+                    CA: ca-staging-plt-betting-api
                     CR: $(ContainerRegistry)
                     REPO: $(ImageRepository)
                   inputs:
@@ -138,7 +137,7 @@ stages:
                   env:
                     TAG: $(Build.BuildId)
                     RG: $(ResourceGroup)
-                    CA: ca-production-platform-betting-api
+                    CA: ca-production-plt-betting-api
                     CR: $(ContainerRegistry)
                     REPO: $(ImageRepository)
                   inputs:

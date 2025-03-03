@@ -50,6 +50,7 @@ namespace Platform.RedCatOperator.API.Repositories
                 BetStatus = request.BetStatusName,
                 //BetStatusId = request.BetStatusId,
                 //BetStatusName = request.BetStatusName,
+                //UserId = request.MemberCode,
                 Amount = request.Stake,
                 Reason = string.Empty
             };
@@ -172,6 +173,7 @@ namespace Platform.RedCatOperator.API.Repositories
                 BetStatus = request.BetStatusName,
                 //BetStatusId = request.BetStatusId,
                 //BetStatusName = request.BetStatusName,
+                //UserId = request.MemberCode,
                 Payout = request.Payout,
                 Amount = request.Stake,
                 Reason = string.Empty
@@ -294,6 +296,7 @@ namespace Platform.RedCatOperator.API.Repositories
                 BetStatus = request.BetStatusName,
                 //BetStatusId = request.BetStatusId,
                 //BetStatusName = request.BetStatusName,
+                //UserId = request.MemberCode,
                 Amount = request.Stake,
                 Reason = string.Empty
             };
@@ -415,6 +418,7 @@ namespace Platform.RedCatOperator.API.Repositories
                 BetStatus = request.BetStatusName,
                 //BetStatusId = request.BetStatusId,
                 //BetStatusName = request.BetStatusName,
+                //UserId = request.MemberCode,
                 Amount = request.Stake,
                 Reason = string.Empty
             };

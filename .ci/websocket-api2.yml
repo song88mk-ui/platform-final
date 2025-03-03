@@ -34,20 +34,12 @@ stages:
           - task: Bash@3
             displayName: Set Build Id
             inputs:
-              workingDirectory: '$(Build.SourcesDirectory)/Platform/Platform.Websocket.API2'
               targetType: inline
               script: |
-                APP_VERSION="0.0.0"
-                if [ -f .version ]; then
-                  APP_VERSION=$(jq -r '.version' .version)
-                elif [ -f ../.version ]; then
-                  APP_VERSION=$(jq -r '.version' ../.version)
-                elif [ -f ../../.version ]; then
-                  APP_VERSION=$(jq -r '.version' ../../.version)
-                fi
-                PROJECT_NAME=`echo $AppName| sed 's|/|-|g'`
-                echo "##vso[task.setvariable variable=appversion;]${BUILD_BUILDID}"
-                echo "##vso[build.updatebuildnumber]${PROJECT_NAME}-v${APP_VERSION}.${BUILD_BUILDID}"
+                PKG_VERSION=v$(jq -r '.version' .version)
+                BUILD_NUMBER="Platform.WebSocket.API-${PKG_VERSION}.${BUILD_BUILDID}"
+                echo "##vso[task.setvariable variable=VERSION]${PKG_VERSION}"
+                echo "##vso[build.updatebuildnumber]${BUILD_NUMBER}"
 
           - task: Docker@2
             displayName: Login to ACR

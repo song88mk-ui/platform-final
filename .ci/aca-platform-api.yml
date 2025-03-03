@@ -81,7 +81,7 @@ stages:
                   env:
                     TAG: $(Build.BuildId)
                     RG: $(ResourceGroup)
-                    CA: ca-staging-platform-api
+                    CA: ca-staging-plt-api
                     CR: $(ContainerRegistry)
                     REPO: $(ImageRepository)
                   inputs:

@@ -608,14 +608,15 @@ namespace Platform.RedCat.API.Repositories
             if (string.IsNullOrEmpty(providedSecurity))
                 return false;
 
-            var parameters = JsonSerializer.Deserialize<Dictionary<string, string>>(JsonSerializer.Serialize(request));
+            var parameters = JsonSerializer.Deserialize<Dictionary<string, object>>(JsonSerializer.Serialize(request));
             parameters.Remove("Security");
 
-            var sortedValues = parameters.OrderBy(p => p.Key).Select(p => p.Value);
+            //var sortedValues = parameters.OrderBy(p => p.Key).Select(p => p.Value);
+            string dataString = string.Concat(parameters.Values);
 
-            string inputString = string.Concat(sortedValues);
+            //string inputString = string.Concat(sortedValues);
 
-            string expectedSecurity = GenerateHMACSHA256(inputString, _sharedKey);
+            string expectedSecurity = GenerateHMACSHA256(dataString, _sharedKey);
 
             return expectedSecurity == providedSecurity;
         }

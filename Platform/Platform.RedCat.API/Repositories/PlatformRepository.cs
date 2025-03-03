@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.RedCat.API.Models;
+using Platform.RedCat.API.Telemetry;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Enums;
 using Platform.Shared.Extensions;
@@ -11,11 +12,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Platform.RedCat.API.Telemetry;
 using WalletBalanceResponseDTO = Platform.RedCat.API.Models.WalletBalanceResponseDTO;
 
 namespace Platform.RedCat.API.Repositories
@@ -610,12 +611,9 @@ namespace Platform.RedCat.API.Repositories
 
             var parameters = JsonSerializer.Deserialize<Dictionary<string, object>>(JsonSerializer.Serialize(request));
             parameters.Remove("Security");
+            var sortedValues = parameters.OrderBy(p => p.Key).Select(c => c.Value);
 
-            //var sortedValues = parameters.OrderBy(p => p.Key).Select(p => p.Value);
-            string dataString = string.Concat(parameters.Values);
-
-            //string inputString = string.Concat(sortedValues);
-
+            string dataString = string.Concat(sortedValues);
             string expectedSecurity = GenerateHMACSHA256(dataString, _sharedKey);
 
             return expectedSecurity == providedSecurity;

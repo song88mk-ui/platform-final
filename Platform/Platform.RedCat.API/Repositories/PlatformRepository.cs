@@ -99,6 +99,7 @@ namespace Platform.RedCat.API.Repositories
                 }, activity);
             }
 
+            activity?.SetStatus(ActivityStatusCode.Ok);
             return new RedCatBaseResponseDTO<ValidateTokenResponseDTO>
             {
                 StatusCode = RedCatStatusCode.Success,
@@ -155,6 +156,7 @@ namespace Platform.RedCat.API.Repositories
                 if (authenticationResponse.StatusCode != RedCatStatusCode.Success)
                     return ReturnErrorBetResponse<WalletBalanceResponseDTO>(RedCatStatusCode.Operator_Error, result, activity);
 
+                activity?.SetStatus(ActivityStatusCode.Ok);
                 return new RedCatBaseResponseDTO<WalletBalanceResponseDTO>()
                 {
                     StatusCode = RedCatStatusCode.Success,

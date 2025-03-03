@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Cors;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Platform.RedCat.API.Models;
 using Platform.RedCat.API.Repositories;
 using Platform.Shared.Enums;
 using Platform.Shared.Models.RedCat;
+using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Platform.RedCat.API.Controllers
@@ -13,16 +16,35 @@ namespace Platform.RedCat.API.Controllers
     public class IntegrationController : ControllerBase
     {
         private readonly IPlatformRepository _platformRepository;
+        private readonly TelemetryClient _telemetryClient;
 
-        public IntegrationController(IPlatformRepository transactionRepository)
+        public IntegrationController(IPlatformRepository transactionRepository, TelemetryClient telemetryClient)
         {
             _platformRepository = transactionRepository;
+            _telemetryClient = telemetryClient;
         }
 
         [HttpPost("validatetoken")]
         public async Task<IActionResult> ValidateToken([FromBody] ValidateTokenRequestDTO request)
         {
             var result = await _platformRepository.ValidateToken(request);
+
+            var parameters = request;
+
+            var properties = new Dictionary<string, string>
+                            {
+                                //{ "ipAddress", ipAddress },
+                                //{ "x-api-key", apiKey },
+                                //{ "x-client-id", clientId },
+                                //{ "user-agent", userAgent },
+                                //{ "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+            _telemetryClient.TrackEvent("e:api/redcat/validatetoken", properties);
 
             switch (result.StatusCode)
             {
@@ -37,6 +59,23 @@ namespace Platform.RedCat.API.Controllers
         public async Task<IActionResult> GetBalance([FromBody] WalletBalanceRequestDTO request)
         {
             var result = await _platformRepository.GetWalletBalance(request);
+
+            var parameters = request;
+
+            var properties = new Dictionary<string, string>
+                            {
+                                //{ "ipAddress", ipAddress },
+                                //{ "x-api-key", apiKey },
+                                //{ "x-client-id", clientId },
+                                //{ "user-agent", userAgent },
+                                //{ "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+            _telemetryClient.TrackEvent("e:api/redcat/getbalance", properties);
 
             switch (result.StatusCode)
             {

@@ -31,6 +31,8 @@ namespace Platform.RedCat.API
                 .AddContexts(Configuration)
                 .AddHttpClients(Configuration)
                 .AddRepositories();
+
+            services.AddApplicationInsightsTelemetry();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

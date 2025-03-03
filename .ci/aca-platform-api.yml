@@ -230,7 +230,7 @@ stages:
                         curl -sd "{\"text\": \"Deployment Platform.API, Build: ${BUILD_BUILDID} to PRODUCTION succeeded.\"}" ${SLACK_URL}
 
   - stage: stage_production_release_32290
-    dependsOn: stage_staging_release
+    dependsOn: stage_staging_release_32290
     displayName: Production - Deploy 32290
     variables:
       - group: PRODUCTION_TRIGGER_STAGE1 # requires approval

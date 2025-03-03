@@ -107,7 +107,7 @@ namespace Platform.RedCat.API.Repositories
                 Result = new ValidateTokenResponseDTO()
                 {
                     StatusCode = (int)authenticationResponse.StatusCode,
-                    MemberCode = string.Empty,
+                    MemberCode = authenticationResponse.Result.UserId,
                     OperatorId = clientResponse.Result.ClientId.ToString(),
                     Currency = Formatting.GetCurrencyCode(authenticationResponse.Result.CurrencyCode).ToString()
                 }
@@ -155,6 +155,19 @@ namespace Platform.RedCat.API.Repositories
 
                 if (authenticationResponse.StatusCode != RedCatStatusCode.Success)
                     return ReturnErrorBetResponse<WalletBalanceResponseDTO>(RedCatStatusCode.Operator_Error, result, activity);
+
+                //if(authenticationResponse.Result.UserId != request.MemberCode)
+                //{
+                //    return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                //    {
+                //        StatusCode = RedCatStatusCode.Unknown_Member_Code,
+                //        Message = RedCatStatusCode.Unknown_Member_Code.GetDescription(),
+                //        Result = new RedCatBetTransactionResponseDTO()
+                //        {
+                //            StatusCode = (int)RedCatStatusCode.Unknown_Member_Code
+                //        }
+                //    };
+                //}
 
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 return new RedCatBaseResponseDTO<WalletBalanceResponseDTO>()
@@ -277,6 +290,19 @@ namespace Platform.RedCat.API.Repositories
                     }
                 };
 
+            //if(authenticationResponse.Result.UserId != request.MemberCode)
+            //{
+            //    return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+            //    {
+            //        StatusCode = RedCatStatusCode.Unknown_Member_Code,
+            //        Message = RedCatStatusCode.Unknown_Member_Code.GetDescription(),
+            //        Result = new RedCatBetTransactionResponseDTO()
+            //        {
+            //            StatusCode = (int)RedCatStatusCode.Unknown_Member_Code
+            //        }
+            //    };
+            //}
+
             var rate = await GetExchangeRate(authenticationResponse.Result.CurrencyCode);
 
             var bettingResponse = await _bettingRepository.PlaceBet(new RedCatBetRequest()
@@ -305,7 +331,7 @@ namespace Platform.RedCat.API.Repositories
                 {
                     StatusCode = (int)RedCatStatusCode.Success,
                     Balance = bettingResponse.Result.Balance,
-                    TransactionRefId = bettingResponse.Result.TransactionRefId
+                    TransactionRefId = bettingResponse.Result.TransactionRefId,
                 }
             };
         }
@@ -355,6 +381,19 @@ namespace Platform.RedCat.API.Repositories
                         StatusCode = authenticationResponse.Result.StatusId
                     }
                 };
+
+            //if(authenticationResponse.Result.UserId != request.MemberCode)
+            //{
+            //    return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+            //    {
+            //        StatusCode = RedCatStatusCode.Unknown_Member_Code,
+            //        Message = RedCatStatusCode.Unknown_Member_Code.GetDescription(),
+            //        Result = new RedCatBetTransactionResponseDTO()
+            //        {
+            //            StatusCode = (int)RedCatStatusCode.Unknown_Member_Code
+            //        }
+            //    };
+            //}
 
             var bettingResponse = await _bettingRepository.SettleBet(new RedCatBetRequest()
             {
@@ -430,6 +469,19 @@ namespace Platform.RedCat.API.Repositories
                         StatusCode = authenticationResponse.Result.StatusId
                     }
                 };
+
+            //if(authenticationResponse.Result.UserId != request.MemberCode)
+            //{
+            //    return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+            //    {
+            //        StatusCode = RedCatStatusCode.Unknown_Member_Code,
+            //        Message = RedCatStatusCode.Unknown_Member_Code.GetDescription(),
+            //        Result = new RedCatBetTransactionResponseDTO()
+            //        {
+            //            StatusCode = (int)RedCatStatusCode.Unknown_Member_Code
+            //        }
+            //    };
+            //}
 
             var bettingResponse = await _bettingRepository.VoidStake(new RedCatVoidBetRequest()
             {
@@ -507,6 +559,19 @@ namespace Platform.RedCat.API.Repositories
                     }
                 };
 
+            //if(authenticationResponse.Result.UserId != request.MemberCode)
+            //{
+            //    return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+            //    {
+            //        StatusCode = RedCatStatusCode.Unknown_Member_Code,
+            //        Message = RedCatStatusCode.Unknown_Member_Code.GetDescription(),
+            //        Result = new RedCatBetTransactionResponseDTO()
+            //        {
+            //            StatusCode = (int)RedCatStatusCode.Unknown_Member_Code
+            //        }
+            //    };
+            //}
+
             var bettingResponse = await _bettingRepository.VoidSettle(new RedCatVoidBetRequest()
             {
                 BetId = request.BetId,
@@ -544,7 +609,7 @@ namespace Platform.RedCat.API.Repositories
                 return false;
 
             var parameters = JsonSerializer.Deserialize<Dictionary<string, string>>(JsonSerializer.Serialize(request));
-            parameters.Remove("security");
+            parameters.Remove("Security");
 
             var sortedValues = parameters.OrderBy(p => p.Key).Select(p => p.Value);
 

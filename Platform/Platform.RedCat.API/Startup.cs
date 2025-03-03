@@ -21,6 +21,20 @@ namespace Platform.RedCat.API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddTelemetry(Configuration);
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAllOrigins",
+                    builder =>
+                    {
+                        builder
+                       .SetPreflightMaxAge(System.TimeSpan.FromHours(24))
+                       .AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+                    });
+            });
+
             services.AddHealthChecks();
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -44,6 +58,7 @@ namespace Platform.RedCat.API
             }
 
             app.UseRouting();
+            app.UseCors("AllowAllOrigins");
 
             app.UseSwagger();
             app.UseSwaggerUI(c =>

@@ -8,8 +8,10 @@ namespace Platform.Shared.Models.RedCat
         public string BetIdRef { get; set; }
         public string ClientId { get; set; }
         public string ClientCode { get; set; }
-        public string OperatorToken { get; set; }
         public string Endpoint { get; set; }
+        public string MemberCode { get; set; }
+        public string OperatorId { get; set; }
+        public string OperatorToken { get; set; }
         public string CurrencyCode { get; set; }
         public long BetMarketId { get; set; }
         public string GameId { get; set; }

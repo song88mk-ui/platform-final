@@ -15,9 +15,14 @@ namespace Platform.Betting.API
         {
             CreateHostBuilder(args).Build().Run();
         }
-        // 
+
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    logging.AddSimpleConsole(opts => { opts.SingleLine = true; });
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();

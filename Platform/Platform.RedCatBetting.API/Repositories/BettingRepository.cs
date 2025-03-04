@@ -110,6 +110,7 @@ namespace Platform.RedCatBetting.API.Repositories
                     ClientCode = request.ClientCode.ToString(),
                     OperatorToken = request.OperatorToken,
                     Endpoint = request.Endpoint,
+                    MemberCode = request.MemberCode,
                     CurrencyCode = betEntity.CurrencyCode,
                     BetMarketId = request.BetMarketId,
                     GameId = request.GameId,

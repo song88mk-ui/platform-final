@@ -34,8 +34,6 @@ namespace Platform.RedCat.API.Controllers
             var properties = new Dictionary<string, string>
                             {
                                 //{ "ipAddress", ipAddress },
-                                //{ "x-api-key", apiKey },
-                                //{ "x-client-id", clientId },
                                 //{ "user-agent", userAgent },
                                 //{ "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -65,8 +63,6 @@ namespace Platform.RedCat.API.Controllers
             var properties = new Dictionary<string, string>
                             {
                                 //{ "ipAddress", ipAddress },
-                                //{ "x-api-key", apiKey },
-                                //{ "x-client-id", clientId },
                                 //{ "user-agent", userAgent },
                                 //{ "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -105,6 +101,21 @@ namespace Platform.RedCat.API.Controllers
         {
             var result = await _platformRepository.Stake(request);
 
+            var parameters = request;
+
+            var properties = new Dictionary<string, string>
+                            {
+                                //{ "ipAddress", ipAddress },
+                                //{ "user-agent", userAgent },
+                                //{ "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+            _telemetryClient.TrackEvent("e:api/redcat/stake", properties);
+
             switch (result.StatusCode)
             {
                 case RedCatStatusCode.Success:
@@ -118,6 +129,21 @@ namespace Platform.RedCat.API.Controllers
         public async Task<IActionResult> Settle([FromBody] RedCatBetTransactionRequestDTO request)
         {
             var result = await _platformRepository.Settle(request);
+
+            var parameters = request;
+
+            var properties = new Dictionary<string, string>
+                            {
+                                //{ "ipAddress", ipAddress },
+                                //{ "user-agent", userAgent },
+                                //{ "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+            _telemetryClient.TrackEvent("e:api/redcat/settle", properties);
 
             switch (result.StatusCode)
             {
@@ -134,6 +160,21 @@ namespace Platform.RedCat.API.Controllers
         {
             var result = await _platformRepository.VoidStake(request);
 
+            var parameters = request;
+
+            var properties = new Dictionary<string, string>
+                            {
+                                //{ "ipAddress", ipAddress },
+                                //{ "user-agent", userAgent },
+                                //{ "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+            _telemetryClient.TrackEvent("e:api/redcat/voidstake", properties);
+
             switch (result.StatusCode)
             {
                 case RedCatStatusCode.Success:
@@ -148,6 +189,21 @@ namespace Platform.RedCat.API.Controllers
         public async Task<IActionResult> VoidSettle([FromBody] RedCatVoidBetTransactionRequestDTO request)
         {
             var result = await _platformRepository.VoidSettle(request);
+
+            var parameters = request;
+
+            var properties = new Dictionary<string, string>
+                            {
+                                //{ "ipAddress", ipAddress },
+                                //{ "user-agent", userAgent },
+                                //{ "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode.ToString() },
+                                { "message", result.Message.ToString() },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
+
+            _telemetryClient.TrackEvent("e:api/redcat/voidsettle", properties);
 
             switch (result.StatusCode)
             {

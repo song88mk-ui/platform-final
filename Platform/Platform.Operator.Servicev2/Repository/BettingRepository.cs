@@ -476,7 +476,6 @@ namespace Platform.Operator.Servicev2.Repository
                             StackTrace = ex.StackTrace,
                             InnerException = ex.InnerException.ToString()
                         }, "OnBetPlacementError", "r.bet.placement.error", correlationId);
-
                     }
                 }
             }

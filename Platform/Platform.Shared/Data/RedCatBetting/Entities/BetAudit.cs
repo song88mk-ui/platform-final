@@ -18,6 +18,7 @@ namespace Platform.Shared.Data.RedCatBetting.Entities
         public decimal ExchangeRate { get; set; }
         public int BetStatusId { get; set; }
         public string BetStatusName { get; set; }
+        public string Reason { get; set; }
         public string GameId { get; set; }
         public long BetMarketId { get; set; }
         [Column(TypeName = "decimal(26,12)")]

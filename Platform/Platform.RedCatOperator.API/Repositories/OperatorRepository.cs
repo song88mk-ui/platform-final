@@ -39,7 +39,7 @@ namespace Platform.RedCatOperator.API.Repositories
         public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessBetPlacement(RedCatOperatorBetTransactionRequest request)
         {
             var path = $"v1/vs/bet/placement";
-            var endpointUrl = $"{request.Endpoint}{path}";
+            var endpointUrl = $"{request.Endpoint}/{path}";
 
             var action = "VSBetPlacement";
 
@@ -86,7 +86,7 @@ namespace Platform.RedCatOperator.API.Repositories
                         };
                     }
 
-                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload);
+                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                     if (operatorResponse == null)
                         return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
@@ -99,7 +99,7 @@ namespace Platform.RedCatOperator.API.Repositories
                             }
                         };
 
-                    if (operatorResponse.StatusId != 100)
+                    if (operatorResponse.StatusId != 1000)
                         return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                         {
                             StatusCode = StatusCode.Operator_Error,
@@ -162,7 +162,7 @@ namespace Platform.RedCatOperator.API.Repositories
         public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessSettleBet(RedCatOperatorBetTransactionRequest request)
         {
             var path = $"v1/vs/bet/settlement";
-            var endpointUrl = $"{request.Endpoint}{path}";
+            var endpointUrl = $"{request.Endpoint}/{path}";
 
             var action = "VSBetPlacement";
 
@@ -209,7 +209,7 @@ namespace Platform.RedCatOperator.API.Repositories
                         };
                     }
 
-                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload);
+                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                     if (operatorResponse == null)
                         return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
@@ -222,7 +222,7 @@ namespace Platform.RedCatOperator.API.Repositories
                             }
                         };
 
-                    if (operatorResponse.StatusId != 100)
+                    if (operatorResponse.StatusId != 1000)
                         return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                         {
                             StatusCode = StatusCode.Operator_Error,
@@ -285,7 +285,7 @@ namespace Platform.RedCatOperator.API.Repositories
         public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessVoidPlacement(RedCatOperatorBetTransactionRequest request)
         {
             var path = $"v1/vs/bet/settlement";
-            var endpointUrl = $"{request.Endpoint}{path}";
+            var endpointUrl = $"{request.Endpoint}/{path}";
 
             var action = "VSVoidPlacement";
 
@@ -331,7 +331,7 @@ namespace Platform.RedCatOperator.API.Repositories
                         };
                     }
 
-                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload);
+                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                     if (operatorResponse == null)
                         return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
@@ -344,7 +344,7 @@ namespace Platform.RedCatOperator.API.Repositories
                             }
                         };
 
-                    if (operatorResponse.StatusId != 100)
+                    if (operatorResponse.StatusId != 1000)
                         return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                         {
                             StatusCode = StatusCode.Operator_Error,
@@ -407,7 +407,7 @@ namespace Platform.RedCatOperator.API.Repositories
         public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessVoidSettlement(RedCatOperatorBetTransactionRequest request)
         {
             var path = $"v1/vs/bet/settlement";
-            var endpointUrl = $"{request.Endpoint}{path}";
+            var endpointUrl = $"{request.Endpoint}/{path}";
 
             var action = "VSVoidSettlement";
 
@@ -453,7 +453,7 @@ namespace Platform.RedCatOperator.API.Repositories
                         };
                     }
 
-                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload);
+                    var operatorResponse = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                     if (operatorResponse == null)
                         return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
@@ -465,8 +465,8 @@ namespace Platform.RedCatOperator.API.Repositories
                                 StatusCode = (int)RedCatStatusCode.Operator_Error
                             }
                         };
-
-                    if (operatorResponse.StatusId != 100)
+                    
+                    if (operatorResponse.StatusId != 1000)
                         return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                         {
                             StatusCode = StatusCode.Operator_Error,

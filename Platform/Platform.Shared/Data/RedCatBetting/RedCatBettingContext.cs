@@ -12,9 +12,11 @@ namespace Platform.Shared.Data.RedCatBetting
         {
             modelBuilder.Entity<Bet>().HasKey(k => new { k.BetId });
             modelBuilder.Entity<BetAudit>().HasKey(k => new { k.Id });
+            //modelBuilder.Entity<BetMapping>().HasKey(k => new { k.BetIdRef });
         }
 
         public DbSet<Bet> Bet { get; set; }
         public DbSet<BetAudit> BetAudit { get; set; }
+        //public DbSet<BetMapping> BetMapping { get; set; }
     }
 }

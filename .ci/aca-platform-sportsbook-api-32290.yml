@@ -7,7 +7,7 @@ trigger:
   batch: true
   branches:
     include:
-      - main
+      - 32290
   paths:
     include:
       - Platform/Platform.Sportsbook.API

@@ -12,7 +12,7 @@ namespace Platform.RedCatOperator.API.Controllers
     {
         private readonly IOperatorRepository _operatorRepository;
 
-        public IntegrationController(OperatorRepository operatorRepository)
+        public IntegrationController(IOperatorRepository operatorRepository)
         {
             _operatorRepository = operatorRepository;
         }

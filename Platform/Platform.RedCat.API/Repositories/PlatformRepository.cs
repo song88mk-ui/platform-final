@@ -223,7 +223,7 @@ namespace Platform.RedCat.API.Repositories
                     }
                 };
 
-            if(!decimal.TryParse(request.TransactionAmt, out decimal transactionAmount))
+            if (!decimal.TryParse(request.TransactionAmt, out decimal transactionAmount))
             {
                 var statusCode = RedCatStatusCode.Error;
                 return new RedCatBaseResponseDTO<ApprovalResponseDTO>()
@@ -275,7 +275,7 @@ namespace Platform.RedCat.API.Repositories
                 };
             }
 
-            if (!decimal.TryParse(request.TransactionAmt, out decimal transactionAmount) || !long.TryParse(request.BetId, out long betId) || 
+            if (!decimal.TryParse(request.TransactionAmt, out decimal transactionAmount) || !long.TryParse(request.BetId, out long betId) ||
                 !long.TryParse(request.BetMarketId, out long betMarketId) || !long.TryParse(request.TransactionId, out long transactionId) ||
                 !DateTime.TryParse(request.EventDate, out DateTime eventDate))
             {
@@ -355,8 +355,19 @@ namespace Platform.RedCat.API.Repositories
                 GameId = request.GameId,
             });
 
-            if(bettingResponse.StatusCode != StatusCode.Success)
+            if (bettingResponse.StatusCode != StatusCode.Success)
             {
+                if (bettingResponse.Result == null)
+                    return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                    {
+                        StatusCode = RedCatStatusCode.Error,
+                        Message = RedCatStatusCode.Error.GetDescription(),
+                        Result = new RedCatBetTransactionResponseDTO()
+                        {
+                            StatusCode = (int)RedCatStatusCode.Error,
+                        }
+                    };
+
                 return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
                 {
                     StatusCode = RedCatStatusCode.Error,
@@ -477,6 +488,17 @@ namespace Platform.RedCat.API.Repositories
 
             if (bettingResponse.StatusCode != StatusCode.Success)
             {
+                if (bettingResponse.Result == null)
+                    return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                    {
+                        StatusCode = RedCatStatusCode.Error,
+                        Message = RedCatStatusCode.Error.GetDescription(),
+                        Result = new RedCatBetTransactionResponseDTO()
+                        {
+                            StatusCode = (int)RedCatStatusCode.Error,
+                        }
+                    };
+
                 return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
                 {
                     StatusCode = RedCatStatusCode.Error,
@@ -598,6 +620,17 @@ namespace Platform.RedCat.API.Repositories
 
             if (bettingResponse.StatusCode != StatusCode.Success)
             {
+                if (bettingResponse.Result == null)
+                    return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                    {
+                        StatusCode = RedCatStatusCode.Error,
+                        Message = RedCatStatusCode.Error.GetDescription(),
+                        Result = new RedCatBetTransactionResponseDTO()
+                        {
+                            StatusCode = (int)RedCatStatusCode.Error,
+                        }
+                    };
+
                 return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
                 {
                     StatusCode = RedCatStatusCode.Error,
@@ -719,6 +752,17 @@ namespace Platform.RedCat.API.Repositories
 
             if (bettingResponse.StatusCode != StatusCode.Success)
             {
+                if (bettingResponse.Result == null)
+                    return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                    {
+                        StatusCode = RedCatStatusCode.Error,
+                        Message = RedCatStatusCode.Error.GetDescription(),
+                        Result = new RedCatBetTransactionResponseDTO()
+                        {
+                            StatusCode = (int)RedCatStatusCode.Error,
+                        }
+                    };
+
                 return new RedCatBaseResponseDTO<RedCatBetTransactionResponseDTO>()
                 {
                     StatusCode = RedCatStatusCode.Error,

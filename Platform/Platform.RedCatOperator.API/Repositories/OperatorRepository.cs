@@ -26,9 +26,10 @@ namespace Platform.RedCatOperator.API.Repositories
         private readonly object _lock = new object();
         private List<HttpClient> _httpClients = new List<HttpClient>();
         private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions();
-        public OperatorRepository(PlatformContext platformContext)
+        public OperatorRepository(IConfiguration configuration, PlatformContext platformContext)
         {
             _platformContext = platformContext;
+            _configuration = configuration;
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase

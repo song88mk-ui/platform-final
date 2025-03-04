@@ -45,13 +45,13 @@ namespace Platform.RedCatOperator.API.Repositories
 
             var operatorRequest = new OperatorRedCatBetRequestDTO()
             {
-                BetId = request.BetIdRef,
+                BetId = request.BetId.ToString(),
                 MarketId = request.BetMarketId,
                 GameId = request.GameId,
                 BetStatus = request.BetStatusName,
                 //BetStatusId = request.BetStatusId,
                 //BetStatusName = request.BetStatusName,
-                //UserId = request.MemberCode,
+                UserId = request.MemberCode,
                 Amount = request.Stake,
                 Reason = string.Empty
             };
@@ -168,13 +168,13 @@ namespace Platform.RedCatOperator.API.Repositories
 
             var operatorRequest = new OperatorRedCatBetSettlementRequestDTO()
             {
-                BetId = request.BetIdRef,
+                BetId = request.BetId.ToString(),
                 MarketId = request.BetMarketId,
                 GameId = request.GameId,
                 BetStatus = request.BetStatusName,
                 //BetStatusId = request.BetStatusId,
                 //BetStatusName = request.BetStatusName,
-                //UserId = request.MemberCode,
+                UserId = request.MemberCode,
                 Payout = request.Payout,
                 Amount = request.Stake,
                 Reason = string.Empty
@@ -291,13 +291,13 @@ namespace Platform.RedCatOperator.API.Repositories
 
             var operatorRequest = new OperatorRedCatBetRequestDTO()
             {
-                BetId = request.BetIdRef,
+                BetId = request.BetId.ToString(),
                 MarketId = request.BetMarketId,
                 GameId = request.GameId,
                 BetStatus = request.BetStatusName,
                 //BetStatusId = request.BetStatusId,
                 //BetStatusName = request.BetStatusName,
-                //UserId = request.MemberCode,
+                UserId = request.MemberCode,
                 Amount = request.Stake,
                 Reason = string.Empty
             };
@@ -413,13 +413,13 @@ namespace Platform.RedCatOperator.API.Repositories
 
             var operatorRequest = new OperatorRedCatBetRequestDTO()
             {
-                BetId = request.BetIdRef,
+                BetId = request.BetId.ToString(),
                 MarketId = request.BetMarketId,
                 GameId = request.GameId,
                 BetStatus = request.BetStatusName,
                 //BetStatusId = request.BetStatusId,
                 //BetStatusName = request.BetStatusName,
-                //UserId = request.MemberCode,
+                UserId = request.MemberCode,
                 Amount = request.Stake,
                 Reason = string.Empty
             };

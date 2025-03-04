@@ -38,7 +38,7 @@ namespace Platform.RedCatOperator.API.Repositories
 
         public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessBetPlacement(RedCatOperatorBetTransactionRequest request)
         {
-            var path = $"/vs/bet/placement";
+            var path = $"v1/vs/bet/placement";
             var endpointUrl = $"{request.Endpoint}{path}";
 
             var action = "VSBetPlacement";
@@ -161,7 +161,7 @@ namespace Platform.RedCatOperator.API.Repositories
         }
         public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessSettleBet(RedCatOperatorBetTransactionRequest request)
         {
-            var path = $"/vs/bet/settlement";
+            var path = $"v1/vs/bet/settlement";
             var endpointUrl = $"{request.Endpoint}{path}";
 
             var action = "VSBetPlacement";
@@ -284,7 +284,7 @@ namespace Platform.RedCatOperator.API.Repositories
         }
         public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessVoidPlacement(RedCatOperatorBetTransactionRequest request)
         {
-            var path = $"/vs/bet/settlement";
+            var path = $"v1/vs/bet/settlement";
             var endpointUrl = $"{request.Endpoint}{path}";
 
             var action = "VSVoidPlacement";
@@ -406,7 +406,7 @@ namespace Platform.RedCatOperator.API.Repositories
         }
         public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessVoidSettlement(RedCatOperatorBetTransactionRequest request)
         {
-            var path = $"/vs/bet/settlement";
+            var path = $"v1/vs/bet/settlement";
             var endpointUrl = $"{request.Endpoint}{path}";
 
             var action = "VSVoidSettlement";

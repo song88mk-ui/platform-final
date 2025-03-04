@@ -11415,9 +11415,10 @@ namespace Platform.Sportsbook.API.Repository
 
         private bool IsOEEnable(string clientCode)
         {
+            if (clientCode == "TTS") //Add client codes for ODDS Feed Clients
+                return false;
+
             return true;
-            //if (string.IsNullOrEmpty(clientCode))
-            //    return false;
             //return _configuration["Custom:ClientCodes"].Contains(clientCode) ? true : false;
         }
 

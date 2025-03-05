@@ -490,7 +490,7 @@ namespace Platform.RedCat.API.Repositories
             activity?.SetTag("security.key", request.Security);
 
             activity?.AddEvent(new ActivityEvent("validate.security.key"));
-            if (!IsValidSecurity<RedCatBetTransactionRequestDTO>(request, request.Security))
+            if (!IsValidSecurity<RedCatVoidBetTransactionRequestDTO>(request, request.Security))
             {
                 var statusCode = RedCatStatusCode.Invalid_Security_Hash;
 
@@ -601,7 +601,7 @@ namespace Platform.RedCat.API.Repositories
             activity?.SetTag("security.key", request.Security);
 
             activity?.AddEvent(new ActivityEvent("validate.security.key"));
-            if (!IsValidSecurity<RedCatBetTransactionRequestDTO>(request, request.Security))
+            if (!IsValidSecurity<RedCatVoidBetTransactionRequestDTO>(request, request.Security))
             {
                 var statusCode = RedCatStatusCode.Invalid_Security_Hash;
 

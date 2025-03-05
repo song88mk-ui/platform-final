@@ -58,7 +58,7 @@ namespace Platform.RedCatBetting.API.Controllers
             }
         }
 
-        [HttpPost("void/placement")]
+        [HttpPost("void/settlement")]
         public async Task<IActionResult> VoidSettlement(RedCatVoidBetRequest request)
         {
             var result = await _bettingRepositories.VoidSettlement(request);

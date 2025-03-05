@@ -561,7 +561,7 @@ namespace Platform.RedCatBetting.API.Repositories
                 {
                     _redCatBettingContext.Update(betEntity);
 
-                    var betAudit = _redCatBettingContext.BetAudit.Add(new BetAudit()
+                    var betAuditEntity = _redCatBettingContext.BetAudit.Add(new BetAudit()
                     {
                         BetId = betEntity.BetId,
                         TransactionId = request.TransactionId,
@@ -584,7 +584,7 @@ namespace Platform.RedCatBetting.API.Repositories
                         BetIdRef = betEntity.BetIdRef,
                         RollbackTransactionId = request.RollbackTransactionId,
                         Timestamp = timestamp
-                    });
+                    }).Entity;
 
                     _redCatBettingContext.SaveChanges();
                     scope.Complete();

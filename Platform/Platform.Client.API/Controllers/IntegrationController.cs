@@ -26,7 +26,7 @@ namespace Platform.Client.API.Controllers
 
         [HttpGet("v1/sportsbook/activefixtures"), ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> GetActiveFixtures()
-        {
+        {//
             var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();

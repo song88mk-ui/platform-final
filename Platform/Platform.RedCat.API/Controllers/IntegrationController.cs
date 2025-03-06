@@ -105,9 +105,10 @@ namespace Platform.RedCat.API.Controllers
 
             var properties = new Dictionary<string, string>
                             {
-                                //{ "ipAddress", ipAddress },
-                                //{ "user-agent", userAgent },
-                                //{ "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                //{ "ipAddress", ipAddress },
+                //{ "user-agent", userAgent },
+                //{ "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "betref.id" , request.BetId  },
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },
@@ -137,6 +138,7 @@ namespace Platform.RedCat.API.Controllers
                                 //{ "ipAddress", ipAddress },
                                 //{ "user-agent", userAgent },
                                 //{ "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "betIdRef" , request.BetId  },
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },
@@ -167,6 +169,7 @@ namespace Platform.RedCat.API.Controllers
                                 //{ "ipAddress", ipAddress },
                                 //{ "user-agent", userAgent },
                                 //{ "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "betIdRef" , request.BetId  },
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },
@@ -197,6 +200,7 @@ namespace Platform.RedCat.API.Controllers
                                 //{ "ipAddress", ipAddress },
                                 //{ "user-agent", userAgent },
                                 //{ "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "betIdRef" , request.BetId  },
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode.ToString() },
                                 { "message", result.Message.ToString() },

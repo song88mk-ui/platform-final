@@ -29,6 +29,18 @@ namespace Platform.RedCatBetting.API.Repositories
             {
                 var timestamp = DateTime.UtcNow;
 
+                var betAudit = _redCatBettingContext.BetAudit.FirstOrDefault(c => c.TransactionId == request.TransactionId);
+                if (betAudit != null)
+                    return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                    {
+                        StatusCode = StatusCode.Record_Is_Already_Existing,
+                        Message = StatusCode.Record_Is_Already_Existing.GetDescription(),
+                        Result = new RedCatBetTransactionResponseDTO()
+                        {
+                            StatusCode = (int)StatusCode.Record_Is_Already_Existing
+                        }
+                    };
+
                 var bet = _redCatBettingContext.Bet.FirstOrDefault(c => c.BetIdRef == request.BetId.ToString());
 
                 if (bet != null)
@@ -76,7 +88,7 @@ namespace Platform.RedCatBetting.API.Repositories
                     //    ClientId = betEntity.ClientId
                     //});
 
-                    var betAudit = _redCatBettingContext.BetAudit.Add(new BetAudit()
+                    var betAuditEntity = _redCatBettingContext.BetAudit.Add(new BetAudit()
                     {
                         TransactionId = request.TransactionId,
                         BetId = betEntity.BetId,
@@ -103,7 +115,7 @@ namespace Platform.RedCatBetting.API.Repositories
                     _redCatBettingContext.SaveChanges();
                     scope.Complete();
 
-                    transactionRefId = betAudit.Id.ToString();
+                    transactionRefId = betAuditEntity.Id.ToString();
                 }
 
                 var operatorResponse = await _operatorRepository.ProcessBetPlacement(new RedCatOperatorBetTransactionRequest()
@@ -211,6 +223,18 @@ namespace Platform.RedCatBetting.API.Repositories
             try
             {
                 var timestamp = DateTime.UtcNow;
+
+                var betAudit = _redCatBettingContext.BetAudit.FirstOrDefault(c => c.TransactionId == request.TransactionId);
+                if (betAudit != null)
+                    return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                    {
+                        StatusCode = StatusCode.Record_Is_Already_Existing,
+                        Message = StatusCode.Record_Is_Already_Existing.GetDescription(),
+                        Result = new RedCatBetTransactionResponseDTO()
+                        {
+                            StatusCode = (int)StatusCode.Record_Is_Already_Existing
+                        }
+                    };
 
                 var betEntity = _redCatBettingContext.Bet.FirstOrDefault(c => c.BetIdRef == request.BetId.ToString());
 
@@ -368,6 +392,18 @@ namespace Platform.RedCatBetting.API.Repositories
                 var timestamp = DateTime.UtcNow;
                 var transactionIdRef = string.Empty;
 
+                var betAudit = _redCatBettingContext.BetAudit.FirstOrDefault(c => c.TransactionId == request.TransactionId);
+                if (betAudit != null)
+                    return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                    {
+                        StatusCode = StatusCode.Record_Is_Already_Existing,
+                        Message = StatusCode.Record_Is_Already_Existing.GetDescription(),
+                        Result = new RedCatBetTransactionResponseDTO()
+                        {
+                            StatusCode = (int)StatusCode.Record_Is_Already_Existing
+                        }
+                    };
+
                 var betEntity = _redCatBettingContext.Bet.FirstOrDefault(c => c.BetIdRef == request.BetId.ToString());
 
                 if (betEntity == null || betEntity.BetStatusId != (int)BetStatus.Running)
@@ -524,6 +560,18 @@ namespace Platform.RedCatBetting.API.Repositories
             {
                 var timestamp = DateTime.UtcNow;
                 var transactionIdRef = string.Empty;
+
+                var betAudit = _redCatBettingContext.BetAudit.FirstOrDefault(c => c.TransactionId == request.TransactionId);
+                if (betAudit != null)
+                    return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                    {
+                        StatusCode = StatusCode.Record_Is_Already_Existing,
+                        Message = StatusCode.Record_Is_Already_Existing.GetDescription(),
+                        Result = new RedCatBetTransactionResponseDTO()
+                        {
+                            StatusCode = (int)StatusCode.Record_Is_Already_Existing
+                        }
+                    };
 
                 var betEntity = _redCatBettingContext.Bet.FirstOrDefault(c => c.BetIdRef == request.BetId.ToString());
 

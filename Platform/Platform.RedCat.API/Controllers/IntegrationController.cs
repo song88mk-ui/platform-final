@@ -15,6 +15,7 @@ namespace Platform.RedCat.API.Controllers
     [Route("api/redcat")]
     public class IntegrationController : ControllerBase
     {
+        //
         private readonly IPlatformRepository _platformRepository;
         private readonly TelemetryClient _telemetryClient;
 

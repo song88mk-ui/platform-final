@@ -1,11 +1,15 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Platform.Shared.Data.RedCatBetting.Entities
 {
     public class BetAudit
     {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+        [Key]
         public long TransactionId { get; set; }
         public Guid BetId { get; set; }
         public string CLientId { get; set; }

@@ -45,16 +45,17 @@ namespace Platform.RedCatBetting.API.Repositories
                 if (bet != null)
                     return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                     {
-                        StatusCode = StatusCode.Betting_Restricted,
-                        Message = StatusCode.Betting_Restricted.GetDescription(),
+                        StatusCode = StatusCode.Record_Is_Already_Existing,
+                        Message = StatusCode.Record_Is_Already_Existing.GetDescription(),
                         Result = new RedCatBetTransactionResponseDTO()
                         {
-                            StatusCode = (int)StatusCode.Betting_Restricted
+                            StatusCode = (int)StatusCode.Record_Is_Already_Existing
                         }
                     };
 
                 var betEntity = new Bet();
                 var transactionRefId = string.Empty;
+
                 using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
                 {
                     var betStatus = BetStatus.Running;
@@ -235,7 +236,7 @@ namespace Platform.RedCatBetting.API.Repositories
                         }
                     };
 
-                var betEntity = _redCatBettingContext.Bet.FirstOrDefault(c => c.BetIdRef == request.BetId.ToString());
+                var betEntity = _redCatBettingContext.Bet.FirstOrDefault(c => c.BetIdRef == request.BetId.ToString() && c.BetStatusId < (int)BetStatus.Rejected);
 
                 if (betEntity == null)
                     return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
@@ -405,7 +406,7 @@ namespace Platform.RedCatBetting.API.Repositories
                         }
                     };
 
-                var betEntity = _redCatBettingContext.Bet.FirstOrDefault(c => c.BetIdRef == request.BetId.ToString());
+                var betEntity = _redCatBettingContext.Bet.FirstOrDefault(c => c.BetIdRef == request.BetId.ToString() && c.BetStatusId < (int)BetStatus.Rejected);
 
                 if (betEntity == null || betEntity.BetStatusId != (int)BetStatus.Running)
                     return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
@@ -577,7 +578,7 @@ namespace Platform.RedCatBetting.API.Repositories
                         }
                     };
 
-                var betEntity = _redCatBettingContext.Bet.FirstOrDefault(c => c.BetIdRef == request.BetId.ToString());
+                var betEntity = _redCatBettingContext.Bet.FirstOrDefault(c => c.BetIdRef == request.BetId.ToString() && c.BetStatusId < (int)BetStatus.Rejected);
 
                 if (betEntity == null)
                     return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()

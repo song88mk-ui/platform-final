@@ -2,7 +2,6 @@
 using Platform.Shared.Data.RedCatBetting.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Extensions;
-using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Models.RedCat;
 using System;
@@ -254,11 +253,82 @@ namespace Platform.RedCatBetting.API.Repositories
                 betEntity.BetStatusId = (int)betStatus;
                 betEntity.BetStatusName = betStatus.GetDescription();
                 betEntity.Payout = request.TransactionAmt;
-                betEntity.Reason = "1024 - Ticket accepted";
 
                 var transactionRefId = string.Empty;
+                var operatorResponse = await _operatorRepository.ProcessBetSettlement(new RedCatOperatorBetTransactionRequest()
+                {
+                    BetId = betEntity.BetId,
+                    BetIdRef = betEntity.BetIdRef,
+                    ClientId = betEntity.ClientId,
+                    ClientCode = betEntity.ClientCode,
+                    Endpoint = betEntity.Endpoint,
+                    MemberCode = request.MemberCode,
+                    OperatorId = request.OperatorId,
+                    OperatorToken = betEntity.OperatorToken,
+                    CurrencyCode = betEntity.CurrencyCode,
+                    BetMarketId = request.BetMarketId,
+                    GameId = request.GameId,
+                    BetStatusId = betEntity.BetStatusId,
+                    BetStatusName = betEntity.BetStatusName,
+                    Payout = request.TransactionAmt,
+                    Stake = betEntity.Amount,
+                    BetDate = betEntity.BetDate,
+                    CorrelationId = ConvertToEpochTimestamp(timestamp).ToString(),
+                });
+
+                if (operatorResponse.StatusCode != StatusCode.Success)
+                {
+                    using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+                    {
+                        betEntity.Reason = $"{operatorResponse.StatusCode} - {operatorResponse.Message}";
+                        _redCatBettingContext.Update(betEntity);
+
+                        var betAuditEntity = _redCatBettingContext.BetAudit.Add(new BetAudit()
+                        {
+                            TransactionId = request.TransactionId,
+                            BetId = betEntity.BetId,
+                            CLientId = betEntity.ClientId,
+                            ClientCode = betEntity.ClientCode,
+                            Endpoint = betEntity.Endpoint,
+                            MemberCode = request.MemberCode,
+                            OperatorId = request.OperatorId,
+                            OperatorToken = betEntity.OperatorToken,
+                            CurrencyCode = betEntity.CurrencyCode,
+                            ExchangeRate = betEntity.ExchangeRate,
+                            BetStatusId = betEntity.BetStatusId,
+                            BetStatusName = betEntity.BetStatusName,
+                            Reason = betEntity.Reason,
+                            GameId = betEntity.GameId,
+                            BetMarketId = betEntity.BetMarketId,
+                            Amount = betEntity.Amount,
+                            Payout = betEntity.Payout,
+                            BetDate = betEntity.BetDate,
+                            BetIdRef = betEntity.BetIdRef,
+                            Timestamp = timestamp
+                        }).Entity;
+
+                        _redCatBettingContext.SaveChanges();
+                        scope.Complete();
+
+                        transactionRefId = betAuditEntity.Id.ToString();
+                    }
+
+                    return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                    {
+                        StatusCode = operatorResponse.StatusCode,
+                        Message = operatorResponse.Message,
+                        Result = new RedCatBetTransactionResponseDTO()
+                        {
+                            StatusCode = operatorResponse.Result?.StatusCode ?? (int)operatorResponse.StatusCode,
+                            Balance = operatorResponse.Result?.Balance ?? 0,
+                            TransactionRefId = transactionRefId
+                        }
+                    };
+                }
+
                 using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
                 {
+                    betEntity.Reason = "1024 - Ticket accepted";
                     _redCatBettingContext.Update(betEntity);
 
                     var betAuditEntity = _redCatBettingContext.BetAudit.Add(new BetAudit()
@@ -289,74 +359,6 @@ namespace Platform.RedCatBetting.API.Repositories
                     scope.Complete();
 
                     transactionRefId = betAuditEntity.Id.ToString();
-                }
-
-                var operatorResponse = await _operatorRepository.ProcessBetSettlement(new RedCatOperatorBetTransactionRequest()
-                {
-                    BetId = betEntity.BetId,
-                    BetIdRef = betEntity.BetIdRef,
-                    ClientId = betEntity.ClientId,
-                    ClientCode = betEntity.ClientCode,
-                    Endpoint = betEntity.Endpoint,
-                    MemberCode = request.MemberCode,
-                    OperatorId = request.OperatorId,
-                    OperatorToken = betEntity.OperatorToken,
-                    CurrencyCode = betEntity.CurrencyCode,
-                    BetMarketId = request.BetMarketId,
-                    GameId = request.GameId,
-                    BetStatusId = betEntity.BetStatusId,
-                    BetStatusName = betEntity.BetStatusName,
-                    Payout = request.TransactionAmt,
-                    Stake = betEntity.Amount,
-                    BetDate = betEntity.BetDate,
-                    CorrelationId = ConvertToEpochTimestamp(timestamp).ToString(),
-                });
-
-                if (operatorResponse.StatusCode != StatusCode.Success)
-                {
-                    using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
-                    {
-                        var betAuditEntity = _redCatBettingContext.BetAudit.Add(new BetAudit()
-                        {
-                            TransactionId = request.TransactionId,
-                            BetId = betEntity.BetId,
-                            CLientId = betEntity.ClientId,
-                            ClientCode = betEntity.ClientCode,
-                            Endpoint = betEntity.Endpoint,
-                            MemberCode = request.MemberCode,
-                            OperatorId = request.OperatorId,
-                            OperatorToken = betEntity.OperatorToken,
-                            CurrencyCode = betEntity.CurrencyCode,
-                            ExchangeRate = betEntity.ExchangeRate,
-                            BetStatusId = betEntity.BetStatusId,
-                            BetStatusName = betEntity.BetStatusName,
-                            Reason = $"{operatorResponse.StatusCode} - {operatorResponse.Message}",
-                            GameId = betEntity.GameId,
-                            BetMarketId = betEntity.BetMarketId,
-                            Amount = betEntity.Amount,
-                            Payout = betEntity.Payout,
-                            BetDate = betEntity.BetDate,
-                            BetIdRef = betEntity.BetIdRef,
-                            Timestamp = timestamp
-                        }).Entity;
-
-                        _redCatBettingContext.SaveChanges();
-                        scope.Complete();
-
-                        transactionRefId = betAuditEntity.Id.ToString();
-                    }
-
-                    return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
-                    {
-                        StatusCode = operatorResponse.StatusCode,
-                        Message = operatorResponse.Message,
-                        Result = new RedCatBetTransactionResponseDTO()
-                        {
-                            StatusCode = operatorResponse.Result?.StatusCode ?? (int)operatorResponse.StatusCode,
-                            Balance = operatorResponse.Result?.Balance ?? 0,
-                            TransactionRefId = transactionRefId
-                        }
-                    };
                 }
 
                 return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
@@ -389,7 +391,6 @@ namespace Platform.RedCatBetting.API.Repositories
         {
             try
             {
-                var timestamp = DateTime.UtcNow;
                 var transactionIdRef = string.Empty;
 
                 var betAudit = _redCatBettingContext.BetAudit.FirstOrDefault(c => c.TransactionId == request.TransactionId);
@@ -422,11 +423,84 @@ namespace Platform.RedCatBetting.API.Repositories
                 betEntity.Payout = betEntity.Amount;
                 betEntity.BetStatusId = (int)betStatus;
                 betEntity.BetStatusName = betStatus.GetDescription();
-                betEntity.Reason = "1024 - Ticket accepted";
 
+                var timestamp = DateTime.UtcNow;
                 var transactionRefId = string.Empty;
+
+                var operatorResponse = await _operatorRepository.ProcessBetSettlement(new RedCatOperatorBetTransactionRequest()
+                {
+                    BetId = betEntity.BetId,
+                    BetIdRef = betEntity.BetIdRef,
+                    ClientId = betEntity.ClientId,
+                    ClientCode = betEntity.ClientCode,
+                    Endpoint = betEntity.Endpoint,
+                    MemberCode = request.MemberCode,
+                    OperatorId = request.OperatorId,
+                    OperatorToken = betEntity.OperatorToken,
+                    CurrencyCode = betEntity.CurrencyCode,
+                    BetMarketId = request.BetMarketId,
+                    GameId = request.GameId,
+                    BetStatusId = betEntity.BetStatusId,
+                    BetStatusName = betEntity.BetStatusName,
+                    Payout = betEntity.Amount,
+                    Stake = betEntity.Amount,
+                    BetDate = betEntity.BetDate,
+                    CorrelationId = ConvertToEpochTimestamp(timestamp).ToString(),
+                });
+
+                if (operatorResponse.StatusCode != StatusCode.Success)
+                {
+                    using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+                    {
+                        betEntity.Reason = $"{operatorResponse.StatusCode} - {operatorResponse.Message}";
+                        _redCatBettingContext.Update(betEntity);
+
+                        var betAuditEntity = _redCatBettingContext.BetAudit.Add(new BetAudit()
+                        {
+                            TransactionId = request.TransactionId,
+                            BetId = betEntity.BetId,
+                            CLientId = betEntity.ClientId,
+                            ClientCode = betEntity.ClientCode,
+                            Endpoint = betEntity.Endpoint,
+                            MemberCode = request.MemberCode,
+                            OperatorId = request.OperatorId,
+                            OperatorToken = betEntity.OperatorToken,
+                            CurrencyCode = betEntity.CurrencyCode,
+                            ExchangeRate = betEntity.ExchangeRate,
+                            BetStatusId = betEntity.BetStatusId,
+                            BetStatusName = betEntity.BetStatusName,
+                            Reason = betEntity.Reason,
+                            GameId = betEntity.GameId,
+                            BetMarketId = betEntity.BetMarketId,
+                            Amount = betEntity.Amount,
+                            Payout = betEntity.Payout,
+                            BetDate = betEntity.BetDate,
+                            BetIdRef = betEntity.BetIdRef,
+                            Timestamp = timestamp,
+                        }).Entity;
+
+                        _redCatBettingContext.SaveChanges();
+                        scope.Complete();
+
+                        transactionRefId = betAuditEntity.Id.ToString();
+                    }
+
+                    return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                    {
+                        StatusCode = operatorResponse.StatusCode,
+                        Message = operatorResponse.Message,
+                        Result = new RedCatBetTransactionResponseDTO()
+                        {
+                            StatusCode = operatorResponse.Result?.StatusCode ?? (int)operatorResponse.StatusCode,
+                            Balance = operatorResponse.Result?.Balance ?? 0,
+                            TransactionRefId = transactionRefId
+                        }
+                    };
+                }
+
                 using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
                 {
+                    betEntity.Reason = "1024 - Ticket accepted";
                     _redCatBettingContext.Update(betEntity);
 
                     var betAuditEntity = _redCatBettingContext.BetAudit.Add(new BetAudit()
@@ -459,75 +533,6 @@ namespace Platform.RedCatBetting.API.Repositories
                     transactionRefId = betAuditEntity.Id.ToString();
                 }
 
-                var operatorResponse = await _operatorRepository.ProcessBetSettlement(new RedCatOperatorBetTransactionRequest()
-                {
-                    BetId = betEntity.BetId,
-                    BetIdRef = betEntity.BetIdRef,
-                    ClientId = betEntity.ClientId,
-                    ClientCode = betEntity.ClientCode,
-                    Endpoint = betEntity.Endpoint,
-                    MemberCode = request.MemberCode,
-                    OperatorId = request.OperatorId,
-                    OperatorToken = betEntity.OperatorToken,
-                    CurrencyCode = betEntity.CurrencyCode,
-                    BetMarketId = request.BetMarketId,
-                    GameId = request.GameId,
-                    BetStatusId = betEntity.BetStatusId,
-                    BetStatusName = betEntity.BetStatusName,
-                    Payout = betEntity.Amount,
-                    Stake = betEntity.Amount,
-                    BetDate = betEntity.BetDate,
-                    CorrelationId = ConvertToEpochTimestamp(timestamp).ToString(),
-                });
-
-
-                if (operatorResponse.StatusCode != StatusCode.Success)
-                {
-                    using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
-                    {
-                        var betAuditEntity = _redCatBettingContext.BetAudit.Add(new BetAudit()
-                        {
-                            TransactionId = request.TransactionId,
-                            BetId = betEntity.BetId,
-                            CLientId = betEntity.ClientId,
-                            ClientCode = betEntity.ClientCode,
-                            Endpoint = betEntity.Endpoint,
-                            MemberCode = request.MemberCode,
-                            OperatorId = request.OperatorId,
-                            OperatorToken = betEntity.OperatorToken,
-                            CurrencyCode = betEntity.CurrencyCode,
-                            ExchangeRate = betEntity.ExchangeRate,
-                            BetStatusId = betEntity.BetStatusId,
-                            BetStatusName = betEntity.BetStatusName,
-                            Reason = $"{operatorResponse.StatusCode} - {operatorResponse.Message}",
-                            GameId = betEntity.GameId,
-                            BetMarketId = betEntity.BetMarketId,
-                            Amount = betEntity.Amount,
-                            Payout = betEntity.Payout,
-                            BetDate = betEntity.BetDate,
-                            BetIdRef = betEntity.BetIdRef,
-                            Timestamp = timestamp
-                        }).Entity;
-
-                        _redCatBettingContext.SaveChanges();
-                        scope.Complete();
-
-                        transactionRefId = betAuditEntity.Id.ToString();
-                    }
-
-                    return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
-                    {
-                        StatusCode = operatorResponse.StatusCode,
-                        Message = operatorResponse.Message,
-                        Result = new RedCatBetTransactionResponseDTO()
-                        {
-                            StatusCode = operatorResponse.Result?.StatusCode ?? (int)operatorResponse.StatusCode,
-                            Balance = operatorResponse.Result?.Balance ?? 0,
-                            TransactionRefId = transactionRefId
-                        }
-                    };
-                }
-
                 return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                 {
                     StatusCode = operatorResponse.StatusCode,
@@ -558,7 +563,6 @@ namespace Platform.RedCatBetting.API.Repositories
         {
             try
             {
-                var timestamp = DateTime.UtcNow;
                 var transactionIdRef = string.Empty;
 
                 var betAudit = _redCatBettingContext.BetAudit.FirstOrDefault(c => c.TransactionId == request.TransactionId);
@@ -599,14 +603,90 @@ namespace Platform.RedCatBetting.API.Repositories
                         }
                     };
 
+                var betStatus = BetStatus.Void;
+
                 betEntity.Payout = betTransaction.Payout;
-                betEntity.BetStatusId = betTransaction.BetStatusId;
-                betEntity.BetStatusName = betTransaction.BetStatusName;
-                betEntity.Reason = "1024 - Ticket accepted";
+                betEntity.BetStatusId = (int)betStatus;
+                betEntity.BetStatusName = betStatus.GetDescription();
 
                 var transactionRefId = string.Empty;
+
+                var timestamp = DateTime.UtcNow;
+
+                var operatorResponse = await _operatorRepository.ProcessBetSettlement(new RedCatOperatorBetTransactionRequest()
+                {
+                    BetId = betEntity.BetId,
+                    BetIdRef = betEntity.BetIdRef,
+                    ClientId = betEntity.ClientId,
+                    ClientCode = betEntity.ClientCode,
+                    Endpoint = betEntity.Endpoint,
+                    MemberCode = request.MemberCode,
+                    OperatorId = request.OperatorId,
+                    OperatorToken = betEntity.OperatorToken,
+                    CurrencyCode = betEntity.CurrencyCode,
+                    BetMarketId = request.BetMarketId,
+                    GameId = request.GameId,
+                    BetStatusId = betEntity.BetStatusId,
+                    BetStatusName = betEntity.BetStatusName,
+                    Payout = betEntity.Payout,
+                    Stake = betEntity.Amount,
+                    BetDate = betEntity.BetDate,
+                    CorrelationId = ConvertToEpochTimestamp(timestamp).ToString(),
+                });
+
+                if (operatorResponse.StatusCode != StatusCode.Success)
+                {
+                    using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+                    {
+                        betEntity.Reason = $"{operatorResponse.StatusCode} - {operatorResponse.Message}";
+                        _redCatBettingContext.Update(betEntity);
+
+                        var betAuditEntity = _redCatBettingContext.BetAudit.Add(new BetAudit()
+                        {
+                            TransactionId = request.TransactionId,
+                            BetId = betEntity.BetId,
+                            CLientId = betEntity.ClientId,
+                            ClientCode = betEntity.ClientCode,
+                            Endpoint = betEntity.Endpoint,
+                            MemberCode = request.MemberCode,
+                            OperatorId = request.OperatorId,
+                            OperatorToken = betEntity.OperatorToken,
+                            CurrencyCode = betEntity.CurrencyCode,
+                            ExchangeRate = betEntity.ExchangeRate,
+                            BetStatusId = betEntity.BetStatusId,
+                            BetStatusName = betEntity.BetStatusName,
+                            Reason = betEntity.Reason,
+                            GameId = betEntity.GameId,
+                            BetMarketId = betEntity.BetMarketId,
+                            Amount = betEntity.Amount,
+                            Payout = betEntity.Payout,
+                            BetDate = betEntity.BetDate,
+                            BetIdRef = betEntity.BetIdRef,
+                            Timestamp = timestamp
+                        }).Entity;
+
+                        _redCatBettingContext.SaveChanges();
+                        scope.Complete();
+
+                        transactionRefId = betAuditEntity.Id.ToString();
+                    }
+
+                    return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
+                    {
+                        StatusCode = operatorResponse.StatusCode,
+                        Message = operatorResponse.Message,
+                        Result = new RedCatBetTransactionResponseDTO()
+                        {
+                            StatusCode = operatorResponse.Result?.StatusCode ?? (int)operatorResponse.StatusCode,
+                            Balance = operatorResponse.Result?.Balance ?? 0,
+                            TransactionRefId = transactionRefId
+                        }
+                    };
+                }
+
                 using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
                 {
+                    betEntity.Reason = "1024 - Ticket accepted";
                     _redCatBettingContext.Update(betEntity);
 
                     var betAuditEntity = _redCatBettingContext.BetAudit.Add(new BetAudit()
@@ -638,75 +718,6 @@ namespace Platform.RedCatBetting.API.Repositories
                     scope.Complete();
 
                     transactionRefId = betAuditEntity.Id.ToString();
-                }
-
-                var operatorResponse = await _operatorRepository.ProcessBetSettlement(new RedCatOperatorBetTransactionRequest()
-                {
-                    BetId = betEntity.BetId,
-                    BetIdRef = betEntity.BetIdRef,
-                    ClientId = betEntity.ClientId,
-                    ClientCode = betEntity.ClientCode,
-                    Endpoint = betEntity.Endpoint,
-                    MemberCode = request.MemberCode,
-                    OperatorId = request.OperatorId,
-                    OperatorToken = betEntity.OperatorToken,
-                    CurrencyCode = betEntity.CurrencyCode,
-                    BetMarketId = request.BetMarketId,
-                    GameId = request.GameId,
-                    BetStatusId = betEntity.BetStatusId,
-                    BetStatusName = betEntity.BetStatusName,
-                    Payout = betEntity.Payout,
-                    Stake = betEntity.Amount,
-                    BetDate = betEntity.BetDate,
-                    CorrelationId = ConvertToEpochTimestamp(timestamp).ToString(),
-                });
-
-
-                if (operatorResponse.StatusCode != StatusCode.Success)
-                {
-                    using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
-                    {
-                        var betAuditEntity = _redCatBettingContext.BetAudit.Add(new BetAudit()
-                        {
-                            TransactionId = request.TransactionId,
-                            BetId = betEntity.BetId,
-                            CLientId = betEntity.ClientId,
-                            ClientCode = betEntity.ClientCode,
-                            Endpoint = betEntity.Endpoint,
-                            MemberCode = request.MemberCode,
-                            OperatorId = request.OperatorId,
-                            OperatorToken = betEntity.OperatorToken,
-                            CurrencyCode = betEntity.CurrencyCode,
-                            ExchangeRate = betEntity.ExchangeRate,
-                            BetStatusId = betEntity.BetStatusId,
-                            BetStatusName = betEntity.BetStatusName,
-                            Reason = $"{operatorResponse.StatusCode} - {operatorResponse.Message}",
-                            GameId = betEntity.GameId,
-                            BetMarketId = betEntity.BetMarketId,
-                            Amount = betEntity.Amount,
-                            Payout = betEntity.Payout,
-                            BetDate = betEntity.BetDate,
-                            BetIdRef = betEntity.BetIdRef,
-                            Timestamp = timestamp
-                        }).Entity;
-
-                        _redCatBettingContext.SaveChanges();
-                        scope.Complete();
-
-                        transactionRefId = betAuditEntity.Id.ToString();
-                    }
-
-                    return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
-                    {
-                        StatusCode = operatorResponse.StatusCode,
-                        Message = operatorResponse.Message,
-                        Result = new RedCatBetTransactionResponseDTO()
-                        {
-                            StatusCode = operatorResponse.Result?.StatusCode ?? (int)operatorResponse.StatusCode,
-                            Balance = operatorResponse.Result?.Balance ?? 0,
-                            TransactionRefId = transactionRefId
-                        }
-                    };
                 }
 
                 return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()

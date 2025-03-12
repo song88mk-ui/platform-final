@@ -604,7 +604,7 @@ namespace Platform.RedCatBetting.API.Repositories
                         }
                     };
 
-                var betStatus = BetStatus.Void;
+                var betStatus = BetStatus.Running;
 
                 betEntity.Payout = betTransaction.Payout;
                 betEntity.BetStatusId = (int)betStatus;

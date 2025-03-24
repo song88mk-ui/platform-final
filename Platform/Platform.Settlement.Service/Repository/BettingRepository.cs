@@ -651,6 +651,12 @@ namespace Platform.Settlement.Service.Repository
                             isSuccess = false;
                         }
 
+                        if ((int)BetStatus.Running < bet.BetStatusId && bet.BetStatusId < (int)BetStatus.Rejected)
+                        {
+                            scope.Complete();
+                            return;
+                        }
+
                         var betSelections = context.BetSelection.Where(c => c.BetId == bet.BetId).ToList();
 
                         if (betSelections.Count == 0)

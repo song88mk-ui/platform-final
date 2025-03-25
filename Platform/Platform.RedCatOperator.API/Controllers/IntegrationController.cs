@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace Platform.RedCatOperator.API.Controllers
 {
-    //
     [Route("v1/vs")]
     [ApiController]
     public class IntegrationController : ControllerBase

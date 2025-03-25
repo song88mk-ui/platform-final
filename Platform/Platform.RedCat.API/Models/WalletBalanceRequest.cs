@@ -2,7 +2,7 @@
 
 namespace Platform.RedCat.API.Models
 {
-    public class WalletBalanceRequestDTO : RedCatBaseRequestDTO
+    public class WalletBalanceRequest : RedCatBaseRequest
     {
         public string Currency { get; set; }
         public string MemberCode { get; set; }

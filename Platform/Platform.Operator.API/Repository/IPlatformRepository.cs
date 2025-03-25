@@ -2,6 +2,7 @@
 using Platform.Shared.Data.Platform.Entities;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
+using Platform.Shared.Models.RedCat;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

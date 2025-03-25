@@ -20,7 +20,7 @@ namespace Platform.RedCat.API.Repositories
             _httpClient = httpClient;
         }
 
-        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> PlaceBet(RedCatBetRequest request)
+        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> PlaceBet(RedCatBetRequestDTO request)
         {
             try
             {
@@ -51,7 +51,7 @@ namespace Platform.RedCat.API.Repositories
                 };
             }
         }
-        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> SettleBet(RedCatBetRequest request)
+        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> SettleBet(RedCatBetRequestDTO request)
         {
             try
             {
@@ -82,7 +82,7 @@ namespace Platform.RedCat.API.Repositories
                 };
             }
         }
-        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> VoidStake(RedCatVoidBetRequest request)
+        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> VoidStake(RedCatVoidBetRequestDTO request)
         {
             try
             {
@@ -113,7 +113,7 @@ namespace Platform.RedCat.API.Repositories
                 };
             }
         }
-        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> VoidSettle(RedCatVoidBetRequest request)
+        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> VoidSettle(RedCatVoidBetRequestDTO request)
         {
             try
             {

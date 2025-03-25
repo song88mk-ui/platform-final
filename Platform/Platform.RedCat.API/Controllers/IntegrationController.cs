@@ -26,7 +26,7 @@ namespace Platform.RedCat.API.Controllers
         }
 
         [HttpPost("validatetoken")]
-        public async Task<IActionResult> ValidateToken([FromBody] ValidateTokenRequestDTO request)
+        public async Task<IActionResult> ValidateToken([FromBody] ValidateTokenRequest request)
         {
             var result = await _platformRepository.ValidateToken(request);
 
@@ -55,7 +55,7 @@ namespace Platform.RedCat.API.Controllers
         }
 
         [HttpPost("getbalance")]
-        public async Task<IActionResult> GetBalance([FromBody] WalletBalanceRequestDTO request)
+        public async Task<IActionResult> GetBalance([FromBody] WalletBalanceRequest request)
         {
             var result = await _platformRepository.GetWalletBalance(request);
 
@@ -84,7 +84,7 @@ namespace Platform.RedCat.API.Controllers
         }
 
         [HttpPost("getapproval")]
-        public async Task<IActionResult> GetApproval([FromBody] ApprovalRequestDTO request)
+        public async Task<IActionResult> GetApproval([FromBody] ApprovalRequest request)
         {
             var result = await _platformRepository.GetApproval(request);
 
@@ -98,7 +98,7 @@ namespace Platform.RedCat.API.Controllers
         }
 
         [HttpPost("stake")]
-        public async Task<IActionResult> Stake([FromBody] RedCatBetTransactionRequestDTO request)
+        public async Task<IActionResult> Stake([FromBody] RedCatBetTransactionRequest request)
         {
             var result = await _platformRepository.Stake(request);
 
@@ -128,7 +128,7 @@ namespace Platform.RedCat.API.Controllers
         }
 
         [HttpPost("settle")]
-        public async Task<IActionResult> Settle([FromBody] RedCatBetTransactionRequestDTO request)
+        public async Task<IActionResult> Settle([FromBody] RedCatBetTransactionRequest request)
         {
             var result = await _platformRepository.Settle(request);
 
@@ -159,7 +159,7 @@ namespace Platform.RedCat.API.Controllers
 
 
         [HttpPost("voidstake")]
-        public async Task<IActionResult> VoidStake([FromBody] RedCatVoidBetTransactionRequestDTO request)
+        public async Task<IActionResult> VoidStake([FromBody] RedCatVoidBetTransactionRequest request)
         {
             var result = await _platformRepository.VoidStake(request);
 
@@ -190,7 +190,7 @@ namespace Platform.RedCat.API.Controllers
 
 
         [HttpPost("voidsettle")]
-        public async Task<IActionResult> VoidSettle([FromBody] RedCatVoidBetTransactionRequestDTO request)
+        public async Task<IActionResult> VoidSettle([FromBody] RedCatVoidBetTransactionRequest request)
         {
             var result = await _platformRepository.VoidSettle(request);
 

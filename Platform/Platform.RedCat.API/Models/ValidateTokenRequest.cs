@@ -2,7 +2,7 @@
 
 namespace Platform.RedCat.API.Models
 {
-    public class ValidateTokenRequestDTO : RedCatBaseRequestDTO
+    public class ValidateTokenRequest : RedCatBaseRequest
     {
     }
 }

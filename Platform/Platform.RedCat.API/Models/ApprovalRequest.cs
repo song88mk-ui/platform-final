@@ -2,7 +2,7 @@
 
 namespace Platform.RedCat.API.Models
 {
-    public class ApprovalRequestDTO : RedCatBaseRequestDTO
+    public class ApprovalRequest : RedCatBaseRequest
     {
         public string Currency { get; set; }
         public string MemberCode { get; set; }

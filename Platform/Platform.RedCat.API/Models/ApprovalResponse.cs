@@ -1,6 +1,6 @@
 ﻿namespace Platform.RedCat.API.Models
 {
-    public class ApprovalResponseDTO
+    public class ApprovalResponse
     {
         public int StatusCode { get; set; }
     }

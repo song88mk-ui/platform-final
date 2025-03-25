@@ -1,6 +1,6 @@
 ﻿namespace Platform.RedCat.API.Models
 {
-    public class WalletBalanceResponseDTO
+    public class WalletBalanceResponse
     {
         public decimal Balance { get; set; }
     }

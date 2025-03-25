@@ -19,11 +19,11 @@ namespace Platform.RedCat.API.Repositories
         //    _httpClient = httpClient;
         //}
 
-        public async Task<RedCatBaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string clientId, string operatorToken, string endpoint, bool isAgent)
+        public async Task<RedCatBaseResponse<AuthenticationResponseDTO>> Authenticate(string clientId, string operatorToken, string endpoint, bool isAgent)
         {
             if (string.IsNullOrEmpty(operatorToken) || string.IsNullOrWhiteSpace(operatorToken))
             {
-                return new RedCatBaseResponseDTO<AuthenticationResponseDTO>
+                return new RedCatBaseResponse<AuthenticationResponseDTO>
                 {
                     StatusCode = RedCatStatusCode.Unknown_Operator_Id,
                     Message = RedCatStatusCode.Unknown_Operator_Id.GetDescription(),
@@ -47,7 +47,7 @@ namespace Platform.RedCat.API.Repositories
                 {
                     var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                    return new RedCatBaseResponseDTO<AuthenticationResponseDTO>
+                    return new RedCatBaseResponse<AuthenticationResponseDTO>
                     {
                         StatusCode = RedCatStatusCode.Success,
                         Message = RedCatStatusCode.Success.GetDescription(),
@@ -81,7 +81,7 @@ namespace Platform.RedCat.API.Repositories
                         {
                         }
 
-                        return new RedCatBaseResponseDTO<AuthenticationResponseDTO>
+                        return new RedCatBaseResponse<AuthenticationResponseDTO>
                         {
                             StatusCode = RedCatStatusCode.Operator_Error,
                             Message = RedCatStatusCode.Operator_Error.GetDescription(),
@@ -89,7 +89,7 @@ namespace Platform.RedCat.API.Repositories
                     }
                     else
                     {
-                        return new RedCatBaseResponseDTO<AuthenticationResponseDTO>
+                        return new RedCatBaseResponse<AuthenticationResponseDTO>
                         {
                             StatusCode = RedCatStatusCode.Operator_Error,
                             Message = $"{RedCatStatusCode.Operator_Error.GetDescription()} ({response.ReasonPhrase})",
@@ -99,7 +99,7 @@ namespace Platform.RedCat.API.Repositories
             }
             catch (Exception ex)
             {
-                return new RedCatBaseResponseDTO<AuthenticationResponseDTO>
+                return new RedCatBaseResponse<AuthenticationResponseDTO>
                 {
                     StatusCode = RedCatStatusCode.Error,
                     Message = $"{RedCatStatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",

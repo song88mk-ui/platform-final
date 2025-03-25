@@ -18,7 +18,7 @@ namespace Platform.RedCatBetting.API.Controllers
         }
 
         [HttpPost("placement")]
-        public async Task<IActionResult> PlaceBet(RedCatBetRequest request)
+        public async Task<IActionResult> PlaceBet(RedCatBetRequestDTO request)
         {
             var result = await _bettingRepositories.PlaceBet(request);
 
@@ -32,7 +32,7 @@ namespace Platform.RedCatBetting.API.Controllers
         }
 
         [HttpPost("settle")]
-        public async Task<IActionResult> SettleBet(RedCatBetRequest request)
+        public async Task<IActionResult> SettleBet(RedCatBetRequestDTO request)
         {
             var result = await _bettingRepositories.SettleBet(request);
 
@@ -46,7 +46,7 @@ namespace Platform.RedCatBetting.API.Controllers
         }
 
         [HttpPost("void/placement")]
-        public async Task<IActionResult> VoidPlacement(RedCatVoidBetRequest request)
+        public async Task<IActionResult> VoidPlacement(RedCatVoidBetRequestDTO request)
         {
             var result = await _bettingRepositories.VoidPlacement(request);
 
@@ -60,7 +60,7 @@ namespace Platform.RedCatBetting.API.Controllers
         }
 
         [HttpPost("void/settlement")]
-        public async Task<IActionResult> VoidSettlement(RedCatVoidBetRequest request)
+        public async Task<IActionResult> VoidSettlement(RedCatVoidBetRequestDTO request)
         {
             var result = await _bettingRepositories.VoidSettlement(request);
 

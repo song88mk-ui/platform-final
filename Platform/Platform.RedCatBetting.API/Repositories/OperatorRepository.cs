@@ -19,7 +19,7 @@ namespace Platform.RedCatBetting.API.Repositories
             _httpClient = httpClient;
         }
 
-        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessBetPlacement(RedCatOperatorBetTransactionRequest request)
+        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessBetPlacement(RedCatOperatorBetTransactionRequestDTO request)
         {
             try
             {
@@ -53,7 +53,7 @@ namespace Platform.RedCatBetting.API.Repositories
             }
         }
 
-        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessBetSettlement(RedCatOperatorBetTransactionRequest request)
+        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessBetSettlement(RedCatOperatorBetTransactionRequestDTO request)
         {
             try
             {

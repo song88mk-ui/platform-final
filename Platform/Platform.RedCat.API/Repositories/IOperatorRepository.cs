@@ -6,6 +6,6 @@ namespace Platform.RedCat.API.Repositories
 {
     public interface IOperatorRepository
     {
-        Task<RedCatBaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string clientId, string operatorToken, string endpoint, bool isAgent);
+        Task<RedCatBaseResponse<AuthenticationResponseDTO>> Authenticate(string clientId, string operatorToken, string endpoint, bool isAgent);
     }
 }

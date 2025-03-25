@@ -5,6 +5,7 @@ using Platform.Operator.API.ActionFilters;
 using Platform.Operator.API.Repository;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
+using Platform.Shared.Models.RedCat;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -83,7 +84,7 @@ namespace Platform.Operator.API.Controllers
                     return BadRequest(result);
             }
         }
-        [HttpPost("v1/vs/bet/placement")]
+        [HttpPost("v1/bet/vs/placement")]
         public async Task<IActionResult> BetPlacementRedCat([FromBody] OperatorRedCatBetRequestDTO request)
         {
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
@@ -144,7 +145,7 @@ namespace Platform.Operator.API.Controllers
                     return BadRequest(result);
             }
         }
-        [HttpPost("v1/vs/bet/settlement")]
+        [HttpPost("v1/bet/vs/settlement")]
         public async Task<IActionResult> BetSettlementRedCat([FromBody] OperatorRedCatBetSettlementRequestDTO request)
         {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();

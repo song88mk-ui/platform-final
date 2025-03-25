@@ -19,7 +19,7 @@ namespace Platform.RedCatOperator.API.Controllers
         }
 
         [HttpPost("bet/placement")]
-        public async Task<IActionResult> PlaceBet([FromBody] RedCatOperatorBetTransactionRequest request)
+        public async Task<IActionResult> PlaceBet([FromBody] RedCatOperatorBetTransactionRequestDTO request)
         {
             var result = await _operatorRepository.ProcessBetPlacement(request);
 
@@ -33,7 +33,7 @@ namespace Platform.RedCatOperator.API.Controllers
         }
 
         [HttpPost("bet/settle")]
-        public async Task<IActionResult> SettleBet([FromBody] RedCatOperatorBetTransactionRequest request)
+        public async Task<IActionResult> SettleBet([FromBody] RedCatOperatorBetTransactionRequestDTO request)
         {
             var result = await _operatorRepository.ProcessSettleBet(request);
 
@@ -47,7 +47,7 @@ namespace Platform.RedCatOperator.API.Controllers
         }
 
         [HttpPost("bet/void/placement")]
-        public async Task<IActionResult> VoidPlacement([FromBody] RedCatOperatorBetTransactionRequest request)
+        public async Task<IActionResult> VoidPlacement([FromBody] RedCatOperatorBetTransactionRequestDTO request)
         {
             var result = await _operatorRepository.ProcessVoidPlacement(request);
 
@@ -60,7 +60,7 @@ namespace Platform.RedCatOperator.API.Controllers
             }
         }
         [HttpPost("bet/void/settle")]
-        public async Task<IActionResult> VoidSettlement([FromBody] RedCatOperatorBetTransactionRequest request)
+        public async Task<IActionResult> VoidSettlement([FromBody] RedCatOperatorBetTransactionRequestDTO request)
         {
             var result = await _operatorRepository.ProcessVoidSettlement(request);
 

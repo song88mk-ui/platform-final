@@ -1,6 +1,6 @@
 ﻿namespace Platform.RedCat.API.Models
 {
-    public class ValidateTokenResponseDTO
+    public class ValidateTokenResponse
     {
         public string MemberCode { get; set; } = string.Empty;
         public string OperatorId { get; set; } = string.Empty;

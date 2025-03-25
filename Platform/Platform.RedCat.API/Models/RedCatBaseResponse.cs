@@ -2,7 +2,7 @@
 
 namespace Platform.RedCat.API.Models
 {
-    public class RedCatBaseResponseDTO<T>
+    public class RedCatBaseResponse<T>
     {
         public RedCatStatusCode StatusCode { get; set; }
         public string Message { get; set; }

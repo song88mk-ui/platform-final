@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Platform.Entities;
+using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Extensions;
 using Platform.Shared.Models;
@@ -36,9 +37,9 @@ namespace Platform.RedCatOperator.API.Repositories
             };
         }
 
-        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessBetPlacement(RedCatOperatorBetTransactionRequest request)
+        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessBetPlacement(RedCatOperatorBetTransactionRequestDTO request)
         {
-            var path = $"v1/vs/bet/placement";
+            var path = $"v1/bet/vs/placement";
             var endpointUrl = $"{request.Endpoint}/{path}";
 
             var action = "VSBetPlacement";
@@ -46,14 +47,22 @@ namespace Platform.RedCatOperator.API.Repositories
             var operatorRequest = new OperatorRedCatBetRequestDTO()
             {
                 BetId = request.BetId.ToString(),
-                MarketId = request.BetMarketId,
-                GameId = request.GameId,
-                BetStatus = request.BetStatusName,
-                //BetStatusId = request.BetStatusId,
-                //BetStatusName = request.BetStatusName,
                 UserId = request.MemberCode,
+                CurrencyCode = request.CurrencyCode,
                 Amount = request.Stake,
-                Reason = string.Empty
+                StakeTax = 0,
+                WinningsTax = 0,
+                ParlayBonus = 0,
+                BonusId = string.Empty,
+                BetStatus = request.BetStatusName,
+                TransactionDate = request.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                BetSelections = request.BetSelections.Select(betselection => new OperatorRedCatBetSelectionDTO()
+                {
+                    BetSelectionId = betselection.BetSelectionId,
+                    GameId = betselection.GameId,
+                    MarketId = betselection.BetMarketId,
+                    BetSelectionStatus = betselection.BetSelectionStatus
+                }).ToList()
             };
 
             var payload = JsonSerializer.Serialize(operatorRequest, _jsonOptions);
@@ -159,25 +168,33 @@ namespace Platform.RedCatOperator.API.Repositories
                 };
             }
         }
-        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessSettleBet(RedCatOperatorBetTransactionRequest request)
+        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessSettleBet(RedCatOperatorBetTransactionRequestDTO request)
         {
-            var path = $"v1/vs/bet/settlement";
+            var path = $"v1/bet/vs/settlement";
             var endpointUrl = $"{request.Endpoint}/{path}";
 
-            var action = "VSBetPlacement";
+            var action = "VSBetSettlement";
 
             var operatorRequest = new OperatorRedCatBetSettlementRequestDTO()
             {
                 BetId = request.BetId.ToString(),
-                MarketId = request.BetMarketId,
-                GameId = request.GameId,
-                BetStatus = request.BetStatusName,
-                //BetStatusId = request.BetStatusId,
-                //BetStatusName = request.BetStatusName,
                 UserId = request.MemberCode,
-                Payout = request.Payout,
+                CurrencyCode = request.CurrencyCode,
                 Amount = request.Stake,
-                Reason = string.Empty
+                Payout = request.Payout,
+                StakeTax = 0,
+                WinningsTax = 0,
+                ParlayBonus = 0,
+                BonusId = string.Empty,
+                BetStatus = request.BetStatusName,
+                TransactionDate = request.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                BetSelections = request.BetSelections.Select(betselection => new OperatorRedCatBetSelectionDTO()
+                {
+                    BetSelectionId = betselection.BetSelectionId,
+                    GameId = betselection.GameId,
+                    MarketId = betselection.BetMarketId,
+                    BetSelectionStatus = betselection.BetSelectionStatus
+                }).ToList()
             };
             var payload = JsonSerializer.Serialize(operatorRequest, _jsonOptions);
 
@@ -282,25 +299,35 @@ namespace Platform.RedCatOperator.API.Repositories
                 };
             }
         }
-        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessVoidPlacement(RedCatOperatorBetTransactionRequest request)
+        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessVoidPlacement(RedCatOperatorBetTransactionRequestDTO request)
         {
-            var path = $"v1/vs/bet/settlement";
+            var path = $"v1/bet/vs/settlement";
             var endpointUrl = $"{request.Endpoint}/{path}";
 
             var action = "VSVoidPlacement";
 
-            var operatorRequest = new OperatorRedCatBetRequestDTO()
+            var operatorRequest = new OperatorRedCatBetSettlementRequestDTO()
             {
                 BetId = request.BetId.ToString(),
-                MarketId = request.BetMarketId,
-                GameId = request.GameId,
-                BetStatus = request.BetStatusName,
-                //BetStatusId = request.BetStatusId,
-                //BetStatusName = request.BetStatusName,
                 UserId = request.MemberCode,
+                CurrencyCode = request.CurrencyCode,
                 Amount = request.Stake,
-                Reason = string.Empty
+                Payout = request.Payout,
+                StakeTax = 0,
+                WinningsTax = 0,
+                ParlayBonus = 0,
+                BonusId = string.Empty,
+                BetStatus = request.BetStatusName,
+                TransactionDate = request.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                BetSelections = request.BetSelections.Select(betselection => new OperatorRedCatBetSelectionDTO()
+                {
+                    BetSelectionId = betselection.BetSelectionId,
+                    GameId = betselection.GameId,
+                    MarketId = betselection.BetMarketId,
+                    BetSelectionStatus = betselection.BetSelectionStatus
+                }).ToList()
             };
+
             var payload = JsonSerializer.Serialize(operatorRequest, _jsonOptions);
 
             try
@@ -404,25 +431,35 @@ namespace Platform.RedCatOperator.API.Repositories
                 };
             }
         }
-        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessVoidSettlement(RedCatOperatorBetTransactionRequest request)
+        public async Task<BaseResponseDTO<RedCatBetTransactionResponseDTO>> ProcessVoidSettlement(RedCatOperatorBetTransactionRequestDTO request)
         {
-            var path = $"v1/vs/bet/settlement";
+            var path = $"v1/bet/vs/settlement";
             var endpointUrl = $"{request.Endpoint}/{path}";
 
             var action = "VSVoidSettlement";
 
-            var operatorRequest = new OperatorRedCatBetRequestDTO()
+            var operatorRequest = new OperatorRedCatBetSettlementRequestDTO()
             {
                 BetId = request.BetId.ToString(),
-                MarketId = request.BetMarketId,
-                GameId = request.GameId,
-                BetStatus = request.BetStatusName,
-                //BetStatusId = request.BetStatusId,
-                //BetStatusName = request.BetStatusName,
                 UserId = request.MemberCode,
+                CurrencyCode = request.CurrencyCode,
                 Amount = request.Stake,
-                Reason = string.Empty
+                Payout = request.Payout,
+                StakeTax = 0,
+                WinningsTax = 0,
+                ParlayBonus = 0,
+                BonusId = string.Empty,
+                BetStatus = request.BetStatusName,
+                TransactionDate = request.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
+                BetSelections = request.BetSelections.Select(betselection => new OperatorRedCatBetSelectionDTO()
+                {
+                    BetSelectionId = betselection.BetSelectionId,
+                    GameId = betselection.GameId,
+                    MarketId = betselection.BetMarketId,
+                    BetSelectionStatus = betselection.BetSelectionStatus
+                }).ToList()
             };
+
             var payload = JsonSerializer.Serialize(operatorRequest, _jsonOptions);
 
             try
@@ -465,7 +502,7 @@ namespace Platform.RedCatOperator.API.Repositories
                                 StatusCode = (int)RedCatStatusCode.Operator_Error
                             }
                         };
-                    
+
                     if (operatorResponse.StatusId != 1000)
                         return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                         {
@@ -527,7 +564,7 @@ namespace Platform.RedCatOperator.API.Repositories
             }
         }
 
-        private void AddOperatorLog(RedCatOperatorBetTransactionRequest bet, string direction, string endpointUrl, string payload, string correlationId)
+        private void AddOperatorLog(RedCatOperatorBetTransactionRequestDTO bet, string direction, string endpointUrl, string payload, string correlationId)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
@@ -554,7 +591,7 @@ namespace Platform.RedCatOperator.API.Repositories
             }
         }
 
-        private async Task RetryBetPlacement(RedCatOperatorBetTransactionRequest request, string payload, string endpoint, string correlationId, string action, int retries)
+        private async Task RetryBetPlacement(RedCatOperatorBetTransactionRequestDTO request, string payload, string endpoint, string correlationId, string action, int retries)
         {
             //if (retries == 0)
             //{

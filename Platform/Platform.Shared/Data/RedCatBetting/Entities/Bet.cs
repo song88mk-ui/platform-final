@@ -13,17 +13,24 @@ namespace Platform.Shared.Data.RedCatBetting.Entities
         public string? OperatorId { get; set; }
         public string OperatorToken { get; set; }
         public string CurrencyCode { get; set; }
+        public string LanguageCode { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
         public decimal ExchangeRate { get; set; }
         public int BetStatusId { get; set; }
         public string BetStatusName { get; set; }
         public string Reason { get; set; }
-        public string GameId { get; set; }
-        public long BetMarketId { get; set; }
         [Column(TypeName = "decimal(26,12)")]
         public decimal Amount { get; set; }
         [Column(TypeName = "decimal(26,12)")]
         public decimal Payout { get; set; }
+        [Column(TypeName = "decimal(26,12)")]
+        public decimal WinLoss { get; set; }
+        public decimal CompanyShare { get; set; }
+        public bool IsResettled { get; set; }
         public string BetIdRef { get; set; }
         public DateTime BetDate { get; set; }
+        public DateTime BetDateOffset { get; set; }
+        public DateTime SettlementDate { get; set; }
+        public DateTime SettlementDateOffset { get; set; }
     }
 }

@@ -9,5 +9,6 @@ namespace Platform.Shared.Extensions
             DateTimeOffset dto = new DateTimeOffset(dateTime);
             return dto.ToUnixTimeMilliseconds();
         }
+        public static DateTime BetOffset(this DateTime dateTime) => dateTime.AddHours(-4);
     }
 }

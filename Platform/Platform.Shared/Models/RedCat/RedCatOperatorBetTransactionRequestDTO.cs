@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Platform.Shared.Models.RedCat
 {
-    public class RedCatOperatorBetTransactionRequest
+    public class RedCatOperatorBetTransactionRequestDTO
     {
         public Guid BetId { get; set; }
         public string BetIdRef { get; set; }
@@ -13,8 +14,6 @@ namespace Platform.Shared.Models.RedCat
         public string OperatorId { get; set; }
         public string OperatorToken { get; set; }
         public string CurrencyCode { get; set; }
-        public long BetMarketId { get; set; }
-        public string GameId { get; set; }
         public int BetStatusId { get; set; }
         public string BetStatusName { get; set; }
         public decimal Payout { get; set; }
@@ -22,5 +21,14 @@ namespace Platform.Shared.Models.RedCat
         public bool IsAgent { get; set; }
         public DateTime BetDate { get; set; }
         public string CorrelationId { get; set; }
+        public List<RedCatOperatorBetSelectionRequestDTO> BetSelections { get; set; }
+    }
+    public class RedCatOperatorBetSelectionRequestDTO
+    {
+
+        public string BetSelectionId { get; set; }
+        public long BetMarketId { get; set; }
+        public string GameId { get; set; }
+        public string BetSelectionStatus { get; set; }
     }
 }

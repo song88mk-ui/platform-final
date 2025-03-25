@@ -1,6 +1,6 @@
 ﻿namespace Platform.Shared.Models.RedCat
 {
-    public class RedCatVoidBetRequest : RedCatBetRequest
+    public class RedCatVoidBetRequestDTO : RedCatBetRequestDTO
     {
         public long RollbackTransactionId { get; set; }
     }

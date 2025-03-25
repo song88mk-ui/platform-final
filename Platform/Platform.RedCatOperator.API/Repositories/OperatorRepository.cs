@@ -55,6 +55,7 @@ namespace Platform.RedCatOperator.API.Repositories
                 ParlayBonus = 0,
                 BonusId = string.Empty,
                 BetStatus = request.BetStatusName,
+                TransactionId = request.CorrelationId,
                 TransactionDate = request.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                 BetSelections = request.BetSelections.Select(betselection => new OperatorRedCatBetSelectionDTO()
                 {
@@ -187,6 +188,7 @@ namespace Platform.RedCatOperator.API.Repositories
                 ParlayBonus = 0,
                 BonusId = string.Empty,
                 BetStatus = request.BetStatusName,
+                TransactionId = request.CorrelationId,
                 TransactionDate = request.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                 BetSelections = request.BetSelections.Select(betselection => new OperatorRedCatBetSelectionDTO()
                 {
@@ -318,6 +320,7 @@ namespace Platform.RedCatOperator.API.Repositories
                 ParlayBonus = 0,
                 BonusId = string.Empty,
                 BetStatus = request.BetStatusName,
+                TransactionId = request.CorrelationId,
                 TransactionDate = request.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                 BetSelections = request.BetSelections.Select(betselection => new OperatorRedCatBetSelectionDTO()
                 {
@@ -450,6 +453,7 @@ namespace Platform.RedCatOperator.API.Repositories
                 ParlayBonus = 0,
                 BonusId = string.Empty,
                 BetStatus = request.BetStatusName,
+                TransactionId = request.CorrelationId,
                 TransactionDate = request.BetDate.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff"),
                 BetSelections = request.BetSelections.Select(betselection => new OperatorRedCatBetSelectionDTO()
                 {

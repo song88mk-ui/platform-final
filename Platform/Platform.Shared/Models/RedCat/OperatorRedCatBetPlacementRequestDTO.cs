@@ -18,6 +18,7 @@ namespace Platform.Shared.Models.RedCat
         public string BonusId { get; set; }
         public string BetStatus { get; set; }
         public string TransactionDate { get; set; }
+        public string TransactionId { get; set; }
         public List<OperatorRedCatBetSelectionDTO> BetSelections { get; set; }
     }
     public class OperatorRedCatBetSelectionDTO

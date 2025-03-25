@@ -11,7 +11,7 @@ namespace Platform.Shared.Data.RedCatBetting
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Bet>().HasKey(k => new { k.BetId });
-            modelBuilder.Entity<BetAudit>().HasKey(k => new { k.TransactionId, k.Id });
+            modelBuilder.Entity<BetAudit>().HasKey(k => new { k.Id });
             modelBuilder.Entity<BetSelection>().HasKey(k => new { k.BetSelectionId });
             modelBuilder.Entity<BetSelectionAudit>().HasKey(k => new { k.Id });
             //modelBuilder.Entity<BetMapping>().HasKey(k => new { k.BetIdRef });

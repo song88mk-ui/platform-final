@@ -158,7 +158,7 @@ namespace Platform.API.Repository
             };
         }
 
-        public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(string apiKey, string clientId, string operatorToken, BetRequest request, OGClientRequest ogParameters, string userAgent = "")
+        public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(string apiKey, string clientId, string operatorToken, BetRequest request, OGClientRequest ogParameters, string isSSR, string userAgent = "")
         {
             using var activity = _activitySource.StartActivity("bet.placement");
 
@@ -166,6 +166,9 @@ namespace Platform.API.Repository
             activity?.SetTag("client.id", clientId);
             activity?.SetTag("odds.type", request.OddsType.ToString());
             activity?.SetTag("stake", request.Stake);
+            activity?.SetTag("is.ssr", request.IPAddress);
+            activity?.SetTag("ip.address.v4", request.IPAddress);
+            activity?.SetTag("ip.address.v6", request.IPAddressV6);
 
             activity?.AddEvent(new ActivityEvent("validate.bet.request"));
 

@@ -164,7 +164,7 @@ namespace Platform.API.Controllers
 
             try
             {
-                var result = await _platformRepository.PlaceBet(apiKey, clientId, operatorToken, request, OGParameters, userAgent);
+                var result = await _platformRepository.PlaceBet(apiKey, clientId, operatorToken, request, OGParameters, isSSR, userAgent);
 
                 var parameters = request;
 

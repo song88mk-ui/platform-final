@@ -166,7 +166,7 @@ namespace Platform.API.Repository
             activity?.SetTag("client.id", clientId);
             activity?.SetTag("odds.type", request.OddsType.ToString());
             activity?.SetTag("stake", request.Stake);
-            activity?.SetTag("is.ssr", request.IPAddress);
+            activity?.SetTag("is.ssr", isSSR);
             activity?.SetTag("ip.address.v4", request.IPAddress);
             activity?.SetTag("ip.address.v6", request.IPAddressV6);
 

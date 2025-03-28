@@ -33,9 +33,11 @@ namespace Platform.Operator.API.Controllers
         {
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
-            var res = _platformContext.NegativeTest.Find(clientId);
+            Guid.TryParse(clientId, out var finalClientId);
 
-            if (res != null && res.ClientId == Guid.Parse(clientId))
+            var res = _platformContext.NegativeTest.Find(finalClientId);
+
+            if (res != null && res.ClientId == finalClientId)
             {
                 return BadRequest(new OddsFeedBetResponse
                 {

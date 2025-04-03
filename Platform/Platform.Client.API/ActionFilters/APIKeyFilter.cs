@@ -145,7 +145,7 @@ namespace Platform.Client.API.ActionFilters
                 new Tuple<string, string, List<string>>("LeningradMedia", "Nbt32tHZYz95tZ3f", new List<string> { "88.212.249.140", "185.162.92.70", "91.235.142.165", "213.159.215.246", "194.39.127.172"}),
                 new Tuple<string, string, List<string>>("panda", "660db1cf5be", new List<string> { "118.143.200.126", "103.84.45.130"}),
                 new Tuple<string, string, List<string>>("cooper", "gDbUSXJZVxFg83D4", new List<string> { "13.53.74.22", "13.50.166.151"}),
-                new Tuple<string, string, List<string>>("qtech", "EhCJMcr6GuqvvKty", new List<string> { "52.79.203.127", "52.76.231.168", "122.2.111.112"})
+                new Tuple<string, string, List<string>>("qtech", "EhCJMcr6GuqvvKty", new List<string> { "52.79.203.127", "52.76.231.168", "122.2.111.112", "202.164.191.254"})
             };
 
             return result;

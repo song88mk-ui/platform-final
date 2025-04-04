@@ -184,9 +184,12 @@ namespace Platform.API.Repository
 
             if (!IsValidIPAddress(request.IPAddress))
             {
+                activity?.AddEvent(new ActivityEvent("ip.address.loopback"));
+
                 request.IPAddress = IPAddress.Loopback.ToString();
 
-                //return ReturnErrorBetResponse(StatusCode.IPAddress_Must_Be_IPv4, activity);
+                if (!IsValidIPAddress(request.IPAddress))
+                    return ReturnErrorBetResponse(StatusCode.IPAddress_Must_Be_IPv4, activity);
             }
 
             if (request.Stake <= 0)

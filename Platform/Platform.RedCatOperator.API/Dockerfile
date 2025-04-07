@@ -1,4 +1,4 @@
-# song88/platform-rc-operator-api
+# song88/platform-rc-oper-api
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 
 WORKDIR /source

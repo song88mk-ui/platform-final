@@ -81,7 +81,7 @@ stages:
                   env:
                     TAG: $(Build.BuildId)
                     RG: $(ResourceGroup)
-                    CA: ca-staging-plt-rc-operator-api
+                    CA: ca-staging-plt-rc-oper-api
                     CR: $(ContainerRegistry)
                     REPO: $(ImageRepository)
                   inputs:
@@ -138,7 +138,7 @@ stages:
                   env:
                     TAG: $(Build.BuildId)
                     RG: $(ResourceGroup)
-                    CA: ca-production-plt-rc-operator-api
+                    CA: ca-production-plt-rc-oper-api
                     CR: $(ContainerRegistry)
                     REPO: $(ImageRepository)
                   inputs:

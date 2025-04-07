@@ -1,4 +1,4 @@
-# song88/platform-rc-api
+# song88/plt-rc-api
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 
 WORKDIR /source

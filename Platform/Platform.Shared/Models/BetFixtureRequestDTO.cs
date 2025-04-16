@@ -43,5 +43,6 @@ namespace Platform.Shared.Models
         public long FixtureId { get; set; }
         public long MarketId { get; set; }
         public long SelectionId { get; set; }
+        public string Line { get; set; }
     }
 }

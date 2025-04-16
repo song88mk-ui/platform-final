@@ -734,7 +734,8 @@ namespace Platform.API.Repository
                         {
                             FixtureId = Convert.ToInt64(selection.FixtureId),
                             MarketId = Convert.ToInt64(selection.MarketId),
-                            SelectionId = Convert.ToInt64(selection.SelectionId)
+                            SelectionId = Convert.ToInt64(selection.SelectionId),
+                            Line = selection.Line
                         });
                     }
                 }
@@ -3367,7 +3368,8 @@ namespace Platform.API.Repository
                         {
                             FixtureId = Convert.ToInt64(selection.FixtureId),
                             MarketId = Convert.ToInt64(selection.MarketId),
-                            SelectionId = Convert.ToInt64(selection.SelectionId)
+                            SelectionId = Convert.ToInt64(selection.SelectionId),
+                            Line = selection.Line
                         });
                     }
                 }

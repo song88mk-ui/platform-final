@@ -8,9 +8,11 @@ using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Models.RedCat;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
 
@@ -19,6 +21,7 @@ namespace Platform.Operator.API.Repository
     public class PlatformRepository : IPlatformRepository
     {
         private readonly PlatformContext _platformContext;
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _playerLocks = new ConcurrentDictionary<string, SemaphoreSlim>();
 
         public PlatformRepository(PlatformContext platformContext)
         {
@@ -292,8 +295,12 @@ namespace Platform.Operator.API.Repository
                 };
             }
 
-            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            //using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.Serializable }))
             {
+                var playerLock = _playerLocks.GetOrAdd(operatorToken, _ => new SemaphoreSlim(1, 1));
+
+                await playerLock.WaitAsync();
                 try
                 {
                     var result = _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefault();
@@ -340,6 +347,10 @@ namespace Platform.Operator.API.Repository
                     {
                         StatusId = 1003
                     };
+                }
+                finally
+                {
+                    playerLock.Release();
                 }
             }
         }

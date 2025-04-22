@@ -295,12 +295,11 @@ namespace Platform.Operator.API.Repository
                 };
             }
 
-            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
+            var playerLock = _playerLocks.GetOrAdd(operatorToken, _ => new SemaphoreSlim(1, 1));
+            await playerLock.WaitAsync();
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
             {
-
-                var playerLock = _playerLocks.GetOrAdd(operatorToken, _ => new SemaphoreSlim(1, 1));
-                await playerLock.WaitAsync();
-
                 try
                 {
                     var result = _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefault();

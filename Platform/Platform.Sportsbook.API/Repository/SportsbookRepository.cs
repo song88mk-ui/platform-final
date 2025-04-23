@@ -6357,8 +6357,10 @@ namespace Platform.Sportsbook.API.Repository
                     var result = new List<MarketDTO>();
                     var marketTemplateGroupPlayerProps = GetMarketTemplatePlayerProps();
 
+                    var ctr = 0;
                     foreach (var market in filteredMarkets)
                     {
+                        ctr++;
                         var clientOdds = new List<ClientOdds>();
 
                         var tempSelections = selections.Where(c => c.MaId == market.MaId).ToList();
@@ -6432,7 +6434,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
                             MarketStatusName = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
-                            SortOrder = marketTemplateIds.Any(c => c == market.MaTeId) ? marketTemplateIds.FindIndex(c => c == market.MaTeId) + 1 : 1000 + Convert.ToInt32(market.MaTeId),
+                            SortOrder = marketTemplateIds.Any(c => c == market.MaTeId) ? marketTemplateIds.FindIndex(c => c == market.MaTeId) + 1 : 1000 + ctr,
                             IsBetBuilder = isBetBuilder,
                             Selections = selectionsToAdd.OrderBy(o => o.SortOrder).ToList()
                         };

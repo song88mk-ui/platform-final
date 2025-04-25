@@ -373,7 +373,7 @@ namespace Platform.API.Repository
                     OddsRef = initialSelection.OddsRef,
                     FixtureStatus = initialSelection.FixtureStatus,
                     FixtureStartDate = initialSelection.FixtureStartDate,
-                    BetScore = initialSelection.Score,
+                    BetScore = initialSelection.Score ?? string.Empty,
                     FixtureSpecifier = initialSelection.FixtureSpecifier,
                     SelectionSpecifier = initialSelection.SelectionSpecifier,
                     CorrelationId = initialSelection.CorrelationId,

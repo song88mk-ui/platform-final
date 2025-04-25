@@ -1660,6 +1660,7 @@ namespace Platform.Sportsbook.API.Repository
                     HalfWonProbability = initialSelectionExtension.HaWoPr,
                     HalfLostProbability = initialSelectionExtension.HaLoPr,
                     SelectionCount = selectionCount,
+                    ChannelTypeId = initialFixture.ChTyId,
                     BetSelectionState = GetBetSelectionStatus(request.OddsChangeType, selection, result, request.ClientCode, request.IsBetBuilder, selectionCount)
                 });
             }

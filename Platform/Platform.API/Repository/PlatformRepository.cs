@@ -375,7 +375,7 @@ namespace Platform.API.Repository
                     FixtureStartDate = initialSelection.FixtureStartDate,
                     BetScore = initialSelection.Score ?? string.Empty,
                     FixtureSpecifier = initialSelection.FixtureSpecifier,
-                    SelectionSpecifier = initialSelection.SelectionSpecifier,
+                    SelectionSpecifier = initialSelection.SelectionSpecifier ?? string.Empty,
                     CorrelationId = initialSelection.CorrelationId,
                     Probability = initialSelection.Probability,
                     WonProbability = initialSelection.WonProbability,

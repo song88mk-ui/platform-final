@@ -26,7 +26,7 @@ namespace Platform.Betting.API.Repository
 
         public async Task<BaseResponseDTO<MTSStakeResponseDTO>> GetMTSMaxStake(string authToken, MTSConfigRequestDTO request, decimal companyShare, bool isBetBuilder, decimal calculatedOdds)
         {
-            if (request.BetSelections.Any(c => c.SportId > 1000 || c.FixtureSpecifier.Contains("bg:match")))
+            if (request.BetSelections.Any(c => c.SportId > 1000))
             {
                 return new BaseResponseDTO<MTSStakeResponseDTO>
                 {

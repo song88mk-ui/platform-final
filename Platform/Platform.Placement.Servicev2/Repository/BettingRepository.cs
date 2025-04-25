@@ -37,7 +37,7 @@ namespace Platform.Placement.Servicev2.Repository
             payload.IsOGClient = message.IsOGClient;
 
             var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
-                message.BetSelections.Any(c => c.BetSelection.SportId > 1000 || c.BetSelection.FixtureSpecifier.Contains("bg:match")) ? new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled for VS)") :
+                message.BetSelections.Any(c => c.BetSelection.SportId > 1000) || message.ChannelTypeId > (int)ChannelType.SR ? new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled for VS)") :
                 ValidateToMTS(message, mts) : new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled)");
 
             if (result.Item1 == TicketAcceptance.Accepted)

@@ -633,7 +633,8 @@ namespace Platform.Betting.API.Repository
                         BonusId = request.BonusId,
                         Odds = request.Odds,
                         UserAgent = request.UserAgent,
-                        IsOGClient = request.IsOGClient
+                        IsOGClient = request.IsOGClient,
+                        ChannelTypeId = request.ChannelTypeId,
                     };
 
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO

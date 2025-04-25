@@ -17,6 +17,7 @@ namespace Platform.Shared.MessageModels
         public string UserAgent { get; set; } = string.Empty;
         public bool IsOGClient { get; set; }
         public bool WillRecordTopMarket { get; set; }
+        public int ChannelTypeId { get; set; }
         public List<BetSelectionMessageExtenstion> BetSelections { get; set; }
     }
     public class BetSelectionMessageExtenstion

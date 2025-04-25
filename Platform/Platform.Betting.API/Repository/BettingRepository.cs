@@ -51,7 +51,9 @@ namespace Platform.Betting.API.Repository
 
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(BetRequestDTO request)
         {
-            if (request.Selections.Any(c => c.SportId > 1000) || request.Selections.Any(s => s.FixtureSpecifier.Contains("bg:match")))
+            if (request.ChannelTypeId == (int)ChannelType.BG)
+                return await PlaceBetWithoutMTS(request); //create method for PlaceBetWithRTS
+            else if (request.Selections.Any(c => c.SportId > 1000))
                 return await PlaceBetWithoutMTS(request);
             else
             {
@@ -63,7 +65,9 @@ namespace Platform.Betting.API.Repository
         }
         public async Task<BaseResponseDTO<MaxStakeResponseDTO>> GetMaxStake(BetRequestDTO request)
         {
-            if (request.IsBoosted == true || request.Selections.Any(c => c.SportId > 1000) || request.Selections.Any(s => s.FixtureSpecifier.Contains("bg:match")))
+            if (request.ChannelTypeId == (int)ChannelType.BG)
+                return await GetMaxStakeWithoutMTS(request); //create method for GetMaxStakeWithRTS
+            else if (request.IsBoosted == true || request.Selections.Any(c => c.SportId > 1000))
                 return await GetMaxStakeWithoutMTS(request);
             else
             {

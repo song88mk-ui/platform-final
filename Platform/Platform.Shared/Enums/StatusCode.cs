@@ -92,6 +92,8 @@
 
         Signature_Mismatch = 162,
 
+        Selection_Cannot_Be_Added_As_Part_Of_Parlay_With_Other_Provider = 163,
+
         Error = 1000,
         Operator_Error = 1001,
 

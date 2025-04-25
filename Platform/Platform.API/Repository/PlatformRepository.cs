@@ -16,6 +16,7 @@ using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
+using Channel = Platform.Shared.Enums.Channel;
 
 namespace Platform.API.Repository
 {
@@ -331,6 +332,13 @@ namespace Platform.API.Repository
                 return ReturnErrorBetResponse(StatusCode.Boosted_Odds_Not_Allowed_Once_Fixture_Transitions_To_Live, activity);
             }
 
+            int chTyId = result.Result.Selections.FirstOrDefault().ChannelTypeId;
+
+            if (result.Result.Selections.Count >= 2 && result.Result.Selections.Any(c => c.ChannelTypeId != chTyId))
+            {
+                return ReturnErrorBetResponse(StatusCode.Selection_Cannot_Be_Added_As_Part_Of_Parlay_With_Other_Provider, activity);
+            }
+
             activity?.AddEvent(new ActivityEvent("prepare.bet"));
 
             var selections = new List<BetSelectionRequestDTO>();
@@ -338,6 +346,7 @@ namespace Platform.API.Repository
             foreach (var selection in request.Selections)
             {
                 var initialSelection = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(selection.SelectionId)).FirstOrDefault();
+                chTyId = initialSelection.ChannelTypeId;
 
                 selections.Add(new BetSelectionRequestDTO
                 {
@@ -424,6 +433,7 @@ namespace Platform.API.Repository
                 Odds = result.Result.TotalOdds,
                 UserAgent = userAgent,
                 IsOGClient = ogParameters != null ? true : false,
+                ChannelTypeId = chTyId
             };
 
             activity?.AddEvent(new ActivityEvent("api.place.bet"));
@@ -570,6 +580,21 @@ namespace Platform.API.Repository
                 };
             }
 
+            var chTyId = result.Result.Selections.FirstOrDefault().ChannelTypeId;
+
+            if (result.Result.Selections.Count >= 2 && result.Result.Selections.Any(c => c.ChannelTypeId != chTyId))
+            {
+                return new BaseResponseDTO<MaxStakeResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = StatusCode.Selection_Cannot_Be_Added_As_Part_Of_Parlay_With_Other_Provider.ToString().Replace('_', ' '),
+                    Result = new MaxStakeResponseDTO
+                    {
+                        Stake = 0
+                    }
+                };
+            }
+
             var payload = new BetRequestDTO
             {
                 APIKey = apiKey,
@@ -593,6 +618,7 @@ namespace Platform.API.Repository
                 IsBoosted = request.IsBoosted,
                 IsBetBuilder = request.IsBetBuilder,
                 Odds = request.TotalOdds,
+                ChannelTypeId = chTyId,
                 Selections = request.Selections.Select(s => new BetSelectionRequestDTO
                 {
                     SportId = result.Result.Selections.Where(c => c.SelectionId == Convert.ToInt64(s.SelectionId)).Select(ss => ss.SportId).FirstOrDefault(),

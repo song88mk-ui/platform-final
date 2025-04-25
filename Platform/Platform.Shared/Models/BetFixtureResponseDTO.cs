@@ -76,6 +76,7 @@ namespace Platform.Shared.Models
         public double HalfWonProbability { get; set; }
         public double HalfLostProbability { get; set; }
         public int SelectionCount { get; set; }
+        public int ChannelTypeId { get; set; }
         public BetSelectionState BetSelectionState { get; set; }
     }
 

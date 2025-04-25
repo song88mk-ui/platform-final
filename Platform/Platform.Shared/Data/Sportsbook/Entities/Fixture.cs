@@ -76,6 +76,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public int LeBeId { get; set; }
         public List<PeriodScoreMDB> PeSc { get; set; }
         public int CuSe { get; set; }
+        public int ChTyId { get; set; }
     }
 
     public class FixtureFilter

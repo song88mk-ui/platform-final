@@ -11436,6 +11436,9 @@ namespace Platform.Sportsbook.API.Repository
             if (clientCode == "TTS") //Add client codes for ODDS Feed Clients
                 return false;
 
+            if (clientCode == "BGC") //No Margin for Bet Genius Clients
+                return false;
+
             return true;
             //return _configuration["Custom:ClientCodes"].Contains(clientCode) ? true : false;
         }

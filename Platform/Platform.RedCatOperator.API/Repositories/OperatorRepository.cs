@@ -27,8 +27,9 @@ namespace Platform.RedCatOperator.API.Repositories
         private List<HttpClient> _httpClients = new List<HttpClient>();
         private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions();
         private readonly IRabbitMQRepository _rabbitMQRepository;
-        public OperatorRepository(IConfiguration configuration, PlatformContext platformContext)
+        public OperatorRepository(IConfiguration configuration, IRabbitMQRepository rabbitMQRepository, PlatformContext platformContext)
         {
+            _rabbitMQRepository = rabbitMQRepository;
             _platformContext = platformContext;
             _configuration = configuration;
             _jsonOptions = new JsonSerializerOptions

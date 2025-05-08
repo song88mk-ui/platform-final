@@ -25,6 +25,7 @@ namespace Platform.RedCatOperator.API
             services.AddTelemetry(Configuration);
             services.AddHealthChecks();
             services.AddDbContextPool<PlatformContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Platform")));
+            services.AddHttpClient<IRabbitMQRepository, RabbitMQRepository>();
             services.AddScoped<IOperatorRepository, OperatorRepository>();
             services.AddControllers();
         }

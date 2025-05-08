@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Platform.Entities;
-using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Extensions;
+using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Models.RedCat;
 using System;
@@ -27,6 +26,7 @@ namespace Platform.RedCatOperator.API.Repositories
         private readonly object _lock = new object();
         private List<HttpClient> _httpClients = new List<HttpClient>();
         private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions();
+        private readonly IRabbitMQRepository _rabbitMQRepository;
         public OperatorRepository(IConfiguration configuration, PlatformContext platformContext)
         {
             _platformContext = platformContext;
@@ -119,6 +119,19 @@ namespace Platform.RedCatOperator.API.Repositories
                                 StatusCode = operatorResponse.StatusId
                             }
                         };
+
+                    _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                    {
+                        Payload = JsonSerializer.Serialize(new OnWalletChange
+                        {
+                            ClientId = request.ClientId.ToString().ToUpper(),
+                            UserId = request.MemberCode,
+                            Balance = operatorResponse.Balance
+                        }),
+                        CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                        MessageType = "OnWalletChange",
+                        RoutingKey = $"r.wallet.{request.ClientCode.ToString().ToLower()}"
+                    });
 
                     return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                     {
@@ -251,6 +264,19 @@ namespace Platform.RedCatOperator.API.Repositories
                                 StatusCode = operatorResponse.StatusId
                             }
                         };
+
+                    _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                    {
+                        Payload = JsonSerializer.Serialize(new OnWalletChange
+                        {
+                            ClientId = request.ClientId.ToString().ToUpper(),
+                            UserId = request.MemberCode,
+                            Balance = operatorResponse.Balance
+                        }),
+                        CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                        MessageType = "OnWalletChange",
+                        RoutingKey = $"r.wallet.{request.ClientCode.ToString().ToLower()}"
+                    });
 
                     return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                     {
@@ -385,6 +411,19 @@ namespace Platform.RedCatOperator.API.Repositories
                             }
                         };
 
+                    _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                    {
+                        Payload = JsonSerializer.Serialize(new OnWalletChange
+                        {
+                            ClientId = request.ClientId.ToString().ToUpper(),
+                            UserId = request.MemberCode,
+                            Balance = operatorResponse.Balance
+                        }),
+                        CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                        MessageType = "OnWalletChange",
+                        RoutingKey = $"r.wallet.{request.ClientCode.ToString().ToLower()}"
+                    });
+
                     return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                     {
                         StatusCode = StatusCode.Success,
@@ -517,6 +556,19 @@ namespace Platform.RedCatOperator.API.Repositories
                                 StatusCode = operatorResponse.StatusId
                             }
                         };
+
+                    _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
+                    {
+                        Payload = JsonSerializer.Serialize(new OnWalletChange
+                        {
+                            ClientId = request.ClientId.ToString().ToUpper(),
+                            UserId = request.MemberCode,
+                            Balance = operatorResponse.Balance
+                        }),
+                        CorrelationId = Guid.NewGuid().ToString().ToUpper(),
+                        MessageType = "OnWalletChange",
+                        RoutingKey = $"r.wallet.{request.ClientCode.ToString().ToLower()}"
+                    });
 
                     return new BaseResponseDTO<RedCatBetTransactionResponseDTO>()
                     {

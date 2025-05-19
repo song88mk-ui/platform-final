@@ -33,6 +33,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
         public BettingRepository(IServiceProvider serviceProvider, IConfiguration configuration, IMemCache memCache)
         {
+            //
             _serviceProvider = serviceProvider;
             _configuration = configuration;
             _memCache = memCache;

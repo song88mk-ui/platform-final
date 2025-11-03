@@ -49,6 +49,14 @@ jobs:
             image: platform-clientplatform-api
           - path: Platform.ClientSportsbook.API
             image: platform-clientsportsbook-api
+          - path: Platform.Job.CCF
+            image: platform-job-ccf
+          - path: Platform.Job.ForexEUR
+            image: platform-job-forexeur
+          - path: Platform.Job.Operator.Score
+            image: platform-job-operator-score
+          - path: Platform.Job.Resettlement
+            image: platform-job-resettlement
 
     steps:
       - name: Checkout

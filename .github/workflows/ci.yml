@@ -75,8 +75,6 @@ jobs:
             image: platform-wallet-api
           - path: Platform.WebSocket.API
             image: platform-websocket-api
-          - path: Platform.WebSocket.Client
-            image: platform-websocket-client
 
     steps:
       - name: Checkout

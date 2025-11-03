@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 
 WORKDIR /source
 
-ADD Platform.Shared Platform.Shared
-ADD Platform.CacheSync.Service Platform.CacheSync.Service
+ADD Platform/Platform.Shared Platform.Shared
+ADD Platform/Platform.CacheSync.Service Platform.CacheSync.Service
 
 WORKDIR /source/Platform.CacheSync.Service
 

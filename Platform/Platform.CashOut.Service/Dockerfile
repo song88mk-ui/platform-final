@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 
 WORKDIR /source
 
-ADD Platform.Shared Platform.Shared
-ADD Platform.CashOut.Service Platform.CashOut.Service
+ADD Platform/Platform.Shared Platform.Shared
+ADD Platform/Platform.CashOut.Service Platform.CashOut.Service
 
 WORKDIR /source/Platform.CashOut.Service
 

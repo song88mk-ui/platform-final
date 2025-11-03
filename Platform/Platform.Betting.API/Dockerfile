@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 
 WORKDIR /source
 
-ADD Platform.Shared Platform.Shared
-ADD Platform.Betting.API Platform.Betting.API
+ADD Platform/Platform.Shared Platform.Shared
+ADD Platform/Platform.Betting.API Platform.Betting.API
 
 WORKDIR /source/Platform.Betting.API
 

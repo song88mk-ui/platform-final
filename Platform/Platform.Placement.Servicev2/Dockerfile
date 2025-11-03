@@ -17,12 +17,13 @@ RUN dotnet publish -o publish \
   && rm -f App.config \
   && rm -f appsettings.*.json
 
-FROM mcr.microsoft.com/dotnet/aspnet:3.1
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y xmlstarlet \
-  && apt-get clean
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /source/Platform.Placement.Servicev2/publish .
 COPY --from=build /source/Platform.Placement.Servicev2/entrypoint.sh /app

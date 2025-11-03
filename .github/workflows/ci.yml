@@ -65,6 +65,18 @@ jobs:
             image: platform-operator-service
           - path: Platform.Placement.Servicev2
             image: platform-placement-service
+          - path: Platform.RabbitMQ.API
+            image: platform-rabbitmq-api
+          - path: Platform.Settlement.Service
+            image: platform-settlement-service
+          - path: Platform.Sportsbook.API
+            image: platform-sportsbook-api
+          - path: Platform.Wallet.API
+            image: platform-wallet-api
+          - path: Platform.WebSocket.API
+            image: platform-websocket-api
+          - path: Platform.WebSocket.Client
+            image: platform-websocket-client
 
     steps:
       - name: Checkout

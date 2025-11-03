@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 
 WORKDIR /source
 
-ADD Platform.API Platform.API
-ADD Platform.Shared Platform.Shared
+ADD Platform/Platform.Shared Platform.Shared
+ADD Platform/Platform.API Platform.API
 
 WORKDIR /source/Platform.API
 

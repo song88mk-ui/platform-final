@@ -57,6 +57,14 @@ jobs:
             image: platform-job-operator-score
           - path: Platform.Job.Resettlement
             image: platform-job-resettlement
+          - path: Platform.Operator.API
+            image: platform-operator-api
+          - path: Platform.Operator.Cashout.Service
+            image: platform-operator-cashout-service
+          - path: Platform.Operator.Servicev2
+            image: platform-operator-service
+          - path: Platform.Placement.Servicev2
+            image: platform-placement-service
 
     steps:
       - name: Checkout

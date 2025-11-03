@@ -10,7 +10,7 @@ WORKDIR /source/Platform.API
 RUN dotnet restore
 RUN dotnet build --configuration Release
 RUN dotnet publish -o publish && \
-  cd publish && rm -f appsettings.Development.json
+  cd publish && rm -f appsettings.*.json
 
 FROM mcr.microsoft.com/dotnet/aspnet:3.1
 EXPOSE 80

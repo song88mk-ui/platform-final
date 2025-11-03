@@ -1,0 +1,20 @@
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+
+WORKDIR /source
+
+ADD Platform.Shared Platform.Shared
+ADD Platform.Cancellation.Service Platform.Cancellation.Service
+
+WORKDIR /source/Platform.Cancellation.Service
+
+RUN dotnet restore
+RUN dotnet build --configuration Release
+RUN dotnet publish -o publish && \
+  cd publish && rm -f appsettings.*.json
+
+FROM mcr.microsoft.com/dotnet/aspnet:3.1
+EXPOSE 80
+WORKDIR /app
+
+COPY --from=build /source/Platform.Cancellation.Service/publish .
+CMD ["/usr/bin/dotnet", "Platform.Cancellation.Service.dll"]

@@ -25,6 +25,20 @@ jobs:
         app:
           - path: Platform.API
             image: platform-api
+          - path: Platform.BetForwarder.Service
+            image: platform-betforwarder-service
+          - path: Platform.BetInfo.Service
+            image: platform-betinfo-service
+          - path: Platform.BetStatus.Service
+            image: platform-betstatus-service
+          - path: Platform.Betting.API
+            image: platform-betting-api
+          - path: Platform.CacheSync.Service
+            image: platform-cachesync-service
+          - path: Platform.Cancellation.Service
+            image: platform-cancellation-service
+          - path: Platform.CashOut.Service
+            image: platform-cashout-service
 
     steps:
       - name: Checkout

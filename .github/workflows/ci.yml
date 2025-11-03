@@ -39,6 +39,16 @@ jobs:
             image: platform-cancellation-service
           - path: Platform.CashOut.Service
             image: platform-cashout-service
+          - path: Platform.CashOutStake.Servicev2
+            image: platform-cashoutstake-service
+          - path: Platform.Client.API
+            image: platform-client-api
+          - path: Platform.Client.TopMarket
+            image: platform-client-topmarket-service
+          - path: Platform.ClientPlatform.API
+            image: platform-clientplatform-api
+          - path: Platform.ClientSportsbook.API
+            image: platform-clientsportsbook-api
 
     steps:
       - name: Checkout

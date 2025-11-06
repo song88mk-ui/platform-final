@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  ECR: 418541840646.dkr.ecr.ap-east-1.amazonaws.com
+  ECR: 418541840646.dkr.ecr.ap-south-1.amazonaws.com
 
 jobs:
   build:
@@ -97,7 +97,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-region: ap-east-1
+          aws-region: ap-south-1
           role-to-assume: arn:aws:iam::418541840646:role/github-oidc-ecr-push-role
 
       - name: Login to Amazon ECR

@@ -330,7 +330,7 @@ namespace Platform.Operator.API.Repository
                 Balance = betResponse.Balance
             };
         }
-        
+
         public async Task<BetPlacementResponseDTO> DebitESports(OperatorESportsDebitRequestDTO request, string clientId, string operatorToken, string isAgent)
         {
 

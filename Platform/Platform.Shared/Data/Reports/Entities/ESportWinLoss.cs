@@ -101,7 +101,7 @@ namespace Platform.Shared.Data.Reports.Entities
         public string BetStatusName { get; set; }
 
         public string Reason { get; set; }
-        
+
         public string CurrencyCode { get; set; }
 
         public string Ticket { get; set; }

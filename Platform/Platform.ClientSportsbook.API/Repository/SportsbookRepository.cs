@@ -235,7 +235,7 @@ namespace Platform.ClientSportsbook.API.Repository
                 foreach (var fixtureId in fixtureIds)
                 {
                     var payload = await _redisCache.GetAsync<FixtureLimited>(clientKeyFilter.ClientCode, $"subscribed-fixture-markets:{clientKeyFilter.ClientCode}:{fixtureId}");
-                    
+
                     result.Fixtures.Add(new FixtureLimitedDTO()
                     {
                         SportId = payload.SpId,

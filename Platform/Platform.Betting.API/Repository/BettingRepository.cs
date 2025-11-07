@@ -193,7 +193,7 @@ namespace Platform.Betting.API.Repository
                 });
 
                 var selection = request.Selections.FirstOrDefault();
-                
+
                 List<OverrideSportConfig> overrideSportConfig = JsonSerializer.Deserialize<List<OverrideSportConfig>>(betConfig.OverrideConfig, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                 var checkOverride = overrideSportConfig.Where(a => a.SportId == selection.SportId).FirstOrDefault();
                 if (checkOverride != null)
@@ -2200,7 +2200,7 @@ namespace Platform.Betting.API.Repository
                         Result = response
                     };
 
-                #endregion                
+                #endregion
 
                 //_messageBroker.Publish(new OnBOBetCancellaton
                 //{
@@ -2421,7 +2421,7 @@ namespace Platform.Betting.API.Repository
                     };
                 }
 
-                #endregion                
+                #endregion
 
                 var payload = new OnBOBetManualSettlement
                 {

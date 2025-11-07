@@ -20,6 +20,6 @@ namespace Platform.Shared.Models
         public int SportId { get; set; }
         public int LeagueId { get; set; }
         public int SegmentId { get; set; }
-        public string ClientCode { get; set; }        
+        public string ClientCode { get; set; }
     }
 }

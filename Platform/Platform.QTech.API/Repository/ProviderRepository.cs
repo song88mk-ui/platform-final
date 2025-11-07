@@ -33,7 +33,7 @@ namespace Platform.QTech.API.Repository
                 if (response.IsSuccessStatusCode)
                 {
                     var result = JsonSerializer.Deserialize<AuthenticationResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-                    
+
                     return new Tuple<AuthenticationCode, AuthenticationResponse>(AuthenticationCode.OK, result);
                 }
                 else

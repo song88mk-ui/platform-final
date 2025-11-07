@@ -50,7 +50,7 @@ namespace Platform.CacheSync.Service.Repository
                     }
                 }
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 return new BaseResponseDTO<bool>
                 {

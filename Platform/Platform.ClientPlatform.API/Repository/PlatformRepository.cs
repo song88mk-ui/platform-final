@@ -125,7 +125,7 @@ namespace Platform.ClientPlatform.API.Repository
                 }
             }
 
-            if (!parameters.Any()) 
+            if (!parameters.Any())
                 return urlEncodedString.ToString();
 
             urlEncodedString.Append("?");

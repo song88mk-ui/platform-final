@@ -125,7 +125,7 @@ namespace Platform.Job.Operator.Score.Repository
                 foreach (var fixtureBet in _fixtureBetReference)
                 {
 
-                    
+
                     var unCachedBetId = new List<Guid>();
 
                     if (fixtureBet.Item4.Any())

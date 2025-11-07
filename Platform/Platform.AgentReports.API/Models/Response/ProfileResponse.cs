@@ -12,4 +12,3 @@
         public decimal WLCLastWeek { get; set; }
     }
 }
-

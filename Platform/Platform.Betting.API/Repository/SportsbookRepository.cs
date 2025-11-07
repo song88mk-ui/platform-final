@@ -232,7 +232,7 @@ namespace Platform.Betting.API.Repository
 
                             if (selections.Count == 1)
                             {
-                                if (selectionProbability == null 
+                                if (selectionProbability == null
                                     || selectionProbability.IsActive == false
                                     || selectionProbability.MarketStatusId != (int)MarketStatus.Active)
                                 {
@@ -320,7 +320,7 @@ namespace Platform.Betting.API.Repository
 
                                 if (OddsTypeHelper.GetOddsByOddsType(bet.OddsTypeId, selections.First().Odds, selections.First().IsBinary) < 0 && (bet.OddsTypeId == (int)OddsType.Indonesian || bet.OddsTypeId == (int)OddsType.Malaysian))
                                 {
-                                    
+
                                     won = Convert.ToDecimal(probabilites.First().WonProbability) * (stake + bet.Stake);
                                     halfWon = Convert.ToDecimal(probabilites.First().HalfWonProbability) * ((bet.Stake / 2) + stake);
                                     nonTaxedWon = Convert.ToDecimal(probabilites.First().WonProbability) * (bet.TrueStake + bet.Stake);

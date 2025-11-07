@@ -228,7 +228,7 @@ namespace Platform.AgentReports.API.Repository
                 MarketTemplateGroupId = s.MarketTemplateGroupId,
                 MarketTemplateGroupName = s.MarketTemplateGroupName,
                 PositionTakingDetails = string.IsNullOrEmpty(s.PositionTakingDetails) ? new PositionTakingDetails() : JsonConvert.DeserializeObject<PositionTakingDetails>(s.PositionTakingDetails),
-                CommissionDetails = string.IsNullOrEmpty(s.CommissionDetails) ? new List<CommissionDetails>() : JsonConvert.DeserializeObject<List<CommissionDetails>>(s.CommissionDetails), 
+                CommissionDetails = string.IsNullOrEmpty(s.CommissionDetails) ? new List<CommissionDetails>() : JsonConvert.DeserializeObject<List<CommissionDetails>>(s.CommissionDetails),
                 CasinoDetails = string.IsNullOrEmpty(s.CasinoDetails) ? null : JsonConvert.DeserializeObject<CasinoDetailDTO>(s.CasinoDetails),
                 Reason = s.Reason,
                 BetScore = (!s.IsParlay && s.ProductId == (int)Product.Sportsbook) ? GetScore(1, s.BetId) : "",
@@ -994,7 +994,7 @@ namespace Platform.AgentReports.API.Repository
             var agentUserTypeId = (int)UserType.Agent;
 
             var isAgent = !(parentAgentId == 0 && directUserId == 0);
-            
+
             var sqlRaw = $"GetProfitLossSummary {parentAgentId}, {directUserId}, {isAgent}, {agentUserTypeId}, {request.ProductTypeId}, '{productTypes}', '{accounts}', '{betIds}', '{status}', '{request.FromDate.ToString("yyyy-MM-dd")}', '{request.ToDate.ToString("yyyy-MM-dd 23:59:59")}', '{currencyCode}', {request.Page}, {request.PageSize}";
             var response = await _context.ReadProfitLossSummary.FromSqlRaw(sqlRaw).ToListAsync();
             var totalResponse = response.FirstOrDefault();
@@ -1845,7 +1845,7 @@ namespace Platform.AgentReports.API.Repository
             //check if the userId is player
             //need to refactor this. need to get the userTypeId from agentApi (Internal)
             var winLoss = _context.WinLoss.FirstOrDefault(c => c.ParentUserId == 0 && c.IndirectUserId == userId);
-            
+
             var userType = (int)UserType.Agent;
 
             if (winLoss != null)
@@ -2403,10 +2403,10 @@ namespace Platform.AgentReports.API.Repository
 
             foreach (var pt in productType)
             {
-                var products = pt.Select(s => new  
-                    { 
-                        ProductId = pt.Key.ProductTypeId == (int)Product.Sportsbook ? s.GameType : s.ProviderName, 
-                        ProductName = s.ProviderName 
+                var products = pt.Select(s => new
+                    {
+                        ProductId = pt.Key.ProductTypeId == (int)Product.Sportsbook ? s.GameType : s.ProviderName,
+                        ProductName = s.ProviderName
                     }).GroupBy(g => g.ProductName).OrderBy(o => pt.Key.ProductTypeId == (int)Product.Sportsbook ? $"Z{o.Key.PadLeft(5, '0')}" : o.Key).ToList();
 
                 var newPt = new ProductType

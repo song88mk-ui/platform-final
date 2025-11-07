@@ -397,5 +397,3 @@ namespace Platform.WebSocket.API.Repository
         public string UserId { get; set; }
     }
 }
-
-

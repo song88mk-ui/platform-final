@@ -7,7 +7,7 @@ namespace Platform.Shared.MessageModels
     public class OnClientTopMarketBetPlacement
     {
         public string ClientId { get; set; }
-        public string ClientCode { get; set; }  
+        public string ClientCode { get; set; }
         public string ClientName { get; set; }
         public int SportId { get; set; }
         public string SportName { get; set; }

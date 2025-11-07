@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Platform.Shared.MessageModels
 {
-    public class OnCashOutResult 
+    public class OnCashOutResult
     {
         public string BetId { get; set; }
         public BetStatus BetStatus { get; set; }

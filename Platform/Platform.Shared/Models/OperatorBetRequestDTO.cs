@@ -57,7 +57,7 @@ namespace Platform.Shared.Models
         public decimal OddsRef { get; set; }
 
         [JsonPropertyName("betSelections")]
-        public List<OperatorBetSelectionRequestDTO> BetSelections { get; set; }        
+        public List<OperatorBetSelectionRequestDTO> BetSelections { get; set; }
     }
 
     public class OperatorBetSelectionRequestDTO

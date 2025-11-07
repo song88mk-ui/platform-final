@@ -67,7 +67,7 @@ namespace Platform.WebSocket.API
                         builder
                            .SetIsOriginAllowed(origin => true)
                            .AllowAnyHeader()
-                           .AllowAnyMethod()                           
+                           .AllowAnyMethod()
                            .AllowCredentials();
                     });
             });

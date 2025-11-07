@@ -53,7 +53,7 @@ namespace Platform.CacheSync.Service.Repository
             var request = new CachePreloadRequestDTO
             {
                 CacheType = CacheType.UserFavorites,
-                CacheKey = message.CacheKey                
+                CacheKey = message.CacheKey
             };
 
             var publishMessage = await DeleteCachePreload_SportsbookApi(request);
@@ -74,7 +74,7 @@ namespace Platform.CacheSync.Service.Repository
         {
             var request = new CachePreloadRequestDTO
             {
-                CacheType = message.CacheType            
+                CacheType = message.CacheType
             };
 
             await DeleteCachePreload_BettingApi(request);

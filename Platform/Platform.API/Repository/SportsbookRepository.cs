@@ -194,7 +194,7 @@ namespace Platform.API.Repository
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                         return JsonSerializer.Deserialize<BaseResponseDTO<MarketTemplateGroupResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
                     else
-                    { 
+                    {
                         return new BaseResponseDTO<MarketTemplateGroupResponseDTO>
                         {
                             StatusCode = StatusCode.Error,
@@ -1338,7 +1338,7 @@ namespace Platform.API.Repository
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
                 };
             }
-        }        
+        }
 
         public async Task<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>> CopyClientTopFixtures(CopyClientTopFixtureRequestDTO request)
         {
@@ -1370,7 +1370,7 @@ namespace Platform.API.Repository
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})"
                 };
             }
-        }        
+        }
 
         public async Task<BaseResponseDTO<ClientTopLeaguesResponseDTO>> GetClientTopLeagues(ClientTopLeaguesRequestDTO request)
         {
@@ -1501,7 +1501,7 @@ namespace Platform.API.Repository
                 };
             }
         }
-        
+
         public async Task<BaseResponseDTO<SportGroupResponseDTO>> GetSportGroups()
         {
             try

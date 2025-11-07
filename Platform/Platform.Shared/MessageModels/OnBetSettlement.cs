@@ -10,7 +10,7 @@ namespace Platform.Shared.MessageModels
             BetSelections = new List<BetSelection>();
             IsRetry = false;
         }
-        
+
         public Bet Bet { get; set; }
         public List<BetSelection> BetSelections { get; set; }
         public string Message { get; set; }

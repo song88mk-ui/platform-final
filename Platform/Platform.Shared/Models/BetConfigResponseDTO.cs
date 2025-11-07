@@ -16,7 +16,7 @@ namespace Platform.Shared.Models
 
     public class OverrideSportConfig
     {
-        [JsonProperty("sportId")] 
+        [JsonProperty("sportId")]
         public int SportId { get; set; }
         [JsonProperty("sportName")]
         public string SportName { get; set; }
@@ -30,7 +30,7 @@ namespace Platform.Shared.Models
 
     public class DefaultSportConfig
     {
-        [JsonProperty("minStake")] 
+        [JsonProperty("minStake")]
         public decimal MinStake { get; set; }
         [JsonProperty("maxStake")]
         public decimal MaxStake { get; set; }
@@ -44,7 +44,7 @@ namespace Platform.Shared.Models
         {
             ParlayBonusConfig = new List<ParlayBonusConfig>();
         }
-        [JsonProperty("minStake")] 
+        [JsonProperty("minStake")]
         public decimal MinStake { get; set; }
         [JsonProperty("maxStake")]
         public decimal MaxStake { get; set; }

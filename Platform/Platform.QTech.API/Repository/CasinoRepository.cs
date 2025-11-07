@@ -78,7 +78,7 @@ namespace Platform.QTech.API.Repository
             if (authenticationResponse.StatusCode != StatusCode.Success)
                 return new Tuple<SessionCode, GameSessionResponse>(SessionCode.INVALID_TOKEN, new GameSessionResponse());
 
-            return new Tuple<SessionCode, GameSessionResponse>(SessionCode.OK, new GameSessionResponse 
+            return new Tuple<SessionCode, GameSessionResponse>(SessionCode.OK, new GameSessionResponse
             {
                 Balance = authenticationResponse.Result.Balance,
                 Currency = authenticationResponse.Result.CurrencyCode
@@ -266,7 +266,7 @@ namespace Platform.QTech.API.Repository
                         RoutingKey = $"r.wallet.{transactionEntity.ClientCode.ToLower()}"
                     });
 
-                    return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse 
+                    return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse
                     {
                         ReferenceId = betId.ToString().ToUpper(),
                         Balance = walletResponse.Result.Balance
@@ -296,7 +296,7 @@ namespace Platform.QTech.API.Repository
                     return new Tuple<WithdrawCode, WithdrawResponse>(WithdrawCode.OK, new WithdrawResponse
                     {
                         ReferenceId = round.BetId.ToString().ToUpper(),
-                        Balance = Convert.ToDecimal(transactionId.Split('|').Last()) 
+                        Balance = Convert.ToDecimal(transactionId.Split('|').Last())
                     });
                 }
 
@@ -842,7 +842,7 @@ namespace Platform.QTech.API.Repository
                             Bets = new List<CasinoBetHistoryDTO>()
                         }
                     };
-                }                
+                }
 
                 foreach (var bet in transactions)
                 {
@@ -851,8 +851,8 @@ namespace Platform.QTech.API.Repository
                     result.Add(new CasinoBetHistoryDTO
                     {
                         BetId = bet.BetId.ToString(),
-                        Stake = bet.Stake,                        
-                        Payout = bet.Payout,                        
+                        Stake = bet.Stake,
+                        Payout = bet.Payout,
                         BetStatusId = bet.BetStatusId,
                         BetStatusName = bet.BetStatusName,
                         TransactionDate = bet.BetDate,
@@ -860,7 +860,7 @@ namespace Platform.QTech.API.Repository
                         GameName = productLookup.ProductName,
                         GameType = productLookup.GameType,
                         ProviderName = productLookup.ProviderName,
-                        ProviderBetId = bet.ProviderBetId                        
+                        ProviderBetId = bet.ProviderBetId
                     });
                 }
 

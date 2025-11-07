@@ -286,8 +286,8 @@ namespace Platform.Oddin.API.Repository
                         }
                     }
 
-                    var odds = request.Ticket.Bets.FirstOrDefault()?.TotalOdds ?? 0m; 
-                    
+                    var odds = request.Ticket.Bets.FirstOrDefault()?.TotalOdds ?? 0m;
+
                     using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
 
                     if (request.TransactionType == (int)TransactionType.DebitAfterCredit)

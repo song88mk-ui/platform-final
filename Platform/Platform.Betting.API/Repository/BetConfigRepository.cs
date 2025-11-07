@@ -439,4 +439,3 @@ namespace Platform.Betting.API.Repository
 
     }
 }
-

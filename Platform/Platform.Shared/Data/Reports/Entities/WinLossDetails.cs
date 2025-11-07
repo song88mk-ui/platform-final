@@ -44,7 +44,7 @@ namespace Platform.Shared.Data.Reports.Entities
 
         public decimal TotalUplineWLC { get; set; }
 
-        
+
         public long UserId { get; set; }
 
         public string Username { get; set; }
@@ -63,7 +63,7 @@ namespace Platform.Shared.Data.Reports.Entities
 
         public decimal ValidStakeAmount { get; set; }
 
-        
+
         public decimal Commission { get; set; }
 
         public decimal MemberWinLoss { get; set; }
@@ -141,7 +141,7 @@ namespace Platform.Shared.Data.Reports.Entities
         public string PositionTakingDetails { get; set; }
 
         public string CommissionDetails { get; set; }
-        
+
         public string CasinoDetails { get; set; }
 
         public string Reason { get; set; }

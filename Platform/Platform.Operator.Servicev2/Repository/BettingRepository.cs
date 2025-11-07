@@ -379,7 +379,7 @@ namespace Platform.Operator.Servicev2.Repository
                             betSelection.BetSelectionStatusName = betEntity.BetStatusName;
 
                             var betSelectionEntity = context.BetSelection.Update(betSelection).Entity;
-                            //payload.BetSelections.Add(betSelectionEntity); 
+                            //payload.BetSelections.Add(betSelectionEntity);
                             payload.BetSelections.Add(new BetSelectionMessageExtenstion()
                             {
                                 BetSelection = betSelectionEntity,
@@ -779,7 +779,7 @@ namespace Platform.Operator.Servicev2.Repository
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
                         var responsePayload = response.Content.ReadAsStringAsync().Result;
-                        
+
                         var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                         activity?.SetTag("response.bad.request.payload", responsePayload);
@@ -813,7 +813,7 @@ namespace Platform.Operator.Servicev2.Repository
                     else
                     {
                         activity?.SetTag("response.error.payload", JsonSerializer.Serialize(response.ReasonPhrase));
-                        
+
                         AddOperatorLog(new OperatorLog
                         {
                             Direction = "RESPONSE",
@@ -861,7 +861,7 @@ namespace Platform.Operator.Servicev2.Repository
                 using var activity = this._activitySource.StartActivity("ProcesssBetPlacementOG");
 
                 activity?.SetTag("bet.id", message.Bet.BetId);
-                
+
                 var publicKey = _ogConfig.PublicAPIKey;
                 var privateKey = _ogConfig.PrivateAPIKey;
                 var vendorName = _ogConfig.VendorName;
@@ -1249,7 +1249,7 @@ namespace Platform.Operator.Servicev2.Repository
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
                         var responsePayload = response.Content.ReadAsStringAsync().Result;
-                        
+
                         var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                         activity?.SetTag("response.bad.request.payload", responsePayload);
@@ -1272,7 +1272,7 @@ namespace Platform.Operator.Servicev2.Repository
                     else
                     {
                         activity?.SetTag("response.error.payload", JsonSerializer.Serialize(response.ReasonPhrase));
-                        
+
                         AddOperatorLog(new OperatorLog
                         {
                             Direction = "RESPONSE",
@@ -2320,7 +2320,7 @@ namespace Platform.Operator.Servicev2.Repository
                         Timestamp = DateTime.UtcNow
                     });
                 }
-                AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, isCancelSuccess ? "OnBetSettlementOG" : "OnBetSettlement", correlationId, false);           
+                AddOrUpdateOperatorSettlementRetry(new OnBetSettlementRetry { RemainingRetries = 0, OnBetSettlement = message }, isCancelSuccess ? "OnBetSettlementOG" : "OnBetSettlement", correlationId, false);
             }
             finally
             {
@@ -2432,7 +2432,7 @@ namespace Platform.Operator.Servicev2.Repository
                 if (response.IsSuccessStatusCode)
                 {
                     var responsePayload = response.Content.ReadAsStringAsync().Result;
-                    
+
                     var result = JsonSerializer.Deserialize<OperatorBetResponseDTO>(responsePayload, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                     activity?.SetTag("response.payload", responsePayload);
@@ -2488,7 +2488,7 @@ namespace Platform.Operator.Servicev2.Repository
                     else
                     {
                         activity?.SetTag("response.error.payload", JsonSerializer.Serialize(response.ReasonPhrase));
-                        
+
                         AddOperatorLog(new OperatorLog
                         {
                             Direction = "RESPONSE",

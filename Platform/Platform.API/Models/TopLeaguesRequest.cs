@@ -13,7 +13,7 @@ namespace Platform.API.Models
         public int SportId { get; set; }
         public string LanguageCode { get; set; }
         public int LeagueId { get; set; }
-        public int SegmentId { get; set; }        
+        public int SegmentId { get; set; }
     }
     public class TempTopLeaguesRequest
     {

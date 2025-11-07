@@ -60,7 +60,7 @@ namespace Platform.Shared.Data.Reports.Entities
 
         public decimal ValidStakeAmount { get; set; }
 
-        
+
         public decimal Commission { get; set; }
 
         public decimal MemberWinLoss { get; set; }

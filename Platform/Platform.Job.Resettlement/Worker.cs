@@ -50,7 +50,7 @@ namespace Platform.Job.Resettlement
 
             while (true)
             {
-                
+
                 try
                 {
                     using var scope = _provider.CreateScope();
@@ -61,7 +61,7 @@ namespace Platform.Job.Resettlement
                     if (bets.Count > 0)
                     {
                         _platformRepository.ProcessBets(bets, _messageBroker);
-                        
+
                         var waitTime = GetNextRetry(false);
                         await Task.Delay(waitTime * 1000 * 60);
                     }

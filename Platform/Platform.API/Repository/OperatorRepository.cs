@@ -295,7 +295,7 @@ namespace Platform.API.Repository
                 }
 
                 var balance = 0m;
-                var currencyCode = string.Empty; 
+                var currencyCode = string.Empty;
 
                 if (!request.IsSBLaunch)
                 {
@@ -311,7 +311,7 @@ namespace Platform.API.Repository
                     var walletResponse = await _httpClient.GetAsync($"{endpoint}/api/v2/platform/player/balance?player_code={walletRequest.player_code}&timestamp={walletRequest.timestamp}&signature={signature}");
 
                     var walletResult = JsonSerializer.Deserialize<OGWalletResponseDTO>(await walletResponse.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = false });
-                    
+
                     if (walletResult.Code != "S-100")
                     {
                         return new BaseResponseDTO<AuthenticationResponseDTO>

@@ -13,7 +13,7 @@ namespace Platform.Oddin.API.Repository
         private readonly HttpClient _httpClient;
         public OperatorRepository(HttpClient httpClient, IRabbitMQRepository rabbitMqRepository)
         {
-            _httpClient = httpClient;            
+            _httpClient = httpClient;
         }
 
         public async Task<BaseResponseDTO<AuthenticationResponseDTO>> Authenticate(string clientId, string operatorToken, string endpoint, bool isAgent)

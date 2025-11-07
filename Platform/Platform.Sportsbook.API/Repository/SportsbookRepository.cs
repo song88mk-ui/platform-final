@@ -6268,7 +6268,7 @@ namespace Platform.Sportsbook.API.Repository
                     marketTemplateIds = marketTemplateGroup != null ? marketTemplateGroup.MarketTemplates.Split(',').ToList() : new List<string>();
                 }
 
-                var filteredMarkets = markets.Where(c => c.IsBo == true).ToList(); //marketTemplates.Contains(c.MaTeId) && 
+                var filteredMarkets = markets.Where(c => c.IsBo == true).ToList(); //marketTemplates.Contains(c.MaTeId) &&
                 var result = new List<BoostedMarketDTO>();
                 var ctr = 0;
                 foreach (var market in filteredMarkets)
@@ -9481,7 +9481,7 @@ namespace Platform.Sportsbook.API.Repository
             //        SortOrder = rmt.SortOrder
             //    }).ToList();
 
-            //// join the 2 results to produce an output 
+            //// join the 2 results to produce an output
             //var marketTemplates = new List<ClientMarketTemplateModel>();
 
             //if (filteredClientMarketTemplates.Any())

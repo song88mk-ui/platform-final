@@ -10,4 +10,3 @@ namespace Platform.AgentReports.API.Models.Response
         public string ReferenceId { get; set; }
     }
 }
-

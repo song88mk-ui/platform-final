@@ -856,7 +856,7 @@ namespace Platform.CashOut.Service
             {
                 var errorMessage = new
                 {
-                    Message = ex.Message, 
+                    Message = ex.Message,
                     StackTrace = ex.StackTrace,
                     Payload = payload
                 };

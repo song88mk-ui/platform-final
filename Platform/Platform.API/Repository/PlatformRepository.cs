@@ -4837,7 +4837,7 @@ namespace Platform.API.Repository
 
         public async Task<BaseResponseDTO<BackofficeAnnouncementResponseDTO>> GetAnnouncements(BackofficeAnnouncementRequest request)
         {
-            
+
             var clientCodes = string.IsNullOrEmpty(request.ClientCodes) ? new List<string>() : request.ClientCodes.Split(',').ToList();
             var clientIds = string.Empty;
             if(clientCodes.Any())
@@ -4853,7 +4853,7 @@ namespace Platform.API.Repository
                 }
                 clientIds = string.Join(',', clientResult.Select(c => c.ClientId).ToList());
             }
-            
+
             return await _sportsbookRepository.GetAnnouncements(new BackofficeAnnouncementRequestDTO
             {
                 ClientIds = clientIds,

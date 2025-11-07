@@ -11,7 +11,7 @@ namespace Platform.Wallet.API.Repository
     public class WalletRepository : IWalletRepository
     {
         private readonly WalletContext _walletContext;
-        
+
         public WalletRepository(WalletContext walletContext)
         {
             _walletContext = walletContext;

@@ -50,7 +50,7 @@ namespace Platform.Client.API.Repository
                 if (response.IsSuccessStatusCode)
                 {
                     var initialResult = JsonSerializer.Deserialize<MTSMaxStakeAuthResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-                    
+
                     var result = new BaseResponseDTO<MTSAuthResponseDTO>
                     {
                         StatusCode = StatusCode.Success,

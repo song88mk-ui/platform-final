@@ -821,7 +821,7 @@ namespace Platform.Sportsbook.API.Controllers
         }
 
         /// <summary>
-        /// Get list of sports along with the following: Segments, Leagues, and Fixtures. Doesn't include virtual sports and outrights. 
+        /// Get list of sports along with the following: Segments, Leagues, and Fixtures. Doesn't include virtual sports and outrights.
         /// </summary>
         [HttpPost("v1/sportsbook/sports/details")]
         public async Task<IActionResult> GetSportstreeDetails([FromBody] BackofficeSportsRequestDTO request)

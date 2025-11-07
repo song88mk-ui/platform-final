@@ -92,7 +92,7 @@ namespace Platform.Shared.Data.Reports.Entities
         public string ProductName { get; set; }
 
         public int MemberCount { get; set; }
-        
+
         public int StatusId { get; set; }
 
         public string StatusName { get; set; }

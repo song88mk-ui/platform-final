@@ -54,7 +54,7 @@ namespace Platform.Shared.Models
         public decimal StakeBonusPayout { get; set; }
         public bool IsFreeBet { get; set; }
         public bool IsBoosted { get; set; }
-        public bool IsBetBuilder { get; set; }        
+        public bool IsBetBuilder { get; set; }
         public List<BetSelectionHistoryDTO> Selections { get; set; }
         public List<PartialCashoutDTO> PartialCashout { get; set; }
     }

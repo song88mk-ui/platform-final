@@ -26,12 +26,13 @@ namespace Platform.Job.ForexEUR
             {
                 try
                 {
-                    await Task.Delay(3600000, stoppingToken);
+                    _logger.LogInformation("processing job: {time}", DateTimeOffset.Now);
                     await _platformRepository.ProcessForex();
-                    _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                    await Task.Delay(3600000, stoppingToken);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
+                    _logger.LogError($"error on ProcessForex(): {e.Message}. Service will retry!");
                 }
             }
         }

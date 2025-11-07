@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Platform.Shared.Data.Platform;
 using System;
 using System.Collections.Generic;
@@ -13,19 +14,24 @@ namespace Platform.Job.ForexEUR.Repository
     {
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
-        public PlatformRepository(IConfiguration configuration, HttpClient httpClient)
+        private readonly ILogger<PlatformRepository> _logger;
+
+        public PlatformRepository(IConfiguration configuration, HttpClient httpClient, ILogger<PlatformRepository> logger)
         {
             _configuration = configuration;
+            _logger = logger;
 
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri("https://openexchangerates.org");
         }
         public async Task ProcessForex()
         {
+            _logger.LogDebug("attempting to make request to [openexchangerates.org]");
             var response = await _httpClient.GetAsync("https://openexchangerates.org/api/latest.json?app_id=b2f778983d0d4b11a98e3cf2b4849c01&base=EUR&show_alternative=true");
 
             if (response.IsSuccessStatusCode)
             {
+                _logger.LogDebug("success! parsing response");
                 var result = JsonSerializer.Deserialize<ExchangeRate>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                 foreach (var rate in result.Rates)
@@ -53,12 +59,12 @@ namespace Platform.Job.ForexEUR.Repository
                             }
 
                             context.SaveChanges();
-                            Console.WriteLine($"{DateTime.Now} - {rate.Key}");
+                            _logger.LogInformation($"update to ForexEUR [{rate.Key}] table complete!");
                         }
                     }
                     catch (Exception ex)
                     {
-                        var message = ex.Message;
+                        _logger.LogError($"error processing forex: {ex.Message}");
                     }
                 }
             }

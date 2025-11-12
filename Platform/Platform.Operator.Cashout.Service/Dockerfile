@@ -13,8 +13,11 @@ RUN dotnet publish -o publish && \
   cd publish && rm -f appsettings.*.json
 
 FROM mcr.microsoft.com/dotnet/aspnet:3.1
-EXPOSE 80
 WORKDIR /app
+RUN apt-get update -qq && \
+    apt-get install curl -y && \
+    apt-get clean && \
+    rm -fr /var/lib/apt/lists/*
 
 COPY --from=build /source/Platform.Operator.Cashout.Service/publish .
 CMD ["/usr/bin/dotnet", "Platform.Operator.Cashout.Service.dll"]

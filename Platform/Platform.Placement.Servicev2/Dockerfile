@@ -21,7 +21,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
 RUN apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y xmlstarlet \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y xmlstarlet curl \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 

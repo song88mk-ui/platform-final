@@ -10,12 +10,9 @@ RUN dotnet restore
 COPY . .
 RUN dotnet publish -c Release --no-restore -o /app
 
-FROM mcr.microsoft.com/dotnet/aspnet:7.0
-WORKDIR /app
-RUN apt-get update -qq && \
-    apt-get install curl -y && \
-    apt-get clean && \
-    rm -fr /var/lib/apt/lists/*
 
+FROM mcr.microsoft.com/dotnet/aspnet:7.0
+EXPOSE 80
+WORKDIR /app
 COPY --from=build /app .
 ENTRYPOINT ["dotnet", "Platform.Websocket.API2.dll"]

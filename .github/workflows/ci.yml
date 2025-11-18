@@ -80,7 +80,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Check Affected Files
+        id: app-changes
+        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62
+        with:
+          files: 'Platform/${{ matrix.app.path }}/**'
+
+      - name: Changes Check
+        id: proceed
+        if: steps.app-changes.outputs.any_changed == 'true'
+        run: |
+          echo "proceed=true" >> $GITHUB_OUTPUT
+
       - name: Docker meta
+        if: steps.proceed.outputs.proceed == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -92,19 +105,23 @@ jobs:
             type=semver,pattern={{version}}
 
       - name: Setup Docker Buildx
+        if: steps.proceed.outputs.proceed == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Configure AWS credentials
+        if: steps.proceed.outputs.proceed == 'true'
         uses: aws-actions/configure-aws-credentials@v5
         with:
           aws-region: ap-south-1
           role-to-assume: arn:aws:iam::418541840646:role/github-oidc-ecr-push-role
 
       - name: Login to Amazon ECR
+        if: steps.proceed.outputs.proceed == 'true'
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build & Push
+        if: steps.proceed.outputs.proceed == 'true'
         uses: docker/build-push-action@v6
         with:
           file: Platform/${{ matrix.app.path }}/Dockerfile
@@ -113,5 +130,5 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Logout to Amazon ECR
-        if: always()
+        if: success() && steps.proceed.outputs.proceed == 'true'
         run: docker logout ${{ steps.login-ecr.outputs.registry }}

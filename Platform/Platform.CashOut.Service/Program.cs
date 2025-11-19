@@ -5,6 +5,7 @@ using Platform.CashOut.Service.Repository;
 using Platform.Shared.Utility;
 using Serilog;
 using Serilog.Events;
+using Serilog.Formatting.Compact;
 using System;
 using System.IO;
 
@@ -14,16 +15,13 @@ namespace Platform.CashOut.Service
     {
         public static void Main(string[] args)
         {
-            var config = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", optional: false)
-                .Build();
-
             var outputTemplate = "{Timestamp:yyyy-MM-ddTHH:mm:ssfff zzz} [{Level:u3}] {Message:j}{NewLine:l}{Exception:l}";
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Information()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
+                .MinimumLevel.Information()
                 .Enrich.FromLogContext()
-                .WriteTo.Console(outputTemplate: outputTemplate)
+                .WriteTo.Console(new RenderedCompactJsonFormatter())
+                .WriteTo.Debug(outputTemplate: outputTemplate)
                 .CreateLogger();
 
             CreateHostBuilder(args).Build().Run();

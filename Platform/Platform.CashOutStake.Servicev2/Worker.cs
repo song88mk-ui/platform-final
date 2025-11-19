@@ -37,10 +37,20 @@ namespace Platform.CashOutStake.Servicev2
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            try
+            {
+                _logger.LogInformation("Preloading active bets.");
+                _bettingRepository.PreloadActiveBets();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error during bets preloading");
+            }
+
+            _logger.LogInformation("Connecting to broker");
             _messageBroker.Connect();
             _messageBroker.MessageReceived += MessageReceivedEvent;
-
-            _bettingRepository.PreloadActiveBets();
+            _logger.LogInformation("Processing event messages");
 
             return Task.CompletedTask;
         }

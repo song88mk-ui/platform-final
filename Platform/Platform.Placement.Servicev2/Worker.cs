@@ -241,7 +241,7 @@ namespace Platform.Placement.Servicev2
             {
                 try
                 {
-                    Console.WriteLine("Starting");
+                    _logger.LogInformation("Starting MTS SDK");
                     var config = MtsSdk.GetConfiguration();
 
                     _mts = new MtsSdk(config);
@@ -249,7 +249,7 @@ namespace Platform.Placement.Servicev2
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    _logger.LogError(ex, "Error starting MTS SDK");
                 }
 
             }
@@ -268,7 +268,7 @@ namespace Platform.Placement.Servicev2
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _logger.LogError(ex, "Error stopping MTS/Placement Service");
             }
 
             return base.StopAsync(cancellationToken);
@@ -829,7 +829,7 @@ namespace Platform.Placement.Servicev2
             try
             {
                 switch (messageType)
-                {//
+                {
                     case "OnBetPlacement":
                         var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
 
@@ -845,7 +845,7 @@ namespace Platform.Placement.Servicev2
             catch (Exception ex)
             {
                 _messageBroker.Acknowledge(e);
-                Console.WriteLine(ex.Message);
+                _logger.LogError(ex, "error processing bet placement");
             }
         }
 

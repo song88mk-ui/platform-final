@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 
 WORKDIR /source
 
@@ -8,22 +8,19 @@ COPY Platform/Platform.Placement.Servicev2 Platform.Placement.Servicev2
 WORKDIR /source/Platform.Placement.Servicev2
 
 RUN dotnet restore
-RUN dotnet build --configuration Release \
-  --framework netcoreapp3.1 \
-  --runtime linux-x64
+RUN dotnet build \
+  --no-restore \
+  --configuration Release
 
-RUN dotnet publish -o publish \
-  && cd publish \
-  && rm -f App.config \
-  && rm -f appsettings.*.json
+RUN dotnet publish \
+  --no-restore \
+  -o publish && \
+  cd publish && \
+  rm -f App.config && \
+  rm -f appsettings.*.json
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:3.1
 WORKDIR /app
-
-RUN apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y xmlstarlet \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /source/Platform.Placement.Servicev2/publish .
 COPY --from=build /source/Platform.Placement.Servicev2/entrypoint.sh /app

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
@@ -20,12 +21,16 @@ namespace Platform.Placement.Servicev2.Repository
 {
     public class BettingRepository : IBettingRepository
     {
+        private readonly ILogger<BettingRepository> _logger;
         private IBuilderFactory _factory;
         private readonly IConfiguration _configuration;
-        public BettingRepository(IConfiguration configuration)
+
+        public BettingRepository(IConfiguration configuration, ILogger<BettingRepository> logger)
         {
+            _logger = logger;
             _configuration = configuration;
         }
+
         public void ProcesssBetPlacement(OnBetPlacement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId, int reprocessAttempt = 0)
         {
             var payload = new OnBetPlacement();
@@ -200,6 +205,7 @@ namespace Platform.Placement.Servicev2.Repository
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Error processing bet placement");
                     //Console.WriteLine($"{DateTime.UtcNow} - END - Error Accepted - {message.Bet.BetId.ToString().ToUpper()} - {ex.Message}");
 
                     messageBroker.Publish(new OnBetStatus

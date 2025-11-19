@@ -1,5 +1,4 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.Cors;
+﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Platform.Client.API.ActionFilters;
 using Platform.Client.API.Repository;
@@ -16,12 +15,10 @@ namespace Platform.Client.API.Controllers
     public class IntegrationController : ControllerBase
     {
         private readonly ISportsbookRepository _sportsbookRepository;
-        private readonly TelemetryClient _telemetryClient;
 
-        public IntegrationController(ISportsbookRepository sportsbookRepository, TelemetryClient telemetryClient)
+        public IntegrationController(ISportsbookRepository sportsbookRepository)
         {
             _sportsbookRepository = sportsbookRepository;
-            _telemetryClient = telemetryClient;
         }
 
         [HttpGet("v1/sportsbook/activefixtures"), ApiExplorerSettings(IgnoreApi = true)]
@@ -47,7 +44,7 @@ namespace Platform.Client.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -81,7 +78,7 @@ namespace Platform.Client.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures/details", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures/details", properties);
 
             switch (result.StatusCode)
             {
@@ -113,7 +110,7 @@ namespace Platform.Client.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures/count", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures/count", properties);
 
             switch (result.StatusCode)
             {
@@ -145,7 +142,7 @@ namespace Platform.Client.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/lookup/sports", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/lookup/sports", properties);
 
             switch (result.StatusCode)
             {
@@ -177,7 +174,7 @@ namespace Platform.Client.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/lookup/segments", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/lookup/segments", properties);
 
             switch (result.StatusCode)
             {
@@ -209,7 +206,7 @@ namespace Platform.Client.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/lookup/leagues", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/lookup/leagues", properties);
 
             switch (result.StatusCode)
             {
@@ -240,7 +237,7 @@ namespace Platform.Client.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/ccf", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/ccf", properties);
 
             switch (result.StatusCode)
             {
@@ -270,7 +267,7 @@ namespace Platform.Client.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/forex", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/forex", properties);
 
             switch (result.StatusCode)
             {

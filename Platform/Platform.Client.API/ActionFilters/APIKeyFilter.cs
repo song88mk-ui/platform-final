@@ -1,5 +1,4 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Enums;
@@ -13,13 +12,11 @@ namespace Platform.Client.API.ActionFilters
     public class APIKeyFilter : ActionFilterAttribute
     {
         private readonly IConfiguration _configuration;
-        private readonly TelemetryClient _telemetryClient;
         private List<Tuple<string, string, List<string>>> _allowed = new List<Tuple<string, string, List<string>>>();
 
-        public APIKeyFilter(IConfiguration configuration, TelemetryClient telemetryClient)
+        public APIKeyFilter(IConfiguration configuration)
         {
             _configuration = configuration;
-            _telemetryClient = telemetryClient;
             _allowed = GetAllowedIPs();
         }
 
@@ -60,7 +57,7 @@ namespace Platform.Client.API.ActionFilters
                                 { "message", StatusCode.Not_Authorized.ToString().Replace('_', ' ') }
                             };
 
-                    _telemetryClient.TrackEvent($"e:{context.ActionDescriptor.AttributeRouteInfo.Template}", properties);
+                    //_telemetryClient.TrackEvent($"e:{context.ActionDescriptor.AttributeRouteInfo.Template}", properties);
 
                     context.Result = new UnauthorizedObjectResult(new
                     {

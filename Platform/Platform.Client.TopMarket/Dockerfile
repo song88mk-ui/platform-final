@@ -17,4 +17,4 @@ EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.Client.TopMarket/publish .
-CMD ["/usr/bin/dotnet", "Platform.Client.TopMarket.dll"]
+CMD ["/usr/bin/dotnet", "Platform.ClientTopMarket.Service.dll"]

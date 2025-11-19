@@ -19,6 +19,6 @@ namespace Platform.ClientTopMarket.Service
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();
-                }).UseWindowsService();
+                });
     }
 }

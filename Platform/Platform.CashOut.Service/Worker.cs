@@ -238,6 +238,7 @@ namespace Platform.CashOut.Service
 
         public override Task StartAsync(CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Worker initializing");
             if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
             {
                 try
@@ -259,6 +260,7 @@ namespace Platform.CashOut.Service
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Worker stopping");
             if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
             {
                 try
@@ -281,6 +283,8 @@ namespace Platform.CashOut.Service
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _logger.LogInformation("Initializing threadpool");
+
             _thread00 = new Thread(ThreadStart00);
             _thread01 = new Thread(ThreadStart01);
             _thread02 = new Thread(ThreadStart02);
@@ -390,6 +394,9 @@ namespace Platform.CashOut.Service
             _thread97 = new Thread(ThreadStart97);
             _thread98 = new Thread(ThreadStart98);
             _thread99 = new Thread(ThreadStart99);
+
+
+            _logger.LogInformation("Starting threads...");
 
             _thread00.Start();
             _thread01.Start();
@@ -501,7 +508,11 @@ namespace Platform.CashOut.Service
             _thread98.Start();
             _thread99.Start();
 
+            _logger.LogInformation("Connecting to RabbitMQ Server");
+
             _messageBroker.ConnectWithManualAck();
+
+            _logger.LogInformation("Starting event processor");
             _messageBroker.MessageReceived += MessageReceivedEvent;
 
             return Task.CompletedTask;

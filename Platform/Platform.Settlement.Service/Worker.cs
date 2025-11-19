@@ -51,7 +51,9 @@ namespace Platform.Settlement.Service
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _logger.LogInformation("Connecting to the broker/RabbitMQ");
             _messageBroker.Connect();
+            _logger.LogInformation("Waiting for messages");
             _messageBroker.MessageReceived += MessageReceivedEvent;
 
             return Task.CompletedTask;
@@ -134,7 +136,7 @@ namespace Platform.Settlement.Service
                 catch (Exception ex)
                 {
                     activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-                    _logger.LogError($"error processing message: {ex.Message}");
+                    _logger.LogError(ex, "Error processing message");
                 }
             }
         }

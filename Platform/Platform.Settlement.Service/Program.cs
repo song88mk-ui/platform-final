@@ -34,6 +34,9 @@ namespace Platform.Settlement.Service
 
                     if (Convert.ToBoolean(configuration["Telemetry:Enabled"]))
                     {
+                      AppContext.SetSwitch(
+                        "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
                       services
                         .AddOpenTelemetry()
                         .ConfigureResource(resource)
@@ -50,14 +53,13 @@ namespace Platform.Settlement.Service
                             metrics
                             .AddMeter(Instrumentation.MeterName)
                             .AddRuntimeInstrumentation()
-                            .AddProcessInstrumentation()
-                            .AddOtlpExporter();
+                            .AddProcessInstrumentation();
                         });
                     }
 
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();
-                }).UseWindowsService();
+                });
     }
 }

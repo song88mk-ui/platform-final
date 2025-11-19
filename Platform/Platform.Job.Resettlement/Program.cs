@@ -23,6 +23,6 @@ namespace Platform.Job.Resettlement
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddHostedService<Worker>();
                     services.AddDbContext<PlatformContext>(o => o.UseSqlServer(hostContext.Configuration["ConnectionStrings:Platform"], opt => opt.CommandTimeout((int)TimeSpan.FromMinutes(30).TotalSeconds)));
-                }).UseWindowsService();
+                });
     }
 }

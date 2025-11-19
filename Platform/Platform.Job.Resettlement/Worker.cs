@@ -74,7 +74,7 @@ namespace Platform.Job.Resettlement
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"{DateTime.UtcNow} - ERROR - {ex.Message}");
+                    _logger.LogError(ex, "error processing bets");
                 }
             }
         }

@@ -91,9 +91,9 @@ namespace Platform.CashOutStake.Servicev2
                         break;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                _logger.LogError(ex, "error processing message");
             }
         }
     }

@@ -8,13 +8,18 @@ ADD Platform/Platform.CashOutStake.Servicev2 Platform.CashOutStake.Servicev2
 WORKDIR /source/Platform.CashOutStake.Servicev2
 
 RUN dotnet restore
-RUN dotnet build --configuration Release
-RUN dotnet publish -o publish && \
-  cd publish && rm -f appsettings.*.json
+RUN dotnet build \
+  --no-restore \
+  --configuration Release
+RUN dotnet publish \
+  --no-restore \
+  -o publish && \
+  cd publish && \
+  rm -f appsettings.*.json
 
 FROM mcr.microsoft.com/dotnet/aspnet:3.1
 EXPOSE 80
 WORKDIR /app
 
 COPY --from=build /source/Platform.CashOutStake.Servicev2/publish .
-CMD ["/usr/bin/dotnet", "Platform.CashOutStakev2.Service.dll"]
+CMD ["/usr/bin/dotnet", "Platform.CashOutStake.Servicev2.dll"]

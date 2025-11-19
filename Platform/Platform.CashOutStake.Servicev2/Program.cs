@@ -23,6 +23,6 @@ namespace Platform.CashOutStake.Servicev2
                     services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();
                     services.AddDbContext<BettingContext>(o => o.UseSqlServer(hostContext.Configuration["ConnectionStrings:Betting"]));
-                }).UseWindowsService();
+                });
     }
 }

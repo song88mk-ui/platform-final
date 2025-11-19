@@ -385,8 +385,10 @@ namespace Platform.Shared.Utility
 
         public void Dispose()
         {
-            _model.Dispose();
-            _connection.Dispose();
+            if (_model != null)
+                _model.Dispose();
+            if (_connection != null)
+                _connection.Dispose();
         }
     }
 }

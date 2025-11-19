@@ -39,16 +39,23 @@ namespace Platform.BetInfo.Service
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _messageBroker.ConnectWithManualAck();
-            _messageBroker.MessageReceived += MessageReceivedEvent;
+            try {
+                _messageBroker.ConnectWithManualAck();
+                _messageBroker.MessageReceived += MessageReceivedEvent;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                throw new InvalidOperationException("Something went wrong connecting to the broker!");
+            }
 
             return Task.CompletedTask;
         }
 
-        private void MessageReceivedEvent(object sender, BasicDeliverEventArgs e)
+        private void MessageReceivedEvent(object sender, BasicDeliverEventArgs msg)
         {
-            var payload = Encoding.UTF8.GetString(e.Body);
-            var messageType = e.BasicProperties.Type;
+            var payload = Encoding.UTF8.GetString(msg.Body);
+            var messageType = msg.BasicProperties.Type;
 
             try
             {
@@ -59,11 +66,11 @@ namespace Platform.BetInfo.Service
                         _bettingRepository.ProcessBetPlacement(betPlacement);
                         break;
                 }
-                _messageBroker.Acknowledge(e);
+                _messageBroker.Acknowledge(msg);
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                _logger.LogError($"error processing message: {ex.Message}, stacktrace: {ex.StackTrace}");
+                _logger.LogError(e, "error processing message");
             }
         }
     }

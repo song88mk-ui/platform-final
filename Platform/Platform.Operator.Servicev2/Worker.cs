@@ -129,6 +129,7 @@ namespace Platform.Operator.Servicev2
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _logger.LogInformation("Preparing thread pool");
             _thread0 = new Thread(ThreadStart0);
             _thread1 = new Thread(ThreadStart1);
             _thread2 = new Thread(ThreadStart2);
@@ -169,6 +170,8 @@ namespace Platform.Operator.Servicev2
             _threadY = new Thread(ThreadStartY);
             _threadZ = new Thread(ThreadStartZ);
 
+            _logger.LogInformation("Starting threads");
+
             _thread0.Start();
             _thread1.Start();
             _thread2.Start();
@@ -207,8 +210,12 @@ namespace Platform.Operator.Servicev2
             _threadY.Start();
             _threadZ.Start();
 
+            _logger.LogInformation("Connecting to broker/RabbitMQ");
+
             _messageBroker.ConnectWithManualAck();
             _messageBroker.MessageReceived += MessageReceivedEvent;
+
+            _logger.LogInformation("Processing arriving messages");
 
             return Task.CompletedTask;
         }
@@ -369,8 +376,9 @@ namespace Platform.Operator.Servicev2
                         break;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "error processing message");
                 _messageBroker.Acknowledge(e);
             }
         }
@@ -480,7 +488,7 @@ namespace Platform.Operator.Servicev2
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"error processing message: {ex.Message}, stacktrace: {ex.StackTrace}");
+                    _logger.LogError(ex, "Error processing message");
 
                     activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
 

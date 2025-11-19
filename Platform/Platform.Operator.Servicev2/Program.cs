@@ -22,11 +22,6 @@ namespace Platform.Operator.Servicev2
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureLogging(logging =>
-                {
-                    logging.ClearProviders();
-                    logging.AddSimpleConsole(opts => { opts.SingleLine = true; });
-                })
                 .ConfigureServices((hostContext, services) =>
                 {
                     var configuration = services.BuildServiceProvider().GetService<IConfiguration>();
@@ -40,6 +35,9 @@ namespace Platform.Operator.Servicev2
 
                     if (Convert.ToBoolean(configuration["Telemetry:Enabled"]))
                     {
+                        AppContext.SetSwitch(
+                                "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
                         services
                           .AddOpenTelemetry()
                           .ConfigureResource(resource)
@@ -56,8 +54,7 @@ namespace Platform.Operator.Servicev2
                               metrics
                               .AddMeter(Instrumentation.MeterName)
                               .AddRuntimeInstrumentation()
-                              .AddProcessInstrumentation()
-                              .AddOtlpExporter();
+                              .AddProcessInstrumentation();
                           });
                     }
 
@@ -65,6 +62,6 @@ namespace Platform.Operator.Servicev2
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();
-                }).UseWindowsService();
+                });
     }
 }

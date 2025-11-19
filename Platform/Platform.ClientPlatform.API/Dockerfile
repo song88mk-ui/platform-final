@@ -8,9 +8,14 @@ ADD Platform/Platform.ClientPlatform.API Platform.ClientPlatform.API
 WORKDIR /source/Platform.ClientPlatform.API
 
 RUN dotnet restore
-RUN dotnet build --configuration Release
-RUN dotnet publish -o publish && \
-  cd publish && rm -f appsettings.*.json
+RUN dotnet build \
+  --no-restore \
+  --configuration Release
+RUN dotnet publish \
+  --no-restore \
+  -o publish && \
+  cd publish && \
+  rm -f appsettings.*.json
 
 FROM mcr.microsoft.com/dotnet/aspnet:3.1
 EXPOSE 80

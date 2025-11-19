@@ -19,22 +19,11 @@ namespace Platform.Cancellation.Service
                 .AddJsonFile("appsettings.json", optional: false)
                 .Build();
 
-            var logSettings = new LogSettings();
-            config.GetSection("Logger").Bind(logSettings);
-
-            if (string.IsNullOrEmpty(logSettings.DirectoryPath) || string.IsNullOrWhiteSpace(logSettings.DirectoryPath))
-            {
-                logSettings.DirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "fci");
-            }
-
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .Enrich.FromLogContext()
-                .WriteTo.Console(new RenderedCompactJsonFormatter()).WriteTo.Debug(outputTemplate: "{Timestamp:yyyy-MM-ddTHH:mm:ssK} {Level:u3} {RequestId} {Message:lj}{NewLine}")
-                .WriteTo.File(Path.Combine(logSettings.DirectoryPath, "app.log")
-                    , retainedFileCountLimit: logSettings.RetentionInDays
-                    , rollingInterval: RollingInterval.Day
-                    , outputTemplate: "{Timestamp:yyyy-MM-ddTHH:mm:ssK} {Level:u3} {RequestId} {Message:lj}{NewLine}")
+                .WriteTo.Console(new RenderedCompactJsonFormatter())
+                .WriteTo.Debug(outputTemplate: "{Timestamp:yyyy-MM-ddTHH:mm:ssK} {Level:u3} {RequestId} {Message:lj}{NewLine}")
                 .CreateLogger();
 
             CreateHostBuilder(args).Build().Run();
@@ -48,6 +37,6 @@ namespace Platform.Cancellation.Service
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();
-                }).UseWindowsService();
+                });
     }
 }

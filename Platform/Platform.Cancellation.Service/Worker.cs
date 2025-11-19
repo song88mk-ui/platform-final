@@ -48,7 +48,7 @@ namespace Platform.Cancellation.Service
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    _logger.LogError(ex, "start error");
                 }
 
             }
@@ -112,7 +112,7 @@ namespace Platform.Cancellation.Service
             }
             catch (Exception ex)
             {
-
+                _logger.LogError(ex, "error on message received");
             }
         }
     }

@@ -116,6 +116,7 @@ namespace Platform.Operator.Cashout.Service
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _logger.LogInformation("Preparing thread pool");
             _thread0 = new Thread(ThreadStart0);
             _thread1 = new Thread(ThreadStart1);
             _thread2 = new Thread(ThreadStart2);
@@ -156,6 +157,8 @@ namespace Platform.Operator.Cashout.Service
             _threadY = new Thread(ThreadStartY);
             _threadZ = new Thread(ThreadStartZ);
 
+            _logger.LogInformation("Starting thread pool");
+
             _thread0.Start();
             _thread1.Start();
             _thread2.Start();
@@ -194,7 +197,10 @@ namespace Platform.Operator.Cashout.Service
             _threadY.Start();
             _threadZ.Start();
 
+            _logger.LogInformation("Connecting to broker/RabbitMQ");
+
             _messageBroker.ConnectWithManualAck();
+
             _messageBroker.MessageReceived += MessageReceivedEvent;
 
             return Task.CompletedTask;
@@ -332,8 +338,9 @@ namespace Platform.Operator.Cashout.Service
                         break;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error on receiving message");
                 _messageBroker.Acknowledge(e);
             }
         }
@@ -350,7 +357,7 @@ namespace Platform.Operator.Cashout.Service
                 {
                     case "OnBetCashOutResult":
                         var onBetCashOutResult = JsonSerializer.Deserialize<OnCashOutResult>(cashout);
-                        Console.WriteLine($"{DateTime.UtcNow} {onBetCashOutResult.BetId} - OnBetCashOutResult");
+                        _logger.LogInformation($"{DateTime.UtcNow} {onBetCashOutResult.BetId} - OnBetCashOutResult");
 
                         if (onBetCashOutResult.BetStatus != Shared.Enums.BetStatus.CashedOut)
                             _bettingRepository.ProcessCashOutResult(onBetCashOutResult, _messageBroker, correlationId);
@@ -361,7 +368,7 @@ namespace Platform.Operator.Cashout.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error: {ex.Message}");
+                _logger.LogError(ex, "Error processing message");
                 _messageBroker.Acknowledge(e);
             }
         }

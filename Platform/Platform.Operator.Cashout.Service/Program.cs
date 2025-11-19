@@ -15,26 +15,10 @@ namespace Platform.Operator.Cashout.Service
     {
         public static void Main(string[] args)
         {
-            var config = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", optional: false)
-                .Build();
-
-            var logSettings = new LogSettings();
-            config.GetSection("Logger").Bind(logSettings);
-
-            if (string.IsNullOrEmpty(logSettings.DirectoryPath) || string.IsNullOrWhiteSpace(logSettings.DirectoryPath))
-            {
-                logSettings.DirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "fci");
-            }
-
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
                 .Enrich.FromLogContext()
-                .WriteTo.Console(new RenderedCompactJsonFormatter()).WriteTo.Debug(outputTemplate: DateTime.Now.ToString())
-                .WriteTo.File(Path.Combine(logSettings.DirectoryPath, "app.log")
-                    , retainedFileCountLimit: logSettings.RetentionInDays
-                    , rollingInterval: RollingInterval.Day
-                    , outputTemplate: "{Timestamp:yyyy-MM-ddTHH:mm:ssK} {Level:w3} {RequestId} {Message:lj}{NewLine}")
+                .WriteTo.Console(new RenderedCompactJsonFormatter())
                 .CreateLogger();
 
             CreateHostBuilder(args).Build().Run();
@@ -49,6 +33,6 @@ namespace Platform.Operator.Cashout.Service
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();
-                }).UseWindowsService();
+                });
     }
 }

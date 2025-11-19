@@ -25,6 +25,6 @@ namespace Platform.Job.CCF
                     services.AddHttpClient<IMTSAuthRepository, MTSAuthRepository>();
                     services.AddSingleton<IPlatformRepository, PlatformRepository>();
                     services.AddHostedService<Worker>();
-                }).UseWindowsService();
+                });
     }
 }

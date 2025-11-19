@@ -32,7 +32,7 @@ namespace Platform.Job.CCF
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"{ex.Message}");
+                    _logger.LogError(ex, "error during execution");
                 }
             }
         }

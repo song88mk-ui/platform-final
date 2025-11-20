@@ -47,6 +47,7 @@ namespace Platform.Job.ForexEUR.Repository
                         {
                             foreach(var rate in result.Rates)
                             {
+                                _logger.LogDebug($"Updating [{rate.Key}]");
                                 var currency = context.ForexEUR.Find(rate.Key);
 
                                 if (currency == null)
@@ -65,8 +66,15 @@ namespace Platform.Job.ForexEUR.Repository
 
                             }
 
-                            context.SaveChanges();
-                            _logger.LogInformation($"update to ForexEUR table complete!");
+                            try
+                            {
+                                context.SaveChanges();
+                                _logger.LogInformation($"update to ForexEUR table complete!");
+                            }
+                            catch (Exception e)
+                            {
+                                _logger.LogError(e, "Failed to save changes to the table");
+                            }
                         }
 
                     }

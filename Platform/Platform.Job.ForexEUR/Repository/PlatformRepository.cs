@@ -64,7 +64,7 @@ namespace Platform.Job.ForexEUR.Repository
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError($"error processing forex: {ex.Message}");
+                        _logger.LogError(ex, $"error processing forex: {ex.StackTrace}");
                     }
                 }
             }

@@ -34,37 +34,79 @@ namespace Platform.Job.ForexEUR.Repository
                 _logger.LogDebug("success! parsing response");
                 var result = JsonSerializer.Deserialize<ExchangeRate>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                foreach (var rate in result.Rates)
+                if (Convert.ToBoolean(_configuration["Features:SingleContext"]))
                 {
-                    try
+                    _logger.LogInformation("Processing Forex updates from single dbContext()");
+
+                    if (result.Rates.Count > 0)
                     {
+
                         var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]);
 
                         using (var context = new PlatformContext(optionsBuilder.Options))
                         {
-                            var currency = context.ForexEUR.Find(rate.Key);
+                            foreach(var rate in result.Rates)
+                            {
+                                var currency = context.ForexEUR.Find(rate.Key);
 
-                            if (currency == null)
-                            {
-                                context.ForexEUR.Add(new Shared.Data.Platform.Entities.ForexEUR
+                                if (currency == null)
                                 {
-                                    CurrencyCode = rate.Key.ToUpper(),
-                                    ExchangeRate = rate.Value
-                                });
-                            }
-                            else
-                            {
-                                currency.ExchangeRate = rate.Value;
-                                context.ForexEUR.Update(currency);
+                                    context.ForexEUR.Add(new Shared.Data.Platform.Entities.ForexEUR
+                                    {
+                                        CurrencyCode = rate.Key.ToUpper(),
+                                        ExchangeRate = rate.Value
+                                    });
+                                }
+                                else
+                                {
+                                    currency.ExchangeRate = rate.Value;
+                                    context.ForexEUR.Update(currency);
+                                }
+
                             }
 
                             context.SaveChanges();
-                            _logger.LogInformation($"update to ForexEUR [{rate.Key}] table complete!");
+                            _logger.LogInformation($"update to ForexEUR table complete!");
                         }
+
                     }
-                    catch (Exception ex)
+                }
+                else
+                {
+                    _logger.LogInformation("Processing Forex using original code");
+
+                    foreach (var rate in result.Rates)
                     {
-                        _logger.LogError(ex, $"error processing forex: {ex.StackTrace}");
+                        try
+                        {
+                            var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]);
+
+                            using (var context = new PlatformContext(optionsBuilder.Options))
+                            {
+                                var currency = context.ForexEUR.Find(rate.Key);
+
+                                if (currency == null)
+                                {
+                                    context.ForexEUR.Add(new Shared.Data.Platform.Entities.ForexEUR
+                                    {
+                                        CurrencyCode = rate.Key.ToUpper(),
+                                        ExchangeRate = rate.Value
+                                    });
+                                }
+                                else
+                                {
+                                    currency.ExchangeRate = rate.Value;
+                                    context.ForexEUR.Update(currency);
+                                }
+
+                                context.SaveChanges();
+                                _logger.LogInformation($"update to ForexEUR [{rate.Key}] table complete!");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"error processing forex: {ex.StackTrace}");
+                        }
                     }
                 }
             }

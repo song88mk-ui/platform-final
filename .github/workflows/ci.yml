@@ -73,7 +73,7 @@ jobs:
             image: platform-sportsbook-api
           - path: Platform.Wallet.API
             image: platform-wallet-api
-          - path: Platform.WebSocket.API
+          - path: Platform.Websocket.API2
             image: platform-websocket-api
 
     steps:

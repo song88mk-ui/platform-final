@@ -1,5 +1,4 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using Platform.Shared.Utility;
 using Platform.Websocket.API2.Handlers;
 using Platform.WebSocket.API2.Data;
@@ -13,15 +12,13 @@ namespace Platform.WebSocket.API2.Repository
         private readonly IServiceProvider _provider;
         private PlatformContext _platformContext;
         private readonly IMemCache _memCache;
-        private readonly TelemetryClient _telemetryClient;
 
 
 
-        public WebSocketRepository(IServiceProvider provider, IMemCache memCache, TelemetryClient telemetryClient)
+        public WebSocketRepository(IServiceProvider provider, IMemCache memCache)
         {
             _provider = provider;
             _memCache = memCache;
-            _telemetryClient = telemetryClient;
         }
         public override async Task OnConnectedAsync()
         {
@@ -42,7 +39,7 @@ namespace Platform.WebSocket.API2.Repository
                                 { "ConnectedTimestamp", DateTime.UtcNow.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:OnConnectedAsync", properties);
+            //_telemetryClient.TrackEvent("e:OnConnectedAsync", properties);
 
             UserHandler.ConnectedIds.Add(connectionId);
 
@@ -58,7 +55,7 @@ namespace Platform.WebSocket.API2.Repository
                                 { "DisconnectedTimestamp", DateTime.UtcNow.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:OnDisconnectedAsync", properties);
+            //_telemetryClient.TrackEvent("e:OnDisconnectedAsync", properties);
 
             UserHandler.ConnectedIds.Remove(connectionId);
 
@@ -75,7 +72,7 @@ namespace Platform.WebSocket.API2.Repository
                                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:SubscribeToEndpoint", properties);
+            //_telemetryClient.TrackEvent("e:SubscribeToEndpoint", properties);
 
             var client = await GetClient(request.ClientId);
 
@@ -97,7 +94,7 @@ namespace Platform.WebSocket.API2.Repository
                                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:UnsubscribeToEndpoint", properties);
+            //_telemetryClient.TrackEvent("e:UnsubscribeToEndpoint", properties);
 
             var client = await GetClient(request.ClientId);
 

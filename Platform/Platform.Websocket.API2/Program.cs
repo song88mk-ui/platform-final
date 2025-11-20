@@ -76,8 +76,6 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<PlatformContext>(o => o.UseSqlServer(builder.Configuration["ConnectionStrings:Platform"]));
 builder.Services.AddSingleton<IMemCache, MemCache>();
 
-builder.Services.AddApplicationInsightsTelemetry();
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

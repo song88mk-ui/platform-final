@@ -85,8 +85,8 @@ jobs:
         uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62
         with:
           files: |
-            'Platform/${{ matrix.app.path }}/**'
-            'Platform/Platform.Shared/**'
+            Platform/${{ matrix.app.path }}/**
+            Platform/Platform.Shared/**
 
       - name: Changes Check
         id: proceed

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Metrics;
@@ -23,7 +24,9 @@ namespace Platform.Settlement.Service
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
-                    var configuration = services.BuildServiceProvider().GetService<IConfiguration>();
+                    var sp = services.BuildServiceProvider();
+                    var configuration = sp.GetService<IConfiguration>();
+                    var logger = sp.GetRequiredService<ILogger<Instrumentation>>();
 
                     Action<ResourceBuilder> resource = r => r.AddService(
                         serviceName: "Platform.Settlement.Service",
@@ -36,6 +39,9 @@ namespace Platform.Settlement.Service
                     {
                       AppContext.SetSwitch(
                         "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
+                      var metricsPort = configuration.GetValue<int>("Telemetry:MetricsPort", 8080);
+                      logger.LogInformation("Setting up Open Telemetry: Prometheus endpoint on port {metricsPort}", metricsPort);
 
                       services
                         .AddOpenTelemetry()
@@ -53,7 +59,8 @@ namespace Platform.Settlement.Service
                             metrics
                             .AddMeter(Instrumentation.MeterName)
                             .AddRuntimeInstrumentation()
-                            .AddProcessInstrumentation();
+                            .AddProcessInstrumentation()
+                            .AddPrometheusHttpListener(opts => opts.UriPrefixes = new string[] { $"http://+:{metricsPort}" });
                         });
                     }
 

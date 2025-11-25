@@ -68,10 +68,8 @@ namespace Platform.Settlement.Service
               var bytes = value as byte[];
               return new[] { Encoding.UTF8.GetString(bytes) };
             }
-          } catch (Exception)
-          {
-            // trace not available
-          }
+          } catch (Exception) {}
+
           return Enumerable.Empty<string>();
         }
 

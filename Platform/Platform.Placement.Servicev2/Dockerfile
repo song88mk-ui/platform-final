@@ -10,7 +10,9 @@ WORKDIR /source/Platform.Placement.Servicev2
 RUN dotnet restore
 RUN dotnet build \
   --no-restore \
-  --configuration Release
+  --configuration Release \
+  /p:SuppressTfmSupportBuildWarnings=true \
+  /p:CheckEolTargetFramework=false
 
 RUN dotnet publish \
   --no-restore \

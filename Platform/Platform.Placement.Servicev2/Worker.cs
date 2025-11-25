@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -8,9 +11,13 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
 using Platform.Placement.Servicev2.Repository;
+using Platform.Placement.Servicev2.Telemetry;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Sportradar.MTS.SDK.API;
 
@@ -22,6 +29,10 @@ namespace Platform.Placement.Servicev2
         private readonly IMessageBroker _messageBroker;
         private readonly IBettingRepository _bettingRepository;
         private readonly IConfiguration _configuration;
+        private readonly ActivitySource _activitySource;
+        private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
+        private readonly Counter<long> _betPlacementCounter;
+
         private IMtsSdk _mts;
         private Stack<int> _index = new Stack<int>();
 
@@ -227,12 +238,14 @@ namespace Platform.Placement.Servicev2
         private readonly BlockingCollection<BasicDeliverEventArgs> _messages98 = new BlockingCollection<BasicDeliverEventArgs>();
         private readonly BlockingCollection<BasicDeliverEventArgs> _messages99 = new BlockingCollection<BasicDeliverEventArgs>();
 
-        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository, IConfiguration configuration)
+        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository, IConfiguration configuration, Instrumentation instrumentation)
         {
             _logger = logger;
             _messageBroker = messageBroker;
             _bettingRepository = bettingRepository;
             _configuration = configuration;
+            _activitySource = instrumentation.ActivitySource;
+            _betPlacementCounter = instrumentation.BetPlacementCounter;
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
@@ -505,6 +518,8 @@ namespace Platform.Placement.Servicev2
         private void MessageReceivedEvent(object sender, BasicDeliverEventArgs e)
         {
             var index = GetIndex();
+            if (_betPlacementCounter.Enabled)
+                _betPlacementCounter.Add(1);
 
             switch (index)
             {
@@ -826,6 +841,11 @@ namespace Platform.Placement.Servicev2
             var messageType = e.BasicProperties.Type;
             var correlationId = e.BasicProperties.CorrelationId;
 
+            var parentContext = Propagator.Extract(default, e.BasicProperties, this.ExtractTraceFromBasicProperties);
+            Baggage.Current = parentContext.Baggage;
+
+            using (var activity = _activitySource.StartActivity("process.bet.placement",
+                        ActivityKind.Consumer, parentContext.ActivityContext))
             try
             {
                 switch (messageType)
@@ -841,11 +861,13 @@ namespace Platform.Placement.Servicev2
                         _messageBroker.Acknowledge(e);
                         break;
                 }
+                activity?.SetStatus(ActivityStatusCode.Ok);
             }
             catch (Exception ex)
             {
-                _messageBroker.Acknowledge(e);
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
                 _logger.LogError(ex, "error processing bet placement");
+                _messageBroker.Acknowledge(e);
             }
         }
 
@@ -1768,6 +1790,20 @@ namespace Platform.Placement.Servicev2
             }
 
             return _index.Pop();
+        }
+
+        private IEnumerable<string> ExtractTraceFromBasicProperties(IBasicProperties props, string key)
+        {
+          try
+          {
+            if (props.Headers.TryGetValue(key, out var value))
+            {
+              var bytes = value as byte[];
+              return new[] { Encoding.UTF8.GetString(bytes) };
+            }
+          } catch (Exception) {}
+
+          return Enumerable.Empty<string>();
         }
     }
 }

@@ -24,7 +24,9 @@ namespace Platform.Operator.Servicev2
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
-                    var configuration = services.BuildServiceProvider().GetService<IConfiguration>();
+                    var sp = services.BuildServiceProvider();
+                    var configuration = sp.GetService<IConfiguration>();
+                    var logger = sp.GetRequiredService<ILogger<Instrumentation>>();
 
                     Action<ResourceBuilder> resource = r => r.AddService(
                         serviceName: "Platform.Operator.Servicev2",
@@ -37,6 +39,9 @@ namespace Platform.Operator.Servicev2
                     {
                         AppContext.SetSwitch(
                                 "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
+                        var metricsPort = configuration.GetValue<int>("Telemetry:MetricsPort", 8080);
+                        logger.LogInformation("Setting up Open Telemetry: Prometheus endpoint on port {metricsPort}", metricsPort);
 
                         services
                           .AddOpenTelemetry()
@@ -54,7 +59,7 @@ namespace Platform.Operator.Servicev2
                               metrics
                               .AddMeter(Instrumentation.MeterName)
                               .AddRuntimeInstrumentation()
-                              .AddProcessInstrumentation();
+                            .AddPrometheusHttpListener(opts => opts.UriPrefixes = new string[] { $"http://+:{metricsPort}" });
                           });
                     }
 

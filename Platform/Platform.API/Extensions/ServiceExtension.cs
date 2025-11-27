@@ -31,16 +31,7 @@ namespace Platform.API.Extensions
                         tracing
                         .AddSource(Instrumentation.ACTIVITY_SOURCE_NAME)
                         .SetSampler(new AlwaysOnSampler())
-                        .AddHttpClientInstrumentation(
-                            (opts) => opts.FilterHttpRequestMessage =
-                                (req) =>
-                                {
-                                    var uriString = req.RequestUri.ToString();
-                                    var isAzureReq = uriString.Contains("azure.com") ||
-                                                     uriString.Contains("visualstudio.com");
-                                    return !isAzureReq;
-                                }
-                        )
+                        .AddHttpClientInstrumentation()
                         .AddOtlpExporter();
                     })
                     .WithMetrics(metrics =>
@@ -49,13 +40,17 @@ namespace Platform.API.Extensions
                         .AddMeter(Instrumentation.METER_NAME)
                         .AddRuntimeInstrumentation()
                         .AddHttpClientInstrumentation()
-                        .AddProcessInstrumentation()
-                        .AddOtlpExporter();
+                        .AddProcessInstrumentation();
+                        // we no longer export metrics
+                        // TODO: expose them as /metrics
+                        //.AddOtlpExporter();
                     });
             }
 
-            services.AddApplicationInsightsTelemetry();
-            services.AddApplicationInsightsTelemetryProcessor<IgnoreRequestsPathsProcessor>();
+            // we no longer have azure app insights
+            // tracing still works as OTEL
+            //services.AddApplicationInsightsTelemetry();
+            //services.AddApplicationInsightsTelemetryProcessor<IgnoreRequestsPathsProcessor>();
 
             return services;
         }

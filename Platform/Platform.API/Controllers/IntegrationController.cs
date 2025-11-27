@@ -1,14 +1,15 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.Cors;
+﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Platform.API.ActionFilters;
 using Platform.API.Models;
 using Platform.API.Repository;
+using Platform.API.Telemetry;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -19,173 +20,49 @@ namespace Platform.API.Controllers
     public class IntegrationController : BaseController
     {
         private readonly IPlatformRepository _platformRepository;
-        private readonly TelemetryClient _telemetryClient;
+        private readonly ActivitySource _activitySource;
 
-        public IntegrationController(IPlatformRepository platformRepository, TelemetryClient telemetryClient)
+        public IntegrationController(IPlatformRepository platformRepository, Instrumentation instrumentation)
         {
-            //
             _platformRepository = platformRepository;
-            _telemetryClient = telemetryClient;
+            _activitySource = instrumentation.ActivitySource;
         }
 
         [HttpPost("v1/authentication/login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-            var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
-            var headers = new Dictionary<string, string>()
+            using (var activity = _activitySource.StartActivity("v1/authentication/login"))
             {
-                { "X-Original-User-IP", ipAddress ?? ""},
-                { "X-Original-User-Agent", userAgent ?? ""},
-                { "X-Original-User-Country", HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault() ?? ""}
-            };
+                var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+                var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+                var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+                var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
+                var headers = new Dictionary<string, string>()
+                {
+                    { "X-Original-User-IP", ipAddress ?? ""},
+                    { "X-Original-User-Agent", userAgent ?? ""},
+                    { "X-Original-User-Country", HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault() ?? ""}
+                };
 
-            var result = await _platformRepository.Login(clientId, request, headers);
-
-            var parameters = request;
-
-            var properties = new Dictionary<string, string>
-                            {
-                                { "ipAddress", ipAddress },
-                                { "x-api-key", apiKey },
-                                { "x-client-id", clientId },
-                                { "user-agent", userAgent },
-                                { "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
-                                { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() },
-                                { "response", JsonSerializer.Serialize(result) }
-                            };
-
-            _telemetryClient.TrackEvent("e:v1/authentication/login", properties);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                case Shared.Enums.StatusCode.Maintenance:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-        [HttpPost("v1/authentication/logout")]
-        public async Task<IActionResult> Logout()
-        {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
-            var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
-
-            var result = await _platformRepository.Logout(clientId, operatorToken);
-
-            var parameters = new { };
-
-            var properties = new Dictionary<string, string>
-                            {
-                                { "ipAddress", ipAddress },
-                                { "x-api-key", apiKey },
-                                { "x-client-id", clientId },
-                                { "user-agent", userAgent },
-                                { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() },
-                                { "response", JsonSerializer.Serialize(result) }
-                            };
-
-            _telemetryClient.TrackEvent("e:v1/authentication/logout", properties);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                case Shared.Enums.StatusCode.Maintenance:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
-        [HttpGet("v1/wallet/balance")]
-        public async Task<IActionResult> GetWalletBalance()
-        {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
-
-            var result = await _platformRepository.GetWalletBalance(clientId, operatorToken, OGParameters);
-
-            var parameters = new
-            {
-            };
-
-            var properties = new Dictionary<string, string>
-                            {
-                                { "ipAddress", ipAddress },
-                                { "x-api-key", apiKey },
-                                { "x-client-id", clientId },
-                                { "x-operator-token", operatorToken },
-                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
-                                { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
-                            };
-
-            _telemetryClient.TrackEvent("e:v1/wallet/balance", properties);
-
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                case Shared.Enums.StatusCode.Maintenance:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
-            }
-        }
-
-        [HttpPost("v2/bet/placement")]
-        public async Task<IActionResult> PlaceBet([FromBody] BetRequest request)
-        {
-            var ipAddressV4 = HttpContext.Request.Headers["Cf-Connecting-Ip"].FirstOrDefault();
-            var ipAddressV6 = HttpContext.Request.Headers["Cf-Connecting-IPv6"].FirstOrDefault();
-            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
-            var connectionId = HttpContext.Request.Headers["x-connection-id"].FirstOrDefault();
-            var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
-            var isSSR = HttpContext.Request.Headers["x-is-ssr"].FirstOrDefault();
-
-            if (isSSR == null)
-            {
-                request.IPAddress = ipAddressV4;
-                request.IPAddressV6 = ipAddressV6;
-            }
-
-            try
-            {
-                var result = await _platformRepository.PlaceBet(apiKey, clientId, operatorToken, request, OGParameters, isSSR, userAgent);
+                var result = await _platformRepository.Login(clientId, request, headers);
 
                 var parameters = request;
 
                 var properties = new Dictionary<string, string>
-                            {
-                                { "ipAddress", ipAddressV4 },
-                                { "ipAddressV6", ipAddressV6 },
-                                { "x-api-key", apiKey },
-                                { "x-client-id", clientId },
-                                { "x-operator-token", operatorToken },
-                                { "user-agent", userAgent },
-                                { "x-connection-id", connectionId },
-                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
-                                { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() },
-                                { "response", JsonSerializer.Serialize(result) }
-                            };
+                                {
+                                    { "ipAddress", ipAddress },
+                                    { "x-api-key", apiKey },
+                                    { "x-client-id", clientId },
+                                    { "user-agent", userAgent },
+                                    { "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                    { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                    { "statusCode", result.StatusCode.ToString() },
+                                    { "message", result.Message.ToString() },
+                                    { "response", JsonSerializer.Serialize(result) }
+                                };
 
-                _telemetryClient.TrackEvent("e:v2/bet/placement", properties);
+                foreach(var prop in properties)
+                    activity?.SetTag(prop.Key, prop.Value);
 
                 switch (result.StatusCode)
                 {
@@ -196,40 +73,182 @@ namespace Platform.API.Controllers
                         return BadRequest(result);
                 }
             }
-            catch (Exception ex)
-            {
-                var result = new BaseResponseDTO<BetErrorResponse>
-                {
-                    StatusCode = Shared.Enums.StatusCode.Error,
-                    Message = Shared.Enums.StatusCode.Error.ToString().Replace('_', ' '),
-                    Result = new BetErrorResponse
-                    {
-                        Message = ex.Message,
-                        StackTrace = ex.StackTrace
-                    }
-                };
+        }
 
-                var parameters = request;
+        [HttpPost("v1/authentication/logout")]
+        public async Task<IActionResult> Logout()
+        {
+            using (var activity = _activitySource.StartActivity("v1/authentication/logout"))
+            {
+                var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+                var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+                var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+                var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+                var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
+
+                var result = await _platformRepository.Logout(clientId, operatorToken);
+
+                var parameters = new { };
 
                 var properties = new Dictionary<string, string>
-                            {
-                                { "ipAddress", ipAddressV4 },
-                                { "ipAddressV6", ipAddressV6 },
-                                { "x-api-key", apiKey },
-                                { "x-client-id", clientId },
-                                { "x-operator-token", operatorToken },
-                                { "user-agent", userAgent },
-                                { "x-connection-id", connectionId },
-                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
-                                { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() },
-                                { "response", JsonSerializer.Serialize(result) }
-                            };
+                                {
+                                    { "ipAddress", ipAddress },
+                                    { "x-api-key", apiKey },
+                                    { "x-client-id", clientId },
+                                    { "user-agent", userAgent },
+                                    { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                    { "statusCode", result.StatusCode.ToString() },
+                                    { "message", result.Message.ToString() },
+                                    { "response", JsonSerializer.Serialize(result) }
+                                };
 
-                _telemetryClient.TrackEvent("e:v2/bet/placement/error", properties);
+                foreach(var prop in properties)
+                    activity?.SetTag(prop.Key, prop.Value);
 
-                return BadRequest(result);
+                switch (result.StatusCode)
+                {
+                    case Shared.Enums.StatusCode.Success:
+                    case Shared.Enums.StatusCode.Maintenance:
+                        return Ok(result);
+                    default:
+                        return BadRequest(result);
+                }
+            }
+        }
+
+        [HttpGet("v1/wallet/balance")]
+        public async Task<IActionResult> GetWalletBalance()
+        {
+            using (var activity = _activitySource.StartActivity("v1/wallet/balance"))
+            {
+                var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+                var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+                var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+                var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+
+                var result = await _platformRepository.GetWalletBalance(clientId, operatorToken, OGParameters);
+
+                var parameters = new
+                {
+                };
+
+                var properties = new Dictionary<string, string>
+                                {
+                                    { "ipAddress", ipAddress },
+                                    { "x-api-key", apiKey },
+                                    { "x-client-id", clientId },
+                                    { "x-operator-token", operatorToken },
+                                    { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                    { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                    { "statusCode", result.StatusCode.ToString() },
+                                    { "message", result.Message.ToString() }
+                                };
+
+                foreach(var prop in properties)
+                    activity?.SetTag(prop.Key, prop.Value);
+
+                switch (result.StatusCode)
+                {
+                    case Shared.Enums.StatusCode.Success:
+                    case Shared.Enums.StatusCode.Maintenance:
+                        return Ok(result);
+                    default:
+                        return BadRequest(result);
+                }
+            }
+        }
+
+        [HttpPost("v2/bet/placement")]
+        public async Task<IActionResult> PlaceBet([FromBody] BetRequest request)
+        {
+            using(var activity = _activitySource.StartActivity("v2/bet/placement"))
+            {
+                var ipAddressV4 = HttpContext.Request.Headers["Cf-Connecting-Ip"].FirstOrDefault();
+                var ipAddressV6 = HttpContext.Request.Headers["Cf-Connecting-IPv6"].FirstOrDefault();
+                var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+                var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+                var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+                var connectionId = HttpContext.Request.Headers["x-connection-id"].FirstOrDefault();
+                var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
+                var isSSR = HttpContext.Request.Headers["x-is-ssr"].FirstOrDefault();
+
+                if (isSSR == null)
+                {
+                    request.IPAddress = ipAddressV4;
+                    request.IPAddressV6 = ipAddressV6;
+                }
+
+                try
+                {
+                    var result = await _platformRepository.PlaceBet(apiKey, clientId, operatorToken, request, OGParameters, isSSR, userAgent);
+
+                    var parameters = request;
+
+                    var properties = new Dictionary<string, string>
+                                {
+                                    { "ipAddress", ipAddressV4 },
+                                    { "ipAddressV6", ipAddressV6 },
+                                    { "x-api-key", apiKey },
+                                    { "x-client-id", clientId },
+                                    { "x-operator-token", operatorToken },
+                                    { "user-agent", userAgent },
+                                    { "x-connection-id", connectionId },
+                                    { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                    { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                    { "statusCode", result.StatusCode.ToString() },
+                                    { "message", result.Message.ToString() },
+                                    { "response", JsonSerializer.Serialize(result) }
+                                };
+
+                    foreach(var prop in properties)
+                        activity?.SetTag(prop.Key, prop.Value);
+
+                    switch (result.StatusCode)
+                    {
+                        case Shared.Enums.StatusCode.Success:
+                        case Shared.Enums.StatusCode.Maintenance:
+                            return Ok(result);
+                        default:
+                            return BadRequest(result);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                    var result = new BaseResponseDTO<BetErrorResponse>
+                    {
+                        StatusCode = Shared.Enums.StatusCode.Error,
+                        Message = Shared.Enums.StatusCode.Error.ToString().Replace('_', ' '),
+                        Result = new BetErrorResponse
+                        {
+                            Message = ex.Message,
+                            StackTrace = ex.StackTrace
+                        }
+                    };
+
+                    var parameters = request;
+
+                    var properties = new Dictionary<string, string>
+                                {
+                                    { "ipAddress", ipAddressV4 },
+                                    { "ipAddressV6", ipAddressV6 },
+                                    { "x-api-key", apiKey },
+                                    { "x-client-id", clientId },
+                                    { "x-operator-token", operatorToken },
+                                    { "user-agent", userAgent },
+                                    { "x-connection-id", connectionId },
+                                    { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                    { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                    { "statusCode", result.StatusCode.ToString() },
+                                    { "message", result.Message.ToString() },
+                                    { "response", JsonSerializer.Serialize(result) }
+                                };
+
+                    foreach(var prop in properties)
+                        activity?.SetTag(prop.Key, prop.Value);
+
+                    return BadRequest(result);
+                }
             }
         }
 
@@ -264,7 +283,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/bet/maxstake", properties);
+            //_telemetryClient.TrackEvent("e:v1/bet/maxstake", properties);
 
             switch (result.StatusCode)
             {
@@ -299,7 +318,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/bet/config", properties);
+            //_telemetryClient.TrackEvent("e:v1/bet/config", properties);
 
             switch (result.StatusCode)
             {
@@ -333,7 +352,7 @@ namespace Platform.API.Controllers
                                 { "statusCode", result.StatusCode.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/bet/status", properties);
+            //_telemetryClient.TrackEvent("e:v1/bet/status", properties);
 
             switch (result.StatusCode)
             {
@@ -399,7 +418,7 @@ namespace Platform.API.Controllers
                                 { "message", ((dynamic)result).Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/bet/history", properties);
+            //_telemetryClient.TrackEvent("e:v1/bet/history", properties);
 
             switch (((dynamic)result).StatusCode)
             {
@@ -446,7 +465,7 @@ namespace Platform.API.Controllers
                                 { "message", ((dynamic)result).Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/bet/history", properties);
+            //_telemetryClient.TrackEvent("e:v1/bet/history", properties);
 
             switch (((dynamic)result).StatusCode)
             {
@@ -481,7 +500,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/bet/history/settled", properties);
+            //_telemetryClient.TrackEvent("e:v1/bet/history/settled", properties);
 
             switch (result.StatusCode)
             {
@@ -520,7 +539,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/bet/history/running", properties);
+            //_telemetryClient.TrackEvent("e:v1/bet/history/running", properties);
 
             switch (result.StatusCode)
             {
@@ -564,7 +583,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/bet/cashout", properties);
+            //_telemetryClient.TrackEvent("e:v1/bet/cashout", properties);
 
             switch (result.StatusCode)
             {
@@ -608,7 +627,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/livestream", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/livestream", properties);
 
             switch (result.StatusCode)
             {
@@ -644,7 +663,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/topleagues", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/topleagues", properties);
 
             switch (result.StatusCode)
             {
@@ -680,7 +699,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/allleagues", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/allleagues", properties);
 
             switch (result.StatusCode)
             {
@@ -716,7 +735,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v2/sportsbook/topfixtures/fixtureId", properties);
+            //_telemetryClient.TrackEvent("e:v2/sportsbook/topfixtures/fixtureId", properties);
 
             switch (result.StatusCode)
             {
@@ -751,7 +770,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/markettemplategroups", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/markettemplategroups", properties);
 
             switch (result.StatusCode)
             {
@@ -786,7 +805,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/selectormarkettemplates", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/selectormarkettemplates", properties);
 
             switch (result.StatusCode)
             {
@@ -821,7 +840,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/marketsortorder", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/marketsortorder", properties);
 
             switch (result.StatusCode)
             {
@@ -856,7 +875,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/fixturesortorder", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/fixturesortorder", properties);
 
             switch (result.StatusCode)
             {
@@ -895,7 +914,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/userfavorites/fixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/userfavorites/fixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -934,7 +953,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/userfavorites|GET", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/userfavorites|GET", properties);
 
             switch (result.StatusCode)
             {
@@ -972,7 +991,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v2/sportsbook/topfixtures", properties);
+            //_telemetryClient.TrackEvent("e:v2/sportsbook/topfixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -1010,7 +1029,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -1048,7 +1067,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures/details", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures/details", properties);
 
             switch (result.StatusCode)
             {
@@ -1084,7 +1103,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/livefixturecount", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/livefixturecount", properties);
 
             switch (result.StatusCode)
             {
@@ -1123,7 +1142,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/todayfixturecount", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/todayfixturecount", properties);
 
             switch (result.StatusCode)
             {
@@ -1164,7 +1183,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/livefixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/livefixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -1207,7 +1226,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/livefixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/livefixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -1249,7 +1268,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/todayfixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/todayfixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -1293,7 +1312,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/todayfixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/todayfixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -1335,7 +1354,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/upcomingfixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/upcomingfixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -1379,7 +1398,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/upcomingfixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/upcomingfixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -1422,7 +1441,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/dailyfixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/dailyfixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -1467,7 +1486,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/dailyfixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/dailyfixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -1508,7 +1527,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/outrightfixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/outrightfixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -1551,7 +1570,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/outrightfixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/outrightfixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -1592,7 +1611,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/topleaguefixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/topleaguefixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -1634,7 +1653,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/fixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/fixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -1677,7 +1696,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/fixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/fixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -1716,7 +1735,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/search", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/search", properties);
 
             switch (result.StatusCode)
             {
@@ -1755,7 +1774,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/sports", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports", properties);
 
             switch (result.StatusCode)
             {
@@ -1796,7 +1815,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/fixturedetails", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/fixturedetails", properties);
 
             switch (result.StatusCode)
             {
@@ -1839,7 +1858,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/selectiondetails", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/selectiondetails", properties);
 
             switch (result.StatusCode)
             {
@@ -1876,7 +1895,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/userfavorites|POST", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/userfavorites|POST", properties);
 
             switch (result.StatusCode)
             {
@@ -1913,7 +1932,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/userfavorites|DELETE", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/userfavorites|DELETE", properties);
 
             switch (result.StatusCode)
             {
@@ -1954,7 +1973,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/boostedfixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/boostedfixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -1989,7 +2008,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/betbuilder/markettemplates", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/betbuilder/markettemplates", properties);
 
             switch (result.StatusCode)
             {
@@ -2025,7 +2044,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/betbuilder/selections/odds", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/betbuilder/selections/odds", properties);
 
             switch (result.StatusCode)
             {
@@ -2060,7 +2079,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/client/markettemplateplayerprops", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/client/markettemplateplayerprops", properties);
 
             switch (result.StatusCode)
             {
@@ -2096,7 +2115,7 @@ namespace Platform.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/casino", properties);
+            //_telemetryClient.TrackEvent("e:v1/casino", properties);
 
             switch (result.StatusCode)
             {
@@ -2131,7 +2150,7 @@ namespace Platform.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/casino/live", properties);
+            //_telemetryClient.TrackEvent("e:v1/casino/live", properties);
 
             switch (result.StatusCode)
             {
@@ -2166,7 +2185,7 @@ namespace Platform.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/casino/virtualgames", properties);
+            //_telemetryClient.TrackEvent("e:v1/casino/virtualgames", properties);
 
             switch (result.StatusCode)
             {
@@ -2198,7 +2217,7 @@ namespace Platform.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/esport/config", properties);
+            //_telemetryClient.TrackEvent("e:v1/esport/config", properties);
 
             switch (result.StatusCode)
             {
@@ -2229,7 +2248,7 @@ namespace Platform.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/translations", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/translations", properties);
 
             switch (result.StatusCode)
             {
@@ -2264,7 +2283,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/highlights", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/highlights", properties);
 
             switch (result.StatusCode)
             {
@@ -2298,7 +2317,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/highlights", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/highlights", properties);
 
             switch (result.StatusCode)
             {
@@ -2329,7 +2348,7 @@ namespace Platform.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/authentication/og", properties);
+            //_telemetryClient.TrackEvent("e:v1/authentication/og", properties);
 
             switch (result.StatusCode)
             {
@@ -2344,30 +2363,34 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/betrecommendations")]
         public async Task<IActionResult> GetBetRecommendations([FromQuery] string currencyCode = "")
         {
-            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
-
-            var result = await _platformRepository.GetBetRecommendations(clientId, languageCode, currencyCode);
-
-            var properties = new Dictionary<string, string>
+            using (var activity = _activitySource.StartActivity("v1/betrecommendations"))
             {
-                                { "x-client-id", clientId },
-                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
-                                { "requestParameters", JsonSerializer.Serialize(OGParameters)},
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() },
-                                { "response", JsonSerializer.Serialize(result) }
-                            };
+                var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+                var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            _telemetryClient.TrackEvent("e:v1/betrecommendations", properties);
+                var result = await _platformRepository.GetBetRecommendations(clientId, languageCode, currencyCode);
 
-            switch (result.StatusCode)
-            {
-                case Shared.Enums.StatusCode.Success:
-                case Shared.Enums.StatusCode.Maintenance:
-                    return Ok(result);
-                default:
-                    return BadRequest(result);
+                var properties = new Dictionary<string, string>
+                {
+                                    { "x-client-id", clientId },
+                                    { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                    { "requestParameters", JsonSerializer.Serialize(OGParameters)},
+                                    { "statusCode", result.StatusCode.ToString() },
+                                    { "message", result.Message.ToString() },
+                                    { "response", JsonSerializer.Serialize(result) }
+                                };
+
+                foreach(var prop in properties)
+                    activity?.SetTag(prop.Key, prop.Value);
+
+                switch (result.StatusCode)
+                {
+                    case Shared.Enums.StatusCode.Success:
+                    case Shared.Enums.StatusCode.Maintenance:
+                        return Ok(result);
+                    default:
+                        return BadRequest(result);
+                }
             }
         }
 
@@ -2396,7 +2419,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/announcements", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/announcements", properties);
 
             switch (result.StatusCode)
             {
@@ -2427,7 +2450,7 @@ namespace Platform.API.Controllers
                                 { "message", result.Message.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/ccf", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/ccf", properties);
 
             switch (result.StatusCode)
             {

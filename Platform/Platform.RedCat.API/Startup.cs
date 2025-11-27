@@ -5,6 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.RedCat.API.Extensions;
+using Platform.RedCat.API.Telemetry;
+using Platform.Shared.Telemetry;
+using Platform.Shared.Extensions;
 
 namespace Platform.RedCat.API
 {
@@ -20,7 +23,12 @@ namespace Platform.RedCat.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddTelemetry(Configuration);
+            services.AddSingleton<Instrumentation>();
+            services.AddTelemetry(new TelemetrySettings (
+                ServiceName: Instrumentation.ActivitySourceName,
+                ActivitySourceName: Instrumentation.ActivitySourceName,
+                MeterName: Instrumentation.MeterName
+            ));
 
             services.AddCors(options =>
             {
@@ -45,8 +53,6 @@ namespace Platform.RedCat.API
                 .AddContexts(Configuration)
                 .AddHttpClients(Configuration)
                 .AddRepositories();
-
-            services.AddApplicationInsightsTelemetry();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

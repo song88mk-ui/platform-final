@@ -4,10 +4,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Platform.RedCatBetting.API.Extensions;
+using Platform.RedCatBetting.API.Telemetry;
 using Platform.RedCatBetting.API.Repositories;
 using Platform.Shared.Data.RedCatBetting;
 using System;
+using Platform.Shared.Telemetry;
+using Platform.Shared.Extensions;
 
 namespace Platform.RedCatBetting.API
 {
@@ -23,7 +25,12 @@ namespace Platform.RedCatBetting.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddTelemetry(Configuration);
+            services.AddSingleton<Instrumentation>();
+            services.AddTelemetry(new TelemetrySettings (
+                ServiceName: Instrumentation.ActivitySourceName,
+                ActivitySourceName: Instrumentation.ActivitySourceName,
+                MeterName: Instrumentation.MeterName
+            ));
             services.AddHealthChecks();
             services.AddDbContextPool<RedCatBettingContext>(o => o.UseSqlServer(Configuration.GetConnectionString("RedCatBetting")));
             services.AddHttpClient<IOperatorRepository, OperatorRepository>(client =>

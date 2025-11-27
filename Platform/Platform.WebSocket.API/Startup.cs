@@ -10,10 +10,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.Shared.Utility;
 using Platform.WebSocket.API.Data;
-using Platform.WebSocket.API.Extensions;
 using Platform.WebSocket.API.Repository;
+using Platform.WebSocket.API.Telemetry;
 using System;
 using System.Linq;
+using Platform.Shared.Telemetry;
+using Platform.Shared.Extensions;
 
 namespace Platform.WebSocket.API
 {
@@ -27,7 +29,12 @@ namespace Platform.WebSocket.API
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddTelemetry(Configuration);
+            services.AddSingleton<Instrumentation>();
+            services.AddTelemetry(new TelemetrySettings (
+                ServiceName: Instrumentation.ActivitySourceName,
+                ActivitySourceName: Instrumentation.ActivitySourceName,
+                MeterName: Instrumentation.MeterName
+            ));
             services.Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -80,8 +87,6 @@ namespace Platform.WebSocket.API
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebSocket API", Version = "v1" });
             });
-
-            services.AddApplicationInsightsTelemetry();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

@@ -24,7 +24,7 @@ jobs:
       matrix:
         app:
           - path: Platform.API
-            image: platform-api
+            image: platform-platform-api
           - path: Platform.BetForwarder.Service
             image: platform-betforwarder-service
           - path: Platform.BetInfo.Service

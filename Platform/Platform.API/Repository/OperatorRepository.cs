@@ -1,5 +1,4 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Platform.API.Models;
 using Platform.Shared.Enums;
 using Platform.Shared.Extensions;
@@ -17,15 +16,13 @@ namespace Platform.API.Repository
     public class OperatorRepository : IOperatorRepository
     {
         private readonly HttpClient _httpClient;
-        private readonly TelemetryClient _telemetryClient;
         private readonly OrientalGamingConfigDTO _ogConfig;
 
         private static List<string> _ogHighCurrencies = new List<string> { "IDRK", "VNDK", "MMKK", "INRK", "UZSK" };
 
-        public OperatorRepository(HttpClient httpClient, TelemetryClient telemetryClient, IConfiguration configuration)
+        public OperatorRepository(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _telemetryClient = telemetryClient;
             _ogConfig = configuration.GetSection("Custom").GetSection("OrientalGaming").Get<OrientalGamingConfigDTO>();
             _httpClient.Timeout = TimeSpan.FromSeconds(5);
         }
@@ -80,7 +77,7 @@ namespace Platform.API.Repository
                                 { "endpoint", endpoint }
                             };
 
-                            _telemetryClient.TrackEvent("Login", properties);
+                            //_telemetryClient.TrackEvent("Login", properties);
                         }
                         catch (Exception)
                         {
@@ -436,7 +433,7 @@ namespace Platform.API.Repository
                                 { "response", result.StatusId.ToString() }
                             };
 
-                            _telemetryClient.TrackEvent("Authenticate", properties);
+                            //_telemetryClient.TrackEvent("Authenticate", properties);
                         }
                         catch (Exception)
                         {

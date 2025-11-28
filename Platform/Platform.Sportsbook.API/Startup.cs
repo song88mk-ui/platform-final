@@ -15,6 +15,9 @@ using Microsoft.OpenApi.Models;
 using Platform.Shared.Data.Sportsbook;
 using Platform.Shared.Utility;
 using Platform.Sportsbook.API.Repository;
+using Platform.Sportsbook.API.Telemetry;
+using Platform.Shared.Telemetry;
+using Platform.Shared.Extensions;
 
 namespace Platform.Sportsbook.API
 {
@@ -61,7 +64,12 @@ namespace Platform.Sportsbook.API
             });
 
             services.AddDbContext<SportsbookContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Sportsbook"]));
-            services.AddApplicationInsightsTelemetry();
+            services.AddSingleton<Instrumentation>();
+            services.AddTelemetry(new TelemetrySettings (
+                ServiceName: Instrumentation.ActivitySourceName,
+                ActivitySourceName: Instrumentation.ActivitySourceName,
+                MeterName: Instrumentation.MeterName
+            ));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

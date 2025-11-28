@@ -7,8 +7,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.Betting.API.Repository;
+using Platform.Betting.API.Telemetry;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Utility;
+using Platform.Shared.Telemetry;
+using Platform.Shared.Extensions;
 
 namespace Platform.Betting.API
 {
@@ -58,8 +61,14 @@ namespace Platform.Betting.API
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Platform Betting API", Version = "v1" });
             });
 
+            services.AddSingleton<Instrumentation>();
+            services.AddTelemetry(new TelemetrySettings (
+                ServiceName: Instrumentation.ActivitySourceName,
+                ActivitySourceName: Instrumentation.ActivitySourceName,
+                MeterName: Instrumentation.MeterName
+            ));
+
             services.AddDbContext<BettingContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Betting"]));
-            services.AddApplicationInsightsTelemetry();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

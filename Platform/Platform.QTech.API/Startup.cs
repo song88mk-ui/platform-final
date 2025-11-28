@@ -8,9 +8,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.QTech.API.ActionFilters;
 using Platform.QTech.API.Repository;
+using Platform.QTech.API.Telemetry;
 using Platform.Shared.Data.CasinoBetting;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Utility;
+using Platform.Shared.Telemetry;
+using Platform.Shared.Extensions;
 
 namespace Platform.QTech.API
 {
@@ -63,7 +66,12 @@ namespace Platform.QTech.API
 
             services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Platform"]));
             services.AddDbContext<CasinoBettingContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:CasinoBetting"]));
-            services.AddApplicationInsightsTelemetry();
+            services.AddSingleton<Instrumentation>();
+            services.AddTelemetry(new TelemetrySettings (
+                ServiceName: Instrumentation.ActivitySourceName,
+                ActivitySourceName: Instrumentation.ActivitySourceName,
+                MeterName: Instrumentation.MeterName
+            ));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

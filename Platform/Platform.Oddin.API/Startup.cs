@@ -7,9 +7,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.Oddin.API.Repository;
+using Platform.Oddin.API.Telemetry;
 using Platform.Shared.Data.ESportBetting;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Utility;
+using Platform.Shared.Telemetry;
+using Platform.Shared.Extensions;
 
 namespace Platform.Oddin.API
 {
@@ -59,7 +62,13 @@ namespace Platform.Oddin.API
 
             services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Platform"]));
             services.AddDbContext<ESportBettingContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:ESportBetting"]));
-            services.AddApplicationInsightsTelemetry();
+
+            services.AddSingleton<Instrumentation>();
+            services.AddTelemetry(new TelemetrySettings (
+                ServiceName: Instrumentation.ActivitySourceName,
+                ActivitySourceName: Instrumentation.ActivitySourceName,
+                MeterName: Instrumentation.MeterName
+            ));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

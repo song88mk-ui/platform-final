@@ -8,10 +8,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.API.ActionFilters;
-using Platform.API.Extensions;
 using Platform.API.Repository;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Utility;
+using Platform.Shared.Telemetry;
+using Platform.Shared.Extensions;
 using System.IO.Compression;
 using System.Linq;
 
@@ -61,7 +62,12 @@ namespace Platform.API
                     });
             });
 
-            services.AddTelemetry(Configuration);
+            services.AddSingleton<Platform.API.Telemetry.Instrumentation>();
+            services.AddTelemetry(new TelemetrySettings (
+                ServiceName: Platform.API.Telemetry.Instrumentation.ACTIVITY_SOURCE_NAME,
+                ActivitySourceName: Platform.API.Telemetry.Instrumentation.ACTIVITY_SOURCE_NAME,
+                MeterName: Platform.API.Telemetry.Instrumentation.METER_NAME
+            ));
 
             services.Configure<ForwardedHeadersOptions>(options =>
             {
@@ -88,7 +94,6 @@ namespace Platform.API
             });
 
             services.AddDbContext<PlatformContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Platform"]));
-            //services.AddApplicationInsightsTelemetry();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

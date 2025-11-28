@@ -11439,8 +11439,7 @@ namespace Platform.Sportsbook.API.Repository
             if (clientCode == "BGC") //No Margin for Bet Genius Clients
                 return false;
 
-            return true;
-            //return _configuration["Custom:ClientCodes"].Contains(clientCode) ? true : false;
+            return false; //disable Margin since we are now using bet genius 
         }
 
         private bool IsLiveStream(string livestreamId, string geoAllowed, string ipCountryCode)

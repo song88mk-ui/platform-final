@@ -8,6 +8,8 @@ namespace Platform.Shared.Data.Sportsbook.Entities
     public class Market
     {
         [BsonId]
+        public string Id { get; set; }
+        public int ChTyId { get; set; }
         public long MaId { get; set; }
         public int SpId { get; set; }
         public int SegId { get; set; }
@@ -32,7 +34,6 @@ namespace Platform.Shared.Data.Sportsbook.Entities
 
     public class MarketFilter
     {
-        [BsonId]
         public long MaId { get; set; }
         public long FiId { get; set; }
         public string MaTeId { get; set; }
@@ -49,7 +50,6 @@ namespace Platform.Shared.Data.Sportsbook.Entities
 
     public class MarketCount
     {
-        [BsonId]
         public long MaId { get; set; }
         public long FiId { get; set; }
     }
@@ -63,14 +63,12 @@ namespace Platform.Shared.Data.Sportsbook.Entities
 
     public class MarketProbabilityFilter
     {
-        [BsonId]
         public long MaId { get; set; }
         public int MaStId { get; set; }
     }
 
     public class CashOutMarketFilter
     {
-        [BsonId]
         public long MaId { get; set; }
         public int MaStId { get; set; }
     }

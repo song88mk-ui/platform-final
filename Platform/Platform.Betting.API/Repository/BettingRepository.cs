@@ -1,5 +1,4 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
@@ -33,9 +32,7 @@ namespace Platform.Betting.API.Repository
         private readonly ISportsbookRepository _sportsbookRepository;
         private readonly IRabbitMQRepository _rabbitMQRepository;
 
-        private readonly TelemetryClient _telemetryClient;
-
-        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IMemCache memCache, IHttpClientFactory httpClientFactory, IMTSAuthRepository mtsAuthRepository, IMTSMaxStakeRepository mtsMaxStakeRepository, IMTSProbabilityRepository mtsProbabilityRepository, ISportsbookRepository sportsbookRepository, IRabbitMQRepository rabbitMQRepository, TelemetryClient telemetryClient)
+        public BettingRepository(BettingContext bettingContext, IConfiguration configuration, IMemCache memCache, IHttpClientFactory httpClientFactory, IMTSAuthRepository mtsAuthRepository, IMTSMaxStakeRepository mtsMaxStakeRepository, IMTSProbabilityRepository mtsProbabilityRepository, ISportsbookRepository sportsbookRepository, IRabbitMQRepository rabbitMQRepository)
         {
             _bettingContext = bettingContext;
             _httpClientFactory = httpClientFactory;
@@ -44,7 +41,6 @@ namespace Platform.Betting.API.Repository
             _mtsProbabilityRepository = mtsProbabilityRepository;
             _sportsbookRepository = sportsbookRepository;
             _rabbitMQRepository = rabbitMQRepository;
-            _telemetryClient = telemetryClient;
             _configuration = configuration;
             _memCache = memCache;
         }
@@ -654,7 +650,7 @@ namespace Platform.Betting.API.Repository
                                 { "Error", ex.Message }
                             };
 
-                _telemetryClient.TrackEvent("BetWithoutMTS", properties);
+                //_telemetryClient.TrackEvent("BetWithoutMTS", properties);
 
                 //_messageBroker.Publish(new OnBetPlacementError
                 //{
@@ -1300,7 +1296,7 @@ namespace Platform.Betting.API.Repository
                                 { "Error", ex.Message }
                             };
 
-                _telemetryClient.TrackEvent("BetWithMTS", properties);
+                //_telemetryClient.TrackEvent("BetWithMTS", properties);
 
                 //_messageBroker.Publish(new OnBetPlacementError
                 //{

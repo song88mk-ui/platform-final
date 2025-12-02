@@ -846,7 +846,7 @@ namespace Platform.Sportsbook.API.Repository
             if (request.SportGroup != Shared.Enums.SportGroup.All)
             {
                 var sportGroup = GetSportGroups(request.SportGroup);
-                var selectedSportIds = sportGroup != null ? sportGroup.Sports.Split(',').Select(long.Parse).Distinct().ToList() : new List<long>();
+                var selectedSportIds = sportGroup != null ? sportGroup.Sports.Split(',').Select(int.Parse).Distinct().ToList() : new List<int>();
 
                 fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId < 2 && selectedSportIds.Contains(c.SpId));
             }

@@ -4,7 +4,7 @@
     {
         public int SportId { get; set; }
         public string MarketTemplateId { get; set; }
-        public bool Prematch { get; set; }
-        public bool Live { get; set; }
+        public int Prematch { get; set; }
+        public int Live { get; set; }
     }
 }

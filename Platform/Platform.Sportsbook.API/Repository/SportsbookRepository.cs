@@ -1782,9 +1782,9 @@ namespace Platform.Sportsbook.API.Repository
                         {
 
                             if (item.FiStId == (int)FixtureStatus.Prematch)
-                                filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == item.SpId && c.Prematch == true).ToList();
+                                filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == item.SpId && c.Prematch == 1).ToList();
                             else if (item.FiStId == (int)FixtureStatus.Live)
-                                filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == item.SpId && c.Live == true).ToList();
+                                filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == item.SpId && c.Live == 1).ToList();
 
                             isBetBuilder = filteredBetBuilderMarketTemplates.Any() ? true : false;
 
@@ -1887,9 +1887,9 @@ namespace Platform.Sportsbook.API.Repository
                         if (betBuilderSportIds.Contains(item.SpId) && item.FiTyId == (int)FixtureType.Match)
                         {
                             if (item.FiStId == (int)FixtureStatus.Prematch)
-                                filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == item.SpId && c.Prematch == true).ToList();
+                                filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == item.SpId && c.Prematch == 1).ToList();
                             else if (item.FiStId == (int)FixtureStatus.Live)
-                                filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == item.SpId && c.Live == true).ToList();
+                                filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == item.SpId && c.Live == 1).ToList();
 
                             isBetBuilder = filteredBetBuilderMarketTemplates.Any() ? true : false;
                         }
@@ -5532,9 +5532,9 @@ namespace Platform.Sportsbook.API.Repository
             if (betBuilderSportIds.Contains(fixture.SpId) && fixture.FiTyId == (int)FixtureType.Match)
             {
                 if (fixture.FiStId == (int)FixtureStatus.Prematch)
-                    filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SpId && c.Prematch == true).ToList();
+                    filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SpId && c.Prematch == 1).ToList();
                 else if (fixture.FiStId == (int)FixtureStatus.Live)
-                    filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SpId && c.Live == true).ToList();
+                    filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SpId && c.Live == 1).ToList();
 
                 isBetBuilder = filteredBetBuilderMarketTemplates.Any() ? true : false;
             }
@@ -6061,11 +6061,11 @@ namespace Platform.Sportsbook.API.Repository
                         if (betBuilderMarketTemplate != null)
                         {
                             var isQuarterMarket = Convert.ToDecimal(market.Li).ToString("0.00").Contains(".25") || Convert.ToDecimal(market.Li).ToString("0.00").Contains(".75") ? true : false;
-                            if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == true)
+                            if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == 1)
                             {
                                 isBetBuilder = true;
                             }
-                            else if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplate.Live == true)
+                            else if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplate.Live == 1)
                             {
                                 isBetBuilder = true;
                             }
@@ -6104,11 +6104,11 @@ namespace Platform.Sportsbook.API.Repository
 
                     if (fixtureTypeId == (int)FixtureType.Match && betBuilderMarketTemplate != null)
                     {
-                        if (fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == true)
+                        if (fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == 1)
                         {
                             isBetBuilder = true;
                         }
-                        else if (fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplate.Live == true)
+                        else if (fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplate.Live == 1)
                         {
                             isBetBuilder = true;
                         }
@@ -6412,11 +6412,11 @@ namespace Platform.Sportsbook.API.Repository
                         if (fixtureTypeId == (int)FixtureType.Match && betBuilderMarketTemplate != null)
                         {
                             var isQuarterMarket = Convert.ToDecimal(market.Li).ToString("0.00").Contains(".25") || Convert.ToDecimal(market.Li).ToString("0.00").Contains(".75") ? true : false;
-                            if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == true)
+                            if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == 1)
                             {
                                 isBetBuilder = true;
                             }
-                            else if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplate.Live == true)
+                            else if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplate.Live == 1)
                             {
                                 isBetBuilder = true;
                             }
@@ -6475,11 +6475,11 @@ namespace Platform.Sportsbook.API.Repository
                     if (fixtureTypeId == (int)FixtureType.Match && betBuilderMarketTemplate != null)
                     {
                         var isQuarterMarket = Convert.ToDecimal(market.Li).ToString("0.00").Contains(".25") || Convert.ToDecimal(market.Li).ToString("0.00").Contains(".75") ? true : false;
-                        if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == true)
+                        if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == 1)
                         {
                             isBetBuilder = true;
                         }
-                        else if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplate.Live == true)
+                        else if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplate.Live == 1)
                         {
                             isBetBuilder = true;
                         }
@@ -7390,8 +7390,8 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     SportId = betBuilder.SportId,
                     MarketTemplateId = betBuilder.MarketTemplateId,
-                    Live = betBuilder.Live,
-                    Prematch = betBuilder.Prematch
+                    Live = betBuilder.Live == 1,
+                    Prematch = betBuilder.Prematch == 1
                 });
             }
 
@@ -10405,11 +10405,11 @@ namespace Platform.Sportsbook.API.Repository
                     if (fixtureTypeId == (int)FixtureType.Match && betBuilderMarketTemplate != null)
                     {
                         var isQuarterMarket = Convert.ToDecimal(market.Li).ToString("0.00").Contains(".25") || Convert.ToDecimal(market.Li).ToString("0.00").Contains(".75") ? true : false;
-                        if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == true)
+                        if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == 1)
                         {
                             isBetBuilder = true;
                         }
-                        else if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplate.Live == true)
+                        else if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplate.Live == 1)
                         {
                             isBetBuilder = true;
                         }
@@ -10508,11 +10508,11 @@ namespace Platform.Sportsbook.API.Repository
                 if (fixtureTypeId == (int)FixtureType.Match && betBuilderMarketTemplate != null)
                 {
                     var isQuarterMarket = Convert.ToDecimal(market.Li).ToString("0.00").Contains(".25") || Convert.ToDecimal(market.Li).ToString("0.00").Contains(".75") ? true : false;
-                    if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == true)
+                    if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplate.Prematch == 1)
                     {
                         isBetBuilder = true;
                     }
-                    else if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplate.Live == true)
+                    else if (!isQuarterMarket && fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplate.Live == 1)
                     {
                         isBetBuilder = true;
                     }
@@ -10709,9 +10709,9 @@ namespace Platform.Sportsbook.API.Repository
                 if (betBuilderSportIds.Contains(fixture.SpId) && fixture.FiTyId == (int)FixtureType.Match)
                 {
                     if (fixture.FiStId == (int)FixtureStatus.Prematch)
-                        filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SpId && c.Prematch == true).ToList();
+                        filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SpId && c.Prematch == 1).ToList();
                     else if (fixture.FiStId == (int)FixtureStatus.Live)
-                        filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SpId && c.Live == true).ToList();
+                        filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SpId && c.Live == 1).ToList();
                 }
 
                 var market = GetTopGameMarket(fixtureMarket, selections.Where(c => c.FiId == Convert.ToInt64(fixture.FiId) && c.MaId == topFixture.MaId).ToList(), request.LanguageCode, request.ClientId, request.ClientCode, fixture.SpId, fixture.FiTyId, fixture.FiStId, clientInitial, betBuilderMarketTemplates);
@@ -10997,9 +10997,9 @@ namespace Platform.Sportsbook.API.Repository
                 if (betBuilderMarketTemplates.Any(s => s.SportId == fixture.SportId) && fixture.FixtureTypeId == (int)FixtureType.Match)
                 {
                     if (fixture.FixtureStatusId == (int)FixtureStatus.Prematch)
-                        filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SportId && c.Prematch == true).ToList();
+                        filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SportId && c.Prematch == 1).ToList();
                     else if (fixture.FixtureStatusId == (int)FixtureStatus.Live)
-                        filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SportId && c.Live == true).ToList();
+                        filteredBetBuilderMarketTemplates = betBuilderMarketTemplates.Where(c => c.SportId == fixture.SportId && c.Live == 1).ToList();
 
                     isBetBuilder = filteredBetBuilderMarketTemplates.Any();
                 }
@@ -12203,9 +12203,9 @@ namespace Platform.Sportsbook.API.Repository
         {
             if (fixtureTypeId == (int)FixtureType.Match)
             {
-                if (fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplates.Any(c => c.SportId == sportId && c.Prematch == true))
+                if (fixtureStatusId == (int)FixtureStatus.Prematch && betBuilderMarketTemplates.Any(c => c.SportId == sportId && c.Prematch == 1))
                     return true;
-                else if (fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplates.Any(c => c.SportId == sportId && c.Live == true))
+                else if (fixtureStatusId == (int)FixtureStatus.Live && betBuilderMarketTemplates.Any(c => c.SportId == sportId && c.Live == 1))
                     return true;
             }
 

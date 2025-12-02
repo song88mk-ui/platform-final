@@ -289,7 +289,7 @@ namespace Platform.Sportsbook.API.Controllers
 
         [HttpPost("v2/sportsbook/livefixtures")]
         public async Task<IActionResult> GetLiveFixtures([FromBody] TWLiveFixtureRequestDTO request)
-        {
+        {//
             var result = await _sportsbookRepository.GetLiveFixtures(request);
 
             switch (result.StatusCode)

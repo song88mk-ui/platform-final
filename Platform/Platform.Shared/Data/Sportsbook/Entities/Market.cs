@@ -50,6 +50,8 @@ namespace Platform.Shared.Data.Sportsbook.Entities
 
     public class MarketCount
     {
+        [BsonId]
+        public string Id { get; set; }
         public long MaId { get; set; }
         public long FiId { get; set; }
     }

@@ -80,7 +80,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.RedCat.API", "Plat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.RedCatBetting.API", "Platform.RedCatBetting.API\Platform.RedCatBetting.API.csproj", "{DACF6686-01CB-4CB2-8AA2-33CDCFDF394D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.RedCatOperator.API", "Platform.RedCatOperator.API\Platform.RedCatOperator.API.csproj", "{27AEAEB4-4D42-420A-A2F7-A6DF7BA60E5C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.RedCatOperator.API", "Platform.RedCatOperator.API\Platform.RedCatOperator.API.csproj", "{27AEAEB4-4D42-420A-A2F7-A6DF7BA60E5C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

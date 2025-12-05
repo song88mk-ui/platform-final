@@ -1,0 +1,21 @@
+name: Run Cucumber Tests
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types:
+      - completed
+
+jobs:
+  on-success:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Tests
+        run: |
+          gh api --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/FlyingCockatoo/api-bdd-tests/dispatches \
+            -f 'event_type=run'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}

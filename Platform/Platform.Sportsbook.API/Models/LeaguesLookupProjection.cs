@@ -7,6 +7,7 @@ namespace Platform.Sportsbook.API.Models
     public class LeaguesLookupProjection
     {
         [BsonId]
+        public string Id { get; set; }
         public long FiId { get; set; }
         public int FiStId { get; set; }
         public int FiTyId { get; set; }

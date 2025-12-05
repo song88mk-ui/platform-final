@@ -8,6 +8,7 @@ namespace Platform.Sportsbook.API.Models
     public class MarketLimitedProjection
     {
         [BsonId]
+        public string Id { get; set; }
         public long MaId { get; set; }
         public long FiId { get; set; }
         public string MaTeId { get; set; }

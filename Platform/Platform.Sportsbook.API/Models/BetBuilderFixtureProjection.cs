@@ -8,6 +8,7 @@ namespace Platform.Sportsbook.API.Models
     public class BetBuilderFixtureProjection
     {
         [BsonId]
+        public string Id { get; set; }
         public long FiId { get; set; }
         public string FiSp { get; set; }
     }
@@ -15,6 +16,7 @@ namespace Platform.Sportsbook.API.Models
     public class BetBuilderMarketProjection
     {
         [BsonId]
+        public string Id { get; set; }
         public long MaId { get; set; }
         public string MaTeId { get; set; }
         public string Li { get; set; }
@@ -24,6 +26,7 @@ namespace Platform.Sportsbook.API.Models
     public class BetBuilderSelectionProjection
     {
         [BsonId]
+        public string Id { get; set; }
         public long SeId { get; set; }
         public long MaId { get; set; }
         public string SeTeId { get; set; }
@@ -34,6 +37,7 @@ namespace Platform.Sportsbook.API.Models
     public class BetBuilderMarketMappingProjection
     {
         [BsonId]
+        public string Id { get; set; }
         public long MaId { get; set; }
         public string MaSp { get; set; }
     }

@@ -8,6 +8,7 @@ namespace Platform.Sportsbook.API.Models
     public class ActiveFixtureCountProjection
     {
         [BsonId]
+        public string Id { get; set; }
         public long FiId { get; set; }
         public int FiStId { get; set; }
         public string ClCo { get; set; }

@@ -124,7 +124,7 @@ namespace Platform.Sportsbook.API.Controllers
 
         [HttpPost("v1/sportsbook/selectormarkettemplates")]
         public async Task<IActionResult> GetSelectorMarketTemplates([FromBody] SelectorMarketTemplatesRequestDTO request)
-        {
+        {//
             var result = await _sportsbookRepository.GetClientSelectorMarketTemplates(request);
 
             switch (result.StatusCode)

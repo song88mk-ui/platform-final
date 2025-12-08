@@ -1,7 +1,9 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Platform.Shared.Data.Sportsbook.SQLEntities
 {
+    [Table("ClientSelectorMarketTemplate2")]
     public class ClientSelectorMarketTemplate
     {
         public Guid ClientId { get; set; }

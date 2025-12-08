@@ -1755,7 +1755,15 @@ namespace Platform.API.Controllers
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
-            var result = await _platformRepository.GetSports(apiKey, clientId, languageCode, sportGroup, fixtureScope, dateUTC, minuteUTCOffset);
+            if(fixtureScope != null && fixtureScope < FixtureScope.Live)
+            {
+                if (minuteUTCOffset == null)
+                    minuteUTCOffset = 0;
+                if(fixtureScope == FixtureScope.Early && dateUTC == null)
+                    dateUTC = DateTime.UtcNow.AddDays(1);
+            }
+
+            var result = await _platformRepository.GetSports(apiKey, clientId, languageCode, sportGroup, fixtureScope, dateUTC, minuteUTCOffset ?? 0);
 
             var parameters = new
             {

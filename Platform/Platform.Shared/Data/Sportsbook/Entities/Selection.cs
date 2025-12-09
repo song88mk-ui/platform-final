@@ -52,6 +52,8 @@ namespace Platform.Shared.Data.Sportsbook.Entities
 
     public class SelectionFilter
     {
+        [BsonId]
+        public string Id { get; set; }
         public long SeId { get; set; }
         public long FiId { get; set; }
         public long MaId { get; set; }

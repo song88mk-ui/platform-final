@@ -12,7 +12,7 @@ namespace Platform.Sportsbook.API.Models
         public long FiId { get; set; }
         public string PrFiId { get; set; }
         public int FiStId { get; set; }
-        public string ClCo { get; set; }
+        public string ClCo { get; set; } = default!;
         public int SpId { get; set; }
         public string SpNa { get; set; }
         public int SegId { get; set; }

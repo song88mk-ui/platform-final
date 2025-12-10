@@ -971,30 +971,7 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var sport in finalResult)
             {
-                if (sport.SportId == 5)
-                {
-                    final.Add(new SportDTO
-                    {
-                        SportId = sport.SportId,
-                        SportName = sport.SportName,
-                        Scope = sport.Scope,
-                        FixtureCount = sport.FixtureCount,
-                        Segments = result.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
-                        {
-                            SegmentId = s.Key,
-                            SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
-                            SortOrder = s.Select(se => se.LeagueSortOrder).FirstOrDefault(),
-                            CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == sport.SportId && cc.SegmentId == s.Key)?.CountryId ?? 0,
-                            Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
-                            {
-                                LeagueId = l.Key,
-                                LeagueName = l.Select(le => le.LeagueName).FirstOrDefault(),
-                                SortOrder = l.Select(le => le.LeagueSortOrder).FirstOrDefault()
-                            }).OrderBy(o => o.LeagueId).ThenBy(o => o.LeagueName).ToList()
-                        }).OrderBy(o => o.SegmentId).ThenBy(o => o.SegmentName).ToList()
-                    });
-                }
-                else if (segmentOrder.Any(c => c.SportId == sport.SportId))
+                if (segmentOrder.Any(c => c.SportId == sport.SportId))
                 {
                     var segment = segmentOrder.Where(c => c.SportId == sport.SportId).ToList();
 

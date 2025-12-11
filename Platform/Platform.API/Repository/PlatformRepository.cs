@@ -8,6 +8,7 @@ using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Platform.Shared.Utility;
+using Platform.Shared.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -173,7 +174,7 @@ namespace Platform.API.Repository
 
             activity?.AddEvent(new ActivityEvent("validate.bet.request"));
 
-            if (request.Selections.Count >= 2 && request.Selections.Any(c => c.SportId > 1000) && request.Selections.Any(c => c.SportId < 1000))
+            if (request.Selections.Count >= 2 && request.Selections.Any(c => c.SportId.IsVirtualSportId()) && request.Selections.Any(c => c.SportId < 1000))
             {
                 return ReturnErrorBetResponse(StatusCode.Virtuals_Cannot_Be_Added_As_Part_Of_Parlay_With_Other_Sports, activity);
             }

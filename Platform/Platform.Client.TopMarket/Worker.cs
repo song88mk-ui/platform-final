@@ -4,6 +4,7 @@ using Platform.ClientTopMarket.Service.Repository;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
+using Platform.Shared.Extensions;
 using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Concurrent;
@@ -76,17 +77,17 @@ namespace Platform.ClientTopMarket.Service
                 {
                     case "OnBetPlacement":
                         var onBetPlacement = JsonSerializer.Deserialize<OnClientTopMarketBetPlacement>(payload);
-                        if (onBetPlacement.SportId < 1000 && onBetPlacement.MarketSelectionCount <= 3 && onBetPlacement.FixtureTypeId != (int)FixtureType.Outright)
+                        if (!onBetPlacement.SportId.IsVirtualSportId() && onBetPlacement.MarketSelectionCount <= 3 && onBetPlacement.FixtureTypeId != (int)FixtureType.Outright)
                             _messagesBetPlacement.Add(onBetPlacement);
                         break;
                     case "OnBetSettlement":
                         var onBetSettlement = JsonSerializer.Deserialize<OnClientTopMarketBetSettlement>(payload);
-                        if (onBetSettlement.SportId < 1000)
+                        if (!onBetSettlement.SportId.IsVirtualSportId())
                             _messagesBetSettlement.Add(onBetSettlement);
                         break;
                     case "OnBetCancellation":
                         var onBetCancellation = JsonSerializer.Deserialize<OnClientTopMarketBetSettlement>(payload);
-                        if (onBetCancellation.SportId < 1000)
+                        if (!onBetCancellation.SportId.IsVirtualSportId())
                             _messagesBetSettlement.Add(onBetCancellation);
                         break;
                 }

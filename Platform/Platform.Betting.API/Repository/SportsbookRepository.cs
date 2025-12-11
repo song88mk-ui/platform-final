@@ -3,6 +3,7 @@ using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Helpers;
 using Platform.Shared.Models;
+using Platform.Shared.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,7 +63,7 @@ namespace Platform.Betting.API.Repository
         {
             var result = new List<CashOutDetailsReponse>();
 
-            var tempSelections = betSelections.Where(c => c.FixtureTypeId == (int)FixtureType.Match && c.SportId < 1000).Select(s => new Tuple<long, long, long>(s.FixtureId, s.MarketId, s.SelectionId)).ToList();
+            var tempSelections = betSelections.Where(c => c.FixtureTypeId == (int)FixtureType.Match && !c.SportId.IsVirtualSportId()).Select(s => new Tuple<long, long, long>(s.FixtureId, s.MarketId, s.SelectionId)).ToList();
 
             if (tempSelections.Count == 0)
             {
@@ -179,7 +180,7 @@ namespace Platform.Betting.API.Repository
 
                     foreach (var selection in selections)
                     {
-                        if (selection.SportId > 1000 || selection.FixtureTypeId == (int)FixtureType.Outright)
+                        if (selection.SportId.IsVirtualSportId() || selection.FixtureTypeId == (int)FixtureType.Outright)
                         {
                             isBreak = true;
                             break;

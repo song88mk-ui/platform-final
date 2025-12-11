@@ -1438,7 +1438,7 @@ namespace Platform.Settlement.Service.Repository
             var wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won).Count();
             var lostSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
 
-            var hasVirtualSport = selections.Any(s => s.SportId > 1000) ? true : false;
+            var hasVirtualSport = selections.Any(s => s.SportId.IsVirtualSportId()) ? true : false;
 
             if (hasVirtualSport == false && wonSelectionCount >= 3 && bet.IsFreeBet == false && lostSelectionCount == 0)
             {
@@ -1587,7 +1587,7 @@ namespace Platform.Settlement.Service.Repository
             var parlayBonusWinnings = 0m;
             var parlayBonus = 0m;
 
-            var hasVirtualSport = selections.Any(s => s.SportId > 1000) ? true : false;
+            var hasVirtualSport = selections.Any(s => s.SportId.IsVirtualSportId()) ? true : false;
             var wonSelectionCount = selections.Where(c => c.SelectionId != betSelection.SelectionId && (c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running)).Count() + 1; // +1 for Running status
             var lostSelectionCount = selections.Where(c => c.SelectionId != betSelection.SelectionId && c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
 

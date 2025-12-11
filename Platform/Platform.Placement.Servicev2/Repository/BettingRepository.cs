@@ -5,6 +5,7 @@ using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
+using Platform.Shared.Extensions;
 using Platform.Shared.Utility;
 using Sportradar.MTS.SDK.API;
 using Sportradar.MTS.SDK.Entities.Builders;
@@ -42,7 +43,7 @@ namespace Platform.Placement.Servicev2.Repository
             payload.IsOGClient = message.IsOGClient;
 
             var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
-                message.BetSelections.Any(c => c.BetSelection.SportId > 1000) || message.ChannelTypeId > (int)ChannelType.SR ? new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled for VS)") :
+                message.BetSelections.Any(c => c.BetSelection.SportId.IsVirtualSportId()) || message.ChannelTypeId > (int)ChannelType.SR ? new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled for VS)") :
                 ValidateToMTS(message, mts) : new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled)");
 
             if (result.Item1 == TicketAcceptance.Accepted)
@@ -719,7 +720,7 @@ namespace Platform.Placement.Servicev2.Repository
             BetBonusDescription bonusDescription = BetBonusDescription.Other;
             // parlay bonus: bet should be Won by default
 
-            var hasVirtualSport = betSelectionData.Any(s => s.SportId > 1000) ? true : false;
+            var hasVirtualSport = betSelectionData.Any(s => s.SportId.IsVirtualSportId()) ? true : false;
 
             if (isBetBuilder == false && hasVirtualSport == false && betSelectionData.Count >= 3 && betData.IsFreeBet == false)
             {

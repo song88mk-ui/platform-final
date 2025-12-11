@@ -2,9 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Platform.Shared.Data.Betting;
-using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Enums;
-using Platform.Shared.MessageModels;
+using Platform.Shared.Extensions;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -85,7 +84,7 @@ namespace Platform.Job.Operator.Score.Repository
                     SettlementScore = s.SettlementScore,
                 }).ToList();
 
-                if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright || !settledStatus.Contains(c.BetSelectionStatusId)))
+                if (betSelections.Count == 0 || betSelections.Any(c => c.SportId.IsVirtualSportId() || c.FixtureTypeId == (int)FixtureType.Outright || !settledStatus.Contains(c.BetSelectionStatusId)))
                     continue;
 
                 bet.BetSelections.AddRange(betSelections);

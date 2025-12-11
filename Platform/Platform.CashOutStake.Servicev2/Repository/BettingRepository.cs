@@ -3,8 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using Platform.Shared.Data.Betting;
-using Platform.Shared.Data.Betting.Entities;
-using Platform.Shared.Data.Reports.Entities;
+using Platform.Shared.Extensions;
 using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.Helpers;
@@ -92,7 +91,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                     IsBinary = s.IsBinary
                 }).ToList();
 
-                if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright)) //|| c.BetSelectionStatusId != (int)BetStatus.Running
+                if (betSelections.Count == 0 || betSelections.Any(c => c.SportId.IsVirtualSportId() || c.FixtureTypeId == (int)FixtureType.Outright)) //|| c.BetSelectionStatusId != (int)BetStatus.Running
                     return;
 
                 bet.BetSelections.AddRange(betSelections);
@@ -182,7 +181,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 IsBinary = s.IsBinary
             }).ToList();
 
-            if (betSelections.Count == 0 || betSelections.Any(c => c.SportId > 1000 || c.FixtureTypeId == (int)FixtureType.Outright)) // || c.BetSelectionStatusId != (int)BetStatus.Running
+            if (betSelections.Count == 0 || betSelections.Any(c => c.SportId.IsVirtualSportId() || c.FixtureTypeId == (int)FixtureType.Outright)) // || c.BetSelectionStatusId != (int)BetStatus.Running
                 return;
 
             bet.BetSelections.AddRange(betSelections);

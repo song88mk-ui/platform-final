@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
+using Platform.Shared.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,7 +27,7 @@ namespace Platform.Betting.API.Repository
 
         public async Task<BaseResponseDTO<MTSStakeResponseDTO>> GetMTSMaxStake(string authToken, MTSConfigRequestDTO request, decimal companyShare, bool isBetBuilder, decimal calculatedOdds)
         {
-            if (request.BetSelections.Any(c => c.SportId > 1000))
+            if (request.BetSelections.Any(c => c.SportId.IsVirtualSportId()))
             {
                 return new BaseResponseDTO<MTSStakeResponseDTO>
                 {

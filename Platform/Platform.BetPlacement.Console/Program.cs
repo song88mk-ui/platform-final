@@ -1,4 +1,5 @@
 ﻿using Platform.Shared.Enums;
+using Platform.Shared.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -40,7 +41,7 @@ namespace Platform.BetPlacement.Console
 
                     if (liveSports.StatusCode == StatusCode.Success)
                     {
-                        foreach (var sport in liveSports.Result.Sports.Where(c => c.SportId > 1000).ToList())
+                        foreach (var sport in liveSports.Result.Sports.Where(c => c.SportId.IsVirtualSportId()).ToList())
                         {
                             var result = GetLiveFixtures(sport.SportId).Result;
 

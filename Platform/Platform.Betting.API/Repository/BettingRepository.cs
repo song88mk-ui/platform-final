@@ -2,8 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
-using Platform.Shared.Data.Sportsbook.SQLEntities;
-using Platform.Shared.Data.Sportsbook;
+using Platform.Shared.Extensions;
 using Platform.Shared.Enums;
 using Platform.Shared.Helpers;
 using Platform.Shared.MessageModels;
@@ -49,7 +48,7 @@ namespace Platform.Betting.API.Repository
         {
             if (request.ChannelTypeId == (int)ChannelType.BG)
                 return await PlaceBetWithoutMTS(request); //create method for PlaceBetWithRTS
-            else if (request.Selections.Any(c => c.SportId > 1000))
+            else if (request.Selections.Any(c => c.SportId.IsVirtualSportId()))
                 return await PlaceBetWithoutMTS(request);
             else
             {
@@ -63,7 +62,7 @@ namespace Platform.Betting.API.Repository
         {
             if (request.ChannelTypeId == (int)ChannelType.BG)
                 return await GetMaxStakeWithoutMTS(request); //create method for GetMaxStakeWithRTS
-            else if (request.IsBoosted == true || request.Selections.Any(c => c.SportId > 1000))
+            else if (request.IsBoosted == true || request.Selections.Any(c => c.SportId.IsVirtualSportId()))
                 return await GetMaxStakeWithoutMTS(request);
             else
             {
@@ -291,7 +290,7 @@ namespace Platform.Betting.API.Repository
                     };
                 }
 
-                var hasVirtualSport = request.Selections.Any(s => s.SportId > 1000) ? true : false;
+                var hasVirtualSport = request.Selections.Any(s => s.SportId.IsVirtualSportId()) ? true : false;
 
                 if (request.IsBetBuilder == false && hasVirtualSport == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
                 {
@@ -937,7 +936,7 @@ namespace Platform.Betting.API.Repository
                     };
                 }
 
-                var hasVirtualSport = request.Selections.Any(s => s.SportId > 1000) ? true : false;
+                var hasVirtualSport = request.Selections.Any(s => s.SportId.IsVirtualSportId()) ? true : false;
 
                 if (request.IsBetBuilder == false && hasVirtualSport == false && request.Selections.Count >= 3 && parlayConfig.ParlayBonusConfig != null)
                 {
@@ -1609,7 +1608,7 @@ namespace Platform.Betting.API.Repository
                     var isBoosted = betBoosted.Any(b => b == bet.BetId);
                     var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
-                    var hasVirtualSport = filteredSelections.Any(s => s.SportId > 1000) ? true : false;
+                    var hasVirtualSport = filteredSelections.Any(s => s.SportId.IsVirtualSportId()) ? true : false;
                     var wonOrRunningSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running).Count();
                     var lostSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
 
@@ -1937,7 +1936,7 @@ namespace Platform.Betting.API.Repository
                 var isBoosted = betBoosted.Any(b => b == bet.BetId);
                 var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder ? true : false;
 
-                var hasVirtualSport = filteredSelections.Any(s => s.SportId > 1000) ? true : false;
+                var hasVirtualSport = filteredSelections.Any(s => s.SportId.IsVirtualSportId()) ? true : false;
                 var wonOrRunningSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won || c.BetSelectionStatusId == (int)BetStatus.Running).Count();
                 var lostSelectionCount = filteredSelections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Lost).Count();
 

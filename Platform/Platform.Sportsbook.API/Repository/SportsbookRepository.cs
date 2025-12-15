@@ -8066,11 +8066,18 @@ namespace Platform.Sportsbook.API.Repository
 
         private Tuple<DateTime, DateTime> GetDateTimeRange2(DateTime utcDate, int minuteUTCOffset, bool dateIsFromRequest = false)
         {
-            var localDate = dateIsFromRequest ? utcDate : utcDate.AddMinutes(minuteUTCOffset);
-            var startTime = new DateTime(localDate.Date.Year, localDate.Date.Month, localDate.Date.Day).AddMilliseconds(-1);
-            var endTime = new DateTime(localDate.Date.AddDays(1).Year, localDate.Date.AddDays(1).Month, localDate.Date.AddDays(1).Day);
+            var referenceDate = dateIsFromRequest ? utcDate : utcDate.AddMinutes(minuteUTCOffset);
 
-            return new Tuple<DateTime, DateTime>(startTime.AddMinutes(minuteUTCOffset * -1), endTime.AddMinutes(minuteUTCOffset * -1));
+            var start = referenceDate.Date.AddMilliseconds(-1);
+            var end = referenceDate.Date.AddDays(1);
+
+            if (dateIsFromRequest)
+            {
+                start = start.AddMinutes(-minuteUTCOffset);
+                end = end.AddMinutes(-minuteUTCOffset);
+            }
+
+            return Tuple.Create(start, end); 
         }
 
 

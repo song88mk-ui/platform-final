@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using JsonProperty = System.Text.Json.Serialization.JsonPropertyNameAttribute;
 namespace Platform.Shared.Models
 {

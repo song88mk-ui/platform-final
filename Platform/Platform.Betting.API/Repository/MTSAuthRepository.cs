@@ -26,7 +26,7 @@ namespace Platform.Betting.API.Repository
         }
         public async Task<BaseResponseDTO<MTSAuthResponseDTO>> GetMTSAuthorizationToken()
         {
-            if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) == false)
+            if (Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]) == false)
             {
                 return new BaseResponseDTO<MTSAuthResponseDTO>
                 {

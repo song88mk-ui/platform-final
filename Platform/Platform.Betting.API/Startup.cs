@@ -12,6 +12,9 @@ using Platform.Shared.Data.Betting;
 using Platform.Shared.Utility;
 using Platform.Shared.Telemetry;
 using Platform.Shared.Extensions;
+using Platform.Betting.API.Providers.GTS;
+using Platform.Betting.API.Providers.MTS;
+using Platform.Betting.API.Providers;
 
 namespace Platform.Betting.API
 {
@@ -50,9 +53,17 @@ namespace Platform.Betting.API
             services.AddSingleton<IMemCache, MemCache>();
             services.AddScoped<IBettingRepository, BettingRepository>();
             services.AddScoped<IBetConfigRepository, BetConfigRepository>();
+            services.AddScoped<IBetProvider, MtsBetProvider>();
+            services.AddScoped<IBetProvider, GTSBetProvider>();
+            services.AddScoped<IBetProviderFactory, BetProviderFactory>();
+
             services.AddHttpClient<IMTSAuthRepository, MTSAuthRepository>();
             services.AddHttpClient<IMTSMaxStakeRepository, MTSMaxStakeRepository>();
             services.AddHttpClient<IMTSProbabilityRepository, MTSProbabilityRepository>();
+
+            services.AddHttpClient<IGTSAuthRepository, GTSAuthRepository>();
+            services.AddHttpClient<IGTSRepository, GTSRepository>();
+
             services.AddHttpClient<ISportsbookRepository, SportsbookRepository>();
             services.AddHttpClient<IRabbitMQRepository, RabbitMQRepository>();
 

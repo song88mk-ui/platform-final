@@ -2,8 +2,9 @@
 {
     public enum ChannelType
     {
-        SR = 0,
-        BG = 1,
-        OD = 2
+        BG = 0,
+        EM = 1,
+        OD = 2,
+        SR = 3
     }
 }

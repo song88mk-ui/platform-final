@@ -40,7 +40,7 @@ namespace Platform.Betting.API.Repository
                 };
             }
 
-            if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) == false)
+            if (Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]) == false)
             {
                 return new BaseResponseDTO<MTSStakeResponseDTO>
                 {

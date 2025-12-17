@@ -2,7 +2,7 @@
 using Platform.Shared.Models;
 using System.Threading.Tasks;
 
-namespace Platform.Betting.API.Providers
+namespace Platform.Shared.Providers
 {
     public interface IBetProvider
     {

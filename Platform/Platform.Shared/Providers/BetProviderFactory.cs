@@ -1,4 +1,4 @@
-﻿namespace Platform.Betting.API.Providers
+﻿namespace Platform.Shared.Providers
 {
     public interface IBetProviderFactory
     {

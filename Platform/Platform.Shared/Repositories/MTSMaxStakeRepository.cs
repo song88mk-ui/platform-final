@@ -9,18 +9,16 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Platform.Betting.API.Repository
+namespace Platform.Shared.Repositories
 {
     public class MTSMaxStakeRepository : IMTSMaxStakeRepository
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
-        private readonly IRabbitMQRepository _rabbitMQRepository;
 
-        public MTSMaxStakeRepository(HttpClient httpClient, IConfiguration configuration, IRabbitMQRepository rabbitMQRepository)
+        public MTSMaxStakeRepository(HttpClient httpClient, IConfiguration configuration)
         {
             _configuration = configuration;
-            _rabbitMQRepository = rabbitMQRepository;
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(_configuration["API:MTSMaxStakeAPI"]);
         }

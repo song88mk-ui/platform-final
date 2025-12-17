@@ -1,7 +1,7 @@
 ﻿using Platform.Shared.Models;
 using System.Threading.Tasks;
 
-namespace Platform.Betting.API.Repository
+namespace Platform.Shared.Repositories
 {
     public interface IGTSRepository
     {

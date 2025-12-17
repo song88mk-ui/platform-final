@@ -3,7 +3,6 @@ using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using Platform.Shared.Extensions;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -11,7 +10,7 @@ using System.Threading.Tasks;
 using Platform.Shared.Utility;
 using System.Text.Json.Serialization;
 
-namespace Platform.Betting.API.Repository
+namespace Platform.Shared.Repositories
 {
     public class GTSRepository : IGTSRepository
     {
@@ -95,7 +94,7 @@ namespace Platform.Betting.API.Repository
                         Message = StatusCode.Success.ToString(),
                         Result = new ProviderStakeResponseDTO
                         {
-                            Stake = 0 
+                            Stake = 0
                         }
                     };
                 }

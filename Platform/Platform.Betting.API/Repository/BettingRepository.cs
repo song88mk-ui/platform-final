@@ -15,7 +15,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
-using Platform.Betting.API.Providers;
+using Platform.Shared.Providers;
 
 namespace Platform.Betting.API.Repository
 {

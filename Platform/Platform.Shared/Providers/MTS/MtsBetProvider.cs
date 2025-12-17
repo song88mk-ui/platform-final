@@ -1,11 +1,11 @@
-﻿using Platform.Betting.API.Repository;
-using Platform.Shared.Enums;
+﻿using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System.Collections.Generic;
 using System;
 using System.Threading.Tasks;
+using Platform.Shared.Repositories;
 
-namespace Platform.Betting.API.Providers.MTS
+namespace Platform.Shared.Providers.MTS
 {
     public class MtsBetProvider  : IBetProvider
     {

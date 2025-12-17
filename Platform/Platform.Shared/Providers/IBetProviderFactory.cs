@@ -1,9 +1,8 @@
-﻿using Platform.Shared.Enums;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System;
 using System.Linq;
 
-namespace Platform.Betting.API.Providers
+namespace Platform.Shared.Providers
 {
     public class BetProviderFactory : IBetProviderFactory
     {

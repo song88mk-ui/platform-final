@@ -8,40 +8,41 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Platform.Betting.API.Repository
+namespace Platform.Shared.Repositories
 {
-    public class MTSAuthRepository : IMTSAuthRepository
+    public class GTSAuthRepository : IGTSAuthRepository
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly IMemCache _memCache;
 
-        public MTSAuthRepository(HttpClient httpClient, IConfiguration configuration, IMemCache memCache)
+        public GTSAuthRepository(HttpClient httpClient, IConfiguration configuration, IMemCache memCache)
         {
             _configuration = configuration;
             _memCache = memCache;
 
             _httpClient = httpClient;
-            _httpClient.BaseAddress = new Uri(_configuration["API:MTSAuthAPI"]);
+            _httpClient.BaseAddress = new Uri(_configuration["API:GTSAuthAPI"]);
         }
-        public async Task<BaseResponseDTO<MTSAuthResponseDTO>> GetMTSAuthorizationToken()
+
+        public async Task<BaseResponseDTO<ProviderAuthResponseDTO>> GetGTSAuthorizationToken()
         {
             if (Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]) == false)
             {
-                return new BaseResponseDTO<MTSAuthResponseDTO>
+                return new BaseResponseDTO<ProviderAuthResponseDTO>
                 {
                     StatusCode = StatusCode.Success,
                     Message = StatusCode.Success.ToString(),
-                    Result = new MTSAuthResponseDTO
+                    Result = new ProviderAuthResponseDTO
                     {
                         Token = string.Empty
                     }
                 };
             }
 
-            var cacheKey = $"mts:auth";
+            var cacheKey = $"gts:auth";
 
-            var cache = _memCache.GetCache<BaseResponseDTO<MTSAuthResponseDTO>>(cacheKey);
+            var cache = _memCache.GetCache<BaseResponseDTO<ProviderAuthResponseDTO>>(cacheKey);
 
             if (cache != null)
                 return cache;
@@ -50,31 +51,29 @@ namespace Platform.Betting.API.Repository
             {
                 var formContent = new FormUrlEncodedContent(new[]
                 {
-                  new KeyValuePair<string, string>("client_id", "mts-edge-ext"),
-                  new KeyValuePair<string, string>("client_secret",  _configuration["Custom:MTSClientSecret"]),
-                  new KeyValuePair<string, string>("username",  _configuration["Custom:MTSUsername"]),
-                  new KeyValuePair<string, string>("password",  _configuration["Custom:MTSPassword"]),
-                  new KeyValuePair<string, string>("grant_type", "password"),
-                  new KeyValuePair<string, string>("client_auth_method", "client-secret")
+                  new KeyValuePair<string, string>("grant_type", "client_credentials"),
+                  new KeyValuePair<string, string>("client_auth_method", "https://api.geniussports.com"),
+                  new KeyValuePair<string, string>("client_id", _configuration["Custom:GTSClientID"]),
+                  new KeyValuePair<string, string>("client_secret",  _configuration["Custom:GTSClientSecret"])
                 });
 
-                var response = await _httpClient.PostAsync($"auth/realms/mts/protocol/openid-connect/token", formContent);
+                var response = await _httpClient.PostAsync($"oauth/token", formContent);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var initialResult = JsonSerializer.Deserialize<MTSMaxStakeAuthResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-                    var result = new BaseResponseDTO<MTSAuthResponseDTO>
+                    var result = new BaseResponseDTO<ProviderAuthResponseDTO>
                     {
                         StatusCode = StatusCode.Success,
                         Message = StatusCode.Success.ToString(),
-                        Result = new MTSAuthResponseDTO
+                        Result = new ProviderAuthResponseDTO
                         {
                             Token = initialResult.AccessToken
                         }
                     };
 
-                    _memCache.AddOrUpdateCache(cacheKey, result, DateTimeOffset.UtcNow.AddMinutes(55));
+                    _memCache.AddOrUpdateCache(cacheKey, result, DateTimeOffset.UtcNow.AddSeconds(initialResult.ExpiresInSeconds));
 
                     return result;
                 }
@@ -82,11 +81,11 @@ namespace Platform.Betting.API.Repository
                 {
                     _memCache.DeleteCache(cacheKey);
 
-                    return new BaseResponseDTO<MTSAuthResponseDTO>
+                    return new BaseResponseDTO<ProviderAuthResponseDTO>
                     {
                         StatusCode = StatusCode.Error,
                         Message = StatusCode.Error.ToString(),
-                        Result = new MTSAuthResponseDTO
+                        Result = new ProviderAuthResponseDTO
                         {
                             Token = string.Empty
                         }
@@ -97,11 +96,11 @@ namespace Platform.Betting.API.Repository
             {
                 _memCache.DeleteCache(cacheKey);
 
-                return new BaseResponseDTO<MTSAuthResponseDTO>
+                return new BaseResponseDTO<ProviderAuthResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
-                    Result = new MTSAuthResponseDTO
+                    Result = new ProviderAuthResponseDTO
                     {
                         Token = string.Empty
                     }

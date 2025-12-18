@@ -28,6 +28,7 @@ namespace Platform.API.Controllers
             _activitySource = instrumentation.ActivitySource;
         }
 
+        [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost("v1/authentication/login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -75,6 +76,7 @@ namespace Platform.API.Controllers
             }
         }
 
+        [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost("v1/authentication/logout")]
         public async Task<IActionResult> Logout()
         {

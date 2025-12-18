@@ -16,10 +16,10 @@ using OpenTelemetry.Context.Propagation;
 using Platform.Placement.Servicev2.Repository;
 using Platform.Placement.Servicev2.Telemetry;
 using Platform.Shared.MessageModels;
+using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using Sportradar.MTS.SDK.API;
 
 namespace Platform.Placement.Servicev2
 {
@@ -29,11 +29,12 @@ namespace Platform.Placement.Servicev2
         private readonly IMessageBroker _messageBroker;
         private readonly IBettingRepository _bettingRepository;
         private readonly IConfiguration _configuration;
+        private readonly IBetProviderFactory _betProviderFactory;
+
         private readonly ActivitySource _activitySource;
         private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
         private readonly Counter<long> _betPlacementCounter;
 
-        private IMtsSdk _mts;
         private Stack<int> _index = new Stack<int>();
 
         private Thread _thread00;
@@ -238,35 +239,24 @@ namespace Platform.Placement.Servicev2
         private readonly BlockingCollection<BasicDeliverEventArgs> _messages98 = new BlockingCollection<BasicDeliverEventArgs>();
         private readonly BlockingCollection<BasicDeliverEventArgs> _messages99 = new BlockingCollection<BasicDeliverEventArgs>();
 
-        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository, IConfiguration configuration, Instrumentation instrumentation)
+        public Worker(ILogger<Worker> logger,
+            IMessageBroker messageBroker,
+            IBettingRepository bettingRepository,
+            IConfiguration configuration,
+            IBetProviderFactory betProviderFactory,
+            Instrumentation instrumentation)
         {
             _logger = logger;
             _messageBroker = messageBroker;
             _bettingRepository = bettingRepository;
             _configuration = configuration;
+            _betProviderFactory = betProviderFactory;
             _activitySource = instrumentation.ActivitySource;
             _betPlacementCounter = instrumentation.BetPlacementCounter;
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
         {
-            if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
-            {
-                try
-                {
-                    _logger.LogInformation("Starting MTS SDK");
-                    var config = MtsSdk.GetConfiguration();
-
-                    _mts = new MtsSdk(config);
-                    _mts.Open();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error starting MTS SDK");
-                }
-
-            }
-
             return base.StartAsync(cancellationToken);
         }
 
@@ -274,9 +264,6 @@ namespace Platform.Placement.Servicev2
         {
             try
             {
-                if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
-                    _mts.Close();
-
                 _messageBroker.Dispose();
             }
             catch (Exception ex)
@@ -846,29 +833,30 @@ namespace Platform.Placement.Servicev2
 
             using (var activity = _activitySource.StartActivity("process.bet.placement",
                         ActivityKind.Consumer, parentContext.ActivityContext))
-            try
-            {
-                switch (messageType)
+                try
                 {
-                    case "OnBetPlacement":
-                        var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
+                    switch (messageType)
+                    {
+                        case "OnBetPlacement":
+                            var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
+                            var provider = _betProviderFactory.Resolve(onBetPlacement.ChannelTypeId);
 
-                        _bettingRepository.ProcesssBetPlacement(onBetPlacement, _mts, _messageBroker, correlationId);
+                            _bettingRepository.ProcesssBetPlacement(onBetPlacement, provider, _messageBroker, correlationId);
 
-                        _messageBroker.Acknowledge(e);
-                        break;
-                    default:
-                        _messageBroker.Acknowledge(e);
-                        break;
+                            _messageBroker.Acknowledge(e);
+                            break;
+                        default:
+                            _messageBroker.Acknowledge(e);
+                            break;
+                    }
+                    activity?.SetStatus(ActivityStatusCode.Ok);
                 }
-                activity?.SetStatus(ActivityStatusCode.Ok);
-            }
-            catch (Exception ex)
-            {
-                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-                _logger.LogError(ex, "error processing bet placement");
-                _messageBroker.Acknowledge(e);
-            }
+                catch (Exception ex)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                    _logger.LogError(ex, "error processing bet placement");
+                    _messageBroker.Acknowledge(e);
+                }
         }
 
         private void ThreadStart00()
@@ -1794,16 +1782,17 @@ namespace Platform.Placement.Servicev2
 
         private IEnumerable<string> ExtractTraceFromBasicProperties(IBasicProperties props, string key)
         {
-          try
-          {
-            if (props.Headers.TryGetValue(key, out var value))
+            try
             {
-              var bytes = value as byte[];
-              return new[] { Encoding.UTF8.GetString(bytes) };
+                if (props.Headers.TryGetValue(key, out var value))
+                {
+                    var bytes = value as byte[];
+                    return new[] { Encoding.UTF8.GetString(bytes) };
+                }
             }
-          } catch (Exception) {}
+            catch (Exception) { }
 
-          return Enumerable.Empty<string>();
+            return Enumerable.Empty<string>();
         }
     }
 }

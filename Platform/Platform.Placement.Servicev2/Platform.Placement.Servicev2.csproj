@@ -16,7 +16,6 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.14.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.14.0-beta.1" />
     <PackageReference Include="RabbitMQ.Client" Version="5.2.0" />
-    <PackageReference Include="Sportradar.MTS.SDKCore" Version="2.4.1" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,11 +1,11 @@
 ﻿using Platform.Shared.MessageModels;
+using Platform.Shared.Providers;
 using Platform.Shared.Utility;
-using Sportradar.MTS.SDK.API;
 
 namespace Platform.Placement.Servicev2.Repository
 {
     public interface IBettingRepository
     {
-        void ProcesssBetPlacement(OnBetPlacement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId, int reprocessAttempt = 0);
+        void ProcesssBetPlacement(OnBetPlacement message, IBetProvider provider, IMessageBroker messageBroker, string correlationId, int reprocessAttempt = 0);
     }
 }

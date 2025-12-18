@@ -5,25 +5,20 @@ using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
-using Platform.Shared.Extensions;
 using Platform.Shared.Utility;
-using Sportradar.MTS.SDK.API;
-using Sportradar.MTS.SDK.Entities.Builders;
 using Sportradar.MTS.SDK.Entities.Enums;
-using Sportradar.MTS.SDK.Entities.Interfaces;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Text.Json;
 using System.Transactions;
+using System.Threading;
+using Platform.Shared.Providers;
 
 namespace Platform.Placement.Servicev2.Repository
 {
     public class BettingRepository : IBettingRepository
     {
         private readonly ILogger<BettingRepository> _logger;
-        private IBuilderFactory _factory;
         private readonly IConfiguration _configuration;
 
         public BettingRepository(IConfiguration configuration, ILogger<BettingRepository> logger)
@@ -32,7 +27,7 @@ namespace Platform.Placement.Servicev2.Repository
             _configuration = configuration;
         }
 
-        public void ProcesssBetPlacement(OnBetPlacement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId, int reprocessAttempt = 0)
+        public void ProcesssBetPlacement(OnBetPlacement message, IBetProvider provider, IMessageBroker messageBroker, string correlationId, int reprocessAttempt = 0)
         {
             var payload = new OnBetPlacement();
             payload.IsBoosted = message.IsBoosted;
@@ -42,11 +37,9 @@ namespace Platform.Placement.Servicev2.Repository
             payload.UserAgent = message.UserAgent;
             payload.IsOGClient = message.IsOGClient;
 
-            var result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ?
-                message.BetSelections.Any(c => c.BetSelection.SportId.IsVirtualSportId()) || message.ChannelTypeId > (int)ChannelType.SR ? new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled for VS)") :
-                ValidateToMTS(message, mts) : new Tuple<TicketAcceptance, string>(TicketAcceptance.Accepted, "1024 - Accepted (MTS disabled)");
+            var providerResult = provider.ValidateAsync(message, CancellationToken.None).GetAwaiter().GetResult();
 
-            if (result.Item1 == TicketAcceptance.Accepted)
+            if (providerResult.Acceptance == BetAcceptance.Accepted)
             {
                 var isReprocess = false;
                 //Console.WriteLine($"{DateTime.UtcNow} - BEG - Accepted - {message.Bet.BetId.ToString().ToUpper()}");
@@ -63,7 +56,7 @@ namespace Platform.Placement.Servicev2.Repository
 
                             if (bet != null && bet.BetStatusId == (int)BetStatus.Waiting)
                             {
-                                bet.Reason = $"{result.Item2} (MTS)";
+                                bet.Reason = $"{providerResult.Reason} (MTS)";
 
                                 var betEntity = context.Bet.Update(bet).Entity;
                                 payload.Bet = betEntity;
@@ -202,7 +195,7 @@ namespace Platform.Placement.Servicev2.Repository
                     //Console.WriteLine($"{DateTime.UtcNow} - END - Accepted - {message.Bet.BetId.ToString().ToUpper()}");
 
                     if (isReprocess && reprocessAttempt < 1)
-                        ProcesssBetPlacement(message, mts, messageBroker, correlationId, reprocessAttempt++);
+                        ProcesssBetPlacement(message, provider, messageBroker, correlationId, reprocessAttempt++);
                 }
                 catch (Exception ex)
                 {
@@ -247,7 +240,7 @@ namespace Platform.Placement.Servicev2.Repository
                                 bet.Payout = bet.TrueStake;
                                 bet.BetStatusId = (int)betStatus;
                                 bet.BetStatusName = betStatus.ToString();
-                                bet.Reason = result.Item2;
+                                bet.Reason = providerResult.Reason;
                                 bet.TaxedStake = 0;
                                 bet.TaxedWinnings = 0;
 
@@ -408,7 +401,7 @@ namespace Platform.Placement.Servicev2.Repository
                                 }, "OnBetStatus", $"r.bet.betstatus.{payload.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
                                 // check if error code is due to Market/SOV expired in MTS. (-423)
-                                var reason = result.Item2.Split(" - Market/SOV expired in MTS,");
+                                var reason = providerResult.Reason.Split(" - Market/SOV expired in MTS,");
 
                                 if (reason.First() == "-423")
                                 {
@@ -434,7 +427,7 @@ namespace Platform.Placement.Servicev2.Repository
                                 messageBroker.Publish(new OnBetPlacementError
                                 {
                                     BetId = $"{message.Bet.BetId.ToString().ToUpper()} - Bet id is not found",
-                                    Error = $"Bet might be stucked in waiting - {JsonSerializer.Serialize(result)}",
+                                    Error = $"Bet might be stucked in waiting - {JsonSerializer.Serialize(providerResult)}",
                                     StackTrace = string.Empty,
                                     InnerException = string.Empty
                                 }, "OnBetPlacementError", "r.bet.placement.error", Guid.NewGuid().ToString().ToUpper());
@@ -648,193 +641,6 @@ namespace Platform.Placement.Servicev2.Repository
                 }
             }
         }
-        private Tuple<TicketAcceptance, string> ValidateToMTS(OnBetPlacement message, IMtsSdk mts)
-        {
-            try
-            {
-                _factory = mts.BuilderFactory;
 
-                TicketAcceptance betStatus;
-                string reason;
-
-                var isValidIP = IPAddress.TryParse(message.Bet.IPAddress, out IPAddress ipAddress);
-
-                if (!isValidIP)
-                    ipAddress = IPAddress.Loopback;
-
-                var bet = _factory.CreateTicketBuilder()
-                    .SetTicketId(message.Bet.BetId.ToString().ToUpper())
-                    .SetOddsChange(Sportradar.MTS.SDK.Entities.Enums.OddsChangeType.None)
-                    .SetSender(_factory.CreateSenderBuilder()
-                    .SetSenderChannel((SenderChannel)Enum.Parse(typeof(SenderChannel), message.Bet.Channel))
-                    .SetLimitId(Convert.ToInt32(message.Bet.LimitId == "0" ? "2183" : message.Bet.LimitId))
-                    .SetCurrency(message.Bet.CurrencyCode.ToString())
-                    .SetEndCustomer(_factory.CreateEndCustomerBuilder()
-                    .SetId($"{message.Bet.ClientCode}{message.Bet.UserId.Replace("-", "")}")
-                    .SetConfidence(10000)
-                    .SetIp(ipAddress)
-                    .SetLanguageId(message.Bet.LanguageCode.ToString())
-                    .SetDeviceId($"{message.Bet.ClientCode}{message.Bet.UserId.Replace("-", "")}")
-                    .Build())
-                    .Build())
-                    .AddBet(BuildBet(message.Bet, message.BetSelections.Select(s => s.BetSelection).ToList(), message.IsBetBuilder, message.Odds))
-                    .BuildTicket();
-
-                var response = mts.SendTicketBlocking(bet);
-
-                betStatus = response.Status;
-                reason = $"{response.Reason.Code} - {response.Reason.Message}";
-
-                return new Tuple<TicketAcceptance, string>(betStatus, reason);
-            }
-            catch (Exception ex)
-            {
-                return new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10000 - {ex.Message}");
-            }
-        }
-        private IBet BuildBet(Bet betData, List<BetSelection> betSelectionData, bool isBetBuilder, decimal calculatedOdds)
-        {
-            //var companyStake = (0.0001m * betData.ExchangeRate) * 10000;
-
-            //if (betData.CompanyShare > 0)
-            //    companyStake = (betData.TrueStake * betData.CompanyShare) * 10000;
-
-            //if (betData.CompanyShare == 0)
-            //    companyStake = betData.TrueStake * 10000;
-
-            //var companyStake = betData.TrueStake * 10000;
-            //var stake = (betData.TrueStake - (betData.TrueStake * betData.WinningsTax)) * 10000;
-
-            var stake = 0m;
-            var entireStake = betData.TrueStake * 10000;
-
-            if (betData.ClientCode.ToUpper() == "RKP")
-                stake = (betData.TrueStake * .10m) * 10000;
-            else
-                stake = betData.TrueStake * 10000;
-
-            #region Get Parlay Bonus
-            var bonus = 0m;
-            var parlayBonus = 0m;
-            var hasBonus = false;
-            BetBonusDescription bonusDescription = BetBonusDescription.Other;
-            // parlay bonus: bet should be Won by default
-
-            var hasVirtualSport = betSelectionData.Any(s => s.SportId.IsVirtualSportId()) ? true : false;
-
-            if (isBetBuilder == false && hasVirtualSport == false && betSelectionData.Count >= 3 && betData.IsFreeBet == false)
-            {
-                var parlayConfig = GetParlayBetConfig(Guid.Parse(betData.ClientId), betData.CurrencyCode, betData.BetDate, betSelectionData, betData.Payout);
-
-                if (parlayConfig.Item1 == true)
-                {
-                    parlayBonus = parlayConfig.Item2.ParlayBonus;
-                    bonus = betData.Payout * parlayConfig.Item2.ParlayBonus;
-                    bonus = bonus * 10000;
-
-                    hasBonus = bonus == 0 ? false : true;
-                    bonusDescription = BetBonusDescription.AccaBonus;
-                }
-            }
-
-            if (betData.BetTypeId == (int)BetType.PriceBoost) //boosted bonus
-            {
-                var totalBoostedPayout = betData.Odds * stake;
-                var totalOriginalPayout = betData.OddsRef * stake;
-
-                bonus = bonus + (totalBoostedPayout - totalOriginalPayout);
-
-                hasBonus = bonus == 0 ? false : true;
-                bonusDescription = BetBonusDescription.OddsBooster;
-            }
-
-            #endregion
-
-            var selection = hasBonus ? _factory.CreateBetBuilder()
-                                    .SetBetId(betData.BetId.ToString().ToUpper())
-                                    .SetBetBonus(Convert.ToInt64(bonus), BetBonusMode.All, BetBonusType.Total, bonusDescription, BetBonusPaidAs.Cash)
-                                    .SetStake(Convert.ToInt64(stake), StakeType.Total)
-                                    .SetEntireStake(Convert.ToInt64(entireStake), StakeType.Total)
-                                    .AddSelectedSystem(betSelectionData.Count)
-                                    :
-                                        isBetBuilder ? _factory.CreateBetBuilder()
-                                            .SetCustomBet(true)
-                                            .SetCalculationOdds(Convert.ToInt32(calculatedOdds * 10000))
-                                            .SetBetId(betData.BetId.ToString().ToUpper())
-                                            .SetStake(Convert.ToInt64(stake), StakeType.Total)
-                                            .SetEntireStake(Convert.ToInt64(entireStake), StakeType.Total)
-                                            .AddSelectedSystem(betSelectionData.Count)
-                                            :
-                                                _factory.CreateBetBuilder()
-                                                .SetBetId(betData.BetId.ToString().ToUpper())
-                                                .SetStake(Convert.ToInt64(stake), StakeType.Total)
-                                                .SetEntireStake(Convert.ToInt64(entireStake), StakeType.Total)
-                                                .AddSelectedSystem(betSelectionData.Count);
-
-            foreach (var betSelection in betSelectionData)
-            {
-                if (betData.BetTypeId == (int)BetType.PriceBoost)
-                {
-                    selection.AddSelection(_factory.CreateSelectionBuilder()
-                                               .SetEventId(betSelection.FixtureSpecifier)
-                                               .SetId(betSelection.SelectionSpecifier)
-                                               .SetOdds(Convert.ToInt32(betSelection.OddsRef * 10000))
-                                               .SetBoostedOdds(Convert.ToInt32(betSelection.Odds * 10000))
-                                               .Build());
-                }
-                else
-                {
-                    selection.AddSelection(_factory.CreateSelectionBuilder()
-                                               .SetEventId(betSelection.FixtureSpecifier)
-                                               .SetId(betSelection.SelectionSpecifier)
-                                               .SetOdds(Convert.ToInt32(betSelection.Odds * 10000))
-                                               .Build());
-                }
-
-            }
-
-            return selection.Build();
-        }
-
-        private Tuple<bool, ParlayBonusAudit> GetParlayBetConfig(Guid clientId, string currencyCode, DateTime betDate, List<BetSelection> selections, decimal payout)
-        {
-            using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
-            {
-                var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
-
-                using (var context = new BettingContext(optionsBuilder.Options))
-                {
-                    var minimumOdds = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate
-                        && c.CurrencyCode == currencyCode).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
-
-                    if (minimumOdds == null)
-                        return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
-
-                    int wonSelectionCount = selections.Where(c => c.BetSelectionStatusId == (int)BetStatus.Won && c.Odds >= minimumOdds.ParlayBonusMinOdds).Count();
-
-                    if (wonSelectionCount >= 3)
-                    {
-                        var result = context.ParlayBonusAudit.Where(c => c.ClientId == clientId && c.TimeStamp < betDate
-                          && c.CurrencyCode == currencyCode && wonSelectionCount == c.SelectionCount).OrderByDescending(o => o.TimeStamp).FirstOrDefault();
-
-
-                        if (result == null)
-                            return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
-                        else
-                            return new Tuple<bool, ParlayBonusAudit>(true, result);
-                        //{
-                        //    var potentialParlayBonusWinnings = payout * result.ParlayBonus;
-
-                        //    if (potentialParlayBonusWinnings > result.ParlayBonusMaxWinnings && result.ParlayBonusMaxWinnings > 0)
-                        //        return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
-                        //    else
-                        //        return new Tuple<bool, ParlayBonusAudit>(true, result);
-                        //}
-                    }
-                    else
-                        return new Tuple<bool, ParlayBonusAudit>(false, new ParlayBonusAudit());
-                }
-            }
-        }
     }
 }

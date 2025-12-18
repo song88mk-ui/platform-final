@@ -1,5 +1,9 @@
 ﻿using Platform.Shared.Enums;
+using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
+using Sportradar.MTS.SDK.Entities.Enums;
+using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Platform.Shared.Providers
@@ -8,9 +12,17 @@ namespace Platform.Shared.Providers
     {
         ChannelType ChannelType { get; }
 
+        Task<BetProviderResult> ValidateAsync(OnBetPlacement bet, CancellationToken cancellationToken);
+
         Task<ProviderStakeResult> GetMaxStakeAsync(BetRequestDTO request);
 
         Task<bool> IsAvailableAsync(BetRequestDTO request);
+    }
+
+    public sealed class BetProviderResult
+    {
+        public BetAcceptance Acceptance { get; set; }
+        public string Reason { get; set; }
     }
 
     public class ProviderStakeResult
@@ -19,5 +31,22 @@ namespace Platform.Shared.Providers
         public decimal MaxStake { get; set; }
         public int? StatusCode { get; set; }
         public string? Message { get; set; }
+    }
+
+    public enum BetAcceptance
+    {
+        Accepted,
+        Rejected
+    }
+
+    public static class AcceptanceMapper
+    {
+        public static BetAcceptance ToBetAcceptance(this TicketAcceptance acceptance)
+            => acceptance switch
+            {
+                TicketAcceptance.Accepted => BetAcceptance.Accepted,
+                TicketAcceptance.Rejected => BetAcceptance.Rejected,
+                _ => throw new ArgumentOutOfRangeException(nameof(acceptance))
+            };
     }
 }

@@ -16,15 +16,15 @@ namespace Platform.Shared.Providers.GTS
         public ChannelType ChannelType => ChannelType.BG;
 
         private readonly IGTSAuthRepository _auth;
-        private readonly IGTSRepository _maxStake;
+        private readonly IGTSRepository _gtsRepo;
         private readonly IConfiguration _configuration;
 
         public GTSBetProvider(
             IGTSAuthRepository auth,
-            IGTSRepository maxStake)
+            IGTSRepository gtsRepo)
         {
             _auth = auth;
-            _maxStake = maxStake;
+            _gtsRepo = gtsRepo;
         }
 
         public async Task<BetProviderResult> ValidateAsync(OnBetPlacement bet, CancellationToken ct)
@@ -43,11 +43,36 @@ namespace Platform.Shared.Providers.GTS
                     Reason = "1024 - Accepted (GTS disabled for VS)"
                 };
 
-            //TODO: Implement Validation
+            var token = await _auth.GetGTSAuthorizationToken();
+            if (token.StatusCode != StatusCode.Success)
+                return new BetProviderResult
+                {
+                    Acceptance = BetAcceptance.Rejected,
+                    Reason = "1025 - GTS Authentication Failed"
+                };
+
+            var result = await _gtsRepo.Assessment(token.Result.Token, bet);
+
+            if (result.Result.IsBetAllowed == false)
+                return new BetProviderResult
+                {
+                    Acceptance = BetAcceptance.Rejected,
+                    Reason = result.Result.Message
+                };
+
+            var sendBet = await _gtsRepo.SendBet(token.Result.Token, bet);
+
+            if(sendBet.StatusCode != StatusCode.Success)
+                return new BetProviderResult
+                {
+                    Acceptance = BetAcceptance.Rejected,
+                    Reason = "1026 - Failed sending Bet to GTS"
+                };
+
             return new BetProviderResult
             {
-                Acceptance = BetAcceptance.Accepted,
-                Reason = "1024 - Accepted (MTS disabled for VS)"
+                Acceptance = result.Result.IsBetAllowed ? BetAcceptance.Accepted : BetAcceptance.Rejected,
+                Reason = result.Result.Message                
             };
         }
 
@@ -69,7 +94,7 @@ namespace Platform.Shared.Providers.GTS
                     Message = "GTS_AUTH_FAILED"
                 };
 
-            var result = await _maxStake.GetMaxStake(
+            var result = await _gtsRepo.GetMaxStake2(
                 token.Result.Token,
                 request);
 

@@ -9,4 +9,11 @@
     {
         public decimal Stake { get; set; }
     }
+
+    public class ProviderAssessmentResponseDTO
+    {
+        public bool IsBetAllowed { get; set; }
+        public decimal Stake { get; set; }
+        public string Message { get; set; }
+    }
 }

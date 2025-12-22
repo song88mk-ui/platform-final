@@ -11,9 +11,8 @@ namespace Platform.Placement.Servicev2
     {
         public static IServiceCollection AddBettingProviders(this IServiceCollection services)
         {
-            // Providers
-            services.AddScoped<IBetProvider, MtsBetProvider>();
-            services.AddScoped<IBetProvider, GTSBetProvider>();
+            //Other Services
+            services.AddScoped<IParlayBonusService, ParlayBonusService>();
 
             // Factory
             services.AddScoped<IBetProviderFactory, BetProviderFactory>();
@@ -27,8 +26,9 @@ namespace Platform.Placement.Servicev2
             services.AddHttpClient<IMTSAuthRepository, MTSAuthRepository>();
             services.AddHttpClient<IMTSMaxStakeRepository, MTSMaxStakeRepository>();
 
-            //Other Services
-            services.AddScoped<IParlayBonusService, ParlayBonusService>();
+            // Providers
+            services.AddScoped<IBetProvider, MtsBetProvider>();
+            services.AddScoped<IBetProvider, GTSBetProvider>();
 
             return services;
         }

@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
@@ -29,7 +30,7 @@ namespace Platform.Placement.Servicev2
         private readonly IMessageBroker _messageBroker;
         private readonly IBettingRepository _bettingRepository;
         private readonly IConfiguration _configuration;
-        private readonly IBetProviderFactory _betProviderFactory;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         private readonly ActivitySource _activitySource;
         private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
@@ -243,14 +244,14 @@ namespace Platform.Placement.Servicev2
             IMessageBroker messageBroker,
             IBettingRepository bettingRepository,
             IConfiguration configuration,
-            IBetProviderFactory betProviderFactory,
+            IServiceScopeFactory scopeFactory,
             Instrumentation instrumentation)
         {
             _logger = logger;
             _messageBroker = messageBroker;
             _bettingRepository = bettingRepository;
             _configuration = configuration;
-            _betProviderFactory = betProviderFactory;
+            _scopeFactory = scopeFactory;
             _activitySource = instrumentation.ActivitySource;
             _betPlacementCounter = instrumentation.BetPlacementCounter;
         }
@@ -824,6 +825,8 @@ namespace Platform.Placement.Servicev2
 
         private void ProcessBetPlacement(BasicDeliverEventArgs e, int threadId)
         {
+            using var scope = _scopeFactory.CreateScope();
+
             var payload = Encoding.UTF8.GetString(e.Body);
             var messageType = e.BasicProperties.Type;
             var correlationId = e.BasicProperties.CorrelationId;
@@ -839,7 +842,11 @@ namespace Platform.Placement.Servicev2
                     {
                         case "OnBetPlacement":
                             var onBetPlacement = JsonSerializer.Deserialize<OnBetPlacement>(payload);
-                            var provider = _betProviderFactory.Resolve(onBetPlacement.ChannelTypeId);
+
+                            var betProviderFactory =
+                                scope.ServiceProvider.GetRequiredService<IBetProviderFactory>();
+
+                            var provider = betProviderFactory.Resolve(onBetPlacement.ChannelTypeId);
 
                             _bettingRepository.ProcesssBetPlacement(onBetPlacement, provider, _messageBroker, correlationId);
 

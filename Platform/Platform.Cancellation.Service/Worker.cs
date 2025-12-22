@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Platform.Cancellation.Service.Repository;
@@ -19,19 +20,19 @@ namespace Platform.Cancellation.Service
         private readonly ILogger<Worker> _logger;
         private readonly IMessageBroker _messageBroker;
         private readonly IBettingRepository _bettingRepository;
-        private readonly IBetProviderFactory _betProviderFactory;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly IConfiguration _configuration;
 
         public Worker(ILogger<Worker> logger, 
             IMessageBroker messageBroker, 
             IBettingRepository bettingRepository,
-            IBetProviderFactory betProviderFactory,
+            IServiceScopeFactory scopeFactory,
             IConfiguration configuration)
         {
             _logger = logger;
             _messageBroker = messageBroker;
             _bettingRepository = bettingRepository;
-            _betProviderFactory = betProviderFactory;
+            _scopeFactory = scopeFactory;
             _configuration = configuration;
         }
 
@@ -78,21 +79,25 @@ namespace Platform.Cancellation.Service
             var payload = Encoding.UTF8.GetString(e.Body);
             var messageType = e.BasicProperties.Type;
             var correlationId = e.BasicProperties.CorrelationId;
-
+            
             try
             {
+                using var scope = _scopeFactory.CreateScope();
+                var betProviderFactory =
+                            scope.ServiceProvider.GetRequiredService<IBetProviderFactory>();
+
                 switch (messageType)
                 {
                     case "OnBetTimeout":
                         var onBetMTSTimeout = JsonSerializer.Deserialize<OnBetTimeout>(payload);
-                        var provider = _betProviderFactory.Resolve(onBetMTSTimeout.ChannelTypeId);
+                        var provider = betProviderFactory.Resolve(onBetMTSTimeout.ChannelTypeId);
 
                         _bettingRepository.ProcessTimeout(onBetMTSTimeout, provider, correlationId);
                         break;
 
                     case "OnBetBackOfficeCancellation":
                         var onBetBackofficeCancellation = JsonSerializer.Deserialize<OnBetBackofficeCancellation>(payload);
-                        var providerBO = _betProviderFactory.Resolve(onBetBackofficeCancellation.ChannelTypeId);
+                        var providerBO = betProviderFactory.Resolve(onBetBackofficeCancellation.ChannelTypeId);
 
                         _bettingRepository.ProcessBackofficeCancellation(onBetBackofficeCancellation, providerBO, correlationId);
                         break;

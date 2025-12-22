@@ -7,6 +7,7 @@ using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -56,15 +57,19 @@ namespace Platform.Shared.Repositories
 
             try
             {
-                var formContent = new FormUrlEncodedContent(new[]
+                var payload = new
                 {
-                  new KeyValuePair<string, string>("grant_type", "client_credentials"),
-                  new KeyValuePair<string, string>("client_auth_method", "https://api.geniussports.com"),
-                  new KeyValuePair<string, string>("client_id", _configuration["Custom:GTSClientID"]),
-                  new KeyValuePair<string, string>("client_secret",  _configuration["Custom:GTSClientSecret"])
-                });
+                    grant_type = "client_credentials",
+                    audience = "https://api.geniussports.com",
+                    client_id = _configuration["Custom:GTSClientID"],
+                    client_secret = _configuration["Custom:GTSClientSecret"]
+                };
 
-                var response = await _httpClient.PostAsync($"oauth/token", formContent);
+                var jsonPayload = JsonSerializer.Serialize(payload);
+
+                var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync($"oauth/token", content);
 
                 if (response.IsSuccessStatusCode)
                 {

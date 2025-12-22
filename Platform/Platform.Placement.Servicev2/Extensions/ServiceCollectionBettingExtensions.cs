@@ -11,9 +11,7 @@ namespace Platform.Placement.Servicev2
     {
         public static IServiceCollection AddBettingProviders(this IServiceCollection services)
         {
-            //Other Services
-            services.AddScoped<IParlayBonusService, ParlayBonusService>();
-
+            
             // Factory
             services.AddScoped<IBetProviderFactory, BetProviderFactory>();
 
@@ -29,6 +27,9 @@ namespace Platform.Placement.Servicev2
             // Providers
             services.AddScoped<IBetProvider, MtsBetProvider>();
             services.AddScoped<IBetProvider, GTSBetProvider>();
+
+            //Other Services
+            services.AddScoped<IParlayBonusService, ParlayBonusService>();
 
             return services;
         }

@@ -28,7 +28,7 @@ namespace Platform.Shared.Repositories
         }
 
         [Obsolete("Please use GetMaxStake2 since getmaxstake doesnt support currency")]
-        public async Task<BaseResponseDTO<ProviderStakeResponseDTO>> GetMaxStake(string authToken, BetRequestDTO request)
+        public async Task<BaseResponseDTO<ProviderStakeResponseDTO>> GetMaxStakeOld(string authToken, BetRequestDTO request)
         {
 
             if (Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]) == false)
@@ -117,7 +117,7 @@ namespace Platform.Shared.Repositories
             }
         }
 
-        public async Task<BaseResponseDTO<ProviderStakeResponseDTO>> GetMaxStake2(string authToken, BetRequestDTO request)
+        public async Task<BaseResponseDTO<ProviderStakeResponseDTO>> GetMaxStake(string authToken, BetRequestDTO request)
         {
 
             if (Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]) == false)

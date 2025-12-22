@@ -94,7 +94,7 @@ namespace Platform.Shared.Providers.GTS
                     Message = "GTS_AUTH_FAILED"
                 };
 
-            var result = await _gtsRepo.GetMaxStake2(
+            var result = await _gtsRepo.GetMaxStake(
                 token.Result.Token,
                 request);
 

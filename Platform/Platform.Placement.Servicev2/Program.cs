@@ -8,6 +8,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Platform.Placement.Servicev2.Repository;
 using Platform.Placement.Servicev2.Telemetry;
+using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using System;
 
@@ -67,6 +68,7 @@ namespace Platform.Placement.Servicev2
 
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();
+                    services.AddSingleton<IBetProviderFactory, BetProviderFactory>();
                     services.AddHostedService<Worker>();
                 });
     }

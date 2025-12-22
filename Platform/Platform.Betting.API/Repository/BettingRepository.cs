@@ -59,7 +59,7 @@ namespace Platform.Betting.API.Repository
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(BetRequestDTO request)
         {
             if (request.Selections.Any(c => c.SportId.IsVirtualSportId())
-                || Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]) == true)
+                || Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]) == false)
                 return await PlaceBetWithoutProvider(request);
             else
                 return await PlaceBetWithProvider(request);

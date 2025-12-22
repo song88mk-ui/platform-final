@@ -11,6 +11,7 @@ using Platform.Shared.Utility;
 using System.Text.Json.Serialization;
 using Platform.Shared.MessageModels;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 
 namespace Platform.Shared.Repositories
 {
@@ -19,10 +20,12 @@ namespace Platform.Shared.Repositories
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly IMemCache _memCache;
+        private readonly ILogger<GTSRepository> _logger;
 
-        public GTSRepository(HttpClient httpClient, IConfiguration configuration)
+        public GTSRepository(HttpClient httpClient, IConfiguration configuration, ILogger<GTSRepository> logger)
         {
             _configuration = configuration;
+            _logger = logger;
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(_configuration["API:GTSAPI"]);
         }
@@ -200,6 +203,8 @@ namespace Platform.Shared.Repositories
             }
             catch (Exception ex)
             {
+                _logger.LogError($"GetMaxStake Error: {JsonSerializer.Serialize(ex)}");
+
                 return new BaseResponseDTO<ProviderStakeResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
@@ -288,10 +293,12 @@ namespace Platform.Shared.Repositories
                 }
                 else
                 {
+                    _logger.LogError($"Assessment Error: {JsonSerializer.Serialize(await response.Content.ReadAsStringAsync())}");
+
                     return new BaseResponseDTO<ProviderAssessmentResponseDTO>
                     {
-                        StatusCode = StatusCode.Success,
-                        Message = StatusCode.Success.ToString(),
+                        StatusCode = StatusCode.Error,
+                        Message = StatusCode.Error.ToString(),
                         Result = new ProviderAssessmentResponseDTO
                         {
                             Stake = 0
@@ -301,6 +308,8 @@ namespace Platform.Shared.Repositories
             }
             catch (Exception ex)
             {
+                _logger.LogError($"Assessment Error: {JsonSerializer.Serialize(ex)}");
+
                 return new BaseResponseDTO<ProviderAssessmentResponseDTO>
                 {
                     StatusCode = StatusCode.Error,
@@ -361,6 +370,8 @@ namespace Platform.Shared.Repositories
                 }
                 else
                 {
+                    _logger.LogError($"SendBet Error: {JsonSerializer.Serialize(await response.Content.ReadAsStringAsync())}");
+
                     return new BaseResponseDTO<string>
                     {
                         StatusCode = StatusCode.Error,
@@ -370,7 +381,59 @@ namespace Platform.Shared.Repositories
             }
             catch (Exception ex)
             {
+                _logger.LogError($"SendBet Error: {JsonSerializer.Serialize(ex)}");
+
                 return new BaseResponseDTO<string>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
+                };
+            }
+        }
+
+
+        public async Task<BaseResponseDTO<Task>> Cancellation(string authToken, OnBetTimeout request)
+        {
+
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
+
+            try
+            {
+                var bookmakerId = int.Parse(_configuration["Custom:GTSBookmakerId"]);
+
+                var payload = new
+                {
+                    betId = request.BetId.ToString().ToUpper()
+                };
+
+                var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/bet-reservation-cancellations", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var initialResult = JsonSerializer.Deserialize<string>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    return new BaseResponseDTO<Task>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString()
+                    };
+                }
+                else
+                {
+                    _logger.LogError($"Cancellation Error: {JsonSerializer.Serialize(await response.Content.ReadAsStringAsync())}");
+
+                    return new BaseResponseDTO<Task>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = StatusCode.Error.ToString(),
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Cancellation Error: {JsonSerializer.Serialize(ex)}");
+
+                return new BaseResponseDTO<Task>
                 {
                     StatusCode = StatusCode.Error,
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",

@@ -8,6 +8,8 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using System.Linq;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace Platform.Shared.Providers.GTS
 {
@@ -18,11 +20,16 @@ namespace Platform.Shared.Providers.GTS
         private readonly IGTSAuthRepository _auth;
         private readonly IGTSRepository _gtsRepo;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<GTSBetProvider> _logger;
 
         public GTSBetProvider(
+            IConfiguration configuration,
+            ILogger<GTSBetProvider> logger, 
             IGTSAuthRepository auth,
             IGTSRepository gtsRepo)
         {
+            _configuration = configuration;
+            _logger = logger;
             _auth = auth;
             _gtsRepo = gtsRepo;
         }
@@ -74,6 +81,33 @@ namespace Platform.Shared.Providers.GTS
                 Acceptance = result.Result.IsBetAllowed ? BetAcceptance.Accepted : BetAcceptance.Rejected,
                 Reason = result.Result.Message                
             };
+        }
+
+        public async Task ProcessCancellation(OnBetTimeout message, string correlationId, bool isBackOfficeTrigger = false)
+        {
+
+            if (!Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]))
+                return;
+
+            try
+            {
+
+                var token = await _auth.GetGTSAuthorizationToken();
+                if (token.StatusCode != StatusCode.Success)
+                    return;
+
+                _logger.LogInformation($"ProcessCancellation (Request)- {JsonSerializer.Serialize(message)}");
+
+                var result = await _gtsRepo.Cancellation(token.Result.Token, message);
+
+                _logger.LogInformation($"ProcessCancellation (Response)- {JsonSerializer.Serialize(result)}");
+
+                return;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"ProcessCancellation Error- {JsonSerializer.Serialize(ex)}");
+            }
         }
 
         public async Task<bool> IsAvailableAsync(BetRequestDTO request)

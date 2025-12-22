@@ -8,9 +8,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Platform.Cancellation.Service.Repository;
 using Platform.Shared.MessageModels;
+using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using RabbitMQ.Client.Events;
-using Sportradar.MTS.SDK.API;
 
 namespace Platform.Cancellation.Service
 {
@@ -19,15 +19,19 @@ namespace Platform.Cancellation.Service
         private readonly ILogger<Worker> _logger;
         private readonly IMessageBroker _messageBroker;
         private readonly IBettingRepository _bettingRepository;
-
-        private IMtsSdk _mts;
+        private readonly IBetProviderFactory _betProviderFactory;
         private readonly IConfiguration _configuration;
 
-        public Worker(ILogger<Worker> logger, IMessageBroker messageBroker, IBettingRepository bettingRepository, IConfiguration configuration)
+        public Worker(ILogger<Worker> logger, 
+            IMessageBroker messageBroker, 
+            IBettingRepository bettingRepository,
+            IBetProviderFactory betProviderFactory,
+            IConfiguration configuration)
         {
             _logger = logger;
             _messageBroker = messageBroker;
             _bettingRepository = bettingRepository;
+            _betProviderFactory = betProviderFactory;
             _configuration = configuration;
         }
 
@@ -38,13 +42,6 @@ namespace Platform.Cancellation.Service
                 try
                 {
                     _logger.LogInformation("Application Starting");
-
-#if (!DEBUG)
-                    var config = MtsSdk.GetConfiguration();
-
-                    _mts = new MtsSdk(config);
-                    _mts.Open();
-#endif
                 }
                 catch (Exception ex)
                 {
@@ -61,17 +58,6 @@ namespace Platform.Cancellation.Service
             if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
             {
                 _logger.LogInformation("Application Stopped");
-                try
-                {
-#if (!DEBUG)
-                    _mts.Close();
-#endif
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-
             }
 
             _messageBroker.Dispose();
@@ -99,14 +85,16 @@ namespace Platform.Cancellation.Service
                 {
                     case "OnBetTimeout":
                         var onBetMTSTimeout = JsonSerializer.Deserialize<OnBetTimeout>(payload);
+                        var provider = _betProviderFactory.Resolve(onBetMTSTimeout.ChannelTypeId);
 
-                        _bettingRepository.ProcessMTSTimeout(onBetMTSTimeout, _mts, _messageBroker, correlationId);
+                        _bettingRepository.ProcessTimeout(onBetMTSTimeout, provider, correlationId);
                         break;
 
                     case "OnBetBackOfficeCancellation":
                         var onBetBackofficeCancellation = JsonSerializer.Deserialize<OnBetBackofficeCancellation>(payload);
+                        var providerBO = _betProviderFactory.Resolve(onBetBackofficeCancellation.ChannelTypeId);
 
-                        _bettingRepository.ProcessBackofficeCancellation(onBetBackofficeCancellation, _mts, _messageBroker, correlationId);
+                        _bettingRepository.ProcessBackofficeCancellation(onBetBackofficeCancellation, providerBO, correlationId);
                         break;
                 }
             }

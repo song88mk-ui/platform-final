@@ -17,6 +17,7 @@ using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using System.Text.Json;
 
 namespace Platform.Shared.Providers.MTS
 {
@@ -150,6 +151,36 @@ namespace Platform.Shared.Providers.MTS
                     };
         }
 
+        public async Task ProcessCancellation(OnBetTimeout message, string correlationId, bool isBackOfficeTrigger = false)
+        {
+            if (Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]))
+            {
+                try
+                {
+                    _factory = _mts.BuilderFactory;
+
+                    var betCancel = isBackOfficeTrigger 
+                        ? _factory.CreateTicketCancelBuilder().BuildTicket(message.BetId.ToString().ToUpper(), Convert.ToInt32(_configuration["Custom:BookmakerId"]), TicketCancellationReason.BookmakerBackofficeTriggered)
+                        : _factory.CreateTicketCancelBuilder().BuildTicket(message.BetId.ToString().ToUpper(), Convert.ToInt32(_configuration["Custom:BookmakerId"]), TicketCancellationReason.TimeoutTriggered);
+
+                    var payload = new
+                    {
+                        message = JsonSerializer.Serialize(message),
+                        payload = JsonSerializer.Serialize(betCancel)
+                    };
+
+                    _logger.LogInformation($"ProcessCancellation (Request)- {payload}");
+                    var response = _mts.SendTicketCancelBlocking(betCancel);
+                    _logger.LogInformation($"ProcessCancellation (Response)- {payload}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"ProcessCancellation Error- {JsonSerializer.Serialize(ex)}");
+                }
+
+            }
+        }
+
 
         private Tuple<TicketAcceptance, string> ValidateToMTS(OnBetPlacement message)
         {
@@ -192,6 +223,7 @@ namespace Platform.Shared.Providers.MTS
             }
             catch (Exception ex)
             {
+                _logger.LogError($"ValidateToMTS Error- {JsonSerializer.Serialize(ex)}");
                 return new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10000 - {ex.Message}");
             }
         }

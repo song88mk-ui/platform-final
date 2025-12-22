@@ -1,12 +1,14 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Platform.Shared.MessageModels;
+using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using Sportradar.MTS.SDK.API;
 using Sportradar.MTS.SDK.Entities.Builders;
 using Sportradar.MTS.SDK.Entities.Enums;
 using System;
 using System.Text.Json;
+using System.Threading;
 
 namespace Platform.Cancellation.Service.Repository
 {
@@ -20,52 +22,17 @@ namespace Platform.Cancellation.Service.Repository
             _configuration = configuration;
             _logger = logger;
         }
-        public void ProcessMTSTimeout(OnBetTimeout message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
+        public void ProcessTimeout(OnBetTimeout message, IBetProvider provider, string correlationId)
         {
-            if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
-            {
-                try
-                {
-                    _factory = mts.BuilderFactory;
-
-                    var betCancel = _factory.CreateTicketCancelBuilder().BuildTicket(message.BetId.ToString().ToUpper(), Convert.ToInt32(_configuration["Custom:BookmakerId"]), TicketCancellationReason.TimeoutTriggered);
-
-                    var payload = new
-                    {
-                        message = JsonSerializer.Serialize(message),
-                        payload = JsonSerializer.Serialize(betCancel)
-                    };
-
-                    _logger.LogInformation($"ProcessMTSTimeout (Request)- {payload}");
-                    var response = mts.SendTicketCancelBlocking(betCancel);
-                    _logger.LogInformation($"ProcessMTSTimeout (Response)- {payload}");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-
-            }
+            provider.ProcessCancellation(message, correlationId, false).GetAwaiter().GetResult();
         }
 
-        public void ProcessBackofficeCancellation(OnBetBackofficeCancellation message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
+        public void ProcessBackofficeCancellation(OnBetBackofficeCancellation message, IBetProvider provider, string correlationId)
         {
-            if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
+            provider.ProcessCancellation(new OnBetTimeout
             {
-                try
-                {
-                    _factory = mts.BuilderFactory;
-
-                    var betCancel = _factory.CreateTicketCancelBuilder().BuildTicket(message.BetId.ToString().ToUpper(), Convert.ToInt32(_configuration["Custom:BookmakerId"]), TicketCancellationReason.BookmakerBackofficeTriggered);
-
-                    var response = mts.SendTicketCancelBlocking(betCancel);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-
-            }
+                BetId = message.BetId,
+            }, correlationId, true).GetAwaiter().GetResult();
         }
     }
 }

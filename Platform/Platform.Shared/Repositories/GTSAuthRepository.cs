@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
+using Platform.Shared.Providers.GTS;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -15,10 +17,15 @@ namespace Platform.Shared.Repositories
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly IMemCache _memCache;
+        private readonly ILogger<GTSAuthRepository> _logger;
 
-        public GTSAuthRepository(HttpClient httpClient, IConfiguration configuration, IMemCache memCache)
+        public GTSAuthRepository(HttpClient httpClient, 
+            IConfiguration configuration, 
+            IMemCache memCache,
+            ILogger<GTSAuthRepository> logger)
         {
             _configuration = configuration;
+            _logger = logger;
             _memCache = memCache;
 
             _httpClient = httpClient;
@@ -94,6 +101,8 @@ namespace Platform.Shared.Repositories
             }
             catch (Exception ex)
             {
+                _logger.LogError($"GetGTSAuthorizationToken Error: {JsonSerializer.Serialize(ex)}");
+
                 _memCache.DeleteCache(cacheKey);
 
                 return new BaseResponseDTO<ProviderAuthResponseDTO>

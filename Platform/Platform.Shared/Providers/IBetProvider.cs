@@ -14,6 +14,8 @@ namespace Platform.Shared.Providers
 
         Task<BetProviderResult> ValidateAsync(OnBetPlacement bet, CancellationToken cancellationToken);
 
+        Task ProcessCancellation(OnBetTimeout message, string correlationId, bool isBackOfficeTrigger = false);
+
         Task<ProviderStakeResult> GetMaxStakeAsync(BetRequestDTO request);
 
         Task<bool> IsAvailableAsync(BetRequestDTO request);

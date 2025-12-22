@@ -149,6 +149,7 @@ namespace Platform.Shared.Repositories
                 };
             }
 
+            _httpClient.DefaultRequestHeaders.Clear();
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
 
             try
@@ -162,10 +163,10 @@ namespace Platform.Shared.Repositories
                     betId = request.BetId.ToString().ToUpper(),
                     playerId = request.UserId,
                     totalStake = totalStake,
-                    currencyCode = request.CurrencyCode,
+                    currencyCode = request.CurrencyCode.ToString(),
                     legs = request.Selections.Select(s => new
                     {
-                        selectionId = s.SelectionTemplateId, //TODO: double check the value
+                        selectionId = s.SelectionId, //TODO: double check the value
                         gameState = "prematch", //TODO: get the gameState value,
                         price = s.DecimalOdds
                     }).ToList(),
@@ -248,6 +249,7 @@ namespace Platform.Shared.Repositories
                 };
             }
 
+            _httpClient.DefaultRequestHeaders.Clear();
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
 
             try

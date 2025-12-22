@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Platform.Cancellation.Service.Repository;
+using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using Serilog;
 using Serilog.Events;
@@ -32,6 +33,7 @@ namespace Platform.Cancellation.Service
                 {
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();
+                    services.AddSingleton<IBetProviderFactory, BetProviderFactory>();
                     services.AddHostedService<Worker>();
                 });
     }

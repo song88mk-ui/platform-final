@@ -66,9 +66,9 @@ namespace Platform.Placement.Servicev2
                         });
                     }
 
+                    services.AddBettingProviders();
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();
-                    services.AddSingleton<IBetProviderFactory, BetProviderFactory>();
                     services.AddHostedService<Worker>();
                 });
     }

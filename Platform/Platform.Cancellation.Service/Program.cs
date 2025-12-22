@@ -31,9 +31,9 @@ namespace Platform.Cancellation.Service
                 .UseSerilog()
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddBettingProviders();
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();
-                    services.AddSingleton<IBetProviderFactory, BetProviderFactory>();
                     services.AddHostedService<Worker>();
                 });
     }

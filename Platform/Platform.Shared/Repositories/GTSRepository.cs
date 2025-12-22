@@ -166,7 +166,7 @@ namespace Platform.Shared.Repositories
                     currencyCode = request.CurrencyCode.ToString(),
                     legs = request.Selections.Select(s => new
                     {
-                        selectionId = s.SelectionId, //TODO: double check the value
+                        selectionId = s.SelectionSpecifier,
                         gameState = "prematch", //TODO: get the gameState value,
                         price = s.DecimalOdds
                     }).ToList(),
@@ -266,7 +266,7 @@ namespace Platform.Shared.Repositories
                     currencyCode = request.Bet.CurrencyCode,
                     legs = request.BetSelections.Select(s => new
                     {
-                        selectionId = s.BetSelection.SelectionTemplateId, //TODO: double check the value
+                        selectionId = s.BetSelection.SelectionSpecifier,
                         gameState = "prematch", //TODO: get the gameState value,
                         price = s.BetSelection.Odds
                     }).ToList(),
@@ -351,7 +351,7 @@ namespace Platform.Shared.Repositories
                         price = s.BetSelection.Odds,
                         betGeniusContent = new
                         {
-                            selectionId = s.BetSelection.SelectionTemplateId, //TODO: double check the value
+                            selectionId = s.BetSelection.SelectionSpecifier,
                         }
                     }).ToList(),
                     priceChangeRule = "AcceptNone"

@@ -688,7 +688,7 @@ namespace Platform.Betting.API.Repository
                     BetId = betData.BetId.ToString(),
                     Error = ex.Message,
                     StackTrace = ex.StackTrace,
-                    InnerException = ex.InnerException.ToString()
+                    InnerException = ex.InnerException?.ToString() ?? string.Empty
                 };
 
                 _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO

@@ -451,7 +451,7 @@ namespace Platform.Placement.Servicev2.Repository
                         BetId = $"{message.Bet.BetId.ToString().ToUpper()} - Rejected Exception",
                         Error = ex.Message,
                         StackTrace = ex.StackTrace,
-                        InnerException = ex.InnerException.ToString()
+                        InnerException = ex.InnerException?.ToString() ?? string.Empty,
                     }, "OnBetPlacementError", "r.bet.placement.error", Guid.NewGuid().ToString().ToUpper());
 
                     RejectBetOnError(message, messageBroker, correlationId, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10002 - {ex.Message}"), 2);

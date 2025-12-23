@@ -4,6 +4,7 @@ using Platform.Shared.Providers.MTS;
 using Platform.Shared.Providers;
 using Platform.Shared.Repositories;
 using Platform.Shared.Services;
+using Platform.Shared.Utility;
 
 namespace Platform.Betting.API.Extensions
 {
@@ -27,6 +28,7 @@ namespace Platform.Betting.API.Extensions
             services.AddHttpClient<IMTSMaxStakeRepository, MTSMaxStakeRepository>();
 
             //Other Services
+            services.AddSingleton<IMemCache, MemCache>();
             services.AddScoped<IParlayBonusService, ParlayBonusService>();
 
             return services;

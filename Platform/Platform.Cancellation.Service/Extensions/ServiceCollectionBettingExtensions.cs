@@ -4,6 +4,7 @@ using Platform.Shared.Providers.MTS;
 using Platform.Shared.Providers;
 using Platform.Shared.Repositories;
 using Platform.Shared.Services;
+using Platform.Shared.Utility;
 
 namespace Platform.Cancellation.Service
 {
@@ -11,9 +12,6 @@ namespace Platform.Cancellation.Service
     {
         public static IServiceCollection AddBettingProviders(this IServiceCollection services)
         {
-            //Other Services
-            services.AddScoped<IParlayBonusService, ParlayBonusService>();
-            
             // Factory
             services.AddScoped<IBetProviderFactory, BetProviderFactory>();
 
@@ -29,6 +27,9 @@ namespace Platform.Cancellation.Service
             services.AddScoped<IBetProvider, MtsBetProvider>();
             services.AddScoped<IBetProvider, GTSBetProvider>();
 
+            //Other Services
+            services.AddScoped<IParlayBonusService, ParlayBonusService>();
+            services.AddSingleton<IMemCache, MemCache>();
 
             return services;
         }

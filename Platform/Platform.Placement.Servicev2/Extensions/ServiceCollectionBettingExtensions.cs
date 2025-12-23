@@ -4,6 +4,7 @@ using Platform.Shared.Providers.MTS;
 using Platform.Shared.Providers;
 using Platform.Shared.Repositories;
 using Platform.Shared.Services;
+using Platform.Shared.Utility;
 
 namespace Platform.Placement.Servicev2
 {
@@ -30,6 +31,7 @@ namespace Platform.Placement.Servicev2
 
             //Other Services
             services.AddScoped<IParlayBonusService, ParlayBonusService>();
+            services.AddSingleton<IMemCache, MemCache>();
 
             return services;
         }

@@ -51,7 +51,6 @@ namespace Platform.Betting.API
 
             services.AddBettingProviders();
 
-            services.AddSingleton<IMemCache, MemCache>();
             services.AddScoped<IBettingRepository, BettingRepository>();
             services.AddScoped<IBetConfigRepository, BetConfigRepository>();
 

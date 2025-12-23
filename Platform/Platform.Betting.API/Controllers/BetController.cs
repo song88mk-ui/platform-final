@@ -21,6 +21,7 @@ namespace Platform.Betting.API.Controllers
         [HttpPost("v1/bet/placement")]
         public async Task<IActionResult> PlaceBet([FromBody] BetRequestDTO request)
         {
+            
             var result = await _bettingRepository.PlaceBet(request);
 
             switch (result.StatusCode)

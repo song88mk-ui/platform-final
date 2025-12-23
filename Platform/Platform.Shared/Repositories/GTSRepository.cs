@@ -328,6 +328,7 @@ namespace Platform.Shared.Repositories
         public async Task<BaseResponseDTO<string>> SendBet(string authToken, OnBetPlacement request)
         {
 
+            _httpClient.DefaultRequestHeaders.Clear();
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
 
             try

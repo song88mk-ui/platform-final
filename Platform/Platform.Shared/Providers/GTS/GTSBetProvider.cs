@@ -79,7 +79,7 @@ namespace Platform.Shared.Providers.GTS
             return new BetProviderResult
             {
                 Acceptance = result.Result.IsBetAllowed ? BetAcceptance.Accepted : BetAcceptance.Rejected,
-                Reason = result.Result.Message                
+                Reason = result.Result.Message ?? string.Empty
             };
         }
 

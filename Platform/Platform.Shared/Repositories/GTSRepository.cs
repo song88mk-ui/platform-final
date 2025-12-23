@@ -346,7 +346,8 @@ namespace Platform.Shared.Repositories
                     playerId = request.Bet.UserId,
                     totalStake = totalStake,
                     currencyCode = request.Bet.CurrencyCode,
-                    status = "Open", //TODO: get the status value
+                    status = "Open", //TODO: get the status value 
+                    //	Represents a bet with any legs that are currently Open
                     legs = request.BetSelections.Select(s => new
                     {
                         status = "Open", //TODO: get the status value

@@ -346,8 +346,10 @@ namespace Platform.Shared.Repositories
                     playerId = request.Bet.UserId,
                     totalStake = totalStake,
                     currencyCode = request.Bet.CurrencyCode,
+                    status = "Open", //TODO: get the status value
                     legs = request.BetSelections.Select(s => new
                     {
+                        status = "Open", //TODO: get the status value
                         gameState = "prematch", //TODO: get the gameState value,
                         price = s.BetSelection.Odds,
                         betGeniusContent = new

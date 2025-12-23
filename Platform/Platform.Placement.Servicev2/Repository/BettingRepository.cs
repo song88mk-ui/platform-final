@@ -42,8 +42,7 @@ namespace Platform.Placement.Servicev2.Repository
             if (providerResult.Acceptance == BetAcceptance.Accepted)
             {
                 var isReprocess = false;
-                //Console.WriteLine($"{DateTime.UtcNow} - BEG - Accepted - {message.Bet.BetId.ToString().ToUpper()}");
-
+                
                 try
                 {
                     using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))

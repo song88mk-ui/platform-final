@@ -387,7 +387,8 @@ namespace Platform.Shared.Repositories
             }
             catch (Exception ex)
             {
-                _logger.LogError($"SendBet Error: {JsonSerializer.Serialize(ex)}");
+                _logger.LogError($"SendBet Error: {JsonSerializer.Serialize(ex.Message)}");
+                _logger.LogError($"SendBet StackTrace: {JsonSerializer.Serialize(ex.StackTrace)}");
 
                 return new BaseResponseDTO<string>
                 {

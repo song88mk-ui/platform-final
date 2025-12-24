@@ -365,7 +365,21 @@ namespace Platform.Shared.Repositories
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var initialResult = JsonSerializer.Deserialize<string>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var content = await response.Content.ReadAsStringAsync();
+
+                    var initialResult = string.Empty;
+                    if (string.IsNullOrWhiteSpace(content))
+                    {
+                        // Handle empty response explicitly
+                        initialResult = null;
+                    }
+                    else
+                    {
+                        initialResult = JsonSerializer.Deserialize<string>(
+                            content,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                        );
+                    }
 
                     return new BaseResponseDTO<string>
                     {

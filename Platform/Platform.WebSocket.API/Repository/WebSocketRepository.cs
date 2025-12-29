@@ -1,11 +1,7 @@
-﻿using MessagePack;
-using MessagePack.Resolvers;
-using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
-using Platform.Shared.Data.Platform.Entities;
+using Microsoft.Extensions.Logging;
 using Platform.Shared.Utility;
 using Platform.WebSocket.API.Data;
 using Platform.WebSocket.API.Messages;
@@ -14,7 +10,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -22,18 +17,20 @@ namespace Platform.WebSocket.API.Repository
 {
     public class WebSocketRepository : Hub<IPlatformEvent>, IWebSocketRepository
     {
-        private readonly IServiceProvider _provider;
         private PlatformContext _platformContext;
+        private readonly IServiceProvider _provider;
         private readonly IMemCache _memCache;
+        private readonly ILogger<WebSocketRepository> _logger;
         private readonly TelemetryClient _telemetryClient;
         private readonly ActivitySource _activitySource;
 
-        public WebSocketRepository(IServiceProvider provider, IMemCache memCache, TelemetryClient telemetryClient, Instrumentation instrumentation)
+        public WebSocketRepository(IServiceProvider provider, IMemCache memCache, TelemetryClient telemetryClient, Instrumentation instrumentation, ILogger<WebSocketRepository> logger)
         {
             _provider = provider;
             _memCache = memCache;
             _telemetryClient = telemetryClient;
             _activitySource = instrumentation.ActivitySource;
+            _logger = logger;
         }
         public override async Task OnConnectedAsync()
         {
@@ -83,6 +80,8 @@ namespace Platform.WebSocket.API.Repository
                 activity.SetStatus(ActivityStatusCode.Ok);
             }
 
+            _logger.LogInformation($"OnConnectedAsync: {JsonSerializer.Serialize(properties)}");
+
             await base.OnConnectedAsync();
         }
         public override async Task OnDisconnectedAsync(Exception exception)
@@ -120,6 +119,8 @@ namespace Platform.WebSocket.API.Repository
                 activity.SetStatus(ActivityStatusCode.Ok);
             }
 
+            _logger.LogInformation($"OnDisconnectedAsync: {JsonSerializer.Serialize(properties)}");
+
             await base.OnDisconnectedAsync(exception);
         }
         public async Task SubscribeToEndpoint(EndpointRequest request)
@@ -132,6 +133,8 @@ namespace Platform.WebSocket.API.Repository
                                 { "requestParameters", JsonSerializer.Serialize(request ?? new EndpointRequest()) },
                                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
                             };
+
+            _logger.LogInformation($"SubscribeToEndpoint: {JsonSerializer.Serialize(properties)}");
 
             _telemetryClient.TrackEvent("e:SubscribeToEndpoint", properties);
 
@@ -154,6 +157,7 @@ namespace Platform.WebSocket.API.Repository
                                 { "requestParameters", JsonSerializer.Serialize(request ?? new EndpointRequest()) },
                                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
                             };
+            _logger.LogInformation($"UnsubscribeToEndpoint: {JsonSerializer.Serialize(properties)}");
 
             _telemetryClient.TrackEvent("e:UnsubscribeToEndpoint", properties);
 
@@ -165,6 +169,16 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task SubscribeToBetslip(BetslipRequest request)
         {
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "requestParameters", JsonSerializer.Serialize(request) },
+                                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+                            };
+
+            _logger.LogInformation($"SubscribeToBetslip: {JsonSerializer.Serialize(properties)}");
+
+
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
@@ -180,6 +194,16 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task UnsubscribeToBetslip(BetslipRequest request)
         {
+
+            var properties = new Dictionary<string, string>
+                            {
+                                { "requestParameters", JsonSerializer.Serialize(request) },
+                                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+                            };
+
+            _logger.LogInformation($"UnsubscribeToBetslip: {JsonSerializer.Serialize(properties)}");
+
+
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
@@ -225,6 +249,15 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task SubscribeToBetStatus(BetStatusRequest request)
         {
+            var properties = new Dictionary<string, string>
+                            {
+                                { "requestParameters", JsonSerializer.Serialize(request) },
+                                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+                            };
+
+            _logger.LogInformation($"SubscribeToBetStatus: {JsonSerializer.Serialize(properties)}");
+
+
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
@@ -232,6 +265,14 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task UnsubscribeToBetStatus(BetStatusRequest request)
         {
+            var properties = new Dictionary<string, string>
+                            {
+                                { "requestParameters", JsonSerializer.Serialize(request) },
+                                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+                            };
+
+            _logger.LogInformation($"UnsubscribeToBetStatus: {JsonSerializer.Serialize(properties)}");
+
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
@@ -253,6 +294,14 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task SubscribeToWalletChange(WalletChangeRequest request)
         {
+            var properties = new Dictionary<string, string>
+                            {
+                                { "requestParameters", JsonSerializer.Serialize(request) },
+                                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+                            };
+
+            _logger.LogInformation($"SubscribeToWalletChange: {JsonSerializer.Serialize(properties)}");
+
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
@@ -260,6 +309,14 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task UnsubscribeToWalletChange(WalletChangeRequest request)
         {
+            var properties = new Dictionary<string, string>
+                            {
+                                { "requestParameters", JsonSerializer.Serialize(request) },
+                                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+                            };
+
+            _logger.LogInformation($"UnsubscribeToWalletChange: {JsonSerializer.Serialize(properties)}");
+
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
@@ -311,6 +368,15 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task PublishBetStopGlobal(string clientCode, OutgoingBetStopGlobal message)
         {
+            var properties = new Dictionary<string, string>
+            {
+                { "clientCode", clientCode },
+                { "requestParameters", JsonSerializer.Serialize(message) },
+                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+            };
+
+            _logger.LogInformation($"PublishBetStopGlobal: {JsonSerializer.Serialize(properties)}");
+
             await Clients.Group($"onbetstopglobal:{clientCode}").OnBetStopGlobal(message);
         }
         public async Task PublishBetStatus(string clientCode, OutgoingBetStatus message)
@@ -331,30 +397,41 @@ namespace Platform.WebSocket.API.Repository
         }
         private async Task<Tuple<bool, string>> GetClient(string clientId)
         {
-            var key = $"cc:{clientId.ToUpper()}";
-            var isGuid = Guid.TryParse(clientId, out Guid guid);
-
-            if (isGuid)
+            try
             {
-                var cache = _memCache.GetCache<Tuple<bool, string>>(key);
+                var key = $"cc:{clientId.ToUpper()}";
+                var isGuid = Guid.TryParse(clientId, out Guid guid);
 
-                if (cache != null)
-                    return cache;
-
-                using var scope = _provider.CreateScope();
-                _platformContext = scope.ServiceProvider.GetRequiredService<PlatformContext>();
-
-                var client = await _platformContext.Client.FindAsync(guid);
-
-                if (client != null)
+                if (isGuid)
                 {
-                    _memCache.AddOrUpdateCache(key, new Tuple<bool, string> (true, client.ClientCode.ToLower()), 24);
-                    return new Tuple<bool, string>(true, client.ClientCode.ToLower());
+                    var cache = _memCache.GetCache<Tuple<bool, string>>(key);
+
+                    if (cache != null)
+                        return cache;
+
+                    using var scope = _provider.CreateScope();
+                    _platformContext = scope.ServiceProvider.GetRequiredService<PlatformContext>();
+
+                    var client = await _platformContext.Client.FindAsync(guid);
+
+                    if (client != null)
+                    {
+                        _memCache.AddOrUpdateCache(key, new Tuple<bool, string>(true, client.ClientCode.ToLower()), 24);
+                        return new Tuple<bool, string>(true, client.ClientCode.ToLower());
+                    }
                 }
+
+                _memCache.AddOrUpdateCache(key, new Tuple<bool, string>(false, string.Empty), DateTimeOffset.UtcNow.AddMinutes(1));
+                return new Tuple<bool, string>(false, string.Empty);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation($"GetClient: {JsonSerializer.Serialize(ex.Message)}");
+                _logger.LogInformation($"GetClient: {JsonSerializer.Serialize(ex.StackTrace)}");
+
+                throw;
             }
 
-            _memCache.AddOrUpdateCache(key, new Tuple<bool, string>(false, string.Empty), DateTimeOffset.UtcNow.AddMinutes(1));
-            return new Tuple<bool, string>(false, string.Empty);
         }
     }
     public class EndpointRequest

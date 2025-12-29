@@ -352,6 +352,8 @@ namespace Platform.WebSocket.API.Repository
         }
         public async Task PublishOddsChangeForMainMarkets(string clientCode, OutgoingOddsChange message)
         {
+            _logger.LogInformation($"PublishOddsChangeForMainMarkets: {JsonSerializer.Serialize(message)}");
+
             await Clients.Groups(message.Gr).OnOddsChange(message.Pa);
         }
         public async Task PublishOddsChangeForAllMarkets(string clientCode, OutgoingOddsChange message)

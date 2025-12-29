@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.SignalR;
 using Platform.Shared.Utility;
 using Platform.Websocket.API2.Handlers;
 using Platform.WebSocket.API2.Data;
@@ -9,16 +10,18 @@ namespace Platform.WebSocket.API2.Repository
 {
     public class WebSocketRepository : Hub<IPlatformEvent>, IWebSocketRepository
     {
-        private readonly IServiceProvider _provider;
         private PlatformContext _platformContext;
+        private readonly IServiceProvider _provider;
         private readonly IMemCache _memCache;
+        private readonly ILogger<WebSocketRepository> _logger;
 
 
 
-        public WebSocketRepository(IServiceProvider provider, IMemCache memCache)
+        public WebSocketRepository(IServiceProvider provider, IMemCache memCache, ILogger<WebSocketRepository> logger)
         {
             _provider = provider;
             _memCache = memCache;
+            _logger = logger;
         }
         public override async Task OnConnectedAsync()
         {
@@ -39,6 +42,8 @@ namespace Platform.WebSocket.API2.Repository
                                 { "ConnectedTimestamp", DateTime.UtcNow.ToString() }
                             };
 
+            _logger.LogInformation($"OnConnectedAsync: {JsonSerializer.Serialize(properties)}");
+
             //_telemetryClient.TrackEvent("e:OnConnectedAsync", properties);
 
             UserHandler.ConnectedIds.Add(connectionId);
@@ -54,6 +59,8 @@ namespace Platform.WebSocket.API2.Repository
                                 { "ConnectionId", connectionId },
                                 { "DisconnectedTimestamp", DateTime.UtcNow.ToString() }
                             };
+
+            _logger.LogInformation($"OnDisconnectedAsync: {JsonSerializer.Serialize(properties)}");
 
             //_telemetryClient.TrackEvent("e:OnDisconnectedAsync", properties);
 
@@ -71,6 +78,8 @@ namespace Platform.WebSocket.API2.Repository
                                 { "requestParameters", JsonSerializer.Serialize(request ?? new EndpointRequest()) },
                                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
                             };
+
+            _logger.LogInformation($"SubscribeToEndpoint: {JsonSerializer.Serialize(properties)}");
 
             //_telemetryClient.TrackEvent("e:SubscribeToEndpoint", properties);
 
@@ -93,6 +102,7 @@ namespace Platform.WebSocket.API2.Repository
                                 { "requestParameters", JsonSerializer.Serialize(request ?? new EndpointRequest()) },
                                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
                             };
+            _logger.LogInformation($"UnsubscribeToEndpoint: {JsonSerializer.Serialize(properties)}");
 
             //_telemetryClient.TrackEvent("e:UnsubscribeToEndpoint", properties);
 
@@ -104,6 +114,14 @@ namespace Platform.WebSocket.API2.Repository
         }
         public async Task SubscribeToBetslip(BetslipRequest request)
         {
+            var properties = new Dictionary<string, string>
+            {
+                { "requestParameters", JsonSerializer.Serialize(request) },
+                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+            };
+
+            _logger.LogInformation($"SubscribeToBetslip: {JsonSerializer.Serialize(properties)}");
+
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
@@ -119,6 +137,14 @@ namespace Platform.WebSocket.API2.Repository
         }
         public async Task UnsubscribeToBetslip(BetslipRequest request)
         {
+            var properties = new Dictionary<string, string>
+            {
+                { "requestParameters", JsonSerializer.Serialize(request) },
+                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+            };
+
+            _logger.LogInformation($"UnsubscribeToBetslip: {JsonSerializer.Serialize(properties)}");
+
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
@@ -164,6 +190,14 @@ namespace Platform.WebSocket.API2.Repository
         }
         public async Task SubscribeToBetStatus(BetStatusRequest request)
         {
+            var properties = new Dictionary<string, string>
+            {
+                { "requestParameters", JsonSerializer.Serialize(request) },
+                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+            };
+
+            _logger.LogInformation($"SubscribeToBetStatus: {JsonSerializer.Serialize(properties)}");
+
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
@@ -171,6 +205,14 @@ namespace Platform.WebSocket.API2.Repository
         }
         public async Task UnsubscribeToBetStatus(BetStatusRequest request)
         {
+            var properties = new Dictionary<string, string>
+            {
+                { "requestParameters", JsonSerializer.Serialize(request) },
+                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+            };
+
+            _logger.LogInformation($"UnsubscribeToBetStatus: {JsonSerializer.Serialize(properties)}");
+
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
@@ -192,6 +234,14 @@ namespace Platform.WebSocket.API2.Repository
         }
         public async Task SubscribeToWalletChange(WalletChangeRequest request)
         {
+            var properties = new Dictionary<string, string>
+            {
+                { "requestParameters", JsonSerializer.Serialize(request) },
+                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+            };
+
+            _logger.LogInformation($"SubscribeToWalletChange: {JsonSerializer.Serialize(properties)}");
+
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
@@ -199,6 +249,14 @@ namespace Platform.WebSocket.API2.Repository
         }
         public async Task UnsubscribeToWalletChange(WalletChangeRequest request)
         {
+            var properties = new Dictionary<string, string>
+            {
+                { "requestParameters", JsonSerializer.Serialize(request) },
+                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+            };
+
+            _logger.LogInformation($"UnsubscribeToWalletChange: {JsonSerializer.Serialize(properties)}");
+
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
@@ -234,6 +292,15 @@ namespace Platform.WebSocket.API2.Repository
         }
         public async Task PublishOddsChangeForMainMarkets(string clientCode, OutgoingOddsChange message)
         {
+            var properties = new Dictionary<string, string>
+            {
+                { "clientCode", clientCode },
+                { "requestParameters", JsonSerializer.Serialize(message) },
+                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+            };
+
+            _logger.LogInformation($"PublishOddsChangeForMainMarkets: {JsonSerializer.Serialize(properties)}");
+
             await Clients.Groups(message.Gr).OnOddsChange(message.Pa);
         }
         public async Task PublishOddsChangeForAllMarkets(string clientCode, OutgoingOddsChange message)
@@ -244,16 +311,43 @@ namespace Platform.WebSocket.API2.Repository
         }
         public async Task PublishBetStopFixture(string clientCode, OutgoingBetStopFixture message)
         {
+            var properties = new Dictionary<string, string>
+            {
+                { "clientCode", clientCode },
+                { "requestParameters", JsonSerializer.Serialize(message) },
+                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+            };
+
+            _logger.LogInformation($"PublishBetStopFixture: {JsonSerializer.Serialize(properties)}");
+
             await Clients.Group($"onbetslipbetstopfixture:{clientCode}:{message.Pa.FiId}").OnBetslipBetStopFixture(message.Pa);
             await Clients.Group($"ontopmarketsbetstopfixture:{clientCode}:{message.Pa.FiId}").OnTopMarketsBetStopFixture(message.Pa);
             await Clients.Groups(message.Gr).OnBetStopFixture(message.Pa);
         }
         public async Task PublishBetStopGlobal(string clientCode, OutgoingBetStopGlobal message)
         {
+            var properties = new Dictionary<string, string>
+            {
+                { "clientCode", clientCode },
+                { "requestParameters", JsonSerializer.Serialize(message) },
+                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+            };
+
+            _logger.LogInformation($"PublishBetStopGlobal: {JsonSerializer.Serialize(properties)}");
+
             await Clients.Group($"onbetstopglobal:{clientCode}").OnBetStopGlobal(message);
         }
         public async Task PublishBetStatus(string clientCode, OutgoingBetStatus message)
         {
+            var properties = new Dictionary<string, string>
+            {
+                { "clientCode", clientCode },
+                { "requestParameters", JsonSerializer.Serialize(message) },
+                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+            };
+
+            _logger.LogInformation($"PublishBetStatus: {JsonSerializer.Serialize(properties)}");
+
             await Clients.Group($"onbetstatus:{clientCode}:{message.UsId.ToLower()}").OnBetStatus(message);
         }
         public async Task PublishCashOutChange(string clientCode, OutgoingCashOutChange message)
@@ -262,6 +356,15 @@ namespace Platform.WebSocket.API2.Repository
         }
         public async Task PublishWalletChange(string clientCode, OutgoingWalletChange message)
         {
+            var properties = new Dictionary<string, string>
+            {
+                { "clientCode", clientCode },
+                { "requestParameters", JsonSerializer.Serialize(message) },
+                { "RequestTimestamp", DateTime.UtcNow.ToString() }
+            };
+
+            _logger.LogInformation($"PublishWalletChange: {JsonSerializer.Serialize(properties)}");
+
             await Clients.Group($"onwalletchange:{clientCode}:{message.UsId.ToLower()}").OnWalletChange(message);
         }
         public async Task PublishPayableChange(string clientCode, OutgoingPayableChange message)
@@ -299,6 +402,8 @@ namespace Platform.WebSocket.API2.Repository
             }
             catch (Exception ex)
             {
+                _logger.LogInformation($"GetClient: {JsonSerializer.Serialize(ex.Message)}");
+                _logger.LogInformation($"GetClient: {JsonSerializer.Serialize(ex.StackTrace)}");
 
             }
 

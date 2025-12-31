@@ -23,6 +23,12 @@ namespace Platform.WebSocket.API2.Repository
             _memCache = memCache;
             _logger = logger;
         }
+
+        public string GetConnectionId()
+        {
+            return Context.ConnectionId;
+        }
+
         public override async Task OnConnectedAsync()
         {
             var connectionId = Context.ConnectionId;

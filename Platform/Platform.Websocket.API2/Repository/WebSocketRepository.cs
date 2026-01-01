@@ -413,7 +413,11 @@ namespace Platform.WebSocket.API2.Repository
                     var cache = _memCache.GetCache<Tuple<bool, string>>(key);
 
                     if (cache != null)
+                    {
+                        _logger.LogInformation($"GetClient: from cache {cache.Item1}-{cache.Item2}");
                         return cache;
+
+                    }
 
                     using var scope = _provider.CreateScope();
 
@@ -423,6 +427,8 @@ namespace Platform.WebSocket.API2.Repository
 
                     if (client != null)
                     {
+                        _logger.LogInformation($"GetClient: {client.ClientCode}-{client.ClientId}");
+
                         _memCache.AddOrUpdateCache(key, new Tuple<bool, string>(true, client.ClientCode.ToLower()), 24);
                         return new Tuple<bool, string>(true, client.ClientCode.ToLower());
                     }

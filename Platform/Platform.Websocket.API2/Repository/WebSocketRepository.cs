@@ -49,6 +49,11 @@ namespace Platform.WebSocket.API2.Repository
                             };
 
             _logger.LogInformation($"OnConnectedAsync: {JsonSerializer.Serialize(properties)}");
+            _logger.LogInformation(
+                "OnConnectedAsync: {ConnectionId} | User: {User} | Server: {Machine}",
+                Context.ConnectionId,
+                Context.UserIdentifier,
+                Environment.MachineName);
 
             //_telemetryClient.TrackEvent("e:OnConnectedAsync", properties);
 
@@ -341,6 +346,11 @@ namespace Platform.WebSocket.API2.Repository
 
             _logger.LogInformation($"PublishBetStopGlobal: {JsonSerializer.Serialize(properties)}");
 
+            _logger.LogInformation(
+                "SENDING to {Target} | Server: {Machine}",
+                $"onbetstopglobal:{clientCode}",
+                Environment.MachineName);
+
             await Clients.Group($"onbetstopglobal:{clientCode}").OnBetStopGlobal(message);
         }
         public async Task PublishBetStatus(string clientCode, OutgoingBetStatus message)
@@ -353,6 +363,11 @@ namespace Platform.WebSocket.API2.Repository
             };
 
             _logger.LogInformation($"PublishBetStatus: {JsonSerializer.Serialize(properties)}");
+
+            _logger.LogInformation(
+                "SENDING to {Target} | Server: {Machine}",
+                $"onbetstatus:{clientCode}:{message.UsId.ToLower()}",
+                Environment.MachineName);
 
             await Clients.Group($"onbetstatus:{clientCode}:{message.UsId.ToLower()}").OnBetStatus(message);
         }
@@ -370,11 +385,20 @@ namespace Platform.WebSocket.API2.Repository
             };
 
             _logger.LogInformation($"PublishWalletChange: {JsonSerializer.Serialize(properties)}");
+            _logger.LogInformation(
+                "SENDING to {Target} | Server: {Machine}",
+                $"onwalletchange:{clientCode}:{message.UsId.ToLower()}",
+                Environment.MachineName);
 
             await Clients.Group($"onwalletchange:{clientCode}:{message.UsId.ToLower()}").OnWalletChange(message);
         }
         public async Task PublishPayableChange(string clientCode, OutgoingPayableChange message)
         {
+            _logger.LogInformation(
+                "SENDING to {Target} | Server: {Machine}",
+                $"onpayablechange:{clientCode}:{message.UsId.ToLower()}",
+                Environment.MachineName);
+
             await Clients.Group($"onpayablechange:{clientCode}:{message.UsId.ToLower()}").OnPayableChange(message);
         }
         private async Task<Tuple<bool, string>> GetClient(string clientId)

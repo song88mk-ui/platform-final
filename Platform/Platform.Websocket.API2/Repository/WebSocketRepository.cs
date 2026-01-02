@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using Platform.Shared.Utility;
 using Platform.Websocket.API2.Handlers;
 using Platform.WebSocket.API2.Data;
@@ -14,8 +13,6 @@ namespace Platform.WebSocket.API2.Repository
         private readonly IServiceProvider _provider;
         private readonly IMemCache _memCache;
         private readonly ILogger<WebSocketRepository> _logger;
-
-
 
         public WebSocketRepository(IServiceProvider provider, IMemCache memCache, ILogger<WebSocketRepository> logger)
         {
@@ -42,6 +39,7 @@ namespace Platform.WebSocket.API2.Repository
 
             var properties = new Dictionary<string, string>
                             {
+                                { "xff", xff },
                                 { "ConnectionId", connectionId },
                                 { "IPAddress", ipAddress },
                                 { "CF-Country", cf_country },
@@ -51,14 +49,13 @@ namespace Platform.WebSocket.API2.Repository
                                 { "ConnectedTimestamp", DateTime.UtcNow.ToString() }
                             };
 
-            _logger.LogInformation("OnConnectedAsync: {@properties}", properties);
-
-            //_telemetryClient.TrackEvent("e:OnConnectedAsync", properties);
+            _logger.LogInformation("{event} {@properties}", "OnConnectedAsync", properties);
 
             UserHandler.ConnectedIds.Add(connectionId);
 
             await base.OnConnectedAsync();
         }
+
         public override async Task OnDisconnectedAsync(Exception exception)
         {
             var connectionId = Context.ConnectionId;
@@ -69,14 +66,13 @@ namespace Platform.WebSocket.API2.Repository
                                 { "DisconnectedTimestamp", DateTime.UtcNow.ToString() }
                             };
 
-            _logger.LogInformation("OnDisconnectedAsync: {@properties}", properties);
-
-            //_telemetryClient.TrackEvent("e:OnDisconnectedAsync", properties);
+            _logger.LogInformation("{event} {@properties}", "OnDisconnectedAsync", properties);
 
             UserHandler.ConnectedIds.Remove(connectionId);
 
             await base.OnDisconnectedAsync(exception);
         }
+
         public async Task SubscribeToEndpoint(EndpointRequest request)
         {
             var connectionId = Context.ConnectionId;
@@ -88,9 +84,7 @@ namespace Platform.WebSocket.API2.Repository
                                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
                             };
 
-            _logger.LogInformation("SubscribeToEndpoint: {@properties}", properties);
-
-            //_telemetryClient.TrackEvent("e:SubscribeToEndpoint", properties);
+            _logger.LogInformation("{event} {@properties}", "SubscribeToEndpoint", properties);
 
             var client = await GetClient(request.ClientId);
 
@@ -101,6 +95,7 @@ namespace Platform.WebSocket.API2.Repository
                     await Groups.AddToGroupAsync(Context.ConnectionId, $"onbetstopglobal:{client.Item2}");
                 }
         }
+
         public async Task UnsubscribeToEndpoint(EndpointRequest request)
         {
             var connectionId = Context.ConnectionId;
@@ -111,9 +106,7 @@ namespace Platform.WebSocket.API2.Repository
                                 { "requestParameters", JsonSerializer.Serialize(request ?? new EndpointRequest()) },
                                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
                             };
-            _logger.LogInformation("UnsubscribeToEndpoint: {@properties}", properties);
-
-            //_telemetryClient.TrackEvent("e:UnsubscribeToEndpoint", properties);
+            _logger.LogInformation("{event} {@properties}", "UnsubscribeToEndpoint", properties);
 
             var client = await GetClient(request.ClientId);
 
@@ -121,6 +114,7 @@ namespace Platform.WebSocket.API2.Repository
                 if (string.IsNullOrEmpty(request.ChannelKey) == false)
                     await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"endpoint:{client.Item2}:{request.ChannelKey}");
         }
+
         public async Task SubscribeToBetslip(BetslipRequest request)
         {
             var properties = new Dictionary<string, string>
@@ -129,7 +123,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation("SubscribeToBetslip: {@properties}", properties);
+            _logger.LogInformation("{event} {@properties}", "SubscribeToBetslip", properties);
 
             var client = await GetClient(request.ClientId);
 
@@ -144,6 +138,7 @@ namespace Platform.WebSocket.API2.Repository
                 }
             }
         }
+
         public async Task UnsubscribeToBetslip(BetslipRequest request)
         {
             var properties = new Dictionary<string, string>
@@ -152,7 +147,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation("UnsubscribeToBetslip: {@properties}", properties);
+            _logger.LogInformation("{event} {@properties}", "UnsubscribeToBetslip", properties);
 
             var client = await GetClient(request.ClientId);
 
@@ -167,6 +162,7 @@ namespace Platform.WebSocket.API2.Repository
                 }
             }
         }
+
         public async Task SubscribeToTopMarkets(BetslipRequest request)
         {
             var client = await GetClient(request.ClientId);
@@ -182,6 +178,7 @@ namespace Platform.WebSocket.API2.Repository
                 }
             }
         }
+
         public async Task UnsubscribeToTopMarkets(BetslipRequest request)
         {
             var client = await GetClient(request.ClientId);
@@ -197,6 +194,7 @@ namespace Platform.WebSocket.API2.Repository
                 }
             }
         }
+
         public async Task SubscribeToBetStatus(BetStatusRequest request)
         {
             var properties = new Dictionary<string, string>
@@ -205,13 +203,14 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation("SubscribeToBetStatus: {@properties}", properties);
+            _logger.LogInformation("{event} {@properties}", "SubscribeToBetStatus", properties);
 
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"onbetstatus:{client.Item2}:{request.UserId.ToLower()}");
         }
+
         public async Task UnsubscribeToBetStatus(BetStatusRequest request)
         {
             var properties = new Dictionary<string, string>
@@ -220,13 +219,14 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation("UnsubscribeToBetStatus: {@properties}", properties);
+            _logger.LogInformation("{event} {@properties}", "UnsubscribeToBetStatus", properties);
 
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onbetstatus:{client.Item2}:{request.UserId.ToLower()}");
         }
+
         public async Task SubscribeToCashOutChange(CashOutChangeRequest request)
         {
             var client = await GetClient(request.ClientId);
@@ -234,6 +234,7 @@ namespace Platform.WebSocket.API2.Repository
             if (client.Item1 == true)
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"oncashoutchange:{client.Item2}:{request.UserId.ToLower()}");
         }
+
         public async Task UnsubscribeToCashOutChange(CashOutChangeRequest request)
         {
             var client = await GetClient(request.ClientId);
@@ -241,6 +242,7 @@ namespace Platform.WebSocket.API2.Repository
             if (client.Item1 == true)
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"oncashoutchange:{client.Item2}:{request.UserId.ToLower()}");
         }
+
         public async Task SubscribeToWalletChange(WalletChangeRequest request)
         {
             var properties = new Dictionary<string, string>
@@ -249,13 +251,14 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation("SubscribeToWalletChange: {@properties}", properties);
+            _logger.LogInformation("{event} {@properties}", "SubscribeToWalletChange", properties);
 
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"onwalletchange:{client.Item2}:{request.UserId.ToLower()}");
         }
+
         public async Task UnsubscribeToWalletChange(WalletChangeRequest request)
         {
             var properties = new Dictionary<string, string>
@@ -264,13 +267,14 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation("UnsubscribeToWalletChange: {@properties}", properties);
+            _logger.LogInformation("{event} {@properties}", "UnsubscribeToWalletChange", properties);
 
             var client = await GetClient(request.ClientId);
 
             if (client.Item1 == true)
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onwalletchange:{client.Item2}:{request.UserId.ToLower()}");
         }
+
         public async Task SubscribeToPayableChange(PayableChangeRequest request)
         {
             var client = await GetClient(request.ClientId);
@@ -278,6 +282,7 @@ namespace Platform.WebSocket.API2.Repository
             if (client.Item1 == true)
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"onpayablechange:{client.Item2}:{request.UserId.ToLower()}");
         }
+
         public async Task UnsubscribeToPayableChange(PayableChangeRequest request)
         {
             var client = await GetClient(request.ClientId);
@@ -285,6 +290,7 @@ namespace Platform.WebSocket.API2.Repository
             if (client.Item1 == true)
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onpayablechange:{client.Item2}:{request.UserId.ToLower()}");
         }
+
         public async Task SubscribeToFavorites(FavoritesRequest request)
         {
             var client = await GetClient(request.ClientId);
@@ -292,6 +298,7 @@ namespace Platform.WebSocket.API2.Repository
             if (client.Item1 == true)
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"onfavorites:{client.Item2}:{request.UserId.ToLower()}");
         }
+
         public async Task UnsubscribeToFavorites(WalletChangeRequest request)
         {
             var client = await GetClient(request.ClientId);
@@ -299,6 +306,7 @@ namespace Platform.WebSocket.API2.Repository
             if (client.Item1 == true)
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"onfavorites:{client.Item2}:{request.UserId.ToLower()}");
         }
+
         public async Task PublishOddsChangeForMainMarkets(string clientCode, OutgoingOddsChange message)
         {
             var properties = new Dictionary<string, string>
@@ -308,16 +316,18 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation("PublishOddsChangeForMainMarkets: {@properties}", properties);
+            _logger.LogInformation("{event} {@properties}", "PublishOddsChangeForMainMarkets", properties);
 
             await Clients.Groups(message.Gr).OnOddsChange(message.Pa);
         }
+
         public async Task PublishOddsChangeForAllMarkets(string clientCode, OutgoingOddsChange message)
         {
             await Clients.Group($"onbetslipoddschange:{clientCode}:{message.Pa.FiId}").OnBetslipOddsChange(message.Pa);
             await Clients.Group($"ontopmarketsoddschange:{clientCode}:{message.Pa.FiId}").OnTopMarketsOddsChange(message.Pa);
             await Clients.Groups(message.Gr).OnOddsChange(message.Pa);
         }
+
         public async Task PublishBetStopFixture(string clientCode, OutgoingBetStopFixture message)
         {
             var properties = new Dictionary<string, string>
@@ -327,12 +337,13 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation("PublishBetStopFixture: {@properties}", properties);
+            _logger.LogInformation("{event} {@properties}", "PublishBetStopFixture", properties);
 
             await Clients.Group($"onbetslipbetstopfixture:{clientCode}:{message.Pa.FiId}").OnBetslipBetStopFixture(message.Pa);
             await Clients.Group($"ontopmarketsbetstopfixture:{clientCode}:{message.Pa.FiId}").OnTopMarketsBetStopFixture(message.Pa);
             await Clients.Groups(message.Gr).OnBetStopFixture(message.Pa);
         }
+
         public async Task PublishBetStopGlobal(string clientCode, OutgoingBetStopGlobal message)
         {
             var properties = new Dictionary<string, string>
@@ -342,7 +353,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation("PublishBetStopGlobal: {@properties}", properties);
+            _logger.LogInformation("{event} {@properties}", "PublishBetStopGlobal", properties);
 
             await Clients.Group($"onbetstopglobal:{clientCode}").OnBetStopGlobal(message);
         }
@@ -356,14 +367,16 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation("PublishBetStatus: {@properties}", properties);
+            _logger.LogInformation("{event} {@properties}", "PublishBetStatus", properties);
 
             await Clients.Group($"onbetstatus:{clientCode}:{message.UsId.ToLower()}").OnBetStatus(message);
         }
+
         public async Task PublishCashOutChange(string clientCode, OutgoingCashOutChange message)
         {
             await Clients.Group($"oncashoutchange:{clientCode}:{message.UsId.ToLower()}").OnCashOutChange(message);
         }
+
         public async Task PublishWalletChange(string clientCode, OutgoingWalletChange message)
         {
             var properties = new Dictionary<string, string>
@@ -373,23 +386,24 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation("PublishWalletChange: {@properties}", properties);
-            _logger.LogInformation("Sending to {target",
-                $"onwalletchange:{clientCode}:{message.UsId.ToLower()}");
+            _logger.LogInformation("{event} {@properties}", "PublishWalletChange", properties);
+            _logger.LogInformation("Sending to {target}", $"onwalletchange:{clientCode}:{message.UsId.ToLower()}");
 
             await Clients.Group($"onwalletchange:{clientCode}:{message.UsId.ToLower()}").OnWalletChange(message);
         }
+
         public async Task PublishPayableChange(string clientCode, OutgoingPayableChange message)
         {
-            _logger.LogInformation("Sending to {target}",
-                $"onpayablechange:{clientCode}:{message.UsId.ToLower()}");
+            _logger.LogInformation("Sending to {target}", $"onpayablechange:{clientCode}:{message.UsId.ToLower()}");
 
             await Clients.Group($"onpayablechange:{clientCode}:{message.UsId.ToLower()}").OnPayableChange(message);
         }
+
         public string? GetClientIp()
         {
             return Context.GetHttpContext()?.Connection.RemoteIpAddress?.ToString();
         }
+
         private async Task<Tuple<bool, string>> GetClient(string clientId)
         {
             try
@@ -433,6 +447,7 @@ namespace Platform.WebSocket.API2.Repository
             return new Tuple<bool, string>(false, string.Empty);
         }
     }
+
     public class EndpointRequest
     {
         public string ClientId { get; set; }

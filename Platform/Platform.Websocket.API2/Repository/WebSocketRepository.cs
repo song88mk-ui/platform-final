@@ -32,7 +32,9 @@ namespace Platform.WebSocket.API2.Repository
         public override async Task OnConnectedAsync()
         {
             var connectionId = Context.ConnectionId;
-            var ipAddress = Context.GetHttpContext().Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? string.Empty;
+            var xff = Context.GetHttpContext().Request.Headers["X-Forwarded-For"].ToString();
+            var ipAddress = xff?.Split(',').Select(ip => ip.Trim()).FirstOrDefault() ?? GetClientIp();
+            var cf_country = Context.GetHttpContext().Request.Headers["CF-IPCountry"].ToString();
             var ipCountry = Context.GetHttpContext().Request.Headers["CF-IPCountry"].FirstOrDefault() ?? string.Empty;
             var userAgent = Context.GetHttpContext().Request.Headers["User-Agent"].FirstOrDefault() ?? string.Empty;
 
@@ -42,6 +44,7 @@ namespace Platform.WebSocket.API2.Repository
                             {
                                 { "ConnectionId", connectionId },
                                 { "IPAddress", ipAddress },
+                                { "CF-Country", cf_country },
                                 { "IPCountry", ipCountry },
                                 { "Server", server },
                                 { "UserAgent", userAgent },
@@ -382,6 +385,10 @@ namespace Platform.WebSocket.API2.Repository
                 $"onpayablechange:{clientCode}:{message.UsId.ToLower()}");
 
             await Clients.Group($"onpayablechange:{clientCode}:{message.UsId.ToLower()}").OnPayableChange(message);
+        }
+        public string? GetClientIp()
+        {
+            return Context.GetHttpContext()?.Connection.RemoteIpAddress?.ToString();
         }
         private async Task<Tuple<bool, string>> GetClient(string clientId)
         {

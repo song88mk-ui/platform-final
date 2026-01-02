@@ -9,8 +9,15 @@ using Microsoft.OpenApi.Models;
 using Platform.Shared.Utility;
 using Platform.WebSocket.API2.Data;
 using Platform.WebSocket.API2.Repository;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// logging
+builder.Host.UseSerilog((context, _, serilog) =>
+{
+    serilog.ReadFrom.Configuration(context.Configuration);
+});
 
 // Add services to the container.
 

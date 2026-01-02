@@ -48,12 +48,7 @@ namespace Platform.WebSocket.API2.Repository
                                 { "ConnectedTimestamp", DateTime.UtcNow.ToString() }
                             };
 
-            _logger.LogInformation($"OnConnectedAsync: {JsonSerializer.Serialize(properties)}");
-            _logger.LogInformation(
-                "OnConnectedAsync: {ConnectionId} | User: {User} | Server: {Machine}",
-                Context.ConnectionId,
-                Context.UserIdentifier,
-                Environment.MachineName);
+            _logger.LogInformation("OnConnectedAsync: {@properties}", properties);
 
             //_telemetryClient.TrackEvent("e:OnConnectedAsync", properties);
 
@@ -71,7 +66,7 @@ namespace Platform.WebSocket.API2.Repository
                                 { "DisconnectedTimestamp", DateTime.UtcNow.ToString() }
                             };
 
-            _logger.LogInformation($"OnDisconnectedAsync: {JsonSerializer.Serialize(properties)}");
+            _logger.LogInformation("OnDisconnectedAsync: {@properties}", properties);
 
             //_telemetryClient.TrackEvent("e:OnDisconnectedAsync", properties);
 
@@ -90,7 +85,7 @@ namespace Platform.WebSocket.API2.Repository
                                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
                             };
 
-            _logger.LogInformation($"SubscribeToEndpoint: {JsonSerializer.Serialize(properties)}");
+            _logger.LogInformation("SubscribeToEndpoint: {@properties}", properties);
 
             //_telemetryClient.TrackEvent("e:SubscribeToEndpoint", properties);
 
@@ -113,7 +108,7 @@ namespace Platform.WebSocket.API2.Repository
                                 { "requestParameters", JsonSerializer.Serialize(request ?? new EndpointRequest()) },
                                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
                             };
-            _logger.LogInformation($"UnsubscribeToEndpoint: {JsonSerializer.Serialize(properties)}");
+            _logger.LogInformation("UnsubscribeToEndpoint: {@properties}", properties);
 
             //_telemetryClient.TrackEvent("e:UnsubscribeToEndpoint", properties);
 
@@ -131,7 +126,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation($"SubscribeToBetslip: {JsonSerializer.Serialize(properties)}");
+            _logger.LogInformation("SubscribeToBetslip: {@properties}", properties);
 
             var client = await GetClient(request.ClientId);
 
@@ -154,7 +149,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation($"UnsubscribeToBetslip: {JsonSerializer.Serialize(properties)}");
+            _logger.LogInformation("UnsubscribeToBetslip: {@properties}", properties);
 
             var client = await GetClient(request.ClientId);
 
@@ -207,7 +202,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation($"SubscribeToBetStatus: {JsonSerializer.Serialize(properties)}");
+            _logger.LogInformation("SubscribeToBetStatus: {@properties}", properties);
 
             var client = await GetClient(request.ClientId);
 
@@ -222,7 +217,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation($"UnsubscribeToBetStatus: {JsonSerializer.Serialize(properties)}");
+            _logger.LogInformation("UnsubscribeToBetStatus: {@properties}", properties);
 
             var client = await GetClient(request.ClientId);
 
@@ -251,7 +246,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation($"SubscribeToWalletChange: {JsonSerializer.Serialize(properties)}");
+            _logger.LogInformation("SubscribeToWalletChange: {@properties}", properties);
 
             var client = await GetClient(request.ClientId);
 
@@ -266,7 +261,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation($"UnsubscribeToWalletChange: {JsonSerializer.Serialize(properties)}");
+            _logger.LogInformation("UnsubscribeToWalletChange: {@properties}", properties);
 
             var client = await GetClient(request.ClientId);
 
@@ -310,7 +305,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation($"PublishOddsChangeForMainMarkets: {JsonSerializer.Serialize(properties)}");
+            _logger.LogInformation("PublishOddsChangeForMainMarkets: {@properties}", properties);
 
             await Clients.Groups(message.Gr).OnOddsChange(message.Pa);
         }
@@ -329,7 +324,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation($"PublishBetStopFixture: {JsonSerializer.Serialize(properties)}");
+            _logger.LogInformation("PublishBetStopFixture: {@properties}", properties);
 
             await Clients.Group($"onbetslipbetstopfixture:{clientCode}:{message.Pa.FiId}").OnBetslipBetStopFixture(message.Pa);
             await Clients.Group($"ontopmarketsbetstopfixture:{clientCode}:{message.Pa.FiId}").OnTopMarketsBetStopFixture(message.Pa);
@@ -344,15 +339,11 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation($"PublishBetStopGlobal: {JsonSerializer.Serialize(properties)}");
-
-            _logger.LogInformation(
-                "SENDING to {Target} | Server: {Machine}",
-                $"onbetstopglobal:{clientCode}",
-                Environment.MachineName);
+            _logger.LogInformation("PublishBetStopGlobal: {@properties}", properties);
 
             await Clients.Group($"onbetstopglobal:{clientCode}").OnBetStopGlobal(message);
         }
+
         public async Task PublishBetStatus(string clientCode, OutgoingBetStatus message)
         {
             var properties = new Dictionary<string, string>
@@ -362,12 +353,7 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation($"PublishBetStatus: {JsonSerializer.Serialize(properties)}");
-
-            _logger.LogInformation(
-                "SENDING to {Target} | Server: {Machine}",
-                $"onbetstatus:{clientCode}:{message.UsId.ToLower()}",
-                Environment.MachineName);
+            _logger.LogInformation("PublishBetStatus: {@properties}", properties);
 
             await Clients.Group($"onbetstatus:{clientCode}:{message.UsId.ToLower()}").OnBetStatus(message);
         }
@@ -384,20 +370,16 @@ namespace Platform.WebSocket.API2.Repository
                 { "RequestTimestamp", DateTime.UtcNow.ToString() }
             };
 
-            _logger.LogInformation($"PublishWalletChange: {JsonSerializer.Serialize(properties)}");
-            _logger.LogInformation(
-                "SENDING to {Target} | Server: {Machine}",
-                $"onwalletchange:{clientCode}:{message.UsId.ToLower()}",
-                Environment.MachineName);
+            _logger.LogInformation("PublishWalletChange: {@properties}", properties);
+            _logger.LogInformation("Sending to {target",
+                $"onwalletchange:{clientCode}:{message.UsId.ToLower()}");
 
             await Clients.Group($"onwalletchange:{clientCode}:{message.UsId.ToLower()}").OnWalletChange(message);
         }
         public async Task PublishPayableChange(string clientCode, OutgoingPayableChange message)
         {
-            _logger.LogInformation(
-                "SENDING to {Target} | Server: {Machine}",
-                $"onpayablechange:{clientCode}:{message.UsId.ToLower()}",
-                Environment.MachineName);
+            _logger.LogInformation("Sending to {target}",
+                $"onpayablechange:{clientCode}:{message.UsId.ToLower()}");
 
             await Clients.Group($"onpayablechange:{clientCode}:{message.UsId.ToLower()}").OnPayableChange(message);
         }
@@ -438,9 +420,7 @@ namespace Platform.WebSocket.API2.Repository
             }
             catch (Exception ex)
             {
-                _logger.LogInformation($"GetClient: {JsonSerializer.Serialize(ex.Message)}");
-                _logger.LogInformation($"GetClient: {JsonSerializer.Serialize(ex.StackTrace)}");
-
+                _logger.LogInformation("Error on GetClient: {message} {@stacktrace}", ex.Message, ex.StackTrace);
             }
 
             return new Tuple<bool, string>(false, string.Empty);

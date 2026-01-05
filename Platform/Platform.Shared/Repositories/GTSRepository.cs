@@ -357,7 +357,7 @@ namespace Platform.Shared.Repositories
                         price = s.BetSelection.Odds,
                         betGeniusContent = new
                         {
-                            selectionId = s.BetSelection.SelectionSpecifier,
+                            selectionId = s.BetSelection.SelectionSpecifier.Split(':').LastOrDefault()
                         }
                     }).ToList(),
                     priceChangeRule = "AcceptNone"
@@ -393,6 +393,7 @@ namespace Platform.Shared.Repositories
                 else
                 {
                     _logger.LogError($"SendBet Error: {JsonSerializer.Serialize(await response.Content.ReadAsStringAsync())}");
+                    _logger.LogError($"SendBet Payload: {JsonSerializer.Serialize(payload)}");
 
                     return new BaseResponseDTO<string>
                     {

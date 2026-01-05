@@ -295,12 +295,14 @@ namespace Platform.Shared.Repositories
                 }
                 else
                 {
-                    _logger.LogError($"Assessment Error: {JsonSerializer.Serialize(await response.Content.ReadAsStringAsync())}");
+                    var responseError = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Assessment Error: {responseError}");
+                    _logger.LogError($"Payload: {JsonSerializer.Serialize(payload)}");
 
                     return new BaseResponseDTO<ProviderAssessmentResponseDTO>
                     {
                         StatusCode = StatusCode.Error,
-                        Message = StatusCode.Error.ToString(),
+                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({responseError})",
                         Result = new ProviderAssessmentResponseDTO
                         {
                             Stake = 0

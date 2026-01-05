@@ -35,8 +35,8 @@ jobs:
             image: platform-betting-api
           - path: Platform.CacheSync.Service
             image: platform-cachesync-service
-          - path: Platform.Cancellation.Service
-            image: platform-cancellation-service
+          - path: Platform.Provider.Service
+            image: platform-provider-service
           - path: Platform.CashOut.Service
             image: platform-cashout-service
           - path: Platform.CashOutStake.Servicev2

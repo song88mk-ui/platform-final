@@ -6,7 +6,7 @@ using Platform.Shared.Repositories;
 using Platform.Shared.Services;
 using Platform.Shared.Utility;
 
-namespace Platform.Cancellation.Service
+namespace Platform.Provider.Service
 {
     public static class ServiceCollectionBettingExtensions
     {

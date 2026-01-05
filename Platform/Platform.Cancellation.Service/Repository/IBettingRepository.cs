@@ -1,9 +1,7 @@
 ﻿using Platform.Shared.MessageModels;
 using Platform.Shared.Providers;
-using Platform.Shared.Utility;
-using Sportradar.MTS.SDK.API;
 
-namespace Platform.Cancellation.Service.Repository
+namespace Platform.Provider.Service.Repository
 {
     public interface IBettingRepository
     {

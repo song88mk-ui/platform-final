@@ -7,13 +7,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Platform.Cancellation.Service.Repository;
+using Platform.Provider.Service.Repository;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using RabbitMQ.Client.Events;
 
-namespace Platform.Cancellation.Service
+namespace Platform.Provider.Service
 {
     public class Worker : BackgroundService
     {
@@ -101,6 +101,8 @@ namespace Platform.Cancellation.Service
 
                         _bettingRepository.ProcessBackofficeCancellation(onBetBackofficeCancellation, providerBO, correlationId);
                         break;
+                        //TODO: OnBetCancellation - dynamically send to provider
+                        //TODO: OnBetSettlement - dynamically send to provider
                 }
             }
             catch (Exception ex)

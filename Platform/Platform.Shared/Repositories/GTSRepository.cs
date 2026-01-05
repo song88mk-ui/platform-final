@@ -326,7 +326,7 @@ namespace Platform.Shared.Repositories
             }
         }
 
-
+        //TODO: Create SendBetPlacement and SendBetSettlement
         public async Task<BaseResponseDTO<string>> SendBet(string authToken, OnBetPlacement request)
         {
 

@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Operator.API", "Pl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Betting.API", "Platform.Betting.API\Platform.Betting.API.csproj", "{4351BA3C-7C1F-42E6-ADDD-6B484CBD3781}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Cancellation.Service", "Platform.Cancellation.Service\Platform.Cancellation.Service.csproj", "{55A314C8-A2B5-49F9-9D8C-6D89098C741F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Provider.Service", "Platform.Cancellation.Service\Platform.Provider.Service.csproj", "{55A314C8-A2B5-49F9-9D8C-6D89098C741F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{A306A71B-2334-4437-A685-B09A2E828C9F} = {A306A71B-2334-4437-A685-B09A2E828C9F}
 	EndProjectSection

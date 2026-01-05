@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Platform.Cancellation.Service.Repository;
+using Platform.Provider.Service.Repository;
 using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using Serilog;
@@ -10,7 +10,7 @@ using Serilog.Formatting.Compact;
 using System;
 using System.IO;
 
-namespace Platform.Cancellation.Service
+namespace Platform.Provider.Service
 {
     public class Program
     {

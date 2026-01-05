@@ -2,19 +2,11 @@
 using Microsoft.Extensions.Logging;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Providers;
-using Platform.Shared.Utility;
-using Sportradar.MTS.SDK.API;
-using Sportradar.MTS.SDK.Entities.Builders;
-using Sportradar.MTS.SDK.Entities.Enums;
-using System;
-using System.Text.Json;
-using System.Threading;
 
-namespace Platform.Cancellation.Service.Repository
+namespace Platform.Provider.Service.Repository
 {
     public class BettingRepository : IBettingRepository
     {
-        private IBuilderFactory _factory;
         private readonly IConfiguration _configuration;
         private ILogger<BettingRepository> _logger;
         public BettingRepository(IConfiguration configuration, ILogger<BettingRepository> logger)

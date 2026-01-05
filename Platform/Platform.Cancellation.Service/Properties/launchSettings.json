@@ -1,6 +1,6 @@
 ﻿{
   "profiles": {
-    "Platform.Cancellation.Service": {
+    "Platform.Provider.Service": {
       "commandName": "Project",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"

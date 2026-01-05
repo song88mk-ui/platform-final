@@ -266,7 +266,7 @@ namespace Platform.Shared.Repositories
                     currencyCode = request.Bet.CurrencyCode,
                     legs = request.BetSelections.Select(s => new
                     {
-                        selectionId = s.BetSelection.SelectionSpecifier,
+                        selectionId = s.BetSelection.SelectionSpecifier.Split(':').LastOrDefault(),
                         gameState = "prematch", //TODO: get the gameState value,
                         price = s.BetSelection.Odds
                     }).ToList(),

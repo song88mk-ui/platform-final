@@ -23,8 +23,8 @@ namespace Platform.Provider.Service
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IConfiguration _configuration;
 
-        public Worker(ILogger<Worker> logger, 
-            IMessageBroker messageBroker, 
+        public Worker(ILogger<Worker> logger,
+            IMessageBroker messageBroker,
             IBettingRepository bettingRepository,
             IServiceScopeFactory scopeFactory,
             IConfiguration configuration)
@@ -38,6 +38,7 @@ namespace Platform.Provider.Service
 
         public override Task StartAsync(CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Starting service");
             if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
             {
                 try
@@ -56,11 +57,13 @@ namespace Platform.Provider.Service
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Stopping service");
             if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
             {
-                _logger.LogInformation("Application Stopped");
+                _logger.LogInformation("stopping MTS");
             }
 
+            _logger.LogInformation("Disconnecting from message broker");
             _messageBroker.Dispose();
 
             return base.StopAsync(cancellationToken);
@@ -68,7 +71,9 @@ namespace Platform.Provider.Service
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _logger.LogInformation("Connecting to RabbitMQ Broker");
             _messageBroker.Connect();
+            _logger.LogInformation("Connected. Processing incoming messages");
             _messageBroker.MessageReceived += MessageReceivedEvent;
 
             return Task.CompletedTask;
@@ -79,7 +84,7 @@ namespace Platform.Provider.Service
             var payload = Encoding.UTF8.GetString(e.Body);
             var messageType = e.BasicProperties.Type;
             var correlationId = e.BasicProperties.CorrelationId;
-            
+
             try
             {
                 using var scope = _scopeFactory.CreateScope();

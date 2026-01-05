@@ -5,8 +5,6 @@ using Platform.Provider.Service.Repository;
 using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using Serilog;
-using Serilog.Events;
-using Serilog.Formatting.Compact;
 using System;
 using System.IO;
 
@@ -16,19 +14,15 @@ namespace Platform.Provider.Service
     {
         public static void Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
-                .Enrich.FromLogContext()
-                .WriteTo.Console(new RenderedCompactJsonFormatter())
-                .WriteTo.Debug(outputTemplate: "{Timestamp:yyyy-MM-ddTHH:mm:ssK} {Level:u3} {RequestId} {Message:lj}{NewLine}")
-                .CreateLogger();
-
             CreateHostBuilder(args).Build().Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .UseSerilog()
+                .UseSerilog((context, _, serilog) =>
+                {
+                    serilog.ReadFrom.Configuration(context.Configuration);
+                })
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddBettingProviders();

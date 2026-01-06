@@ -5747,7 +5747,7 @@ namespace Platform.Sportsbook.API.Repository
                 sportMarketTemplateGroup.Prematch.Add(new Shared.Models.MarketTemplateGroup
                 {
                     MarketTemplateGroupId = 1,
-                    MarketTemplateGroupName = "All Markets",
+                    MarketTemplateGroupName = _ALLMARKETS,
                     MarketTemplateIds = new List<string>(),
                     SortOrder = 1
                 });
@@ -5756,7 +5756,7 @@ namespace Platform.Sportsbook.API.Repository
                 sportMarketTemplateGroup.Live.Add(new Shared.Models.MarketTemplateGroup
                 {
                     MarketTemplateGroupId = 1,
-                    MarketTemplateGroupName = "All Markets",
+                    MarketTemplateGroupName = _ALLMARKETS,
                     MarketTemplateIds = new List<string>(),
                     SortOrder = 1
                 });
@@ -9740,7 +9740,7 @@ namespace Platform.Sportsbook.API.Repository
                             marketTemplateGroups.Add(new Shared.Data.Sportsbook.SQLEntities.MarketTemplateGroup
                             {
                                 SportId = sportId,
-                                Name = "All Markets",
+                                Name = _ALLMARKETS,
                                 FixtureStatusId = 0,
                                 SortOrder = 0,
                                 MarketTemplates = string.Join(',', request.MarketTemplates.Select(s => s.MarketTemplateId))

@@ -1,5 +1,8 @@
-﻿namespace Platform.Shared.Data.Sportsbook.SQLEntities
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Platform.Shared.Data.Sportsbook.SQLEntities
 {
+    [Table("MarketTemplateGroup2")]
     public class MarketTemplateGroup
     {
         public int SportId { get; set; }

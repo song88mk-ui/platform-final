@@ -12214,7 +12214,7 @@ namespace Platform.Sportsbook.API.Repository
                 && marketTemplateGroups.Prematch.FirstOrDefault().MarketTemplateGroupName.ToLower() == _ALLMARKETS.ToLower()
                 && !marketTemplateGroups.Prematch.FirstOrDefault().MarketTemplateIds.Any())
             {
-                marketTemplateGroups.Prematch.FirstOrDefault().MarketTemplateIds.AddRange(finalMarkets.Select(s => s.MarketTemplateId).ToList());
+                marketTemplateGroups.Prematch.FirstOrDefault().MarketTemplateIds.AddRange(finalMarkets.Select(s => s.MarketTemplateId).Distinct().ToList());
             }
 
             if (fixtureStatusId == (int)FixtureStatus.Live
@@ -12222,7 +12222,7 @@ namespace Platform.Sportsbook.API.Repository
                 && marketTemplateGroups.Live.FirstOrDefault().MarketTemplateGroupName.ToLower() == _ALLMARKETS.ToLower()
                 && !marketTemplateGroups.Live.FirstOrDefault().MarketTemplateIds.Any())
             {
-                marketTemplateGroups.Live.FirstOrDefault().MarketTemplateIds.AddRange(finalMarkets.Select(s => s.MarketTemplateId).ToList());
+                marketTemplateGroups.Live.FirstOrDefault().MarketTemplateIds.AddRange(finalMarkets.Select(s => s.MarketTemplateId).Distinct().ToList());
             }
         }
 

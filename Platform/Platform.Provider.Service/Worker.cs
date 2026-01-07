@@ -78,7 +78,6 @@ namespace Platform.Provider.Service
 
             return Task.CompletedTask;
         }
-
         private void MessageReceivedEvent(object sender, BasicDeliverEventArgs e)
         {
             var payload = Encoding.UTF8.GetString(e.Body);
@@ -88,32 +87,74 @@ namespace Platform.Provider.Service
             try
             {
                 using var scope = _scopeFactory.CreateScope();
-                var betProviderFactory =
-                            scope.ServiceProvider.GetRequiredService<IBetProviderFactory>();
+                var betProviderFactory = scope.ServiceProvider.GetRequiredService<IBetProviderFactory>();
 
                 switch (messageType)
                 {
                     case "OnBetTimeout":
-                        var onBetMTSTimeout = JsonSerializer.Deserialize<OnBetTimeout>(payload);
-                        var provider = betProviderFactory.Resolve(onBetMTSTimeout.ChannelTypeId);
-
-                        _bettingRepository.ProcessTimeout(onBetMTSTimeout, provider, correlationId);
+                        ProcessMessage<OnBetTimeout>(payload, msg =>
+                            ProcessWithProvider(
+                                msg,
+                                msg.ChannelTypeId,
+                                betProviderFactory,
+                                correlationId,
+                                (payload, provider, correlationId) => _bettingRepository.ProcessBetCancellation(payload.BetId, provider, correlationId)
+                            ));
                         break;
 
                     case "OnBetBackOfficeCancellation":
-                        var onBetBackofficeCancellation = JsonSerializer.Deserialize<OnBetBackofficeCancellation>(payload);
-                        var providerBO = betProviderFactory.Resolve(onBetBackofficeCancellation.ChannelTypeId);
-
-                        _bettingRepository.ProcessBackofficeCancellation(onBetBackofficeCancellation, providerBO, correlationId);
+                        ProcessMessage<OnBetBackofficeCancellation>(payload, msg =>
+                            ProcessWithProvider(
+                                msg,
+                                msg.ChannelTypeId,
+                                betProviderFactory,
+                                correlationId,
+                                (payload, provider, correlationId) => _bettingRepository.ProcessBetCancellation(payload.BetId, provider, correlationId)
+                            ));
                         break;
-                        //TODO: OnBetCancellation - dynamically send to provider
-                        //TODO: OnBetSettlement - dynamically send to provider
+
+                    case "OnBetCancellation":
+                        ProcessMessage<OnBetSettlement>(payload, msg =>
+                            ProcessWithProvider(
+                                msg,
+                                msg.ChannelTypeId,
+                                betProviderFactory,
+                                correlationId,
+                                (payload, provider, correlationId) => _bettingRepository.ProcessBetCancellation(payload.Bet.BetId, provider, correlationId)
+                            ));
+                        break;
+
+                    case "OnBetSettlement":
+                        ProcessMessage<OnBetSettlement>(payload, msg =>
+                            ProcessWithProvider(
+                                msg,
+                                msg.ChannelTypeId,
+                                betProviderFactory,
+                                correlationId,
+                                (payload, provider, correlationId) => _bettingRepository.ProcessBetSettlement(payload, provider, correlationId)
+                            ));
+                        break;
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "error on message received");
             }
+        }
+        private void ProcessMessage<T>(string payload, Action<T> processor)
+        {
+            if (string.IsNullOrWhiteSpace(payload)) return;
+
+            var message = JsonSerializer.Deserialize<T>(payload);
+            if (message != null)
+            {
+                processor(message);
+            }
+        }
+        private void ProcessWithProvider<T>(T payload, int channelTypeId, IBetProviderFactory factory, string correlationId, Action<T, IBetProvider, string> handler)
+        {
+            var provider = factory.Resolve(channelTypeId);
+            handler(payload, provider, correlationId);
         }
     }
 }

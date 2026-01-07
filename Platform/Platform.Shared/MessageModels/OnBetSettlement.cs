@@ -1,4 +1,5 @@
 ﻿using Platform.Shared.Data.Betting.Entities;
+using Platform.Shared.Enums;
 using System.Collections.Generic;
 
 namespace Platform.Shared.MessageModels
@@ -13,6 +14,7 @@ namespace Platform.Shared.MessageModels
 
         public Bet Bet { get; set; }
         public List<BetSelection> BetSelections { get; set; }
+        public int ChannelTypeId { get; set; } = (int)ChannelType.BG;
         public string Message { get; set; }
         public bool IsRetry { get; set; }
         public decimal NonTaxedPayout { get; set; }

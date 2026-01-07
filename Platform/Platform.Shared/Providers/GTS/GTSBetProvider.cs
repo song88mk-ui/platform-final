@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using Platform.Shared.Models.Provider.GTS;
 
 namespace Platform.Shared.Providers.GTS
 {
@@ -24,7 +25,7 @@ namespace Platform.Shared.Providers.GTS
 
         public GTSBetProvider(
             IConfiguration configuration,
-            ILogger<GTSBetProvider> logger, 
+            ILogger<GTSBetProvider> logger,
             IGTSAuthRepository auth,
             IGTSRepository gtsRepo)
         {
@@ -67,9 +68,13 @@ namespace Platform.Shared.Providers.GTS
                     Reason = result.Result.Message
                 };
 
-            var sendBet = await _gtsRepo.SendBet(token.Result.Token, bet);
+            var sendBet = await _gtsRepo.SendBet(token.Result.Token, new SendBet()
+            {
+                Bet = bet.Bet,
+                BetSelections = bet.BetSelections.Select(s => s.BetSelection).ToList()
+            });
 
-            if(sendBet.StatusCode != StatusCode.Success)
+            if (sendBet.StatusCode != StatusCode.Success)
                 return new BetProviderResult
                 {
                     Acceptance = BetAcceptance.Rejected,
@@ -83,9 +88,8 @@ namespace Platform.Shared.Providers.GTS
             };
         }
 
-        public async Task ProcessCancellation(OnBetTimeout message, string correlationId, bool isBackOfficeTrigger = false)
+        public async void ProcessCancellation(Guid betId, string correlationId, bool isBackOfficeTrigger = false)
         {
-
             if (!Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]))
                 return;
 
@@ -96,9 +100,9 @@ namespace Platform.Shared.Providers.GTS
                 if (token.StatusCode != StatusCode.Success)
                     return;
 
-                _logger.LogInformation($"ProcessCancellation (Request)- {JsonSerializer.Serialize(message)}");
+                _logger.LogInformation($"ProcessCancellation (Request)- {betId}");
 
-                var result = await _gtsRepo.Cancellation(token.Result.Token, message);
+                var result = await _gtsRepo.Cancellation(token.Result.Token, betId);
 
                 _logger.LogInformation($"ProcessCancellation (Response)- {JsonSerializer.Serialize(result)}");
 
@@ -108,6 +112,40 @@ namespace Platform.Shared.Providers.GTS
             {
                 _logger.LogError($"ProcessCancellation Error- {JsonSerializer.Serialize(ex)}");
             }
+        }
+
+        public async void ProcessSettlemet(OnBetSettlement bet, string correlationId)
+        {
+            if (!Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]))
+                return;
+
+            if (bet.BetSelections.Any(c => c.SportId.IsVirtualSportId()))
+                return;
+
+            var token = await _auth.GetGTSAuthorizationToken();
+            if (token.StatusCode != StatusCode.Success)
+                return;
+
+            var sendBet = await _gtsRepo.SendBet(token.Result.Token, new SendBet()
+            {
+                Bet = bet.Bet,
+                BetSelections = bet.BetSelections
+            });
+
+            if (sendBet.StatusCode != StatusCode.Success)
+                return;
+            //return new BetProviderResult
+            //{
+            //    Acceptance = BetAcceptance.Rejected,
+            //    Reason = "1026 - Failed sending Bet to GTS"
+            //};
+
+            return;
+            //return new BetProviderResult
+            //{
+            //    Acceptance = result.Result.IsBetAllowed ? BetAcceptance.Accepted : BetAcceptance.Rejected,
+            //    Reason = result.Result.Message ?? string.Empty
+            //};
         }
 
         public async Task<bool> IsAvailableAsync(BetRequestDTO request)

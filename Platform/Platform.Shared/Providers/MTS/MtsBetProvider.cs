@@ -151,7 +151,7 @@ namespace Platform.Shared.Providers.MTS
                     };
         }
 
-        public async Task ProcessCancellation(OnBetTimeout message, string correlationId, bool isBackOfficeTrigger = false)
+        public void ProcessCancellation(Guid betId, string correlationId, bool isBackOfficeTrigger = false)
         {
             if (Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]))
             {
@@ -160,12 +160,12 @@ namespace Platform.Shared.Providers.MTS
                     _factory = _mts.BuilderFactory;
 
                     var betCancel = isBackOfficeTrigger 
-                        ? _factory.CreateTicketCancelBuilder().BuildTicket(message.BetId.ToString().ToUpper(), Convert.ToInt32(_configuration["Custom:BookmakerId"]), TicketCancellationReason.BookmakerBackofficeTriggered)
-                        : _factory.CreateTicketCancelBuilder().BuildTicket(message.BetId.ToString().ToUpper(), Convert.ToInt32(_configuration["Custom:BookmakerId"]), TicketCancellationReason.TimeoutTriggered);
+                        ? _factory.CreateTicketCancelBuilder().BuildTicket(betId.ToString().ToUpper(), Convert.ToInt32(_configuration["Custom:BookmakerId"]), TicketCancellationReason.BookmakerBackofficeTriggered)
+                        : _factory.CreateTicketCancelBuilder().BuildTicket(betId.ToString().ToUpper(), Convert.ToInt32(_configuration["Custom:BookmakerId"]), TicketCancellationReason.TimeoutTriggered);
 
                     var payload = new
                     {
-                        message = JsonSerializer.Serialize(message),
+                        betId = betId,
                         payload = JsonSerializer.Serialize(betCancel)
                     };
 
@@ -177,10 +177,12 @@ namespace Platform.Shared.Providers.MTS
                 {
                     _logger.LogError($"ProcessCancellation Error- {JsonSerializer.Serialize(ex)}");
                 }
-
             }
         }
-
+        public void ProcessSettlemet(OnBetSettlement bet, string correlationId)
+        {
+            //return new NotImplementedException();
+        }
 
         private Tuple<TicketAcceptance, string> ValidateToMTS(OnBetPlacement message)
         {

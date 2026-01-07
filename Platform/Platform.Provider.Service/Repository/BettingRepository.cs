@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Logging;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Providers;
+using System;
+using System.Threading.Tasks;
 
 namespace Platform.Provider.Service.Repository
 {
@@ -14,17 +16,15 @@ namespace Platform.Provider.Service.Repository
             _configuration = configuration;
             _logger = logger;
         }
-        public void ProcessTimeout(OnBetTimeout message, IBetProvider provider, string correlationId)
+
+        public void ProcessBetCancellation(Guid betId, IBetProvider provider, string correlationId, bool isBackOfficeTrigger = false)
         {
-            provider.ProcessCancellation(message, correlationId, false).GetAwaiter().GetResult();
+            provider.ProcessCancellation(betId, correlationId, isBackOfficeTrigger);
         }
 
-        public void ProcessBackofficeCancellation(OnBetBackofficeCancellation message, IBetProvider provider, string correlationId)
+        public void ProcessBetSettlement(OnBetSettlement message, IBetProvider provider, string correlationId)
         {
-            provider.ProcessCancellation(new OnBetTimeout
-            {
-                BetId = message.BetId,
-            }, correlationId, true).GetAwaiter().GetResult();
+            provider.ProcessSettlemet(message, correlationId);
         }
     }
 }

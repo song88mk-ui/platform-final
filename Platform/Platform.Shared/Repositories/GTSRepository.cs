@@ -1,17 +1,18 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Platform.Shared.Enums;
-using Platform.Shared.Models;
 using Platform.Shared.Extensions;
+using Platform.Shared.MessageModels;
+using Platform.Shared.Models;
+using Platform.Shared.Models.Provider.GTS;
+using Platform.Shared.Utility;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Platform.Shared.Utility;
 using System.Text.Json.Serialization;
-using Platform.Shared.MessageModels;
-using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace Platform.Shared.Repositories
 {
@@ -220,7 +221,6 @@ namespace Platform.Shared.Repositories
 
         public async Task<BaseResponseDTO<ProviderAssessmentResponseDTO>> Assessment(string authToken, OnBetPlacement request)
         {
-
             if (Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]) == false)
             {
                 return new BaseResponseDTO<ProviderAssessmentResponseDTO>
@@ -326,10 +326,9 @@ namespace Platform.Shared.Repositories
             }
         }
 
-        //TODO: Create SendBetPlacement and SendBetSettlement
-        public async Task<BaseResponseDTO<string>> SendBet(string authToken, OnBetPlacement request)
-        {
 
+        public async Task<BaseResponseDTO<string>> SendBet(string authToken, SendBet request)
+        {
             _httpClient.DefaultRequestHeaders.Clear();
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
 
@@ -348,16 +347,16 @@ namespace Platform.Shared.Repositories
                     playerId = request.Bet.UserId,
                     totalStake = totalStake,
                     currencyCode = request.Bet.CurrencyCode,
-                    status = "Open", //TODO: get the status value 
+                    status = GetGtsBetStatus(request.Bet.BetStatusId),
                     //	Represents a bet with any legs that are currently Open
                     legs = request.BetSelections.Select(s => new
                     {
-                        status = "Open", //TODO: get the status value
+                        status = GetGtsBetStatus(s.BetSelectionStatusId), //TODO: get the status value
                         gameState = "prematch", //TODO: get the gameState value,
-                        price = s.BetSelection.Odds,
+                        price = s.Odds,
                         betGeniusContent = new
                         {
-                            selectionId = s.BetSelection.SelectionSpecifier.Split(':').LastOrDefault()
+                            selectionId = s.SelectionSpecifier.Split(':').LastOrDefault()
                         }
                     }).ToList(),
                     priceChangeRule = "AcceptNone"
@@ -415,8 +414,7 @@ namespace Platform.Shared.Repositories
             }
         }
 
-
-        public async Task<BaseResponseDTO<Task>> Cancellation(string authToken, OnBetTimeout request)
+        public async Task<BaseResponseDTO<Task>> Cancellation(string authToken, Guid betId)
         {
 
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
@@ -427,7 +425,7 @@ namespace Platform.Shared.Repositories
 
                 var payload = new
                 {
-                    betId = request.BetId.ToString().ToUpper()
+                    betId = betId.ToString().ToUpper()
                 };
 
                 var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/bet-reservation-cancellations", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
@@ -464,6 +462,13 @@ namespace Platform.Shared.Repositories
                 };
             }
         }
+
+        private string GetGtsBetStatus(int statusId) => statusId switch
+        {
+            var s when s <= (int)BetStatus.Running => Enums.Provider.GTS.BetStatus.Open.ToString(),
+            var s when s == (int)BetStatus.Void || s == (int)BetStatus.Cancelled || s == (int)BetStatus.Rejected => Enums.Provider.GTS.BetStatus.Cancelled.ToString(),
+            _ => Enums.Provider.GTS.BetStatus.Settled.ToString()
+        };
     }
 
     public class GTSMaxStakeResponseDTO

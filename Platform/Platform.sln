@@ -11,11 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Operator.API", "Pl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Betting.API", "Platform.Betting.API\Platform.Betting.API.csproj", "{4351BA3C-7C1F-42E6-ADDD-6B484CBD3781}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Provider.Service", "Platform.Cancellation.Service\Platform.Provider.Service.csproj", "{55A314C8-A2B5-49F9-9D8C-6D89098C741F}"
-	ProjectSection(ProjectDependencies) = postProject
-		{A306A71B-2334-4437-A685-B09A2E828C9F} = {A306A71B-2334-4437-A685-B09A2E828C9F}
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Settlement.Service", "Platform.Settlement.Service\Platform.Settlement.Service.csproj", "{4CAC3C09-65E3-4F4F-8F49-6EF886C2F6EF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.Client.API", "Platform.Client.API\Platform.Client.API.csproj", "{7B22A870-0C2A-4EA6-8039-1B8837FD9F82}"
@@ -82,6 +77,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.RedCatBetting.API"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Platform.RedCatOperator.API", "Platform.RedCatOperator.API\Platform.RedCatOperator.API.csproj", "{27AEAEB4-4D42-420A-A2F7-A6DF7BA60E5C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Provider.Service", "Platform.Provider.Service\Platform.Provider.Service.csproj", "{DEAAC788-0D0C-BC8E-0534-9E59F6665D95}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -104,10 +101,6 @@ Global
 		{4351BA3C-7C1F-42E6-ADDD-6B484CBD3781}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4351BA3C-7C1F-42E6-ADDD-6B484CBD3781}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4351BA3C-7C1F-42E6-ADDD-6B484CBD3781}.Release|Any CPU.Build.0 = Release|Any CPU
-		{55A314C8-A2B5-49F9-9D8C-6D89098C741F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{55A314C8-A2B5-49F9-9D8C-6D89098C741F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{55A314C8-A2B5-49F9-9D8C-6D89098C741F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{55A314C8-A2B5-49F9-9D8C-6D89098C741F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4CAC3C09-65E3-4F4F-8F49-6EF886C2F6EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4CAC3C09-65E3-4F4F-8F49-6EF886C2F6EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4CAC3C09-65E3-4F4F-8F49-6EF886C2F6EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -240,6 +233,10 @@ Global
 		{27AEAEB4-4D42-420A-A2F7-A6DF7BA60E5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27AEAEB4-4D42-420A-A2F7-A6DF7BA60E5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27AEAEB4-4D42-420A-A2F7-A6DF7BA60E5C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DEAAC788-0D0C-BC8E-0534-9E59F6665D95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DEAAC788-0D0C-BC8E-0534-9E59F6665D95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DEAAC788-0D0C-BC8E-0534-9E59F6665D95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DEAAC788-0D0C-BC8E-0534-9E59F6665D95}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

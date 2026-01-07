@@ -73,7 +73,7 @@ namespace Platform.Shared.Repositories
                     legs = request.Selections.Select(s => new
                     {
                         selectionId = s.SelectionTemplateId, //TODO: double check the value
-                        gameState = "prematch", //TODO: get the gameState value,
+                        gameState = GetGameState((int)s.FixtureId),
                         price = s.DecimalOdds
                     }).ToList()
                 };
@@ -168,7 +168,7 @@ namespace Platform.Shared.Repositories
                     legs = request.Selections.Select(s => new
                     {
                         selectionId = s.SelectionSpecifier,
-                        gameState = "prematch", //TODO: get the gameState value,
+                        gameState = GetGameState((int)s.FixtureId),
                         price = s.DecimalOdds
                     }).ToList(),
                     priceChangeRule = "AcceptNone"
@@ -267,7 +267,7 @@ namespace Platform.Shared.Repositories
                     legs = request.BetSelections.Select(s => new
                     {
                         selectionId = s.BetSelection.SelectionSpecifier.Split(':').LastOrDefault(),
-                        gameState = "prematch", //TODO: get the gameState value,
+                        gameState = GetGameState(s.BetSelection.FixtureStatusId),
                         price = s.BetSelection.Odds
                     }).ToList(),
                     priceChangeRule = "AcceptNone"
@@ -351,8 +351,8 @@ namespace Platform.Shared.Repositories
                     //	Represents a bet with any legs that are currently Open
                     legs = request.BetSelections.Select(s => new
                     {
-                        status = GetGtsBetStatus(s.BetSelectionStatusId), //TODO: get the status value
-                        gameState = "prematch", //TODO: get the gameState value,
+                        status = GetGtsBetStatus(s.BetSelectionStatusId),
+                        gameState = GetGameState((int)s.FixtureId),
                         price = s.Odds,
                         betGeniusContent = new
                         {
@@ -468,6 +468,12 @@ namespace Platform.Shared.Repositories
             var s when s <= (int)BetStatus.Running => Enums.Provider.GTS.BetStatus.Open.ToString(),
             var s when s == (int)BetStatus.Void || s == (int)BetStatus.Cancelled || s == (int)BetStatus.Rejected => Enums.Provider.GTS.BetStatus.Cancelled.ToString(),
             _ => Enums.Provider.GTS.BetStatus.Settled.ToString()
+        };
+
+        private string GetGameState(int fixtureStatusId) => fixtureStatusId switch
+        {
+            var s when s == 1 => "InPlay",
+            _ => "PreMatch"
         };
     }
 

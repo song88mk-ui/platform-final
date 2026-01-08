@@ -224,6 +224,8 @@ namespace Platform.Placement.Servicev2.Repository
             {
                 try
                 {
+                    _logger.LogError($"ProcesssBetPlacement: {providerResult.Reason}");
+
                     using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
                     {
                         var optionsBuilder = new DbContextOptionsBuilder<BettingContext>().UseSqlServer(_configuration["ConnectionStrings:Betting"]);
@@ -437,6 +439,8 @@ namespace Platform.Placement.Servicev2.Repository
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError($"ProcesssBetPlacement Eror: {ex.Message}");
+
                     messageBroker.Publish(new OnBetStatus
                     {
                         ClientId = message.Bet.ClientId.ToString().ToUpper(),

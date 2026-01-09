@@ -402,7 +402,7 @@ namespace Platform.Placement.Servicev2.Repository
                                 }, "OnBetStatus", $"r.bet.betstatus.{payload.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
                                 // check if error code is due to Market/SOV expired in MTS. (-423)
-                                var reason = providerResult.Reason.Split(" - Market/SOV expired in MTS,");
+                                var reason = providerResult.Reason.Split(" - Market/SOV expired in GTS,");
 
                                 if (reason.First() == "-423")
                                 {

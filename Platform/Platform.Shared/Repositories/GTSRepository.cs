@@ -279,6 +279,9 @@ namespace Platform.Shared.Repositories
                 {
                     var initialResult = JsonSerializer.Deserialize<GTSAssessmentResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
+                    if(initialResult.IsBetAllowed == false)
+                        _logger.LogError($"Assessment Result: {JsonSerializer.Serialize(initialResult)}");
+
                     return new BaseResponseDTO<ProviderAssessmentResponseDTO>
                     {
                         StatusCode = StatusCode.Success,
@@ -305,7 +308,8 @@ namespace Platform.Shared.Repositories
                         Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({responseError})",
                         Result = new ProviderAssessmentResponseDTO
                         {
-                            Stake = 0
+                            Stake = 0,
+                            Message = "1026 - Failed sending Bet to GTS"
                         }
                     };
                 }
@@ -320,7 +324,8 @@ namespace Platform.Shared.Repositories
                     Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
                     Result = new ProviderAssessmentResponseDTO
                     {
-                        Stake = 0
+                        Stake = 0,
+                        Message = "1026 - Failed sending Bet to GTS"
                     }
                 };
             }

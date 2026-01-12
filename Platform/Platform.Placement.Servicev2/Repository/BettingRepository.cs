@@ -28,7 +28,7 @@ namespace Platform.Placement.Servicev2.Repository
         }
 
         public void ProcesssBetPlacement(OnBetPlacement message, IBetProvider provider, IMessageBroker messageBroker, string correlationId, int reprocessAttempt = 0)
-        {//
+        {
             var payload = new OnBetPlacement();
             payload.IsBoosted = message.IsBoosted;
             payload.IsBetBuilder = message.IsBetBuilder;
@@ -42,7 +42,7 @@ namespace Platform.Placement.Servicev2.Repository
             if (providerResult.Acceptance == BetAcceptance.Accepted)
             {
                 var isReprocess = false;
-                
+
                 try
                 {
                     using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))

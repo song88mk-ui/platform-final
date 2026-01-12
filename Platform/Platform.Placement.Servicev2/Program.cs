@@ -11,6 +11,7 @@ using Platform.Placement.Servicev2.Telemetry;
 using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using System;
+using Serilog;
 
 namespace Platform.Placement.Servicev2
 {
@@ -23,6 +24,10 @@ namespace Platform.Placement.Servicev2
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .UseSerilog((ctx, _, log) =>
+                {
+                    log.ReadFrom.Configuration(ctx.Configuration);
+                })
                 .ConfigureServices((hostContext, services) =>
                 {
                     var sp = services.BuildServiceProvider();

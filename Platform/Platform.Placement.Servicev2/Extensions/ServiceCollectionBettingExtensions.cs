@@ -12,10 +12,8 @@ namespace Platform.Placement.Servicev2
     {
         public static IServiceCollection AddBettingProviders(this IServiceCollection services)
         {
-            
             // Factory
             services.AddScoped<IBetProviderFactory, BetProviderFactory>();
-
 
             // GTS HTTP clients
             services.AddHttpClient<IGTSAuthRepository, GTSAuthRepository>();

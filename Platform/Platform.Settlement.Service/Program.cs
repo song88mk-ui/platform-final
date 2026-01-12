@@ -10,6 +10,7 @@ using Platform.Settlement.Service.Repository;
 using Platform.Settlement.Service.Telemetry;
 using Platform.Shared.Utility;
 using System;
+using Serilog;
 
 namespace Platform.Settlement.Service
 {
@@ -22,6 +23,10 @@ namespace Platform.Settlement.Service
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .UseSerilog((ctx, _, log) =>
+                {
+                    log.ReadFrom.Configuration(ctx.Configuration);
+                })
                 .ConfigureServices((hostContext, services) =>
                 {
                     var sp = services.BuildServiceProvider();

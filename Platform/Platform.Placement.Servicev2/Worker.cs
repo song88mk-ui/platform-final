@@ -258,6 +258,7 @@ namespace Platform.Placement.Servicev2
 
         public override Task StartAsync(CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Starting service");
             return base.StartAsync(cancellationToken);
         }
 
@@ -265,11 +266,12 @@ namespace Platform.Placement.Servicev2
         {
             try
             {
+                _logger.LogInformation("Stopping service");
                 _messageBroker.Dispose();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error stopping MTS/Placement Service");
+                _logger.LogError(ex, "Error stopping service");
             }
 
             return base.StopAsync(cancellationToken);
@@ -277,6 +279,8 @@ namespace Platform.Placement.Servicev2
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _logger.LogInformation("Initializing thread pool");
+
             _thread00 = new Thread(ThreadStart00);
             _thread01 = new Thread(ThreadStart01);
             _thread02 = new Thread(ThreadStart02);
@@ -386,6 +390,8 @@ namespace Platform.Placement.Servicev2
             _thread97 = new Thread(ThreadStart97);
             _thread98 = new Thread(ThreadStart98);
             _thread99 = new Thread(ThreadStart99);
+
+            _logger.LogInformation("Starting threads");
 
             _thread00.Start();
             _thread01.Start();
@@ -497,7 +503,10 @@ namespace Platform.Placement.Servicev2
             _thread98.Start();
             _thread99.Start();
 
+            _logger.LogInformation("Connecting to message broker");
             _messageBroker.ConnectWithManualAck();
+
+            _logger.LogInformation("connected, processing incoming messages");
             _messageBroker.MessageReceived += MessageReceivedEvent;
 
             return Task.CompletedTask;

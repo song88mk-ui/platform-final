@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Platform.Job.ForexEUR.Repository;
+using Serilog;
 
 namespace Platform.Job.ForexEUR
 {
@@ -14,10 +15,9 @@ namespace Platform.Job.ForexEUR
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureLogging(logging =>
+                .UseSerilog((ctx, _, log) =>
                 {
-                    logging.ClearProviders();
-                    logging.AddSimpleConsole(console => { console.SingleLine = true; });
+                    log.ReadFrom.Configuration(ctx.Configuration);
                 })
                 .ConfigureServices((hostContext, services) =>
                 {

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Platform.CashOutStake.Servicev2.Repository;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Utility;
+using Serilog;
 
 namespace Platform.CashOutStake.Servicev2
 {
@@ -16,6 +17,10 @@ namespace Platform.CashOutStake.Servicev2
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .UseSerilog((ctx, _, log) =>
+                {
+                    log.ReadFrom.Configuration(ctx.Configuration);
+                })
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddSingleton<IMemCache, MemCache>();

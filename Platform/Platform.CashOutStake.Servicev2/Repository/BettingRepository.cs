@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Extensions;
@@ -22,6 +23,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
         private readonly IServiceProvider _serviceProvider;
         private readonly IConfiguration _configuration;
         private readonly IMemCache _memCache;
+        private readonly ILogger<BettingRepository> _logger;
 
         public List<BetMemory> _bets = new List<BetMemory>();
         public List<Tuple<long, List<Guid>>> _fixtureBetReference = new List<Tuple<long, List<Guid>>>();
@@ -30,11 +32,12 @@ namespace Platform.CashOutStake.Servicev2.Repository
         private IMongoCollection<Market> marketCollection;
         private IMongoCollection<Selection> selectionCollection;
 
-        public BettingRepository(IServiceProvider serviceProvider, IConfiguration configuration, IMemCache memCache)
+        public BettingRepository(IServiceProvider serviceProvider, IConfiguration configuration, IMemCache memCache, ILogger<BettingRepository> logger)
         {
             _serviceProvider = serviceProvider;
             _configuration = configuration;
             _memCache = memCache;
+            _logger = logger;
 
             var client = new MongoClient(_configuration["ConnectionStrings:MongoDB-Sportsbook"]);
             _db = client.GetDatabase("Sportsbook");
@@ -203,9 +206,9 @@ namespace Platform.CashOutStake.Servicev2.Repository
             }
 
             if (_bets.Any(c => c.BetId == bet.BetId))
-                Console.WriteLine($"{DateTime.UtcNow} - Add Bet : {bet.BetId.ToString().ToUpper()} : True");
+                _logger.LogInformation("{action} - {betId} - {result}", "Add Bet", bet.BetId, true);
             else
-                Console.WriteLine($"{DateTime.UtcNow} - Add Bet : {bet.BetId.ToString().ToUpper()} : False");
+                _logger.LogInformation("{action} - {betId} - {result}", "Add Bet", bet.BetId, false);
         }
         public void RemoveBet(OnBetSettlement message)
         {
@@ -235,9 +238,9 @@ namespace Platform.CashOutStake.Servicev2.Repository
                 _bets = _bets.Where(c => c.BetId != message.Bet.BetId).ToList();
 
                 if (_bets.Any(c => c.BetId == message.Bet.BetId))
-                    Console.WriteLine($"{DateTime.UtcNow} - Remove Bet : {message.Bet.BetId.ToString().ToUpper()} : False");
+                    _logger.LogInformation("{action} - {betId} - {result}", "Remove Bet", message.Bet.BetId, false);
                 else
-                    Console.WriteLine($"{DateTime.UtcNow} - Remove Bet : {message.Bet.BetId.ToString().ToUpper()} : True");
+                    _logger.LogInformation("{action} - {betId} - {result}", "Remove Bet", message.Bet.BetId, true);
             }
         }
         public void ProcessOddsChange(OnExternalOddsChangeMessage message, IMessageBroker messageBroker)
@@ -299,7 +302,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
                 messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.cashoutchange.{bet.ClientCode.ToString().ToLower()}", Guid.NewGuid().ToString());
 
-                Console.WriteLine($"{DateTime.UtcNow} - ProcessPartialCashOut : {JsonSerializer.Serialize(cashoutHistory)}");
+                _logger.LogInformation("{action} - {@cashoutHistory}", "Process Partial CashOut", cashoutHistory);
             }
         }
         private void ProcessCashOut(Guid betId, OnExternalOddsChangeMessage message, IMessageBroker messageBroker)
@@ -316,7 +319,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
 
                 var payload = GetCashOut(bet, message);
 
-                Console.WriteLine($"{DateTime.UtcNow} - OddsChange : {JsonSerializer.Serialize(payload)}");
+                _logger.LogInformation("{action} - {@payload}", "OddsChange", payload);
 
                 messageBroker.Publish(payload, "OnCashOutChange", $"r.bet.cashoutchange.{bet.ClientCode.ToString().ToLower()}", Guid.NewGuid().ToString());
             }

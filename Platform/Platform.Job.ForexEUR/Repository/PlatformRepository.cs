@@ -27,7 +27,11 @@ namespace Platform.Job.ForexEUR.Repository
         public async Task ProcessForex()
         {
             _logger.LogDebug("attempting to make request to [openexchangerates.org]");
-            var response = await _httpClient.GetAsync("https://openexchangerates.org/api/latest.json?app_id=b2f778983d0d4b11a98e3cf2b4849c01&base=EUR&show_alternative=true");
+
+            var appId = _configuration.GetValue<string>("OpenExchangeRates:AppId");
+            var baseCurrency = _configuration.GetValue<string>("OpenExchangeRates:BaseCurrency", "EUR");
+
+            var response = await _httpClient.GetAsync($"https://openexchangerates.org/api/latest.json?app_id={appId}&base={baseCurrency}&show_alternative=true");
 
             if (response.IsSuccessStatusCode)
             {

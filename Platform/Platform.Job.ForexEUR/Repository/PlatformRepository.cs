@@ -33,93 +33,55 @@ namespace Platform.Job.ForexEUR.Repository
 
             var response = await _httpClient.GetAsync($"https://openexchangerates.org/api/latest.json?app_id={appId}&base={baseCurrency}&show_alternative=true");
 
-            if (response.IsSuccessStatusCode)
+            if (!response.IsSuccessStatusCode)
             {
-                _logger.LogDebug("success! parsing response");
-                var result = JsonSerializer.Deserialize<ExchangeRate>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                _logger.LogError("Failed to fetch rates: [{code}]", response.StatusCode);
+                return;
+            }
 
-                if (Convert.ToBoolean(_configuration["Features:SingleContext"]))
+            var result = JsonSerializer.Deserialize<ExchangeRate>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+            if (result.Rates.Count <= 0)
+            {
+                _logger.LogError("Failed to serialize Rates, count={count}", result.Rates.Count);
+                return;
+            }
+
+            _logger.LogInformation("Updating database [ForexEUR]");
+
+            var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]);
+
+            using (var context = new PlatformContext(optionsBuilder.Options))
+            {
+                foreach(var rate in result.Rates)
                 {
-                    _logger.LogInformation("Processing Forex updates from single dbContext()");
+                    _logger.LogDebug($"Updating [{rate.Key}]");
+                    var currency = context.ForexEUR.Find(rate.Key);
 
-                    if (result.Rates.Count > 0)
+                    if (currency == null)
                     {
-
-                        var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]);
-
-                        using (var context = new PlatformContext(optionsBuilder.Options))
+                        context.ForexEUR.Add(new Shared.Data.Platform.Entities.ForexEUR
                         {
-                            foreach(var rate in result.Rates)
-                            {
-                                _logger.LogDebug($"Updating [{rate.Key}]");
-                                var currency = context.ForexEUR.Find(rate.Key);
-
-                                if (currency == null)
-                                {
-                                    context.ForexEUR.Add(new Shared.Data.Platform.Entities.ForexEUR
-                                    {
-                                        CurrencyCode = rate.Key.ToUpper(),
-                                        ExchangeRate = rate.Value
-                                    });
-                                }
-                                else
-                                {
-                                    currency.ExchangeRate = rate.Value;
-                                    context.ForexEUR.Update(currency);
-                                }
-
-                            }
-
-                            try
-                            {
-                                context.SaveChanges();
-                                _logger.LogInformation($"update to ForexEUR table complete!");
-                            }
-                            catch (Exception e)
-                            {
-                                _logger.LogError(e, "Failed to save changes to the table");
-                            }
-                        }
-
+                            CurrencyCode = rate.Key.ToUpper(),
+                            ExchangeRate = rate.Value
+                        });
                     }
+                    else
+                    {
+                        currency.ExchangeRate = rate.Value;
+                        context.ForexEUR.Update(currency);
+                    }
+
                 }
-                else
+
+                try
                 {
-                    _logger.LogInformation("Processing Forex using original code");
-
-                    foreach (var rate in result.Rates)
-                    {
-                        try
-                        {
-                            var optionsBuilder = new DbContextOptionsBuilder<PlatformContext>().UseSqlServer(_configuration["ConnectionStrings:Platform"]);
-
-                            using (var context = new PlatformContext(optionsBuilder.Options))
-                            {
-                                var currency = context.ForexEUR.Find(rate.Key);
-
-                                if (currency == null)
-                                {
-                                    context.ForexEUR.Add(new Shared.Data.Platform.Entities.ForexEUR
-                                    {
-                                        CurrencyCode = rate.Key.ToUpper(),
-                                        ExchangeRate = rate.Value
-                                    });
-                                }
-                                else
-                                {
-                                    currency.ExchangeRate = rate.Value;
-                                    context.ForexEUR.Update(currency);
-                                }
-
-                                context.SaveChanges();
-                                _logger.LogInformation($"update to ForexEUR [{rate.Key}] table complete!");
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, $"error processing forex: {ex.StackTrace}");
-                        }
-                    }
+                    context.SaveChanges();
+                    _logger.LogInformation("Update to ForexEUR table complete!");
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Failed to save changes to the table");
                 }
             }
         }

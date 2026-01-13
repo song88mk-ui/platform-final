@@ -18,6 +18,7 @@ namespace Platform.BetStatus.Service.Utility
         private readonly IConfiguration _configuration;
 
         private string _hostName = string.Empty;
+        private int _hostPort = 5672;
         private string _userName = string.Empty;
         private string _password = string.Empty;
         private string _virtualHost = string.Empty;
@@ -31,6 +32,7 @@ namespace Platform.BetStatus.Service.Utility
         private IModel _externalModel;
 
         private string _externalHostName = string.Empty;
+        private int _externalHostPort = 5672;
         private string _externalUserName = string.Empty;
         private string _externalPassword = string.Empty;
         private string _externalVirtualHost = string.Empty;
@@ -47,6 +49,7 @@ namespace Platform.BetStatus.Service.Utility
         public void Connect()
         {
             _hostName = _configuration["MessageBroker:Host"];
+            _hostPort = string.IsNullOrEmpty(_configuration["MessageBroker:Port"]) ? 5672 : Convert.ToInt32(_configuration["MessageBroker:Port"]);
             _userName = _configuration["MessageBroker:Username"];
             _password = _configuration["MessageBroker:Password"];
             _virtualHost = _configuration["MessageBroker:VirtualHost"];
@@ -61,11 +64,12 @@ namespace Platform.BetStatus.Service.Utility
                     _connectionFactory = new ConnectionFactory
                     {
                         HostName = _hostName,
-                        Port = 5672,
+                        Port = _hostPort,
                         UserName = _userName,
                         Password = _password,
                         VirtualHost = _virtualHost,
                         RequestedHeartbeat = 60,
+                        Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
                         NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
                     };
 
@@ -94,6 +98,7 @@ namespace Platform.BetStatus.Service.Utility
         public void ExternalConnect()
         {
             _externalHostName = _configuration["ExternalMessageBroker:Host"];
+            _externalHostPort = string.IsNullOrEmpty(_configuration["ExternalMessageBroker:Port"]) ? 5672 : Convert.ToInt32(_configuration["ExternalMessageBroker:Port"]);
             _externalUserName = _configuration["ExternalMessageBroker:Username"];
             _externalPassword = _configuration["ExternalMessageBroker:Password"];
             _externalVirtualHost = _configuration["ExternalMessageBroker:VirtualHost"];
@@ -108,11 +113,12 @@ namespace Platform.BetStatus.Service.Utility
                     _externalConnectionFactory = new ConnectionFactory
                     {
                         HostName = _externalHostName,
-                        Port = 5672,
+                        Port = _externalHostPort,
                         UserName = _externalUserName,
                         Password = _externalPassword,
                         VirtualHost = _externalVirtualHost,
                         RequestedHeartbeat = 60,
+                        Ssl = new SslOption { Enabled = _externalHostPort == 5671 ? true : false, ServerName = _externalHostName },
                         NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
                     };
 

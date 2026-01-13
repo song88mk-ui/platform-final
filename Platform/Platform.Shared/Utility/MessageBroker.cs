@@ -22,6 +22,7 @@ namespace Platform.Shared.Utility
         private readonly IConfiguration _configuration;
 
         private string _hostName = string.Empty;
+        private int _hostPort = 5672;
         private string _userName = string.Empty;
         private string _password = string.Empty;
         private string _virtualHost = string.Empty;
@@ -38,6 +39,7 @@ namespace Platform.Shared.Utility
         private IModel _externalModel;
 
         private string _externalHostName = string.Empty;
+        private int _externalHostPort = 5672;
         private string _externalUserName = string.Empty;
         private string _externalPassword = string.Empty;
         private string _externalVirtualHost = string.Empty;
@@ -68,6 +70,7 @@ namespace Platform.Shared.Utility
         {
             _isExclusive = string.IsNullOrEmpty(_configuration["MessageBroker:IsExclusive"]) ? false : Convert.ToBoolean(_configuration["MessageBroker:IsExclusive"]);
             _hostName = _configuration["MessageBroker:Host"];
+            _hostPort = string.IsNullOrEmpty(_configuration["MessageBroker:Port"]) ? 5672 : Convert.ToInt32(_configuration["MessageBroker:Port"]);
             _userName = _configuration["MessageBroker:Username"];
             _password = _configuration["MessageBroker:Password"];
             _virtualHost = _configuration["MessageBroker:VirtualHost"];
@@ -83,11 +86,12 @@ namespace Platform.Shared.Utility
                     _connectionFactory = new ConnectionFactory
                     {
                         HostName = _hostName,
-                        Port = 5672,
+                        Port = _hostPort,
                         UserName = _userName,
                         Password = _password,
                         VirtualHost = _virtualHost,
                         RequestedHeartbeat = 60,
+                        Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
                         NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
                     };
 
@@ -120,6 +124,7 @@ namespace Platform.Shared.Utility
         public void ExternalConnect()
         {
             _externalHostName = _configuration["ExternalMessageBroker:Host"];
+            _externalHostPort = string.IsNullOrEmpty(_configuration["ExternalMessageBroker:Port"]) ? 5672 : Convert.ToInt32(_configuration["ExternalMessageBroker:Port"]);
             _externalUserName = _configuration["ExternalMessageBroker:Username"];
             _externalPassword = _configuration["ExternalMessageBroker:Password"];
             _externalVirtualHost = _configuration["ExternalMessageBroker:VirtualHost"];
@@ -134,11 +139,12 @@ namespace Platform.Shared.Utility
                     _externalConnectionFactory = new ConnectionFactory
                     {
                         HostName = _externalHostName,
-                        Port = 5672,
+                        Port = _externalHostPort,
                         UserName = _externalUserName,
                         Password = _externalPassword,
                         VirtualHost = _externalVirtualHost,
                         RequestedHeartbeat = 60,
+                        Ssl = new SslOption { Enabled = _externalHostPort == 5671 ? true : false, ServerName = _externalHostName },
                         NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
                     };
 
@@ -152,6 +158,7 @@ namespace Platform.Shared.Utility
         public void ConnectWithManualAck()
         {
             _hostName = _configuration["MessageBroker:Host"];
+            _hostPort = string.IsNullOrEmpty(_configuration["MessageBroker:Port"]) ? 5672 : Convert.ToInt32(_configuration["MessageBroker:Port"]);
             _userName = _configuration["MessageBroker:Username"];
             _password = _configuration["MessageBroker:Password"];
             _virtualHost = _configuration["MessageBroker:VirtualHost"];
@@ -168,11 +175,12 @@ namespace Platform.Shared.Utility
                     _connectionFactory = new ConnectionFactory
                     {
                         HostName = _hostName,
-                        Port = 5672,
+                        Port = _hostPort,
                         UserName = _userName,
                         Password = _password,
                         VirtualHost = _virtualHost,
                         RequestedHeartbeat = 60,
+                        Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
                         NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
                     };
 
@@ -210,6 +218,7 @@ namespace Platform.Shared.Utility
         public void ConnectWithAutoAck()
         {
             _hostName = _configuration["MessageBroker:Host"];
+            _hostPort = string.IsNullOrEmpty(_configuration["MessageBroker:Port"]) ? 5672 : Convert.ToInt32(_configuration["MessageBroker:Port"]);
             _userName = _configuration["MessageBroker:Username"];
             _password = _configuration["MessageBroker:Password"];
             _virtualHost = _configuration["MessageBroker:VirtualHost"];
@@ -225,11 +234,12 @@ namespace Platform.Shared.Utility
                     _connectionFactory = new ConnectionFactory
                     {
                         HostName = _hostName,
-                        Port = 5672,
+                        Port = _hostPort,
                         UserName = _userName,
                         Password = _password,
                         VirtualHost = _virtualHost,
                         RequestedHeartbeat = 60,
+                        Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
                         NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
                     };
 

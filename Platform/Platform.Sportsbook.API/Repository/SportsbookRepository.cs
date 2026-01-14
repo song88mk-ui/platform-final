@@ -60,7 +60,7 @@ namespace Platform.Sportsbook.API.Repository
         {
             _configuration = configuration;
 
-            _africaClientCodes = _configuration["ConnectionStrings:MongoDB-Sportsbook"].Split(',').ToList();
+            _africaClientCodes = _configuration["Custom:AfricaClientCodes"].Split(',').ToList();
             _countryWhiteList = _configuration["Custom:CountryWhiteList"].Split(',').ToList();
             _asianClientCodes = _configuration["Custom:AsianClientCodes"].Split(',').ToList();
 
@@ -69,36 +69,18 @@ namespace Platform.Sportsbook.API.Repository
                 var client = new MongoClient(_configuration["ConnectionStrings:MongoDB-Sportsbook"]);
                 _db = client.GetDatabase("Sportsbook");
 
-                if (bool.Parse(_configuration["Custom:IsNearestReplica"]))
-                {
-                    fixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
-                    marketCollection = _db.GetCollection<Market>("Market").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
-                    marketMappingCollection = _db.GetCollection<MarketMapping>("MarketMapping").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
-                    selectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
-                    bettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
-                    maintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
+                fixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+                marketCollection = _db.GetCollection<Market>("Market").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+                marketMappingCollection = _db.GetCollection<MarketMapping>("MarketMapping").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+                selectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+                bettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+                maintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
 
-                    primaryFixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
-                    primaryMarketCollection = _db.GetCollection<Market>("Market").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
-                    primarySelectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
-                    primaryBettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
-                    primaryMaintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(new ReadPreference(ReadPreferenceMode.Nearest));
-                }
-                else
-                {
-                    fixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
-                    marketCollection = _db.GetCollection<Market>("Market").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
-                    marketMappingCollection = _db.GetCollection<MarketMapping>("MarketMapping").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
-                    selectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
-                    bettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
-                    maintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(new ReadPreference(ReadPreferenceMode.Secondary));
-
-                    primaryFixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                    primaryMarketCollection = _db.GetCollection<Market>("Market").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                    primarySelectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                    primaryBettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                    primaryMaintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                }
+                primaryFixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+                primaryMarketCollection = _db.GetCollection<Market>("Market").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+                primarySelectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+                primaryBettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+                primaryMaintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
             }
 
             _sportsbookContext = sportsbookContext;
@@ -8101,7 +8083,7 @@ namespace Platform.Sportsbook.API.Repository
                 end = end.AddMinutes(-minuteUTCOffset);
             }
 
-            return Tuple.Create(start, end); 
+            return Tuple.Create(start, end);
         }
 
 
@@ -11357,7 +11339,7 @@ namespace Platform.Sportsbook.API.Repository
             if (clientCode == "BGC") //No Margin for Bet Genius Clients
                 return false;
 
-            return false; //disable Margin since we are now using bet genius 
+            return false; //disable Margin since we are now using bet genius
         }
 
         private bool IsLiveStream(string livestreamId, string geoAllowed, string ipCountryCode)
@@ -12209,7 +12191,7 @@ namespace Platform.Sportsbook.API.Repository
 
         private void UpdateMarketTemplateGroup(SportMarketTemplateGroup marketTemplateGroups, int fixtureStatusId, List<MarketDTO> finalMarkets)
         {
-            if (fixtureStatusId == (int)FixtureStatus.Prematch 
+            if (fixtureStatusId == (int)FixtureStatus.Prematch
                 && marketTemplateGroups.Prematch.Count == 1
                 && marketTemplateGroups.Prematch.FirstOrDefault().MarketTemplateGroupName.ToLower() == _ALLMARKETS.ToLower()
                 && !marketTemplateGroups.Prematch.FirstOrDefault().MarketTemplateIds.Any())

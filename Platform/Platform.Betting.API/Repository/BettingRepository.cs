@@ -438,7 +438,10 @@ namespace Platform.Betting.API.Repository
                         BetTypeId = (int)betType,
                         BetTypeName = betType.ToString(),
                         OddsRef = totalOddsRef,
-                        IsAgent = request.IsAgent
+                        IsAgent = request.IsAgent,
+                        BonusId = request.BonusId,
+                        UserAgent = request.UserAgent,
+                        ClientType = request.IsOGClient ? ClientType.OG.ToString() : ClientType.REG.ToString()
                     }).Entity;
 
                     betData = betEntity;
@@ -546,7 +549,7 @@ namespace Platform.Betting.API.Repository
                         betSelectionData.Add(new BetSelectionMessageExtenstion()
                         {
                             BetSelection = betSelectionEntity,
-                            MarketSelectionCoumt = selection.MarketSelectionCount
+                            MarketSelectionCount = selection.MarketSelectionCount
                         });
 
                         var betSelectionId = betSelectionEntity.BetSelectionId;
@@ -1179,7 +1182,7 @@ namespace Platform.Betting.API.Repository
                         betSelectionData.Add(new BetSelectionMessageExtenstion()
                         {
                             BetSelection = betSelectionEntity,
-                            MarketSelectionCoumt = selection.MarketSelectionCount
+                            MarketSelectionCount = selection.MarketSelectionCount
                         });
 
                         var betSelectionId = betSelectionEntity.BetSelectionId;
@@ -1850,7 +1853,7 @@ namespace Platform.Betting.API.Repository
         //                betSelectionData.Add(new BetSelectionMessageExtenstion()
         //                {
         //                    BetSelection = betSelectionEntity,
-        //                    MarketSelectionCoumt = selection.MarketSelectionCount
+        //                    MarketSelectionCount = selection.MarketSelectionCount
         //                });
 
         //                var betSelectionId = betSelectionEntity.BetSelectionId;

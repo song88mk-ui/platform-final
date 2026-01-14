@@ -55,7 +55,17 @@ namespace Platform.Placement.Servicev2.Repository
 
                             if (bet != null && bet.BetStatusId == (int)BetStatus.Waiting)
                             {
-                                bet.Reason = $"{providerResult.Reason} (MTS)";
+                                if (message.DelayedBetAcceptance != null)
+                                {
+                                    payload.IsBoosted = bet.BetTypeId == (int)BetType.PriceBoost;
+                                    payload.IsBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder;
+                                    payload.BonusId = bet.BonusId;
+                                    payload.Odds = bet.Odds;
+                                    payload.UserAgent = bet.UserAgent;
+                                    payload.IsOGClient = bet.ClientType == ClientType.OG.ToString();
+                                }
+
+                                bet.Reason = $"{providerResult.Reason} ({provider.ChannelType.ToString()})";
 
                                 var betEntity = context.Bet.Update(bet).Entity;
                                 payload.Bet = betEntity;
@@ -118,11 +128,18 @@ namespace Platform.Placement.Servicev2.Repository
                                     betSelection.BetSelectionStatusName = betEntity.BetStatusName;
 
                                     var betSelectionEntity = context.BetSelection.Update(betSelection).Entity;
-                                    payload.BetSelections.Add(new BetSelectionMessageExtenstion()
+
+                                    var betSelectionExtension = new BetSelectionMessageExtenstion()
                                     {
                                         BetSelection = betSelectionEntity,
-                                        MarketSelectionCoumt = message.BetSelections.FirstOrDefault(c => c.BetSelection.BetId == betSelection.BetId && c.BetSelection.BetSelectionId == betSelection.BetSelectionId).MarketSelectionCoumt
-                                    });
+                                    };
+
+                                    if(message.DelayedBetAcceptance == null)
+                                    {
+                                        betSelectionExtension.MarketSelectionCount = message.BetSelections.FirstOrDefault(c => c.BetSelection.BetId == betSelection.BetId && c.BetSelection.BetSelectionId == betSelection.BetSelectionId).MarketSelectionCount;
+                                    }
+
+                                    payload.BetSelections.Add(betSelectionExtension);
 
                                     context.BetSelectionAudit.Add(new BetSelectionAudit
                                     {
@@ -220,7 +237,7 @@ namespace Platform.Placement.Servicev2.Repository
                     RejectBetOnError(message, messageBroker, correlationId, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10001 - {ex.Message}"), 2);
                 }
             }
-            else
+            else if(providerResult.Acceptance == BetAcceptance.Rejected)
             {
                 try
                 {
@@ -307,12 +324,19 @@ namespace Platform.Placement.Servicev2.Repository
                                     betSelection.IsSettled = true;
 
                                     var betSelectionEntity = context.BetSelection.Update(betSelection).Entity;
-                                    //payload.BetSelections.Add(betSelectionEntity);
-                                    payload.BetSelections.Add(new BetSelectionMessageExtenstion()
+                                    
+                                    var betSelectionExtension = new BetSelectionMessageExtenstion()
                                     {
                                         BetSelection = betSelectionEntity,
-                                        MarketSelectionCoumt = message.BetSelections.FirstOrDefault(c => c.BetSelection.BetId == betSelection.BetId && c.BetSelection.BetSelectionId == betSelection.BetSelectionId).MarketSelectionCoumt
-                                    });
+                                    };
+
+                                    if (message.DelayedBetAcceptance == null)
+                                    {
+                                        betSelectionExtension.MarketSelectionCount = message.BetSelections.FirstOrDefault(c => c.BetSelection.BetId == betSelection.BetId && c.BetSelection.BetSelectionId == betSelection.BetSelectionId).MarketSelectionCount;
+                                    }
+
+                                    payload.BetSelections.Add(betSelectionExtension);
+
 
                                     context.BetSelectionAudit.Add(new BetSelectionAudit
                                     {
@@ -361,7 +385,8 @@ namespace Platform.Placement.Servicev2.Repository
                                     });
                                 }
 
-                                if (message.IsBoosted == true)
+                                var isBoosted = message.DelayedBetAcceptance == null ? message.IsBoosted : bet.BetTypeId == (int)BetType.PriceBoost;
+                                if (isBoosted)
                                 {
                                     var betBoosted = context.BetPriceBoost.Where(c => c.BetId == bet.BetId).FirstOrDefault();
                                     betBoosted.BetStatusId = bet.BetStatusId;
@@ -383,15 +408,6 @@ namespace Platform.Placement.Servicev2.Repository
 
                                 //publish to reports
                                 messageBroker.Publish(payload, "OnBetRejection", "r.bet.reports", correlationId);
-
-                                //TODO: delete when TW is no longer the frontend
-                                messageBroker.Publish(new OnBetStatus
-                                {
-                                    ClientId = payload.Bet.ClientId.ToString().ToUpper(),
-                                    UserId = payload.Bet.UserId,
-                                    BetId = payload.Bet.BetId.ToString().ToUpper(),
-                                    BetStatus = (BetStatus)payload.Bet.BetStatusId
-                                }, "OnBetStatus", "r.bet.betstatus", correlationId);
 
                                 messageBroker.Publish(new OnBetStatus
                                 {
@@ -550,7 +566,7 @@ namespace Platform.Placement.Servicev2.Repository
                                 rejectionPayload.BetSelections.Add(new BetSelectionMessageExtenstion()
                                 {
                                     BetSelection = betSelectionEntity,
-                                    MarketSelectionCoumt = message.BetSelections.FirstOrDefault(c => c.BetSelection.BetId == betSelection.BetId && c.BetSelection.BetSelectionId == betSelection.BetSelectionId).MarketSelectionCoumt
+                                    MarketSelectionCount = message.BetSelections.FirstOrDefault(c => c.BetSelection.BetId == betSelection.BetId && c.BetSelection.BetSelectionId == betSelection.BetSelectionId).MarketSelectionCount
                                 });
 
                                 context.BetSelectionAudit.Add(new BetSelectionAudit

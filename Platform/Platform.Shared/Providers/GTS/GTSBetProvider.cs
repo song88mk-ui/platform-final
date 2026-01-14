@@ -11,6 +11,7 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Platform.Shared.Models.Provider.GTS;
+using static App.Metrics.Health.HealthCheck;
 
 namespace Platform.Shared.Providers.GTS
 {
@@ -44,12 +45,13 @@ namespace Platform.Shared.Providers.GTS
                     Reason = "1024 - Accepted (GTS disabled)"
                 };
 
-            if (bet.BetSelections.Any(c => c.BetSelection.SportId.IsVirtualSportId()))
+            if (bet.DelayedBetAcceptance == null && bet.BetSelections.Any(c => c.BetSelection.SportId.IsVirtualSportId()))
                 return new BetProviderResult
                 {
                     Acceptance = BetAcceptance.Accepted,
                     Reason = "1024 - Accepted (GTS disabled for VS)"
                 };
+
 
             var token = await _auth.GetGTSAuthorizationToken();
             if (token.StatusCode != StatusCode.Success)
@@ -59,33 +61,50 @@ namespace Platform.Shared.Providers.GTS
                     Reason = "1025 - GTS Authentication Failed"
                 };
 
-            var result = await _gtsRepo.Assessment(token.Result.Token, bet);
+            var providerResult = new ProviderAssessmentResponseDTO {
+                IsBetAllowed = false
+            };
 
-            if (result.Result.IsBetAllowed == false)
-                return new BetProviderResult
-                {
-                    Acceptance = BetAcceptance.Rejected,
-                    Reason = result.Result.Message
-                };
-
-            var sendBet = await _gtsRepo.SendBet(token.Result.Token, new SendBet()
+            if(bet.DelayedBetAcceptance == null)
             {
-                Bet = bet.Bet,
-                BetSelections = bet.BetSelections.Select(s => s.BetSelection).ToList()
-            });
+                var result = await _gtsRepo.Assessment(token.Result.Token, bet);
 
-            if (sendBet.StatusCode != StatusCode.Success)
-                return new BetProviderResult
+                providerResult = result.Result;
+
+                if (providerResult.IsBetAllowed == false)
+                    return new BetProviderResult
+                    {
+                        Acceptance = result.Result.IsPending ? BetAcceptance.Pending : BetAcceptance.Rejected,
+                        Reason = result.Result.Message
+                    };
+            }
+            else
+            {
+                providerResult.IsBetAllowed = bet.DelayedBetAcceptance == BetAcceptance.Accepted;
+            }
+
+            if(bet.DelayedBetAcceptance == BetAcceptance.Accepted)
+            {
+                var sendBet = await _gtsRepo.SendBet(token.Result.Token, new SendBet()
                 {
-                    Acceptance = BetAcceptance.Rejected,
-                    Reason = "1026 - Failed sending Bet to GTS"
-                };
+                    Bet = bet.Bet,
+                    BetSelections = bet.BetSelections.Select(s => s.BetSelection).ToList()
+                });
+
+                if (sendBet.StatusCode != StatusCode.Success)
+                    return new BetProviderResult
+                    {
+                        Acceptance = BetAcceptance.Rejected,
+                        Reason = "1026 - Failed sending Bet to GTS"
+                    };
+            }
 
             return new BetProviderResult
             {
-                Acceptance = result.Result.IsBetAllowed ? BetAcceptance.Accepted : BetAcceptance.Rejected,
-                Reason = result.Result.Message ?? string.Empty
+                Acceptance = providerResult.IsBetAllowed ? BetAcceptance.Accepted : BetAcceptance.Rejected,
+                Reason = providerResult.Message ?? string.Empty
             };
+
         }
 
         public async void ProcessCancellation(Guid betId, string correlationId, bool isBackOfficeTrigger = false)

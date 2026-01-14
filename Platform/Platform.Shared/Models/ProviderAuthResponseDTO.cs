@@ -15,5 +15,6 @@
         public bool IsBetAllowed { get; set; }
         public decimal Stake { get; set; }
         public string Message { get; set; }
+        public bool IsPending { get; set; }
     }
 }

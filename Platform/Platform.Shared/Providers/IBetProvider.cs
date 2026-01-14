@@ -39,7 +39,8 @@ namespace Platform.Shared.Providers
     public enum BetAcceptance
     {
         Accepted,
-        Rejected
+        Rejected,
+        Pending
     }
 
     public static class AcceptanceMapper

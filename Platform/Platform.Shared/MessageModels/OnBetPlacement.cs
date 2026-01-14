@@ -1,4 +1,5 @@
 ﻿using Platform.Shared.Data.Betting.Entities;
+using Platform.Shared.Providers;
 using System.Collections.Generic;
 
 namespace Platform.Shared.MessageModels
@@ -18,12 +19,13 @@ namespace Platform.Shared.MessageModels
         public bool IsOGClient { get; set; }
         public bool WillRecordTopMarket { get; set; }
         public int ChannelTypeId { get; set; }
+        public BetAcceptance? DelayedBetAcceptance { get; set; }
         public List<BetSelectionMessageExtenstion> BetSelections { get; set; }
     }
     public class BetSelectionMessageExtenstion
     {
         public BetSelection BetSelection { get; set; }
-        public int MarketSelectionCoumt { get;set; }
+        public int MarketSelectionCount { get;set; }
     }
     public class OnBetPlacementError
     {

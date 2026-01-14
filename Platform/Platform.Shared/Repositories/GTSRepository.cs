@@ -290,6 +290,7 @@ namespace Platform.Shared.Repositories
                         {
                             Stake = initialResult.MaxAllowedStake,
                             IsBetAllowed = initialResult.IsBetAllowed,
+                            IsPending = initialResult.BetAssessmentResult == "AssessmentDelayed",
                             Message = initialResult.IsBetAllowed == false ?
                                 initialResult.Legs?.FirstOrDefault(l => l.RejectReason != null).RejectReason.ReasonMessage :
                                 string.Empty

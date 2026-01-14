@@ -383,7 +383,7 @@ namespace Platform.Operator.Servicev2.Repository
                             payload.BetSelections.Add(new BetSelectionMessageExtenstion()
                             {
                                 BetSelection = betSelectionEntity,
-                                //MarketSelectionCoumt = message.BetSelections.FirstOrDefault(c => c.BetSelection.BetId == betSelection.BetId && c.BetSelection.BetSelectionId == betSelection.BetSelectionId).MarketSelectionCoumt
+                                //MarketSelectionCount = message.BetSelections.FirstOrDefault(c => c.BetSelection.BetId == betSelection.BetId && c.BetSelection.BetSelectionId == betSelection.BetSelectionId).MarketSelectionCount
                             });
 
                             context.BetSelectionAudit.Add(new BetSelectionAudit
@@ -751,7 +751,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                         AcceptBet(message.Bet.BetId, correlationId, messageBroker, result, message.IsBoosted, message.IsBetBuilder, message.UserAgent);
 
-                        foreach (var selection in message.BetSelections.Where(c => c.MarketSelectionCoumt <= 3))
+                        foreach (var selection in message.BetSelections.Where(c => c.MarketSelectionCount <= 3))
                         {
                             messageBroker.Publish(new OnClientTopMarketBetPlacement
                             {
@@ -769,7 +769,7 @@ namespace Platform.Operator.Servicev2.Repository
                                 MarketName = selection.BetSelection.MarketName,
                                 MarketStatusId = (int)MarketStatus.Active,
                                 MarketStatusName = MarketStatus.Active.ToString(),
-                                MarketSelectionCount = selection.MarketSelectionCoumt
+                                MarketSelectionCount = selection.MarketSelectionCount
                             }, "OnBetPlacement", $"r.client.topmarket.placement", correlationId);
                         }
                     }
@@ -1028,7 +1028,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                         AcceptBet(message.Bet.BetId, correlationId, messageBroker, operatorResponse, message.IsBoosted, message.IsBetBuilder, message.UserAgent);
 
-                        foreach (var selection in message.BetSelections.Where(c => c.MarketSelectionCoumt <= 3))
+                        foreach (var selection in message.BetSelections.Where(c => c.MarketSelectionCount <= 3))
                         {
                             messageBroker.Publish(new OnClientTopMarketBetPlacement
                             {
@@ -1046,7 +1046,7 @@ namespace Platform.Operator.Servicev2.Repository
                                 MarketName = selection.BetSelection.MarketName,
                                 MarketStatusId = (int)MarketStatus.Active,
                                 MarketStatusName = MarketStatus.Active.ToString(),
-                                MarketSelectionCount = selection.MarketSelectionCoumt
+                                MarketSelectionCount = selection.MarketSelectionCount
                             }, "OnBetPlacement", $"r.client.topmarket.placement", correlationId);
                         }
                     }

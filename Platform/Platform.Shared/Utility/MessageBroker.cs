@@ -32,7 +32,7 @@ namespace Platform.Shared.Utility
         private string _queue = string.Empty;
         private string _consumerName = string.Empty;
         private string _routingKey = string.Empty;
-        private string _prefetchCount = string.Empty;
+        private ushort _prefetchCount = 1000;
         private bool _isExclusive = false;
         private bool _isPriority = false;
 
@@ -81,10 +81,16 @@ namespace Platform.Shared.Utility
             _queue = _isExclusive == true ? $"{_configuration["MessageBroker:Queue"]}.{Environment.MachineName.ToLower()}" : _configuration["MessageBroker:Queue"];
             _consumerName = _configuration["MessageBroker:Consumer"];
             _routingKey = _configuration["MessageBroker:RoutingKey"];
-            _prefetchCount = string.IsNullOrEmpty(_configuration["MessageBroker:PrefetchCount"]) ? "1000" : _configuration["MessageBroker:PrefetchCount"];
+            _prefetchCount = _configuration.GetValue<ushort>("MessageBroker:PrefetchCount", 1000);
 
             _logger.LogInformation("Connecting to RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}",
                     _hostName, _hostPort, _hostPort == 5671 ? true : false);
+
+            var clientProperties = new Dictionary<string, object>
+            {
+                { "host_name", Environment.MachineName },
+                { "application_name", "Song88 Platform" }
+            };
 
             if (_connection == null)
             {
@@ -97,8 +103,9 @@ namespace Platform.Shared.Utility
                         Password = _password,
                         VirtualHost = _virtualHost,
                         RequestedHeartbeat = 60,
+                        NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
                         Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
-                        NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
+                        ClientProperties = clientProperties
                     };
 
                 _connection = _connectionFactory.CreateConnection();
@@ -118,7 +125,7 @@ namespace Platform.Shared.Utility
                     foreach (var routingKey in _routingKey.Split('|'))
                         _model.QueueBind(_queue, _exchange, routingKey.ToLower(), null);
 
-                    _model.BasicQos(0, Convert.ToUInt16(_prefetchCount), false);
+                    _model.BasicQos(0, _prefetchCount, false);
                     _consumer = new EventingBasicConsumer(_model);
                     _consumer.Received += HandleMessage;
 
@@ -142,6 +149,11 @@ namespace Platform.Shared.Utility
             _logger.LogInformation("Connecting to External RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}",
                     _externalHostName, _externalHostPort, _externalHostPort == 5671 ? true : false);
 
+            var clientProperties = new Dictionary<string, object>
+            {
+                { "application_name", "Song88 Platform" }
+            };
+
             if (_externalConnection == null)
             {
                 if (_externalConnectionFactory == null)
@@ -153,8 +165,9 @@ namespace Platform.Shared.Utility
                         Password = _externalPassword,
                         VirtualHost = _externalVirtualHost,
                         RequestedHeartbeat = 60,
+                        NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
                         Ssl = new SslOption { Enabled = _externalHostPort == 5671 ? true : false, ServerName = _externalHostName },
-                        NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
+                        ClientProperties = clientProperties
                     };
 
                 _externalConnection = _externalConnectionFactory.CreateConnection();
@@ -175,11 +188,17 @@ namespace Platform.Shared.Utility
             _queue = _configuration["MessageBroker:Queue"];
             _consumerName = _configuration["MessageBroker:Consumer"];
             _routingKey = _configuration["MessageBroker:RoutingKey"];
-            _prefetchCount = string.IsNullOrEmpty(_configuration["MessageBroker:PrefetchCount"]) ? "1000" : _configuration["MessageBroker:PrefetchCount"];
+            _prefetchCount = _configuration.GetValue<ushort>("MessageBroker:PrefetchCount", 1000);
             _isPriority = string.IsNullOrEmpty(_configuration["MessageBroker:IsPriority"]) ? false : Convert.ToBoolean(_configuration["MessageBroker:IsPriority"]);
 
             _logger.LogInformation("Connecting to RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}; ManualAck",
                     _hostName, _hostPort, _hostPort == 5671 ? true : false);
+
+            var clientProperties = new Dictionary<string, object>
+            {
+                { "host_name", Environment.MachineName },
+                { "application_name", "Song88 Platform" }
+            };
 
             if (_connection == null)
             {
@@ -192,8 +211,9 @@ namespace Platform.Shared.Utility
                         Password = _password,
                         VirtualHost = _virtualHost,
                         RequestedHeartbeat = 60,
+                        NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
                         Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
-                        NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
+                        ClientProperties = clientProperties,
                     };
 
                 _connection = _connectionFactory.CreateConnection();
@@ -218,7 +238,7 @@ namespace Platform.Shared.Utility
                     foreach (var routingKey in _routingKey.Split('|'))
                         _model.QueueBind(_queue, _exchange, routingKey, null);
 
-                    _model.BasicQos(0, Convert.ToUInt16(_prefetchCount), false);
+                    _model.BasicQos(0, _prefetchCount, false);
                     _consumer = new EventingBasicConsumer(_model);
                     _consumer.Received += HandleMessageWithManualAck;
 
@@ -238,10 +258,16 @@ namespace Platform.Shared.Utility
             _queue = _configuration["MessageBroker:Queue"];
             _consumerName = _configuration["MessageBroker:Consumer"];
             _routingKey = _configuration["MessageBroker:RoutingKey"];
-            _prefetchCount = string.IsNullOrEmpty(_configuration["MessageBroker:PrefetchCount"]) ? "1000" : _configuration["MessageBroker:PrefetchCount"];
+            _prefetchCount = _configuration.GetValue<ushort>("MessageBroker:PrefetchCount", 1000);
 
             _logger.LogInformation("Connecting to RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}; AutoAck",
                     _hostName, _hostPort, _hostPort == 5671 ? true : false);
+
+            var clientProperties = new Dictionary<string, object>
+            {
+                { "host_name", Environment.MachineName },
+                { "application_name", "Song88 Platform" }
+            };
 
             if (_connection == null)
             {
@@ -254,8 +280,9 @@ namespace Platform.Shared.Utility
                         Password = _password,
                         VirtualHost = _virtualHost,
                         RequestedHeartbeat = 60,
+                        NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
                         Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
-                        NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
+                        ClientProperties = clientProperties
                     };
 
                 _connection = _connectionFactory.CreateConnection();
@@ -271,7 +298,7 @@ namespace Platform.Shared.Utility
                     foreach (var routingKey in _routingKey.Split('|'))
                         _model.QueueBind(_queue, _exchange, routingKey.ToLower(), null);
 
-                    _model.BasicQos(0, Convert.ToUInt16(_prefetchCount), false);
+                    _model.BasicQos(0, _prefetchCount, false);
                     _consumer = new EventingBasicConsumer(_model);
                     _consumer.Received += HandleMessageWithManualAck;
 

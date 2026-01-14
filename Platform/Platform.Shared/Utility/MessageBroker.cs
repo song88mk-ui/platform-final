@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Context.Propagation;
 using RabbitMQ.Client;
@@ -20,6 +21,7 @@ namespace Platform.Shared.Utility
         public event EventHandler<BasicDeliverEventArgs> MessageReceived;
 
         private readonly IConfiguration _configuration;
+        private readonly ILogger<MessageBroker> _logger;
 
         private string _hostName = string.Empty;
         private int _hostPort = 5672;
@@ -51,9 +53,10 @@ namespace Platform.Shared.Utility
         private static readonly ActivitySource _activitySource = new ActivitySource(nameof(MessageBroker));
         private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
 
-        public MessageBroker(IConfiguration configuration)
+        public MessageBroker(IConfiguration configuration, ILogger<MessageBroker> logger)
         {
             _configuration = configuration;
+            _logger = logger;
         }
 
         public void Acknowledge(BasicDeliverEventArgs e)
@@ -70,7 +73,7 @@ namespace Platform.Shared.Utility
         {
             _isExclusive = string.IsNullOrEmpty(_configuration["MessageBroker:IsExclusive"]) ? false : Convert.ToBoolean(_configuration["MessageBroker:IsExclusive"]);
             _hostName = _configuration["MessageBroker:Host"];
-            _hostPort = string.IsNullOrEmpty(_configuration["MessageBroker:Port"]) ? 5672 : Convert.ToInt32(_configuration["MessageBroker:Port"]);
+            _hostPort = _configuration.GetValue<int>("MessageBroker:Port", 5672);
             _userName = _configuration["MessageBroker:Username"];
             _password = _configuration["MessageBroker:Password"];
             _virtualHost = _configuration["MessageBroker:VirtualHost"];
@@ -79,6 +82,9 @@ namespace Platform.Shared.Utility
             _consumerName = _configuration["MessageBroker:Consumer"];
             _routingKey = _configuration["MessageBroker:RoutingKey"];
             _prefetchCount = string.IsNullOrEmpty(_configuration["MessageBroker:PrefetchCount"]) ? "1000" : _configuration["MessageBroker:PrefetchCount"];
+
+            _logger.LogInformation("Connecting to RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}",
+                    _hostName, _hostPort, _hostPort == 5671 ? true : false);
 
             if (_connection == null)
             {
@@ -124,7 +130,7 @@ namespace Platform.Shared.Utility
         public void ExternalConnect()
         {
             _externalHostName = _configuration["ExternalMessageBroker:Host"];
-            _externalHostPort = string.IsNullOrEmpty(_configuration["ExternalMessageBroker:Port"]) ? 5672 : Convert.ToInt32(_configuration["ExternalMessageBroker:Port"]);
+            _externalHostPort = _configuration.GetValue<int>("ExternalMessageBroker:Port", 5672);
             _externalUserName = _configuration["ExternalMessageBroker:Username"];
             _externalPassword = _configuration["ExternalMessageBroker:Password"];
             _externalVirtualHost = _configuration["ExternalMessageBroker:VirtualHost"];
@@ -132,6 +138,9 @@ namespace Platform.Shared.Utility
             _externalQueue = _configuration["ExternalMessageBroker:Queue"];
             _externalConsumerName = _configuration["ExternalMessageBroker:Consumer"];
             _externalRoutingKey = _configuration["ExternalMessageBroker:RoutingKey"];
+
+            _logger.LogInformation("Connecting to External RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}",
+                    _externalHostName, _externalHostPort, _externalHostPort == 5671 ? true : false);
 
             if (_externalConnection == null)
             {
@@ -158,7 +167,7 @@ namespace Platform.Shared.Utility
         public void ConnectWithManualAck()
         {
             _hostName = _configuration["MessageBroker:Host"];
-            _hostPort = string.IsNullOrEmpty(_configuration["MessageBroker:Port"]) ? 5672 : Convert.ToInt32(_configuration["MessageBroker:Port"]);
+            _hostPort = _configuration.GetValue<int>("MessageBroker:Port", 5672);
             _userName = _configuration["MessageBroker:Username"];
             _password = _configuration["MessageBroker:Password"];
             _virtualHost = _configuration["MessageBroker:VirtualHost"];
@@ -168,6 +177,9 @@ namespace Platform.Shared.Utility
             _routingKey = _configuration["MessageBroker:RoutingKey"];
             _prefetchCount = string.IsNullOrEmpty(_configuration["MessageBroker:PrefetchCount"]) ? "1000" : _configuration["MessageBroker:PrefetchCount"];
             _isPriority = string.IsNullOrEmpty(_configuration["MessageBroker:IsPriority"]) ? false : Convert.ToBoolean(_configuration["MessageBroker:IsPriority"]);
+
+            _logger.LogInformation("Connecting to RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}; ManualAck",
+                    _hostName, _hostPort, _hostPort == 5671 ? true : false);
 
             if (_connection == null)
             {
@@ -218,7 +230,7 @@ namespace Platform.Shared.Utility
         public void ConnectWithAutoAck()
         {
             _hostName = _configuration["MessageBroker:Host"];
-            _hostPort = string.IsNullOrEmpty(_configuration["MessageBroker:Port"]) ? 5672 : Convert.ToInt32(_configuration["MessageBroker:Port"]);
+            _hostPort = _configuration.GetValue<int>("MessageBroker:Port", 5672);
             _userName = _configuration["MessageBroker:Username"];
             _password = _configuration["MessageBroker:Password"];
             _virtualHost = _configuration["MessageBroker:VirtualHost"];
@@ -227,6 +239,9 @@ namespace Platform.Shared.Utility
             _consumerName = _configuration["MessageBroker:Consumer"];
             _routingKey = _configuration["MessageBroker:RoutingKey"];
             _prefetchCount = string.IsNullOrEmpty(_configuration["MessageBroker:PrefetchCount"]) ? "1000" : _configuration["MessageBroker:PrefetchCount"];
+
+            _logger.LogInformation("Connecting to RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}; AutoAck",
+                    _hostName, _hostPort, _hostPort == 5671 ? true : false);
 
             if (_connection == null)
             {

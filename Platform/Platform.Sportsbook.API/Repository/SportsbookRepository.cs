@@ -5679,6 +5679,46 @@ namespace Platform.Sportsbook.API.Repository
                 var prematch = clientInitial.Where(c => c.FixtureStatusId == 0 && c.MarketTemplates != "0").ToList();
                 var live = clientInitial.Where(c => c.FixtureStatusId == 1 && c.MarketTemplates != "0").ToList();
 
+
+                if (!prematch.Any(c => c.Name.ToLower() == _ALLMARKETS.ToLower()))
+                {
+                    var allMarketTemplates = string.Join(",",
+                           prematch.Where(p => !string.IsNullOrWhiteSpace(p.MarketTemplates))
+                               .SelectMany(p => p.MarketTemplates.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                               .Select(id => id.Trim())
+                               .Distinct()
+                       );
+
+                    prematch.Add(new Shared.Data.Sportsbook.SQLEntities.ClientMarketTemplateGroup
+                    {
+                        FixtureStatusId = 0,
+                        Name = _ALLMARKETS,
+                        SortOrder = 1,
+                        SportId = sportId,
+                        MarketTemplates = allMarketTemplates
+                    });
+                }
+
+
+                if (!live.Any(c => c.Name.ToLower() == _ALLMARKETS.ToLower()))
+                {
+                    var allMarketTemplates = string.Join(",",
+                           live.Where(p => !string.IsNullOrWhiteSpace(p.MarketTemplates))
+                               .SelectMany(p => p.MarketTemplates.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                               .Select(id => id.Trim())
+                               .Distinct()
+                       );
+
+                    live.Add(new Shared.Data.Sportsbook.SQLEntities.ClientMarketTemplateGroup
+                    {
+                        FixtureStatusId = 1,
+                        Name = _ALLMARKETS,
+                        SortOrder = 1,
+                        SportId = sportId,
+                        MarketTemplates = allMarketTemplates
+                    });
+                }
+
                 sportMarketTemplateGroup = new SportMarketTemplateGroup
                 {
                     SportId = sportId,
@@ -5704,6 +5744,45 @@ namespace Platform.Sportsbook.API.Repository
 
                 var prematch = initial.Where(c => c.FixtureStatusId == 0 && c.MarketTemplates != "0").ToList();
                 var live = initial.Where(c => c.FixtureStatusId == 1 && c.MarketTemplates != "0").ToList();
+
+                if (!prematch.Any(c => c.Name.ToLower() == _ALLMARKETS.ToLower()))
+                {
+                    var allMarketTemplates = string.Join(",",
+                           prematch.Where(p => !string.IsNullOrWhiteSpace(p.MarketTemplates))
+                               .SelectMany(p => p.MarketTemplates.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                               .Select(id => id.Trim())
+                               .Distinct()
+                       );
+
+                    prematch.Add(new Shared.Data.Sportsbook.SQLEntities.MarketTemplateGroup
+                    {
+                        FixtureStatusId = 0,
+                        Name = _ALLMARKETS,
+                        SortOrder = 1,
+                        SportId = sportId,
+                        MarketTemplates = allMarketTemplates
+                    });
+                }
+
+
+                if (!live.Any(c => c.Name.ToLower() == _ALLMARKETS.ToLower()))
+                {
+                    var allMarketTemplates = string.Join(",",
+                           live.Where(p => !string.IsNullOrWhiteSpace(p.MarketTemplates))
+                               .SelectMany(p => p.MarketTemplates.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                               .Select(id => id.Trim())
+                               .Distinct()
+                       );
+
+                    live.Add(new Shared.Data.Sportsbook.SQLEntities.MarketTemplateGroup
+                    {
+                        FixtureStatusId = 1,
+                        Name = _ALLMARKETS,
+                        SortOrder = 1,
+                        SportId = sportId,
+                        MarketTemplates = allMarketTemplates
+                    });
+                }
 
                 sportMarketTemplateGroup = new SportMarketTemplateGroup
                 {

@@ -46,7 +46,9 @@ namespace Platform.Job.Resettlement
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _logger.LogInformation("Connecting to Broker");
             _messageBroker.Connect();
+            _logger.LogInformation("Connected. Running loop");
 
             while (true)
             {

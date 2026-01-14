@@ -198,9 +198,9 @@ namespace Platform.Operator.Cashout.Service
             _threadZ.Start();
 
             _logger.LogInformation("Connecting to broker/RabbitMQ");
-
             _messageBroker.ConnectWithManualAck();
 
+            _logger.LogInformation("Connected. Processing incoming messages");
             _messageBroker.MessageReceived += MessageReceivedEvent;
 
             return Task.CompletedTask;

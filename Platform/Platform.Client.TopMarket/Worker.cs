@@ -49,18 +49,21 @@ namespace Platform.ClientTopMarket.Service
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+            _logger.LogInformation("Service is starting.");
 
             _threadBetPlacement = new Thread(ThreadBetPlacement);
             _threadBetSettlement = new Thread(ThreadBetSettlement);
             _threadBetCancellation = new Thread(ThreadBetCancellation);
 
+            _logger.LogInformation("Starting threads");
             _threadBetPlacement.Start();
             _threadBetSettlement.Start();
             _threadBetCancellation.Start();
 
+            _logger.LogInformation("Connecting to MessageBroker");
             _messageBroker.Connect();
             _messageBroker.MessageReceived += MessageReceivedEvent;
+            _logger.LogInformation("Connected. Processing incoming messages");
 
             return Task.CompletedTask;
         }

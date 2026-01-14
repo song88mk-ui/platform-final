@@ -92,45 +92,53 @@ namespace Platform.Shared.Utility
                 { "application_name", "Song88 Platform" }
             };
 
-            if (_connection == null)
+            try
             {
-                if (_connectionFactory == null)
-                    _connectionFactory = new ConnectionFactory
-                    {
-                        HostName = _hostName,
-                        Port = _hostPort,
-                        UserName = _userName,
-                        Password = _password,
-                        VirtualHost = _virtualHost,
-                        RequestedHeartbeat = 60,
-                        NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
-                        Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
-                        ClientProperties = clientProperties
-                    };
-
-                _connection = _connectionFactory.CreateConnection();
-
-                if (_model == null)
-                    _model = _connection.CreateModel();
-
-                if (!string.IsNullOrEmpty(_queue))
+                if (_connection == null)
                 {
-                    _model.ExchangeDeclare(_exchange, "topic", true, false, null);
+                    if (_connectionFactory == null)
+                        _connectionFactory = new ConnectionFactory
+                        {
+                            HostName = _hostName,
+                            Port = _hostPort,
+                            UserName = _userName,
+                            Password = _password,
+                            VirtualHost = _virtualHost,
+                            RequestedHeartbeat = 60,
+                            NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
+                            Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
+                            ClientProperties = clientProperties
+                        };
 
-                    if (_isExclusive)
-                        _model.QueueDeclare(_queue, true, true, true, null);
-                    else
-                        _model.QueueDeclare(_queue, true, false, false, null);
+                    _connection = _connectionFactory.CreateConnection();
 
-                    foreach (var routingKey in _routingKey.Split('|'))
-                        _model.QueueBind(_queue, _exchange, routingKey.ToLower(), null);
+                    if (_model == null)
+                        _model = _connection.CreateModel();
 
-                    _model.BasicQos(0, _prefetchCount, false);
-                    _consumer = new EventingBasicConsumer(_model);
-                    _consumer.Received += HandleMessage;
+                    if (!string.IsNullOrEmpty(_queue))
+                    {
+                        _model.ExchangeDeclare(_exchange, "topic", true, false, null);
 
-                    _model.BasicConsume(_queue, false, $"{_consumerName}.{Guid.NewGuid()}", _consumer);
+                        if (_isExclusive)
+                            _model.QueueDeclare(_queue, true, true, true, null);
+                        else
+                            _model.QueueDeclare(_queue, true, false, false, null);
+
+                        foreach (var routingKey in _routingKey.Split('|'))
+                            _model.QueueBind(_queue, _exchange, routingKey.ToLower(), null);
+
+                        _model.BasicQos(0, _prefetchCount, false);
+                        _consumer = new EventingBasicConsumer(_model);
+                        _consumer.Received += HandleMessage;
+
+                        _model.BasicConsume(_queue, false, $"{_consumerName}.{Guid.NewGuid()}", _consumer);
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to establish connection to RabbitMQ!");
+                throw;
             }
         }
 
@@ -154,26 +162,34 @@ namespace Platform.Shared.Utility
                 { "application_name", "Song88 Platform" }
             };
 
-            if (_externalConnection == null)
+            try
             {
-                if (_externalConnectionFactory == null)
-                    _externalConnectionFactory = new ConnectionFactory
-                    {
-                        HostName = _externalHostName,
-                        Port = _externalHostPort,
-                        UserName = _externalUserName,
-                        Password = _externalPassword,
-                        VirtualHost = _externalVirtualHost,
-                        RequestedHeartbeat = 60,
-                        NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
-                        Ssl = new SslOption { Enabled = _externalHostPort == 5671 ? true : false, ServerName = _externalHostName },
-                        ClientProperties = clientProperties
-                    };
+                if (_externalConnection == null)
+                {
+                    if (_externalConnectionFactory == null)
+                        _externalConnectionFactory = new ConnectionFactory
+                        {
+                            HostName = _externalHostName,
+                            Port = _externalHostPort,
+                            UserName = _externalUserName,
+                            Password = _externalPassword,
+                            VirtualHost = _externalVirtualHost,
+                            RequestedHeartbeat = 60,
+                            NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
+                            Ssl = new SslOption { Enabled = _externalHostPort == 5671 ? true : false, ServerName = _externalHostName },
+                            ClientProperties = clientProperties
+                        };
 
-                _externalConnection = _externalConnectionFactory.CreateConnection();
+                    _externalConnection = _externalConnectionFactory.CreateConnection();
 
-                if (_externalModel == null)
-                    _externalModel = _externalConnection.CreateModel();
+                    if (_externalModel == null)
+                        _externalModel = _externalConnection.CreateModel();
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to establish connection to RabbitMQ!");
+                throw;
             }
         }
 
@@ -189,7 +205,7 @@ namespace Platform.Shared.Utility
             _consumerName = _configuration["MessageBroker:Consumer"];
             _routingKey = _configuration["MessageBroker:RoutingKey"];
             _prefetchCount = _configuration.GetValue<ushort>("MessageBroker:PrefetchCount", 1000);
-            _isPriority = string.IsNullOrEmpty(_configuration["MessageBroker:IsPriority"]) ? false : Convert.ToBoolean(_configuration["MessageBroker:IsPriority"]);
+            _isPriority = _configuration.GetValue<bool>("MessageBroker:IsPriority", false);
 
             _logger.LogInformation("Connecting to RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}; ManualAck",
                     _hostName, _hostPort, _hostPort == 5671 ? true : false);
@@ -200,50 +216,59 @@ namespace Platform.Shared.Utility
                 { "application_name", "Song88 Platform" }
             };
 
-            if (_connection == null)
+            try
             {
-                if (_connectionFactory == null)
-                    _connectionFactory = new ConnectionFactory
-                    {
-                        HostName = _hostName,
-                        Port = _hostPort,
-                        UserName = _userName,
-                        Password = _password,
-                        VirtualHost = _virtualHost,
-                        RequestedHeartbeat = 60,
-                        NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
-                        Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
-                        ClientProperties = clientProperties,
-                    };
-
-                _connection = _connectionFactory.CreateConnection();
-
-                if (_model == null)
-                    _model = _connection.CreateModel();
-
-                if (!string.IsNullOrEmpty(_queue))
+                if (_connection == null)
                 {
-                    _model.ExchangeDeclare(_exchange, "topic", true, false, null);
+                    if (_connectionFactory == null)
+                        _connectionFactory = new ConnectionFactory
+                        {
+                            HostName = _hostName,
+                            Port = _hostPort,
+                            UserName = _userName,
+                            Password = _password,
+                            VirtualHost = _virtualHost,
+                            RequestedHeartbeat = 60,
+                            NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
+                            Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
+                            ClientProperties = clientProperties,
+                        };
 
-                    if (_isPriority)
+                    _connection = _connectionFactory.CreateConnection();
+
+                    if (_model == null)
+                        _model = _connection.CreateModel();
+
+                    if (!string.IsNullOrEmpty(_queue))
                     {
+                        _model.ExchangeDeclare(_exchange, "topic", true, false, null);
+
                         var dictionary = new Dictionary<string, object>();
-                        dictionary.Add("x-max-priority", 10);
 
-                        _model.QueueDeclare(_queue, true, false, false, dictionary);
+                        if (_isPriority)
+                        {
+                            dictionary.Add("x-queue-type", "classic");
+                            dictionary.Add("x-max-priority", 10);
+                            _model.QueueDeclare(_queue, true, false, false, dictionary);
+                        }
+                        else
+                            _model.QueueDeclare(_queue, true, false, false, dictionary);
+
+                        foreach (var routingKey in _routingKey.Split('|'))
+                            _model.QueueBind(_queue, _exchange, routingKey, null);
+
+                        _model.BasicQos(0, _prefetchCount, false);
+                        _consumer = new EventingBasicConsumer(_model);
+                        _consumer.Received += HandleMessageWithManualAck;
+
+                        _model.BasicConsume(_queue, false, $"{_consumerName}.{Guid.NewGuid()}", _consumer);
                     }
-                    else
-                        _model.QueueDeclare(_queue, true, false, false, null);
-
-                    foreach (var routingKey in _routingKey.Split('|'))
-                        _model.QueueBind(_queue, _exchange, routingKey, null);
-
-                    _model.BasicQos(0, _prefetchCount, false);
-                    _consumer = new EventingBasicConsumer(_model);
-                    _consumer.Received += HandleMessageWithManualAck;
-
-                    _model.BasicConsume(_queue, false, $"{_consumerName}.{Guid.NewGuid()}", _consumer);
                 }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to establish connection to RabbitMQ!");
+                throw;
             }
         }
 
@@ -269,41 +294,49 @@ namespace Platform.Shared.Utility
                 { "application_name", "Song88 Platform" }
             };
 
-            if (_connection == null)
+            try
             {
-                if (_connectionFactory == null)
-                    _connectionFactory = new ConnectionFactory
-                    {
-                        HostName = _hostName,
-                        Port = _hostPort,
-                        UserName = _userName,
-                        Password = _password,
-                        VirtualHost = _virtualHost,
-                        RequestedHeartbeat = 60,
-                        NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
-                        Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
-                        ClientProperties = clientProperties
-                    };
-
-                _connection = _connectionFactory.CreateConnection();
-
-                if (_model == null)
-                    _model = _connection.CreateModel();
-
-                if (!string.IsNullOrEmpty(_queue))
+                if (_connection == null)
                 {
-                    _model.ExchangeDeclare(_exchange, "topic", true, false, null);
-                    _model.QueueDeclare(_queue, true, false, false, null);
+                    if (_connectionFactory == null)
+                        _connectionFactory = new ConnectionFactory
+                        {
+                            HostName = _hostName,
+                            Port = _hostPort,
+                            UserName = _userName,
+                            Password = _password,
+                            VirtualHost = _virtualHost,
+                            RequestedHeartbeat = 60,
+                            NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
+                            Ssl = new SslOption { Enabled = _hostPort == 5671 ? true : false, ServerName = _hostName },
+                            ClientProperties = clientProperties
+                        };
 
-                    foreach (var routingKey in _routingKey.Split('|'))
-                        _model.QueueBind(_queue, _exchange, routingKey.ToLower(), null);
+                    _connection = _connectionFactory.CreateConnection();
 
-                    _model.BasicQos(0, _prefetchCount, false);
-                    _consumer = new EventingBasicConsumer(_model);
-                    _consumer.Received += HandleMessageWithManualAck;
+                    if (_model == null)
+                        _model = _connection.CreateModel();
 
-                    _model.BasicConsume(_queue, true, $"{_consumerName}.{Guid.NewGuid()}", _consumer);
+                    if (!string.IsNullOrEmpty(_queue))
+                    {
+                        _model.ExchangeDeclare(_exchange, "topic", true, false, null);
+                        _model.QueueDeclare(_queue, true, false, false, null);
+
+                        foreach (var routingKey in _routingKey.Split('|'))
+                            _model.QueueBind(_queue, _exchange, routingKey.ToLower(), null);
+
+                        _model.BasicQos(0, _prefetchCount, false);
+                        _consumer = new EventingBasicConsumer(_model);
+                        _consumer.Received += HandleMessageWithManualAck;
+
+                        _model.BasicConsume(_queue, true, $"{_consumerName}.{Guid.NewGuid()}", _consumer);
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to establish connection to RabbitMQ!");
+                throw;
             }
         }
 

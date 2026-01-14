@@ -211,11 +211,10 @@ namespace Platform.Operator.Servicev2
             _threadZ.Start();
 
             _logger.LogInformation("Connecting to broker/RabbitMQ");
-
             _messageBroker.ConnectWithManualAck();
-            _messageBroker.MessageReceived += MessageReceivedEvent;
 
-            _logger.LogInformation("Processing arriving messages");
+            _messageBroker.MessageReceived += MessageReceivedEvent;
+            _logger.LogInformation("Connected. Processing incoming messages");
 
             return Task.CompletedTask;
         }

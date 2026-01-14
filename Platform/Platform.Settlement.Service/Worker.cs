@@ -53,7 +53,8 @@ namespace Platform.Settlement.Service
         {
             _logger.LogInformation("Connecting to the broker/RabbitMQ");
             _messageBroker.Connect();
-            _logger.LogInformation("Waiting for messages");
+
+            _logger.LogInformation("Connected. Processing incoming messages");
             _messageBroker.MessageReceived += MessageReceivedEvent;
 
             return Task.CompletedTask;

@@ -73,6 +73,7 @@ namespace Platform.Provider.Service
         {
             _logger.LogInformation("Connecting to RabbitMQ Broker");
             _messageBroker.Connect();
+
             _logger.LogInformation("Connected. Processing incoming messages");
             _messageBroker.MessageReceived += MessageReceivedEvent;
 

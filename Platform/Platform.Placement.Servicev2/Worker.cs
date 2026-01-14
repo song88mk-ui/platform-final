@@ -503,10 +503,10 @@ namespace Platform.Placement.Servicev2
             _thread98.Start();
             _thread99.Start();
 
-            _logger.LogInformation("Connecting to message broker");
+            _logger.LogInformation("Connecting to Broker");
             _messageBroker.ConnectWithManualAck();
 
-            _logger.LogInformation("connected, processing incoming messages");
+            _logger.LogInformation("Connected. Processing incoming messages");
             _messageBroker.MessageReceived += MessageReceivedEvent;
 
             return Task.CompletedTask;

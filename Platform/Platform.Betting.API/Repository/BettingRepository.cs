@@ -3853,14 +3853,12 @@ namespace Platform.Betting.API.Repository
             BetConfigLeagueResponse result = new BetConfigLeagueResponse();
             int TierId = 2;
             var league = await _bettingContext.League.Where(a => a.SportId == request.SportId && a.LeagueId == request.LeagueId && a.SegmentId == request.SegmentId).FirstOrDefaultAsync();
-            List<int> eSports = new List<int> { 109, 110, 111, 112, 125, 134, 137, 153, 195 };
-            List<int> virtualSports = new List<int> { 1001, 1002, 1003, 1005, 1021, 1055, 1058 };
-
+            
             if (league == null)
             {
-                if (eSports.Contains(request.SportId))
+                if (request.SportId.IsESports())
                     TierId = 1;
-                if (virtualSports.Contains(request.SportId))
+                if (request.SportId.IsVirtualSportId())
                     TierId = 3;
             }
             else

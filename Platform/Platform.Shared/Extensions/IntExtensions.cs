@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
 
 namespace Platform.Shared.Extensions
 {
@@ -12,6 +10,14 @@ namespace Platform.Shared.Extensions
             //todo: append virtual sports here
 
             return listOfVirtualSports.Contains(sportId);
+        }
+
+        public static bool IsESports(this int sportId)
+        {
+            var listOfESports = new List<int>();
+            //todo: append E-Sports here
+
+            return listOfESports.Contains(sportId);
         }
     }
 }

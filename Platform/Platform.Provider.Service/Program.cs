@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Platform.Provider.Service.Repository;
+using Platform.Provider.Service.Telemetry;
 using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using Serilog;
@@ -25,6 +26,13 @@ namespace Platform.Provider.Service
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddSingleton<Instrumentation>();
+                    services.AddTelemetry(new TelemetrySettings(
+                        ServiceName: Instrumentation.ActivitySourceName,
+                        ActivitySourceName: Instrumentation.ActivitySourceName,
+                        MeterName: Instrumentation.MeterName
+                    ));
+
                     services.AddBettingProviders();
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();

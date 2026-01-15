@@ -1,17 +1,26 @@
-using System;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
 using Platform.Provider.Service.Repository;
+using Platform.Provider.Service.Telemetry;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Providers;
 using Platform.Shared.Utility;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Platform.Provider.Service
 {
@@ -23,17 +32,25 @@ namespace Platform.Provider.Service
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IConfiguration _configuration;
 
+
+        private readonly ActivitySource _activitySource;
+        private static readonly TextMapPropagator Propagator = Propagators.DefaultTextMapPropagator;
+        private readonly Counter<long> _betCancellationCounter;
+
         public Worker(ILogger<Worker> logger,
             IMessageBroker messageBroker,
             IBettingRepository bettingRepository,
             IServiceScopeFactory scopeFactory,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            Instrumentation instrumentation)
         {
             _logger = logger;
             _messageBroker = messageBroker;
             _bettingRepository = bettingRepository;
             _scopeFactory = scopeFactory;
             _configuration = configuration;
+            _activitySource = instrumentation.ActivitySource;
+            _betCancellationCounter = instrumentation.BetCancellationCounter;
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
@@ -85,10 +102,20 @@ namespace Platform.Provider.Service
             var messageType = e.BasicProperties.Type;
             var correlationId = e.BasicProperties.CorrelationId;
 
+            if (_betCancellationCounter.Enabled)
+                _betCancellationCounter.Add(1);
+
+            var parentContext = Propagator.Extract(default, e.BasicProperties, this.ExtractTraceFromBasicProperties);
+            Baggage.Current = parentContext.Baggage;
+
+            using (var activity = _activitySource.StartActivity("process.bet.cancellation",
+                        ActivityKind.Consumer, parentContext.ActivityContext))
             try
             {
                 using var scope = _scopeFactory.CreateScope();
                 var betProviderFactory = scope.ServiceProvider.GetRequiredService<IBetProviderFactory>();
+
+                activity?.SetTag("message.type", messageType);
 
                 switch (messageType)
                 {
@@ -136,9 +163,11 @@ namespace Platform.Provider.Service
                             ));
                         break;
                 }
+                activity?.SetStatus(ActivityStatusCode.Ok);
             }
             catch (Exception ex)
             {
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
                 _logger.LogError(ex, "error on message received");
             }
         }
@@ -156,6 +185,21 @@ namespace Platform.Provider.Service
         {
             var provider = factory.Resolve(channelTypeId);
             handler(payload, provider, correlationId);
+        }
+
+        private IEnumerable<string> ExtractTraceFromBasicProperties(IBasicProperties props, string key)
+        {
+            try
+            {
+                if (props.Headers.TryGetValue(key, out var value))
+                {
+                    var bytes = value as byte[];
+                    return new[] { Encoding.UTF8.GetString(bytes) };
+                }
+            }
+            catch (Exception) { }
+
+            return Enumerable.Empty<string>();
         }
     }
 }

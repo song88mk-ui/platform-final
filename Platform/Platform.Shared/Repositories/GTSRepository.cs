@@ -13,6 +13,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Platform.Shared.Repositories
 {
@@ -22,6 +23,7 @@ namespace Platform.Shared.Repositories
         private readonly IConfiguration _configuration;
         private readonly IMemCache _memCache;
         private readonly ILogger<GTSRepository> _logger;
+        private readonly ActivitySource _activitySource;
 
         public GTSRepository(HttpClient httpClient, IConfiguration configuration, ILogger<GTSRepository> logger)
         {
@@ -29,284 +31,352 @@ namespace Platform.Shared.Repositories
             _logger = logger;
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(_configuration["API:GTSAPI"]);
+            _activitySource = new ActivitySource("GTS.Validation");
         }
 
         [Obsolete("Please use GetMaxStake2 since getmaxstake doesnt support currency")]
         public async Task<BaseResponseDTO<ProviderStakeResponseDTO>> GetMaxStakeOld(string authToken, BetRequestDTO request)
         {
-
-            if (Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]) == false)
+            using(var activity = _activitySource.StartActivity("gts.maxstake.old"))
             {
-                return new BaseResponseDTO<ProviderStakeResponseDTO>
+                activity?.SetTag("provider.enabled", _configuration["Custom:IsProviderEnabled"]);
+
+                if (Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]) == false)
                 {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new ProviderStakeResponseDTO
-                    {
-                        Stake = 0m
-                    }
-                };
-            }
-
-            if (request.Selections.Any(c => c.SportId.IsVirtualSportId()))
-            {
-                return new BaseResponseDTO<ProviderStakeResponseDTO>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new ProviderStakeResponseDTO
-                    {
-                        Stake = 0m
-                    }
-                };
-            }
-
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
-
-            try
-            {
-                var bookmakerId = int.Parse(_configuration["Custom:GTSBookmakerId"]);
-
-                var maxStakePayload = new
-                {
-                    playerId = request.UserId,
-                    legs = request.Selections.Select(s => new
-                    {
-                        selectionId = s.SelectionTemplateId, //TODO: double check the value
-                        gameState = GetGameState((int)s.FixtureId),
-                        price = s.DecimalOdds
-                    }).ToList()
-                };
-
-                var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/max-allowed-stake", new StringContent(JsonSerializer.Serialize(maxStakePayload), System.Text.Encoding.UTF8, "application/json"));
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var initialResult = JsonSerializer.Deserialize<GTSMaxStakeResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-
                     return new BaseResponseDTO<ProviderStakeResponseDTO>
                     {
                         StatusCode = StatusCode.Success,
                         Message = StatusCode.Success.ToString(),
                         Result = new ProviderStakeResponseDTO
                         {
-                            Stake = initialResult.MaxAllowedStake, //TODO: convert based on currency
+                            Stake = 0m
                         }
                     };
                 }
-                else
+
+                if (request.Selections.Any(c => c.SportId.IsVirtualSportId()))
                 {
+                    activity?.SetTag("gts.virtual.sports", true);
                     return new BaseResponseDTO<ProviderStakeResponseDTO>
                     {
                         StatusCode = StatusCode.Success,
                         Message = StatusCode.Success.ToString(),
+                        Result = new ProviderStakeResponseDTO
+                        {
+                            Stake = 0m
+                        }
+                    };
+                }
+
+                activity?.SetTag("gts.auth.token", authToken);
+
+                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
+
+                try
+                {
+                    var bookmakerId = int.Parse(_configuration["Custom:GTSBookmakerId"]);
+
+                    activity?.SetTag("gts.bookmaker.id", bookmakerId);
+
+                    var maxStakePayload = new
+                    {
+                        playerId = request.UserId,
+                        legs = request.Selections.Select(s => new
+                        {
+                            selectionId = s.SelectionTemplateId, //TODO: double check the value
+                            gameState = GetGameState((int)s.FixtureId),
+                            price = s.DecimalOdds
+                        }).ToList()
+                    };
+
+                    activity?.SetTag("gts.maxstake.payload", maxStakePayload);
+
+                    var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/max-allowed-stake", new StringContent(JsonSerializer.Serialize(maxStakePayload), System.Text.Encoding.UTF8, "application/json"));
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var initialResult = JsonSerializer.Deserialize<GTSMaxStakeResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                        activity?.SetStatus(ActivityStatusCode.Ok);
+
+                        return new BaseResponseDTO<ProviderStakeResponseDTO>
+                        {
+                            StatusCode = StatusCode.Success,
+                            Message = StatusCode.Success.ToString(),
+                            Result = new ProviderStakeResponseDTO
+                            {
+                                Stake = initialResult.MaxAllowedStake, //TODO: convert based on currency
+                            }
+                        };
+                    }
+                    else
+                    {
+                        activity?.SetStatus(ActivityStatusCode.Error, response.StatusCode.ToString());
+
+                        return new BaseResponseDTO<ProviderStakeResponseDTO>
+                        {
+                            StatusCode = StatusCode.Success,
+                            Message = StatusCode.Success.ToString(),
+                            Result = new ProviderStakeResponseDTO
+                            {
+                                Stake = 0
+                            }
+                        };
+                    }
+                }
+                catch (Exception ex)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+
+                    return new BaseResponseDTO<ProviderStakeResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
                         Result = new ProviderStakeResponseDTO
                         {
                             Stake = 0
                         }
                     };
                 }
-            }
-            catch (Exception ex)
-            {
-                return new BaseResponseDTO<ProviderStakeResponseDTO>
-                {
-                    StatusCode = StatusCode.Error,
-                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
-                    Result = new ProviderStakeResponseDTO
-                    {
-                        Stake = 0
-                    }
-                };
-            }
+            } // activity
         }
 
         public async Task<BaseResponseDTO<ProviderStakeResponseDTO>> GetMaxStake(string authToken, BetRequestDTO request)
         {
-
-            if (Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]) == false)
+            using(var activity = _activitySource.StartActivity("gts.maxstake"))
             {
-                return new BaseResponseDTO<ProviderStakeResponseDTO>
+                activity?.SetTag("provider.enabled", _configuration["Custom:IsProviderEnabled"]);
+
+                if (Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]) == false)
                 {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new ProviderStakeResponseDTO
-                    {
-                        Stake = 0m
-                    }
-                };
-            }
-
-            if (request.Selections.Any(c => c.SportId.IsVirtualSportId()))
-            {
-                return new BaseResponseDTO<ProviderStakeResponseDTO>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new ProviderStakeResponseDTO
-                    {
-                        Stake = 0m
-                    }
-                };
-            }
-
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
-
-            try
-            {
-                var bookmakerId = int.Parse(_configuration["Custom:GTSBookmakerId"]);
-
-                var totalStake = request.Stake; //TODO: compute true stake
-
-                var payload = new
-                {
-                    betId = request.BetId.ToString().ToUpper(),
-                    playerId = request.UserId,
-                    totalStake = totalStake,
-                    currencyCode = request.CurrencyCode.ToString(),
-                    legs = request.Selections.Select(s => new
-                    {
-                        selectionId = s.SelectionSpecifier,
-                        gameState = GetGameState((int)s.FixtureId),
-                        price = s.DecimalOdds
-                    }).ToList(),
-                    priceChangeRule = "AcceptNone"
-                };
-
-                var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/assessment", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var initialResult = JsonSerializer.Deserialize<GTSAssessmentResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-
                     return new BaseResponseDTO<ProviderStakeResponseDTO>
                     {
                         StatusCode = StatusCode.Success,
                         Message = StatusCode.Success.ToString(),
                         Result = new ProviderStakeResponseDTO
                         {
-                            Stake = initialResult.MaxAllowedStake
+                            Stake = 0m
                         }
                     };
                 }
-                else
+
+                if (request.Selections.Any(c => c.SportId.IsVirtualSportId()))
                 {
+                    activity?.SetTag("gts.virtual.sports", true);
                     return new BaseResponseDTO<ProviderStakeResponseDTO>
                     {
                         StatusCode = StatusCode.Success,
                         Message = StatusCode.Success.ToString(),
+                        Result = new ProviderStakeResponseDTO
+                        {
+                            Stake = 0m
+                        }
+                    };
+                }
+
+                activity?.SetTag("gts.auth.token", authToken);
+
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
+
+                try
+                {
+                    var bookmakerId = int.Parse(_configuration["Custom:GTSBookmakerId"]);
+
+                    activity?.SetTag("gts.bookmaker.id", bookmakerId);
+
+                    var totalStake = request.Stake; //TODO: compute true stake
+
+                    var payload = new
+                    {
+                        betId = request.BetId.ToString().ToUpper(),
+                        playerId = request.UserId,
+                        totalStake = totalStake,
+                        currencyCode = request.CurrencyCode.ToString(),
+                        legs = request.Selections.Select(s => new
+                        {
+                            selectionId = s.SelectionSpecifier,
+                            gameState = GetGameState((int)s.FixtureId),
+                            price = s.DecimalOdds
+                        }).ToList(),
+                        priceChangeRule = "AcceptNone"
+                    };
+
+                    activity?.SetTag("gts.maxstake.payload", payload);
+
+                    var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/assessment", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var initialResult = JsonSerializer.Deserialize<GTSAssessmentResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                        activity?.SetStatus(ActivityStatusCode.Ok);
+
+                        return new BaseResponseDTO<ProviderStakeResponseDTO>
+                        {
+                            StatusCode = StatusCode.Success,
+                            Message = StatusCode.Success.ToString(),
+                            Result = new ProviderStakeResponseDTO
+                            {
+                                Stake = initialResult.MaxAllowedStake
+                            }
+                        };
+                    }
+                    else
+                    {
+                        activity?.SetStatus(ActivityStatusCode.Error, response.StatusCode.ToString());
+
+                        return new BaseResponseDTO<ProviderStakeResponseDTO>
+                        {
+                            StatusCode = StatusCode.Success,
+                            Message = StatusCode.Success.ToString(),
+                            Result = new ProviderStakeResponseDTO
+                            {
+                                Stake = 0
+                            }
+                        };
+                    }
+                }
+                catch (Exception ex)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                    _logger.LogError(ex, "GetMaxStake Error");
+
+                    return new BaseResponseDTO<ProviderStakeResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
                         Result = new ProviderStakeResponseDTO
                         {
                             Stake = 0
                         }
                     };
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GetMaxStake Error: {JsonSerializer.Serialize(ex)}");
-
-                return new BaseResponseDTO<ProviderStakeResponseDTO>
-                {
-                    StatusCode = StatusCode.Error,
-                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
-                    Result = new ProviderStakeResponseDTO
-                    {
-                        Stake = 0
-                    }
-                };
-            }
+            } // activity
         }
 
         public async Task<BaseResponseDTO<ProviderAssessmentResponseDTO>> Assessment(string authToken, OnBetPlacement request)
         {
-            if (Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]) == false)
+            using(var activity = _activitySource.StartActivity("gts.assessment"))
             {
-                return new BaseResponseDTO<ProviderAssessmentResponseDTO>
+                activity?.SetTag("provider.enabled", _configuration["Custom:IsProviderEnabled"]);
+
+                if (Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]) == false)
                 {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new ProviderAssessmentResponseDTO
-                    {
-                        Stake = 0m,
-                        IsBetAllowed = true
-                    }
-                };
-            }
-
-            if (request.BetSelections.Any(c => c.BetSelection.SportId.IsVirtualSportId()))
-            {
-                return new BaseResponseDTO<ProviderAssessmentResponseDTO>
-                {
-                    StatusCode = StatusCode.Success,
-                    Message = StatusCode.Success.ToString(),
-                    Result = new ProviderAssessmentResponseDTO
-                    {
-                        Stake = 0m,
-                        IsBetAllowed = true
-                    }
-                };
-            }
-
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
-
-            try
-            {
-                var bookmakerId = int.Parse(_configuration["Custom:GTSBookmakerId"]);
-
-                var totalStake = request.Bet.TrueStake;
-
-                var payload = new
-                {
-                    betId = request.Bet.BetId.ToString().ToUpper(),
-                    playerId = request.Bet.UserId,
-                    totalStake = totalStake,
-                    currencyCode = request.Bet.CurrencyCode,
-                    legs = request.BetSelections.Select(s => new
-                    {
-                        selectionId = s.BetSelection.SelectionSpecifier.Split(':').LastOrDefault(),
-                        gameState = GetGameState(s.BetSelection.FixtureStatusId),
-                        price = s.BetSelection.Odds
-                    }).ToList(),
-                    priceChangeRule = "AcceptNone"
-                };
-
-                var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/assessment", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var initialResult = JsonSerializer.Deserialize<GTSAssessmentResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-
-                    if(initialResult.IsBetAllowed == false)
-                        _logger.LogError($"Assessment Result: {JsonSerializer.Serialize(initialResult)}");
-
                     return new BaseResponseDTO<ProviderAssessmentResponseDTO>
                     {
                         StatusCode = StatusCode.Success,
                         Message = StatusCode.Success.ToString(),
                         Result = new ProviderAssessmentResponseDTO
                         {
-                            Stake = initialResult.MaxAllowedStake,
-                            IsBetAllowed = initialResult.IsBetAllowed,
-                            IsPending = initialResult.BetAssessmentResult == "AssessmentDelayed",
-                            Message = initialResult.IsBetAllowed == false ?
-                                initialResult.Legs?.FirstOrDefault(l => l.RejectReason != null).RejectReason.ReasonMessage :
-                                string.Empty
+                            Stake = 0m,
+                            IsBetAllowed = true
                         }
                     };
                 }
-                else
+
+                if (request.BetSelections.Any(c => c.BetSelection.SportId.IsVirtualSportId()))
                 {
-                    var responseError = await response.Content.ReadAsStringAsync();
-                    _logger.LogError($"Assessment Error: {responseError}");
-                    _logger.LogError($"Payload: {JsonSerializer.Serialize(payload)}");
+                    activity?.SetTag("gts.virtual.sports", true);
+                    return new BaseResponseDTO<ProviderAssessmentResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString(),
+                        Result = new ProviderAssessmentResponseDTO
+                        {
+                            Stake = 0m,
+                            IsBetAllowed = true
+                        }
+                    };
+                }
+
+                activity?.SetTag("gts.auth.token", authToken);
+
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
+
+                try
+                {
+                    var bookmakerId = int.Parse(_configuration["Custom:GTSBookmakerId"]);
+
+                    activity?.SetTag("gts.bookmaker.id", bookmakerId);
+
+                    var totalStake = request.Bet.TrueStake;
+
+                    var payload = new
+                    {
+                        betId = request.Bet.BetId.ToString().ToUpper(),
+                        playerId = request.Bet.UserId,
+                        totalStake = totalStake,
+                        currencyCode = request.Bet.CurrencyCode,
+                        legs = request.BetSelections.Select(s => new
+                        {
+                            selectionId = s.BetSelection.SelectionSpecifier.Split(':').LastOrDefault(),
+                            gameState = GetGameState(s.BetSelection.FixtureStatusId),
+                            price = s.BetSelection.Odds
+                        }).ToList(),
+                        priceChangeRule = "AcceptNone"
+                    };
+
+                    activity?.SetTag("gts.assessment.payload", payload);
+
+                    var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/assessment", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var initialResult = JsonSerializer.Deserialize<GTSAssessmentResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                        if(initialResult.IsBetAllowed == false)
+                            _logger.LogError($"Assessment Result: {JsonSerializer.Serialize(initialResult)}");
+
+                        activity?.SetTag("gts.assessment.result", initialResult);
+                        activity?.SetStatus(ActivityStatusCode.Ok);
+
+                        return new BaseResponseDTO<ProviderAssessmentResponseDTO>
+                        {
+                            StatusCode = StatusCode.Success,
+                            Message = StatusCode.Success.ToString(),
+                            Result = new ProviderAssessmentResponseDTO
+                            {
+                                Stake = initialResult.MaxAllowedStake,
+                                IsBetAllowed = initialResult.IsBetAllowed,
+                                IsPending = initialResult.BetAssessmentResult == "AssessmentDelayed",
+                                Message = initialResult.IsBetAllowed == false ?
+                                    initialResult.Legs?.FirstOrDefault(l => l.RejectReason != null).RejectReason.ReasonMessage :
+                                    string.Empty
+                            }
+                        };
+                    }
+                    else
+                    {
+                        var responseError = await response.Content.ReadAsStringAsync();
+                        _logger.LogError($"Assessment Error: {responseError}");
+                        _logger.LogError($"Payload: {JsonSerializer.Serialize(payload)}");
+
+                        activity?.SetStatus(ActivityStatusCode.Error, responseError);
+
+                        return new BaseResponseDTO<ProviderAssessmentResponseDTO>
+                        {
+                            StatusCode = StatusCode.Error,
+                            Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({responseError})",
+                            Result = new ProviderAssessmentResponseDTO
+                            {
+                                Stake = 0,
+                                Message = "1026 - Failed sending Bet to GTS"
+                            }
+                        };
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Assessment Error");
+
+                    activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
 
                     return new BaseResponseDTO<ProviderAssessmentResponseDTO>
                     {
                         StatusCode = StatusCode.Error,
-                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({responseError})",
+                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
                         Result = new ProviderAssessmentResponseDTO
                         {
                             Stake = 0,
@@ -314,159 +384,168 @@ namespace Platform.Shared.Repositories
                         }
                     };
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Assessment Error: {JsonSerializer.Serialize(ex)}");
-
-                return new BaseResponseDTO<ProviderAssessmentResponseDTO>
-                {
-                    StatusCode = StatusCode.Error,
-                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
-                    Result = new ProviderAssessmentResponseDTO
-                    {
-                        Stake = 0,
-                        Message = "1026 - Failed sending Bet to GTS"
-                    }
-                };
-            }
+            } // activity
         }
 
 
         public async Task<BaseResponseDTO<string>> SendBet(string authToken, SendBet request)
         {
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
-
-            try
+            using(var activity = _activitySource.StartActivity("gts.bet.placement"))
             {
-                var bookmakerId = int.Parse(_configuration["Custom:GTSBookmakerId"]);
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
 
-                var totalStake = request.Bet.TrueStake;
-
-                var payload = new
+                try
                 {
-                    id = request.Bet.BetId.ToString().ToUpper(),
-                    betPlacedTimestampUTC = DateTime.UtcNow,
-                    betUpdatedTimestampUTC = DateTime.UtcNow,
-                    bookMakerName = "Song88",
-                    playerId = request.Bet.UserId,
-                    totalStake = totalStake,
-                    currencyCode = request.Bet.CurrencyCode,
-                    status = GetGtsBetStatus(request.Bet.BetStatusId),
-                    //	Represents a bet with any legs that are currently Open
-                    legs = request.BetSelections.Select(s => new
+                    var bookmakerId = int.Parse(_configuration["Custom:GTSBookmakerId"]);
+                    activity?.SetTag("gts.bookmaker.id", bookmakerId);
+
+                    var totalStake = request.Bet.TrueStake;
+
+                    var payload = new
                     {
-                        status = GetGtsBetStatus(s.BetSelectionStatusId),
-                        gameState = GetGameState((int)s.FixtureId),
-                        price = s.Odds,
-                        betGeniusContent = new
+                        id = request.Bet.BetId.ToString().ToUpper(),
+                        betPlacedTimestampUTC = DateTime.UtcNow,
+                        betUpdatedTimestampUTC = DateTime.UtcNow,
+                        bookMakerName = "Song88",
+                        playerId = request.Bet.UserId,
+                        totalStake = totalStake,
+                        currencyCode = request.Bet.CurrencyCode,
+                        status = GetGtsBetStatus(request.Bet.BetStatusId),
+                        //	Represents a bet with any legs that are currently Open
+                        legs = request.BetSelections.Select(s => new
                         {
-                            selectionId = s.SelectionSpecifier.Split(':').LastOrDefault()
-                        }
-                    }).ToList(),
-                    priceChangeRule = "AcceptNone"
-                };
+                            status = GetGtsBetStatus(s.BetSelectionStatusId),
+                            gameState = GetGameState((int)s.FixtureId),
+                            price = s.Odds,
+                            betGeniusContent = new
+                            {
+                                selectionId = s.SelectionSpecifier.Split(':').LastOrDefault()
+                            }
+                        }).ToList(),
+                        priceChangeRule = "AcceptNone"
+                    };
 
-                var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/bets", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
+                    activity?.SetTag("gts.bet.placement.payload", payload);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = await response.Content.ReadAsStringAsync();
+                    var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/bets", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
 
-                    var initialResult = string.Empty;
-                    if (string.IsNullOrWhiteSpace(content))
+                    if (response.IsSuccessStatusCode)
                     {
-                        // Handle empty response explicitly
-                        initialResult = null;
+                        var content = await response.Content.ReadAsStringAsync();
+
+                        var initialResult = string.Empty;
+                        if (string.IsNullOrWhiteSpace(content))
+                        {
+                            // Handle empty response explicitly
+                            initialResult = null;
+                        }
+                        else
+                        {
+                            initialResult = JsonSerializer.Deserialize<string>(
+                                content,
+                                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                            );
+                        }
+
+                        activity?.SetStatus(ActivityStatusCode.Ok);
+
+                        return new BaseResponseDTO<string>
+                        {
+                            StatusCode = StatusCode.Success,
+                            Message = StatusCode.Success.ToString(),
+                            Result = initialResult
+                        };
                     }
                     else
                     {
-                        initialResult = JsonSerializer.Deserialize<string>(
-                            content,
-                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-                        );
-                    }
+                        _logger.LogError($"SendBet Error: {JsonSerializer.Serialize(await response.Content.ReadAsStringAsync())}");
+                        _logger.LogError($"SendBet Payload: {JsonSerializer.Serialize(payload)}");
 
-                    return new BaseResponseDTO<string>
-                    {
-                        StatusCode = StatusCode.Success,
-                        Message = StatusCode.Success.ToString(),
-                        Result = initialResult
-                    };
+                        activity?.SetStatus(ActivityStatusCode.Error, response.StatusCode.ToString());
+
+                        return new BaseResponseDTO<string>
+                        {
+                            StatusCode = StatusCode.Error,
+                            Message = StatusCode.Error.ToString(),
+                        };
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    _logger.LogError($"SendBet Error: {JsonSerializer.Serialize(await response.Content.ReadAsStringAsync())}");
-                    _logger.LogError($"SendBet Payload: {JsonSerializer.Serialize(payload)}");
+                    _logger.LogError($"SendBet Error: {JsonSerializer.Serialize(ex.Message)}");
+                    _logger.LogError($"SendBet StackTrace: {JsonSerializer.Serialize(ex.StackTrace)}");
+
+                    activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
 
                     return new BaseResponseDTO<string>
                     {
                         StatusCode = StatusCode.Error,
-                        Message = StatusCode.Error.ToString(),
+                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
                     };
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"SendBet Error: {JsonSerializer.Serialize(ex.Message)}");
-                _logger.LogError($"SendBet StackTrace: {JsonSerializer.Serialize(ex.StackTrace)}");
-
-                return new BaseResponseDTO<string>
-                {
-                    StatusCode = StatusCode.Error,
-                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
-                };
-            }
+            } // activity
         }
 
         public async Task<BaseResponseDTO<Task>> Cancellation(string authToken, Guid betId)
         {
-
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
-
-            try
+            using(var activity = _activitySource.StartActivity("gts.bet.cancellation"))
             {
-                var bookmakerId = int.Parse(_configuration["Custom:GTSBookmakerId"]);
+                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
 
-                var payload = new
+                try
                 {
-                    betId = betId.ToString().ToUpper()
-                };
+                    var bookmakerId = int.Parse(_configuration["Custom:GTSBookmakerId"]);
 
-                var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/bet-reservation-cancellations", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
+                    activity?.SetTag("gts.bookmaker.id", bookmakerId);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    var initialResult = JsonSerializer.Deserialize<string>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-
-                    return new BaseResponseDTO<Task>
+                    var payload = new
                     {
-                        StatusCode = StatusCode.Success,
-                        Message = StatusCode.Success.ToString()
+                        betId = betId.ToString().ToUpper()
                     };
+
+                    activity?.SetTag("gts.bet.cancellation.payload", payload);
+
+                    var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/bet-reservation-cancellations", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var initialResult = JsonSerializer.Deserialize<string>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                        activity?.SetStatus(ActivityStatusCode.Ok);
+
+                        return new BaseResponseDTO<Task>
+                        {
+                            StatusCode = StatusCode.Success,
+                            Message = StatusCode.Success.ToString()
+                        };
+                    }
+                    else
+                    {
+                        _logger.LogError($"Cancellation Error: {JsonSerializer.Serialize(await response.Content.ReadAsStringAsync())}");
+
+                        activity?.SetStatus(ActivityStatusCode.Error, response.StatusCode.ToString());
+
+                        return new BaseResponseDTO<Task>
+                        {
+                            StatusCode = StatusCode.Error,
+                            Message = StatusCode.Error.ToString(),
+                        };
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    _logger.LogError($"Cancellation Error: {JsonSerializer.Serialize(await response.Content.ReadAsStringAsync())}");
+                    _logger.LogError($"Cancellation Error: {JsonSerializer.Serialize(ex)}");
+
+                    activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
 
                     return new BaseResponseDTO<Task>
                     {
                         StatusCode = StatusCode.Error,
-                        Message = StatusCode.Error.ToString(),
+                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
                     };
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Cancellation Error: {JsonSerializer.Serialize(ex)}");
-
-                return new BaseResponseDTO<Task>
-                {
-                    StatusCode = StatusCode.Error,
-                    Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
-                };
-            }
+            } // using
         }
 
         private string GetGtsBetStatus(int statusId) => statusId switch

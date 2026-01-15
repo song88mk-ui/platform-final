@@ -18,6 +18,7 @@ namespace Platform.Operator.Servicev2
     {
         public static void Main(string[] args)
         {
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             CreateHostBuilder(args).Build().Run();
         }
 
@@ -29,44 +30,14 @@ namespace Platform.Operator.Servicev2
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
-                    var sp = services.BuildServiceProvider();
-                    var configuration = sp.GetService<IConfiguration>();
-                    var logger = sp.GetRequiredService<ILogger<Instrumentation>>();
-
-                    Action<ResourceBuilder> resource = r => r.AddService(
-                        serviceName: "Platform.Operator.Servicev2",
-                        serviceVersion: "latest",
-                        serviceInstanceId: Environment.MachineName);
-
                     services.AddSingleton<Instrumentation>();
 
-                    if (Convert.ToBoolean(configuration["Telemetry:Enabled"]))
-                    {
-                        AppContext.SetSwitch(
-                                "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-
-                        var metricsPort = configuration.GetValue<int>("Telemetry:MetricsPort", 8080);
-                        logger.LogInformation("Setting up Open Telemetry: Prometheus endpoint on port {metricsPort}", metricsPort);
-
-                        services
-                          .AddOpenTelemetry()
-                          .ConfigureResource(resource)
-                          .WithTracing(tracing =>
-                          {
-                              tracing
-                              .AddSource(Instrumentation.ActivitySourceName)
-                              .SetSampler(new AlwaysOnSampler())
-                              .AddSqlClientInstrumentation()
-                              .AddOtlpExporter();
-                          })
-                          .WithMetrics(metrics =>
-                          {
-                              metrics
-                              .AddMeter(Instrumentation.MeterName)
-                              .AddRuntimeInstrumentation()
-                            .AddPrometheusHttpListener(opts => opts.UriPrefixes = new string[] { $"http://+:{metricsPort}" });
-                          });
-                    }
+                    services.AddSingleton<Instrumentation>();
+                    services.AddTelemetry(new TelemetrySettings(
+                        ServiceName: Instrumentation.ActivitySourceName,
+                        ActivitySourceName: Instrumentation.ActivitySourceName,
+                        MeterName: Instrumentation.MeterName
+                    ));
 
                     services.AddHttpClient();
                     services.AddSingleton<IMessageBroker, MessageBroker>();

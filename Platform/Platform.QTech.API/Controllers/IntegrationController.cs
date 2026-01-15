@@ -1,5 +1,4 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.Cors;
+﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Platform.QTech.API.ActionFilters;
 using Platform.QTech.API.Models;
@@ -16,12 +15,10 @@ namespace Platform.QTech.API.Controllers
     public class IntegrationController : ControllerBase
     {
         private readonly ICasinoRepository _casinoRepository;
-        private readonly TelemetryClient _telemetryClient;
 
-        public IntegrationController(ICasinoRepository casinoRepository, TelemetryClient telemetryClient)
+        public IntegrationController(ICasinoRepository casinoRepository)
         {
             _casinoRepository = casinoRepository;
-            _telemetryClient = telemetryClient;
         }
 
         [HttpGet("v1/accounts/{playerId}/session"), ServiceFilter(typeof(PassKeyFilter))]
@@ -43,7 +40,7 @@ namespace Platform.QTech.API.Controllers
                                 { "response", JsonSerializer.Serialize(result.Item2) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/accounts/{playerId}/session", properties);
+            //_telemetryClient.TrackEvent("e:v1/accounts/{playerId}/session", properties);
 
             switch (result.Item1)
             {
@@ -73,7 +70,7 @@ namespace Platform.QTech.API.Controllers
                                 { "response", JsonSerializer.Serialize(result.Item2) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/accounts/{playerId}/balance", properties);
+            //_telemetryClient.TrackEvent("e:v1/accounts/{playerId}/balance", properties);
 
             switch (result.Item1)
             {
@@ -97,7 +94,7 @@ namespace Platform.QTech.API.Controllers
                                 { "request", JsonSerializer.Serialize(request) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/transactions/initial", initial);
+            //_telemetryClient.TrackEvent("e:v1/transactions/initial", initial);
 
             if (request.BonusType == null)
                 request.BonusType = string.Empty;
@@ -149,7 +146,7 @@ namespace Platform.QTech.API.Controllers
                                 { "response", JsonSerializer.Serialize(withdrawResponse.Item2) }
                             };
 
-                _telemetryClient.TrackEvent("e:v1/transactions", properties);
+                //_telemetryClient.TrackEvent("e:v1/transactions", properties);
 
                 switch (withdrawResponse.Item1)
                 {
@@ -193,7 +190,7 @@ namespace Platform.QTech.API.Controllers
                                 { "response", JsonSerializer.Serialize(depositResponse.Item2) }
                             };
 
-                _telemetryClient.TrackEvent("e:v1/transactions", properties);
+                //_telemetryClient.TrackEvent("e:v1/transactions", properties);
 
                 switch (depositResponse.Item1)
                 {
@@ -224,7 +221,7 @@ namespace Platform.QTech.API.Controllers
                                 { "response", JsonSerializer.Serialize(result.Item2) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/transactions/rollback", properties);
+            //_telemetryClient.TrackEvent("e:v1/transactions/rollback", properties);
 
             switch (result.Item1)
             {
@@ -251,7 +248,7 @@ namespace Platform.QTech.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/bonus/status", properties);
+            //_telemetryClient.TrackEvent("e:v1/bonus/status", properties);
 
             switch (result)
             {
@@ -280,7 +277,7 @@ namespace Platform.QTech.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/bonus/rewards", properties);
+            //_telemetryClient.TrackEvent("e:v1/bonus/rewards", properties);
 
             switch (result.Item1)
             {

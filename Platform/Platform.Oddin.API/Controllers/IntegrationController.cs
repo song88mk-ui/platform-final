@@ -1,5 +1,4 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.Cors;
+﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Platform.Oddin.API.Enums;
 using Platform.Oddin.API.Models;
@@ -14,13 +13,10 @@ namespace Platform.Oddin.API.Controllers
     public class IntegrationController : ControllerBase
     {
         private readonly IESportsBettingRepository _eSportsBettingRepository;
-        private readonly TelemetryClient _telemetryClient;
 
-        public IntegrationController(IESportsBettingRepository eSportsBettingRepository, TelemetryClient telemetryClient)
+        public IntegrationController(IESportsBettingRepository eSportsBettingRepository)
         {
-            //
             _eSportsBettingRepository = eSportsBettingRepository;
-            _telemetryClient = telemetryClient;
         }
 
         [HttpPost("v1/userdetails")]
@@ -37,7 +33,7 @@ namespace Platform.Oddin.API.Controllers
                                 { "message", ((SessionCode)result.ErrorCode).ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/userdetails", properties);
+            //_telemetryClient.TrackEvent("e:v1/userdetails", properties);
 
             switch (result.ErrorCode)
             {
@@ -62,7 +58,7 @@ namespace Platform.Oddin.API.Controllers
                                 { "message", ((SessionCode)result.ErrorCode).ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/debituser", properties);
+            //_telemetryClient.TrackEvent("e:v1/debituser", properties);
 
             switch ((SessionCode)result.ErrorCode)
             {
@@ -75,7 +71,7 @@ namespace Platform.Oddin.API.Controllers
 
         [HttpPost("v1/credituser")]
         public async Task<IActionResult> CreditUser([FromBody] CreditUserRequest request)
-        {//
+        {
             var result = await _eSportsBettingRepository.CreditUser(request);
 
             var parameters = request;
@@ -87,7 +83,7 @@ namespace Platform.Oddin.API.Controllers
                                 { "message", ((SessionCode)result.ErrorCode).ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/credituser", properties);
+            //_telemetryClient.TrackEvent("e:v1/credituser", properties);
 
             switch ((SessionCode)result.ErrorCode)
             {

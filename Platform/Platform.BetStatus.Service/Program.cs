@@ -46,6 +46,6 @@ namespace Platform.BetStatus.Service
                 {
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddHostedService<Worker>();
-                }).UseWindowsService();
+                });
     }
 }

@@ -16,7 +16,6 @@ using Platform.Shared.Data.Sportsbook;
 using Platform.Shared.Utility;
 using Platform.Sportsbook.API.Repository;
 using Platform.Sportsbook.API.Telemetry;
-using Platform.Shared.Telemetry;
 using Platform.Shared.Extensions;
 
 namespace Platform.Sportsbook.API
@@ -33,6 +32,13 @@ namespace Platform.Sportsbook.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<Instrumentation>();
+            services.AddTelemetry(new TelemetrySettings (
+                ServiceName: Instrumentation.ActivitySourceName,
+                ActivitySourceName: Instrumentation.ActivitySourceName,
+                MeterName: Instrumentation.MeterName
+            ));
+
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowAllOrigins",
@@ -64,12 +70,6 @@ namespace Platform.Sportsbook.API
             });
 
             services.AddDbContext<SportsbookContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Sportsbook"]));
-            services.AddSingleton<Instrumentation>();
-            services.AddTelemetry(new TelemetrySettings (
-                ServiceName: Instrumentation.ActivitySourceName,
-                ActivitySourceName: Instrumentation.ActivitySourceName,
-                MeterName: Instrumentation.MeterName
-            ));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

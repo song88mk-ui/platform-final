@@ -147,6 +147,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: NUGET_PASSWORD=${{ secrets.NUGET_PASSWORD }}
 
       - name: Logout to Amazon ECR
         if: success() && steps.proceed.outputs.proceed == 'true'

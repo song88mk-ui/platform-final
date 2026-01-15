@@ -7,6 +7,14 @@ ADD Platform/Platform.Operator.Servicev2 Platform.Operator.Servicev2
 
 WORKDIR /source/Platform.Operator.Servicev2
 
+ARG NUGET_PASSWORD
+
+RUN dotnet nuget add source \
+  --username FlyingCockatoo \
+  --password ${NUGET_PASSWORD} \
+  --store-password-in-clear-text \
+  --name github "https://nuget.pkg.github.com/FlyingCockatoo/index.json"
+
 RUN dotnet restore
 RUN dotnet build \
   --no-restore \

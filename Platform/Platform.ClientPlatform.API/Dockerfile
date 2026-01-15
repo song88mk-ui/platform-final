@@ -7,6 +7,14 @@ ADD Platform/Platform.ClientPlatform.API Platform.ClientPlatform.API
 
 WORKDIR /source/Platform.ClientPlatform.API
 
+ARG NUGET_PASSWORD
+
+RUN dotnet nuget add source \
+  --username FlyingCockatoo \
+  --password ${NUGET_PASSWORD} \
+  --store-password-in-clear-text \
+  --name github "https://nuget.pkg.github.com/FlyingCockatoo/index.json"
+
 RUN dotnet restore
 RUN dotnet build \
   --no-restore \

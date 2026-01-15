@@ -1,5 +1,4 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Platform.Shared.Utility;
@@ -21,14 +20,12 @@ namespace Platform.WebSocket.API.Repository
         private readonly IServiceProvider _provider;
         private readonly IMemCache _memCache;
         private readonly ILogger<WebSocketRepository> _logger;
-        private readonly TelemetryClient _telemetryClient;
         private readonly ActivitySource _activitySource;
 
-        public WebSocketRepository(IServiceProvider provider, IMemCache memCache, TelemetryClient telemetryClient, Instrumentation instrumentation, ILogger<WebSocketRepository> logger)
+        public WebSocketRepository(IServiceProvider provider, IMemCache memCache, Instrumentation instrumentation, ILogger<WebSocketRepository> logger)
         {
             _provider = provider;
             _memCache = memCache;
-            _telemetryClient = telemetryClient;
             _activitySource = instrumentation.ActivitySource;
             _logger = logger;
         }
@@ -69,7 +66,7 @@ namespace Platform.WebSocket.API.Repository
                                 { "ConnectedTimestamp", DateTime.UtcNow.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:OnConnectedAsync", properties);
+            //_telemetryClient.TrackEvent("e:OnConnectedAsync", properties);
 
             using (var activity = _activitySource.StartActivity("websocket.connect"))
             {
@@ -111,7 +108,7 @@ namespace Platform.WebSocket.API.Repository
                                 { "DisconnectedTimestamp", DateTime.UtcNow.ToString() }
                             };
 
-            _telemetryClient.TrackEvent("e:OnDisconnectedAsync", properties);
+            //_telemetryClient.TrackEvent("e:OnDisconnectedAsync", properties);
 
             using (var activity = _activitySource.StartActivity("websocket.disconnect"))
             {
@@ -136,7 +133,7 @@ namespace Platform.WebSocket.API.Repository
 
             _logger.LogInformation($"SubscribeToEndpoint: {JsonSerializer.Serialize(properties)}");
 
-            _telemetryClient.TrackEvent("e:SubscribeToEndpoint", properties);
+            //_telemetryClient.TrackEvent("e:SubscribeToEndpoint", properties);
 
             var client = await GetClient(request.ClientId);
 

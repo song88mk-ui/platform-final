@@ -7,6 +7,14 @@ ADD Platform/Platform.BetForwarder.Service Platform.BetForwarder.Service
 
 WORKDIR /source/Platform.BetForwarder.Service
 
+ARG NUGET_PASSWORD
+
+RUN dotnet nuget add source \
+  --username FlyingCockatoo \
+  --password ${NUGET_PASSWORD} \
+  --store-password-in-clear-text \
+  --name github "https://nuget.pkg.github.com/FlyingCockatoo/index.json"
+
 RUN dotnet restore
 RUN dotnet build --configuration Release
 RUN dotnet publish -o publish && \

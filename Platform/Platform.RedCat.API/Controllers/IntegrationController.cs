@@ -1,5 +1,4 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.Cors;
+﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Platform.RedCat.API.Models;
 using Platform.RedCat.API.Repositories;
@@ -16,12 +15,10 @@ namespace Platform.RedCat.API.Controllers
     public class IntegrationController : ControllerBase
     {
         private readonly IPlatformRepository _platformRepository;
-        private readonly TelemetryClient _telemetryClient;
 
-        public IntegrationController(IPlatformRepository transactionRepository, TelemetryClient telemetryClient)
+        public IntegrationController(IPlatformRepository transactionRepository)
         {
             _platformRepository = transactionRepository;
-            _telemetryClient = telemetryClient;
         }
 
         [HttpPost("validatetoken")]
@@ -42,7 +39,7 @@ namespace Platform.RedCat.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            _telemetryClient.TrackEvent("e:api/redcat/validatetoken", properties);
+            //_telemetryClient.TrackEvent("e:api/redcat/validatetoken", properties);
 
             switch (result.StatusCode)
             {
@@ -71,7 +68,7 @@ namespace Platform.RedCat.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            _telemetryClient.TrackEvent("e:api/redcat/getbalance", properties);
+            //_telemetryClient.TrackEvent("e:api/redcat/getbalance", properties);
 
             switch (result.StatusCode)
             {
@@ -115,7 +112,7 @@ namespace Platform.RedCat.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            _telemetryClient.TrackEvent("e:api/redcat/stake", properties);
+            //_telemetryClient.TrackEvent("e:api/redcat/stake", properties);
 
             switch (result.StatusCode)
             {
@@ -145,7 +142,7 @@ namespace Platform.RedCat.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            _telemetryClient.TrackEvent("e:api/redcat/settle", properties);
+            //_telemetryClient.TrackEvent("e:api/redcat/settle", properties);
 
             switch (result.StatusCode)
             {
@@ -176,7 +173,7 @@ namespace Platform.RedCat.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            _telemetryClient.TrackEvent("e:api/redcat/voidstake", properties);
+            //_telemetryClient.TrackEvent("e:api/redcat/voidstake", properties);
 
             switch (result.StatusCode)
             {
@@ -207,7 +204,7 @@ namespace Platform.RedCat.API.Controllers
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            _telemetryClient.TrackEvent("e:api/redcat/voidsettle", properties);
+            //_telemetryClient.TrackEvent("e:api/redcat/voidsettle", properties);
 
             switch (result.StatusCode)
             {

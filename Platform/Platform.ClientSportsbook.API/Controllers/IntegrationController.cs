@@ -1,5 +1,4 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.AspNetCore.Cors;
+﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Platform.ClientSportsbook.API.ActionFilters;
 using Platform.ClientSportsbook.API.Models;
@@ -16,11 +15,10 @@ namespace Platform.ClientSportsbook.API.Controllers
     public class IntegrationController : IntegrationControllerBase
     {
         private readonly ISportsbookRepository _sportsbookRepository;
-        private readonly TelemetryClient _telemetryClient;
-        public IntegrationController(ISportsbookRepository platformRepository, TelemetryClient telemetryClient)
+
+        public IntegrationController(ISportsbookRepository platformRepository)
         {
             _sportsbookRepository = platformRepository;
-            _telemetryClient = telemetryClient;
         }
 
         [HttpGet("v1/sportsbook/activefixtures")]
@@ -42,7 +40,7 @@ namespace Platform.ClientSportsbook.API.Controllers
                                 { "response", JsonSerializer.Serialize(new { Status = result.StatusCode, Message = result.Message }) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures", properties);
 
             switch (result.StatusCode)
             {
@@ -71,7 +69,7 @@ namespace Platform.ClientSportsbook.API.Controllers
                                 { "response", JsonSerializer.Serialize(new { Status = result.StatusCode, Message = result.Message }) }
                             };
 
-            _telemetryClient.TrackEvent($"e:v1/sportsbook/activefixtures/details/{fixtureId}", properties);
+            //_telemetryClient.TrackEvent($"e:v1/sportsbook/activefixtures/details/{fixtureId}", properties);
 
             switch (result.StatusCode)
             {
@@ -100,7 +98,7 @@ namespace Platform.ClientSportsbook.API.Controllers
                                 { "response", JsonSerializer.Serialize(new { Status = result.StatusCode, Message = result.Message }) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/market/subscribe", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/market/subscribe", properties);
 
             switch (result.StatusCode)
             {
@@ -129,7 +127,7 @@ namespace Platform.ClientSportsbook.API.Controllers
                                 { "response", JsonSerializer.Serialize(new { Status = result.StatusCode, Message = result.Message }) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/market/unsubscribe", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/market/unsubscribe", properties);
 
             switch (result.StatusCode)
             {
@@ -158,7 +156,7 @@ namespace Platform.ClientSportsbook.API.Controllers
                                 { "response", JsonSerializer.Serialize(new { Status = result.StatusCode, Message = result.Message }) }
                             };
 
-            _telemetryClient.TrackEvent("e:v1/sportsbook/market/subscription", properties);
+            //_telemetryClient.TrackEvent("e:v1/sportsbook/market/subscription", properties);
 
             switch (result.StatusCode)
             {

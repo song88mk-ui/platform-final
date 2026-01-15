@@ -10,7 +10,6 @@ using Platform.Betting.API.Repository;
 using Platform.Betting.API.Telemetry;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Utility;
-using Platform.Shared.Telemetry;
 using Platform.Shared.Extensions;
 using Platform.Shared.Repositories;
 using Platform.Betting.API.Extensions;

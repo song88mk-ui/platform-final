@@ -4,10 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Platform.Operator.Cashout.Service.Repository;
 using Platform.Shared.Utility;
 using Serilog;
-using Serilog.Events;
-using Serilog.Formatting.Compact;
 using System;
-using System.IO;
 
 namespace Platform.Operator.Cashout.Service
 {
@@ -15,18 +12,15 @@ namespace Platform.Operator.Cashout.Service
     {
         public static void Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-                .Enrich.FromLogContext()
-                .WriteTo.Console(new RenderedCompactJsonFormatter())
-                .CreateLogger();
-
             CreateHostBuilder(args).Build().Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .UseSerilog()
+                .UseSerilog((ctx, _, log) =>
+                {
+                    log.ReadFrom.Configuration(ctx.Configuration);
+                })
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddHttpClient();

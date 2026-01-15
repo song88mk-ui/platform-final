@@ -13,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Platform.RabbitMQ.API.Telemetry;
 using Platform.Shared.Utility;
-using Platform.Shared.Telemetry;
 using Platform.Shared.Extensions;
 
 namespace Platform.RabbitMQ.API
@@ -55,6 +54,7 @@ namespace Platform.RabbitMQ.API
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Platform RabbitMQ API", Version = "v1" });
             });
+
             services.AddSingleton<Instrumentation>();
             services.AddTelemetry(new TelemetrySettings (
                 ServiceName: Instrumentation.ActivitySourceName,

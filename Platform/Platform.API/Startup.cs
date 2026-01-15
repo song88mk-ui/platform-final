@@ -9,9 +9,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.API.ActionFilters;
 using Platform.API.Repository;
+using Platform.API.Telemetry;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Utility;
-using Platform.Shared.Telemetry;
 using Platform.Shared.Extensions;
 using System.IO.Compression;
 using System.Linq;
@@ -62,7 +62,7 @@ namespace Platform.API
                     });
             });
 
-            services.AddSingleton<Platform.API.Telemetry.Instrumentation>();
+            services.AddSingleton<Instrumentation>();
             services.AddTelemetry(new TelemetrySettings (
                 ServiceName: Platform.API.Telemetry.Instrumentation.ACTIVITY_SOURCE_NAME,
                 ActivitySourceName: Platform.API.Telemetry.Instrumentation.ACTIVITY_SOURCE_NAME,

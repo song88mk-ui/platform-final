@@ -240,7 +240,7 @@ namespace Platform.Shared.Repositories
                 catch (Exception ex)
                 {
                     activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-                    _logger.LogError(ex, "GetMaxStake Error");
+                    _logger.LogError("GetMaxStake Error: {@exception}", ex);
 
                     return new BaseResponseDTO<ProviderStakeResponseDTO>
                     {
@@ -319,6 +319,7 @@ namespace Platform.Shared.Repositories
                     };
 
                     activity?.SetTag("gts.assessment.payload", payload);
+                    _logger.LogInformation("Assessment Payload: {@payload}", payload);
 
                     var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/assessment", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
 
@@ -327,7 +328,7 @@ namespace Platform.Shared.Repositories
                         var initialResult = JsonSerializer.Deserialize<GTSAssessmentResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                         if(initialResult.IsBetAllowed == false)
-                            _logger.LogError($"Assessment Result: {JsonSerializer.Serialize(initialResult)}");
+                            _logger.LogError("Assessment Result: {@result}", initialResult);
 
                         activity?.SetTag("gts.assessment.result", initialResult);
                         activity?.SetStatus(ActivityStatusCode.Ok);
@@ -350,8 +351,7 @@ namespace Platform.Shared.Repositories
                     else
                     {
                         var responseError = await response.Content.ReadAsStringAsync();
-                        _logger.LogError($"Assessment Error: {responseError}");
-                        _logger.LogError($"Payload: {JsonSerializer.Serialize(payload)}");
+                        _logger.LogError("Assessment Error: {@response}", responseError);
 
                         activity?.SetStatus(ActivityStatusCode.Error, responseError);
 
@@ -369,7 +369,7 @@ namespace Platform.Shared.Repositories
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Assessment Error");
+                    _logger.LogError("Assessment Exception: {@exception}", ex);
 
                     activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
 
@@ -427,6 +427,7 @@ namespace Platform.Shared.Repositories
                     };
 
                     activity?.SetTag("gts.bet.placement.payload", payload);
+                    _logger.LogInformation("SendBet Payload: {@payload}", payload);
 
                     var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/bets", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
 
@@ -459,8 +460,7 @@ namespace Platform.Shared.Repositories
                     }
                     else
                     {
-                        _logger.LogError($"SendBet Error: {JsonSerializer.Serialize(await response.Content.ReadAsStringAsync())}");
-                        _logger.LogError($"SendBet Payload: {JsonSerializer.Serialize(payload)}");
+                        _logger.LogError("SendBet Error Response: {@response}", await response.Content.ReadAsStringAsync());
 
                         activity?.SetStatus(ActivityStatusCode.Error, response.StatusCode.ToString());
 
@@ -473,8 +473,8 @@ namespace Platform.Shared.Repositories
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"SendBet Error: {JsonSerializer.Serialize(ex.Message)}");
-                    _logger.LogError($"SendBet StackTrace: {JsonSerializer.Serialize(ex.StackTrace)}");
+                    _logger.LogError("SendBet Exception: {@exception}", ex);
+                    _logger.LogError("SendBet StackTrace: {@stackTrace}", ex.StackTrace);
 
                     activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
 
@@ -522,7 +522,7 @@ namespace Platform.Shared.Repositories
                     }
                     else
                     {
-                        _logger.LogError($"Cancellation Error: {JsonSerializer.Serialize(await response.Content.ReadAsStringAsync())}");
+                        _logger.LogError("Cancellation Error: {@response}", await response.Content.ReadAsStringAsync());
 
                         activity?.SetStatus(ActivityStatusCode.Error, response.StatusCode.ToString());
 
@@ -535,7 +535,7 @@ namespace Platform.Shared.Repositories
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Cancellation Error: {JsonSerializer.Serialize(ex)}");
+                    _logger.LogError("Cancellation Exception: {@exception}", ex);
 
                     activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
 

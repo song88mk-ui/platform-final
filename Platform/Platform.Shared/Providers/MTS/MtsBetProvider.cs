@@ -159,7 +159,7 @@ namespace Platform.Shared.Providers.MTS
                 {
                     _factory = _mts.BuilderFactory;
 
-                    var betCancel = isBackOfficeTrigger 
+                    var betCancel = isBackOfficeTrigger
                         ? _factory.CreateTicketCancelBuilder().BuildTicket(betId.ToString().ToUpper(), Convert.ToInt32(_configuration["Custom:BookmakerId"]), TicketCancellationReason.BookmakerBackofficeTriggered)
                         : _factory.CreateTicketCancelBuilder().BuildTicket(betId.ToString().ToUpper(), Convert.ToInt32(_configuration["Custom:BookmakerId"]), TicketCancellationReason.TimeoutTriggered);
 
@@ -169,13 +169,13 @@ namespace Platform.Shared.Providers.MTS
                         payload = JsonSerializer.Serialize(betCancel)
                     };
 
-                    _logger.LogInformation($"ProcessCancellation (Request)- {payload}");
+                    _logger.LogInformation("ProcessCancellation (Request): {@payload}", payload);
                     var response = _mts.SendTicketCancelBlocking(betCancel);
-                    _logger.LogInformation($"ProcessCancellation (Response)- {payload}");
+                    _logger.LogInformation("ProcessCancellation (Response): {@response}", response);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"ProcessCancellation Error- {JsonSerializer.Serialize(ex)}");
+                    _logger.LogError("ProcessCancellation Error: {@exception}", ex);
                 }
             }
         }
@@ -225,7 +225,7 @@ namespace Platform.Shared.Providers.MTS
             }
             catch (Exception ex)
             {
-                _logger.LogError($"ValidateToMTS Error- {JsonSerializer.Serialize(ex)}");
+                _logger.LogError("ValidateToMTS Error : {@exception}", ex);
                 return new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10000 - {ex.Message}");
             }
         }

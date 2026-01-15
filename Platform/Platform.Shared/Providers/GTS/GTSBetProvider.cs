@@ -119,17 +119,17 @@ namespace Platform.Shared.Providers.GTS
                 if (token.StatusCode != StatusCode.Success)
                     return;
 
-                _logger.LogInformation($"ProcessCancellation (Request)- {betId}");
+                _logger.LogInformation("ProcessCancellation (Request) : {betId}", betId);
 
                 var result = await _gtsRepo.Cancellation(token.Result.Token, betId);
 
-                _logger.LogInformation($"ProcessCancellation (Response)- {JsonSerializer.Serialize(result)}");
+                _logger.LogInformation("ProcessCancellation (Response) : {@response}", result);
 
                 return;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"ProcessCancellation Error- {JsonSerializer.Serialize(ex)}");
+                _logger.LogError("ProcessCancellation Error: {@exception}", ex);
             }
         }
 

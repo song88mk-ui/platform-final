@@ -137,7 +137,7 @@ namespace Platform.Shared.Utility
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to establish connection to RabbitMQ!");
+                _logger.LogError("Failed to establish connection to RabbitMQ!: {@exception}", e);
                 throw;
             }
         }
@@ -188,7 +188,7 @@ namespace Platform.Shared.Utility
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to establish connection to RabbitMQ!");
+                _logger.LogError("Failed to establish connection to RabbitMQ!: {@exception}", e);
                 throw;
             }
         }
@@ -267,7 +267,7 @@ namespace Platform.Shared.Utility
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to establish connection to RabbitMQ!");
+                _logger.LogError("Failed to establish connection to RabbitMQ!: {@exception}", e);
                 throw;
             }
         }
@@ -335,7 +335,7 @@ namespace Platform.Shared.Utility
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to establish connection to RabbitMQ!");
+                _logger.LogError("Failed to establish connection to RabbitMQ!: {@exception}", e);
                 throw;
             }
         }

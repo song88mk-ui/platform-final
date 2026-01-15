@@ -9,6 +9,7 @@ using Microsoft.OpenApi.Models;
 using Platform.Shared.Utility;
 using Platform.WebSocket.API2.Data;
 using Platform.WebSocket.API2.Repository;
+using Platform.WebSocket.API2.Telemetry;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +21,12 @@ builder.Host.UseSerilog((context, _, serilog) =>
 });
 
 // Add services to the container.
+builder.Services.AddSingleton<Instrumentation>();
+builder.Services.AddTelemetry(new TelemetrySettings (
+    ServiceName: Instrumentation.ActivitySourceName,
+    ActivitySourceName: Instrumentation.ActivitySourceName,
+    MeterName: Instrumentation.MeterName
+));
 
 builder.Services.AddControllers();
 

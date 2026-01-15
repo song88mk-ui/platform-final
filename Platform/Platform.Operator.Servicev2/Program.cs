@@ -31,8 +31,6 @@ namespace Platform.Operator.Servicev2
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddSingleton<Instrumentation>();
-
-                    services.AddSingleton<Instrumentation>();
                     services.AddTelemetry(new TelemetrySettings(
                         ServiceName: Instrumentation.ActivitySourceName,
                         ActivitySourceName: Instrumentation.ActivitySourceName,

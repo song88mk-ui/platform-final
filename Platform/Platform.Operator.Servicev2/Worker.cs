@@ -1,24 +1,24 @@
-using System;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
 using Platform.Operator.Servicev2.Repository;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using Platform.Shared.Extensions;
-using RabbitMQ.Client.Events;
-using OpenTelemetry.Context.Propagation;
-using System.Diagnostics;
 using Platform.Operator.Servicev2.Telemetry;
-using OpenTelemetry;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Platform.Operator.Servicev2
 {

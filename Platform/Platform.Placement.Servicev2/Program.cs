@@ -15,6 +15,7 @@ namespace Platform.Placement.Servicev2
     {
         public static void Main(string[] args)
         {
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             CreateHostBuilder(args).Build().Run();
         }
 
@@ -26,8 +27,6 @@ namespace Platform.Placement.Servicev2
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
-                    AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-
                     services.AddSingleton<Instrumentation>();
                     services.AddTelemetry(new TelemetrySettings(
                         ServiceName: Instrumentation.ActivitySourceName,

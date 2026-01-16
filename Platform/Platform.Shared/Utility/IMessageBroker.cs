@@ -14,8 +14,11 @@ namespace Platform.Shared.Utility
         void NAcknowledge(BasicDeliverEventArgs e);
         void Publish<T>(T payload, string messageType, string routingKey, string correlationId);
         void Publish<T>(T payload, string messageType, string routingKey, string correlationId, int priority);
-        void ExternalPublish<T>(T payload, string messageType, string routingKey, string correlationId);
+        void CPublish<T>(T payload, string messageType, string routingKey, string correlationId);
+        void CPublish<T>(T payload, string messageType, string routingKey, string correlationId, int priority);
         void Publish(string payload, string messageType, string routingKey, string correlationId);
+        void CPublish(string payload, string messageType, string routingKey, string correlationId);
+        void ExternalPublish<T>(T payload, string messageType, string routingKey, string correlationId);
         void Dispose();
     }
 }

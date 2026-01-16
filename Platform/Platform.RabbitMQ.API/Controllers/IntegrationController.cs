@@ -15,7 +15,6 @@ namespace Platform.RabbitMQ.API.Controllers
         public IntegrationController(IMessageBroker messageBroker)
         {
             _messageBroker = messageBroker;
-            _messageBroker.Connect();
         }
 
         [HttpPost("v1/broker/publish")]
@@ -23,7 +22,7 @@ namespace Platform.RabbitMQ.API.Controllers
         {
             try
             {
-                _messageBroker.Publish(request.Payload, request.MessageType, request.RoutingKey, request.CorrelationId);
+                _messageBroker.CPublish(request.Payload, request.MessageType, request.RoutingKey, request.CorrelationId);
 
                 return Ok(new BaseResponseDTO<MessageResponseDTO>
                 {

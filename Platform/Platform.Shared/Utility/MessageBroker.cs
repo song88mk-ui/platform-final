@@ -7,6 +7,7 @@ using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
@@ -22,6 +23,8 @@ namespace Platform.Shared.Utility
 
         private readonly IConfiguration _configuration;
         private readonly ILogger<MessageBroker> _logger;
+
+        private readonly object _lock = new object();
 
         private string _hostName = string.Empty;
         private int _hostPort = 5672;
@@ -71,20 +74,16 @@ namespace Platform.Shared.Utility
 
         public void Connect()
         {
-            _isExclusive = string.IsNullOrEmpty(_configuration["MessageBroker:IsExclusive"]) ? false : Convert.ToBoolean(_configuration["MessageBroker:IsExclusive"]);
+            _isExclusive = _configuration.GetValue<bool>("MessageBroker:IsExclusive", false);
             _hostName = _configuration["MessageBroker:Host"];
             _hostPort = _configuration.GetValue<int>("MessageBroker:Port", 5672);
             _userName = _configuration["MessageBroker:Username"];
             _password = _configuration["MessageBroker:Password"];
             _virtualHost = _configuration["MessageBroker:VirtualHost"];
             _exchange = _configuration["MessageBroker:Exchange"];
-            _queue = _isExclusive == true ? $"{_configuration["MessageBroker:Queue"]}.{Environment.MachineName.ToLower()}" : _configuration["MessageBroker:Queue"];
             _consumerName = _configuration["MessageBroker:Consumer"];
             _routingKey = _configuration["MessageBroker:RoutingKey"];
             _prefetchCount = _configuration.GetValue<ushort>("MessageBroker:PrefetchCount", 1000);
-
-            _logger.LogInformation("Connecting to RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}",
-                    _hostName, _hostPort, _hostPort == 5671 ? true : false);
 
             var clientProperties = new Dictionary<string, object>
             {
@@ -92,11 +91,30 @@ namespace Platform.Shared.Utility
                 { "application_name", "Song88 Platform" }
             };
 
+            var suffix = "";
+
+            if (_isExclusive)
+            {
+                using (MD5 hasher = MD5.Create())
+                {
+                    byte[] bytes = hasher.ComputeHash(Encoding.UTF8.GetBytes(Environment.MachineName));
+                    StringBuilder sb = new StringBuilder();
+                    foreach(byte b in bytes)
+                        sb.Append(b.ToString("x2"));
+                    suffix = sb.ToString().Substring(0,5);
+                }
+            }
+
+            _queue = _isExclusive == true ? $"{_configuration["MessageBroker:Queue"]}.{suffix}" : _configuration["MessageBroker:Queue"];
+
             try
             {
                 if (_connection == null)
                 {
                     if (_connectionFactory == null)
+                        _logger.LogInformation("Connecting to RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}",
+                                _hostName, _hostPort, _hostPort == 5671 ? true : false);
+
                         _connectionFactory = new ConnectionFactory
                         {
                             HostName = _hostName,
@@ -207,9 +225,6 @@ namespace Platform.Shared.Utility
             _prefetchCount = _configuration.GetValue<ushort>("MessageBroker:PrefetchCount", 1000);
             _isPriority = _configuration.GetValue<bool>("MessageBroker:IsPriority", false);
 
-            _logger.LogInformation("Connecting to RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}; ManualAck",
-                    _hostName, _hostPort, _hostPort == 5671 ? true : false);
-
             var clientProperties = new Dictionary<string, object>
             {
                 { "host_name", Environment.MachineName },
@@ -221,6 +236,9 @@ namespace Platform.Shared.Utility
                 if (_connection == null)
                 {
                     if (_connectionFactory == null)
+                        _logger.LogInformation("Connecting to RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}; ManualAck",
+                                _hostName, _hostPort, _hostPort == 5671 ? true : false);
+
                         _connectionFactory = new ConnectionFactory
                         {
                             HostName = _hostName,
@@ -285,9 +303,6 @@ namespace Platform.Shared.Utility
             _routingKey = _configuration["MessageBroker:RoutingKey"];
             _prefetchCount = _configuration.GetValue<ushort>("MessageBroker:PrefetchCount", 1000);
 
-            _logger.LogInformation("Connecting to RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}; AutoAck",
-                    _hostName, _hostPort, _hostPort == 5671 ? true : false);
-
             var clientProperties = new Dictionary<string, object>
             {
                 { "host_name", Environment.MachineName },
@@ -299,6 +314,9 @@ namespace Platform.Shared.Utility
                 if (_connection == null)
                 {
                     if (_connectionFactory == null)
+                        _logger.LogInformation("Connecting to RabbitMQ on [{host}:{port}; TlsEnabled: {tlsEnabled}; AutoAck",
+                                _hostName, _hostPort, _hostPort == 5671 ? true : false);
+
                         _connectionFactory = new ConnectionFactory
                         {
                             HostName = _hostName,
@@ -368,12 +386,19 @@ namespace Platform.Shared.Utility
 
         public void Publish<T>(T payload, string messageType, string routingKey, string correlationId)
         {
+            Publish(payload, messageType, routingKey, correlationId, 0);
+        }
+
+        public void Publish<T>(T payload, string messageType, string routingKey, string correlationId, int priority)
+        {
             using (var activity = _activitySource.StartActivity($"{routingKey} send", ActivityKind.Producer))
             {
                 var properties = _model.CreateBasicProperties();
                 properties.CorrelationId = correlationId;
                 properties.DeliveryMode = 2;
                 properties.Type = messageType;
+                if (priority != 0)
+                    properties.Priority = Convert.ToByte(priority);
 
                 ActivityContext contextToInject = default;
                 if (activity != null)
@@ -392,15 +417,24 @@ namespace Platform.Shared.Utility
             }
         }
 
-        public void Publish<T>(T payload, string messageType, string routingKey, string correlationId, int priority)
+        public void CPublish<T>(T payload, string messageType, string routingKey, string correlationId)
+        {
+            Publish(payload, messageType, routingKey, correlationId, 0);
+        }
+
+        public void CPublish<T>(T payload, string messageType, string routingKey, string correlationId, int priority)
         {
             using (var activity = _activitySource.StartActivity($"{routingKey} send", ActivityKind.Producer))
             {
-                var properties = _model.CreateBasicProperties();
+                var conn = GetConnection();
+                using var channel = conn.CreateModel();
+
+                var properties = channel.CreateBasicProperties();
                 properties.CorrelationId = correlationId;
                 properties.DeliveryMode = 2;
                 properties.Type = messageType;
-                properties.Priority = Convert.ToByte(priority);
+                if (priority != 0)
+                    properties.Priority = Convert.ToByte(priority);
 
                 ActivityContext contextToInject = default;
                 if (activity != null)
@@ -415,7 +449,7 @@ namespace Platform.Shared.Utility
 
                 var payloadBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload));
 
-                _model.BasicPublish(_exchange, routingKey, properties, payloadBytes);
+                channel.BasicPublish(_exchange, routingKey, properties, payloadBytes);
             }
         }
 
@@ -458,6 +492,36 @@ namespace Platform.Shared.Utility
             }
         }
 
+        public void CPublish(string payload, string messageType, string routingKey, string correlationId)
+        {
+            using (var activity = _activitySource.StartActivity($"{routingKey} send", ActivityKind.Producer))
+            {
+                var conn = GetConnection();
+                using var channel = conn.CreateModel();
+
+                var properties = channel.CreateBasicProperties();
+                properties.CorrelationId = correlationId;
+                properties.DeliveryMode = 2;
+                properties.Type = messageType;
+
+                ActivityContext contextToInject = default;
+                if (activity != null)
+                {
+                    contextToInject = activity.Context;
+                } else if (Activity.Current != null)
+                {
+                    contextToInject = Activity.Current.Context;
+                }
+
+                Propagator.Inject(new PropagationContext(contextToInject, Baggage.Current), properties, this.InjectTraceContextIntoBasicProperties);
+
+
+                var payloadBytes = Encoding.UTF8.GetBytes(payload);
+
+                channel.BasicPublish(_exchange, routingKey, properties, payloadBytes);
+            }
+        }
+
         private void InjectTraceContextIntoBasicProperties(IBasicProperties props, string key, string value)
         {
             try
@@ -474,6 +538,21 @@ namespace Platform.Shared.Utility
                 _model.Dispose();
             if (_connection != null)
                 _connection.Dispose();
+        }
+
+        private IConnection GetConnection()
+        {
+            if (_connection != null && _connection.IsOpen)
+                return _connection;
+
+            lock(_lock)
+            {
+                if (_connection == null || !_connection.IsOpen)
+                {
+                    _connection = _connectionFactory.CreateConnection();
+                }
+            }
+            return _connection;
         }
     }
 }

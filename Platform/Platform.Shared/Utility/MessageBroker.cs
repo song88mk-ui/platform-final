@@ -547,6 +547,7 @@ namespace Platform.Shared.Utility
 
             lock(_lock)
             {
+                Connect(); //
                 if (_connection == null || !_connection.IsOpen)
                 {
                     _connection = _connectionFactory.CreateConnection();

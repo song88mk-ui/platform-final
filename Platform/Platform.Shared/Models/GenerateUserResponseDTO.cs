@@ -7,7 +7,7 @@ namespace Platform.Shared.Models
     {
         public Guid ClientId { get; set; }
         public Guid UserId { get; set; }
-        public Guid OperatorToken { get; set; }
+        public string OperatorToken { get; set; }
         public decimal Balance { get; set; }
         public string CurrencyCode { get; set; }
     }

@@ -7,7 +7,7 @@ namespace Platform.Shared.Data.Platform.Entities
     {
         public long Id { get; set; }
         public Guid UserId { get; set; }
-        public Guid OperatorToken { get; set; }
+        public string OperatorToken { get; set; }
         public Guid ClientId { get; set; }
         public Guid BetId { get; set; }
         public int TransactionTypeId { get; set; }

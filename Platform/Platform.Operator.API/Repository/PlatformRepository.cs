@@ -42,7 +42,7 @@ namespace Platform.Operator.API.Repository
                 };
             }
 
-            var result = await _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefaultAsync();
+            var result = await _platformContext.Operator.Where(c => c.OperatorToken.ToLower() == guid.ToString().ToLower()).FirstOrDefaultAsync();
 
             if (result == null)
             {
@@ -98,7 +98,7 @@ namespace Platform.Operator.API.Repository
                 };
             }
 
-            var result = await _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefaultAsync();
+            var result = await _platformContext.Operator.Where(c => c.OperatorToken.ToLower() == guid.ToString().ToLower()).FirstOrDefaultAsync();
 
             if (result == null)
             {
@@ -173,7 +173,7 @@ namespace Platform.Operator.API.Repository
             {
                 try
                 {
-                    var result = _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefault();
+                    var result = _platformContext.Operator.Where(c => c.OperatorToken.ToLower() == guid.ToString().ToLower()).FirstOrDefault();
 
                     if (result == null)
                     {
@@ -302,7 +302,7 @@ namespace Platform.Operator.API.Repository
             {
                 try
                 {
-                    var result = _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefault();
+                    var result = _platformContext.Operator.Where(c => c.OperatorToken.ToLower() == guid.ToString().ToLower()).FirstOrDefault();
 
                     if (result == null)
                     {
@@ -809,14 +809,14 @@ namespace Platform.Operator.API.Repository
                         ClientId = request.ClientId,
                         Balance = request.Balance,
                         CurrencyCode = request.CurrencyCode,
-                        OperatorToken = Guid.NewGuid(),
+                        OperatorToken = Guid.NewGuid().ToString(),
                         CreatedDate = DateTime.UtcNow
                     }).Entity;
 
                     response.ClientId = request.ClientId;
                     response.CurrencyCode = request.CurrencyCode;
                     response.UserId = operatorEntity.UserId;
-                    response.OperatorToken = operatorEntity.OperatorToken;
+                    response.OperatorToken = operatorEntity.OperatorToken.ToString();
                     response.Balance = operatorEntity.Balance;
 
                     await _platformContext.SaveChangesAsync();
@@ -868,7 +868,7 @@ namespace Platform.Operator.API.Repository
             {
                 try
                 {
-                    var result = _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefault();
+                    var result = _platformContext.Operator.Where(c => c.OperatorToken.ToLower() == guid.ToString().ToLower()).FirstOrDefault();
 
                     if (result == null)
                     {
@@ -1044,7 +1044,7 @@ namespace Platform.Operator.API.Repository
                         };
                     }
 
-                    var result = _platformContext.Operator.Where(c => c.OperatorToken == guid).FirstOrDefault();
+                    var result = _platformContext.Operator.Where(c => c.OperatorToken.ToLower() == guid.ToString().ToLower()).FirstOrDefault();
 
                     if (result == null)
                     {
@@ -1238,7 +1238,7 @@ namespace Platform.Operator.API.Repository
                 BetId = Guid.Parse(betId),
                 UserId = _operator.UserId,
                 ClientId = _operator.ClientId,
-                OperatorToken = _operator.OperatorToken,
+                OperatorToken = _operator.OperatorToken.ToString(),
                 CreatedDate = DateTime.UtcNow,
                 CurrencyCode = _operator.CurrencyCode,
                 TransactionTypeId = (int)Enum.Parse(typeof(BetStatus), betStatus),

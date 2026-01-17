@@ -108,7 +108,7 @@ namespace Platform.Provider.Service
             var parentContext = Propagator.Extract(default, e.BasicProperties, this.ExtractTraceFromBasicProperties);
             Baggage.Current = parentContext.Baggage;
 
-            using (var activity = _activitySource.StartActivity("process.bet.cancellation",
+            using (var activity = _activitySource.StartActivity("process.provider",
                         ActivityKind.Consumer, parentContext.ActivityContext))
             try
             {

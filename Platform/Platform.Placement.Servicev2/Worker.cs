@@ -847,6 +847,8 @@ namespace Platform.Placement.Servicev2
                         ActivityKind.Consumer, parentContext.ActivityContext))
                 try
                 {
+                    activity?.SetTag("message.type", messageType);
+
                     switch (messageType)
                     {
                         case "OnBetPlacement":
@@ -856,6 +858,8 @@ namespace Platform.Placement.Servicev2
                                 scope.ServiceProvider.GetRequiredService<IBetProviderFactory>();
 
                             var provider = betProviderFactory.Resolve(onBetPlacement.ChannelTypeId);
+
+                            activity?.SetTag("provider.channel.id", onBetPlacement.ChannelTypeId);
 
                             _bettingRepository.ProcesssBetPlacement(onBetPlacement, provider, _messageBroker, correlationId);
 

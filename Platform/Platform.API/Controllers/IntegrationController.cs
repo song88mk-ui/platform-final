@@ -32,47 +32,47 @@ namespace Platform.API.Controllers
         [HttpPost("v1/authentication/login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            using (var activity = _activitySource.StartActivity("v1/authentication/login"))
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
+
+            var headers = new Dictionary<string, string>()
             {
-                var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-                var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-                var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-                var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
-                var headers = new Dictionary<string, string>()
-                {
-                    { "X-Original-User-IP", ipAddress ?? ""},
-                    { "X-Original-User-Agent", userAgent ?? ""},
-                    { "X-Original-User-Country", HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault() ?? ""}
-                };
+                { "X-Original-User-IP", ipAddress ?? ""},
+                { "X-Original-User-Agent", userAgent ?? ""},
+                { "X-Original-User-Country", HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault() ?? ""}
+            };
 
-                var result = await _platformRepository.Login(clientId, request, headers);
+            var result = await _platformRepository.Login(clientId, request, headers);
 
-                var parameters = request;
+            var parameters = request;
 
-                var properties = new Dictionary<string, string>
-                                {
-                                    { "ipAddress", ipAddress },
-                                    { "x-api-key", apiKey },
-                                    { "x-client-id", clientId },
-                                    { "user-agent", userAgent },
-                                    { "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
-                                    { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                    { "statusCode", result.StatusCode.ToString() },
-                                    { "message", result.Message.ToString() },
-                                    { "response", JsonSerializer.Serialize(result) }
-                                };
+            var properties = new Dictionary<string, object>
+                            {
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "user-agent", userAgent },
+                                { "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message },
+                                { "response", result }
+                            };
 
-                foreach(var prop in properties)
-                    activity?.SetTag(prop.Key, prop.Value);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
-                switch (result.StatusCode)
-                {
-                    case Shared.Enums.StatusCode.Success:
-                    case Shared.Enums.StatusCode.Maintenance:
-                        return Ok(result);
-                    default:
-                        return BadRequest(result);
-                }
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
             }
         }
 
@@ -80,71 +80,122 @@ namespace Platform.API.Controllers
         [HttpPost("v1/authentication/logout")]
         public async Task<IActionResult> Logout()
         {
-            using (var activity = _activitySource.StartActivity("v1/authentication/logout"))
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
+
+            var result = await _platformRepository.Logout(clientId, operatorToken);
+
+            var parameters = new { };
+
+            var properties = new Dictionary<string, object>
+                            {
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "user-agent", userAgent },
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message },
+                                { "response", result }
+                            };
+
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
+
+            switch (result.StatusCode)
             {
-                var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-                var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-                var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-                var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
-                var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
-
-                var result = await _platformRepository.Logout(clientId, operatorToken);
-
-                var parameters = new { };
-
-                var properties = new Dictionary<string, string>
-                                {
-                                    { "ipAddress", ipAddress },
-                                    { "x-api-key", apiKey },
-                                    { "x-client-id", clientId },
-                                    { "user-agent", userAgent },
-                                    { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                    { "statusCode", result.StatusCode.ToString() },
-                                    { "message", result.Message.ToString() },
-                                    { "response", JsonSerializer.Serialize(result) }
-                                };
-
-                foreach(var prop in properties)
-                    activity?.SetTag(prop.Key, prop.Value);
-
-                switch (result.StatusCode)
-                {
-                    case Shared.Enums.StatusCode.Success:
-                    case Shared.Enums.StatusCode.Maintenance:
-                        return Ok(result);
-                    default:
-                        return BadRequest(result);
-                }
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
             }
         }
 
         [HttpGet("v1/wallet/balance")]
         public async Task<IActionResult> GetWalletBalance()
         {
-            using (var activity = _activitySource.StartActivity("v1/wallet/balance"))
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+
+            var result = await _platformRepository.GetWalletBalance(clientId, operatorToken, OGParameters);
+
+            var properties = new Dictionary<string, object>
+                            {
+                                { "ipv4-address", ClientIPv4 },
+                                { "country", ClientCountry },
+                                { "ipAddress", ipAddress },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "x-operator-token", operatorToken },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
+                            };
+
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
+
+            switch (result.StatusCode)
             {
-                var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-                var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-                var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-                var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
 
-                var result = await _platformRepository.GetWalletBalance(clientId, operatorToken, OGParameters);
+        [HttpPost("v2/bet/placement")]
+        public async Task<IActionResult> PlaceBet([FromBody] BetRequest request)
+        {
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
 
-                var parameters = new
-                {
-                };
+            var ipAddressV4 = ClientIPv4;
+            var ipAddressV6 = ClientIPv6;
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
+            var connectionId = HttpContext.Request.Headers["x-connection-id"].FirstOrDefault();
+            var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
+            var isSSR = HttpContext.Request.Headers["x-is-ssr"].FirstOrDefault();
 
-                var properties = new Dictionary<string, string>
-                                {
-                                    { "ipAddress", ipAddress },
-                                    { "x-api-key", apiKey },
-                                    { "x-client-id", clientId },
-                                    { "x-operator-token", operatorToken },
-                                    { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
-                                    { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                    { "statusCode", result.StatusCode.ToString() },
-                                    { "message", result.Message.ToString() }
-                                };
+            if (isSSR == null)
+            {
+                request.IPAddress = ipAddressV4;
+                request.IPAddressV6 = ipAddressV6;
+            }
+
+            try
+            {
+                var result = await _platformRepository.PlaceBet(apiKey, clientId, operatorToken, request, OGParameters, isSSR, userAgent);
+
+                var parameters = request;
+
+                var properties = new Dictionary<string, object>
+                            {
+                                { "ipAddress", ipAddressV4 },
+                                { "ipAddressV6", ipAddressV6 },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "x-operator-token", operatorToken },
+                                { "user-agent", userAgent },
+                                { "x-connection-id", connectionId },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
 
                 foreach(var prop in properties)
                     activity?.SetTag(prop.Key, prop.Value);
@@ -158,106 +209,51 @@ namespace Platform.API.Controllers
                         return BadRequest(result);
                 }
             }
-        }
-
-        [HttpPost("v2/bet/placement")]
-        public async Task<IActionResult> PlaceBet([FromBody] BetRequest request)
-        {
-            using(var activity = _activitySource.StartActivity("v2/bet/placement"))
+            catch (Exception ex)
             {
-                var ipAddressV4 = HttpContext.Request.Headers["Cf-Connecting-Ip"].FirstOrDefault();
-                var ipAddressV6 = HttpContext.Request.Headers["Cf-Connecting-IPv6"].FirstOrDefault();
-                var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
-                var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-                var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
-                var connectionId = HttpContext.Request.Headers["x-connection-id"].FirstOrDefault();
-                var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
-                var isSSR = HttpContext.Request.Headers["x-is-ssr"].FirstOrDefault();
-
-                if (isSSR == null)
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                var result = new BaseResponseDTO<BetErrorResponse>
                 {
-                    request.IPAddress = ipAddressV4;
-                    request.IPAddressV6 = ipAddressV6;
-                }
-
-                try
-                {
-                    var result = await _platformRepository.PlaceBet(apiKey, clientId, operatorToken, request, OGParameters, isSSR, userAgent);
-
-                    var parameters = request;
-
-                    var properties = new Dictionary<string, string>
-                                {
-                                    { "ipAddress", ipAddressV4 },
-                                    { "ipAddressV6", ipAddressV6 },
-                                    { "x-api-key", apiKey },
-                                    { "x-client-id", clientId },
-                                    { "x-operator-token", operatorToken },
-                                    { "user-agent", userAgent },
-                                    { "x-connection-id", connectionId },
-                                    { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
-                                    { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                    { "statusCode", result.StatusCode.ToString() },
-                                    { "message", result.Message.ToString() },
-                                    { "response", JsonSerializer.Serialize(result) }
-                                };
-
-                    foreach(var prop in properties)
-                        activity?.SetTag(prop.Key, prop.Value);
-
-                    switch (result.StatusCode)
+                    StatusCode = Shared.Enums.StatusCode.Error,
+                    Message = Shared.Enums.StatusCode.Error.ToString().Replace('_', ' '),
+                    Result = new BetErrorResponse
                     {
-                        case Shared.Enums.StatusCode.Success:
-                        case Shared.Enums.StatusCode.Maintenance:
-                            return Ok(result);
-                        default:
-                            return BadRequest(result);
+                        Message = ex.Message,
+                        StackTrace = ex.StackTrace
                     }
-                }
-                catch (Exception ex)
-                {
-                    activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-                    var result = new BaseResponseDTO<BetErrorResponse>
-                    {
-                        StatusCode = Shared.Enums.StatusCode.Error,
-                        Message = Shared.Enums.StatusCode.Error.ToString().Replace('_', ' '),
-                        Result = new BetErrorResponse
-                        {
-                            Message = ex.Message,
-                            StackTrace = ex.StackTrace
-                        }
-                    };
+                };
 
-                    var parameters = request;
+                var parameters = request;
 
-                    var properties = new Dictionary<string, string>
-                                {
-                                    { "ipAddress", ipAddressV4 },
-                                    { "ipAddressV6", ipAddressV6 },
-                                    { "x-api-key", apiKey },
-                                    { "x-client-id", clientId },
-                                    { "x-operator-token", operatorToken },
-                                    { "user-agent", userAgent },
-                                    { "x-connection-id", connectionId },
-                                    { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
-                                    { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                    { "statusCode", result.StatusCode.ToString() },
-                                    { "message", result.Message.ToString() },
-                                    { "response", JsonSerializer.Serialize(result) }
-                                };
+                var properties = new Dictionary<string, object>
+                            {
+                                { "ipAddress", ipAddressV4 },
+                                { "ipAddressV6", ipAddressV6 },
+                                { "x-api-key", apiKey },
+                                { "x-client-id", clientId },
+                                { "x-operator-token", operatorToken },
+                                { "user-agent", userAgent },
+                                { "x-connection-id", connectionId },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "requestParameters", JsonSerializer.Serialize(parameters) },
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message },
+                                { "response", result }
+                            };
 
-                    foreach(var prop in properties)
-                        activity?.SetTag(prop.Key, prop.Value);
+                foreach(var prop in properties)
+                    activity?.SetTag(prop.Key, prop.Value);
 
-                    return BadRequest(result);
-                }
+                return BadRequest(result);
             }
         }
 
         [HttpPost("v1/bet/maxstake")]
         public async Task<IActionResult> GetMaxStake([FromBody] BetRequest request)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
@@ -273,7 +269,7 @@ namespace Platform.API.Controllers
 
             var parameters = request;
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -281,11 +277,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/bet/maxstake", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -300,7 +297,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/bet/config")]
         public async Task<IActionResult> GetBetConfig([FromQuery] BetConfigRequest request)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
@@ -308,7 +307,7 @@ namespace Platform.API.Controllers
 
             var parameters = request;
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -316,11 +315,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/bet/config", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -335,7 +335,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/bet/status")]
         public async Task<IActionResult> GetBetStatus([FromQuery] BetStatusRequest request)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
@@ -343,7 +345,7 @@ namespace Platform.API.Controllers
 
             var parameters = request;
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -351,10 +353,11 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() }
+                                { "statusCode", result.StatusCode }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/bet/status", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -388,7 +391,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/bet/history")]
         public async Task<IActionResult> GetBetHistory([FromQuery] BetHistoryRequest request)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
@@ -408,7 +413,7 @@ namespace Platform.API.Controllers
 
             var parameters = request;
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -416,11 +421,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", ((dynamic)result).StatusCode.ToString() },
-                                { "message", ((dynamic)result).Message.ToString() }
+                                { "statusCode", ((dynamic)result).StatusCode },
+                                { "message", ((dynamic)result).Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/bet/history", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (((dynamic)result).StatusCode)
             {
@@ -435,7 +441,9 @@ namespace Platform.API.Controllers
         [HttpPost("v2/bet/history")]
         public async Task<IActionResult> GetBetHistory2([FromBody] BetHistoryRequest request)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
@@ -455,7 +463,7 @@ namespace Platform.API.Controllers
 
             var parameters = request;
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -463,11 +471,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", ((dynamic)result).StatusCode.ToString() },
-                                { "message", ((dynamic)result).Message.ToString() }
+                                { "statusCode", ((dynamic)result).StatusCode },
+                                { "message", ((dynamic)result).Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/bet/history", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (((dynamic)result).StatusCode)
             {
@@ -482,7 +491,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/bet/history/settled")]
         public async Task<IActionResult> GetBetHistorySettled([FromQuery] BetHistorySettledRequest request)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -491,18 +502,19 @@ namespace Platform.API.Controllers
 
             var parameters = request;
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/bet/history/settled", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -517,7 +529,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/bet/history/running")]
         public async Task<IActionResult> GetBetHistoryRunning()
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
@@ -529,7 +543,7 @@ namespace Platform.API.Controllers
             {
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -537,11 +551,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/bet/history/running", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -556,8 +571,9 @@ namespace Platform.API.Controllers
         [HttpPost("v1/bet/cashout")]
         public async Task<IActionResult> CashoutBet([FromBody] CashoutBetRequest request)
         {
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
 
-            var ipAddressV4 = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var ipAddressV4 = ClientIPv4;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
@@ -568,12 +584,12 @@ namespace Platform.API.Controllers
             {
                 request.IPAddress = ipAddressV4;
             }
-            //
+
             var result = await _platformRepository.CashoutBet(apiKey, clientId, operatorToken, request, OGParameters);
 
             var parameters = request;
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddressV4 },
                                 { "x-api-key", apiKey },
@@ -581,11 +597,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/bet/cashout", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -600,8 +617,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/livestream")]
         public async Task<IActionResult> GetLivestream([FromQuery] LivestreamRequest request)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
@@ -616,7 +635,7 @@ namespace Platform.API.Controllers
 
             var parameters = request;
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -625,11 +644,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/livestream", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -644,7 +664,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/topleagues")]
         public async Task<IActionResult> GetTopLeagues([FromQuery] TopLeaguesRequest request)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -653,7 +675,7 @@ namespace Platform.API.Controllers
 
             var parameters = request;
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -661,11 +683,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/topleagues", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -680,7 +703,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/allleagues")]
         public async Task<IActionResult> GetAllLeagues([FromQuery] TopLeaguesRequest request)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -689,7 +714,7 @@ namespace Platform.API.Controllers
 
             var parameters = request;
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -697,11 +722,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/allleagues", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -716,7 +742,9 @@ namespace Platform.API.Controllers
         [HttpGet("v2/sportsbook/topfixtures/fixtureId")]
         public async Task<IActionResult> GetTopFixtures()
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -725,7 +753,7 @@ namespace Platform.API.Controllers
 
             var parameters = new { };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -733,11 +761,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v2/sportsbook/topfixtures/fixtureId", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -752,7 +781,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/markettemplategroups")]
         public async Task<IActionResult> GetMarketTemplateGroups()
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
@@ -760,7 +791,7 @@ namespace Platform.API.Controllers
 
             var parameters = new { };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -768,11 +799,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/markettemplategroups", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -787,7 +819,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/selectormarkettemplates")]
         public async Task<IActionResult> GetSelectorMarketTemplates()
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
@@ -795,7 +829,7 @@ namespace Platform.API.Controllers
 
             var parameters = new { };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -803,11 +837,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/selectormarkettemplates", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -822,7 +857,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/marketsortorder")]
         public async Task<IActionResult> GetMarketSortOrder()
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
@@ -830,7 +867,7 @@ namespace Platform.API.Controllers
 
             var parameters = new { };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -838,11 +875,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/marketsortorder", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -857,7 +895,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/fixturesortorder")]
         public async Task<IActionResult> GetFixtureSortOrder()
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
@@ -865,7 +905,7 @@ namespace Platform.API.Controllers
 
             var parameters = new { };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -873,11 +913,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/fixturesortorder", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -892,6 +933,8 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/userfavorites/fixtures")]
         public async Task<IActionResult> GetUserFavorites2()
         {
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
             var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
@@ -901,9 +944,9 @@ namespace Platform.API.Controllers
 
             var result = await _platformRepository.GetUserFavorites2(apiKey, clientId, languageCode, operatorToken, ipCountryCode, OGParameters);
 
-            var parameters = new { };
+            var parameters = new {};
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -912,11 +955,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/userfavorites/fixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -931,8 +975,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/userfavorites")]
         public async Task<IActionResult> GetUserFavorites()
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
@@ -942,7 +988,7 @@ namespace Platform.API.Controllers
 
             var parameters = new { };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -951,11 +997,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/userfavorites|GET", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -970,8 +1017,10 @@ namespace Platform.API.Controllers
         [HttpGet("v2/sportsbook/topfixtures")]
         public async Task<IActionResult> GetTopFixtures2()
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -980,7 +1029,7 @@ namespace Platform.API.Controllers
 
             var parameters = new { };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -989,11 +1038,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v2/sportsbook/topfixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1008,8 +1058,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/activefixtures")]
         public async Task<IActionResult> GetActiveFixtures([FromQuery] ActiveFixturesFilterRequestDTO request)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1018,7 +1070,7 @@ namespace Platform.API.Controllers
 
             var parameters = new { };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1027,11 +1079,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1046,8 +1099,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/activefixtures/details")]
         public async Task<IActionResult> GetActiveFixtures([FromQuery] string fixtureId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1056,7 +1111,7 @@ namespace Platform.API.Controllers
 
             var parameters = new { fixtureId };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1065,11 +1120,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/activefixtures/details", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1084,7 +1140,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/livefixturecount")]
         public async Task<IActionResult> GetLiveFixtureCount([FromQuery] SportGroup sportGroupId)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1093,7 +1151,7 @@ namespace Platform.API.Controllers
 
             var parameters = new { };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -1101,11 +1159,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/livefixturecount", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1120,7 +1179,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/todayfixturecount")]
         public async Task<IActionResult> GetTodayFixtureCount([FromQuery] int minuteUTCOffset, SportGroup sportGroupId)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1132,7 +1193,7 @@ namespace Platform.API.Controllers
                 minuteUTCOffset
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -1140,11 +1201,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/todayfixturecount", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1159,8 +1221,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/livefixtures")]
         public async Task<IActionResult> GetLiveFixtures([FromQuery] int sportId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1172,7 +1236,7 @@ namespace Platform.API.Controllers
                 sportId
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1181,11 +1245,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/livefixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1200,8 +1265,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/segments/leagues/livefixtures")]
         public async Task<IActionResult> GetLiveFixturesByLeague([FromQuery] int sportId, int segmentId, int leagueId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1215,7 +1282,7 @@ namespace Platform.API.Controllers
                 leagueId
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1224,11 +1291,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/livefixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1243,8 +1311,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/todayfixtures")]
         public async Task<IActionResult> GetTodayFixtures([FromQuery] int sportId, int minuteUTCOffset)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1257,7 +1327,7 @@ namespace Platform.API.Controllers
                 minuteUTCOffset
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1266,11 +1336,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/todayfixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1285,8 +1356,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/segments/leagues/todayfixtures")]
         public async Task<IActionResult> GetTodayFixturesByLeague([FromQuery] int sportId, int segmentId, int leagueId, int minuteUTCOffset)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1301,7 +1374,7 @@ namespace Platform.API.Controllers
                 minuteUTCOffset
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1310,11 +1383,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/todayfixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1329,8 +1403,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/upcomingfixtures")]
         public async Task<IActionResult> GetUpcomingFixtures([FromQuery] int sportId, int minuteUTCOffset)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1343,7 +1419,7 @@ namespace Platform.API.Controllers
                 minuteUTCOffset
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1352,11 +1428,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/upcomingfixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1371,8 +1448,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/segments/leagues/upcomingfixtures")]
         public async Task<IActionResult> GetUpcomingFixturesByLeague([FromQuery] int sportId, int segmentId, int leagueId, int minuteUTCOffset)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1387,7 +1466,7 @@ namespace Platform.API.Controllers
                 minuteUTCOffset
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1396,11 +1475,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/upcomingfixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1415,8 +1495,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/dailyfixtures")]
         public async Task<IActionResult> GetDailyFixtures([FromQuery] int sportId, DateTime dateUTC, int minuteUTCOffset)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1430,7 +1512,7 @@ namespace Platform.API.Controllers
                 minuteUTCOffset
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1439,11 +1521,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/dailyfixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1458,8 +1541,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/segments/leagues/dailyfixtures")]
         public async Task<IActionResult> GetDailyFixturesByLeague([FromQuery] int sportId, int segmentId, int leagueId, DateTime dateUTC, int minuteUTCOffset)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1475,7 +1560,7 @@ namespace Platform.API.Controllers
                 minuteUTCOffset
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1484,11 +1569,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/dailyfixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1503,8 +1589,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/outrightfixtures")]
         public async Task<IActionResult> GetOutrightFixtures([FromQuery] int sportId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1516,7 +1604,7 @@ namespace Platform.API.Controllers
                 sportId
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1525,11 +1613,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/outrightfixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1544,8 +1633,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/segments/leagues/outrightfixtures")]
         public async Task<IActionResult> GetOutrightFixturesByLeague([FromQuery] int sportId, int segmentId, int leagueId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1559,7 +1650,7 @@ namespace Platform.API.Controllers
                 leagueId
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1568,11 +1659,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/outrightfixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1587,8 +1679,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/topleaguefixtures")]
         public async Task<IActionResult> GetFixtures([FromQuery] int sportId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1600,7 +1694,7 @@ namespace Platform.API.Controllers
                 sportId
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1609,11 +1703,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/topleaguefixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1628,8 +1723,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/segments/fixtures")]
         public async Task<IActionResult> GetFixtures([FromQuery] int sportId, int segmentId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1642,7 +1739,7 @@ namespace Platform.API.Controllers
                 segmentId
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1651,11 +1748,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/fixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1670,8 +1768,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports/segments/leagues/fixtures")]
         public async Task<IActionResult> GetFixtures([FromQuery] int sportId, int segmentId, int leagueId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1685,7 +1785,7 @@ namespace Platform.API.Controllers
                 leagueId
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1694,11 +1794,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports/segments/leagues/fixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1713,7 +1814,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/search")]
         public async Task<IActionResult> GetSearchResults([FromQuery] string searchText, SportGroup sportGroupId)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1725,7 +1828,7 @@ namespace Platform.API.Controllers
                 searchText
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -1733,11 +1836,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/search", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1752,7 +1856,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/sports")]
         public async Task<IActionResult> GetSports([FromQuery] SportGroup sportGroup, FixtureScope? fixtureScope, DateTime? dateUTC, int? minuteUTCOffset)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1772,7 +1878,7 @@ namespace Platform.API.Controllers
                 sportGroup
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -1780,11 +1886,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/sports", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1799,8 +1906,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/fixturedetails")]
         public async Task<IActionResult> GetFixtureDetails([FromQuery] string fixtureId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1812,7 +1921,7 @@ namespace Platform.API.Controllers
                 fixtureId
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1821,11 +1930,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/fixturedetails", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1840,8 +1950,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/selectiondetails")]
         public async Task<IActionResult> GetSelectionDetails([FromQuery] string fixtureId, string marketId, string selectionId)
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1855,7 +1967,7 @@ namespace Platform.API.Controllers
                 selectionId
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1864,11 +1976,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/selectiondetails", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1883,7 +1996,9 @@ namespace Platform.API.Controllers
         [HttpPost("v1/sportsbook/userfavorites")]
         public async Task<IActionResult> AddUserFavorites([FromQuery] InsertDeleteUserFavoritesRequest request)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
@@ -1893,7 +2008,7 @@ namespace Platform.API.Controllers
 
             var parameters = request;
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -1901,11 +2016,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/userfavorites|POST", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1920,7 +2036,9 @@ namespace Platform.API.Controllers
         [HttpDelete("v1/sportsbook/userfavorites")]
         public async Task<IActionResult> DeleteUserFavorites([FromQuery] InsertDeleteUserFavoritesRequest request)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
@@ -1930,7 +2048,7 @@ namespace Platform.API.Controllers
 
             var parameters = request;
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -1938,11 +2056,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/userfavorites|DELETE", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1958,8 +2077,10 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/boostedfixtures")]
         public async Task<IActionResult> GetBoostedFixtures()
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -1970,7 +2091,7 @@ namespace Platform.API.Controllers
             {
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -1979,11 +2100,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode},
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/boostedfixtures", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -1998,7 +2120,9 @@ namespace Platform.API.Controllers
         [HttpPost("v1/sportsbook/betbuilder/markettemplates")]
         public async Task<IActionResult> GetBetBuilderMarketTemplates()
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
@@ -2006,7 +2130,7 @@ namespace Platform.API.Controllers
 
             var parameters = new { };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
@@ -2014,11 +2138,12 @@ namespace Platform.API.Controllers
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/betbuilder/markettemplates", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -2034,7 +2159,9 @@ namespace Platform.API.Controllers
         [HttpPost("v1/sportsbook/betbuilder/selections/odds")]
         public async Task<IActionResult> GetBetBuilderSelectionsOdds([FromBody] BetBuilderSelectionsOddsRequest request)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -2043,18 +2170,19 @@ namespace Platform.API.Controllers
 
             var parameters = request;
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/betbuilder/selections/odds", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -2069,7 +2197,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/client/markettemplateplayerprops")]
         public async Task<IActionResult> GetMarketTemplatePlayerProps([FromQuery] int sportId)
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -2078,18 +2208,19 @@ namespace Platform.API.Controllers
 
             var parameters = new { };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/client/markettemplateplayerprops", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -2105,6 +2236,8 @@ namespace Platform.API.Controllers
         [HttpGet("v1/casino")]
         public async Task<IActionResult> GetCasinoURL([FromQuery] bool isMobile = false)
         {
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var countryCode = HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault();
@@ -2112,7 +2245,7 @@ namespace Platform.API.Controllers
 
             var result = await _platformRepository.GetCasinoURL(clientId, operatorToken, countryCode, languageCode, isMobile, OGParameters);
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
             {
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
@@ -2120,12 +2253,13 @@ namespace Platform.API.Controllers
                                 { "x-language-code", languageCode },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(new { IsMobile = isMobile }) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() },
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message },
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/casino", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -2140,6 +2274,8 @@ namespace Platform.API.Controllers
         [HttpGet("v1/casino/live")]
         public async Task<IActionResult> GetLiveCasinoURL([FromQuery] bool isMobile = false)
         {
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var countryCode = HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault();
@@ -2147,7 +2283,7 @@ namespace Platform.API.Controllers
 
             var result = await _platformRepository.GetLiveCasinoURL(clientId, operatorToken, countryCode, languageCode, isMobile, OGParameters);
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
             {
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
@@ -2155,12 +2291,13 @@ namespace Platform.API.Controllers
                                 { "x-language-code", languageCode },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(new { IsMobile = isMobile }) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() },
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message },
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/casino/live", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -2175,14 +2312,16 @@ namespace Platform.API.Controllers
         [HttpGet("v1/casino/virtualgames")]
         public async Task<IActionResult> GetVirtualGamesURL([FromQuery] bool isMobile = false)
         {
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
-            var countryCode = HttpContext.Request.Headers["CF-IPCountry"].FirstOrDefault();
+            var countryCode = ClientCountry;
             var languageCode = HttpContext.Request.Headers["x-language-code"].FirstOrDefault();
 
             var result = await _platformRepository.GetVirtualGames(clientId, operatorToken, countryCode, languageCode, isMobile, OGParameters);
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
             {
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
@@ -2190,12 +2329,13 @@ namespace Platform.API.Controllers
                                 { "x-language-code", languageCode },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(new { IsMobile = isMobile }) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() },
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message },
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/casino/virtualgames", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -2210,24 +2350,27 @@ namespace Platform.API.Controllers
         [HttpGet("v1/esport/config")]
         public async Task<IActionResult> GetESportConfig()
         {
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = HttpContext.Request.Headers["x-language-code"].FirstOrDefault();
 
             var result = await _platformRepository.GetESportConfig(clientId, operatorToken, languageCode, OGParameters);
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
             {
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
                                 { "x-language-code", languageCode },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() },
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message },
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/esport/config", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -2242,23 +2385,26 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/translations")]
         public async Task<IActionResult> GetTranslationByLanguageCode()
         {
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
             var result = await _platformRepository.GetTranslationByLanguageCode(apiKey, clientId, languageCode);
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
             {
                                 { "x-client-id", clientId },
                                 { "x-language-code", languageCode },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() },
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message },
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/translations", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -2273,7 +2419,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/highlights")]
         public async Task<IActionResult> GetLeagueHighlights()
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
@@ -2281,7 +2429,7 @@ namespace Platform.API.Controllers
 
             var result = await _platformRepository.GetLeagueHighlights(clientId, languageCode);
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -2289,11 +2437,12 @@ namespace Platform.API.Controllers
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/highlights", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -2307,15 +2456,17 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/highlights/fixtures")]
         public async Task<IActionResult> GetLeagueHighlightsFixtures()
         {
-            var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipCountryCode = ClientCountry;
+            var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
             var result = await _platformRepository.GetLeagueHighlightsFixtures(clientId, languageCode);
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipCountryCode", ipCountryCode },
                                 { "ipAddress", ipAddress },
@@ -2323,11 +2474,12 @@ namespace Platform.API.Controllers
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/highlights", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -2342,23 +2494,26 @@ namespace Platform.API.Controllers
         [HttpGet("v1/authentication/og")]
         public async Task<IActionResult> AuthenticateOG()
         {
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
             var result = await _platformRepository.AuthenticateOG(clientId, operatorToken, OGParameters);
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
             {
                                 { "x-client-id", clientId },
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(OGParameters)},
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() },
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message },
                                 { "response", JsonSerializer.Serialize(result) }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/authentication/og", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -2373,34 +2528,33 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/betrecommendations")]
         public async Task<IActionResult> GetBetRecommendations([FromQuery] string currencyCode = "")
         {
-            using (var activity = _activitySource.StartActivity("v1/betrecommendations"))
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
+
+            var result = await _platformRepository.GetBetRecommendations(clientId, languageCode, currencyCode);
+
+            var properties = new Dictionary<string, object>
             {
-                var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-                var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
+                                { "x-client-id", clientId },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "requestParameters", JsonSerializer.Serialize(OGParameters)},
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message },
+                                { "response", JsonSerializer.Serialize(result) }
+                            };
 
-                var result = await _platformRepository.GetBetRecommendations(clientId, languageCode, currencyCode);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
-                var properties = new Dictionary<string, string>
-                {
-                                    { "x-client-id", clientId },
-                                    { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
-                                    { "requestParameters", JsonSerializer.Serialize(OGParameters)},
-                                    { "statusCode", result.StatusCode.ToString() },
-                                    { "message", result.Message.ToString() },
-                                    { "response", JsonSerializer.Serialize(result) }
-                                };
-
-                foreach(var prop in properties)
-                    activity?.SetTag(prop.Key, prop.Value);
-
-                switch (result.StatusCode)
-                {
-                    case Shared.Enums.StatusCode.Success:
-                    case Shared.Enums.StatusCode.Maintenance:
-                        return Ok(result);
-                    default:
-                        return BadRequest(result);
-                }
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
             }
         }
 
@@ -2408,7 +2562,9 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/announcements")]
         public async Task<IActionResult> GetAnnouncements()
         {
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var ipAddress = ClientIPv6;
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -2418,18 +2574,19 @@ namespace Platform.API.Controllers
             {
             };
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
                             {
                                 { "ipAddress", ipAddress },
                                 { "x-client-id", clientId },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/announcements", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {
@@ -2444,23 +2601,26 @@ namespace Platform.API.Controllers
         [HttpGet("v1/sportsbook/ccf")]
         public async Task<IActionResult> GetCCF([FromQuery] string userId)
         {
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
-            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            var ipAddress = ClientIPv6;
 
             var result = await _platformRepository.GetCustomerConfidenceFactor(apiKey, clientId, userId);
 
-            var properties = new Dictionary<string, string>
+            var properties = new Dictionary<string, object>
             {
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
                                 { "requestParameters", userId },
-                                { "statusCode", result.StatusCode.ToString() },
-                                { "message", result.Message.ToString() }
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
                             };
 
-            //_telemetryClient.TrackEvent("e:v1/sportsbook/ccf", properties);
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {

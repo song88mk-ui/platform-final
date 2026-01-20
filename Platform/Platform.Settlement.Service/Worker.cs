@@ -89,6 +89,8 @@ namespace Platform.Settlement.Service
             {
                 try
                 {
+                    _logger.LogInformation($"{messageType}.{e.RoutingKey}");
+
                     activity?.SetTag("messaging.system", "rabbitmq");
                     activity?.SetTag("messaging.destination_kind", "queue");
                     activity?.SetTag("messaging.rabbitmq.routing_key", e.RoutingKey);

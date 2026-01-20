@@ -417,6 +417,8 @@ namespace Platform.Placement.Servicev2.Repository
                                     BetStatus = (BetStatus)payload.Bet.BetStatusId
                                 }, "OnBetStatus", $"r.bet.betstatus.{payload.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
 
+
+                                //TODO: get the actual result for GTS market expired
                                 // check if error code is due to Market/SOV expired in MTS. (-423)
                                 var reason = providerResult.Reason.Split(" - Market/SOV expired in GTS,");
 

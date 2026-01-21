@@ -100,6 +100,7 @@ namespace Platform.Settlement.Service
                     {
                         case "OnBetSettlement":
                             var onBetSettlement = JsonSerializer.Deserialize<OnUOFBetSettlement>(payload);
+                            _logger.LogInformation($"{onBetSettlement.SelectionId}.{onBetSettlement.SelectionStatus}");
                             activity.SetTag("selection.id", onBetSettlement.SelectionId);
                             _bettingRepository.ProcessBetSettlement(onBetSettlement, _messageBroker, correlationId);
                             break;

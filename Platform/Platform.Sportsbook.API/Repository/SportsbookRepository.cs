@@ -2487,20 +2487,9 @@ namespace Platform.Sportsbook.API.Repository
         }
         private string GetStatisticsURL(Guid clientId, string uriPath, LanguageCode languageCode)
         {
-            switch (clientId.ToString().ToUpper())
-            {
-                case "5093617A-9367-EB11-89FB-00224815B68B":
-                case "BFED6DA4-D1B5-4437-665D-08D8EE99AC1C":
-                    return string.IsNullOrEmpty(uriPath) ? string.Empty : $"https://st-cdn001.akamaized.net/song882{uriPath}".Replace("{languageCode}", languageCode.ToString().ToLower());
-
-                case "A96AB8BC-2970-EB11-89FC-00224815B68B":
-                case "917070EC-1DC1-4E10-28E8-08D8EE99CA8E":
-                    return string.IsNullOrEmpty(uriPath) ? string.Empty : $"https://st-cdn001.akamaized.net/song883{uriPath}".Replace("{languageCode}", languageCode.ToString().ToLower());
-
-                default:
-                    return string.IsNullOrEmpty(uriPath) ? string.Empty : $"https://st-cdn001.akamaized.net/song884{uriPath}".Replace("{languageCode}", languageCode.ToString().ToLower());
-            }
+            return string.IsNullOrEmpty(uriPath) ? string.Empty : uriPath;
         }
+
         public async Task<BaseResponseDTO<TWResponseDTO>> GetLiveFixtures(TWLiveFixtureRequestDTO request)
         {
             var maintenance = GetMaintenance();

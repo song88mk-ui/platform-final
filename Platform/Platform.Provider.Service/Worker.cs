@@ -22,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using IO.Ably;
 using Platform.Shared.Enums;
+using Platform.Shared.Models;
 
 namespace Platform.Provider.Service
 {
@@ -260,15 +261,17 @@ namespace Platform.Provider.Service
 
             try
             {
-                //var message = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+                var message = JsonSerializer.Deserialize<ProviderAssessmentResponseDTO>(payload);
 
-                //if (message == null)
-                //    return;
+                if (message == null)
+                    return;
+
+                Guid.TryParse(message.BetId, out var betId);
 
                 var onBetPlacement = new OnBetPlacement();
                 onBetPlacement.ChannelTypeId = (int)ChannelType.BG;
-                onBetPlacement.DelayedBetAcceptance = BetAcceptance.Accepted; //TODO
-                onBetPlacement.Bet.BetId = Guid.NewGuid(); //TODO
+                onBetPlacement.DelayedBetAcceptance = message.IsBetAllowed ? BetAcceptance.Accepted : BetAcceptance.Rejected;
+                onBetPlacement.Bet.BetId = betId;
 
                 _messageBroker.Publish(onBetPlacement, "OnBetPlacement", $"r.bet.placement", Guid.NewGuid().ToString().ToUpper());
 

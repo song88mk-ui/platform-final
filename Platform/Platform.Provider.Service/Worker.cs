@@ -12,7 +12,6 @@ using Platform.Shared.Utility;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
@@ -21,6 +20,8 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using IO.Ably;
+using Platform.Shared.Enums;
 
 namespace Platform.Provider.Service
 {
@@ -93,6 +94,52 @@ namespace Platform.Provider.Service
 
             _logger.LogInformation("Connected. Processing incoming messages");
             _messageBroker.MessageReceived += MessageReceivedEvent;
+
+            
+            _logger.LogInformation("Connecting to Ably");
+            var key = _configuration["Custom:Ably:ApiKey"];
+            var options = new ClientOptions
+            {
+                Key = key,
+                Environment = "geniussports",
+                FallbackHosts = new string[]
+                {
+                    "geniussports-a-fallback.ably-realtime.com",
+                    "geniussports-b-fallback.ably-realtime.com",
+                    "geniussports-c-fallback.ably-realtime.com",
+                    "geniussports-d-fallback.ably-realtime.com",
+                    "geniussports-e-fallback.ably-realtime.com"
+                }
+            };
+
+            var ably = new AblyRealtime(options);
+
+            ably.Connection.On(state =>
+            {
+                _logger.LogInformation("Ably connection state: {State}", state.Current);
+            });
+
+            var channelName = _configuration["Custom:Ably:Channel"];
+            var channel = ably.Channels.Get(channelName);
+
+            channel.Subscribe(message =>
+            {
+                try
+                {
+                    if (string.IsNullOrEmpty(message.Data?.ToString()))
+                        return;
+
+                    _logger.LogInformation("Received Ably message");
+
+                    HandleIncomingMessage(message.Data.ToString());
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing Ably message");
+                }
+            });
+
+            _logger.LogInformation("Subscribed to Ably channel: {Channel}", channelName);
 
             return Task.CompletedTask;
         }
@@ -200,6 +247,40 @@ namespace Platform.Provider.Service
             catch (Exception) { }
 
             return Enumerable.Empty<string>();
+        }
+
+        private void HandleIncomingMessage(string payload)
+        {
+            _logger.LogInformation($"process.bet.assessment: {payload}");
+
+            using var scope = _scopeFactory.CreateScope();
+            var betProviderFactory = scope.ServiceProvider.GetRequiredService<IBetProviderFactory>();
+
+            using var activity = _activitySource.StartActivity("process.bet.assessment", ActivityKind.Consumer);
+
+            try
+            {
+                //var message = JsonSerializer.Deserialize<OnBetSettlement>(payload);
+
+                //if (message == null)
+                //    return;
+
+                var onBetPlacement = new OnBetPlacement();
+                onBetPlacement.ChannelTypeId = (int)ChannelType.BG;
+                onBetPlacement.DelayedBetAcceptance = BetAcceptance.Accepted; //TODO
+                onBetPlacement.Bet.BetId = Guid.NewGuid(); //TODO
+
+                _messageBroker.Publish(onBetPlacement, "OnBetPlacement", $"r.bet.placement", Guid.NewGuid().ToString().ToUpper());
+
+                _logger.LogInformation("Published bet assessment to RabbitMQ | BetId={BetId}", onBetPlacement.Bet?.BetId);
+
+                activity?.SetStatus(ActivityStatusCode.Ok);
+            }
+            catch (Exception ex)
+            {
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                _logger.LogError(ex, "Failed to process Ably message");
+            }
         }
     }
 }

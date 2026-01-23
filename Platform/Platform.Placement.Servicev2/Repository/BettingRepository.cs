@@ -49,7 +49,9 @@ namespace Platform.Placement.Servicev2.Repository
                     return;
                 }
                 _memCache.DeleteCache(key);
+                var betAcceptance = message.DelayedBetAcceptance;
                 message = cache;
+                message.DelayedBetAcceptance = betAcceptance;
             }
 
             var providerResult = provider.ValidateAsync(message, CancellationToken.None).GetAwaiter().GetResult();

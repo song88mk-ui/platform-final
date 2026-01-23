@@ -20,11 +20,13 @@ namespace Platform.Placement.Servicev2.Repository
     {
         private readonly ILogger<BettingRepository> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IMemCache _memCache;
 
-        public BettingRepository(IConfiguration configuration, ILogger<BettingRepository> logger)
+        public BettingRepository(IConfiguration configuration, ILogger<BettingRepository> logger, IMemCache memCache)
         {
             _logger = logger;
             _configuration = configuration;
+            _memCache = memCache;
         }
 
         public void ProcesssBetPlacement(OnBetPlacement message, IBetProvider provider, IMessageBroker messageBroker, string correlationId, int reprocessAttempt = 0)
@@ -36,6 +38,19 @@ namespace Platform.Placement.Servicev2.Repository
             payload.Odds = message.Odds;
             payload.UserAgent = message.UserAgent;
             payload.IsOGClient = message.IsOGClient;
+            
+            var key = $"dly:{message.Bet.BetId}";
+            if(message.DelayedBetAcceptance != null)
+            {
+                var cache = _memCache.GetCache<OnBetPlacement>(key);
+                if (cache == null)
+                {
+                    _logger.LogError($"Cache not found for {key}");
+                    return;
+                }
+                _memCache.DeleteCache(key);
+                message = cache;
+            }
 
             var providerResult = provider.ValidateAsync(message, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -477,6 +492,10 @@ namespace Platform.Placement.Servicev2.Repository
 
                     RejectBetOnError(message, messageBroker, correlationId, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10002 - {ex.Message}"), 2);
                 }
+            }
+            else //Pending assessment/delay assessment
+            {
+                _memCache.AddOrUpdateCache(key, message, 1);
             }
         }
 

@@ -35,6 +35,7 @@ namespace Platform.Placement.Servicev2
                     ));
 
                     services.AddBettingProviders();
+                    services.AddSingleton<IMemCache, MemCache>();
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();

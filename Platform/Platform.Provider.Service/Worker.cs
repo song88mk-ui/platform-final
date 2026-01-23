@@ -271,7 +271,9 @@ namespace Platform.Provider.Service
                 var onBetPlacement = new OnBetPlacement();
                 onBetPlacement.ChannelTypeId = (int)ChannelType.BG;
                 onBetPlacement.DelayedBetAcceptance = message.IsBetAllowed ? BetAcceptance.Accepted : BetAcceptance.Rejected;
+                onBetPlacement.Bet = new Shared.Data.Betting.Entities.Bet();
                 onBetPlacement.Bet.BetId = betId;
+                onBetPlacement.BetSelections = new List<BetSelectionMessageExtenstion>();
 
                 _messageBroker.Publish(onBetPlacement, "OnBetPlacement", $"r.bet.placement", Guid.NewGuid().ToString().ToUpper());
 

@@ -328,7 +328,7 @@ namespace Platform.Shared.Repositories
                         var initialResult = JsonSerializer.Deserialize<GTSAssessmentResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                         if(initialResult.IsBetAllowed == false)
-                            _logger.LogError($"Assessment Result: {initialResult}");
+                            _logger.LogError($"Assessment Result: {JsonSerializer.Serialize(initialResult)}");
 
                         activity?.SetTag("gts.assessment.result", initialResult);
                         activity?.SetStatus(ActivityStatusCode.Ok);
@@ -586,7 +586,7 @@ namespace Platform.Shared.Repositories
         public string BetAssessmentResult { get; set; }
 
         [JsonPropertyName("legs")]
-        public List<BetLeg> Legs { get; set; }
+        public List<BetLeg> Legs { get; set; } = new List<BetLeg>();
     }
 
     public class BetLeg

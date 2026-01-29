@@ -262,7 +262,11 @@ namespace Platform.Provider.Service
 
             try
             {
-                var message = JsonSerializer.Deserialize<GTSAssessmentResponseDTO>(payload);
+                var message = JsonSerializer.Deserialize<GTSAssessmentResponseDTO>(payload,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
 
                 if (message == null)
                     return;
@@ -271,7 +275,7 @@ namespace Platform.Provider.Service
 
                 var delayedMessage = string.Empty;
                 if(!message.IsBetAllowed)
-                    if (message.Legs.Any())
+                    if (message.Legs?.Any() ?? false)
                         delayedMessage = message.Legs.FirstOrDefault(l => l.RejectReason != null).RejectReason?.ReasonMessage ?? string.Empty;
 
 

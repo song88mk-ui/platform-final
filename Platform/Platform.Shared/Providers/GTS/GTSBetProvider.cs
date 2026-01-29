@@ -81,6 +81,7 @@ namespace Platform.Shared.Providers.GTS
             else
             {
                 providerResult.IsBetAllowed = bet.DelayedBetAcceptance == BetAcceptance.Accepted;
+                providerResult.Message = bet.DelayedMessage;
             }
 
             if(bet.DelayedBetAcceptance == BetAcceptance.Accepted)
@@ -95,7 +96,7 @@ namespace Platform.Shared.Providers.GTS
                     return new BetProviderResult
                     {
                         Acceptance = BetAcceptance.Rejected,
-                        Reason = "1026 - Failed sending Bet to GTS"
+                        Reason = $"1026 - Failed sending Bet to GTS {sendBet.Message}"
                     };
             }
 

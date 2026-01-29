@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using IO.Ably;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
+using Platform.Shared.Repositories;
 
 namespace Platform.Provider.Service
 {
@@ -261,16 +262,23 @@ namespace Platform.Provider.Service
 
             try
             {
-                var message = JsonSerializer.Deserialize<ProviderAssessmentResponseDTO>(payload);
+                var message = JsonSerializer.Deserialize<GTSAssessmentResponseDTO>(payload);
 
                 if (message == null)
                     return;
 
                 Guid.TryParse(message.BetId, out var betId);
 
+                var delayedMessage = string.Empty;
+                if(!message.IsBetAllowed)
+                    if (message.Legs.Any())
+                        delayedMessage = message.Legs.FirstOrDefault(l => l.RejectReason != null).RejectReason?.ReasonMessage ?? string.Empty;
+
+
                 var onBetPlacement = new OnBetPlacement();
                 onBetPlacement.ChannelTypeId = (int)ChannelType.BG;
                 onBetPlacement.DelayedBetAcceptance = message.IsBetAllowed ? BetAcceptance.Accepted : BetAcceptance.Rejected;
+                onBetPlacement.DelayedMessage = delayedMessage;
                 onBetPlacement.Bet = new Shared.Data.Betting.Entities.Bet();
                 onBetPlacement.Bet.BetId = betId;
                 onBetPlacement.BetSelections = new List<BetSelectionMessageExtenstion>();
@@ -284,7 +292,7 @@ namespace Platform.Provider.Service
             catch (Exception ex)
             {
                 activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-                _logger.LogError(ex, "Failed to process Ably message");
+                _logger.LogError(ex, $"Failed to process Ably message: {payload}");
             }
         }
     }

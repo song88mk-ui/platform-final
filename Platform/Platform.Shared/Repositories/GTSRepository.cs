@@ -319,7 +319,7 @@ namespace Platform.Shared.Repositories
                     };
 
                     activity?.SetTag("gts.assessment.payload", payload);
-                    _logger.LogInformation("Assessment Payload: {@payload}", payload);
+                    _logger.LogInformation($"Assessment Payload: {payload}");
 
                     var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/assessment", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
 
@@ -328,7 +328,7 @@ namespace Platform.Shared.Repositories
                         var initialResult = JsonSerializer.Deserialize<GTSAssessmentResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                         if(initialResult.IsBetAllowed == false)
-                            _logger.LogError("Assessment Result: {@result}", initialResult);
+                            _logger.LogError($"Assessment Result: {initialResult}");
 
                         activity?.SetTag("gts.assessment.result", initialResult);
                         activity?.SetStatus(ActivityStatusCode.Ok);
@@ -351,7 +351,7 @@ namespace Platform.Shared.Repositories
                     else
                     {
                         var responseError = await response.Content.ReadAsStringAsync();
-                        _logger.LogError("Assessment Error: {@response}", responseError);
+                        _logger.LogError($"Assessment Error: {responseError}");
 
                         activity?.SetStatus(ActivityStatusCode.Error, responseError);
 
@@ -362,14 +362,14 @@ namespace Platform.Shared.Repositories
                             Result = new ProviderAssessmentResponseDTO
                             {
                                 Stake = 0,
-                                Message = "1026 - Failed sending Bet to GTS"
+                                Message = $"1026 - Failed sending Bet to GTS ({responseError})"
                             }
                         };
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError("Assessment Exception: {@exception}", ex);
+                    _logger.LogError($"Assessment Exception: {JsonSerializer.Serialize(ex)}");
 
                     activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
 
@@ -427,7 +427,7 @@ namespace Platform.Shared.Repositories
                     };
 
                     activity?.SetTag("gts.bet.placement.payload", payload);
-                    _logger.LogInformation("SendBet Payload: {@payload}", payload);
+                    _logger.LogInformation($"SendBet Payload: {payload}");
 
                     var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/bets", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
 

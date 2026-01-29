@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
@@ -34,6 +35,7 @@ namespace Platform.Sportsbook.API.Repository
         private readonly IMemCache _memCache;
         private readonly SportsbookContext _sportsbookContext;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<SportsbookRepository> _logger;
         private static IMongoCollection<Fixture> fixtureCollection;
         private static IMongoCollection<Market> marketCollection;
         private static IMongoCollection<MarketMapping> marketMappingCollection;
@@ -56,7 +58,7 @@ namespace Platform.Sportsbook.API.Repository
         private static List<string> _marketTemplateIds = new List<string> { "16", "18", "66", "68" };
         private const string _ALLMARKETS = "All Markets";
 
-        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMemCache memCache, IConfiguration configuration, IRabbitMQRepository rabbitMQRepository, IBetBuilderRepository betBuilderRepository)
+        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMemCache memCache, IConfiguration configuration, IRabbitMQRepository rabbitMQRepository, IBetBuilderRepository betBuilderRepository, ILogger<SportsbookRepository> logger)
         {
             _configuration = configuration;
 
@@ -86,6 +88,7 @@ namespace Platform.Sportsbook.API.Repository
             _sportsbookContext = sportsbookContext;
             _httpClient = httpClient;
             _memCache = memCache;
+            _logger = logger;
 
             _rabbitMQRepository = rabbitMQRepository;
             _betBuilderRepository = betBuilderRepository;
@@ -763,6 +766,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
             };
         }
+
         public async Task<BaseResponseDTO<SportsResponseDTO>> GetSports(SportsRequestDTO request)
         {
             var maintenance = GetMaintenance();
@@ -775,6 +779,8 @@ namespace Platform.Sportsbook.API.Repository
                     Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
                 };
             }
+
+            _logger.LogInformation($"GetSports: {JsonSerializer.Serialize(request)}");
 
             var mKey = string.Empty;
 

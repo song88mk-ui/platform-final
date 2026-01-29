@@ -50,8 +50,10 @@ namespace Platform.Placement.Servicev2.Repository
                 }
                 _memCache.DeleteCache(key);
                 var betAcceptance = message.DelayedBetAcceptance;
+                var delayedMessage = message.DelayedMessage;
                 message = cache;
                 message.DelayedBetAcceptance = betAcceptance;
+                message.DelayedMessage = delayedMessage;
             }
 
             var providerResult = provider.ValidateAsync(message, CancellationToken.None).GetAwaiter().GetResult();

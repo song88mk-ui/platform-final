@@ -319,7 +319,7 @@ namespace Platform.Shared.Repositories
                     };
 
                     activity?.SetTag("gts.assessment.payload", payload);
-                    _logger.LogInformation($"Assessment Payload: {payload}");
+                    _logger.LogInformation($"Assessment Payload: {JsonSerializer.Serialize(payload)}");
 
                     var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/assessment", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
 

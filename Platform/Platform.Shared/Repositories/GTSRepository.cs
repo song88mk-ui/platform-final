@@ -362,14 +362,14 @@ namespace Platform.Shared.Repositories
                             Result = new ProviderAssessmentResponseDTO
                             {
                                 Stake = 0,
-                                Message = $"1026 - Failed sending Bet to GTS ({responseError})"
+                                Message = $"1027 - Failed sending Bet to GTS ({responseError})"
                             }
                         };
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Assessment Exception: {JsonSerializer.Serialize(ex)}");
+                    _logger.LogError($"Assessment Exception: {ex.Message}-{ex.StackTrace}");
 
                     activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
 
@@ -380,7 +380,7 @@ namespace Platform.Shared.Repositories
                         Result = new ProviderAssessmentResponseDTO
                         {
                             Stake = 0,
-                            Message = "1026 - Failed sending Bet to GTS"
+                            Message = $"1025 - Failed sending Bet to GTS ({ex.Message})"
                         }
                     };
                 }

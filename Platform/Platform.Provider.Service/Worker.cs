@@ -131,8 +131,6 @@ namespace Platform.Provider.Service
                     if (string.IsNullOrEmpty(message.Data?.ToString()))
                         return;
 
-                    _logger.LogInformation("Received Ably message");
-
                     HandleIncomingMessage(message.Data.ToString());
                 }
                 catch (Exception ex)
@@ -289,7 +287,7 @@ namespace Platform.Provider.Service
 
                 _messageBroker.Publish(onBetPlacement, "OnBetPlacement", $"r.bet.placement", Guid.NewGuid().ToString().ToUpper());
 
-                _logger.LogInformation("Published bet assessment to RabbitMQ | BetId={BetId}", onBetPlacement.Bet?.BetId);
+                _logger.LogInformation($"Published bet assessment to RabbitMQ | BetId={onBetPlacement.Bet?.BetId}");
 
                 activity?.SetStatus(ActivityStatusCode.Ok);
             }

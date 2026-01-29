@@ -343,7 +343,7 @@ namespace Platform.Shared.Repositories
                                 IsBetAllowed = initialResult.IsBetAllowed,
                                 IsPending = initialResult.BetAssessmentResult == "AssessmentDelayed",
                                 Message = initialResult.IsBetAllowed == false ?
-                                    initialResult.Legs?.FirstOrDefault(l => l.RejectReason != null).RejectReason.ReasonMessage :
+                                    initialResult.Legs?.FirstOrDefault(l => l.RejectReason != null)?.RejectReason?.ReasonMessage ?? string.Empty :
                                     string.Empty
                             }
                         };

@@ -38,7 +38,7 @@ namespace Platform.Placement.Servicev2.Repository
             payload.Odds = message.Odds;
             payload.UserAgent = message.UserAgent;
             payload.IsOGClient = message.IsOGClient;
-            //
+            
             var key = $"dly:{message.Bet.BetId}";
             if(message.DelayedBetAcceptance != null)
             {

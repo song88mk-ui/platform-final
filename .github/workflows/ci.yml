@@ -13,9 +13,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  ECR: 418541840646.dkr.ecr.ap-south-1.amazonaws.com
-
 jobs:
   build:
     name: Build ${{ matrix.app.path }}
@@ -104,9 +101,15 @@ jobs:
           if [[ "${{ github.event_name }}" == "release" && "${{ github.event.release.tag_name }}" == *"-stg" ]]; then
             echo "environment=stg" >> $GITHUB_OUTPUT
             echo "aws_account_id=172065883315" >> $GITHUB_OUTPUT
+            echo "aws_region=ap-south-1" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "release" && "${{ github.event.release.tag_name }}" == *"-prd" ]]; then
+            echo "environment=prd" >> $GITHUB_OUTPUT
+            echo "aws_account_id=525375333516" >> $GITHUB_OUTPUT
+            echo "aws_region=ap-east-1" >> $GITHUB_OUTPUT
           else
             echo "environment=dev" >> $GITHUB_OUTPUT
             echo "aws_account_id=418541840646" >> $GITHUB_OUTPUT
+            echo "aws_region=ap-south-1" >> $GITHUB_OUTPUT
           fi
 
       - name: Docker meta
@@ -115,7 +118,7 @@ jobs:
         uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5
         with:
           images: |
-            ${{ steps.env.outputs.aws_account_id }}.dkr.ecr.ap-south-1.amazonaws.com/${{ matrix.app.image }}
+            ${{ steps.env.outputs.aws_account_id }}.dkr.ecr.${{ steps.env.outputs.aws_region }}.amazonaws.com/${{ matrix.app.image }}
           tags: |
             type=sha,event=pr,prefix=pr-sha-
             type=sha,event=branch,prefix={{branch}}-sha-,enable={{is_default_branch}}
@@ -129,7 +132,7 @@ jobs:
         if: steps.proceed.outputs.proceed == 'true' || github.event_name == 'release'
         uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5
         with:
-          aws-region: ap-south-1
+          aws-region: ${{ steps.env.outputs.aws_region }}
           role-to-assume: arn:aws:iam::${{ steps.env.outputs.aws_account_id }}:role/github-oidc-ecr-push-role
           role-duration-seconds: 3600
           role-session-name: GitHubActions

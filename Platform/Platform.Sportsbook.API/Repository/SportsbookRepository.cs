@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Writers;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using Platform.Shared.Data.Sportsbook;
@@ -11,6 +13,7 @@ using Platform.Shared.Enums;
 using Platform.Shared.Extensions;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
+using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using Platform.Sportsbook.API.Models;
 using System;
@@ -52,13 +55,18 @@ namespace Platform.Sportsbook.API.Repository
         private readonly HttpClient _httpClient;
         private readonly IRabbitMQRepository _rabbitMQRepository;
         private readonly IBetBuilderRepository _betBuilderRepository;
+        private readonly IServiceScopeFactory _scopeFactory;
+
         private readonly List<string> _africaClientCodes = new List<string>();
         private readonly List<string> _countryWhiteList = new List<string>();
         private static List<string> _asianClientCodes = new List<string>();
         private static List<string> _marketTemplateIds = new List<string> { "16", "18", "66", "68" };
         private const string _ALLMARKETS = "All Markets";
 
-        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, IMemCache memCache, IConfiguration configuration, IRabbitMQRepository rabbitMQRepository, IBetBuilderRepository betBuilderRepository, ILogger<SportsbookRepository> logger)
+        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, 
+            IMemCache memCache, IConfiguration configuration, IRabbitMQRepository rabbitMQRepository, IBetBuilderRepository betBuilderRepository,
+            IServiceScopeFactory scopeFactory,
+            ILogger<SportsbookRepository> logger)
         {
             _configuration = configuration;
 
@@ -92,6 +100,8 @@ namespace Platform.Sportsbook.API.Repository
 
             _rabbitMQRepository = rabbitMQRepository;
             _betBuilderRepository = betBuilderRepository;
+            _scopeFactory = scopeFactory;
+
             _httpClient.BaseAddress = new Uri("https://av-api.betradar.com");
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer D6ewpdvADa8k5U7Xcx");
         }
@@ -1683,7 +1693,7 @@ namespace Platform.Sportsbook.API.Repository
                             AwayName = GetAwayName(item.FiNa, item.FiNaTr, request.LanguageCode, (FixtureType)item.FiTyId),
                             FixtureStartDate = item.FiStDa,
                             IsLive = item.IsOfLi,
-                            IsLiveStream = IsLiveStream(item.LiId, item.GeAl, request.IpCountryCode),
+                            IsLiveStream = IsLiveStream(item.FiId, request.Device, request.IpCountryCode, item.ChTyId),
                             FixtureStatusId = item.SpId.IsVirtualSportId() || item.FiTyId == (int)FixtureType.Outright ? item.FiStId : !IsOEEnable(request.ClientCode) || item.ClCo.Contains(request.ClientCode) ? item.FiStId : (int)FixtureStatus.Closed,
                             FixtureStatusName = item.SpId.IsVirtualSportId() || item.FiTyId == (int)FixtureType.Outright ? item.FiStNa : !IsOEEnable(request.ClientCode) || item.ClCo.Contains(request.ClientCode) ? item.FiStNa : FixtureStatus.Closed.ToString(),
                             MarketCount = marketCount.Result.Where(c => c.FiId == item.FiId).Count(),
@@ -1787,7 +1797,7 @@ namespace Platform.Sportsbook.API.Repository
                             AwayName = GetAwayName(item.FiNa, item.FiNaTr, request.LanguageCode, (FixtureType)item.FiTyId),
                             FixtureStartDate = item.FiStDa,
                             IsLive = item.IsOfLi,
-                            IsLiveStream = IsLiveStream(item.LiId, item.GeAl, request.IpCountryCode),
+                            IsLiveStream = IsLiveStream(item.FiId, request.Device, request.IpCountryCode, item.ChTyId),
                             FixtureStatusId = item.SpId.IsVirtualSportId() || item.FiTyId == (int)FixtureType.Outright ? item.FiStId : !IsOEEnable(request.ClientCode) || item.ClCo.Contains(request.ClientCode) ? item.FiStId : (int)FixtureStatus.Closed,
                             FixtureStatusName = item.SpId.IsVirtualSportId() || item.FiTyId == (int)FixtureType.Outright ? item.FiStNa : !IsOEEnable(request.ClientCode) || item.ClCo.Contains(request.ClientCode) ? item.FiStNa : FixtureStatus.Closed.ToString(),
                             MarketCount = marketCount.Result.Where(c => c.FiId == item.FiId).Count(),
@@ -2195,7 +2205,7 @@ namespace Platform.Sportsbook.API.Repository
                 AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
-                IsLiveStream = IsLiveStream(s.LiId, s.GeAl, request.IpCountryCode),
+                IsLiveStream = IsLiveStream(s.FiId, request.Device, request.IpCountryCode, s.ChTyId),
                 FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 FixtureTypeId = s.FiTyId,
@@ -2559,7 +2569,7 @@ namespace Platform.Sportsbook.API.Repository
                 AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
-                IsLiveStream = IsLiveStream(s.LiId, s.GeAl, request.IpCountryCode),
+                IsLiveStream = IsLiveStream(s.FiId, request.Device, request.IpCountryCode, s.ChTyId),
                 FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 FixtureTypeId = s.FiTyId,
@@ -11416,12 +11426,9 @@ namespace Platform.Sportsbook.API.Repository
             return false; //disable Margin since we are now using bet genius
         }
 
-        private bool IsLiveStream(string livestreamId, string geoAllowed, string ipCountryCode)
+        private bool IsLiveStream(long fixtureId, string device, string ipCountryCode, int channelTypeId)
         {
-            if (string.IsNullOrEmpty(livestreamId))
-                return false;
-
-            if (!string.IsNullOrEmpty(livestreamId) && !string.IsNullOrEmpty(ipCountryCode) && _countryWhiteList.Contains(ipCountryCode.ToUpper()))
+            if (!string.IsNullOrEmpty(ipCountryCode) && _countryWhiteList.Contains(ipCountryCode.ToUpper()))
                 return true;
 
             if (!string.IsNullOrEmpty(geoAllowed) && !string.IsNullOrEmpty(ipCountryCode))
@@ -11430,8 +11437,14 @@ namespace Platform.Sportsbook.API.Repository
                     return false;
             }
 
-            return true;
+            using var scope = _scopeFactory.CreateScope();
+            var providerFactory =
+                scope.ServiceProvider.GetRequiredService<ILiveStreamFactory>();
 
+            var provider = providerFactory.Resolve(channelTypeId);
+
+            var result = provider.ValidateLiveStream(fixtureId.ToString(), ipCountryCode, device).ConfigureAwait(false).GetAwaiter().GetResult();
+            return result;
         }
 
         //private decimal GetClientOdds(IEnumerable<SelectionFilter> selections, SelectionFilter currentSelection, string clientMarketConfig, string clientCode)

@@ -80,6 +80,7 @@ namespace Platform.Shared.Models
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
         public string IpCountryCode { get; set; }
+        public string Device { get; set; }
     }
     public class TWLiveFixtureRequestDTO
     {
@@ -222,6 +223,7 @@ namespace Platform.Shared.Models
         public LanguageCode LanguageCode { get; set; }
         public string ClientCode { get; set; }
         public string IpCountryCode { get; set; }
+        public string Device { get; set; }
     }
 
     public class TWResponseDTO

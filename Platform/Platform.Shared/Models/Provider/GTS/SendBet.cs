@@ -1,6 +1,4 @@
 ﻿using Platform.Shared.Data.Betting.Entities;
-using Platform.Shared.MessageModels;
-using System;
 using System.Collections.Generic;
 
 namespace Platform.Shared.Models.Provider.GTS

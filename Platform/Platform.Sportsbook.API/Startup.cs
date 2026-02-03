@@ -17,6 +17,7 @@ using Platform.Shared.Utility;
 using Platform.Sportsbook.API.Repository;
 using Platform.Sportsbook.API.Telemetry;
 using Platform.Shared.Extensions;
+using Platform.Sportsbook.API.Extensions;
 
 namespace Platform.Sportsbook.API
 {
@@ -59,7 +60,7 @@ namespace Platform.Sportsbook.API
 
             services.AddControllers();
 
-            services.AddSingleton<IMemCache, MemCache>();
+            services.AddProviders();
             services.AddHttpClient<ISportsbookRepository, SportsbookRepository>();
             services.AddHttpClient<IRabbitMQRepository, RabbitMQRepository>();
             services.AddHttpClient<IBetBuilderRepository, BetBuilderRepository>();

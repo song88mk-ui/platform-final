@@ -1155,10 +1155,12 @@ namespace Platform.Sportsbook.API.Repository
 
         private async Task<Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>>> GetBetFixtures2(BetFixtureRequestDTO request)
         {
+            _logger.LogInformation($"GetBetFixtures2: Start {JsonSerializer.Serialize(request)}");
+
             var selectionIds = request.Selections.Select(s => s.SelectionId).ToList();
             var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
             var selections = await primarySelectionCollection.Find(selectionFilter).ToListAsync();
-
+            
             var newFixtures = new List<Fixture>();
             var newMarkets = new List<Market>();
             var newSelectionExtension = new List<SelectionExtension>();
@@ -1167,6 +1169,8 @@ namespace Platform.Sportsbook.API.Repository
 
             if (selections.Count > 0)
             {
+                _logger.LogInformation($"GetBetFixtures2: Fixture start");
+
                 var fixtureIds = selections.Select(s => s.FiId).Distinct().ToList();
                 var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
                 var fixtures = primaryFixtureCollection.Find(fixtureFilter).ToListAsync();
@@ -1182,6 +1186,8 @@ namespace Platform.Sportsbook.API.Repository
                 var bettingStatus = primaryBettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
 
                 await Task.WhenAll(fixtures, markets, allSelections, bettingStatus);
+                
+                _logger.LogInformation($"GetBetFixtures2: Fixture end");
 
                 newFixtures = fixtures.Result;
                 newMarkets = markets.Result;
@@ -1348,6 +1354,8 @@ namespace Platform.Sportsbook.API.Repository
                 if (finalSelections.Count > 0)
                     newSelectionExtension = finalSelections;
             }
+
+            _logger.LogInformation($"GetBetFixtures2: End");
 
             return new Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>>(newFixtures, newMarkets, newSelectionExtension, newBettingStatus, newAllSelections);
         }

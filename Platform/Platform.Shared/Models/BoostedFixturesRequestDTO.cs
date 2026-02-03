@@ -9,5 +9,6 @@ namespace Platform.Shared.Models
         public string ClientCode { get; set; }
         public LanguageCode LanguageCode { get; set; }
         public string IPCountryCode { get; set; }
+        public string Device { get; set; }
     }
 }

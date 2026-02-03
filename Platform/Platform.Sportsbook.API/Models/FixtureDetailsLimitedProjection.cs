@@ -9,6 +9,7 @@ namespace Platform.Sportsbook.API.Models
     {
         [BsonId]
         public string Id { get; set; }
+        public int ChTyId { get; set; }
         public long FiId { get; set; }
         public string PrFiId { get; set; }
         public int FiStId { get; set; }

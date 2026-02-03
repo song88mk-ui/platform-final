@@ -13,5 +13,6 @@ namespace Platform.Shared.Models
         public DateTime? FromFixtureStartDate { get; set; }
         public DateTime? ToFixtureStartDate { get; set; }
         public string FixtureStatus { get; set; }
+        public string Device { get; set; }
     }
 }

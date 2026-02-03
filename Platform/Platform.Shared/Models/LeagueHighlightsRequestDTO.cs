@@ -12,5 +12,6 @@ namespace Platform.Shared.Models
     public class LeagueHighlightsFixturesRequestDTO : LeagueHighlightsRequestDTO
     {
         public string IpCountryCode { get; set; }
+        public string Device { get; set; }
     }
 }

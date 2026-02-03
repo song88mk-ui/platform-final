@@ -221,9 +221,12 @@ namespace Platform.Placement.Servicev2.Repository
                                 scope.Complete();
 
                                 messageBroker.Publish(payload, "OnBetPlacement", "r.bet.operator", correlationId, 10);
+                                _logger.LogInformation($"ProcesssBetPlacement: Completed");
                             }
                             else
                             {
+                                _logger.LogInformation($"ProcesssBetPlacement: isReprocess=true");
+
                                 isReprocess = true;
                                 //Console.WriteLine($"{DateTime.UtcNow} - Bet Not Found - Accepted - {message.Bet.BetId.ToString().ToUpper()}");
                                 //Console.WriteLine($"{DateTime.UtcNow} - Re-process Bet - Accepted - {message.Bet.BetId.ToString().ToUpper()}");
@@ -503,6 +506,8 @@ namespace Platform.Placement.Servicev2.Repository
             }
             else //Pending assessment/delay assessment
             {
+                _logger.LogInformation($"ProcesssBetPlacement: {key} Delayed, AddOrUpdateCache updated");
+
                 _memCache.AddOrUpdateCache(key, message, 1);
             }
         }

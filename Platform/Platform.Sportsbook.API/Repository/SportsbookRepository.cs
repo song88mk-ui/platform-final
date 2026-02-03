@@ -11429,8 +11429,8 @@ namespace Platform.Sportsbook.API.Repository
 
         private bool IsLiveStream(long fixtureId, string device, string ipCountryCode, int channelTypeId)
         {
-            if (!string.IsNullOrEmpty(ipCountryCode) && _countryWhiteList.Contains(ipCountryCode.ToUpper()))
-                return true;
+            //if (!string.IsNullOrEmpty(ipCountryCode) && _countryWhiteList.Contains(ipCountryCode.ToUpper()))
+            //    return true;
 
             if (string.IsNullOrEmpty(device))
                 device = "DESKTOP";

@@ -122,7 +122,7 @@ namespace Platform.Shared.Providers.GTS
 
                 var result = await _gtsRepo.Cancellation(token.Result.Token, betId);
 
-                _logger.LogInformation("ProcessCancellation (Response) : {@response}", result);
+                _logger.LogInformation($"ProcessCancellation (Response) : {result}");
 
                 return;
             }
@@ -162,18 +162,9 @@ namespace Platform.Shared.Providers.GTS
                 _logger.LogInformation($"ProcessSettlement: SendBet Failed {sendBet.Message}-{sendBet.Result}");
                 return;
             }
-            //return new BetProviderResult
-            //{
-            //    Acceptance = BetAcceptance.Rejected,
-            //    Reason = "1026 - Failed sending Bet to GTS"
-            //};
+            //TODO: Send to retry if failed
 
             return;
-            //return new BetProviderResult
-            //{
-            //    Acceptance = result.Result.IsBetAllowed ? BetAcceptance.Accepted : BetAcceptance.Rejected,
-            //    Reason = result.Result.Message ?? string.Empty
-            //};
         }
 
         public async Task<bool> IsAvailableAsync(BetRequestDTO request)

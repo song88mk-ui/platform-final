@@ -460,7 +460,8 @@ namespace Platform.Shared.Repositories
                     }
                     else
                     {
-                        _logger.LogError("SendBet Error Response: {@response}", await response.Content.ReadAsStringAsync());
+                        var error = await response.Content.ReadAsStringAsync();
+                        _logger.LogError($"SendBet Error Response: {error}");
 
                         activity?.SetStatus(ActivityStatusCode.Error, response.StatusCode.ToString());
 
@@ -487,10 +488,13 @@ namespace Platform.Shared.Repositories
             } // activity
         }
 
-        public async Task<BaseResponseDTO<Task>> Cancellation(string authToken, Guid betId)
+        public async Task<BaseResponseDTO<string>> Cancellation(string authToken, Guid betId)
         {
-            using(var activity = _activitySource.StartActivity("gts.bet.cancellation"))
+            _logger.LogInformation($"Cancellation Start: {betId}");
+
+            using (var activity = _activitySource.StartActivity("gts.bet.cancellation"))
             {
+                _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
 
                 try
@@ -510,23 +514,39 @@ namespace Platform.Shared.Repositories
 
                     if (response.IsSuccessStatusCode)
                     {
-                        var initialResult = JsonSerializer.Deserialize<string>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var content = await response.Content.ReadAsStringAsync();
 
+                        var initialResult = string.Empty; 
+                        if (string.IsNullOrWhiteSpace(content))
+                        {
+                            // Handle empty response explicitly
+                            initialResult = null;
+                        }
+                        else
+                        {
+                            initialResult = JsonSerializer.Deserialize<string>(
+                                content,
+                                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                            );
+                        }
                         activity?.SetStatus(ActivityStatusCode.Ok);
 
-                        return new BaseResponseDTO<Task>
+                        _logger.LogInformation($"Cancellation Success: {initialResult}");
+                        return new BaseResponseDTO<string>
                         {
                             StatusCode = StatusCode.Success,
-                            Message = StatusCode.Success.ToString()
+                            Message = StatusCode.Success.ToString(),
+                            Result = initialResult
                         };
                     }
                     else
                     {
-                        _logger.LogError("Cancellation Error: {@response}", await response.Content.ReadAsStringAsync());
+                        var error = await response.Content.ReadAsStringAsync();
+                        _logger.LogError($"Cancellation Error: {error}");
 
                         activity?.SetStatus(ActivityStatusCode.Error, response.StatusCode.ToString());
 
-                        return new BaseResponseDTO<Task>
+                        return new BaseResponseDTO<string>
                         {
                             StatusCode = StatusCode.Error,
                             Message = StatusCode.Error.ToString(),
@@ -535,11 +555,11 @@ namespace Platform.Shared.Repositories
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError("Cancellation Exception: {@exception}", ex);
+                    _logger.LogError($"Cancellation Exception: {ex.Message}-{ex.StackTrace}");
 
                     activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
 
-                    return new BaseResponseDTO<Task>
+                    return new BaseResponseDTO<string>
                     {
                         StatusCode = StatusCode.Error,
                         Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",

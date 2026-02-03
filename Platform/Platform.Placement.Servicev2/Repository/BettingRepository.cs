@@ -45,7 +45,7 @@ namespace Platform.Placement.Servicev2.Repository
                 var cache = _memCache.GetCache<OnBetPlacement>(key);
                 if (cache == null)
                 {
-                    _logger.LogError($"Cache not found for {key}");
+                    _logger.LogError($"ProcesssBetPlacement: Cache not found for {key}");
                     return;
                 }
                 _memCache.DeleteCache(key);
@@ -56,7 +56,11 @@ namespace Platform.Placement.Servicev2.Repository
                 message.DelayedMessage = delayedMessage;
             }
 
+            _logger.LogInformation($"ProcesssBetPlacement {key}");
+
             var providerResult = provider.ValidateAsync(message, CancellationToken.None).GetAwaiter().GetResult();
+
+            _logger.LogInformation($"ProcesssBetPlacement: ValidateAsync {JsonSerializer.Serialize(providerResult)}");
 
             if (providerResult.Acceptance == BetAcceptance.Accepted)
             {

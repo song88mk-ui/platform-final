@@ -9,9 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using System.Linq;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 using Platform.Shared.Models.Provider.GTS;
-using static App.Metrics.Health.HealthCheck;
 
 namespace Platform.Shared.Providers.GTS
 {
@@ -134,17 +132,24 @@ namespace Platform.Shared.Providers.GTS
             }
         }
 
-        public async void ProcessSettlemet(OnBetSettlement bet, string correlationId)
+        public async void ProcessSettlement(OnBetSettlement bet, string correlationId)
         {
+
+            _logger.LogInformation($"ProcessSettlement start");
+
             if (!Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]))
                 return;
 
             if (bet.BetSelections.Any(c => c.SportId.IsVirtualSportId()))
                 return;
 
+            _logger.LogInformation($"ProcessSettlement: GetGTSAuthorizationToken");
+
             var token = await _auth.GetGTSAuthorizationToken();
             if (token.StatusCode != StatusCode.Success)
                 return;
+
+            _logger.LogInformation($"ProcessSettlement: SendBet");
 
             var sendBet = await _gtsRepo.SendBet(token.Result.Token, new SendBet()
             {
@@ -153,7 +158,10 @@ namespace Platform.Shared.Providers.GTS
             });
 
             if (sendBet.StatusCode != StatusCode.Success)
+            {
+                _logger.LogInformation($"ProcessSettlement: SendBet Failed {sendBet.Message}-{sendBet.Result}");
                 return;
+            }
             //return new BetProviderResult
             //{
             //    Acceptance = BetAcceptance.Rejected,

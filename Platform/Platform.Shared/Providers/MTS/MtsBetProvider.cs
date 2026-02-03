@@ -179,7 +179,7 @@ namespace Platform.Shared.Providers.MTS
                 }
             }
         }
-        public void ProcessSettlemet(OnBetSettlement bet, string correlationId)
+        public void ProcessSettlement(OnBetSettlement bet, string correlationId)
         {
             //return new NotImplementedException();
         }

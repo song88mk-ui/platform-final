@@ -416,7 +416,7 @@ namespace Platform.Shared.Repositories
                         legs = request.BetSelections.Select(s => new
                         {
                             status = GetGtsBetStatus(s.BetSelectionStatusId),
-                            gameState = GetGameState((int)s.FixtureId),
+                            gameState = GetGameState((int)s.FixtureStatusId),
                             price = s.Odds,
                             betGeniusContent = new
                             {

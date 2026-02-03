@@ -11429,6 +11429,7 @@ namespace Platform.Sportsbook.API.Repository
 
         private bool IsLiveStream(string fixtureId, string device, string ipCountryCode, int channelTypeId)
         {
+            return false; //need to move the logic below into the background service
             //if (!string.IsNullOrEmpty(ipCountryCode) && _countryWhiteList.Contains(ipCountryCode.ToUpper()))
             //    return true;
 

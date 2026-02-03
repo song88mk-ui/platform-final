@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Providers;
 using System;
-using System.Threading.Tasks;
 
 namespace Platform.Provider.Service.Repository
 {
@@ -24,7 +23,7 @@ namespace Platform.Provider.Service.Repository
 
         public void ProcessBetSettlement(OnBetSettlement message, IBetProvider provider, string correlationId)
         {
-            provider.ProcessSettlemet(message, correlationId);
+            provider.ProcessSettlement(message, correlationId);
         }
     }
 }

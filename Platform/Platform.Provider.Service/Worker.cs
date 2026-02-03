@@ -97,7 +97,7 @@ namespace Platform.Provider.Service
             _logger.LogInformation("Connected. Processing incoming messages");
             _messageBroker.MessageReceived += MessageReceivedEvent;
 
-            
+
             _logger.LogInformation("Connecting to Ably");
             var key = _configuration["Custom:Ably:ApiKey"];
             var options = new ClientOptions
@@ -157,66 +157,69 @@ namespace Platform.Provider.Service
 
             using (var activity = _activitySource.StartActivity("process.provider",
                         ActivityKind.Consumer, parentContext.ActivityContext))
-            try
-            {
-                using var scope = _scopeFactory.CreateScope();
-                var betProviderFactory = scope.ServiceProvider.GetRequiredService<IBetProviderFactory>();
-
-                activity?.SetTag("message.type", messageType);
-
-                switch (messageType)
+                try
                 {
-                    case "OnBetTimeout":
-                        ProcessMessage<OnBetTimeout>(payload, msg =>
-                            ProcessWithProvider(
-                                msg,
-                                msg.ChannelTypeId,
-                                betProviderFactory,
-                                correlationId,
-                                (payload, provider, correlationId) => _bettingRepository.ProcessBetCancellation(payload.BetId, provider, correlationId)
-                            ));
-                        break;
+                    using var scope = _scopeFactory.CreateScope();
+                    var betProviderFactory = scope.ServiceProvider.GetRequiredService<IBetProviderFactory>();
 
-                    case "OnBetBackOfficeCancellation":
-                        ProcessMessage<OnBetBackofficeCancellation>(payload, msg =>
-                            ProcessWithProvider(
-                                msg,
-                                msg.ChannelTypeId,
-                                betProviderFactory,
-                                correlationId,
-                                (payload, provider, correlationId) => _bettingRepository.ProcessBetCancellation(payload.BetId, provider, correlationId)
-                            ));
-                        break;
+                    activity?.SetTag("message.type", messageType);
 
-                    case "OnBetCancellation":
-                        ProcessMessage<OnBetSettlement>(payload, msg =>
-                            ProcessWithProvider(
-                                msg,
-                                msg.ChannelTypeId,
-                                betProviderFactory,
-                                correlationId,
-                                (payload, provider, correlationId) => _bettingRepository.ProcessBetCancellation(payload.Bet.BetId, provider, correlationId)
-                            ));
-                        break;
+                    switch (messageType)
+                    {
+                        case "OnBetTimeout":
+                            ProcessMessage<OnBetTimeout>(payload, msg =>
+                                ProcessWithProvider(
+                                    msg,
+                                    msg.ChannelTypeId,
+                                    betProviderFactory,
+                                    correlationId,
+                                    (payload, provider, correlationId) => _bettingRepository.ProcessBetCancellation(payload.BetId, provider, correlationId)
+                                ));
+                            break;
 
-                    case "OnBetSettlement":
-                        ProcessMessage<OnBetSettlement>(payload, msg =>
-                            ProcessWithProvider(
-                                msg,
-                                msg.ChannelTypeId,
-                                betProviderFactory,
-                                correlationId,
-                                (payload, provider, correlationId) => _bettingRepository.ProcessBetSettlement(payload, provider, correlationId)
-                            ));
-                        break;
+                        case "OnBetBackOfficeCancellation":
+                            ProcessMessage<OnBetBackofficeCancellation>(payload, msg =>
+                                ProcessWithProvider(
+                                    msg,
+                                    msg.ChannelTypeId,
+                                    betProviderFactory,
+                                    correlationId,
+                                    (payload, provider, correlationId) => _bettingRepository.ProcessBetCancellation(payload.BetId, provider, correlationId)
+                                ));
+                            break;
+
+                        case "OnBetCancellation":
+                            ProcessMessage<OnBetSettlement>(payload, msg =>
+                                ProcessWithProvider(
+                                    msg,
+                                    msg.ChannelTypeId,
+                                    betProviderFactory,
+                                    correlationId,
+                                    (payload, provider, correlationId) => _bettingRepository.ProcessBetCancellation(payload.Bet.BetId, provider, correlationId)
+                                ));
+                            break;
+
+                        case "OnBetSettlement":
+
+                            _logger.LogInformation($"OnBetSettlement received: {payload}");
+
+                            ProcessMessage<OnBetSettlement>(payload, msg =>
+                                ProcessWithProvider(
+                                    msg,
+                                    msg.ChannelTypeId,
+                                    betProviderFactory,
+                                    correlationId,
+                                    (payload, provider, correlationId) => _bettingRepository.ProcessBetSettlement(payload, provider, correlationId)
+                                ));
+                            break;
+                    }
+                    activity?.SetStatus(ActivityStatusCode.Ok);
                 }
-                activity?.SetStatus(ActivityStatusCode.Ok);
-            }
-            catch (Exception ex)
-            {
-                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-                _logger.LogError(ex, "error on message received");
-            }
+                catch (Exception ex)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                    _logger.LogError(ex, "error on message received");
+                }
         }
         private void ProcessMessage<T>(string payload, Action<T> processor)
         {
@@ -272,7 +275,7 @@ namespace Platform.Provider.Service
                 Guid.TryParse(message.BetId, out var betId);
 
                 var delayedMessage = string.Empty;
-                if(!message.IsBetAllowed)
+                if (!message.IsBetAllowed)
                     if (message.Legs?.Any() ?? false)
                         delayedMessage = message.Legs.FirstOrDefault(l => l.RejectReason != null).RejectReason?.ReasonMessage ?? string.Empty;
 

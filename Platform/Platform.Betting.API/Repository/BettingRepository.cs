@@ -442,7 +442,7 @@ namespace Platform.Betting.API.Repository
                         BonusId = request.BonusId,
                         UserAgent = request.UserAgent,
                         ClientType = request.IsOGClient ? ClientType.OG.ToString() : ClientType.REG.ToString(),
-                        OddsChangeTypeId = (int)request.OddsChangeType
+                        OddsChangeTypeId = (short)request.OddsChangeType
                     }).Entity;
 
                     betData = betEntity;
@@ -1082,7 +1082,7 @@ namespace Platform.Betting.API.Repository
                         BonusId = request.BonusId,
                         UserAgent = request.UserAgent,
                         ClientType = request.IsOGClient ? ClientType.OG.ToString() : ClientType.REG.ToString(),
-                        OddsChangeTypeId = (int)request.OddsChangeType
+                        OddsChangeTypeId = (short)request.OddsChangeType
 
                     }).Entity;
 

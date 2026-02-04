@@ -434,7 +434,8 @@ namespace Platform.API.Repository
                 Odds = result.Result.TotalOdds,
                 UserAgent = userAgent,
                 IsOGClient = ogParameters != null ? true : false,
-                ChannelTypeId = chTyId
+                ChannelTypeId = chTyId,
+                OddsChangeType = request.OddsChangeType
             };
 
             activity?.AddEvent(new ActivityEvent("api.place.bet"));

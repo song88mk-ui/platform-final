@@ -74,5 +74,6 @@ namespace Platform.Shared.Data.Betting.Entities
         public string ClientType { get; set; }
         public string BonusId { get; set; }
         public string UserAgent { get; set; }
+        public int OddsChangeTypeId { get; set; }
     }
 }

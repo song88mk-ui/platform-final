@@ -315,7 +315,7 @@ namespace Platform.Shared.Repositories
                             gameState = GetGameState(s.BetSelection.FixtureStatusId),
                             price = s.BetSelection.Odds
                         }).ToList(),
-                        priceChangeRule = "AcceptNone"
+                        priceChangeRule = GetPriceChangeRule(request.OddsChangeType)
                     };
 
                     activity?.SetTag("gts.assessment.payload", payload);
@@ -388,7 +388,7 @@ namespace Platform.Shared.Repositories
         }
 
 
-        public async Task<BaseResponseDTO<string>> SendBet(string authToken, SendBet request)
+        public async Task<BaseResponseDTO<string>> SendBet(string authToken, SendBet request, bool isSettled = false)
         {
             using(var activity = _activitySource.StartActivity("gts.bet.placement"))
             {
@@ -405,25 +405,25 @@ namespace Platform.Shared.Repositories
                     var payload = new
                     {
                         id = request.Bet.BetId.ToString().ToUpper(),
-                        betPlacedTimestampUTC = DateTime.UtcNow,
+                        betPlacedTimestampUTC = request.Bet.BetDate,
                         betUpdatedTimestampUTC = DateTime.UtcNow,
                         bookMakerName = "Song88",
                         playerId = request.Bet.UserId,
                         totalStake = totalStake,
                         currencyCode = request.Bet.CurrencyCode,
                         status = GetGtsBetStatus(request.Bet.BetStatusId),
-                        //	Represents a bet with any legs that are currently Open
+                        payout = isSettled ? (decimal?)request.Bet.Payout : null,
                         legs = request.BetSelections.Select(s => new
                         {
                             status = GetGtsBetStatus(s.BetSelectionStatusId),
                             gameState = GetGameState((int)s.FixtureStatusId),
                             price = s.Odds,
+                            payoutPrice = isSettled ? (decimal?)(s.Odds * request.Bet.TrueStake) : null,
                             betGeniusContent = new
                             {
                                 selectionId = s.SelectionSpecifier.Split(':').LastOrDefault()
                             }
                         }).ToList(),
-                        priceChangeRule = "AcceptNone"
                     };
 
                     activity?.SetTag("gts.bet.placement.payload", payload);
@@ -580,6 +580,17 @@ namespace Platform.Shared.Repositories
             var s when s == 1 => "InPlay",
             _ => "PreMatch"
         };
+
+        private string GetPriceChangeRule(OddsChangeType oddsChangeType)
+        {
+            return oddsChangeType switch
+            {
+                OddsChangeType.None => "AcceptNone",
+                OddsChangeType.Any => "AcceptAny",
+                OddsChangeType.Higher => "AcceptHigher",
+                _ => "AcceptNone" // safe default
+            };
+        }
     }
 
     public class GTSMaxStakeResponseDTO

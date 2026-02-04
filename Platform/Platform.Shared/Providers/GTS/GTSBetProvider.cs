@@ -155,7 +155,7 @@ namespace Platform.Shared.Providers.GTS
             {
                 Bet = bet.Bet,
                 BetSelections = bet.BetSelections
-            });
+            }, true);
 
             if (sendBet.StatusCode != StatusCode.Success)
             {

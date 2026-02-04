@@ -6,7 +6,6 @@ using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
-using Sportradar.MTS.SDK.Entities.Enums;
 using System;
 using System.Linq;
 using System.Text.Json;
@@ -38,7 +37,8 @@ namespace Platform.Placement.Servicev2.Repository
             payload.Odds = message.Odds;
             payload.UserAgent = message.UserAgent;
             payload.IsOGClient = message.IsOGClient;
-            
+            payload.OddsChangeType = message.OddsChangeType;
+
             var key = $"dly:{message.Bet.BetId}";
             if(message.DelayedBetAcceptance != null)
             {
@@ -86,6 +86,7 @@ namespace Platform.Placement.Servicev2.Repository
                                     payload.Odds = bet.Odds;
                                     payload.UserAgent = bet.UserAgent;
                                     payload.IsOGClient = bet.ClientType == ClientType.OG.ToString();
+                                    payload.OddsChangeType = (OddsChangeType)bet.OddsChangeTypeId;
                                 }
 
                                 bet.Reason = $"{providerResult.Reason} ({provider.ChannelType.ToString()})";
@@ -140,7 +141,8 @@ namespace Platform.Placement.Servicev2.Repository
                                     BetTypeId = betEntity.BetTypeId,
                                     BetTypeName = betEntity.BetTypeName,
                                     OddsRef = betEntity.OddsRef,
-                                    IsAgent = betEntity.IsAgent
+                                    IsAgent = betEntity.IsAgent,
+                                    OddsChangeTypeId = betEntity.OddsChangeTypeId
                                 });
 
                                 var betSelections = context.BetSelection.Where(c => c.BetId == betEntity.BetId).ToList();
@@ -260,7 +262,7 @@ namespace Platform.Placement.Servicev2.Repository
                         InnerException = ex.InnerException.ToString()
                     }, "OnBetPlacementError", "r.bet.placement.error", Guid.NewGuid().ToString().ToUpper());
 
-                    RejectBetOnError(message, messageBroker, correlationId, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10001 - {ex.Message}"), 2);
+                    RejectBetOnError(message, messageBroker, correlationId, new Tuple<BetAcceptance, string>(BetAcceptance.Rejected, $"10001 - {ex.Message}"), 2);
                 }
             }
             else if(providerResult.Acceptance == BetAcceptance.Rejected)
@@ -501,7 +503,7 @@ namespace Platform.Placement.Servicev2.Repository
                         InnerException = ex.InnerException?.ToString() ?? string.Empty,
                     }, "OnBetPlacementError", "r.bet.placement.error", Guid.NewGuid().ToString().ToUpper());
 
-                    RejectBetOnError(message, messageBroker, correlationId, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10002 - {ex.Message}"), 2);
+                    RejectBetOnError(message, messageBroker, correlationId, new Tuple<BetAcceptance, string>(BetAcceptance.Rejected, $"10002 - {ex.Message}"), 2);
                 }
             }
             else //Pending assessment/delay assessment
@@ -512,7 +514,7 @@ namespace Platform.Placement.Servicev2.Repository
             }
         }
 
-        private void RejectBetOnError(OnBetPlacement message, IMessageBroker messageBroker, string correlationId, Tuple<TicketAcceptance, string> result, int remainingRetries)
+        private void RejectBetOnError(OnBetPlacement message, IMessageBroker messageBroker, string correlationId, Tuple<BetAcceptance, string> result, int remainingRetries)
         {
             if (remainingRetries == 0) return;
             remainingRetries -= 1;
@@ -677,7 +679,7 @@ namespace Platform.Placement.Servicev2.Repository
             }
             catch (Exception ex)
             {
-                RejectBetOnError(message, messageBroker, correlationId, new Tuple<TicketAcceptance, string>(TicketAcceptance.Rejected, $"10003 - {ex.Message}"), remainingRetries);
+                RejectBetOnError(message, messageBroker, correlationId, new Tuple<BetAcceptance, string>(BetAcceptance.Rejected, $"10003 - {ex.Message}"), remainingRetries);
             }
         }
         private static void ProcessStakeFixtureLimit(OnBetPlacement payload, BettingContext context)

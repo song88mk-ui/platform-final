@@ -40,6 +40,7 @@ namespace Platform.Shared.Models
         public string UserAgent { get; set; } = string.Empty;
         public bool IsOGClient { get; set; }
         public int ChannelTypeId { get; set; }
+        public OddsChangeType OddsChangeType { get; set; }
         public List<BetSelectionRequestDTO> Selections { get; set; }
     }
 

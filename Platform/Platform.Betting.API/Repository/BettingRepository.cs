@@ -441,7 +441,8 @@ namespace Platform.Betting.API.Repository
                         IsAgent = request.IsAgent,
                         BonusId = request.BonusId,
                         UserAgent = request.UserAgent,
-                        ClientType = request.IsOGClient ? ClientType.OG.ToString() : ClientType.REG.ToString()
+                        ClientType = request.IsOGClient ? ClientType.OG.ToString() : ClientType.REG.ToString(),
+                        OddsChangeTypeId = (int)request.OddsChangeType
                     }).Entity;
 
                     betData = betEntity;
@@ -496,7 +497,8 @@ namespace Platform.Betting.API.Repository
                         BetTypeId = betEntity.BetTypeId,
                         BetTypeName = betEntity.BetTypeName,
                         OddsRef = betEntity.OddsRef,
-                        IsAgent = betEntity.IsAgent
+                        IsAgent = betEntity.IsAgent,
+                        OddsChangeTypeId = betEntity.OddsChangeTypeId
                     });
 
                     foreach (var selection in request.Selections)
@@ -656,7 +658,9 @@ namespace Platform.Betting.API.Repository
                         BonusId = request.BonusId,
                         Odds = request.Odds,
                         UserAgent = request.UserAgent,
-                        IsOGClient = request.IsOGClient
+                        IsOGClient = request.IsOGClient,
+                        OddsChangeType = request.OddsChangeType,
+                        ChannelTypeId = request.ChannelTypeId
                     };
 
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO
@@ -1074,7 +1078,12 @@ namespace Platform.Betting.API.Repository
                         BetTypeId = (int)betType,
                         BetTypeName = betType.ToString(),
                         OddsRef = totalOddsRef,
-                        IsAgent = request.IsAgent
+                        IsAgent = request.IsAgent,
+                        BonusId = request.BonusId,
+                        UserAgent = request.UserAgent,
+                        ClientType = request.IsOGClient ? ClientType.OG.ToString() : ClientType.REG.ToString(),
+                        OddsChangeTypeId = (int)request.OddsChangeType
+
                     }).Entity;
 
                     betData = betEntity;
@@ -1129,7 +1138,8 @@ namespace Platform.Betting.API.Repository
                         BetTypeId = betEntity.BetTypeId,
                         BetTypeName = betEntity.BetTypeName,
                         OddsRef = betEntity.OddsRef,
-                        IsAgent = betEntity.IsAgent
+                        IsAgent = betEntity.IsAgent,
+                        OddsChangeTypeId = betEntity.OddsChangeTypeId
                     });
 
                     foreach (var selection in request.Selections)
@@ -1289,6 +1299,7 @@ namespace Platform.Betting.API.Repository
                         UserAgent = request.UserAgent,
                         IsOGClient = request.IsOGClient,
                         ChannelTypeId = request.ChannelTypeId,
+                        OddsChangeType = request.OddsChangeType
                     };
 
                     _rabbitMQRepository.PublishViaHttp(new MessageRequestDTO

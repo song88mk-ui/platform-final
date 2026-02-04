@@ -124,7 +124,7 @@ namespace Platform.Shared.Repositories
                 catch (Exception ex)
                 {
                     activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-                    _logger.LogError("GetGTSAuthorizationToken Error: {@exception}", ex);
+                    _logger.LogError($"GetGTSAuthorizationToken Error: {ex.Message}-{ex.StackTrace}");
 
                     _memCache.DeleteCache(cacheKey);
 

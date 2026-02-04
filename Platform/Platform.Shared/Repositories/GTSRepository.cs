@@ -240,7 +240,7 @@ namespace Platform.Shared.Repositories
                 catch (Exception ex)
                 {
                     activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-                    _logger.LogError("GetMaxStake Error: {@exception}", ex);
+                    _logger.LogError($"GetMaxStake Error: {ex.Message}-{ex.StackTrace}");
 
                     return new BaseResponseDTO<ProviderStakeResponseDTO>
                     {

@@ -157,7 +157,7 @@ namespace Platform.API.Controllers
 
         [HttpPost("v2/bet/placement")]
         public async Task<IActionResult> PlaceBet([FromBody] BetRequest request)
-        {
+        {//
             using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
 
             var ipAddressV4 = ClientIPv4;

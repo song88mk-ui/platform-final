@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Platform.Shared.Models.Provider.GTS;
+using System.Text.Json;
 
 namespace Platform.Shared.Providers.GTS
 {
@@ -122,13 +123,13 @@ namespace Platform.Shared.Providers.GTS
 
                 var result = await _gtsRepo.Cancellation(token.Result.Token, betId);
 
-                _logger.LogInformation($"ProcessCancellation (Response) : {result}");
+                _logger.LogInformation($"ProcessCancellation (Response) : {JsonSerializer.Serialize(result)}");
 
                 return;
             }
             catch (Exception ex)
             {
-                _logger.LogError("ProcessCancellation Error: {@exception}", ex);
+                _logger.LogError($"ProcessCancellation Error: {ex.Message}-{ex.StackTrace}");
             }
         }
 

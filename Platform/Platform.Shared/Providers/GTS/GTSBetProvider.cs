@@ -107,7 +107,7 @@ namespace Platform.Shared.Providers.GTS
 
         }
 
-        public async void ProcessCancellation(Guid betId, string correlationId, bool isBackOfficeTrigger = false)
+        public async void ProcessCancellation(Guid betId, string limitId, string correlationId, bool isBackOfficeTrigger = false)
         {
             if (!Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]))
                 return;
@@ -121,7 +121,7 @@ namespace Platform.Shared.Providers.GTS
 
                 _logger.LogInformation("ProcessCancellation (Request) : {betId}", betId);
 
-                var result = await _gtsRepo.Cancellation(token.Result.Token, betId);
+                var result = await _gtsRepo.Cancellation(token.Result.Token, betId, limitId);
 
                 _logger.LogInformation($"ProcessCancellation (Response) : {JsonSerializer.Serialize(result)}");
 

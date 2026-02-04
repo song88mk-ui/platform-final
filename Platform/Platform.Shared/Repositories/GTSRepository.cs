@@ -181,7 +181,7 @@ namespace Platform.Shared.Repositories
 
                 try
                 {
-                    var bookmakerId = int.Parse(_configuration["Custom:GTSBookmakerId"]);
+                    var bookmakerId = request.LimitId; //int.Parse(_configuration["Custom:GTSBookmakerId"]);
 
                     activity?.SetTag("gts.bookmaker.id", bookmakerId);
 
@@ -297,7 +297,7 @@ namespace Platform.Shared.Repositories
 
                 try
                 {
-                    var bookmakerId = int.Parse(_configuration["Custom:GTSBookmakerId"]);
+                    var bookmakerId = request.Bet.LimitId; //int.Parse(_configuration["Custom:GTSBookmakerId"]);
 
                     activity?.SetTag("gts.bookmaker.id", bookmakerId);
 
@@ -397,7 +397,7 @@ namespace Platform.Shared.Repositories
 
                 try
                 {
-                    var bookmakerId = int.Parse(_configuration["Custom:GTSBookmakerId"]);
+                    var bookmakerId = request.Bet.LimitId; //int.Parse(_configuration["Custom:GTSBookmakerId"]);
                     activity?.SetTag("gts.bookmaker.id", bookmakerId);
 
                     var totalStake = request.Bet.TrueStake;
@@ -488,7 +488,7 @@ namespace Platform.Shared.Repositories
             } // activity
         }
 
-        public async Task<BaseResponseDTO<string>> Cancellation(string authToken, Guid betId)
+        public async Task<BaseResponseDTO<string>> Cancellation(string authToken, Guid betId, string limitId)
         {
             _logger.LogInformation($"Cancellation Start: {betId}");
 
@@ -499,7 +499,7 @@ namespace Platform.Shared.Repositories
 
                 try
                 {
-                    var bookmakerId = int.Parse(_configuration["Custom:GTSBookmakerId"]);
+                    var bookmakerId = limitId; //int.Parse(_configuration["Custom:GTSBookmakerId"]);
 
                     activity?.SetTag("gts.bookmaker.id", bookmakerId);
 

@@ -431,7 +431,9 @@ namespace Platform.Placement.Servicev2.Repository
 
                                 messageBroker.Publish(new OnBetTimeout()
                                 {
-                                    BetId = bet.BetId
+                                    BetId = bet.BetId,
+                                    ChannelTypeId = message.ChannelTypeId,
+                                    LimitId = bet.LimitId
                                 }, "OnBetTimeout", "r.bet.cancellation", correlationId);
 
                                 //publish to reports
@@ -660,7 +662,9 @@ namespace Platform.Placement.Servicev2.Repository
 
                             messageBroker.Publish(new OnBetTimeout()
                             {
-                                BetId = bet.BetId
+                                BetId = bet.BetId,
+                                ChannelTypeId = message.ChannelTypeId,
+                                LimitId = bet.LimitId
                             }, "OnBetTimeout", "r.bet.cancellation", correlationId);
 
                             //publish to reports

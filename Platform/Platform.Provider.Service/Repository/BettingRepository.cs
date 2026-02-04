@@ -16,9 +16,9 @@ namespace Platform.Provider.Service.Repository
             _logger = logger;
         }
 
-        public void ProcessBetCancellation(Guid betId, IBetProvider provider, string correlationId, bool isBackOfficeTrigger = false)
+        public void ProcessBetCancellation(Guid betId, string limitId, IBetProvider provider, string correlationId, bool isBackOfficeTrigger = false)
         {
-            provider.ProcessCancellation(betId, correlationId, isBackOfficeTrigger);
+            provider.ProcessCancellation(betId, limitId, correlationId, isBackOfficeTrigger);
         }
 
         public void ProcessBetSettlement(OnBetSettlement message, IBetProvider provider, string correlationId)

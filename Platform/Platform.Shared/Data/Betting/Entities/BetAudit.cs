@@ -71,6 +71,6 @@ namespace Platform.Shared.Data.Betting.Entities
         public decimal OddsRef { get; set; }
         public bool IsAgent { get; set; }
         public string BetIdRef { get; set; }
-        public int OddsChangeTypeId { get; set; }
+        public int? OddsChangeTypeId { get; set; }
     }
 }

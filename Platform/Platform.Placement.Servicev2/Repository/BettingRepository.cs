@@ -429,12 +429,15 @@ namespace Platform.Placement.Servicev2.Repository
 
                                 scope.Complete();
 
-                                messageBroker.Publish(new OnBetTimeout()
-                                {
-                                    BetId = bet.BetId,
-                                    ChannelTypeId = message.ChannelTypeId,
-                                    LimitId = bet.LimitId
-                                }, "OnBetTimeout", "r.bet.cancellation", correlationId);
+                                if(message.ChannelTypeId != (int)ChannelType.BG)
+                                {//no need to send to BG if they rejected it on their end
+                                    messageBroker.Publish(new OnBetTimeout()
+                                    {
+                                        BetId = bet.BetId,
+                                        ChannelTypeId = message.ChannelTypeId,
+                                        LimitId = bet.LimitId
+                                    }, "OnBetTimeout", "r.bet.cancellation", correlationId);
+                                }
 
                                 //publish to reports
                                 messageBroker.Publish(payload, "OnBetRejection", "r.bet.reports", correlationId);

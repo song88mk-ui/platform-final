@@ -18,6 +18,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
 using Channel = Platform.Shared.Enums.Channel;
+using Microsoft.Extensions.Logging;
 
 namespace Platform.API.Repository
 {
@@ -30,12 +31,13 @@ namespace Platform.API.Repository
         private readonly PlatformContext _platformContext;
         private readonly IMemCache _memCache;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<PlatformRepository> _logger;
 
         private readonly ActivitySource _activitySource;
 
         private static List<string> _ogHighCurrencies = new List<string> { "IDRK", "VNDK", "MMKK", "INRK", "UZSK" };
 
-        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, ICasinoRepository casinoRepository, PlatformContext platformContext, IMemCache memCache, IConfiguration configuration, Instrumentation instrumentation)
+        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, ICasinoRepository casinoRepository, PlatformContext platformContext, IMemCache memCache, IConfiguration configuration, Instrumentation instrumentation, ILogger<PlatformRepository> logger)
         {
             _operatorRepository = operatorRepository;
             _bettingRepository = bettingRepository;
@@ -46,6 +48,7 @@ namespace Platform.API.Repository
             _configuration = configuration;
 
             _activitySource = instrumentation.ActivitySource;
+            _logger = logger;
         }
 
         public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string clientId, LoginRequest request, Dictionary<string, string> headers = null)
@@ -4568,6 +4571,7 @@ namespace Platform.API.Repository
 
             if (!isGuid)
             {
+                _logger.LogError($"GetBetStatus: Invalid Guid");
                 return new BaseResponseDTO<BetStatus>
                 {
                     StatusCode = StatusCode.Error,
@@ -4579,6 +4583,7 @@ namespace Platform.API.Repository
 
             if (clientResponse.StatusCode != StatusCode.Success)
             {
+                _logger.LogError($"GetBetStatus: {JsonSerializer.Serialize(clientResponse)}");
                 return new BaseResponseDTO<BetStatus>
                 {
                     StatusCode = clientResponse.StatusCode,

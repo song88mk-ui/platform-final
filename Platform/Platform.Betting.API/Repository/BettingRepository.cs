@@ -16,6 +16,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
 using Platform.Shared.Providers;
+using Castle.Core.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace Platform.Betting.API.Repository
 {
@@ -26,6 +28,7 @@ namespace Platform.Betting.API.Repository
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
         private readonly IMemCache _memCache;
+        private readonly ILogger<BettingRepository> _logger;
 
         //private readonly IMTSAuthRepository _mtsAuthRepository;
         //private readonly IMTSMaxStakeRepository _mtsMaxStakeRepository;
@@ -42,7 +45,8 @@ namespace Platform.Betting.API.Repository
             //IMTSMaxStakeRepository mtsMaxStakeRepository, 
             //IMTSProbabilityRepository mtsProbabilityRepository, 
             ISportsbookRepository sportsbookRepository, 
-            IRabbitMQRepository rabbitMQRepository)
+            IRabbitMQRepository rabbitMQRepository,
+            ILogger<BettingRepository> logger)
         {
             _bettingContext = bettingContext;
             _httpClientFactory = httpClientFactory;
@@ -54,6 +58,7 @@ namespace Platform.Betting.API.Repository
             _rabbitMQRepository = rabbitMQRepository;
             _configuration = configuration;
             _memCache = memCache;
+            _logger = logger;
         }
 
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(BetRequestDTO request)
@@ -3662,6 +3667,8 @@ namespace Platform.Betting.API.Repository
             }
             catch (Exception ex)
             {
+                _logger.LogError($"GetBetStatus Error: {ex.Message}-{ex.StackTrace}")
+
                 return new BaseResponseDTO<BetStatus>
                 {
                     StatusCode = StatusCode.Error,

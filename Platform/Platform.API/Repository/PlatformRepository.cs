@@ -4567,36 +4567,47 @@ namespace Platform.API.Repository
 
         public async Task<BaseResponseDTO<BetStatus>> GetBetStatus(string clientId, BetStatusRequest request)
         {
-            var isGuid = Guid.TryParse(request.BetId, out Guid BetId);
-
-            if (!isGuid)
+            try
             {
-                _logger.LogError($"GetBetStatus: Invalid Guid");
-                return new BaseResponseDTO<BetStatus>
+                _logger.LogError($"GetBetStatus: Start");
+                var isGuid = Guid.TryParse(request.BetId, out Guid BetId);
+
+                if (!isGuid)
                 {
-                    StatusCode = StatusCode.Error,
-                    Message = StatusCode.Error.ToString()
-                };
-            }
+                    _logger.LogError($"GetBetStatus: Invalid Guid");
+                    return new BaseResponseDTO<BetStatus>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = StatusCode.Error.ToString()
+                    };
+                }
 
-            var clientResponse = await GetClient(clientId);
+                var clientResponse = await GetClient(clientId);
 
-            if (clientResponse.StatusCode != StatusCode.Success)
-            {
-                _logger.LogError($"GetBetStatus: {JsonSerializer.Serialize(clientResponse)}");
-                return new BaseResponseDTO<BetStatus>
+                if (clientResponse.StatusCode != StatusCode.Success)
                 {
-                    StatusCode = clientResponse.StatusCode,
-                    Message = clientResponse.Message
+                    _logger.LogError($"GetBetStatus: {JsonSerializer.Serialize(clientResponse)}");
+                    return new BaseResponseDTO<BetStatus>
+                    {
+                        StatusCode = clientResponse.StatusCode,
+                        Message = clientResponse.Message
+                    };
+                }
+
+                var payload = new BetStatusRequestDTO()
+                {
+                    BetId = BetId
                 };
+
+                _logger.LogError($"GetBetStatus: Send Payload {JsonSerializer.Serialize(payload)}");
+                return await _bettingRepository.GetBetStatus(payload);
             }
-
-            var payload = new BetStatusRequestDTO()
+            catch (Exception ex)
             {
-                BetId = BetId
-            };
-
-            return await _bettingRepository.GetBetStatus(payload);
+                _logger.LogError($"GetBetStatus Error: {ex.Message}-{ex.StackTrace}");
+                throw;
+            }
+            
         }
 
         public async Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request)

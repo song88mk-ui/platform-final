@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Platform.Shared.Enums;
 using Platform.Shared.Models;
 using System;
@@ -14,12 +15,14 @@ namespace Platform.API.Repository
         //
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<BettingRepository> _logger;
 
-        public BettingRepository(HttpClient httpClient, IConfiguration configuration)
+        public BettingRepository(HttpClient httpClient, IConfiguration configuration, ILogger<BettingRepository> logger)
         {
             _configuration = configuration;
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(_configuration["API:PlatformBettingAPI"]);
+            _logger = logger;
         }
         public async Task<BaseResponseDTO<BetResponseDTO>> PlaceBet(BetRequestDTO request)
         {
@@ -563,6 +566,7 @@ namespace Platform.API.Repository
             }
             catch (Exception ex)
             {
+                _logger.LogError($"BettingRepository.GetBetStatus Error: {ex.Message}-{ex.StackTrace}");
                 return new BaseResponseDTO<BetStatus>
                 {
                     StatusCode = StatusCode.Error,

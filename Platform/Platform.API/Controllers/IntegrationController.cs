@@ -334,7 +334,7 @@ namespace Platform.API.Controllers
 
         [HttpGet("v1/bet/status")]
         public async Task<IActionResult> GetBetStatus([FromQuery] BetStatusRequest request)
-        {
+        {//
             using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
 
             var ipAddress = ClientIPv6;

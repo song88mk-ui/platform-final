@@ -3667,7 +3667,7 @@ namespace Platform.Betting.API.Repository
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GetBetStatus Error: {ex.Message}-{ex.StackTrace}")
+                _logger.LogError($"GetBetStatus Error: {ex.Message}-{ex.StackTrace}");
 
                 return new BaseResponseDTO<BetStatus>
                 {

@@ -14,6 +14,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using Platform.Shared.Helpers;
+using Platform.Shared.Data.Betting.Entities;
 
 namespace Platform.Shared.Repositories
 {
@@ -418,7 +420,7 @@ namespace Platform.Shared.Repositories
                             status = GetGtsBetStatus(s.BetSelectionStatusId),
                             gameState = GetGameState((int)s.FixtureStatusId),
                             price = s.Odds,
-                            payoutPrice = isSettled ? (decimal?)(s.Odds * request.Bet.TrueStake) : null,
+                            payoutPrice = isSettled ? GetSelectionPayout(s.BetSelectionStatusId, s.Odds, request.Bet, request.BetSelections.Count == 1) : null,
                             betGeniusContent = new
                             {
                                 selectionId = s.SelectionSpecifier.Split(':').LastOrDefault()
@@ -589,6 +591,45 @@ namespace Platform.Shared.Repositories
                 OddsChangeType.Any => "AcceptAny",
                 OddsChangeType.Higher => "AcceptHigher",
                 _ => "AcceptNone" // safe default
+            };
+        }
+
+        private decimal? GetSelectionPayout(int status, decimal odds, Bet bet, bool isSingleBet)
+        {
+            var stakePart = bet.Stake;
+            var isBoosted = bet.BetTypeId == (int)BetType.PriceBoost;
+            var trueStake = bet.TrueStake;
+            var oddsType = bet.OddsTypeId;
+            var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder;
+
+            if (isBetBuilder)
+                return trueStake;
+
+            if (isSingleBet &&
+                OddsTypeHelper.GetOddsByOddsType((int)oddsType, odds, isBoosted) < 0 &&
+                (oddsType == (int)OddsType.Indonesian || oddsType == (int)OddsType.Malaysian))
+            {
+                return status switch
+                {
+                    (int)BetStatus.Lost => 0m,
+                    (int)BetStatus.HalfWon => (trueStake / 2) + trueStake,
+                    (int)BetStatus.HalfLost => 0.5m * trueStake,
+                    (int)BetStatus.Won => trueStake + trueStake,
+                    (int)BetStatus.Void => trueStake,
+                    (int)BetStatus.Cancelled => trueStake,
+                    _ => 0m
+                };
+            }
+
+            return status switch
+            {
+                (int)BetStatus.Lost => 0m,
+                (int)BetStatus.HalfWon => ((odds + 1) / 2) * trueStake,
+                (int)BetStatus.HalfLost => 0.5m * trueStake,
+                (int)BetStatus.Won => odds * stakePart * trueStake,
+                (int)BetStatus.Void => 1m * trueStake,
+                (int)BetStatus.Cancelled => 1m * trueStake,
+                _ => 0m
             };
         }
     }

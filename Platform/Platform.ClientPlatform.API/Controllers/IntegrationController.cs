@@ -21,6 +21,7 @@ namespace Platform.ClientPlatform.API.Controllers
         public IntegrationController(IPlatformRepository platformRepository, Instrumentation instrumentation)
         {
             _platformRepository = platformRepository;
+            _activitySource = instrumentation.ActivitySource;
         }
 
         [HttpGet("v1/sportsbook/topfixtures")]

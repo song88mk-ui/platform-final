@@ -7894,7 +7894,7 @@ namespace Platform.Sportsbook.API.Repository
                                 LanguageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), l.LanguageCode),
                                 Message = l.Message
                             }).ToList()
-                        }).Skip(skip).Take(request.PageSize).ToList();
+                        }).OrderBy(a => a.StartDate).Skip(skip).Take(request.PageSize).ToList();
 
             return new BaseResponseDTO<BackofficeAnnouncementResponseDTO>
             {

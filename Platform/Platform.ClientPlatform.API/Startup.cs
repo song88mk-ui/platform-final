@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Platform.ClientPlatform.API.ActionFilters;
 using Platform.ClientPlatform.API.Repository;
+using Platform.ClientPlatform.API.Telemetry;
 
 namespace Platform.ClientPlatform.API
 {
@@ -21,6 +22,13 @@ namespace Platform.ClientPlatform.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<Instrumentation>();
+            services.AddTelemetry(new TelemetrySettings (
+                ServiceName: Instrumentation.ActivitySourceName,
+                ActivitySourceName: Instrumentation.ActivitySourceName,
+                MeterName: Instrumentation.MeterName
+            ));
+
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowAllOrigins",

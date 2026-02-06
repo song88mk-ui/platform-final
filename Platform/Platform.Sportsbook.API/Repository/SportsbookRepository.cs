@@ -17,6 +17,7 @@ using Platform.Shared.Models;
 using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using Platform.Sportsbook.API.Models;
+using Platform.Sportsbook.API.Telemetry;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -40,6 +41,8 @@ namespace Platform.Sportsbook.API.Repository
         private readonly SportsbookContext _sportsbookContext;
         private readonly IConfiguration _configuration;
         private readonly ILogger<SportsbookRepository> _logger;
+        private readonly ActivitySource _activitySource;
+
         private static IMongoCollection<Fixture> fixtureCollection;
         private static IMongoCollection<Market> marketCollection;
         private static IMongoCollection<MarketMapping> marketMappingCollection;
@@ -64,44 +67,58 @@ namespace Platform.Sportsbook.API.Repository
         private static List<string> _marketTemplateIds = new List<string> { "16", "18", "66", "68" };
         private const string _ALLMARKETS = "All Markets";
 
-        public SportsbookRepository(SportsbookContext sportsbookContext, HttpClient httpClient, 
-            IMemCache memCache, IConfiguration configuration, IRabbitMQRepository rabbitMQRepository, IBetBuilderRepository betBuilderRepository,
+        public SportsbookRepository(
+            SportsbookContext sportsbookContext,
+            HttpClient httpClient,
+            IMemCache memCache,
+            IConfiguration configuration,
+            IRabbitMQRepository rabbitMQRepository,
+            IBetBuilderRepository betBuilderRepository,
             IServiceScopeFactory scopeFactory,
-            ILogger<SportsbookRepository> logger)
+            ILogger<SportsbookRepository> logger,
+            Instrumentation instrumentation)
         {
             _configuration = configuration;
+            _sportsbookContext = sportsbookContext;
+            _httpClient = httpClient;
+            _memCache = memCache;
+            _logger = logger;
+            _activitySource = instrumentation.ActivitySource;
+
+            _rabbitMQRepository = rabbitMQRepository;
+            _betBuilderRepository = betBuilderRepository;
+            _scopeFactory = scopeFactory;
 
             _africaClientCodes = _configuration["Custom:AfricaClientCodes"].Split(',').ToList();
             _countryWhiteList = _configuration["Custom:CountryWhiteList"].Split(',').ToList();
             _asianClientCodes = _configuration["Custom:AsianClientCodes"].Split(',').ToList();
+
+            var primaryReadPreference = new ReadPreference(ReadPreferenceMode.Primary);
+            // allow secondary collections to read on replica
+            var secondaryReadPreference = new ReadPreference(
+                    _configuration.GetValue<bool>("Custom:HasReplica", false)
+                    ? ReadPreferenceMode.Secondary
+                    : ReadPreferenceMode.Primary
+                    );
 
             if (_db == null)
             {
                 var client = new MongoClient(_configuration["ConnectionStrings:MongoDB-Sportsbook"]);
                 _db = client.GetDatabase("Sportsbook");
 
-                fixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                marketCollection = _db.GetCollection<Market>("Market").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                marketMappingCollection = _db.GetCollection<MarketMapping>("MarketMapping").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                selectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                bettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                maintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+                fixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(secondaryReadPreference);
+                marketCollection = _db.GetCollection<Market>("Market").WithReadPreference(secondaryReadPreference);
+                marketMappingCollection = _db.GetCollection<MarketMapping>("MarketMapping").WithReadPreference(secondaryReadPreference);
+                selectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(secondaryReadPreference);
+                bettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(secondaryReadPreference);
+                maintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(secondaryReadPreference);
 
-                primaryFixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                primaryMarketCollection = _db.GetCollection<Market>("Market").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                primarySelectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                primaryBettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
-                primaryMaintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(new ReadPreference(ReadPreferenceMode.Primary));
+                primaryFixtureCollection = _db.GetCollection<Fixture>("Fixture").WithReadPreference(primaryReadPreference);
+                primaryMarketCollection = _db.GetCollection<Market>("Market").WithReadPreference(primaryReadPreference);
+                primarySelectionCollection = _db.GetCollection<Selection>("Selection").WithReadPreference(primaryReadPreference);
+                primaryBettingStatusCollection = _db.GetCollection<BettingStatus>("BettingStatus").WithReadPreference(primaryReadPreference);
+                primaryMaintenanceCollection = _db.GetCollection<Maintenance>("Maintenance").WithReadPreference(primaryReadPreference);
             }
-
-            _sportsbookContext = sportsbookContext;
-            _httpClient = httpClient;
-            _memCache = memCache;
-            _logger = logger;
-
-            _rabbitMQRepository = rabbitMQRepository;
-            _betBuilderRepository = betBuilderRepository;
-            _scopeFactory = scopeFactory;
 
             _httpClient.BaseAddress = new Uri("https://av-api.betradar.com");
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer D6ewpdvADa8k5U7Xcx");
@@ -780,6 +797,8 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<SportsResponseDTO>> GetSports(SportsRequestDTO request)
         {
+            using var activity = _activitySource.StartActivity("GetSports");
+
             var maintenance = GetMaintenance();
 
             if (maintenance.isMa)
@@ -791,7 +810,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            _logger.LogInformation($"GetSports: {JsonSerializer.Serialize(request)}");
+            activity?.SetTag("request", JsonSerializer.Serialize(request));
 
             var mKey = string.Empty;
 
@@ -1155,12 +1174,13 @@ namespace Platform.Sportsbook.API.Repository
 
         private async Task<Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>>> GetBetFixtures2(BetFixtureRequestDTO request)
         {
-            _logger.LogInformation($"GetBetFixtures2: Start {JsonSerializer.Serialize(request)}");
+            using var activity = _activitySource.StartActivity("GetBetFixtures2");
+            activity?.SetTag("request", JsonSerializer.Serialize(request));
 
             var selectionIds = request.Selections.Select(s => s.SelectionId).ToList();
             var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
             var selections = await primarySelectionCollection.Find(selectionFilter).ToListAsync();
-            
+
             var newFixtures = new List<Fixture>();
             var newMarkets = new List<Market>();
             var newSelectionExtension = new List<SelectionExtension>();
@@ -1169,7 +1189,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (selections.Count > 0)
             {
-                _logger.LogInformation($"GetBetFixtures2: Fixture start");
+                activity?.AddEvent(new ActivityEvent("fixture start"));
 
                 var fixtureIds = selections.Select(s => s.FiId).Distinct().ToList();
                 var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
@@ -1186,8 +1206,8 @@ namespace Platform.Sportsbook.API.Repository
                 var bettingStatus = primaryBettingStatusCollection.Find(bettingStatusFilter).FirstOrDefaultAsync();
 
                 await Task.WhenAll(fixtures, markets, allSelections, bettingStatus);
-                
-                _logger.LogInformation($"GetBetFixtures2: Fixture end");
+
+                activity?.AddEvent(new ActivityEvent("fixture end"));
 
                 newFixtures = fixtures.Result;
                 newMarkets = markets.Result;
@@ -1354,8 +1374,6 @@ namespace Platform.Sportsbook.API.Repository
                 if (finalSelections.Count > 0)
                     newSelectionExtension = finalSelections;
             }
-
-            _logger.LogInformation($"GetBetFixtures2: End");
 
             return new Tuple<List<Fixture>, List<Market>, List<SelectionExtension>, BettingStatus, List<Selection>>(newFixtures, newMarkets, newSelectionExtension, newBettingStatus, newAllSelections);
         }
@@ -6939,6 +6957,9 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<ActiveFixturesResponseDTO>> GetActiveFixtures(ActiveFixturesRequestDTO request)
         {
+            using var activity = _activitySource.StartActivity("GetActiveFixtures");
+            activity?.SetTag("request", JsonSerializer.Serialize(request));
+
             var maintenance = GetMaintenance();
 
             if (maintenance.isMa)

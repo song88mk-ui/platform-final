@@ -11462,17 +11462,6 @@ namespace Platform.Sportsbook.API.Repository
             //if (!string.IsNullOrEmpty(ipCountryCode) && _countryWhiteList.Contains(ipCountryCode.ToUpper()))
             //    return true;
 
-            if (string.IsNullOrEmpty(device))
-                device = "DESKTOP";
-
-            using var scope = _scopeFactory.CreateScope();
-            var providerFactory =
-                scope.ServiceProvider.GetRequiredService<ILiveStreamFactory>();
-
-            var provider = providerFactory.Resolve(channelTypeId);
-
-            var result = provider.ValidateLiveStream(fixtureId, ipCountryCode, device).ConfigureAwait(false).GetAwaiter().GetResult();
-            return result;
         }
 
         //private decimal GetClientOdds(IEnumerable<SelectionFilter> selections, SelectionFilter currentSelection, string clientMarketConfig, string clientCode)

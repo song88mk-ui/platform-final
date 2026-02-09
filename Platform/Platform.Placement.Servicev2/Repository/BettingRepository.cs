@@ -54,6 +54,7 @@ namespace Platform.Placement.Servicev2.Repository
                 message = cache;
                 message.DelayedBetAcceptance = betAcceptance;
                 message.DelayedMessage = delayedMessage;
+                message.Bet.BetDate = DateTime.UtcNow;
             }
 
             _logger.LogInformation($"ProcesssBetPlacement {key}");
@@ -87,7 +88,10 @@ namespace Platform.Placement.Servicev2.Repository
                                     payload.UserAgent = bet.UserAgent;
                                     payload.IsOGClient = bet.ClientType == ClientType.OG.ToString();
                                     payload.OddsChangeType = (OddsChangeType)bet.OddsChangeTypeId;
+                                    bet.BetDate = message.Bet.BetDate;
                                 }
+                                else
+                                    bet.BetDate = DateTime.UtcNow;
 
                                 bet.Reason = $"{providerResult.Reason} ({provider.ChannelType.ToString()})";
 

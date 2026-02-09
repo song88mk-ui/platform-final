@@ -16,7 +16,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
 using Platform.Shared.Providers;
-using Castle.Core.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace Platform.Betting.API.Repository

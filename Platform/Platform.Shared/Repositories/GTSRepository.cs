@@ -403,13 +403,14 @@ namespace Platform.Shared.Repositories
                     activity?.SetTag("gts.bookmaker.id", bookmakerId);
 
                     var totalStake = request.Bet.TrueStake;
+                    var updateDate = isSettled ? DateTime.UtcNow : request.Bet.BetDate;
 
                     var payload = new
                     {
                         id = request.Bet.BetId.ToString().ToUpper(),
                         betPlacedTimestampUTC = request.Bet.BetDate,
                         betUpdatedTimestampUTC = DateTime.UtcNow,
-                        bookMakerName = "Song88",
+                        bookMakerName = request.Bet.ClientCode,
                         playerId = request.Bet.UserId,
                         totalStake = totalStake,
                         currencyCode = request.Bet.CurrencyCode,
@@ -598,37 +599,21 @@ namespace Platform.Shared.Repositories
         {
             var stakePart = bet.Stake;
             var isBoosted = bet.BetTypeId == (int)BetType.PriceBoost;
-            var trueStake = bet.TrueStake;
+            var trueStake = 1;
             var oddsType = bet.OddsTypeId;
             var isBetBuilder = bet.BetTypeId == (int)BetType.BetBuilder;
 
             if (isBetBuilder)
                 return trueStake;
 
-            if (isSingleBet &&
-                OddsTypeHelper.GetOddsByOddsType((int)oddsType, odds, isBoosted) < 0 &&
-                (oddsType == (int)OddsType.Indonesian || oddsType == (int)OddsType.Malaysian))
-            {
-                return status switch
-                {
-                    (int)BetStatus.Lost => 0m,
-                    (int)BetStatus.HalfWon => (trueStake / 2) + trueStake,
-                    (int)BetStatus.HalfLost => 0.5m * trueStake,
-                    (int)BetStatus.Won => trueStake + trueStake,
-                    (int)BetStatus.Void => trueStake,
-                    (int)BetStatus.Cancelled => trueStake,
-                    _ => 0m
-                };
-            }
-
             return status switch
             {
                 (int)BetStatus.Lost => 0m,
-                (int)BetStatus.HalfWon => ((odds + 1) / 2) * trueStake,
+                (int)BetStatus.HalfWon => (trueStake / 2) + trueStake,
                 (int)BetStatus.HalfLost => 0.5m * trueStake,
-                (int)BetStatus.Won => odds * stakePart * trueStake,
-                (int)BetStatus.Void => 1m * trueStake,
-                (int)BetStatus.Cancelled => 1m * trueStake,
+                (int)BetStatus.Won => trueStake + trueStake,
+                (int)BetStatus.Void => trueStake,
+                (int)BetStatus.Cancelled => trueStake,
                 _ => 0m
             };
         }

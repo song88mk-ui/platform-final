@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Platform.Shared.Utility;
 
 namespace Platform.Sportsbook.API.Extensions
 {
@@ -13,6 +14,7 @@ namespace Platform.Sportsbook.API.Extensions
             // HTTP clients
 
             //Other Services
+            services.AddSingleton<IMemCache, MemCache>();
 
             return services;
         }

@@ -23,7 +23,7 @@ namespace Platform.ClientSportsbook.API.Controllers
 
         [HttpGet("v1/sportsbook/activefixtures")]
         public async Task<IActionResult> GetActiveFixtures([FromQuery] ActiveFixtureRequest request = null)
-        {
+        {//test
             var parameters = request;
 
             var result = await _sportsbookRepository.GetClientActiveFixtures(ClientKeyFilter, request);

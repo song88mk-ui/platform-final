@@ -83,7 +83,7 @@ namespace Platform.Shared.Providers.GTS
                 providerResult.Message = bet.DelayedMessage;
             }
 
-            if(bet.DelayedBetAcceptance == BetAcceptance.Accepted)
+            if(providerResult.IsBetAllowed)
             {
                 var sendBet = await _gtsRepo.SendBet(token.Result.Token, new SendBet()
                 {

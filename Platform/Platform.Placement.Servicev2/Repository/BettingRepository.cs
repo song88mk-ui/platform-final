@@ -29,7 +29,7 @@ namespace Platform.Placement.Servicev2.Repository
         }
 
         public void ProcesssBetPlacement(OnBetPlacement message, IBetProvider provider, IMessageBroker messageBroker, string correlationId, int reprocessAttempt = 0)
-        {//
+        {
             var payload = new OnBetPlacement();
             payload.IsBoosted = message.IsBoosted;
             payload.IsBetBuilder = message.IsBetBuilder;

@@ -173,7 +173,7 @@ namespace Platform.Provider.Service
                                     msg.ChannelTypeId,
                                     betProviderFactory,
                                     correlationId,
-                                    (payload, provider, correlationId) => _bettingRepository.ProcessBetCancellation(payload.BetId, payload.LimitId, provider, correlationId)
+                                    (payload, provider, correlationId) => _bettingRepository.ProcessBetCancellation(payload.BetId, payload.LimitId, payload.ClientCode, provider, correlationId)
                                 ));
                             break;
 
@@ -184,7 +184,7 @@ namespace Platform.Provider.Service
                                     msg.ChannelTypeId,
                                     betProviderFactory,
                                     correlationId,
-                                    (payload, provider, correlationId) => _bettingRepository.ProcessBetCancellation(payload.BetId, payload.LimitId, provider, correlationId)
+                                    (payload, provider, correlationId) => _bettingRepository.ProcessBetCancellation(payload.BetId, payload.LimitId, payload.ClientCode, provider, correlationId)
                                 ));
                             break;
 
@@ -195,7 +195,7 @@ namespace Platform.Provider.Service
                                     msg.ChannelTypeId,
                                     betProviderFactory,
                                     correlationId,
-                                    (payload, provider, correlationId) => _bettingRepository.ProcessBetCancellation(payload.Bet.BetId, payload.Bet.LimitId, provider, correlationId)
+                                    (payload, provider, correlationId) => _bettingRepository.ProcessBetCancellation(payload.Bet.BetId, payload.Bet.LimitId, payload.Bet.ClientCode, provider, correlationId)
                                 ));
                             break;
 

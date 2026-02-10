@@ -491,7 +491,7 @@ namespace Platform.Shared.Repositories
             } // activity
         }
 
-        public async Task<BaseResponseDTO<string>> Cancellation(string authToken, Guid betId, string limitId)
+        public async Task<BaseResponseDTO<string>> Cancellation(string authToken, Guid betId, string limitId, string clientCode)
         {
             _logger.LogInformation($"Cancellation Start: {betId}");
 
@@ -513,7 +513,7 @@ namespace Platform.Shared.Repositories
 
                     activity?.SetTag("gts.bet.cancellation.payload", payload);
 
-                    var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/bet-reservation-cancellations", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
+                    var response = await _httpClient.PostAsync($"v1/platforms/{clientCode}/bookmakers/{bookmakerId}/bet-reservation-cancellations", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
 
                     if (response.IsSuccessStatusCode)
                     {

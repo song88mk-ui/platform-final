@@ -439,7 +439,8 @@ namespace Platform.Placement.Servicev2.Repository
                                     {
                                         BetId = bet.BetId,
                                         ChannelTypeId = message.ChannelTypeId,
-                                        LimitId = bet.LimitId
+                                        LimitId = bet.LimitId,
+                                        ClientCode = bet.ClientCode
                                     }, "OnBetTimeout", "r.bet.cancellation", correlationId);
                                 }
 
@@ -671,7 +672,8 @@ namespace Platform.Placement.Servicev2.Repository
                             {
                                 BetId = bet.BetId,
                                 ChannelTypeId = message.ChannelTypeId,
-                                LimitId = bet.LimitId
+                                LimitId = bet.LimitId,
+                                ClientCode = bet.ClientCode
                             }, "OnBetTimeout", "r.bet.cancellation", correlationId);
 
                             //publish to reports

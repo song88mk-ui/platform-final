@@ -151,7 +151,7 @@ namespace Platform.Shared.Providers.MTS
                     };
         }
 
-        public void ProcessCancellation(Guid betId, string limitId, string correlationId, bool isBackOfficeTrigger = false)
+        public void ProcessCancellation(Guid betId, string limitId, string clientCode, string correlationId, bool isBackOfficeTrigger = false)
         {
             if (Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]))
             {

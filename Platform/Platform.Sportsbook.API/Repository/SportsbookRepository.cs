@@ -2,8 +2,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Writers;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Misc;
 using MongoDB.Driver.Linq;
@@ -14,7 +12,6 @@ using Platform.Shared.Enums;
 using Platform.Shared.Extensions;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
-using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using Platform.Sportsbook.API.Models;
 using Platform.Sportsbook.API.Telemetry;
@@ -1720,7 +1717,7 @@ namespace Platform.Sportsbook.API.Repository
                             AwayName = GetAwayName(item.FiNa, item.FiNaTr, request.LanguageCode, (FixtureType)item.FiTyId),
                             FixtureStartDate = item.FiStDa,
                             IsLive = item.IsOfLi,
-                            IsLiveStream = IsLiveStream(item.PrFiId, request.Device, request.IpCountryCode, item.ChTyId),
+                            IsLiveStream = IsLiveStream(item.PrFiId, item.GeAl, request.Device, request.IpCountryCode, item.ChTyId),
                             FixtureStatusId = item.SpId.IsVirtualSportId() || item.FiTyId == (int)FixtureType.Outright ? item.FiStId : !IsOEEnable(request.ClientCode) || item.ClCo.Contains(request.ClientCode) ? item.FiStId : (int)FixtureStatus.Closed,
                             FixtureStatusName = item.SpId.IsVirtualSportId() || item.FiTyId == (int)FixtureType.Outright ? item.FiStNa : !IsOEEnable(request.ClientCode) || item.ClCo.Contains(request.ClientCode) ? item.FiStNa : FixtureStatus.Closed.ToString(),
                             MarketCount = marketCount.Result.Where(c => c.FiId == item.FiId).Count(),
@@ -1824,7 +1821,7 @@ namespace Platform.Sportsbook.API.Repository
                             AwayName = GetAwayName(item.FiNa, item.FiNaTr, request.LanguageCode, (FixtureType)item.FiTyId),
                             FixtureStartDate = item.FiStDa,
                             IsLive = item.IsOfLi,
-                            IsLiveStream = IsLiveStream(item.PrFiId, request.Device, request.IpCountryCode, item.ChTyId),
+                            IsLiveStream = IsLiveStream(item.PrFiId, item.GeAl, request.Device, request.IpCountryCode, item.ChTyId),
                             FixtureStatusId = item.SpId.IsVirtualSportId() || item.FiTyId == (int)FixtureType.Outright ? item.FiStId : !IsOEEnable(request.ClientCode) || item.ClCo.Contains(request.ClientCode) ? item.FiStId : (int)FixtureStatus.Closed,
                             FixtureStatusName = item.SpId.IsVirtualSportId() || item.FiTyId == (int)FixtureType.Outright ? item.FiStNa : !IsOEEnable(request.ClientCode) || item.ClCo.Contains(request.ClientCode) ? item.FiStNa : FixtureStatus.Closed.ToString(),
                             MarketCount = marketCount.Result.Where(c => c.FiId == item.FiId).Count(),
@@ -2232,7 +2229,7 @@ namespace Platform.Sportsbook.API.Repository
                 AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
-                IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                 FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 FixtureTypeId = s.FiTyId,
@@ -2596,7 +2593,7 @@ namespace Platform.Sportsbook.API.Repository
                 AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
-                IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                 FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 FixtureTypeId = s.FiTyId,
@@ -2775,7 +2772,7 @@ namespace Platform.Sportsbook.API.Repository
                 AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
-                IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                 FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 FixtureTypeId = s.FiTyId,
@@ -2966,7 +2963,7 @@ namespace Platform.Sportsbook.API.Repository
                     AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
-                    IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                    IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                     FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                     FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                     FixtureTypeId = s.FiTyId,
@@ -3002,7 +2999,7 @@ namespace Platform.Sportsbook.API.Repository
                     AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
-                    IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                    IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                     FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                     FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                     FixtureTypeId = s.FiTyId,
@@ -3208,7 +3205,7 @@ namespace Platform.Sportsbook.API.Repository
                     AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
-                    IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                    IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                     FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                     FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                     FixtureTypeId = s.FiTyId,
@@ -3244,7 +3241,7 @@ namespace Platform.Sportsbook.API.Repository
                     AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
-                    IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                    IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                     FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                     FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                     FixtureTypeId = s.FiTyId,
@@ -3442,7 +3439,7 @@ namespace Platform.Sportsbook.API.Repository
                     AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
-                    IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                    IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                     FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                     FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                     FixtureTypeId = s.FiTyId,
@@ -3478,7 +3475,7 @@ namespace Platform.Sportsbook.API.Repository
                     AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
-                    IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                    IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                     FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                     FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                     FixtureTypeId = s.FiTyId,
@@ -3681,7 +3678,7 @@ namespace Platform.Sportsbook.API.Repository
                     AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
-                    IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                    IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                     FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                     FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                     FixtureTypeId = s.FiTyId,
@@ -3717,7 +3714,7 @@ namespace Platform.Sportsbook.API.Repository
                     AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
-                    IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                    IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                     FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                     FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                     FixtureTypeId = s.FiTyId,
@@ -3913,7 +3910,7 @@ namespace Platform.Sportsbook.API.Repository
                 AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
-                IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                 FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 FixtureTypeId = s.FiTyId,
@@ -4104,7 +4101,7 @@ namespace Platform.Sportsbook.API.Repository
                 AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
-                IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                 FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 FixtureTypeId = s.FiTyId,
@@ -4274,7 +4271,7 @@ namespace Platform.Sportsbook.API.Repository
                 AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
-                IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                 FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 FixtureTypeId = s.FiTyId,
@@ -4430,7 +4427,7 @@ namespace Platform.Sportsbook.API.Repository
                 AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
-                IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                 FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 FixtureTypeId = s.FiTyId,
@@ -4706,7 +4703,7 @@ namespace Platform.Sportsbook.API.Repository
                 AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
-                IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                 FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
@@ -4831,7 +4828,7 @@ namespace Platform.Sportsbook.API.Repository
                 AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
-                IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                 FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
@@ -4964,7 +4961,7 @@ namespace Platform.Sportsbook.API.Repository
                 AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
-                IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IpCountryCode, s.ChTyId),
+                IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
                 FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
@@ -5463,7 +5460,7 @@ namespace Platform.Sportsbook.API.Repository
                     AwayName = GetAwayName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
                     FixtureStartDate = fixture.FiStDa,
                     IsLive = fixture.IsOfLi,
-                    IsLiveStream = IsLiveStream(fixture.PrFiId, request.Device, request.IpCountryCode, fixture.ChTyId),
+                    IsLiveStream = IsLiveStream(fixture.PrFiId, fixture.GeAl, request.Device, request.IpCountryCode, fixture.ChTyId),
                     FixtureStatusId = fixture.SpId.IsVirtualSportId() || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStId : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStId : (int)FixtureStatus.Closed,
                     FixtureStatusName = fixture.SpId.IsVirtualSportId() || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStNa : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
                     MarketCount = markets.Result.Where(c => c.FiId == fixture.FiId).Count(),
@@ -5568,7 +5565,7 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureStartDate = fixture.FiStDa,
                     FixtureStatus = fixture.SpId.IsVirtualSportId() || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStNa : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
                     IsLive = fixture.SpId == 21 ? fixture.FiStId == (int)FixtureStatus.Live ? true : false : fixture.IsOfLi,
-                    IsLiveStream = IsLiveStream(fixture.PrFiId, request.Device, request.IpCountryCode, fixture.ChTyId),
+                    IsLiveStream = IsLiveStream(fixture.PrFiId, fixture.GeAl, request.Device, request.IpCountryCode, fixture.ChTyId),
                     Markets = GetMarketsLimited(markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FiId)).ToList(), request.LanguageCode, request.ClientCode, fixture.SpId, fixture.FiTyId)
                 }
             };
@@ -5674,7 +5671,7 @@ namespace Platform.Sportsbook.API.Repository
                     AwayName = GetAwayName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
                     FixtureStartDate = fixture.FiStDa,
                     IsLive = fixture.IsOfLi,
-                    IsLiveStream = IsLiveStream(fixture.PrFiId, request.Device, request.IpCountryCode, fixture.ChTyId),
+                    IsLiveStream = IsLiveStream(fixture.PrFiId, fixture.GeAl, request.Device, request.IpCountryCode, fixture.ChTyId),
                     FixtureStatusId = fixture.SpId.IsVirtualSportId() || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStId : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStId : (int)FixtureStatus.Closed,
                     FixtureStatusName = fixture.SpId.IsVirtualSportId() || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStNa : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
                     MarketCount = markets.Result.Where(c => c.FiId == fixture.FiId).Count(),
@@ -7028,7 +7025,7 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureStatus = IsOEEnable(request.ClientCode) == false || s.FiTyId == (int)FixtureType.Outright || s.SpId.IsVirtualSportId() ? s.FiStNa : s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.SpId == 21 ? s.FiStId == (int)FixtureStatus.Live ? true : false : s.IsOfLi,
-                IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IPCountryCode, s.ChTyId)
+                IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IPCountryCode, s.ChTyId)
             }).ToList();
 
 
@@ -7335,7 +7332,7 @@ namespace Platform.Sportsbook.API.Repository
                 AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
-                IsLiveStream = IsLiveStream(s.PrFiId, request.Device, request.IPCountryCode, s.ChTyId),
+                IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IPCountryCode, s.ChTyId),
                 FixtureStatusId = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStId : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = s.SpId.IsVirtualSportId() || s.FiTyId == (int)FixtureType.Outright ? s.FiStNa : !IsOEEnable(request.ClientCode) || s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 MarketCount = marketCount.Result.Where(c => c.FiId == s.FiId).Count(),
@@ -10749,7 +10746,7 @@ namespace Platform.Sportsbook.API.Repository
                     AwayName = GetAwayName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
                     FixtureStartDate = fixture.FiStDa,
                     IsLive = fixture.IsOfLi,
-                    IsLiveStream = IsLiveStream(fixture.PrFiId, request.Device, request.IpCountryCode, fixture.ChTyId),
+                    IsLiveStream = IsLiveStream(fixture.PrFiId, fixture.GeAl, request.Device, request.IpCountryCode, fixture.ChTyId),
                     FixtureStatusId = fixture.SpId.IsVirtualSportId() || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStId : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStId : (int)FixtureStatus.Closed,
                     FixtureStatusName = fixture.SpId.IsVirtualSportId() || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStNa : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
                     FixtureTypeId = fixture.FiTyId,
@@ -10987,7 +10984,7 @@ namespace Platform.Sportsbook.API.Repository
                 AwayName = GetAwayName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
                 FixtureStartDate = fixture.FiStDa,
                 IsLive = fixture.IsOfLi,
-                IsLiveStream = IsLiveStream(fixture.PrFiId, request.Device, request.IpCountryCode, fixture.ChTyId),
+                IsLiveStream = IsLiveStream(fixture.PrFiId, fixture.GeAl, request.Device, request.IpCountryCode, fixture.ChTyId),
                 FixtureStatusId = fixture.SpId.IsVirtualSportId() || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStId : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStId : (int)FixtureStatus.Closed,
                 FixtureStatusName = fixture.SpId.IsVirtualSportId() || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStNa : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
                 MarketCount = marketCount.Result.Where(c => c.FiId == fixture.FiId).Count(),
@@ -11456,11 +11453,19 @@ namespace Platform.Sportsbook.API.Repository
             return false; //disable Margin since we are now using bet genius
         }
 
-        private bool IsLiveStream(string fixtureId, string device, string ipCountryCode, int channelTypeId)
+        private bool IsLiveStream(string fixtureId, string permission, string device, string ipCountryCode, int channelTypeId)
         {
-            return false; //need to move the logic below into the background service
+            if(string.IsNullOrEmpty(permission))
+                return false;
+
+            return true;
+            //var streamDto = JsonSerializer.Deserialize<StreamDto>(permission);
+            //if (streamDto.Pe.Contains($"{device}:{ipCountryCode}", StringComparer.OrdinalIgnoreCase))
+            //    return true;
             //if (!string.IsNullOrEmpty(ipCountryCode) && _countryWhiteList.Contains(ipCountryCode.ToUpper()))
             //    return true;
+
+            //return false;
 
         }
 

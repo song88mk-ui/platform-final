@@ -12,6 +12,7 @@ using Platform.Shared.Enums;
 using Platform.Shared.Extensions;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
+using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using Platform.Sportsbook.API.Models;
 using Platform.Sportsbook.API.Telemetry;
@@ -155,57 +156,45 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            if (!string.IsNullOrEmpty(fixture.GeAl) && !string.IsNullOrEmpty(request.IPCountryCode))
+            if (string.IsNullOrEmpty(fixture.GeAl))
             {
-                if (_countryWhiteList.Contains(request.IPCountryCode.ToUpper()))
+                return new BaseResponseDTO<LivestreamResponseDTO>
                 {
-
-                }
-                else
-                {
-                    if (!fixture.GeAl.Split(",").Any(g => g.ToUpper() == request.IPCountryCode.ToUpper()))
-                        return new BaseResponseDTO<LivestreamResponseDTO>
-                        {
-                            StatusCode = StatusCode.Livestream_Is_Not_Available_In_Your_Region,
-                            Message = StatusCode.Livestream_Is_Not_Available_In_Your_Region.ToString().Replace('_', ' ')
-                        };
-                }
+                    StatusCode = StatusCode.Fixture_Has_No_Livestream,
+                    Message = StatusCode.Fixture_Has_No_Livestream.ToString().Replace('_', ' ')
+                };
             }
-
-            _httpClient.DefaultRequestHeaders.Remove("X-Real-IP");
-            _httpClient.DefaultRequestHeaders.Add("X-Real-IP", request.IPAddress);
-
-            var streamType = "dash-manifest";
-
-            if (request.IsMobile)
-                streamType = "hls-manifest";
 
             try
             {
-                var response = await _httpClient.GetAsync($"/v1/streams/{fixture.LiId}/{streamType}");
+                var device = request.IsMobile ? "MOBILE" : "DESKTOP";
 
-                if (response.IsSuccessStatusCode)
+                using var scope = _scopeFactory.CreateScope();
+                var providerFactory =
+                    scope.ServiceProvider.GetRequiredService<ILiveStreamFactory>();
+
+                var provider = providerFactory.Resolve(fixture.ChTyId);
+
+                var result = provider.GetLiveStream(fixture.FiId.ToString(), fixture.GeAl, request.IPCountryCode, device).ConfigureAwait(false).GetAwaiter().GetResult();
+
+                if (!string.IsNullOrEmpty(result))
                 {
-                    var result = JsonSerializer.Deserialize<LivestreamResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-
                     return new BaseResponseDTO<LivestreamResponseDTO>
                     {
                         StatusCode = StatusCode.Success,
                         Message = StatusCode.Success.ToString(),
                         Result = new LivestreamResponseDTO
                         {
-                            LiveStreamURL = HttpUtility.UrlEncode(result.Url)
+                            LiveStreamURL = result
                         }
                     };
                 }
                 else
                 {
-                    var result = JsonSerializer.Deserialize<LivestreamResponse>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-
                     return new BaseResponseDTO<LivestreamResponseDTO>
                     {
                         StatusCode = StatusCode.Error,
-                        Message = $"{result.Error.Code} : {result.Error.Message}"
+                        Message = $"{StatusCode.Error}"
                     };
                 }
             }

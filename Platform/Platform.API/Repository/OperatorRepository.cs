@@ -398,13 +398,15 @@ namespace Platform.API.Repository
             else
                 _httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
 
+            var responseString = string.Empty;
             try
             {
                 var response = await _httpClient.PostAsync($"{endpoint}/v1/authentication", new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    responseString = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<AuthenticationResponseDTO>(responseString, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                     return new BaseResponseDTO<AuthenticationResponseDTO>
                     {
@@ -461,7 +463,7 @@ namespace Platform.API.Repository
             }
             catch (Exception ex)
             {
-                _logger.LogError($"AuthenticatePlayer Error: {ex.Message}-{ex.StackTrace}");
+                _logger.LogError($"AuthenticatePlayer Error: response={responseString} error={ex.Message}-{ex.StackTrace}");
                 return new BaseResponseDTO<AuthenticationResponseDTO>
                 {
                     StatusCode = StatusCode.Operator_Error,

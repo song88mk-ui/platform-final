@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Platform.API.Models;
 using Platform.Shared.Enums;
 using Platform.Shared.Extensions;
@@ -17,14 +18,16 @@ namespace Platform.API.Repository
     {
         private readonly HttpClient _httpClient;
         private readonly OrientalGamingConfigDTO _ogConfig;
+        private readonly ILogger<OperatorRepository> _logger;
 
         private static List<string> _ogHighCurrencies = new List<string> { "IDRK", "VNDK", "MMKK", "INRK", "UZSK" };
 
-        public OperatorRepository(HttpClient httpClient, IConfiguration configuration)
+        public OperatorRepository(HttpClient httpClient, IConfiguration configuration, ILogger<OperatorRepository> logger)
         {
             _httpClient = httpClient;
             _ogConfig = configuration.GetSection("Custom").GetSection("OrientalGaming").Get<OrientalGamingConfigDTO>();
             _httpClient.Timeout = TimeSpan.FromSeconds(5);
+            _logger = logger;
         }
 
         public async Task<BaseResponseDTO<LoginResponseDTO>> Login(string userName, string password, string endpoint, Dictionary<string, string> headers = null)
@@ -447,6 +450,7 @@ namespace Platform.API.Repository
                     }
                     else
                     {
+                        _logger.LogError($"AuthenticatePlayer Error: {response.ReasonPhrase}");
                         return new BaseResponseDTO<AuthenticationResponseDTO>
                         {
                             StatusCode = StatusCode.Operator_Error,
@@ -457,6 +461,7 @@ namespace Platform.API.Repository
             }
             catch (Exception ex)
             {
+                _logger.LogError($"AuthenticatePlayer Error: {ex.Message}-{ex.StackTrace}");
                 return new BaseResponseDTO<AuthenticationResponseDTO>
                 {
                     StatusCode = StatusCode.Operator_Error,

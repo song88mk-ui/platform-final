@@ -16,6 +16,8 @@ namespace Platform.Job.Resettlement
 {
     public class Worker : BackgroundService
     {
+        const int MaxRetryCount = 8;
+
         private readonly ILogger<Worker> _logger;
         private readonly IServiceProvider _provider;
         private readonly IMessageBroker _messageBroker;
@@ -23,7 +25,11 @@ namespace Platform.Job.Resettlement
         private readonly IConfiguration _configuration;
         private Stack<int> _fibonnaci = new Stack<int>();
 
-        public Worker(ILogger<Worker> logger, IServiceProvider provider, IMessageBroker messageBroker, IPlatformRepository platformRepository, IConfiguration configuration)
+        public Worker(ILogger<Worker> logger,
+                IServiceProvider provider,
+                IMessageBroker messageBroker,
+                IPlatformRepository platformRepository,
+                IConfiguration configuration)
         {
             _logger = logger;
             _provider = provider;
@@ -48,7 +54,7 @@ namespace Platform.Job.Resettlement
         {
             _logger.LogInformation("Connecting to Broker");
             _messageBroker.Connect();
-            _logger.LogInformation("Connected. Running loop");
+            _logger.LogInformation("Connected. Running job loop");
 
             while (true)
             {
@@ -58,7 +64,11 @@ namespace Platform.Job.Resettlement
                     using var scope = _provider.CreateScope();
                     var context = scope.ServiceProvider.GetRequiredService<PlatformContext>();
 
-                    var bets = context.OperatorSettlementRetry.Where(c => c.IsRetry == true && c.RetryCount < 8).AsNoTracking().ToList();
+                    var bets = context.OperatorSettlementRetry
+                        .Where(c => c.IsRetry == true && c.RetryCount < MaxRetryCount)
+                        .AsNoTracking().ToList();
+
+                    _logger.LogInformation("Retrieved {betCount} bets for resettlement", bets.Count);
 
                     if (bets.Count > 0)
                     {

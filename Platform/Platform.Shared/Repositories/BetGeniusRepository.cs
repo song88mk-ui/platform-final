@@ -223,12 +223,12 @@ namespace Platform.Shared.Repositories
             } // activity
         }
 
-        public async Task<BaseResponseDTO<BGLiveStreamDto>> GetLiveStream(string token, string fixtureId, string liveStreamId, string deliveryId, string region, string device)
+        public async Task<BaseResponseDTO<BGLiveStreamResponseDto>> GetLiveStreamToken(string token, string fixtureId, string liveStreamId, string deliveryId, string region, string device)
         {
             using (var activity = _activitySource.StartActivity("betgenius.livestream"))
             {
                 var cacheKey = $"bg:livestream:{fixtureId}";
-                var cache = _memCache.GetCache<BaseResponseDTO<BGLiveStreamDto>>(cacheKey);
+                var cache = _memCache.GetCache<BaseResponseDTO<BGLiveStreamResponseDto>>(cacheKey);
 
                 if (cache != null)
                 {
@@ -259,11 +259,11 @@ namespace Platform.Shared.Repositories
 
                     if (response.IsSuccessStatusCode)
                     {
-                        var initialResult = JsonSerializer.Deserialize<BGLiveStreamDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        var initialResult = JsonSerializer.Deserialize<BGLiveStreamResponseDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
                         activity?.SetStatus(ActivityStatusCode.Ok);
 
-                        var result = new BaseResponseDTO<BGLiveStreamDto>
+                        var result = new BaseResponseDTO<BGLiveStreamResponseDto>
                         {
                             StatusCode = StatusCode.Success,
                             Message = StatusCode.Success.ToString(),
@@ -280,11 +280,11 @@ namespace Platform.Shared.Repositories
 
                         if (response.StatusCode == HttpStatusCode.NotFound)
                         {
-                            var result = new BaseResponseDTO<BGLiveStreamDto>
+                            var result = new BaseResponseDTO<BGLiveStreamResponseDto>
                             {
                                 StatusCode = StatusCode.Livestream_Is_Not_Available_In_Your_Region,
                                 Message = StatusCode.Livestream_Is_Not_Available_In_Your_Region.ToString(),
-                                Result = new BGLiveStreamDto()
+                                Result = new BGLiveStreamResponseDto()
                             };
 
                             _memCache.AddOrUpdateCache(cacheKey, result, DateTimeOffset.UtcNow.AddHours(5));
@@ -295,11 +295,11 @@ namespace Platform.Shared.Repositories
 
                         _memCache.DeleteCache(cacheKey);
 
-                        return new BaseResponseDTO<BGLiveStreamDto>
+                        return new BaseResponseDTO<BGLiveStreamResponseDto>
                         {
                             StatusCode = StatusCode.Error,
                             Message = StatusCode.Error.ToString(),
-                            Result = new BGLiveStreamDto()
+                            Result = new BGLiveStreamResponseDto()
                         };
                     }
                 }
@@ -310,11 +310,11 @@ namespace Platform.Shared.Repositories
 
                     _memCache.DeleteCache(cacheKey);
 
-                    return new BaseResponseDTO<BGLiveStreamDto>
+                    return new BaseResponseDTO<BGLiveStreamResponseDto>
                     {
                         StatusCode = StatusCode.Error,
                         Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
-                        Result = new BGLiveStreamDto()
+                        Result = new BGLiveStreamResponseDto()
                     };
                 }
             } // activity

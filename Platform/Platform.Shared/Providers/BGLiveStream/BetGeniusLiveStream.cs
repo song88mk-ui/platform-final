@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System;
 using System.Text.Json;
 using Platform.Shared.Models.Provider.BetGenius;
+using System.Linq;
 
 namespace Platform.Shared.Providers.BGLiveStream
 {
@@ -31,7 +32,11 @@ namespace Platform.Shared.Providers.BGLiveStream
         {
             try
             {
-                _logger.LogInformation($"GetLiveStream Start : {fixtureId}");
+                _logger.LogInformation($"GetLiveStream Start : {fixtureId} LiveStream:{liveStream}");
+
+                var liveStreamDto = JsonSerializer.Deserialize<BGLiveStreamDto>(liveStream);
+                if(!liveStreamDto.Pe.Any(p => p.ToLower() == $"{region.ToLower()}:{device.ToLower()}"))
+                    return string.Empty;
 
                 var token = await _bgRepo.GetBetGeniusAuthorizationToken();
 
@@ -40,46 +45,38 @@ namespace Platform.Shared.Providers.BGLiveStream
                     _logger.LogError($"GetLiveStream: GetBetGeniusAuthorizationToken Failed: {token.Message}-{JsonSerializer.Serialize(token)}");
                     return string.Empty;
                 }
-                
-                var liveStreamDto = JsonSerializer.Deserialize<BGLiveStreamDto>(liveStream);
-                //TODO
-                //var result = await _bgRepo.GetLiveStream(token.Result.IdToken, fixtureId, liveStreamDto.Id, liveStreamDto.Ot, region, device);
-                //if (result == null)
-                //{
-                //    _logger.LogError($"GetLiveStream: GetBetGeniusFixture Failed: null");
-                //    return (false, string.Empty);
-                //}
 
-                //if (result.StatusCode == StatusCode.Error)
-                //{
-                //    _logger.LogError($"GetLiveStream: GetBetGeniusFixture Failed: {result.Message}-{JsonSerializer.Serialize(result)}");
-                //    return (false, string.Empty);
-                //}
-                //else if (result.StatusCode == StatusCode.Bet_Not_Found)
-                //{
-                //    _logger.LogError($"GetLiveStream: GetBetGeniusFixture Not Found: {fixtureId}");
-                //    return (false, string.Empty);
-                //}
+                var deliveryId = liveStreamDto.Ot.Hls.FirstOrDefault()?.Id ?? string.Empty;
+                var result = await _bgRepo.GetLiveStreamToken(token.Result.IdToken, fixtureId, liveStreamDto.Id, deliveryId, region, device);
+                if (result == null)
+                {
+                    _logger.LogError($"GetLiveStream: GetBetGeniusFixture Failed: null");
+                    return string.Empty;
+                }
 
-                //_logger.LogInformation($"GetLiveStream: GetBetGeniusFixture Result : {JsonSerializer.Serialize(result)}");
-                
-                //var fixture = result.Result;
-                //if (fixture?.LiveStreams == null || !fixture.LiveStreams.Any())
-                //{
-                //    _logger.LogInformation("GetLiveStream: No LiveStreams available");
-                //    return (false, string.Empty);
-                //}
-                    
-                //var liveStreams = fixture.LiveStreams.Select(s => 
-                //    new { 
-                //        Id = s.Id, 
-                //        Pe = s.Permissions.Select(s => $"{s.Device}:{s.Region}").ToList(), 
-                //        Ot = s.Deliveries
-                //    });
+                if (result.StatusCode == StatusCode.Error)
+                {
+                    _logger.LogError($"GetLiveStream: GetBetGeniusFixture Failed: {result.Message}-{JsonSerializer.Serialize(result)}");
+                    return string.Empty;
+                }
+                else if (result.StatusCode == StatusCode.Livestream_Is_Not_Available_In_Your_Region)
+                {
+                    _logger.LogError($"GetLiveStream: GetBetGeniusFixture Not Available: {fixtureId}");
+                    return string.Empty;
+                }
 
-                _logger.LogInformation($"GetLiveStream Result for {fixtureId}: {liveStream}");
+                _logger.LogInformation($"GetLiveStream: GetBetGeniusFixture Result : {JsonSerializer.Serialize(result)}");
 
-                return string.Empty;
+                var response = result.Result;
+                if (response?.Token == null)
+                {
+                    _logger.LogInformation("GetLiveStream: No LiveStreams available");
+                    return string.Empty;
+                }
+
+                _logger.LogInformation($"GetLiveStream Result for {fixtureId}: {JsonSerializer.Serialize(response)}");
+
+                return response?.Token;
             }
             catch (Exception ex)
             {

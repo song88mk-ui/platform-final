@@ -8,6 +8,6 @@ namespace Platform.Shared.Repositories
     {
         Task<BaseResponseDTO<BGAuth>> GetBetGeniusAuthorizationToken();
         Task<BaseResponseDTO<BGEvent>> GetBetGeniusFixture(string token, string fixtureId);
-        Task<BaseResponseDTO<BGLiveStreamDto>> GetLiveStream(string token, string fixtureId, string liveStreamId, string deliveryId, string region, string device);
+        Task<BaseResponseDTO<BGLiveStreamResponseDto>> GetLiveStreamToken(string token, string fixtureId, string liveStreamId, string deliveryId, string region, string device);
     }
 }

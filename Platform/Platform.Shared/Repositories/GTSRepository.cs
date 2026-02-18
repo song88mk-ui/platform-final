@@ -609,11 +609,11 @@ namespace Platform.Shared.Repositories
             return status switch
             {
                 (int)BetStatus.Lost => 0m,
-                (int)BetStatus.HalfWon => (trueStake / 2) + trueStake,
-                (int)BetStatus.HalfLost => 0.5m * trueStake,
-                (int)BetStatus.Won => trueStake + trueStake,
-                (int)BetStatus.Void => trueStake,
-                (int)BetStatus.Cancelled => trueStake,
+                (int)BetStatus.HalfWon => ((odds - 1)/2) + 1,
+                (int)BetStatus.HalfLost => 0.5m,
+                (int)BetStatus.Won => odds,
+                (int)BetStatus.Void => 1,
+                (int)BetStatus.Cancelled => 1,
                 _ => 0m
             };
         }

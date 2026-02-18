@@ -144,7 +144,7 @@ namespace Platform.Provider.Service
             return Task.CompletedTask;
         }
         private void MessageReceivedEvent(object sender, BasicDeliverEventArgs e)
-        {//
+        {
             var payload = Encoding.UTF8.GetString(e.Body);
             var messageType = e.BasicProperties.Type;
             var correlationId = e.BasicProperties.CorrelationId;

@@ -124,6 +124,8 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(LivestreamRequestDTO request)
         {
+            _logger.LogInformation($"GetLivestream Start: {JsonSerializer.Serialize(request)}");
+
             var maintenance = GetMaintenance();
 
             if (maintenance.isMa)
@@ -140,6 +142,8 @@ namespace Platform.Sportsbook.API.Repository
 
             if (fixture == null)
             {
+                _logger.LogError($"GetLivestream: PrFiId {request.ProviderFixtureId} not found");
+
                 return new BaseResponseDTO<LivestreamResponseDTO>
                 {
                     StatusCode = StatusCode.Fixture_Has_No_Livestream,
@@ -149,6 +153,8 @@ namespace Platform.Sportsbook.API.Repository
 
             if (string.IsNullOrEmpty(fixture.LiId) || string.IsNullOrWhiteSpace(fixture.LiId))
             {
+                _logger.LogError($"GetLivestream: LiId is blank");
+
                 return new BaseResponseDTO<LivestreamResponseDTO>
                 {
                     StatusCode = StatusCode.Fixture_Has_No_Livestream,
@@ -158,6 +164,8 @@ namespace Platform.Sportsbook.API.Repository
 
             if (string.IsNullOrEmpty(fixture.GeAl))
             {
+                _logger.LogError($"GetLivestream: GeAl is blank");
+
                 return new BaseResponseDTO<LivestreamResponseDTO>
                 {
                     StatusCode = StatusCode.Fixture_Has_No_Livestream,
@@ -175,10 +183,14 @@ namespace Platform.Sportsbook.API.Repository
 
                 var provider = providerFactory.Resolve(fixture.ChTyId);
 
+                _logger.LogInformation($"GetLivestream: request={fixture.FiId}, {fixture.GeAl}, {request.IPCountryCode}, {device}");
+
                 var result = provider.GetLiveStream(fixture.FiId.ToString(), fixture.GeAl, request.IPCountryCode, device).ConfigureAwait(false).GetAwaiter().GetResult();
 
                 if (!string.IsNullOrEmpty(result))
                 {
+                    _logger.LogInformation($"GetLivestream: result={result}");
+
                     return new BaseResponseDTO<LivestreamResponseDTO>
                     {
                         StatusCode = StatusCode.Success,

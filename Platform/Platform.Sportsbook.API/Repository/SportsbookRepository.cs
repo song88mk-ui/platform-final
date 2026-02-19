@@ -212,6 +212,7 @@ namespace Platform.Sportsbook.API.Repository
             }
             catch (Exception ex)
             {
+
                 return new BaseResponseDTO<LivestreamResponseDTO>
                 {
                     StatusCode = StatusCode.Error,

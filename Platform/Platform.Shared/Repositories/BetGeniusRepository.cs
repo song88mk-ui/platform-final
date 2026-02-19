@@ -255,6 +255,8 @@ namespace Platform.Shared.Repositories
 
                     var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
+                    _logger.LogInformation($"GetLiveStream: Token:{token} ApiKey:{_configuration["Custom:BetGenius:Key"]} Url:Video-v3/{env}/fixtures/{fixtureId}/live-streams/{liveStreamId}/deliveries/hls/{deliveryId} Payload:{jsonPayload}");
+
                     var response = await _httpClient.PostAsync($"Video-v3/{env}/fixtures/{fixtureId}/live-streams/{liveStreamId}/deliveries/hls/{deliveryId}", content);
 
                     if (response.IsSuccessStatusCode)
@@ -287,6 +289,7 @@ namespace Platform.Shared.Repositories
                                 Result = new BGLiveStreamResponseDto()
                             };
 
+                            _logger.LogError($"GetLiveStream Error: Not found");
                             _memCache.AddOrUpdateCache(cacheKey, result, DateTimeOffset.UtcNow.AddHours(5));
                             return result;
                         }

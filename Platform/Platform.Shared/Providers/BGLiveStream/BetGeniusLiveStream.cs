@@ -41,7 +41,7 @@ namespace Platform.Shared.Providers.BGLiveStream
                 if(liveStreamDto == null)
                     return string.Empty;
 
-                if (!liveStreamDto.Pe.Any(p => p.ToLower() == $"{region.ToLower()}:{device.ToLower()}"))
+                if (!liveStreamDto.Pe.Any(p => p.ToLower() == $"{device.ToLower()}:{region.ToLower()}"))
                     return string.Empty;
 
                 var token = await _bgRepo.GetBetGeniusAuthorizationToken();

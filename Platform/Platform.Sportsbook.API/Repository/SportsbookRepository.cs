@@ -206,7 +206,7 @@ namespace Platform.Sportsbook.API.Repository
                     return new BaseResponseDTO<LivestreamResponseDTO>
                     {
                         StatusCode = StatusCode.Error,
-                        Message = $"{StatusCode.Error}"
+                        Message = $"{StatusCode.Error}-Live Stream Not Available"
                     };
                 }
             }

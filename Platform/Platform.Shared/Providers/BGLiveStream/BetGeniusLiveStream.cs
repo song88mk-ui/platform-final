@@ -39,10 +39,16 @@ namespace Platform.Shared.Providers.BGLiveStream
                 var liveStreamDto = liveStreams?.FirstOrDefault();
 
                 if(liveStreamDto == null)
+                {
+                    _logger.LogError($"GetLiveStream: empty liveStreamDto");
                     return string.Empty;
+                }
 
                 if (!liveStreamDto.Pe.Any(p => p.ToLower() == $"{device.ToLower()}:{region.ToLower()}"))
+                {
+                    _logger.LogError($"GetLiveStream: no device region found {device.ToLower()}:{region.ToLower()}");
                     return string.Empty;
+                }
 
                 var token = await _bgRepo.GetBetGeniusAuthorizationToken();
 
@@ -76,7 +82,7 @@ namespace Platform.Shared.Providers.BGLiveStream
                 var response = result.Result;
                 if (response?.Token == null)
                 {
-                    _logger.LogInformation("GetLiveStream: No LiveStreams available");
+                    _logger.LogError("GetLiveStream: No LiveStreams available");
                     return string.Empty;
                 }
 

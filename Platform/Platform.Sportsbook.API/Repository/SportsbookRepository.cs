@@ -183,9 +183,9 @@ namespace Platform.Sportsbook.API.Repository
 
                 var provider = providerFactory.Resolve(fixture.ChTyId);
 
-                _logger.LogInformation($"GetLivestream: request={fixture.FiId}, {fixture.GeAl}, {request.IPCountryCode}, {device}");
+                _logger.LogInformation($"GetLivestream: request={fixture.PrFiId}, {fixture.GeAl}, {request.IPCountryCode}, {device}");
 
-                var result = provider.GetLiveStream(fixture.FiId.ToString(), fixture.GeAl, request.IPCountryCode, device).ConfigureAwait(false).GetAwaiter().GetResult();
+                var result = provider.GetLiveStream(fixture.PrFiId, fixture.GeAl, request.IPCountryCode, device).ConfigureAwait(false).GetAwaiter().GetResult();
 
                 if (!string.IsNullOrEmpty(result))
                 {

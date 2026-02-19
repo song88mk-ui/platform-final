@@ -7,6 +7,7 @@ using System;
 using System.Text.Json;
 using Platform.Shared.Models.Provider.BetGenius;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Platform.Shared.Providers.BGLiveStream
 {
@@ -34,8 +35,13 @@ namespace Platform.Shared.Providers.BGLiveStream
             {
                 _logger.LogInformation($"GetLiveStream Start : {fixtureId} LiveStream:{liveStream}");
 
-                var liveStreamDto = JsonSerializer.Deserialize<BGLiveStreamDto>(liveStream);
-                if(!liveStreamDto.Pe.Any(p => p.ToLower() == $"{region.ToLower()}:{device.ToLower()}"))
+                var liveStreams = JsonSerializer.Deserialize<List<BGLiveStreamDto>>(liveStream);
+                var liveStreamDto = liveStreams?.FirstOrDefault();
+
+                if(liveStreamDto == null)
+                    return string.Empty;
+
+                if (!liveStreamDto.Pe.Any(p => p.ToLower() == $"{region.ToLower()}:{device.ToLower()}"))
                     return string.Empty;
 
                 var token = await _bgRepo.GetBetGeniusAuthorizationToken();

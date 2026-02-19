@@ -22,7 +22,7 @@ namespace Platform.Sportsbook.API.Controllers
 
         [HttpPost("v1/sportsbook/livestream")]
         public async Task<IActionResult> GetLivestream([FromBody] LivestreamRequestDTO request)
-        {//
+        {
             using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
 
             var result = await _sportsbookRepository.GetLivestream(request);

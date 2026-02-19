@@ -82,7 +82,7 @@ namespace Platform.Shared.Providers.BGLiveStream
 
                 _logger.LogInformation($"GetLiveStream Result for {fixtureId}: {JsonSerializer.Serialize(response)}");
 
-                return response?.Token;
+                return JsonSerializer.Serialize(response);
             }
             catch (Exception ex)
             {

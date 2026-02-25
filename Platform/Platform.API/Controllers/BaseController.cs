@@ -14,6 +14,8 @@ namespace Platform.API.Controllers
         protected string ClientIPv6 => GetClientIPAddress(HttpContext, preferIPv6: true);
         protected string ClientCountry => GetClientCountry(HttpContext);
 
+        // helper for getting Remote Caller Country Code by either supplied
+        // from X-Country-Code or from Cloudflare's CF-IPCountry
         protected string GetClientCountry(HttpContext context)
         {
             // support internal x-country-code header passed from platform web
@@ -26,10 +28,28 @@ namespace Platform.API.Controllers
             if (!string.IsNullOrEmpty(cfCountry))
                 return cfCountry;
             return ""; // default
+            /* no default, it would be easier to debug something you know its not working
+             * rather than having a default value that is working but not what you intend */
         }
 
-        protected string GetClientIPAddress(HttpContext context, bool preferIPv6 = false)
+        /* Helper to obtain the Remote IP Address of the Caller with the following:
+         *
+         * 1. Header (X-User-IP)          - If supplied (eg. Platform Web)
+         * 2. Header (CF-Connecting-IPv6) - from Cloudflare if Client is IPv6
+         * 3. Header (CF-Connecting-IP)   - from Cloudflare if Client is IPV4
+         * 4. Header (X-Forwarded-For)    - Standard header for proxies
+         * 5. Remote IP                   - From remote socket connection
+         *
+         * Params:
+         *      preferXUserIp = false (if you want to ignore the x-user-ip header)
+         *      preferIPv6 = false    (if you want to get the ipv4 only address)
+         */
+        protected string GetClientIPAddress(HttpContext context, bool preferIPv6 = false, bool preferXUserIp = true)
         {
+            var xUserIp = context.Request.Headers["x-user-ip"].ToString();
+            if (preferXUserIp && !string.IsNullOrEmpty(xUserIp))
+                return xUserIp;
+
             var cfConnectingIpv6 = context.Request.Headers["Cf-Connecting-IPv6"].ToString();
             if (preferIPv6 && !string.IsNullOrEmpty(cfConnectingIpv6))
                 return cfConnectingIpv6;

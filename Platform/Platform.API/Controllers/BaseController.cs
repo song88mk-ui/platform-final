@@ -20,7 +20,7 @@ namespace Platform.API.Controllers
             var cfCountry = HttpContext.Request.Headers["CF-IPCountry"].ToString();
             if (!string.IsNullOrEmpty(cfCountry))
                 return cfCountry;
-            return ""; // no data
+            return "PH"; // default
         }
 
         protected string GetClientIPAddress(HttpContext context, bool preferIPv6 = false)

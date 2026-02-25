@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Platform.Operator.API.ActionFilters;
 using Platform.Operator.API.Repository;
+using Platform.Operator.API.Telemetry;
 using Platform.Shared.Data;
 using Platform.Shared.Data.Platform;
 
@@ -25,6 +26,13 @@ namespace Platform.Operator.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<Instrumentation>();
+            services.AddTelemetry(new TelemetrySettings (
+                ServiceName: Instrumentation.ActivitySourceName,
+                ActivitySourceName: Instrumentation.ActivitySourceName,
+                MeterName: Instrumentation.MeterName
+            ));
+
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowAllOrigins",

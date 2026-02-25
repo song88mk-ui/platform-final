@@ -4607,7 +4607,7 @@ namespace Platform.API.Repository
                 _logger.LogError($"GetBetStatus Error: {ex.Message}-{ex.StackTrace}");
                 throw;
             }
-            
+
         }
 
         public async Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request)

@@ -16,11 +16,16 @@ namespace Platform.API.Controllers
 
         protected string GetClientCountry(HttpContext context)
         {
+            // support internal x-country-code header passed from platform web
+            var xcc = HttpContext.Request.Headers["x-country-code"].ToString();
+            if (!string.IsNullOrEmpty(xcc))
+                return xcc;
+
             // rely on cf
             var cfCountry = HttpContext.Request.Headers["CF-IPCountry"].ToString();
             if (!string.IsNullOrEmpty(cfCountry))
                 return cfCountry;
-            return "PH"; // default
+            return ""; // default
         }
 
         protected string GetClientIPAddress(HttpContext context, bool preferIPv6 = false)

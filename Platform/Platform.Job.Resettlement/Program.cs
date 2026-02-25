@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Platform.Job.Resettlement.Repository;
+using Platform.Job.Resettlement.Telemetry;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Utility;
 using Serilog;
@@ -13,6 +15,7 @@ namespace Platform.Job.Resettlement
     {
         public static void Main(string[] args)
         {
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             CreateHostBuilder(args).Build().Run();
         }
 
@@ -24,6 +27,13 @@ namespace Platform.Job.Resettlement
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddSingleton<Instrumentation>();
+                    services.AddTelemetry(new TelemetrySettings (
+                        ServiceName: Instrumentation.ActivitySourceName,
+                        ActivitySourceName: Instrumentation.ActivitySourceName,
+                        MeterName: Instrumentation.MeterName
+                    ));
+
                     services.AddSingleton<IPlatformRepository, PlatformRepository>();
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddHostedService<Worker>();

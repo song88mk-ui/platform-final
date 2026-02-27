@@ -36,6 +36,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
 
@@ -55,6 +56,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "user-agent", userAgent },
                                 { "referer",  HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -84,6 +86,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var userAgent = HttpContext.Request.Headers["user-agent"].FirstOrDefault();
@@ -97,6 +100,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "user-agent", userAgent },
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode },
@@ -124,6 +128,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
@@ -136,6 +141,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "statusCode", result.StatusCode },
@@ -160,9 +166,12 @@ namespace Platform.API.Controllers
         {//
             using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
 
+            // during bet placements these ip addresss contains the source IP of the caller
+            // in this case, thats Platform Web not the UA (UserAgent) IP address
             var ipAddressV4 = ClientIPv4;
             var ipAddressV6 = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var connectionId = HttpContext.Request.Headers["x-connection-id"].FirstOrDefault();
@@ -187,6 +196,7 @@ namespace Platform.API.Controllers
                                 { "ipAddressV6", ipAddressV6 },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", operatorToken },
                                 { "user-agent", userAgent },
                                 { "x-connection-id", connectionId },
@@ -231,6 +241,7 @@ namespace Platform.API.Controllers
                                 { "ipAddressV6", ipAddressV6 },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", operatorToken },
                                 { "user-agent", userAgent },
                                 { "x-connection-id", connectionId },
@@ -255,6 +266,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
@@ -274,6 +286,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -301,6 +314,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
             var result = await _platformRepository.GetBetConfig(apiKey, clientId, request);
@@ -312,6 +326,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -339,6 +354,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
             var result = await _platformRepository.GetBetStatus(clientId, request);
@@ -350,6 +366,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -374,6 +391,7 @@ namespace Platform.API.Controllers
         //{
         //    var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
         //    var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+        //    var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
         //    var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
         //    var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
@@ -395,6 +413,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -418,6 +437,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -445,6 +465,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -468,6 +489,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -495,6 +517,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -507,6 +530,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode },
@@ -533,6 +557,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -548,6 +573,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -575,6 +601,7 @@ namespace Platform.API.Controllers
 
             var ipAddressV4 = ClientIPv4;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
 
@@ -594,6 +621,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddressV4 },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -622,6 +650,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var isSSR = HttpContext.Request.Headers["x-is-ssr"].FirstOrDefault();
@@ -641,6 +670,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -668,6 +698,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -680,6 +711,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -707,6 +739,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -719,6 +752,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -746,6 +780,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -758,6 +793,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -785,6 +821,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
             var result = await _platformRepository.GetMarketTemplateGroups(apiKey, clientId);
@@ -796,6 +833,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -823,6 +861,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
             var result = await _platformRepository.GetSelectorMarketTemplates(apiKey, clientId);
@@ -834,6 +873,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -861,6 +901,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
             var result = await _platformRepository.GetMarketSortOrder(clientId);
@@ -872,6 +913,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -899,6 +941,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
             var result = await _platformRepository.GetFixtureSortOrder(clientId);
@@ -910,6 +953,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -938,6 +982,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = HttpContext.Request.Headers["x-country-code"].FirstOrDefault();
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -952,6 +997,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -980,6 +1026,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -994,6 +1041,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1022,6 +1070,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1035,6 +1084,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1063,6 +1113,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1076,6 +1127,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1104,6 +1156,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1117,6 +1170,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1144,6 +1198,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1156,6 +1211,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1183,6 +1239,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1198,6 +1255,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1226,6 +1284,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1242,6 +1301,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1270,6 +1330,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1288,6 +1349,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1316,6 +1378,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1333,6 +1396,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1361,6 +1425,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1380,6 +1445,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1408,6 +1474,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1425,6 +1492,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1453,6 +1521,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1472,6 +1541,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1500,6 +1570,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1518,6 +1589,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1546,6 +1618,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1566,6 +1639,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1594,6 +1668,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1610,6 +1685,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1638,6 +1714,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1656,6 +1733,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1684,6 +1762,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1700,6 +1779,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1728,6 +1808,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1745,6 +1826,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1773,6 +1855,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1791,6 +1874,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1818,6 +1902,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1833,6 +1918,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1860,6 +1946,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1883,6 +1970,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1911,6 +1999,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1927,6 +2016,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -1955,6 +2045,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -1973,6 +2064,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -2000,6 +2092,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -2013,6 +2106,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -2040,6 +2134,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var operatorToken = HttpContext.Request.Headers["x-operator-token"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
@@ -2053,6 +2148,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", operatorToken },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -2082,6 +2178,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -2097,6 +2194,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -2124,6 +2222,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
 
             var result = await _platformRepository.GetBetBuilderMarketTemplates(apiKey, clientId);
@@ -2135,6 +2234,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
@@ -2163,6 +2263,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -2175,6 +2276,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode },
@@ -2201,6 +2303,7 @@ namespace Platform.API.Controllers
 
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -2213,6 +2316,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "requestParameters", JsonSerializer.Serialize(parameters) },
                                 { "statusCode", result.StatusCode },
@@ -2388,6 +2492,7 @@ namespace Platform.API.Controllers
             using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
 
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -2396,6 +2501,7 @@ namespace Platform.API.Controllers
             var properties = new Dictionary<string, object>
             {
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-language-code", languageCode },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "statusCode", result.StatusCode },
@@ -2424,6 +2530,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -2435,6 +2542,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "statusCode", result.StatusCode },
@@ -2461,6 +2569,7 @@ namespace Platform.API.Controllers
             var ipCountryCode = ClientCountry;
             var ipAddress = ClientIPv6;
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
 
@@ -2472,6 +2581,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "x-operator-token", string.Empty },
                                 { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
                                 { "statusCode", result.StatusCode },
@@ -2604,6 +2714,7 @@ namespace Platform.API.Controllers
             using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
 
             var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
             var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
             var ipAddress = ClientIPv6;
 
@@ -2614,6 +2725,7 @@ namespace Platform.API.Controllers
                                 { "ipAddress", ipAddress },
                                 { "x-api-key", apiKey },
                                 { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
                                 { "requestParameters", userId },
                                 { "statusCode", result.StatusCode },
                                 { "message", result.Message }

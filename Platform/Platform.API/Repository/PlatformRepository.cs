@@ -392,15 +392,7 @@ namespace Platform.API.Repository
                 });
             }
 
-            var isV4 = true;
-
-            // if we have IPv6
-            if (request.IPAddressV6 != null && request.IPAddressV6.IndexOf(':') > 0)
-            {
-                isV4 = false;
-                // set IPv4 to loopback
-                request.IPAddress = IPAddress.Loopback.ToString();
-            };
+            var isIPv6 = (request.IPAddressV6 != null && request.IPAddressV6.IndexOf(':') > 0);
 
             if (ogParameters != null)
                 operatorToken = $"{operatorToken}|{ogParameters.CurrencyCode}|{ogParameters.GameCode}";
@@ -429,7 +421,7 @@ namespace Platform.API.Repository
                 Channel = request.Channel,
                 IPAddressV4 = request.IPAddress,
                 IPAddressV6 = request.IPAddressV6,
-                IsV4 = isV4,
+                IsV4 = !isIPv6,
                 IsBoosted = request.IsBoosted,
                 Selections = selections,
                 IsBetBuilder = request.IsBetBuilder,

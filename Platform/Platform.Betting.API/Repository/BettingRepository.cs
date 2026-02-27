@@ -35,15 +35,15 @@ namespace Platform.Betting.API.Repository
         private readonly ISportsbookRepository _sportsbookRepository;
         private readonly IRabbitMQRepository _rabbitMQRepository;
 
-        public BettingRepository(BettingContext bettingContext, 
-            IConfiguration configuration, 
-            IMemCache memCache, 
+        public BettingRepository(BettingContext bettingContext,
+            IConfiguration configuration,
+            IMemCache memCache,
             IHttpClientFactory httpClientFactory,
             IBetProviderFactory providerFactory,
-            //IMTSAuthRepository mtsAuthRepository, 
-            //IMTSMaxStakeRepository mtsMaxStakeRepository, 
-            //IMTSProbabilityRepository mtsProbabilityRepository, 
-            ISportsbookRepository sportsbookRepository, 
+            //IMTSAuthRepository mtsAuthRepository,
+            //IMTSMaxStakeRepository mtsMaxStakeRepository,
+            //IMTSProbabilityRepository mtsProbabilityRepository,
+            ISportsbookRepository sportsbookRepository,
             IRabbitMQRepository rabbitMQRepository,
             ILogger<BettingRepository> logger)
         {
@@ -651,6 +651,8 @@ namespace Platform.Betting.API.Repository
                     //    BetSelections = betSelectionData
                     //}, "OnBetPlacement", "r.bet.placement", Guid.NewGuid().ToString().ToUpper());
 
+                    // This is used because MTS doesn't support IPv6
+                    // TODO: we probably want this feature flagged for MTS only
                     betData.IPAddress = request.IPAddressV4;
 
                     var payload = new OnBetPlacement
@@ -3873,7 +3875,7 @@ namespace Platform.Betting.API.Repository
             BetConfigLeagueResponse result = new BetConfigLeagueResponse();
             int TierId = 2;
             var league = await _bettingContext.League.Where(a => a.SportId == request.SportId && a.LeagueId == request.LeagueId && a.SegmentId == request.SegmentId).FirstOrDefaultAsync();
-            
+
             if (league == null)
             {
                 if (request.SportId.IsESports())

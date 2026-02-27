@@ -58,16 +58,20 @@ namespace Platform.API.Controllers
             if (!string.IsNullOrEmpty(cfConnectingIp))
                 return cfConnectingIp;
 
+            const string kubePrefix = "::ffff:";
+
             var xForwardedFor = context.Request.Headers["X-Forwarded-For"].ToString();
             if (!string.IsNullOrEmpty(xForwardedFor))
             {
                 var ipAddresses = xForwardedFor.Split(',').Select(ip => ip.Trim())
                         .Where(ip => !string.IsNullOrEmpty(ip) && ip != "127.0.0.1").ToList();
                 if (ipAddresses.Any())
-                    return ipAddresses.First().Split(':').First();
+                {
+                    var firstIp = ipAddresses.First().Split(':').First();
+                    if (firstIp.StartsWith(kubePrefix))
+                        return firstIp.Substring(kubePrefix.Length);
+                }
             }
-
-            const string kubePrefix = "::ffff:";
 
             var remoteIp = context.Connection?.RemoteIpAddress?.ToString();
 

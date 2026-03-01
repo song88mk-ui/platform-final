@@ -122,6 +122,17 @@ namespace Platform.Sportsbook.API.Repository
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer D6ewpdvADa8k5U7Xcx");
         }
 
+        public async Task<BaseResponseDTO<bool>> InvalidateMaintenanceCache()
+        {
+            _memCache.DeleteCache("mtnn");
+            return new BaseResponseDTO<bool>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = true
+            };
+        }
+
         public async Task<BaseResponseDTO<LivestreamResponseDTO>> GetLivestream(LivestreamRequestDTO request)
         {
             _logger.LogInformation($"GetLivestream Start: {JsonSerializer.Serialize(request)}");

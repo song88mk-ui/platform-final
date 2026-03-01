@@ -20,6 +20,21 @@ namespace Platform.Sportsbook.API.Controllers
             _activitySource = instrumentation.ActivitySource;
         }
 
+        [HttpDelete("v1/cache/maintenance")]
+        public async Task<IActionResult> MaintenanceCacheInvalidate()
+        {
+            var result = await _sportsbookRepository.InvalidateMaintenanceCache();
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/sportsbook/livestream")]
         public async Task<IActionResult> GetLivestream([FromBody] LivestreamRequestDTO request)
         {

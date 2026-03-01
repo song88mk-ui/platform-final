@@ -101,5 +101,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<BackofficeAnnouncementResponseDTO>> AddOrUpdateAnnouncements(AddOrUpdateBackofficeAnnouncementRequest request);
         Task<BaseResponseDTO<bool>> DeleteClientAnnouncements(DeleteBackofficeAnnouncementDTO request);
         Task<BaseResponseDTO<CustomerConfidenceFactorResponseDTO>> GetCustomerConfidenceFactor(string apiKey, string clientId, string userId);
+        Task<BaseResponseDTO<bool>> ClientCacheInvalidate(string clientId);
     }
 }

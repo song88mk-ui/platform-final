@@ -37,6 +37,32 @@ namespace Platform.API.Repository
 
         private static List<string> _ogHighCurrencies = new List<string> { "IDRK", "VNDK", "MMKK", "INRK", "UZSK" };
 
+        public async Task<BaseResponseDTO<bool>> ClientCacheInvalidate(string clientId)
+        {
+            var isGuid = Guid.TryParse(clientId, out Guid guid);
+
+            if (!isGuid)
+            {
+                return new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers,
+                    Message = StatusCode.Missing_Or_Unsupported_ClientId_In_Request_Headers.ToString().Replace('_', ' '),
+                    Result = false
+                };
+            }
+
+            var key = $"cc:{guid.ToString().ToUpper()}";
+
+            _memCache.DeleteCache(key);
+
+            return new BaseResponseDTO<bool>
+                {
+                    StatusCode = StatusCode.Success,
+                    Message = StatusCode.Success.ToString(),
+                    Result = true
+                };
+        }
+
         public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, ICasinoRepository casinoRepository, PlatformContext platformContext, IMemCache memCache, IConfiguration configuration, Instrumentation instrumentation, ILogger<PlatformRepository> logger)
         {
             _operatorRepository = operatorRepository;

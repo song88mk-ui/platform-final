@@ -19,6 +19,21 @@ namespace Platform.API.Controllers
             _platformRepository = platformRepository;
         }
 
+        [HttpDelete("v1/cache/client/{clientId}")]
+        public async Task<IActionResult> ClientCacheInvalidate(string clientId)
+        {
+            var result = await _platformRepository.ClientCacheInvalidate(clientId);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v1/client")]
         public async Task<IActionResult> AddOrUpdateClient([FromBody] ClientRequestDTO request)
         {

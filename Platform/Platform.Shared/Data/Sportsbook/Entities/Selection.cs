@@ -89,6 +89,8 @@ namespace Platform.Shared.Data.Sportsbook.Entities
     }
     public class SelectionProbabilityFilter
     {
+        [BsonId]
+        public string Id { get; set; }
         public long SeId { get; set; }
         public long FiId { get; set; }
         public long MaId { get; set; }
@@ -105,6 +107,8 @@ namespace Platform.Shared.Data.Sportsbook.Entities
 
     public class CashOutSelectionFilter
     {
+        [BsonId]
+        public string Id { get; set; }
         public long SeId { get; set; }
         public long MaId { get; set; }
         public int MaStId { get; set; }

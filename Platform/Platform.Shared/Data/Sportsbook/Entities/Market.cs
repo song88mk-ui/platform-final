@@ -67,12 +67,16 @@ namespace Platform.Shared.Data.Sportsbook.Entities
 
     public class MarketProbabilityFilter
     {
+        [BsonId]
+        public string Id { get; set; }
         public long MaId { get; set; }
         public int MaStId { get; set; }
     }
 
     public class CashOutMarketFilter
     {
+        [BsonId]
+        public string Id { get; set; }
         public long MaId { get; set; }
         public int MaStId { get; set; }
     }

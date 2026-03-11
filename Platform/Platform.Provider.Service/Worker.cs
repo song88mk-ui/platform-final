@@ -100,6 +100,9 @@ namespace Platform.Provider.Service
 
             _logger.LogInformation("Connecting to Ably");
             var key = _configuration["Custom:Ably:ApiKey"];
+            var baseChannel = _configuration["Custom:Ably:Channel"];
+            var channelCount = Convert.ToInt32(_configuration["Custom:Ably:ChannelCount"]);
+
             var options = new ClientOptions
             {
                 Key = key,
@@ -121,25 +124,28 @@ namespace Platform.Provider.Service
                 _logger.LogInformation("Ably connection state: {State}", state.Current);
             });
 
-            var channelName = _configuration["Custom:Ably:Channel"];
-            var channel = ably.Channels.Get(channelName);
-
-            channel.Subscribe(message =>
+            for (int i = 0; i < channelCount; i++)
             {
-                try
-                {
-                    if (string.IsNullOrEmpty(message.Data?.ToString()))
-                        return;
+                var channelName = $"{baseChannel}:{i}";
+                var channel = ably.Channels.Get(channelName);
 
-                    HandleIncomingMessage(message.Data.ToString());
-                }
-                catch (Exception ex)
+                channel.Subscribe(message =>
                 {
-                    _logger.LogError(ex, "Error processing Ably message");
-                }
-            });
+                    try
+                    {
+                        if (string.IsNullOrEmpty(message.Data?.ToString()))
+                            return;
 
-            _logger.LogInformation("Subscribed to Ably channel: {Channel}", channelName);
+                        HandleIncomingMessage(message.Data.ToString(), i);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error processing Ably message");
+                    }
+                });
+
+                _logger.LogInformation("Subscribed to Ably channel: {Channel}", channelName);
+            }
 
             return Task.CompletedTask;
         }
@@ -252,9 +258,9 @@ namespace Platform.Provider.Service
             return Enumerable.Empty<string>();
         }
 
-        private void HandleIncomingMessage(string payload)
+        private void HandleIncomingMessage(string payload, int channel)
         {
-            _logger.LogInformation($"process.bet.assessment: {payload}");
+            _logger.LogInformation($"process.bet.assessment: Channel{channel} {payload}");
 
             using var scope = _scopeFactory.CreateScope();
             var betProviderFactory = scope.ServiceProvider.GetRequiredService<IBetProviderFactory>();

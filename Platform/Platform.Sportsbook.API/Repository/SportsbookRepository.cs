@@ -1406,15 +1406,15 @@ namespace Platform.Sportsbook.API.Repository
             var selectionIds = request.Selections.Select(s => s.Item3).Distinct().ToList();
 
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
-            var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.IsSu).Include(c => c.FiStId);
+            var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.IsSu).Include(c => c.FiStId);
             var fixtures = primaryFixtureCollection.Find(fixtureFilter).Project<FixtureProbabilityFilter>(fixtureProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => marketIds.Contains(c.MaId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.MaId).Include(c => c.MaStId);
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.MaId).Include(c => c.MaStId);
             var markets = primaryMarketCollection.Find(marketFilter).Project<MarketProbabilityFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr).Include(c => c.SeStId);
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.SeId).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr).Include(c => c.SeStId);
             var selections = primarySelectionCollection.Find(selectionFilter).Project<SelectionProbabilityFilter>(selectionProjection).ToListAsync();
 
             var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
@@ -7437,7 +7437,7 @@ namespace Platform.Sportsbook.API.Repository
             var selectionIds = request.Selections.Select(s => Convert.ToInt64(s.SelectionId)).Distinct().ToList();
 
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
-            var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.IsSu).Include(c => c.FiStId).Include(c => c.FiSp).Include(c => c.SpId);
+            var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.IsSu).Include(c => c.FiStId).Include(c => c.FiSp).Include(c => c.SpId);
             var fixture = primaryFixtureCollection.Find(fixtureFilter).Project<FixtureBetBuilderFilter>(fixtureProjection).FirstOrDefaultAsync();
 
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
@@ -9273,7 +9273,7 @@ namespace Platform.Sportsbook.API.Repository
             }
 
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 12 && c.SpId.IsVirtualSportId());
-            var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.FiId).Include(c => c.FiTyId).Include(c => c.FiStId).Include(c => c.SpId).Include(c => c.SpNa);
+            var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.FiTyId).Include(c => c.FiStId).Include(c => c.SpId).Include(c => c.SpNa);
             var fixtures = await primaryFixtureCollection.Find(fixtureFilter).Project<FixtureClientSportFilter>(fixtureProjection).ToListAsync();
             if (fixtures.Count == 0)
             {

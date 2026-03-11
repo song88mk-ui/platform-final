@@ -336,7 +336,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
             if (marketResult == null)
             {
                 var filter = Builders<Market>.Filter.Eq("MaId", marketId);
-                var projection = Builders<Market>.Projection.Include(c => c.MaId).Include(c => c.MaStId);
+                var projection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.MaId).Include(c => c.MaStId);
                 var result = marketCollection.Find(filter).Project<CashOutMarketFilter>(projection).FirstOrDefault();
 
                 _memCache.AddOrUpdateCache(marketKey, result, expiration);
@@ -379,7 +379,7 @@ namespace Platform.CashOutStake.Servicev2.Repository
             if (selectionResult == null)
             {
                 var filter = Builders<Selection>.Filter.Eq("SeId", selectionId);
-                var projection = Builders<Selection>.Projection.Include(c => c.SeId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr).Include(c => c.SeStId);
+                var projection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.SeId).Include(c => c.MaId).Include(c => c.MaStId).Include(c => c.IsAc).Include(c => c.Pr).Include(c => c.WoPr).Include(c => c.LoPr).Include(c => c.VoPr).Include(c => c.HaWoPr).Include(c => c.HaLoPr).Include(c => c.SeStId);
                 var result = selectionCollection.Find(filter).Project<CashOutSelectionFilter>(projection).FirstOrDefault();
 
                 _memCache.AddOrUpdateCache(selectionKey, result, expiration);

@@ -147,6 +147,8 @@ namespace Platform.Shared.Data.Sportsbook.Entities
 
     public class FixtureProbabilityFilter
     {
+        [BsonId]
+        public string Id { get; set; }
         public long FiId { get; set; }
         public bool IsSu { get; set; }
         public int FiStId { get; set; }
@@ -154,6 +156,8 @@ namespace Platform.Shared.Data.Sportsbook.Entities
 
     public class FixtureClientSportFilter
     {
+        [BsonId]
+        public string Id { get; set; }
         public long FiId { get; set; }
         public int FiStId { get; set; }
         public int FiTyId { get; set; }
@@ -172,6 +176,8 @@ namespace Platform.Shared.Data.Sportsbook.Entities
 
     public class FixtureBetBuilderFilter
     {
+        [BsonId]
+        public string Id { get; set; }
         public long FiId { get; set; }
         public bool IsSu { get; set; }
         public int FiStId { get; set; }

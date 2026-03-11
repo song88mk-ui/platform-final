@@ -11,6 +11,7 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using Platform.Shared.Models.Provider.GTS;
 using System.Text.Json;
+using System.Collections.Generic;
 
 namespace Platform.Shared.Providers.GTS
 {
@@ -60,11 +61,12 @@ namespace Platform.Shared.Providers.GTS
                     Reason = "1025 - GTS Authentication Failed"
                 };
 
-            var providerResult = new ProviderAssessmentResponseDTO {
+            var providerResult = new ProviderAssessmentResponseDTO
+            {
                 IsBetAllowed = false
             };
 
-            if(bet.DelayedBetAcceptance == null)
+            if (bet.DelayedBetAcceptance == null)
             {
                 var result = await _gtsRepo.Assessment(token.Result.Token, bet);
 
@@ -83,13 +85,19 @@ namespace Platform.Shared.Providers.GTS
                 providerResult.Message = bet.DelayedMessage;
             }
 
-            if(providerResult.IsBetAllowed)
+            if (providerResult.IsBetAllowed)
             {
+                var testClientCodes = (_configuration["Custom:TestBetClientCodes"] ?? string.Empty)
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+                string testPrefix = testClientCodes.Contains(bet.Bet.ClientCode, StringComparer.OrdinalIgnoreCase)
+                    ? "test" : string.Empty;
+
                 var sendBet = await _gtsRepo.SendBet(token.Result.Token, new SendBet()
                 {
                     Bet = bet.Bet,
                     BetSelections = bet.BetSelections.Select(s => s.BetSelection).ToList()
-                });
+                }, testPrefix);
 
                 if (sendBet.StatusCode != StatusCode.Success)
                     return new BetProviderResult
@@ -141,6 +149,12 @@ namespace Platform.Shared.Providers.GTS
             if (!Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]))
                 return;
 
+            var testClientCodes = (_configuration["Custom:TestBetClientCodes"] ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+            string testPrefix = testClientCodes.Contains(bet.Bet.ClientCode, StringComparer.OrdinalIgnoreCase)
+                ? "test" : string.Empty;
+            
             if (bet.BetSelections.Any(c => c.SportId.IsVirtualSportId()))
                 return;
 
@@ -156,7 +170,7 @@ namespace Platform.Shared.Providers.GTS
             {
                 Bet = bet.Bet,
                 BetSelections = bet.BetSelections
-            }, true);
+            }, testPrefix, true);
 
             if (sendBet.StatusCode != StatusCode.Success)
             {

@@ -14,7 +14,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Diagnostics;
-using Platform.Shared.Helpers;
 using Platform.Shared.Data.Betting.Entities;
 
 namespace Platform.Shared.Repositories
@@ -390,7 +389,7 @@ namespace Platform.Shared.Repositories
         }
 
 
-        public async Task<BaseResponseDTO<string>> SendBet(string authToken, SendBet request, bool isSettled = false)
+        public async Task<BaseResponseDTO<string>> SendBet(string authToken, SendBet request, string testPrefix = "", bool isSettled = false)
         {
             using(var activity = _activitySource.StartActivity("gts.bet.placement"))
             {
@@ -407,7 +406,7 @@ namespace Platform.Shared.Repositories
 
                     var payload = new
                     {
-                        id = request.Bet.BetId.ToString().ToUpper(),
+                        id = $"{testPrefix}{request.Bet.BetId.ToString().ToUpper()}",
                         betPlacedTimestampUTC = request.Bet.BetDate,
                         betUpdatedTimestampUTC = DateTime.UtcNow,
                         bookMakerName = request.Bet.ClientCode,

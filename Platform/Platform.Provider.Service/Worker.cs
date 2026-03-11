@@ -136,7 +136,7 @@ namespace Platform.Provider.Service
                         if (string.IsNullOrEmpty(message.Data?.ToString()))
                             return;
 
-                        HandleIncomingMessage(message.Data.ToString(), i);
+                        HandleIncomingMessage(message.Data.ToString(), $"{message.ClientId}:{message.ConnectionId}:{message.ConnectionKey}");
                     }
                     catch (Exception ex)
                     {
@@ -144,7 +144,7 @@ namespace Platform.Provider.Service
                     }
                 });
 
-                _logger.LogInformation("Subscribed to Ably channel: {Channel}", channelName);
+                _logger.LogInformation($"Subscribed to Ably channel: {channelName}");
             }
 
             return Task.CompletedTask;
@@ -258,7 +258,7 @@ namespace Platform.Provider.Service
             return Enumerable.Empty<string>();
         }
 
-        private void HandleIncomingMessage(string payload, int channel)
+        private void HandleIncomingMessage(string payload, string channel)
         {
             _logger.LogInformation($"process.bet.assessment: Channel{channel} {payload}");
 

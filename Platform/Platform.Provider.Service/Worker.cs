@@ -278,7 +278,7 @@ namespace Platform.Provider.Service
                 if (message == null)
                     return;
 
-                Guid.TryParse(message.BetId, out var betId);
+                Guid.TryParse(message.BetId.Replace("test",""), out var betId);
 
                 var delayedMessage = string.Empty;
                 if (!message.IsBetAllowed)

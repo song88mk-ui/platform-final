@@ -61,6 +61,12 @@ namespace Platform.Shared.Providers.GTS
                     Reason = "1025 - GTS Authentication Failed"
                 };
 
+            var testClientCodes = (_configuration["Custom:TestBetClientCodes"] ?? string.Empty)
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+            string testPrefix = testClientCodes.Contains(bet.Bet.ClientCode, StringComparer.OrdinalIgnoreCase)
+                ? "test" : string.Empty;
+
             var providerResult = new ProviderAssessmentResponseDTO
             {
                 IsBetAllowed = false
@@ -68,7 +74,7 @@ namespace Platform.Shared.Providers.GTS
 
             if (bet.DelayedBetAcceptance == null)
             {
-                var result = await _gtsRepo.Assessment(token.Result.Token, bet);
+                var result = await _gtsRepo.Assessment(token.Result.Token, bet, testPrefix);
 
                 providerResult = result.Result;
 
@@ -87,12 +93,7 @@ namespace Platform.Shared.Providers.GTS
 
             if (providerResult.IsBetAllowed)
             {
-                var testClientCodes = (_configuration["Custom:TestBetClientCodes"] ?? string.Empty)
-                    .Split(',', StringSplitOptions.RemoveEmptyEntries);
-
-                string testPrefix = testClientCodes.Contains(bet.Bet.ClientCode, StringComparer.OrdinalIgnoreCase)
-                    ? "test" : string.Empty;
-
+                
                 var sendBet = await _gtsRepo.SendBet(token.Result.Token, new SendBet()
                 {
                     Bet = bet.Bet,
@@ -122,6 +123,8 @@ namespace Platform.Shared.Providers.GTS
 
             try
             {
+                var testClientCodes = (_configuration["Custom:TestBetClientCodes"] ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries);
+                string testPrefix = testClientCodes.Contains(clientCode, StringComparer.OrdinalIgnoreCase) ? "test" : string.Empty;
 
                 var token = await _auth.GetGTSAuthorizationToken();
                 if (token.StatusCode != StatusCode.Success)
@@ -129,7 +132,7 @@ namespace Platform.Shared.Providers.GTS
 
                 _logger.LogInformation("ProcessCancellation (Request) : {betId}", betId);
 
-                var result = await _gtsRepo.Cancellation(token.Result.Token, betId, limitId, clientCode);
+                var result = await _gtsRepo.Cancellation(token.Result.Token, betId, limitId, clientCode, testPrefix);
 
                 _logger.LogInformation($"ProcessCancellation (Response) : {JsonSerializer.Serialize(result)}");
 

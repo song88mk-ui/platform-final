@@ -256,7 +256,7 @@ namespace Platform.Shared.Repositories
             } // activity
         }
 
-        public async Task<BaseResponseDTO<ProviderAssessmentResponseDTO>> Assessment(string authToken, OnBetPlacement request)
+        public async Task<BaseResponseDTO<ProviderAssessmentResponseDTO>> Assessment(string authToken, OnBetPlacement request, string testPrefix = "")
         {
             using(var activity = _activitySource.StartActivity("gts.assessment"))
             {
@@ -306,7 +306,7 @@ namespace Platform.Shared.Repositories
 
                     var payload = new
                     {
-                        betId = request.Bet.BetId.ToString().ToUpper(),
+                        betId = $"{testPrefix}{request.Bet.BetId.ToString().ToUpper()}",
                         playerId = request.Bet.UserId,
                         totalStake = totalStake,
                         currencyCode = request.Bet.CurrencyCode,
@@ -490,7 +490,7 @@ namespace Platform.Shared.Repositories
             } // activity
         }
 
-        public async Task<BaseResponseDTO<string>> Cancellation(string authToken, Guid betId, string limitId, string clientCode)
+        public async Task<BaseResponseDTO<string>> Cancellation(string authToken, Guid betId, string limitId, string clientCode, string testPrefix)
         {
             _logger.LogInformation($"Cancellation Start: {betId}");
 

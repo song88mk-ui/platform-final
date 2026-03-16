@@ -54,8 +54,8 @@ namespace Platform.Placement.Servicev2.Repository
                 message = cache;
                 message.DelayedBetAcceptance = betAcceptance;
                 message.DelayedMessage = delayedMessage;
-                message.Bet.BetDate = DateTime.UtcNow;
             }
+            message.Bet.BetDate = DateTime.UtcNow;
 
             _logger.LogInformation($"ProcesssBetPlacement {key}");
 

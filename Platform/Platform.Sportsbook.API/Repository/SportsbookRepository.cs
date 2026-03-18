@@ -5971,6 +5971,12 @@ namespace Platform.Sportsbook.API.Repository
             }
 
         }
+
+        private bool is1x2Market(string marketName)
+        {
+            return marketName.ToLowerInvariant().Contains("1x2");
+        }
+
         private List<MarketDTO> GetMainMarkets(int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, int fixtureStatusId, List<BetBuilderMarketTemplates> betBuilderMarketTemplates, Guid clientId)
         {
             var marketTemplates = GetMainMarketTemplates(sportId, clientId);
@@ -6124,6 +6130,22 @@ namespace Platform.Sportsbook.API.Repository
 
                     var filteredSelections = selections.Where(c => c.MaId == market.MaId).ToList();
                     var isBinary = filteredSelections.Count > 2 ? false : true;
+                    var selectionDTOs = filteredSelections.Select(s => new SelectionDTO
+                    {
+                        SelectionTemplateId = s.SeTeId,
+                        SelectionId = s.SeId.ToString(),
+                        SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
+                        DecimalOdds = s.Od.ToString("0.00"),
+                        MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                        HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                        IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
+                        IsActive = s.IsAc,
+                        CorrelationId = s.CoId,
+                        SortOrder = s.SeSoOr
+                    });
+
+                    var orderedSelections = is1x2Market(market.MaNa) ? selectionDTOs.OrderBy(s => s.SelectionName, new Selections1x2Comparer()) :
+                        selectionDTOs.OrderBy(o => o.SortOrder);
 
                     result.Add(new MarketDTO
                     {
@@ -6136,19 +6158,7 @@ namespace Platform.Sportsbook.API.Repository
                         MarketStatusName = market.MaStNa,
                         SortOrder = ctr,
                         IsBetBuilder = isBetBuilder,
-                        Selections = filteredSelections.Select(s => new SelectionDTO
-                        {
-                            SelectionTemplateId = s.SeTeId,
-                            SelectionId = s.SeId.ToString(),
-                            SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
-                            DecimalOdds = s.Od.ToString("0.00"),
-                            MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
-                            HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
-                            IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
-                            IsActive = s.IsAc,
-                            CorrelationId = s.CoId,
-                            SortOrder = s.SeSoOr
-                        }).OrderBy(o => o.SortOrder).ToList()
+                        Selections = orderedSelections.ToList()
                     });
                 }
 
@@ -12330,6 +12340,23 @@ namespace Platform.Sportsbook.API.Repository
             }
         }
 
+    }
+
+    public class Selections1x2Comparer : IComparer<string>
+    {
+        public int Compare(string odd1, string odd2)
+        {
+            if (odd1.ToLowerInvariant().Contains("x") && odd2.All(char.IsDigit))
+            {
+                return -1;
+            }
+            else if (odd1.All(char.IsDigit) && odd2.ToLowerInvariant().Contains("x"))
+            {
+                return 1;
+            }
+
+            return string.Compare(odd1, odd2);
+        }
     }
 
     public static class CurrentPeriodHelper

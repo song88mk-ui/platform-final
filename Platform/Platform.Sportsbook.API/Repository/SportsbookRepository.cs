@@ -6009,7 +6009,7 @@ namespace Platform.Sportsbook.API.Repository
                         });
 
                         var orderedSelections = Is1x2Market(market.MaNa)
-                            ? selectionDTOs.OrderBy(s => s.SelectionName, new Selections1x2Comparer()).Select((s, index) =>
+                            ? selectionDTOs.OrderBy(s => s.SelectionTemplateId, new Selections1x2Comparer()).Select((s, index) =>
                             {
                                 s.SortOrder = index + 1;
                                 return s;
@@ -6155,7 +6155,7 @@ namespace Platform.Sportsbook.API.Repository
                     });
 
                     var orderedSelections = Is1x2Market(market.MaNa) 
-                        ? selectionDTOs.OrderBy(s => s.SelectionName, new Selections1x2Comparer()).Select((s, index) =>
+                        ? selectionDTOs.OrderBy(s => s.SelectionTemplateId, new Selections1x2Comparer()).Select((s, index) =>
                             {
                                 s.SortOrder = index + 1;
                                 return s;
@@ -12359,18 +12359,25 @@ namespace Platform.Sportsbook.API.Repository
 
     public class Selections1x2Comparer : IComparer<string>
     {
-        public int Compare(string odd1, string odd2)
+        public int Compare(string x, string y)
         {
-            if (odd1.ToLowerInvariant().Contains("x") && odd2.All(char.IsDigit))
-            {
-                return -1;
-            }
-            else if (odd1.All(char.IsDigit) && odd2.ToLowerInvariant().Contains("x"))
-            {
-                return 1;
-            }
+            int orderX = GetOrder(x);
+            int orderY = GetOrder(y);
 
-            return string.Compare(odd1, odd2);
+            return orderX.CompareTo(orderY);
+        }
+
+        private int GetOrder(string selectionTemplateId)
+        {
+            return selectionTemplateId switch
+            {
+                "1" => 1, // Home
+                "4" => 1, // Home
+                "2" => 2, // Draw (X)
+                "3" => 3, // Away
+                "5" => 3, // Away
+                _ => 99 // fallback
+            };
         }
     }
 

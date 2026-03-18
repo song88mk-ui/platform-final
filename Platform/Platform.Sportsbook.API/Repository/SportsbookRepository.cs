@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Misc;
 using MongoDB.Driver.Linq;
+using MongoDB.Libmongocrypt;
 using Platform.Shared.Data.Sportsbook;
 using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Data.Sportsbook.SQLEntities;
@@ -5995,6 +5996,28 @@ namespace Platform.Sportsbook.API.Repository
                         var filteredSelections = selections.Where(c => c.MaId == market.MaId).ToList();
                         var isBinary = filteredSelections.Count > 2 ? false : true;
 
+                        var selectionDTOs = filteredSelections.Select(s => new SelectionDTO
+                        {
+                            SelectionTemplateId = s.SeTeId,
+                            SelectionId = s.SeId.ToString(),
+                            SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
+                            DecimalOdds = s.Od.ToString("0.00"),
+                            MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                            HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                            IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
+                            IsActive = s.IsAc,
+                            CorrelationId = s.CoId,
+                            SortOrder = s.SeSoOr
+                        });
+
+                        var orderedSelections = Is1x2Market(market.MaNa)
+                            ? selectionDTOs.OrderBy(s => s.SelectionName, new Selections1x2Comparer()).Select((s, index) =>
+                            {
+                                s.SortOrder = index + 1;
+                                return s;
+                            })
+                            : selectionDTOs.OrderBy(o => o.SortOrder);
+
                         result.Add(new MarketDTO
                         {
                             MarketTemplateId = market.MaTeId,
@@ -6006,19 +6029,7 @@ namespace Platform.Sportsbook.API.Repository
                             MarketStatusName = market.MaStNa,
                             SortOrder = ctr,
                             IsBetBuilder = false,
-                            Selections = filteredSelections.Select(s => new SelectionDTO
-                            {
-                                SelectionTemplateId = s.SeTeId,
-                                SelectionId = s.SeId.ToString(),
-                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
-                                DecimalOdds = s.Od.ToString("0.00"),
-                                MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
-                                HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
-                                IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
-                                IsActive = s.IsAc,
-                                CorrelationId = s.CoId,
-                                SortOrder = s.SeSoOr
-                            }).OrderBy(o => o.SortOrder).ToList()
+                            Selections = orderedSelections.ToList()
                         });
                     }
 
@@ -6145,8 +6156,13 @@ namespace Platform.Sportsbook.API.Repository
                         SortOrder = s.SeSoOr
                     });
 
-                    var orderedSelections = is1x2Market(market.MaNa) ? selectionDTOs.OrderBy(s => s.SelectionName, new Selections1x2Comparer()) :
-                        selectionDTOs.OrderBy(o => o.SortOrder);
+                    var orderedSelections = Is1x2Market(market.MaNa) 
+                        ? selectionDTOs.OrderBy(s => s.SelectionName, new Selections1x2Comparer()).Select((s, index) =>
+                            {
+                                s.SortOrder = index + 1;
+                                return s;
+                            })
+                        : selectionDTOs.OrderBy(o => o.SortOrder);
 
                     result.Add(new MarketDTO
                     {

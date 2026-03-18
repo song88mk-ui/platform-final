@@ -5972,9 +5972,10 @@ namespace Platform.Sportsbook.API.Repository
 
         }
 
-        private bool is1x2Market(string marketName)
+        private bool Is1x2Market(string marketName)
         {
-            return marketName.ToLowerInvariant().Contains("1x2");
+            string[] markets = { "1x2", "match result" };
+            return markets.Any(m => marketName.ToLowerInvariant().Contains(m));
         }
 
         private List<MarketDTO> GetMainMarkets(int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, int fixtureStatusId, List<BetBuilderMarketTemplates> betBuilderMarketTemplates, Guid clientId)

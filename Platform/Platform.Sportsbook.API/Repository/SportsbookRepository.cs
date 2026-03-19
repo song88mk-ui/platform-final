@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Misc;
 using MongoDB.Driver.Linq;
 using Platform.Shared.Data.Sportsbook;
 using Platform.Shared.Data.Sportsbook.Entities;
@@ -5970,13 +5971,6 @@ namespace Platform.Sportsbook.API.Repository
             }
 
         }
-
-        private bool Is1x2Market(string marketName)
-        {
-            string[] markets = { "1x2", "match result" };
-            return markets.Any(m => marketName.ToLowerInvariant().Contains(m));
-        }
-
         private List<MarketDTO> GetMainMarkets(int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, int fixtureStatusId, List<BetBuilderMarketTemplates> betBuilderMarketTemplates, Guid clientId)
         {
             var marketTemplates = GetMainMarketTemplates(sportId, clientId);
@@ -5994,28 +5988,6 @@ namespace Platform.Sportsbook.API.Repository
                         var filteredSelections = selections.Where(c => c.MaId == market.MaId).ToList();
                         var isBinary = filteredSelections.Count > 2 ? false : true;
 
-                        var selectionDTOs = filteredSelections.Select(s => new SelectionDTO
-                        {
-                            SelectionTemplateId = s.SeTeId,
-                            SelectionId = s.SeId.ToString(),
-                            SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
-                            DecimalOdds = s.Od.ToString("0.00"),
-                            MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
-                            HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
-                            IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
-                            IsActive = s.IsAc,
-                            CorrelationId = s.CoId,
-                            SortOrder = s.SeSoOr
-                        });
-
-                        var orderedSelections = Is1x2Market(market.MaNa)
-                            ? selectionDTOs.OrderBy(s => s.SelectionTemplateId, new Selections1x2Comparer()).Select((s, index) =>
-                            {
-                                s.SortOrder = index + 1;
-                                return s;
-                            })
-                            : selectionDTOs.OrderBy(o => o.SortOrder);
-
                         result.Add(new MarketDTO
                         {
                             MarketTemplateId = market.MaTeId,
@@ -6027,7 +5999,19 @@ namespace Platform.Sportsbook.API.Repository
                             MarketStatusName = market.MaStNa,
                             SortOrder = ctr,
                             IsBetBuilder = false,
-                            Selections = orderedSelections.ToList()
+                            Selections = filteredSelections.Select(s => new SelectionDTO
+                            {
+                                SelectionTemplateId = s.SeTeId,
+                                SelectionId = s.SeId.ToString(),
+                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                DecimalOdds = s.Od.ToString("0.00"),
+                                MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                                HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                                IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
+                                IsActive = s.IsAc,
+                                CorrelationId = s.CoId,
+                                SortOrder = s.SeSoOr
+                            }).OrderBy(o => o.SortOrder).ToList()
                         });
                     }
 
@@ -6140,27 +6124,6 @@ namespace Platform.Sportsbook.API.Repository
 
                     var filteredSelections = selections.Where(c => c.MaId == market.MaId).ToList();
                     var isBinary = filteredSelections.Count > 2 ? false : true;
-                    var selectionDTOs = filteredSelections.Select(s => new SelectionDTO
-                    {
-                        SelectionTemplateId = s.SeTeId,
-                        SelectionId = s.SeId.ToString(),
-                        SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
-                        DecimalOdds = s.Od.ToString("0.00"),
-                        MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
-                        HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
-                        IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
-                        IsActive = s.IsAc,
-                        CorrelationId = s.CoId,
-                        SortOrder = s.SeSoOr
-                    });
-
-                    var orderedSelections = Is1x2Market(market.MaNa) 
-                        ? selectionDTOs.OrderBy(s => s.SelectionTemplateId, new Selections1x2Comparer()).Select((s, index) =>
-                            {
-                                s.SortOrder = index + 1;
-                                return s;
-                            })
-                        : selectionDTOs.OrderBy(o => o.SortOrder);
 
                     result.Add(new MarketDTO
                     {
@@ -6173,7 +6136,19 @@ namespace Platform.Sportsbook.API.Repository
                         MarketStatusName = market.MaStNa,
                         SortOrder = ctr,
                         IsBetBuilder = isBetBuilder,
-                        Selections = orderedSelections.ToList()
+                        Selections = filteredSelections.Select(s => new SelectionDTO
+                        {
+                            SelectionTemplateId = s.SeTeId,
+                            SelectionId = s.SeId.ToString(),
+                            SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
+                            DecimalOdds = s.Od.ToString("0.00"),
+                            MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
+                            HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
+                            IndonesianOdds = GetIndoOdds(s.Od, isBinary).ToString("0.00"),
+                            IsActive = s.IsAc,
+                            CorrelationId = s.CoId,
+                            SortOrder = s.SeSoOr
+                        }).OrderBy(o => o.SortOrder).ToList()
                     });
                 }
 
@@ -12355,30 +12330,6 @@ namespace Platform.Sportsbook.API.Repository
             }
         }
 
-    }
-
-    public class Selections1x2Comparer : IComparer<string>
-    {
-        public int Compare(string x, string y)
-        {
-            int orderX = GetOrder(x);
-            int orderY = GetOrder(y);
-
-            return orderX.CompareTo(orderY);
-        }
-
-        private int GetOrder(string selectionTemplateId)
-        {
-            return selectionTemplateId switch
-            {
-                "1" => 1, // Home
-                "4" => 1, // Home
-                "2" => 2, // Draw (X)
-                "3" => 3, // Away
-                "5" => 3, // Away
-                _ => 99 // fallback
-            };
-        }
     }
 
     public static class CurrentPeriodHelper

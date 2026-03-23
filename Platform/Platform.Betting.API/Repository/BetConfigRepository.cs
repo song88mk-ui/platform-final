@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Platform.Betting.API.Repository
 {
@@ -18,11 +19,14 @@ namespace Platform.Betting.API.Repository
     {
         private readonly BettingContext _bettingContext;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<BetConfigRepository> _logger;
 
-        public BetConfigRepository(BettingContext bettingContext, IConfiguration configuration)
+        public BetConfigRepository(BettingContext bettingContext, IConfiguration configuration,
+            ILogger<BetConfigRepository> logger)
         {
             _bettingContext = bettingContext;
             _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task<BaseResponseDTO<StatusCode>> ProcessBetConfig(BackOfficeBetConfigPayloadDTO payload)
@@ -174,6 +178,8 @@ namespace Platform.Betting.API.Repository
             }
             catch (Exception ex)
             {
+                _logger.LogError($"Error ProcessBetConfig: {ex.Message}-{ex.StackTrace}");
+
                 return new BaseResponseDTO<StatusCode>
                 {
                     StatusCode = StatusCode.Error,
@@ -226,6 +232,8 @@ namespace Platform.Betting.API.Repository
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError($"Error ProcessUserBetConfig: {ex.Message}-{ex.StackTrace}");
+
                     scope.Dispose();
                     return new BaseResponseDTO<StatusCode>
                     {
@@ -351,6 +359,8 @@ namespace Platform.Betting.API.Repository
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError($"Error ProcessParlayBonus: {ex.Message}-{ex.StackTrace}");
+
                     scope.Dispose();
                     return new BaseResponseDTO<StatusCode>
                     {

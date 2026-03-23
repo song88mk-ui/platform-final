@@ -302,14 +302,14 @@ namespace Platform.Shared.Repositories
 
                     activity?.SetTag("gts.bookmaker.id", bookmakerId);
 
-                    var totalStake = request.Bet.TrueStake;
-
+                    var totalStake = request.Bet.TrueStake * request.Bet.ExchangeRate;
+                     
                     var payload = new
                     {
                         betId = $"{testPrefix}{request.Bet.BetId.ToString().ToUpper()}",
                         playerId = request.Bet.UserId,
                         totalStake = totalStake,
-                        currencyCode = request.Bet.CurrencyCode,
+                        currencyCode = "EUR",
                         legs = request.BetSelections.Select(s => new
                         {
                             selectionId = s.BetSelection.SelectionSpecifier.Split(':').LastOrDefault(),
@@ -401,7 +401,7 @@ namespace Platform.Shared.Repositories
                     var bookmakerId = request.Bet.LimitId; //int.Parse(_configuration["Custom:GTSBookmakerId"]);
                     activity?.SetTag("gts.bookmaker.id", bookmakerId);
 
-                    var totalStake = request.Bet.TrueStake;
+                    var totalStake = request.Bet.TrueStake * request.Bet.ExchangeRate;
                     var updateDate = isSettled ? DateTime.UtcNow : request.Bet.BetDate;
 
                     var payload = new
@@ -412,7 +412,7 @@ namespace Platform.Shared.Repositories
                         bookMakerName = request.Bet.ClientCode,
                         playerId = request.Bet.UserId,
                         totalStake = totalStake,
-                        currencyCode = request.Bet.CurrencyCode,
+                        currencyCode = "EUR",
                         status = GetGtsBetStatus(request.Bet.BetStatusId),
                         payout = isSettled ? (decimal?)request.Bet.Payout : null,
                         legs = request.BetSelections.Select(s => new

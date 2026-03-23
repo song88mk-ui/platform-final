@@ -57,7 +57,7 @@ namespace Platform.Provider.Service
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
-        {
+        {//
             _logger.LogInformation("Starting service");
             if (Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]))
             {

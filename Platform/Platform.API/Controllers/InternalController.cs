@@ -450,6 +450,14 @@ namespace Platform.API.Controllers
             return ReturnResult(result);
         }
 
+        [HttpGet("v1/clients")]
+        public async Task<IActionResult> GetClients()
+        {
+            var result = await _platformRepository.GetClients();
+
+            return ReturnResult(result);
+        }
+
         [HttpPost("v1/translation/recovery")]
         public async Task<IActionResult> TranslationRecovery([FromBody] TranslationRecoveryRequest request)
         {

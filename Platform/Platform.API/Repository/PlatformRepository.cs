@@ -4769,6 +4769,40 @@ namespace Platform.API.Repository
             });
         }
 
+        public async Task<BaseResponseDTO<List<ClientResponse>>> GetClients()
+        {
+            var key = $"ccs";
+
+            var cache = _memCache.GetCache<BaseResponseDTO<List<ClientResponse>>>(key);
+
+            if (cache != null)
+                return cache;
+
+            var result = await _platformContext.Client.ToListAsync();
+
+            var finalResult = new BaseResponseDTO<List<ClientResponse>>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString().Replace('_', ' '),
+                Result = result.Select(s => new ClientResponse
+                {
+                    ClientId = s.ClientId,
+                    ClientName = s.ClientName,
+                    ClientCode = s.ClientCode,
+                    LimitId = s.LimitId,
+                    IsActive = s.IsActive,
+                    Endpoint = s.Endpoint,
+                    CompanyShare = s.EffectiveDate.Date < DateTime.UtcNow.Date ? s.NextCompanyShare : s.CurrentCompanyShare,
+                    ClientIdRef = s.ClientIdRef,
+                    IsAgent = s.IsAgent
+                }).ToList()
+            };
+
+            _memCache.AddOrUpdateCache(key, finalResult, 24);
+
+            return finalResult;
+        }
+
         public async Task<BaseResponseDTO<ClientResponse>> GetClientInformation(string clientId)
         {
             return await GetClient(clientId);

@@ -1,5 +1,4 @@
-﻿using Platform.Shared.Models;
-using System;
+﻿using System;
 
 namespace Platform.API.Models
 {

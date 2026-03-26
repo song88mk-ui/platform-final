@@ -302,7 +302,7 @@ namespace Platform.Shared.Repositories
 
                     activity?.SetTag("gts.bookmaker.id", bookmakerId);
 
-                    var totalStake = request.Bet.TrueStake * request.Bet.ExchangeRate;
+                    var totalStake = ConvertToEur(request.Bet.TrueStake, request.Bet.ExchangeRate);
                      
                     var payload = new
                     {
@@ -401,7 +401,7 @@ namespace Platform.Shared.Repositories
                     var bookmakerId = request.Bet.LimitId; //int.Parse(_configuration["Custom:GTSBookmakerId"]);
                     activity?.SetTag("gts.bookmaker.id", bookmakerId);
 
-                    var totalStake = request.Bet.TrueStake * request.Bet.ExchangeRate;
+                    var totalStake = ConvertToEur(request.Bet.TrueStake, request.Bet.ExchangeRate);
                     var updateDate = isSettled ? DateTime.UtcNow : request.Bet.BetDate;
 
                     var payload = new
@@ -615,6 +615,14 @@ namespace Platform.Shared.Repositories
                 (int)BetStatus.Cancelled => 1,
                 _ => 0m
             };
+        }
+
+        private decimal ConvertToEur(decimal trueStake, decimal exchangeRate)
+        {
+            if (exchangeRate == 0)
+                exchangeRate = 1;
+
+            return trueStake / exchangeRate;
         }
     }
 

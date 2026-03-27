@@ -9919,102 +9919,90 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var virtualSportIds = new int[] { 1001, 1002, 1003, 1005, 1021 };
-            var hasVirtualSports = virtualSportIds.Any(c => c == request.SportId + 1000);
+            var sportId = request.SportId;
 
-            var sportIds = new List<int>();
-
-            if (hasVirtualSports)
-                sportIds.Add(1000 + request.SportId);
-
-            sportIds.Add(request.SportId);
-
-            foreach (var sportId in sportIds)
+            foreach (var marketTemplateGroup in request.MarketTemplateGroups)
             {
 
-                foreach (var marketTemplateGroup in request.MarketTemplateGroups)
+                // verify if market name already exists
+                if (request.IsAdd)
                 {
+                    var clientMarketTemplateGroup = _sportsbookContext.ClientMarketTemplateGroup.AsNoTracking()
+                            .FirstOrDefault(c => c.ClientId == request.ClientId && c.SportId == sportId
+                            && c.FixtureStatusId == marketTemplateGroup.FixtureStatusId && c.Name.ToLower() == marketTemplateGroup.Name.ToLower());
 
-                    // verify if market name already exists
-                    if (request.IsAdd)
+                    if (clientMarketTemplateGroup != null)
                     {
-                        var clientMarketTemplateGroup = _sportsbookContext.ClientMarketTemplateGroup.AsNoTracking()
-                                .FirstOrDefault(c => c.ClientId == request.ClientId && c.SportId == sportId
-                                && c.FixtureStatusId == marketTemplateGroup.FixtureStatusId && c.Name.ToLower() == marketTemplateGroup.Name.ToLower());
-
-                        if (clientMarketTemplateGroup != null)
+                        return new BaseResponseDTO<ClientPostMarketTemplateGroupResponseDTO>
                         {
-                            return new BaseResponseDTO<ClientPostMarketTemplateGroupResponseDTO>
+                            StatusCode = StatusCode.Error,
+                            Message = $"Market Group Name already exists in {(FixtureStatus)marketTemplateGroup.FixtureStatusId}",
+                            Result = new ClientPostMarketTemplateGroupResponseDTO()
+                        };
+                    }
+                }
+
+                var hasClientMarketTemplateGroup = _sportsbookContext.ClientMarketTemplateGroup.AsNoTracking()
+                    .Any(c => c.ClientId == request.ClientId && c.SportId == sportId);
+
+                if (hasClientMarketTemplateGroup)
+                {
+                    _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup2 {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}",
+                        request.ClientId.ToString(), sportId, marketTemplateGroup.FixtureStatusId, marketTemplateGroup.MarketTemplateGroupId,
+                        marketTemplateGroup.Name, marketTemplateGroup.SortOrder, (marketTemplateGroup.IsActive ? 1 : 0), marketTemplateGroup.MarketTemplateIds);
+                }
+                else
+                {
+                    // insert first the records from MarketTemplateGroup in ClientMarketTemplateGroup
+                    var marketTemplateGroups = _sportsbookContext.MarketTemplateGroup.AsNoTracking()
+                        .Where(c => c.SportId == sportId && c.Name.ToLower() != marketTemplateGroup.Name.ToLower())
+                        .ToList();
+
+                    if (marketTemplateGroup.Name.ToLower() != _ALLMARKETS.ToLower() && (!marketTemplateGroups.Any() || !marketTemplateGroups.Any(c => c.Name.ToLower() == _ALLMARKETS.ToLower())))
+                    {
+                        if (!marketTemplateGroups.Any())
+                        {
+                            marketTemplateGroups.Add(new Shared.Data.Sportsbook.SQLEntities.MarketTemplateGroup
                             {
-                                StatusCode = StatusCode.Error,
-                                Message = $"Market Group Name already exists in {(FixtureStatus)marketTemplateGroup.FixtureStatusId}",
-                                Result = new ClientPostMarketTemplateGroupResponseDTO()
-                            };
+                                SportId = sportId,
+                                Name = _ALLMARKETS,
+                                FixtureStatusId = 0,
+                                SortOrder = 0,
+                                MarketTemplates = marketTemplateGroup.MarketTemplateIds
+                            });
+                        }
+                        else if (!marketTemplateGroups.Any(c => c.Name.ToLower() == _ALLMARKETS.ToLower()))
+                        {
+                            marketTemplateGroups.Insert(0, new Shared.Data.Sportsbook.SQLEntities.MarketTemplateGroup
+                            {
+                                SportId = sportId,
+                                Name = _ALLMARKETS,
+                                FixtureStatusId = 0,
+                                SortOrder = 0,
+                                MarketTemplates = marketTemplateGroup.MarketTemplateIds
+                            });
                         }
                     }
 
-                    var hasClientMarketTemplateGroup = _sportsbookContext.ClientMarketTemplateGroup.AsNoTracking()
-                        .Any(c => c.ClientId == request.ClientId && c.SportId == sportId);
-
-                    if (hasClientMarketTemplateGroup)
+                    foreach (var marketGroup in marketTemplateGroups)
                     {
-                        _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup2 {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}",
-                            request.ClientId.ToString(), sportId, marketTemplateGroup.FixtureStatusId, marketTemplateGroup.MarketTemplateGroupId,
-                            marketTemplateGroup.Name, marketTemplateGroup.SortOrder, (marketTemplateGroup.IsActive ? 1 : 0), marketTemplateGroup.MarketTemplateIds);
-                    }
-                    else
-                    {
-                        // insert first the records from MarketTemplateGroup in ClientMarketTemplateGroup
-                        var marketTemplateGroups = _sportsbookContext.MarketTemplateGroup.AsNoTracking()
-                            .Where(c => c.SportId == sportId && c.Name.ToLower() != marketTemplateGroup.Name.ToLower())
-                            .ToList();
-
-                        if (marketTemplateGroup.Name.ToLower() != _ALLMARKETS.ToLower() && (!marketTemplateGroups.Any() || !marketTemplateGroups.Any(c => c.Name.ToLower() == _ALLMARKETS.ToLower())))
+                        if (marketGroup.Name.ToLower() == _ALLMARKETS.ToLower())
                         {
-                            if (!marketTemplateGroups.Any())
-                            {
-                                marketTemplateGroups.Add(new Shared.Data.Sportsbook.SQLEntities.MarketTemplateGroup
-                                {
-                                    SportId = sportId,
-                                    Name = _ALLMARKETS,
-                                    FixtureStatusId = 0,
-                                    SortOrder = 0,
-                                    MarketTemplates = marketTemplateGroup.MarketTemplateIds
-                                });
-                            }
-                            else if (!marketTemplateGroups.Any(c => c.Name.ToLower() == _ALLMARKETS.ToLower()))
-                            {
-                                marketTemplateGroups.Insert(0, new Shared.Data.Sportsbook.SQLEntities.MarketTemplateGroup
-                                {
-                                    SportId = sportId,
-                                    Name = _ALLMARKETS,
-                                    FixtureStatusId = 0,
-                                    SortOrder = 0,
-                                    MarketTemplates = marketTemplateGroup.MarketTemplateIds
-                                });
-                            }
-                        }
+                            _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup2 {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}",
+                                request.ClientId.ToString(), sportId, (int)FixtureStatus.Prematch, 0, marketGroup.Name, marketGroup.SortOrder, 1, marketGroup.MarketTemplates);
 
-                        foreach (var marketGroup in marketTemplateGroups)
+                            _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup2 {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}",
+                                request.ClientId.ToString(), sportId, (int)FixtureStatus.Live, 0, marketGroup.Name, marketGroup.SortOrder, 1, marketGroup.MarketTemplates);
+                        }
+                        else
                         {
-                            if (marketGroup.Name.ToLower() == _ALLMARKETS.ToLower())
-                            {
-                                _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup2 {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}",
-                                    request.ClientId.ToString(), sportId, (int)FixtureStatus.Prematch, 0, marketGroup.Name, marketGroup.SortOrder, 1, marketGroup.MarketTemplates);
-
-                                _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup2 {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}",
-                                    request.ClientId.ToString(), sportId, (int)FixtureStatus.Live, 0, marketGroup.Name, marketGroup.SortOrder, 1, marketGroup.MarketTemplates);
-                            }
-                            else
-                            {
-                                _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup2 {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}",
-                                    request.ClientId.ToString(), sportId, marketTemplateGroup.FixtureStatusId, 0, marketGroup.Name, marketGroup.SortOrder, 1, marketGroup.MarketTemplates);
-                            }
+                            _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup2 {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}",
+                                request.ClientId.ToString(), sportId, marketTemplateGroup.FixtureStatusId, 0, marketGroup.Name, marketGroup.SortOrder, 1, marketGroup.MarketTemplates);
                         }
-
-                        _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup2 {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}",
-                            request.ClientId.ToString(), sportId, marketTemplateGroup.FixtureStatusId, 0, marketTemplateGroup.Name, marketTemplateGroup.SortOrder, 1, marketTemplateGroup.MarketTemplateIds);
                     }
+
+                    _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup2 {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}",
+                        request.ClientId.ToString(), sportId, marketTemplateGroup.FixtureStatusId, 0, marketTemplateGroup.Name, marketTemplateGroup.SortOrder, 1, marketTemplateGroup.MarketTemplateIds);
                 }
             }
 

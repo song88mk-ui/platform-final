@@ -414,7 +414,7 @@ namespace Platform.Shared.Repositories
                         totalStake = totalStake,
                         currencyCode = "EUR",
                         status = GetGtsBetStatus(request.Bet.BetStatusId),
-                        payout = isSettled ? (decimal?)request.Bet.Payout : null,
+                        payout = isSettled ? (decimal?)(ConvertToEur(request.Bet.Payout, request.Bet.ExchangeRate)) : null,
                         legs = request.BetSelections.Select(s => new
                         {
                             status = GetGtsBetStatus(s.BetSelectionStatusId),
@@ -617,12 +617,12 @@ namespace Platform.Shared.Repositories
             };
         }
 
-        private decimal ConvertToEur(decimal trueStake, decimal exchangeRate)
+        private decimal ConvertToEur(decimal amount, decimal exchangeRate)
         {
             if (exchangeRate == 0)
                 exchangeRate = 1;
 
-            return trueStake / exchangeRate;
+            return amount / exchangeRate;
         }
     }
 

@@ -833,7 +833,7 @@ namespace Platform.Placement.Servicev2
         }
 
         private void ProcessBetPlacement(BasicDeliverEventArgs e, int threadId)
-        {
+        {//
             using var scope = _scopeFactory.CreateScope();
 
             var payload = Encoding.UTF8.GetString(e.Body);

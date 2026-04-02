@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
-using MongoDB.Driver.Core.Misc;
 using MongoDB.Driver.Linq;
 using Platform.Shared.Data.Sportsbook;
 using Platform.Shared.Data.Sportsbook.Entities;
@@ -26,7 +25,6 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
-using System.Web;
 using System.Xml;
 using BettingStatus = Platform.Shared.Data.Sportsbook.Entities.BettingStatus;
 
@@ -9471,7 +9469,7 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     Id = s.MarketTemplateGroupId,
                     Name = s.Name,
-                    MarketTemplateIds = s.MarketTemplateIds.Split(',').ToList()
+                    MarketTemplateIds = s.MarketTemplateIds?.Split(',').ToList() ?? new List<string>()
                 })
                 .ToList();
 

@@ -915,7 +915,7 @@ namespace Platform.Sportsbook.API.Repository
             var segmentOrder = GetSegmentOrder(request.ClientId);
             var leagueOrder = GetLeagueOrder(request.ClientId);
             var activeSportIds = sportSortOrder.Select(s => s.SportId).ToList();
-            
+
             var result = fixtures.Where(c => activeSportIds.Contains(c.SpId) && c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
             {
                 SportId = s.SpId,
@@ -7969,7 +7969,7 @@ namespace Platform.Sportsbook.API.Repository
                         UserRoleId = request.UserRoleId
                     });
 
-                    if(request.Clients.Any())
+                    if (request.Clients.Any())
                         clientAnnouncements.AddRange(request.Clients.Select(s => new ClientAnnouncements
                         {
                             AnnouncementId = announcement.Id,
@@ -11454,7 +11454,7 @@ namespace Platform.Sportsbook.API.Repository
 
         private bool IsLiveStream(string fixtureId, string permission, string device, string ipCountryCode, int channelTypeId)
         {
-            if(string.IsNullOrEmpty(permission))
+            if (string.IsNullOrEmpty(permission))
                 return false;
 
             return true;

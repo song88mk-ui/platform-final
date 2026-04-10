@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Platform.Shared.Models;
 using Platform.Sportsbook.API.Repository;
 using Platform.Sportsbook.API.Telemetry;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Platform.Sportsbook.API.Controllers
@@ -585,6 +587,19 @@ namespace Platform.Sportsbook.API.Controllers
             using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
 
             var result = await _sportsbookRepository.GetFixtureDetails(request);
+
+            var properties = new Dictionary<string, object>
+                            {
+                                { "ipCountryCode", request.IpCountryCode },
+                                { "x-client-id", request.ClientId },
+                                { "fixtureId", request.FixtureId },
+                                { "requestParameters", JsonSerializer.Serialize(request) },
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
+                            };
+
+            foreach (var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
 
             switch (result.StatusCode)
             {

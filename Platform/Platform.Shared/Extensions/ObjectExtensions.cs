@@ -21,6 +21,7 @@ namespace Platform.Shared.Extensions
         {
             var dictionary = model.ToDictionary(false);
             var list = dictionary.Where(c => c.Key != "signature")
+                .OrderBy(c => c.Key)
                 .Select(s => $"{s.Key}={s.Value.ConvertObjectToString()}")
                 .ToList();
 

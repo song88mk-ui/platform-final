@@ -864,6 +864,7 @@ namespace Platform.Operator.Servicev2.Repository
                 var privateKey = _ogConfig.PrivateAPIKey;
                 var vendorName = _ogConfig.VendorName;
                 var ogParam = message.Bet.OperatorToken.ToOGParam();
+                var trueStake = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, betData.TrueStake).Truncate()).Parse();
 
                 var betSelectionData = new
                 {
@@ -927,10 +928,13 @@ namespace Platform.Operator.Servicev2.Repository
                 };
 
                 var records = new[] { new {
-                           amount = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, betData.TrueStake).Truncate()).Parse(),
+                           amount = trueStake,
                            bet_place = message.BetSelections.Count > 1 ? "multiple" : "single",
                            transaction_id = betData.BetId.ToString().ToLower().Replace("-",""),
-                           secondary_info = new { bet_amount = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.Stake).Truncate()).Parse(), detain_amount = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, message.Bet.TrueStake).Truncate()).Parse() },
+                           secondary_info = new { 
+                               bet_amount = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, betData.Stake).Truncate()).Parse(), 
+                               detain_amount = trueStake
+                           },
                            other_info = betSelectionData,
                            remark = (string)null
                         }};
@@ -939,7 +943,7 @@ namespace Platform.Operator.Servicev2.Repository
                 {
                     PlayerCode = betData.UserId,
                     TimeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    TotalAmount = Convert.ToDecimal(GetOgRedenominatedValue(ogParam.OGCurrencyCode, betData.TrueStake).Truncate()).Parse(),
+                    TotalAmount = trueStake,
                     TransactionType = "debit",
                     GameCode = ogParam.GameCode,
                     RoundId = "na",
@@ -998,7 +1002,7 @@ namespace Platform.Operator.Servicev2.Repository
 
                         _logger.LogError("BetPlacement OG Failed {ClientId} {BetId} {Signature} {Key} {ResultStatusCode} {payload}", betData.ClientId, betData.BetId.ToString(), signature, privateKey, result.Code, info);
 
-                        CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId);
+                        CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId, true);
                     }
                     else
                     {
@@ -1122,7 +1126,7 @@ namespace Platform.Operator.Servicev2.Repository
                 _logger.LogError("Error BetPLacement OG: Exception: {message}, StackTrace: {@stackTrace}, Privatekey: {@privateKey}, Payload: {@payload}",
                         ex.Message, ex.StackTrace, _ogConfig.PrivateAPIKey, JsonSerializer.Serialize(message));
 
-                CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId);
+                CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId, true);
             }
         }
 

@@ -1,14 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using OpenTelemetry;
 using OpenTelemetry.Context.Propagation;
 using Platform.Operator.Servicev2.Telemetry;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Data.Platform;
 using Platform.Shared.Data.Platform.Entities;
-using Platform.Shared.Data.Sportsbook.SQLEntities;
 using Platform.Shared.Enums;
 using Platform.Shared.Extensions;
 using Platform.Shared.Helpers;
@@ -998,6 +996,8 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
+                        _logger.LogError("BetPlacement OG Failed {ClientId} {BetId} {Signature} {Key} {ResultStatusCode} {payload}", betData.ClientId, betData.BetId.ToString(), signature, privateKey, result.Code, info);
+
                         CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId);
                     }
                     else
@@ -1053,7 +1053,7 @@ namespace Platform.Operator.Servicev2.Repository
                 }
                 else
                 {
-                    _logger.LogError("OG Bet Placement Failed {ClientId} {BetId} {Signature} {Key}", betData.ClientId, betData.BetId.ToString(), signature, privateKey);
+                    _logger.LogError("BetPlacement OG GetClient Failed {ClientId} {BetId} {Signature} {Key}", betData.ClientId, betData.BetId.ToString(), signature, privateKey);
 
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
@@ -1118,6 +1118,9 @@ namespace Platform.Operator.Servicev2.Repository
                     CorrelationId = correlationId,
                     Timestamp = DateTime.UtcNow
                 });
+
+                _logger.LogError("Error BetPLacement OG: Exception: {message}, StackTrace: {@stackTrace}, Privatekey: {@privateKey}, Payload: {@payload}",
+                        ex.Message, ex.StackTrace, _ogConfig.PrivateAPIKey, JsonSerializer.Serialize(message));
 
                 CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId);
             }

@@ -1053,6 +1053,8 @@ namespace Platform.Operator.Servicev2.Repository
                 }
                 else
                 {
+                    _logger.LogError("OG Bet Placement Failed {ClientId} {BetId} {Signature} {Key}", betData.ClientId, betData.BetId.ToString(), signature, privateKey);
+
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
                         var result = JsonSerializer.Deserialize<OGDebitResponseDTO>(response.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });

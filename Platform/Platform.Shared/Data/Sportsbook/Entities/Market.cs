@@ -28,6 +28,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public string ClCo { get; set; }
         public string ClCoMa { get; set; }
         public bool IsBo { get; set; }
+        public bool InPl { get; set; }
         public string ClBo { get; set; }
         public List<MarketTranslationMDB> MaNaTr { get; set; }
     }

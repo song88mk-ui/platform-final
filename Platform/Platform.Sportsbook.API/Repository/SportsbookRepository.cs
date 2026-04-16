@@ -1289,6 +1289,12 @@ namespace Platform.Sportsbook.API.Repository
                             market.MaStNa = market.ClCo.Contains(request.ClientCode) ? market.MaStNa : MarketStatus.Inactive.ToString();
                         }
 
+                        if(market.InPl == false && fixture.FiStDa <= DateTime.UtcNow)
+                        {
+                            market.MaStId = (int)MarketStatus.Inactive;
+                            market.MaStNa = MarketStatus.Inactive.ToString();
+                        }
+
                         finalMarkets.Add(market);
 
                         var clientOdds = new List<ClientOdds>();
@@ -6702,7 +6708,7 @@ namespace Platform.Sportsbook.API.Repository
                 }
             }
 
-            if ((fixture.SpId == 1001 || fixture.SpId == 1002 || fixture.SpId == 1055 || fixture.SpId == 1058) && fixture.FiStDa < DateTime.UtcNow)
+            if (fixture.SpId.IsVirtualSportId() && fixture.FiStDa < DateTime.UtcNow)
             {
                 return new BetSelectionState
                 {

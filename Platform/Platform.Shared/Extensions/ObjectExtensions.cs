@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 
 namespace Platform.Shared.Extensions
@@ -20,8 +23,7 @@ namespace Platform.Shared.Extensions
         public static string ToSignOG(this object model, string privateKey)
         {
             var dictionary = model.ToDictionary(false);
-            var list = dictionary.Where(c => c.Key != "signature")
-                .OrderBy(c => c.Key)
+            var list = dictionary.Where(c => c.Value != null && c.Key != "signature")
                 .Select(s => $"{s.Key}={s.Value.ConvertObjectToString()}")
                 .ToList();
 
@@ -29,10 +31,25 @@ namespace Platform.Shared.Extensions
             var strHash = hash.ToMD5Hash(privateKey).ToLower();
             return strHash;
         }
+        public static string ToStringOG(this object model)
+        {
+            var dictionary = model.ToDictionary(false);
+            var list = dictionary.Where(c => c.Value != null && c.Key != "signature")
+                .Select(s => $"{s.Key}={s.Value.ConvertObjectToString()}")
+                .ToList();
+
+            var hash = list.GetDataString();
+            return hash;
+        }
+        public static string ToSignOG(this string stringData, string privateKey)
+        {
+            var strHash = stringData.ToMD5Hash(privateKey).ToLower();
+            return strHash;
+        }
 
         private static string ConvertObjectToString(this object? obj)
         {
-            if(obj != null && (((JsonElement)obj).ValueKind == JsonValueKind.Object || ((JsonElement)obj).ValueKind == JsonValueKind.Array))
+            if (obj != null && (((JsonElement)obj).ValueKind == JsonValueKind.Object || ((JsonElement)obj).ValueKind == JsonValueKind.Array))
                 return obj.ToString().Replace("/", @"\/");
             else
                 return obj?.ToString() ?? "";

@@ -954,7 +954,9 @@ namespace Platform.Operator.Servicev2.Repository
                 };
 
                 //signature generation
-                var signature = payload.ToSignOG(privateKey);
+                var hash = payload.ToStringOG();
+                var signature = hash.ToSignOG(privateKey);
+                //var signature = payload.ToSignOG(privateKey);
                 payload.Signature = signature;
 
                 var options = new JsonSerializerOptions
@@ -1000,7 +1002,7 @@ namespace Platform.Operator.Servicev2.Repository
                             Timestamp = DateTime.UtcNow
                         });
 
-                        _logger.LogError("BetPlacement OG Failed {ClientId} {BetId} {Signature} {Key} {ResultStatusCode} {payload}", betData.ClientId, betData.BetId.ToString(), signature, privateKey, result.Code, info);
+                        _logger.LogError("BetPlacement OG Failed {ClientId} {BetId} {Signature} {Key} {ResultStatusCode} {hash} {payload}", betData.ClientId, betData.BetId.ToString(), signature, privateKey, result.Code, hash, info);
 
                         CancelBet(betData.BetId, "Operator Error", Guid.NewGuid().ToString().ToUpper(), messageBroker, false, message.IsBoosted, threadId, true);
                     }

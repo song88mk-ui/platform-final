@@ -7,6 +7,7 @@ using MongoDB.Driver.Linq;
 using Platform.Shared.Data.Sportsbook;
 using Platform.Shared.Data.Sportsbook.Entities;
 using Platform.Shared.Data.Sportsbook.SQLEntities;
+using Platform.Shared.Data.Translation.SQLEntities;
 using Platform.Shared.Enums;
 using Platform.Shared.Extensions;
 using Platform.Shared.MessageModels;
@@ -35,6 +36,7 @@ namespace Platform.Sportsbook.API.Repository
         private static IMongoDatabase _db;
         private readonly IMemCache _memCache;
         private readonly SportsbookContext _sportsbookContext;
+        private readonly TranslationContext _translationContext;
         private readonly IConfiguration _configuration;
         private readonly ILogger<SportsbookRepository> _logger;
         private readonly ActivitySource _activitySource;
@@ -65,6 +67,7 @@ namespace Platform.Sportsbook.API.Repository
 
         public SportsbookRepository(
             SportsbookContext sportsbookContext,
+            TranslationContext translationContext,
             HttpClient httpClient,
             IMemCache memCache,
             IConfiguration configuration,
@@ -76,6 +79,7 @@ namespace Platform.Sportsbook.API.Repository
         {
             _configuration = configuration;
             _sportsbookContext = sportsbookContext;
+            _translationContext = translationContext;
             _httpClient = httpClient;
             _memCache = memCache;
             _logger = logger;
@@ -12196,9 +12200,9 @@ namespace Platform.Sportsbook.API.Repository
             return _memCache.GetCache("mtpp", () => _sportsbookContext.MarketTemplatePlayerProps.AsNoTracking().ToList(), 24);
         }
 
-        private List<Translation> GetTranslations()
+        private List<SportsbookStatic> GetTranslations()
         {
-            return _memCache.GetCache("tr", () => _sportsbookContext.Translation.AsNoTracking().ToList(), 24);
+            return _memCache.GetCache("tr", () => _translationContext.SportsbookStatic.AsNoTracking().ToList(), 24);
         }
 
         private Maintenance GetMaintenance()

@@ -1,6 +1,6 @@
-﻿namespace Platform.Shared.Data.Sportsbook.SQLEntities
+﻿namespace Platform.Shared.Data.Translation.SQLEntities
 {
-    public class Translation
+    public class SportsbookStatic
     {
         public string LanguageCode { get; set; }
         public string Name { get; set; }

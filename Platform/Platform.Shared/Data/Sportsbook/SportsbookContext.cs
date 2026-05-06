@@ -27,7 +27,7 @@ namespace Platform.Shared.Data.Sportsbook
             modelBuilder.Entity<MarketTemplatePlayerProps>().HasKey(k => new { k.SportId, k.FixtureStatusId });
             modelBuilder.Entity<ClientSelectorMarketTemplate>().HasKey(k => new { k.ClientId, k.SportId, k.MarketTemplateId });
             modelBuilder.Entity<MarketTemplatePlayerProps>().HasKey(k => new { k.SportId, k.FixtureStatusId });
-            modelBuilder.Entity<Translation>().HasKey(k => new { k.LanguageCode, k.Name });
+            //modelBuilder.Entity<Translation>().HasKey(k => new { k.LanguageCode, k.Name });
             modelBuilder.Entity<Country>().HasKey(k => new { k.Id });
             modelBuilder.Entity<Announcement>().HasKey(k => new { k.Id });
             modelBuilder.Entity<ClientAnnouncements>().HasKey(k => new { k.AnnouncementId, k.ClientId });
@@ -49,7 +49,7 @@ namespace Platform.Shared.Data.Sportsbook
         public DbSet<BetBuilderMarketTemplates> BetBuilderMarketTemplates { get; set; }
         public DbSet<MarketTemplatePlayerProps> MarketTemplatePlayerProps { get; set; }
         public DbSet<ClientSelectorMarketTemplate> ClientSelectorMarketTemplate { get; set; }
-        public DbSet<Translation> Translation { get; set; }
+        //public DbSet<Translation> Translation { get; set; }
         public DbSet<Country> Country { get; set; }
         public DbSet<Announcement> Announcements { get; set; }
         public DbSet<ClientAnnouncements> ClientAnnouncements { get; set; }

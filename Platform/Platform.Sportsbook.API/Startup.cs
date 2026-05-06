@@ -63,6 +63,7 @@ namespace Platform.Sportsbook.API
             });
 
             services.AddDbContext<SportsbookContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Sportsbook"]));
+            services.AddDbContext<TranslationContext>(o => o.UseSqlServer(Configuration["ConnectionStrings:Translation"]));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

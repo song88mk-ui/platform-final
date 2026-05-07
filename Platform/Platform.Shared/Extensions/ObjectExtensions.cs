@@ -43,8 +43,7 @@ namespace Platform.Shared.Extensions
         }
         public static string ToSignOG(this string stringData, string privateKey)
         {
-            var strHash = stringData.ToMD5Hash(privateKey).ToLower();
-            return strHash;
+            return stringData.ToMD5Hash(privateKey).ToLower();
         }
 
         private static string ConvertObjectToString(this object? obj)

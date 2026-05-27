@@ -11251,8 +11251,8 @@ namespace Platform.Sportsbook.API.Repository
 
         private string GetSportName(string name, List<SportTranslationMDB> translations, LanguageCode languageCode)
         {
-            //if (translations == null)
-            //    return name;
+            if (translations == null)
+                return name;
 
             var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 

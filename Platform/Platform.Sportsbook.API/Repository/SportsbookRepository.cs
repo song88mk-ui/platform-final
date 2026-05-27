@@ -58,6 +58,7 @@ namespace Platform.Sportsbook.API.Repository
         private readonly IRabbitMQRepository _rabbitMQRepository;
         private readonly IBetBuilderRepository _betBuilderRepository;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ITranslationRepository _translationRepository;
 
         private readonly List<string> _africaClientCodes = new List<string>();
         private readonly List<string> _countryWhiteList = new List<string>();
@@ -74,6 +75,7 @@ namespace Platform.Sportsbook.API.Repository
             IRabbitMQRepository rabbitMQRepository,
             IBetBuilderRepository betBuilderRepository,
             IServiceScopeFactory scopeFactory,
+            ITranslationRepository translationRepository,
             ILogger<SportsbookRepository> logger,
             Instrumentation instrumentation)
         {
@@ -88,6 +90,7 @@ namespace Platform.Sportsbook.API.Repository
             _rabbitMQRepository = rabbitMQRepository;
             _betBuilderRepository = betBuilderRepository;
             _scopeFactory = scopeFactory;
+            _translationRepository = translationRepository;
 
             _africaClientCodes = _configuration["Custom:AfricaClientCodes"].Split(',').ToList();
             _countryWhiteList = _configuration["Custom:CountryWhiteList"].Split(',').ToList();
@@ -912,6 +915,7 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
+            var translations = await LoadTranslations(fixtures, request.LanguageCode);
             var sportIds = fixtures.Select(s => s.SpId).Distinct().ToList();
 
             var leagueSortOrder = GetTierLeagueOrder().Where(c => sportIds.Contains(c.SportId)).ToList();
@@ -923,11 +927,11 @@ namespace Platform.Sportsbook.API.Repository
             var result = fixtures.Where(c => activeSportIds.Contains(c.SpId) && c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
             {
                 SportId = s.SpId,
-                SportName = GetSportName(s.SpNa, s.SpNaTr, request.LanguageCode),
+                SportName = GetTranslation(translations, s.SpId, "SpId", s.SpNa),
                 SegmentId = s.SegId,
-                SegmentName = GetSegmentName(s.SegNa, s.SegNaTr, request.LanguageCode),
+                SegmentName = GetTranslation(translations, s.SegId, "SegId", s.SegNa),
                 LeagueId = s.LeId,
-                LeagueName = GetLeagueName(s.LeNa, s.LeNaTr, request.LanguageCode),
+                LeagueName = GetTranslation(translations, s.LeId, "LeId", s.LeNa),
                 LeagueSortOrder = leagueOrder.FirstOrDefault(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId)?.SortOrder ??
                     leagueSortOrder.FirstOrDefault(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId)?.SortOrder + 1000 ?? 2000
             }).ToList();
@@ -935,7 +939,7 @@ namespace Platform.Sportsbook.API.Repository
             var sportResult = fixtures.Where(c => activeSportIds.Contains(c.SpId)).Select(s => new TempOrderedSport
             {
                 SportId = s.SpId,
-                SportName = GetSportName(s.SpNa, s.SpNaTr, request.LanguageCode),
+                SportName = GetTranslation(translations, s.SpId, "SpId", s.SpNa),
                 HasOutrights = fixtures.Any(c => c.SpId == s.SpId && c.FiTyId == (int)FixtureType.Outright),
                 SortOrder = sportSortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
                     == 0 ? 1000 : sportSortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
@@ -965,11 +969,11 @@ namespace Platform.Sportsbook.API.Repository
                         result.Add(new TempOrderedLeague
                         {
                             SportId = temp.SpId,
-                            SportName = GetSportName(temp.SpNa, temp.SpNaTr, request.LanguageCode),
+                            SportName = GetTranslation(translations, temp.SpId, "SpId", temp.SpNa),
                             SegmentId = temp.SegId,
-                            SegmentName = GetSegmentName(temp.SegNa, temp.SegNaTr, request.LanguageCode),
+                            SegmentName = GetTranslation(translations, temp.SegId, "SegId", temp.SegNa),
                             LeagueId = temp.LeId,
-                            LeagueName = GetLeagueName(temp.LeNa, temp.LeNaTr, request.LanguageCode),
+                            LeagueName = GetTranslation(translations, temp.LeId, "LeId", temp.LeNa),
                             LeagueSortOrder = 2000
                         });
                     }
@@ -7135,6 +7139,8 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
+            var translations = await LoadTranslations(fixtures, request.LanguageCode);
+
             var finalResult = new List<SportLookup>();
 
             foreach (var item in fixtures)
@@ -7142,7 +7148,7 @@ namespace Platform.Sportsbook.API.Repository
                 if (finalResult.Any(c => c.SportId == item.SpId))
                     continue;
 
-                finalResult.Add(new SportLookup { SportId = item.SpId, SportName = GetSportName(item.SpNa, item.SpNaTr, request.LanguageCode) });
+                finalResult.Add(new SportLookup { SportId = item.SpId, SportName = GetTranslation(translations, item.SpId, "SpId", item.SpNa) });
             }
 
             return new BaseResponseDTO<SportsLookupResponseDTO>
@@ -11242,10 +11248,11 @@ namespace Platform.Sportsbook.API.Repository
 
             return result.OrderBy(o => o.Name).ToList();
         }
+
         private string GetSportName(string name, List<SportTranslationMDB> translations, LanguageCode languageCode)
         {
-            if (translations == null)
-                return name;
+            //if (translations == null)
+            //    return name;
 
             var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
@@ -12325,7 +12332,59 @@ namespace Platform.Sportsbook.API.Repository
                 marketTemplateGroups.Live.FirstOrDefault().MarketTemplateIds.AddRange(finalMarkets.Select(s => s.MarketTemplateId).Distinct().ToList());
             }
         }
+        private string GetTranslation(
+            Dictionary<string, string> translations,
+            object id,
+            string prefix,
+            string fallback)
+        {
+            if (id == null)
+                return fallback;
 
+            var key = $"{prefix}:{id}";
+
+            if (translations.TryGetValue(key, out var translated))
+                return translated;
+
+            return fallback;
+        }
+
+        private async Task<Dictionary<string, string>> LoadTranslations(
+            List<SportsLookupProjection> fixtures,
+            LanguageCode languageCode)
+        {
+            var stringIds = new HashSet<string>();
+
+            foreach (var fixture in fixtures)
+            {
+                AddTranslationKey(stringIds, fixture.SpId, "SpId");
+            }
+
+            return await _translationRepository.GetTranslationsAsync(
+                stringIds.ToList(),
+                languageCode.ToString());
+        }
+
+        private async Task<Dictionary<string, string>> LoadTranslations(
+            List<Fixture> fixtures,
+            LanguageCode languageCode)
+        {
+            var stringIds = new HashSet<string>();
+
+            foreach (var fixture in fixtures)
+            {
+                AddTranslationKey(stringIds, fixture.SpId, "SpId");
+                AddTranslationKey(stringIds, fixture.SegId, "SegId");
+                AddTranslationKey(stringIds, fixture.LeId, "LeId");
+                AddTranslationKey(stringIds, fixture.FiId, "FiId");
+            }
+
+            return await _translationRepository.GetTranslationsAsync(
+                stringIds.ToList(),
+                languageCode.ToString());
+        }
+
+        private void AddTranslationKey(HashSet<string> stringIds, object? id, string prefix) { if (id == null || string.IsNullOrWhiteSpace(id.ToString())) { return; } var key = $"{prefix}:{id}"; stringIds.Add(key); }
     }
 
     public static class CurrentPeriodHelper

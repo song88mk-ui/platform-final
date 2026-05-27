@@ -1,30 +1,55 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Platform.Shared.Data.Translation.SQLEntities
 {
     public class SportsbookDynamic
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("ID")]
+        public long Id { get; set; }
+
         [Required]
         [MaxLength(100)]
-        public string String_ID { get; set; }
+        [Column("String_ID")]
+        public string StringId { get; set; }
 
         [Required]
-        public string VALUE_EN { get; set; }
+        [MaxLength(10)]
+        [Column("SOURCE_LANGUAGE_ID")]
+        public string SourceLanguageId { get; set; }
 
-        public string VALUE_ZH { get; set; }
-        public string VALUE_ID { get; set; }
-        public string VALUE_BR { get; set; }
-        public string VALUE_DE { get; set; }
-        public string VALUE_ES { get; set; }
-        public string VALUE_FI { get; set; }
-        public string VALUE_FR { get; set; }
-        public string VALUE_JA { get; set; }
-        public string VALUE_KO { get; set; }
-        public string VALUE_NL { get; set; }
-        public string VALUE_PT { get; set; }
-        public string VALUE_TH { get; set; }
-        public string VALUE_TR { get; set; }
-        public string VALUE_VI { get; set; }
+        [Required]
+        [MaxLength(10)]
+        [Column("TARGET_LANGUAGE_ID")]
+        public string TargetLanguageId { get; set; }
+
+        [Required]
+        [Column("SOURCE_TEXT")]
+        public string SourceText { get; set; }
+
+        [Column("TARGET_TEXT")]
+        public string? TargetText { get; set; }
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        [Column("SOURCE_HASH")]
+        public string SourceHash { get; private set; }
+
+        [Required]
+        [Column("GLOSSARY_VERSION")]
+        public int GlossaryVersion { get; set; }
+
+        [Required]
+        [Column("CREATED_AT")]
+        public DateTime CreatedAt { get; set; }
+
+        [Column("UPDATED_AT")]
+        public DateTime? UpdatedAt { get; set; }
+
+        [Required]
+        [Column("PROCESSED")]
+        public bool Processed { get; set; }
     }
 }

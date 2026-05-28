@@ -12380,7 +12380,7 @@ namespace Platform.Sportsbook.API.Repository
                 AddTranslationKey(stringIds, fixture.SpId, "SpId");
                 AddTranslationKey(stringIds, fixture.SegId, "SegId");
                 AddTranslationKey(stringIds, fixture.LeId, "LeId");
-                AddTranslationKey(stringIds, fixture.FiId, "FiId");
+                AddTranslationKey(stringIds, fixture.Id, "FiId");
             }
 
             return await _translationRepository.GetTranslationsAsync(
@@ -12399,7 +12399,7 @@ namespace Platform.Sportsbook.API.Repository
                 AddTranslationKey(stringIds, fixture.SpId, "SpId");
                 AddTranslationKey(stringIds, fixture.SegId, "SegId");
                 AddTranslationKey(stringIds, fixture.LeId, "LeId");
-                AddTranslationKey(stringIds, fixture.FiId, "FiId");
+                AddTranslationKey(stringIds, fixture.Id, "FiId");
             }
 
             return await _translationRepository.GetTranslationsAsync(
@@ -12416,7 +12416,7 @@ namespace Platform.Sportsbook.API.Repository
             foreach (var fixture in fixtures)
             {
                 AddTranslationKey(stringIds, fixture.SpId, "SpId");
-                AddTranslationKey(stringIds, fixture.FiId, "FiId");
+                AddTranslationKey(stringIds, fixture.Id, "FiId");
             }
 
             return await _translationRepository.GetTranslationsAsync(
@@ -12434,7 +12434,7 @@ namespace Platform.Sportsbook.API.Repository
             {
                 AddTranslationKey(stringIds, fixture.SpId, "SpId");
                 AddTranslationKey(stringIds, fixture.SegId, "SegId");
-                AddTranslationKey(stringIds, fixture.FiId, "FiId");
+                AddTranslationKey(stringIds, fixture.Id, "FiId");
             }
 
             return await _translationRepository.GetTranslationsAsync(
@@ -12453,7 +12453,7 @@ namespace Platform.Sportsbook.API.Repository
                 AddTranslationKey(stringIds, fixture.SpId, "SpId");
                 AddTranslationKey(stringIds, fixture.SegId, "SegId");
                 AddTranslationKey(stringIds, fixture.LeId, "LeId");
-                AddTranslationKey(stringIds, fixture.FiId, "FiId");
+                AddTranslationKey(stringIds, fixture.Id, "FiId");
             }
 
             return await _translationRepository.GetTranslationsAsync(
@@ -12472,7 +12472,7 @@ namespace Platform.Sportsbook.API.Repository
                 AddTranslationKey(stringIds, fixture.SpId, "SpId");
                 AddTranslationKey(stringIds, fixture.SegId, "SegId");
                 AddTranslationKey(stringIds, fixture.LeId, "LeId");
-                AddTranslationKey(stringIds, fixture.FiId, "FiId");
+                AddTranslationKey(stringIds, fixture.Id, "FiId");
             }
 
             return await _translationRepository.GetTranslationsAsync(

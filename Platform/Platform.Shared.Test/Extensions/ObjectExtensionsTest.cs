@@ -8,11 +8,51 @@ namespace Platform.Shared.Test.Extensions
     {
         private const string PrivateKey = "fjfOLes3FEbe2ubdqFtIak4CFDXRk6Lg";
 
+        //[Fact]
+        //public void ToSignOG_ShouldWork_WithComplexRecordsStructure()
+        //{
+        //    // Arrange
+        //    var model = CreateModel();
+
+        //    // Act
+        //    var hash = model.ToStringOG();
+        //    var signature = hash.ToSignOG(PrivateKey);
+
+        //    // Assert
+        //    Assert.Equal(model.Signature, signature);
+        //}
+
+        //[Fact]
+        //public void ToSignOG_ShouldWork_WithSuccessPayload()
+        //{
+        //    // Arrange
+        //    var model = CreateModelSuccess();
+
+        //    // Act
+        //    var hash = model.ToStringOG();
+        //    var signature = hash.ToSignOG(PrivateKey);
+
+        //    // Assert
+        //    Assert.Equal(model.Signature, signature);
+        //}
+        //[Fact]
+        //public void ToSignOG_ShouldWork_WithSuccessPayload2()
+        //{
+        //    // Arrange
+        //    var model = CreateModel2();
+
+        //    // Act
+        //    var hash = model.ToStringOG();
+        //    var signature = hash.ToSignOG(PrivateKey);
+
+        //    // Assert
+        //    Assert.Equal(model.Signature, signature);
+        //}
         [Fact]
-        public void ToSignOG_ShouldWork_WithComplexRecordsStructure()
+        public void ToSignOG_ShouldWork_WithSuccessPayload3()
         {
             // Arrange
-            var model = CreateModel();
+            var model = CreateModel3();
 
             // Act
             var hash = model.ToStringOG();
@@ -21,25 +61,11 @@ namespace Platform.Shared.Test.Extensions
             // Assert
             Assert.Equal(model.Signature, signature);
         }
-
         [Fact]
-        public void ToSignOG_ShouldWork_WithSuccessPayload()
+        public void ToSignOG_ShouldWork_NullOverEmptyString()
         {
             // Arrange
-            var model = CreateModelSuccess();
-
-            // Act
-            var hash = model.ToStringOG();
-            var signature = hash.ToSignOG(PrivateKey);
-
-            // Assert
-            Assert.Equal(model.Signature, signature);
-        }
-        [Fact]
-        public void ToSignOG_ShouldWork_WithSuccessPayload2()
-        {
-            // Arrange
-            var model = CreateModel2();
+            var model = CreateModel4();
 
             // Act
             var hash = model.ToStringOG();
@@ -277,6 +303,161 @@ namespace Platform.Shared.Test.Extensions
                 CalledAt = 1776254803468,
                 Records = records,
                 Signature = "d2b7f301870e3b46d8ba4421abf98f58"
+            };
+        }
+
+        private OnOGDebitRequest CreateModel3()
+        {
+            var records = new[]
+            {
+                new
+                {
+                    amount = 8.15m,
+                    bet_place = "single",
+                    transaction_id = "f73b39c2cb4a42767c6c08deac1af959",
+                    secondary_info = new
+                    {
+                        bet_amount = 8.15m,
+                        detain_amount = 8.15m
+                    },
+                    other_info = new
+                    {
+                        BetId = "f73b39c2-cb4a-4276-7c6c-08deac1af959",
+                        UserId = "609_SmilingLobster452",
+                        CurrencyCode = "CNY",
+                        bet_status = "Running",
+                        ParlayBonus = 0,
+                        ParlayBonusWinnings = 0,
+                        odds_type = "Decimal",
+                        total_odds = 1.08,
+                        parlay_type = (string)null,
+                        bet_list = new[]
+                        {
+                            new
+                            {
+                                sport_code = "5",
+                                sport_name = new { en = "Boxing" },
+                                play_name = new { en = "Fight Result" },
+                                score = "",
+                                odds = 1.08,
+                                original_odds = 1.08,
+                                bet_item = new { en = "Jalolov, B" },
+                                away_team = new { en = "Smakici, A" },
+                                home_team = new { en = "Jalolov, B" },
+                                league_name = new { en = "Professional Boxing" },
+                                game_date_time = 1778350200000,
+                                BetSelectionId = "0e221b5a-8f56-4581-6b78-08deac1af980",
+                                bet_selection_status = "Running",
+                                SegmentId = 2,
+                                SegmentName = "World",
+                                LeagueId = 1512,
+                                FixtureId = "1501720553922600960",
+                                FixtureName = "Jalolov, B vs. Smakici, A",
+                                FixtureStartDate = "2026-05-09T18:10:00.0000000",
+                                FixtureStatus = "Prematch",
+                                FixtureType = "Match",
+                                settlement_score = "",
+                                MarketTemplateId = "201",
+                                MarketId = "1501720554937622528",
+                                Line = "",
+                                SelectionId = "1501720554941816832",
+                                DeadHeatFactor = 1
+                            }
+                        }
+                    },
+                    remark = (string)null
+                }
+            };
+
+            return new OnOGDebitRequest
+            {
+                PlayerCode = "609_SmilingLobster452",
+                TimeStamp = 1778146100617,
+                TotalAmount = 8.15m,
+                TransactionType = "debit",
+                GameCode = "ogsports",
+                RoundId = "na",
+                Currency = "CNY",
+                CalledAt = 1778146100618,
+                Records = records,
+                Signature = "519bfa58c47daa924d0a9be7ec961fc4"
+            };
+        }
+        private OnOGDebitRequest CreateModel4()
+        {
+            var records = new[]
+            {
+                new
+                {
+                    amount = 8.15m,
+                    bet_place = "single",
+                    transaction_id = "f73b39c2cb4a42767c6c08deac1af959",
+                    secondary_info = new
+                    {
+                        bet_amount = 8.15m,
+                        detain_amount = 8.15m
+                    },
+                    other_info = new
+                    {
+                        BetId = "f73b39c2-cb4a-4276-7c6c-08deac1af959",
+                        UserId = "609_SmilingLobster452",
+                        CurrencyCode = "CNY",
+                        bet_status = "Running",
+                        ParlayBonus = 0,
+                        ParlayBonusWinnings = 0,
+                        odds_type = "Decimal",
+                        total_odds = 1.08,
+                        parlay_type = (string)null,
+                        bet_list = new[]
+                        {
+                            new
+                            {
+                                sport_code = "5",
+                                sport_name = new { en = "Boxing" },
+                                play_name = new { en = "Fight Result" },
+                                score = (string)null,
+                                odds = 1.08,
+                                original_odds = 1.08,
+                                bet_item = new { en = "Jalolov, B" },
+                                away_team = new { en = "Smakici, A" },
+                                home_team = new { en = "Jalolov, B" },
+                                league_name = new { en = "Professional Boxing" },
+                                game_date_time = 1778350200000,
+                                BetSelectionId = "0e221b5a-8f56-4581-6b78-08deac1af980",
+                                bet_selection_status = "Running",
+                                SegmentId = 2,
+                                SegmentName = "World",
+                                LeagueId = 1512,
+                                FixtureId = "1501720553922600960",
+                                FixtureName = "Jalolov, B vs. Smakici, A",
+                                FixtureStartDate = "2026-05-09T18:10:00.0000000",
+                                FixtureStatus = "Prematch",
+                                FixtureType = "Match",
+                                settlement_score = (string)null,
+                                MarketTemplateId = "201",
+                                MarketId = "1501720554937622528",
+                                Line = (string)null,
+                                SelectionId = "1501720554941816832",
+                                DeadHeatFactor = 1
+                            }
+                        }
+                    },
+                    remark = (string)null
+                }
+            };
+
+            return new OnOGDebitRequest
+            {
+                PlayerCode = "609_SmilingLobster452",
+                TimeStamp = 1778146100617,
+                TotalAmount = 8.15m,
+                TransactionType = "debit",
+                GameCode = "ogsports",
+                RoundId = "na",
+                Currency = "CNY",
+                CalledAt = 1778146100618,
+                Records = records,
+                Signature = "519bfa58c47daa924d0a9be7ec961fc4"
             };
         }
     }

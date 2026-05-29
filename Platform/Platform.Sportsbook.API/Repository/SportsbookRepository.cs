@@ -941,8 +941,10 @@ namespace Platform.Sportsbook.API.Repository
                 SportName = GetTranslation(translations, s.SpId, "SpId", s.SpNa),
                 SegmentId = s.SegId,
                 SegmentName = GetTranslation(translations, s.SegId, "SegId", s.SegNa),
+                SegmentNameEN = s.SegNa,
                 LeagueId = s.LeId,
                 LeagueName = GetTranslation(translations, s.LeId, "LeId", s.LeNa),
+                LeagueNameEN = s.LeNa,
                 LeagueSortOrder = leagueOrder.FirstOrDefault(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId)?.SortOrder ??
                     leagueSortOrder.FirstOrDefault(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId)?.SortOrder + 1000 ?? 2000
             }).ToList();
@@ -983,8 +985,10 @@ namespace Platform.Sportsbook.API.Repository
                             SportName = GetTranslation(translations, temp.SpId, "SpId", temp.SpNa),
                             SegmentId = temp.SegId,
                             SegmentName = GetTranslation(translations, temp.SegId, "SegId", temp.SegNa),
+                            SegmentNameEN = temp.SegNa,
                             LeagueId = temp.LeId,
                             LeagueName = GetTranslation(translations, temp.LeId, "LeId", temp.LeNa),
+                            LeagueNameEN = temp.LeNa,
                             LeagueSortOrder = 2000
                         });
                     }
@@ -999,8 +1003,10 @@ namespace Platform.Sportsbook.API.Repository
                             SportName = string.Empty,
                             SegmentId = 999999,
                             SegmentName = "Outrights",
+                            SegmentNameEN = "Outrights",
                             LeagueId = 0,
                             LeagueName = string.Empty,
+                            LeagueNameEN = string.Empty,
                             LeagueSortOrder = 99999
                         });
                     }
@@ -1027,7 +1033,7 @@ namespace Platform.Sportsbook.API.Repository
                             SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
                             SortOrder = segment?.FirstOrDefault(c => c.SegmentId == s.Key)?.SortOrder == null && s.Select(se => se.SegmentId).FirstOrDefault() == 999999 ? 2000
                                         : segment?.FirstOrDefault(c => c.SegmentId == s.Key)?.SortOrder ?? 1000,
-                            CountryId = GetCountryIdBySegmentName(s.Select(se => se.SegmentName).FirstOrDefault()),
+                            CountryId = GetCountryIdBySegmentName(s.Select(se => se.SegmentNameEN).FirstOrDefault()),
                             Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
                             {
                                 LeagueId = l.Key,
@@ -1050,7 +1056,7 @@ namespace Platform.Sportsbook.API.Repository
                             SegmentId = s.Key,
                             SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
                             SortOrder = s.Select(se => se.LeagueSortOrder).FirstOrDefault(),
-                            CountryId = GetCountryIdBySegmentName(s.Select(se => se.SegmentName).FirstOrDefault()),
+                            CountryId = GetCountryIdBySegmentName(s.Select(se => se.SegmentNameEN).FirstOrDefault()),
                             Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new LeagueDTO
                             {
                                 LeagueId = l.Key,
@@ -1745,8 +1751,8 @@ namespace Platform.Sportsbook.API.Repository
                             fixtureTypeId = item.FiTyId,
                             FixtureId = item.FiId.ToString(),
                             FixtureName = GetTranslation(translations, item.Id, "FiId", item.FiNa),
-                            HomeName = GetHomeName(item.FiNa, item.FiNaTr, request.LanguageCode, (FixtureType)item.FiTyId),
-                            AwayName = GetAwayName(item.FiNa, item.FiNaTr, request.LanguageCode, (FixtureType)item.FiTyId),
+                            HomeName = GetHomeName(item.FiNa, translations, item.Id, (FixtureType)item.FiTyId),
+                            AwayName = GetAwayName(item.FiNa, translations, item.Id, (FixtureType)item.FiTyId),
                             FixtureStartDate = item.FiStDa,
                             IsLive = item.IsOfLi,
                             IsLiveStream = IsLiveStream(item.PrFiId, item.GeAl, request.Device, request.IpCountryCode, item.ChTyId),
@@ -1850,8 +1856,8 @@ namespace Platform.Sportsbook.API.Repository
                             fixtureTypeId = item.FiTyId,
                             FixtureId = item.FiId.ToString(),
                             FixtureName = GetTranslation(translations, item.Id, "FiId", item.FiNa),
-                            HomeName = GetHomeName(item.FiNa, item.FiNaTr, request.LanguageCode, (FixtureType)item.FiTyId),
-                            AwayName = GetAwayName(item.FiNa, item.FiNaTr, request.LanguageCode, (FixtureType)item.FiTyId),
+                            HomeName = GetHomeName(item.FiNa, translations, item.Id, (FixtureType)item.FiTyId),
+                            AwayName = GetAwayName(item.FiNa, translations, item.Id, (FixtureType)item.FiTyId),
                             FixtureStartDate = item.FiStDa,
                             IsLive = item.IsOfLi,
                             IsLiveStream = IsLiveStream(item.PrFiId, item.GeAl, request.Device, request.IpCountryCode, item.ChTyId),
@@ -2266,8 +2272,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureId = s.FiId.ToString(),
                 FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                 IsHomeFavorite = s.IsHoFa,
-                HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -2633,8 +2639,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureId = s.FiId.ToString(),
                 FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                 IsHomeFavorite = s.IsHoFa,
-                HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -2813,8 +2819,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureId = s.FiId.ToString(),
                 FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                 IsHomeFavorite = s.IsHoFa,
-                HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -3005,8 +3011,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureId = s.FiId.ToString(),
                     FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                     IsHomeFavorite = s.IsHoFa,
-                    HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                    AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                    HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                    AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
                     IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -3041,8 +3047,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureId = s.FiId.ToString(),
                     FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                     IsHomeFavorite = s.IsHoFa,
-                    HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                    AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                    HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                    AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
                     IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -3248,8 +3254,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureId = s.FiId.ToString(),
                     FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                     IsHomeFavorite = s.IsHoFa,
-                    HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                    AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                    HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                    AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
                     IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -3284,8 +3290,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureId = s.FiId.ToString(),
                     FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                     IsHomeFavorite = s.IsHoFa,
-                    HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                    AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                    HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                    AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
                     IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -3483,8 +3489,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureId = s.FiId.ToString(),
                     FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                     IsHomeFavorite = s.IsHoFa,
-                    HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                    AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                    HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                    AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
                     IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -3519,8 +3525,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureId = s.FiId.ToString(),
                     FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                     IsHomeFavorite = s.IsHoFa,
-                    HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                    AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                    HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                    AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
                     IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -3723,8 +3729,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureId = s.FiId.ToString(),
                     FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                     IsHomeFavorite = s.IsHoFa,
-                    HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                    AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                    HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                    AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
                     IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -3759,8 +3765,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureId = s.FiId.ToString(),
                     FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                     IsHomeFavorite = s.IsHoFa,
-                    HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                    AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                    HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                    AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                     FixtureStartDate = s.FiStDa,
                     IsLive = s.IsOfLi,
                     IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -3956,8 +3962,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureId = s.FiId.ToString(),
                 FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                 IsHomeFavorite = s.IsHoFa,
-                HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -4148,8 +4154,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureId = s.FiId.ToString(),
                 FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                 IsHomeFavorite = s.IsHoFa,
-                HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -4319,8 +4325,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureId = s.FiId.ToString(),
                 FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                 EnFixtureName = s.FiNa,
-                HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -4476,8 +4482,8 @@ namespace Platform.Sportsbook.API.Repository
                 ProviderFixtureId = s.PrFiId,
                 FixtureId = s.FiId.ToString(),
                 FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
-                HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -4753,8 +4759,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureId = s.FiId.ToString(),
                 FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                 IsHomeFavorite = s.IsHoFa,
-                HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -4879,8 +4885,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureId = s.FiId.ToString(),
                 FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                 IsHomeFavorite = s.IsHoFa,
-                HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -5013,8 +5019,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureId = s.FiId.ToString(),
                 FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                 IsHomeFavorite = s.IsHoFa,
-                HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IpCountryCode, s.ChTyId),
@@ -5514,8 +5520,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureId = fixture.FiId.ToString(),
                     FixtureName = GetTranslation(translations, fixture.Id, "FiId", fixture.FiNa),
                     IsHomeFavorite = fixture.IsHoFa,
-                    HomeName = GetHomeName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
-                    AwayName = GetAwayName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
+                    HomeName = GetHomeName(fixture.FiNa, translations, fixture.Id, (FixtureType)fixture.FiTyId),
+                    AwayName = GetAwayName(fixture.FiNa, translations, fixture.Id, (FixtureType)fixture.FiTyId),
                     FixtureStartDate = fixture.FiStDa,
                     IsLive = fixture.IsOfLi,
                     IsLiveStream = IsLiveStream(fixture.PrFiId, fixture.GeAl, request.Device, request.IpCountryCode, fixture.ChTyId),
@@ -5619,8 +5625,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureId = fixture.FiId.ToString(),
                     ProviderFixtureId = fixture.PrFiId,
                     FixtureName = GetTranslation(translations, fixture.Id, "FiId", fixture.FiNa),
-                    Home = GetHomeName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
-                    Away = GetAwayName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
+                    Home = GetHomeName(fixture.FiNa, translations, fixture.Id, (FixtureType)fixture.FiTyId),
+                    Away = GetAwayName(fixture.FiNa, translations, fixture.Id, (FixtureType)fixture.FiTyId),
                     FixtureStartDate = fixture.FiStDa,
                     FixtureStatus = fixture.SpId.IsVirtualSportId() || fixture.FiTyId == (int)FixtureType.Outright ? fixture.FiStNa : !IsOEEnable(request.ClientCode) || fixture.ClCo.Contains(request.ClientCode) ? fixture.FiStNa : FixtureStatus.Closed.ToString(),
                     IsLive = fixture.SpId == 21 ? fixture.FiStId == (int)FixtureStatus.Live ? true : false : fixture.IsOfLi,
@@ -5727,8 +5733,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureId = fixture.FiId.ToString(),
                     FixtureName = GetTranslation(translations, fixture.Id, "FiId", fixture.FiNa),
                     IsHomeFavorite = fixture.IsHoFa,
-                    HomeName = GetHomeName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
-                    AwayName = GetAwayName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
+                    HomeName = GetHomeName(fixture.FiNa, translations, fixture.Id, (FixtureType)fixture.FiTyId),
+                    AwayName = GetAwayName(fixture.FiNa, translations, fixture.Id, (FixtureType)fixture.FiTyId),
                     FixtureStartDate = fixture.FiStDa,
                     IsLive = fixture.IsOfLi,
                     IsLiveStream = IsLiveStream(fixture.PrFiId, fixture.GeAl, request.Device, request.IpCountryCode, fixture.ChTyId),
@@ -7081,8 +7087,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureId = s.FiId.ToString(),
                 ProviderFixtureId = s.PrFiId,
                 FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
-                Home = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                Away = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                Home = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                Away = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                 FixtureStatus = IsOEEnable(request.ClientCode) == false || s.FiTyId == (int)FixtureType.Outright || s.SpId.IsVirtualSportId() ? s.FiStNa : s.ClCo.Contains(request.ClientCode) ? s.FiStNa : FixtureStatus.Closed.ToString(),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.SpId == 21 ? s.FiStId == (int)FixtureStatus.Live ? true : false : s.IsOfLi,
@@ -7395,8 +7401,8 @@ namespace Platform.Sportsbook.API.Repository
                 ProviderFixtureId = s.PrFiId,
                 FixtureId = s.FiId.ToString(),
                 FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
-                HomeName = GetHomeName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
-                AwayName = GetAwayName(s.FiNa, s.FiNaTr, request.LanguageCode, (FixtureType)s.FiTyId),
+                HomeName = GetHomeName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
+                AwayName = GetAwayName(s.FiNa, translations, s.Id, (FixtureType)s.FiTyId),
                 FixtureStartDate = s.FiStDa,
                 IsLive = s.IsOfLi,
                 IsLiveStream = IsLiveStream(s.PrFiId, s.GeAl, request.Device, request.IPCountryCode, s.ChTyId),
@@ -10805,8 +10811,8 @@ namespace Platform.Sportsbook.API.Repository
                     FixtureId = fixture.FiId.ToString(),
                     FixtureName = GetTranslation(translations, fixture.Id, "FiId", fixture.FiNa),
                     IsHomeFavorite = fixture.IsHoFa,
-                    HomeName = GetHomeName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
-                    AwayName = GetAwayName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
+                    HomeName = GetHomeName(fixture.FiNa, translations, fixture.Id, (FixtureType)fixture.FiTyId),
+                    AwayName = GetAwayName(fixture.FiNa, translations, fixture.Id, (FixtureType)fixture.FiTyId),
                     FixtureStartDate = fixture.FiStDa,
                     IsLive = fixture.IsOfLi,
                     IsLiveStream = IsLiveStream(fixture.PrFiId, fixture.GeAl, request.Device, request.IpCountryCode, fixture.ChTyId),
@@ -11045,8 +11051,8 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureTypeId = fixture.FiTyId,
                 FixtureId = fixture.FiId.ToString(),
                 FixtureName = GetTranslation(translations, fixture.Id, "FiId", fixture.FiNa),
-                HomeName = GetHomeName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
-                AwayName = GetAwayName(fixture.FiNa, fixture.FiNaTr, request.LanguageCode, (FixtureType)fixture.FiTyId),
+                HomeName = GetHomeName(fixture.FiNa, translations, fixture.Id, (FixtureType)fixture.FiTyId),
+                AwayName = GetAwayName(fixture.FiNa, translations, fixture.Id, (FixtureType)fixture.FiTyId),
                 FixtureStartDate = fixture.FiStDa,
                 IsLive = fixture.IsOfLi,
                 IsLiveStream = IsLiveStream(fixture.PrFiId, fixture.GeAl, request.Device, request.IpCountryCode, fixture.ChTyId),
@@ -11301,30 +11307,48 @@ namespace Platform.Sportsbook.API.Repository
             return result.OrderBy(o => o.Name).ToList();
         }
 
-        private string GetHomeName(string name, List<FixtureTranslationMDB> translations, LanguageCode languageCode, FixtureType fixtureType)
+        private string GetHomeName(
+            string name,
+            Dictionary<string, string> translations,
+            string fixtureId,
+            FixtureType fixtureType)
         {
-            if (translations == null)
-                return fixtureType == FixtureType.Match ? name.Split(" vs. ").First().Trim() : string.Empty;
+            if (fixtureType != FixtureType.Match)
+                return string.Empty;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
+            var translatedName = GetTranslation(
+                translations,
+                fixtureId,
+                "FiId",
+                name);
 
-            if (result != null)
-                return fixtureType == FixtureType.Match ? result.FiNa.Split(" vs. ").First().Trim() : string.Empty;
-            else
-                return fixtureType == FixtureType.Match ? name.Split(" vs. ").First().Trim() : string.Empty;
+            return translatedName
+                .Split(" vs. ")
+                .FirstOrDefault()?
+                .Trim() ?? string.Empty;
         }
-        private string GetAwayName(string name, List<FixtureTranslationMDB> translations, LanguageCode languageCode, FixtureType fixtureType)
+
+        private string GetAwayName(
+            string name,
+            Dictionary<string, string> translations,
+            string fixtureId,
+            FixtureType fixtureType)
         {
-            if (translations == null)
-                return fixtureType == FixtureType.Match ? name.Split(" vs. ").Last().Trim() : string.Empty;
+            if (fixtureType != FixtureType.Match)
+                return string.Empty;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
+            var translatedName = GetTranslation(
+                translations,
+                fixtureId,
+                "FiId",
+                name);
 
-            if (result != null)
-                return fixtureType == FixtureType.Match ? result.FiNa.Split(" vs. ").Last().Trim() : string.Empty;
-            else
-                return fixtureType == FixtureType.Match ? name.Split(" vs. ").Last().Trim() : string.Empty;
+            return translatedName
+                .Split(" vs. ")
+                .LastOrDefault()?
+                .Trim() ?? string.Empty;
         }
+
         private string GetMarketName(string name, List<MarketTranslationMDB> translations, LanguageCode languageCode)
         {
             if (translations == null)

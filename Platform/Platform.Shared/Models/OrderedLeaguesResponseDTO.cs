@@ -24,5 +24,7 @@ namespace Platform.Shared.Models
     public class TempOrderedLeague : OrderedLeague
     {
         public int LeagueSortOrder { get; set; }
+        public string SegmentNameEN { get; set; }
+        public string LeagueNameEN { get; set; }
     }
 }

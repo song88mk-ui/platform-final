@@ -27,6 +27,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
 using System.Xml;
+using static App.Metrics.Health.HealthCheck;
 using BettingStatus = Platform.Shared.Data.Sportsbook.Entities.BettingStatus;
 
 namespace Platform.Sportsbook.API.Repository
@@ -1518,6 +1519,7 @@ namespace Platform.Sportsbook.API.Repository
 
             var result = await GetBetFixtureTranslations(request);
             var translations = await LoadTranslations(result.Item1, request.LanguageCode);
+            var marketTranslations = LoadTranslations(result.Item2, result.Item3, request.LanguageCode);
 
             return new BaseResponseDTO<BetFixtureTranslationResponseDTO>
             {
@@ -1534,11 +1536,13 @@ namespace Platform.Sportsbook.API.Repository
                         LeagueId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.LeId).FirstOrDefault(),
                         LeagueName = GetTranslation(translations, result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.LeId).FirstOrDefault(), "LeId", result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.LeNa).FirstOrDefault()),
                         FixtureId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiId).FirstOrDefault(),
-                        FixtureName = GetTranslation(translations, result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiId).FirstOrDefault(), "FiId", result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiNa).FirstOrDefault()),
+                        FixtureName = GetTranslation(translations, result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.Id).FirstOrDefault(), "FiId", result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiNa).FirstOrDefault()),
                         MarketId = result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.MaId).FirstOrDefault(),
-                        MarketName = GetMarketName(result.Item2.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId).Select(ss => ss.MaNa).FirstOrDefault(), result.Item2.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId).Select(ss => ss.MaNaTr).FirstOrDefault(), request.LanguageCode),
+                        //MarketName = GetMarketName(result.Item2.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId).Select(ss => ss.MaNa).FirstOrDefault(), result.Item2.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId).Select(ss => ss.MaNaTr).FirstOrDefault(), request.LanguageCode),
+                        MarketName = GetTranslation(marketTranslations, result.Item2.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId).Select(ss => ss.Id).FirstOrDefault(), "MaId", result.Item2.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId).Select(ss => ss.MaNa).FirstOrDefault()),
                         SelectionId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeId).FirstOrDefault(),
-                        SelectionName = GetComputedSelectionName(result.Item3.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId && c.SeId == s.SelectionId).Select(ss => ss.SeNa).FirstOrDefault(), result.Item3.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId && c.SeId == s.SelectionId).Select(ss => ss.SeNaTr).FirstOrDefault(), request.LanguageCode, result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SpId).FirstOrDefault(), result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.MaTeId).FirstOrDefault(), result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeTeId).FirstOrDefault(), s.Line)
+                        //SelectionName = GetComputedSelectionName(result.Item3.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId && c.SeId == s.SelectionId).Select(ss => ss.SeNa).FirstOrDefault(), result.Item3.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId && c.SeId == s.SelectionId).Select(ss => ss.SeNaTr).FirstOrDefault(), request.LanguageCode, result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SpId).FirstOrDefault(), result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.MaTeId).FirstOrDefault(), result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeTeId).FirstOrDefault(), s.Line)
+                        SelectionName = GetTranslation(marketTranslations, result.Item3.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId && c.SeId == s.SelectionId).Select(ss => ss.Id).FirstOrDefault(), "SeId", result.Item3.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId && c.SeId == s.SelectionId).Select(ss => ss.SeNa).FirstOrDefault())
                     }).ToList()
                 }
             };
@@ -1706,6 +1710,8 @@ namespace Platform.Sportsbook.API.Repository
 
                     await Task.WhenAll(marketCount, markets, selections);
 
+                    var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
                     foreach (var item in leagueResult)
                     {
                         if (!userFavorites.Any(c => c.SportId == item.SpId && c.Id == item.LeId.ToString() && c.HierarchyId == (int)UserFavoriteHierarchy.League))
@@ -1769,7 +1775,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsBetStopGlobal = bettingStatus.IsBeSo,
                             IsBetBuilder = isBetBuilder,
                             CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SpId && cc.SegmentId == item.SegId)?.CountryId ?? 0,
-                            Markets = GetMainMarkets(item.SpId, item.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), request.LanguageCode, request.ClientCode, item.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
+                            Markets = GetMainMarkets(marketTranslations, item.SpId, item.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), request.LanguageCode, request.ClientCode, item.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
                         });
                     }
                 }
@@ -1812,6 +1818,8 @@ namespace Platform.Sportsbook.API.Repository
                     var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
                     await Task.WhenAll(marketCount, markets, selections);
+
+                    var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
 
                     foreach (var item in fixtureResult)
                     {
@@ -1874,7 +1882,7 @@ namespace Platform.Sportsbook.API.Repository
                             IsBetStopGlobal = bettingStatus.IsBeSo,
                             IsBetBuilder = isBetBuilder,
                             CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SpId && cc.SegmentId == item.SegId)?.CountryId ?? 0,
-                            Markets = GetMainMarkets(item.SpId, item.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), request.LanguageCode, request.ClientCode, item.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
+                            Markets = GetMainMarkets(marketTranslations, item.SpId, item.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FiId)).ToList(), request.LanguageCode, request.ClientCode, item.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
                         });
                     }
                 }
@@ -2339,6 +2347,8 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
+            var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
             var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
                                     new CountrySegment
                                     {
@@ -2351,7 +2361,7 @@ namespace Platform.Sportsbook.API.Repository
             {
                 var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(item.SportId) && item.FixtureTypeId == (int)FixtureType.Match ? betBuilderMarketTemplates.Where(c => c.SportId == item.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
-                var currentMarkets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId);
+                var currentMarkets = GetMainMarkets(marketTranslations, item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId);
 
                 //if (currentMarkets.Count == 0) continue;
 
@@ -2692,6 +2702,8 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
+            var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
             var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
@@ -2739,7 +2751,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetBuilder = item.IsBetBuilder,
                     SortOrder = item.SortOrder,
                     CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0,
-                    Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
+                    Markets = GetMainMarkets(marketTranslations, item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
                 });
             });
 
@@ -2872,6 +2884,8 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
+            var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
             var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
@@ -2919,7 +2933,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetBuilder = item.IsBetBuilder,
                     SortOrder = item.SortOrder,
                     CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0,
-                    Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
+                    Markets = GetMainMarkets(marketTranslations, item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
                 });
             });
 
@@ -3108,6 +3122,8 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
+            var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
             var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
@@ -3155,7 +3171,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetBuilder = item.IsBetBuilder,
                     SortOrder = item.SortOrder,
                     CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0,
-                    Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
+                    Markets = GetMainMarkets(marketTranslations, item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
                 });
             });
 
@@ -3344,6 +3360,8 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
+            var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
             var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
@@ -3391,7 +3409,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetBuilder = item.IsBetBuilder,
                     SortOrder = item.SortOrder,
                     CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0,
-                    Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
+                    Markets = GetMainMarkets(marketTranslations, item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
                 });
             });
 
@@ -3582,6 +3600,8 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
+            var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
             var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
@@ -3629,7 +3649,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetBuilder = item.IsBetBuilder,
                     SortOrder = item.SortOrder,
                     CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0,
-                    Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
+                    Markets = GetMainMarkets(marketTranslations, item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
                 });
             });
 
@@ -3819,6 +3839,8 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
+            var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
             var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
@@ -3866,7 +3888,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetBuilder = item.IsBetBuilder,
                     SortOrder = item.SortOrder,
                     CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0,
-                    Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
+                    Markets = GetMainMarkets(marketTranslations, item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
                 });
             });
 
@@ -4015,6 +4037,8 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
+            var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
             // avoid invalid operation exception due to foreach parallel feature
@@ -4054,7 +4078,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetBuilder = item.IsBetBuilder,
                     SortOrder = item.SortOrder,
                     CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0,
-                    Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
+                    Markets = GetMainMarkets(marketTranslations, item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
                 });
             });
 
@@ -4207,6 +4231,8 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
+            var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
 
             // avoid invalid operation exception due to foreach parallel feature
@@ -4246,7 +4272,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetBuilder = item.IsBetBuilder,
                     SortOrder = item.SortOrder,
                     CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == item.SportId && cc.SegmentId == item.SegmentId)?.CountryId ?? 0,
-                    Markets = GetMainMarkets(item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
+                    Markets = GetMainMarkets(marketTranslations, item.SportId, item.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId)
                 });
             });
 
@@ -4378,6 +4404,8 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(markets, selections);
 
+            var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
             Parallel.ForEach(initialResult, item =>
             {
 
@@ -4418,7 +4446,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStop = item.IsBetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
-                    Markets = GetOutrightMarkets(itemMarkets, selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.SportId, item.FixtureTypeId)
+                    Markets = GetOutrightMarkets(marketTranslations, itemMarkets, selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.SportId, item.FixtureTypeId)
                 });
             });
 
@@ -4529,6 +4557,8 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(markets, selections);
 
+            var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
             Parallel.ForEach(initialResult, item =>
             {
                 var itemMarkets = markets.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList();
@@ -4565,7 +4595,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStop = item.IsBetStop,
                     IsBetStopGlobal = item.IsBetStopGlobal,
                     SortOrder = item.SortOrder,
-                    Markets = GetOutrightMarkets(itemMarkets, selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.SportId, item.FixtureTypeId)
+                    Markets = GetOutrightMarkets(marketTranslations, itemMarkets, selections.Result.Where(c => c.FiId == Convert.ToInt64(item.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, item.SportId, item.FixtureTypeId)
                 });
             });
 
@@ -4735,6 +4765,8 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
+            var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
             var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();
@@ -4778,7 +4810,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
                 SortOrder = clientTopLeagues.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() == 0 ? sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() : clientTopLeagues.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault(),
                 CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == s.SpId && cc.SegmentId == s.SegId)?.CountryId ?? 0,
-                Markets = GetMainMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, s.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
+                Markets = GetMainMarkets(marketTranslations, s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, s.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             var returnResult = new BaseResponseDTO<TWResponseDTO>
@@ -4872,6 +4904,8 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
+            var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
             var result = fixtures.Select(s => new FixtureDTO
             {
                 SportId = s.SpId,
@@ -4904,7 +4938,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
                 SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault(),
                 CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == s.SpId && cc.SegmentId == s.SegId)?.CountryId ?? 0,
-                Markets = GetMainMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, s.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
+                Markets = GetMainMarkets(marketTranslations, s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, s.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             if (request.SportId == 5)
@@ -4998,6 +5032,8 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
+            var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
             var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
                                     new CountrySegment
                                     {
@@ -5037,7 +5073,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
                 CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == s.SpId && cc.SegmentId == s.SegId)?.CountryId ?? 0,
-                Markets = GetMainMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, s.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
+                Markets = GetMainMarkets(marketTranslations, s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, s.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
             }).OrderBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             var returnResult = new BaseResponseDTO<TWResponseDTO>
@@ -5921,6 +5957,8 @@ namespace Platform.Sportsbook.API.Repository
         }
         private List<MarketLimitedDTO> GetMarketsLimited(List<MarketLimitedProjection> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, int sportId, int fixtureTypeId)
         {
+            var translations = LoadTranslations(markets, selections, languageCode);
+
             if (IsOEEnable(clientCode))
             {
                 if (sportId.IsVirtualSportId() || fixtureTypeId == (int)FixtureType.Outright)
@@ -5936,13 +5974,15 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
-                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                             Line = market.Li,
                             MarketStatus = market.MaStNa,
                             Selections = filteredSelections.Select(s => new SelectionLimitedDTO
                             {
                                 SelectionId = s.SeId.ToString(),
-                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                //SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                SelectionName = GetTranslation(translations, s.Id, "SeId", s.SeNa),
                                 Odds = s.Od.ToString("0.00"),
                                 //MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                                 //HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -5980,13 +6020,15 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
-                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                             Line = market.Li,
                             MarketStatus = market.ClCo.Contains(clientCode) ? market.MaStNa : MarketStatus.Inactive.ToString(),
                             Selections = selections.Where(c => c.MaId == market.MaId).Select(s => new SelectionLimitedDTO
                             {
                                 SelectionId = s.SeId.ToString(),
-                                SelectionName = GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
+                                //SelectionName = GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
+                                SelectionName = GetTranslation(translations, s.Id, "SeId", s.SeNa),
                                 //Odds = clientOdds.Where(c => c.SelectionId == s.SeId).Select(ss => ss.Odds).FirstOrDefault().ToString(),
                                 Odds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).DecimalOdds.ToString(),
                                 //MalaysianOdds = clientOdds.FirstOrDefault(c => c.SelectionId == s.SeId).MalaysianOdds.ToString(),
@@ -6012,13 +6054,15 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         MarketTemplateId = market.MaTeId,
                         MarketId = market.MaId.ToString(),
-                        MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                        //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                        MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                         Line = market.Li,
                         MarketStatus = market.MaStNa,
                         Selections = filteredSelections.Select(s => new SelectionLimitedDTO
                         {
                             SelectionId = s.SeId.ToString(),
-                            SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
+                            //SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
+                            SelectionName = GetTranslation(translations, s.Id, "SeId", s.SeNa),
                             Odds = s.Od.ToString("0.00"),
                             //MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                             //HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -6031,7 +6075,7 @@ namespace Platform.Sportsbook.API.Repository
             }
 
         }
-        private List<MarketDTO> GetMainMarkets(int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, int fixtureStatusId, List<BetBuilderMarketTemplates> betBuilderMarketTemplates, Guid clientId)
+        private List<MarketDTO> GetMainMarkets(Dictionary<string, string> translations, int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, int fixtureStatusId, List<BetBuilderMarketTemplates> betBuilderMarketTemplates, Guid clientId)
         {
             var marketTemplates = GetMainMarketTemplates(sportId, clientId);
 
@@ -6052,7 +6096,8 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
-                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                             Line = market.Li,
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
@@ -6063,7 +6108,8 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
-                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                //SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                SelectionName = GetTranslation(translations, s.Id, "SeId", s.SeNa),
                                 DecimalOdds = s.Od.ToString("0.00"),
                                 MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                                 HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -6112,7 +6158,8 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionTemplateId = item.SeTeId,
                                 SelectionId = item.SeId.ToString(),
-                                SelectionName = GetComputedSelectionName(item.SeNa, item.SeNaTr, languageCode, sportId, market.MaTeId, item.SeTeId, market.Li),
+                                //SelectionName = GetComputedSelectionName(item.SeNa, item.SeNaTr, languageCode, sportId, market.MaTeId, item.SeTeId, market.Li),
+                                SelectionName = GetTranslation(translations, item.Id, "SeId", item.SeNa),
                                 DecimalOdds = odds.DecimalOdds.ToString("0.00"),
                                 MalaysianOdds = odds.MalaysianOdds.ToString("0.00"),
                                 HongkongOdds = odds.HongkongOdds.ToString("0.00"),
@@ -6143,7 +6190,8 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
-                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                             Line = market.Li,
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
@@ -6189,7 +6237,8 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         MarketTemplateId = market.MaTeId,
                         MarketId = market.MaId.ToString(),
-                        MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                        //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                        MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                         Line = market.Li,
                         IsCashout = market.CaStId == 1 ? true : false,
                         MarketStatusId = market.MaStId,
@@ -6200,7 +6249,8 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
-                            SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
+                            //SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
+                            SelectionName = GetTranslation(translations, s.Id, "SeId", s.SeNa),
                             DecimalOdds = s.Od.ToString("0.00"),
                             MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                             HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -6216,7 +6266,7 @@ namespace Platform.Sportsbook.API.Repository
             }
 
         }
-        private List<BoostedMarketDTO> GetBoostedMarkets(int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, bool isBoosted, int fixtureStatusId, List<ClientMarketTemplateGroup> clientMarketTemplateGroups)
+        private List<BoostedMarketDTO> GetBoostedMarkets(Dictionary<string, string> translations, int sportId, int fixtureTypeId, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, bool isBoosted, int fixtureStatusId, List<ClientMarketTemplateGroup> clientMarketTemplateGroups)
         {
             if (IsOEEnable(clientCode))
             {
@@ -6235,7 +6285,8 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
-                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                             Line = market.Li,
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
@@ -6297,7 +6348,8 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
-                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                             Line = market.Li,
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
@@ -6349,7 +6401,8 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         MarketTemplateId = market.MaTeId,
                         MarketId = market.MaId.ToString(),
-                        MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                        //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                        MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                         Line = market.Li,
                         IsCashout = market.CaStId == 1 ? true : false,
                         MarketStatusId = market.MaStId,
@@ -6379,6 +6432,8 @@ namespace Platform.Sportsbook.API.Repository
         }
         private List<MarketDTO> GetMarkets(List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, int sportId, int fixtureTypeId, int fixtureStatusId, List<ClientMarketTemplateGroup> clientMarketTemplateGroups, List<BetBuilderMarketTemplates> betBuilderMarketTemplates)
         {
+            var translations = LoadTranslations(markets, selections, languageCode);
+
             if (IsOEEnable(clientCode))
             {
                 if (sportId.IsVirtualSportId() || fixtureTypeId == (int)FixtureType.Outright)
@@ -6395,7 +6450,7 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
-                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                             Line = market.Li,
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.MaStId,
@@ -6406,7 +6461,7 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionTemplateId = s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
-                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                SelectionName = GetTranslation(translations, s.Id, "SeId", s.SeNa),
                                 DecimalOdds = s.Od.ToString("0.00"),
                                 MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                                 HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -6463,7 +6518,8 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionTemplateId = item.SeTeId,
                                 SelectionId = item.SeId.ToString(),
-                                SelectionName = GetComputedSelectionName(item.SeNa, item.SeNaTr, languageCode, sportId, market.MaTeId, item.SeTeId, market.Li),
+                                //SelectionName = GetComputedSelectionName(item.SeNa, item.SeNaTr, languageCode, sportId, market.MaTeId, item.SeTeId, market.Li),
+                                SelectionName = GetTranslation(translations, item.Id, "SeId", item.SeNa),
                                 DecimalOdds = odds.DecimalOdds.ToString("0.00"),
                                 MalaysianOdds = odds.MalaysianOdds.ToString("0.00"),
                                 HongkongOdds = odds.HongkongOdds.ToString("0.00"),
@@ -6506,7 +6562,8 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
-                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                             Line = market.Li,
                             IsCashout = market.CaStId == 1 ? true : false,
                             MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
@@ -6560,7 +6617,8 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         MarketTemplateId = market.MaTeId,
                         MarketId = market.MaId.ToString(),
-                        MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                        //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                        MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                         Line = market.Li,
                         IsCashout = market.CaStId == 1 ? true : false,
                         MarketStatusId = market.MaStId,
@@ -6571,7 +6629,8 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
-                            SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
+                            //SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
+                            SelectionName = GetTranslation(translations, s.Id, "SeId", s.SeNa),
                             DecimalOdds = s.Od.ToString("0.00"),
                             MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                             HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -6586,7 +6645,7 @@ namespace Platform.Sportsbook.API.Repository
                 return result.OrderBy(o => Convert.ToInt32(o.SortOrder)).ThenBy(o => o.Line).ThenBy(o => o.MarketName).ToList();
             }
         }
-        private List<MarketDTO> GetOutrightMarkets(List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, int sportId, int fixtureTypeId)
+        private List<MarketDTO> GetOutrightMarkets(Dictionary<string, string> translations, List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, string clientCode, int sportId, int fixtureTypeId)
         {
             var result = new List<MarketDTO>();
 
@@ -6605,7 +6664,8 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
-                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                             EnMarketName = market.MaNa,
                             Line = market.Li,
                             IsCashout = market.CaStId == 1 ? true : false,
@@ -6616,7 +6676,8 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
-                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                //SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                SelectionName = GetTranslation(translations, s.Id, "SeId", s.SeNa),
                                 DecimalOdds = s.Od.ToString("0.00"),
                                 MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                                 HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -6632,7 +6693,8 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
-                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                             EnMarketName = market.MaNa,
                             Line = market.Li,
                             IsCashout = market.CaStId == 1 ? true : false,
@@ -6643,7 +6705,8 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
-                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                //SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                SelectionName = GetTranslation(translations, s.Id, "SeId", s.SeNa),
                                 DecimalOdds = s.Od.ToString("0.00"),
                                 MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                                 HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -6671,7 +6734,8 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
-                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                             EnMarketName = market.MaNa,
                             Line = market.Li,
                             IsCashout = market.CaStId == 1 ? true : false,
@@ -6682,7 +6746,8 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
-                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                //SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                SelectionName = GetTranslation(translations, s.Id, "SeId", s.SeNa),
                                 DecimalOdds = s.Od.ToString("0.00"),
                                 MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                                 HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -6698,7 +6763,8 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             MarketTemplateId = market.MaTeId,
                             MarketId = market.MaId.ToString(),
-                            MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                            MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                             EnMarketName = market.MaNa,
                             Line = market.Li,
                             IsCashout = market.CaStId == 1 ? true : false,
@@ -6709,7 +6775,8 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionTemplateId = s.SeNa.ToLower() == "yes" ? "1" : s.SeNa.ToLower() == "no" ? "2" : s.SeTeId,
                                 SelectionId = s.SeId.ToString(),
-                                SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                //SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                                SelectionName = GetTranslation(translations, s.Id, "SeId", s.SeNa),
                                 DecimalOdds = s.Od.ToString("0.00"),
                                 MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                                 HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -7380,6 +7447,8 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
+            var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
 
             var clientInitial = GetClientMarketTemplateGroups();
             var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
@@ -7418,7 +7487,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 IsBoosted = s.IsBo,
                 CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == s.SpId && cc.SegmentId == s.SegId)?.CountryId ?? 0,
-                Markets = GetBoostedMarkets(s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, true, s.FiStId, clientInitial.Where(c => c.SportId == s.SpId && c.ClientId == request.ClientId).ToList())
+                Markets = GetBoostedMarkets(marketTranslations, s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, true, s.FiStId, clientInitial.Where(c => c.SportId == s.SpId && c.ClientId == request.ClientId).ToList())
             }).ToList();
 
             await _rabbitMQRepository.PublishToRabbitMQAPI(new MessageRequestDTO
@@ -10292,6 +10361,8 @@ namespace Platform.Sportsbook.API.Repository
         }
         private MarketDTO GetTopGameMarket(List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, Guid clientid, string clientCode, int sportId, int fixtureTypeId, int fixtureStatusId, List<ClientMarketTemplateGroup> clientMarketTemplateGroups, List<BetBuilderMarketTemplates> betBuilderMarketTemplates)
         {
+            var translations = LoadTranslations(markets, selections, languageCode);
+
             var selectorMarketTemplate = GetClientSelectorMarketTemplate().Where(c => c.ClientId == clientid);
 
             if (IsOEEnable(clientCode))
@@ -10303,6 +10374,7 @@ namespace Platform.Sportsbook.API.Repository
                         selector => selector.MarketTemplateId,
                         (market, selector) => new
                         {
+                            Id = market.Id,
                             MaId = market.MaId,
                             FiId = market.FiId,
                             MaTeId = market.MaTeId,
@@ -10326,6 +10398,7 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             market = markets.Select(market => new
                             {
+                                Id = market.Id,
                                 MaId = market.MaId,
                                 FiId = market.FiId,
                                 MaTeId = market.MaTeId,
@@ -10352,7 +10425,8 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         MarketTemplateId = market.MaTeId,
                         MarketId = market.MaId.ToString(),
-                        MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                        //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                        MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                         Line = market.Li,
                         IsCashout = market.CaStId == 1 ? true : false,
                         MarketStatusId = market.MaStId,
@@ -10363,7 +10437,8 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             SelectionTemplateId = s.SeTeId,
                             SelectionId = s.SeId.ToString(),
-                            SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                            //SelectionName = GetSelectionName(s.SeNa, s.SeNaTr, languageCode),
+                            SelectionName = GetTranslation(translations, s.Id, "SeId", s.SeNa),
                             DecimalOdds = s.Od.ToString("0.00"),
                             MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                             HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -10398,6 +10473,7 @@ namespace Platform.Sportsbook.API.Repository
                         selector => selector.MarketTemplateId,
                         (market, selector) => new
                         {
+                            Id = market.Id,
                             MaId = market.MaId,
                             FiId = market.FiId,
                             MaTeId = market.MaTeId,
@@ -10422,6 +10498,7 @@ namespace Platform.Sportsbook.API.Repository
                         {
                             market = markets.Select(market => new
                             {
+                                Id = market.Id,
                                 MaId = market.MaId,
                                 FiId = market.FiId,
                                 MaTeId = market.MaTeId,
@@ -10466,7 +10543,8 @@ namespace Platform.Sportsbook.API.Repository
                             {
                                 SelectionTemplateId = item.SeTeId,
                                 SelectionId = item.SeId.ToString(),
-                                SelectionName = GetComputedSelectionName(item.SeNa, item.SeNaTr, languageCode, sportId, market.MaTeId, item.SeTeId, market.Li),
+                                //SelectionName = GetComputedSelectionName(item.SeNa, item.SeNaTr, languageCode, sportId, market.MaTeId, item.SeTeId, market.Li),
+                                SelectionName = GetTranslation(translations, item.Id, "SeId", item.SeNa),
                                 DecimalOdds = odds.DecimalOdds.ToString("0.00"),
                                 MalaysianOdds = odds.MalaysianOdds.ToString("0.00"),
                                 HongkongOdds = odds.HongkongOdds.ToString("0.00"),
@@ -10510,7 +10588,8 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         MarketTemplateId = market.MaTeId,
                         MarketId = market.MaId.ToString(),
-                        MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                        //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                        MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                         Line = market.Li,
                         IsCashout = market.CaStId == 1 ? true : false,
                         MarketStatusId = market.ClCo.Contains(clientCode) ? market.MaStId : (int)MarketStatus.Inactive,
@@ -10540,6 +10619,7 @@ namespace Platform.Sportsbook.API.Repository
                     selector => selector.MarketTemplateId,
                     (market, selector) => new
                     {
+                        Id = market.Id,
                         MaId = market.MaId,
                         FiId = market.FiId,
                         MaTeId = market.MaTeId,
@@ -10564,6 +10644,7 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         market = markets.Select(market => new
                         {
+                            Id = market.Id,
                             MaId = market.MaId,
                             FiId = market.FiId,
                             MaTeId = market.MaTeId,
@@ -10604,7 +10685,8 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     MarketTemplateId = market.MaTeId,
                     MarketId = market.MaId.ToString(),
-                    MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                    //MarketName = GetMarketName(market.MaNa, market.MaNaTr, languageCode),
+                    MarketName = GetTranslation(translations, market.Id, "MaId", market.MaNa),
                     Line = market.Li,
                     IsCashout = market.CaStId == 1 ? true : false,
                     MarketStatusId = market.MaStId,
@@ -10615,7 +10697,8 @@ namespace Platform.Sportsbook.API.Repository
                     {
                         SelectionTemplateId = s.SeTeId,
                         SelectionId = s.SeId.ToString(),
-                        SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
+                        //SelectionName = fixtureTypeId == (int)FixtureType.Outright ? GetSelectionName(s.SeNa, s.SeNaTr, languageCode) : GetComputedSelectionName(s.SeNa, s.SeNaTr, languageCode, sportId, market.MaTeId, s.SeTeId, market.Li),
+                        SelectionName = GetTranslation(translations, s.Id, "SeId", s.SeNa),
                         DecimalOdds = s.Od.ToString("0.00"),
                         MalaysianOdds = GetMalayOdds(s.Od, isBinary).ToString("0.00"),
                         HongkongOdds = GetHongkongOdds(s.Od, isBinary).ToString("0.00"),
@@ -11039,6 +11122,8 @@ namespace Platform.Sportsbook.API.Repository
             await Task.WhenAll(marketCount, markets, selections, bettingStatusCollectionResponse);
             var bettingStatus = bettingStatusCollectionResponse.Result;
 
+            var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
+
             var initialResult = tierLeagueFixtures.SelectMany(s => s.Fixtures.Select(fixture => new TempFixtureDTO()
             {
                 SportId = fixture.SpId,
@@ -11086,7 +11171,7 @@ namespace Platform.Sportsbook.API.Repository
                     isBetBuilder = filteredBetBuilderMarketTemplates.Any();
                 }
 
-                var currentMarkets = GetMainMarkets(fixture.SportId, fixture.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, fixture.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId);
+                var currentMarkets = GetMainMarkets(marketTranslations, fixture.SportId, fixture.FixtureTypeId, markets.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FixtureId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(fixture.FixtureId)).ToList(), request.LanguageCode, request.ClientCode, fixture.FixtureStatusId, filteredBetBuilderMarketTemplates, request.ClientId);
 
                 twResponse.Fixtures.Add(new FixtureDTO()
                 {
@@ -11349,81 +11434,82 @@ namespace Platform.Sportsbook.API.Repository
                 .Trim() ?? string.Empty;
         }
 
-        private string GetMarketName(string name, List<MarketTranslationMDB> translations, LanguageCode languageCode)
-        {
-            if (translations == null)
-                return name;
+        //private string GetMarketName(string name, List<MarketTranslationMDB> translations, LanguageCode languageCode)
+        //{
+        //    if (translations == null)
+        //        return name;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
+        //    var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
-            if (result != null)
-                return result.MaNa;
-            else
-                return name;
-        }
-        private string GetSelectionName(string name, List<SelectionTranslationMDB> translations, LanguageCode languageCode)
-        {
-            if (translations == null)
-                return name;
+        //    if (result != null)
+        //        return result.MaNa;
+        //    else
+        //        return name;
+        //}
+        //private string GetSelectionName(string name, List<SelectionTranslationMDB> translations, LanguageCode languageCode)
+        //{
+        //    if (translations == null)
+        //        return name;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
+        //    var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
-            if (result != null)
-                return result.SeNa;
-            else
-                return name;
-        }
-        private string GetComputedSelectionName(string name, List<SelectionTranslationMDB> translations, LanguageCode languageCode, int sportId, string marketTemplateId, string selectionTemplateId, string line)
-        {
-            if (translations == null)
-                return name;
+        //    if (result != null)
+        //        return result.SeNa;
+        //    else
+        //        return name;
+        //}
+        //private string GetComputedSelectionName(string name, List<SelectionTranslationMDB> translations, LanguageCode languageCode, int sportId, string marketTemplateId, string selectionTemplateId, string line)
+        //{
+        //    if (translations == null)
+        //        return name;
 
-            var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
+        //    var result = translations.Where(c => c.LaCo == languageCode.ToString()).LastOrDefault();
 
-            if (result == null)
-                return name;
+        //    if (result == null)
+        //        return name;
 
-            var marketTemplateIds = new string[] { "16", "66" };
+        //    var marketTemplateIds = new string[] { "16", "66" };
 
-            if (sportId == 1 && marketTemplateIds.Contains(marketTemplateId))
-            {
-                var decLine = Convert.ToDecimal(line);
-                var absLine = Math.Abs(decLine);
+        //    if (sportId == 1 && marketTemplateIds.Contains(marketTemplateId))
+        //    {
+        //        var decLine = Convert.ToDecimal(line);
+        //        var absLine = Math.Abs(decLine);
 
-                var selectionName = string.Empty;
+        //        var selectionName = string.Empty;
 
-                if (decLine == 0m)
-                {
-                    selectionName = result.SeNa.Replace("(0)", string.Empty).TrimEnd(); // backward compatibility
-                    selectionName = $"{selectionName} (0)";
-                }
-                else
-                {
-                    selectionName = result.SeNa.Replace($"(+{absLine})", string.Empty).TrimEnd();  // backward compatibility
-                    selectionName = selectionName.Replace($"(-{absLine})", string.Empty).TrimEnd();  // backward compatibility
+        //        if (decLine == 0m)
+        //        {
+        //            selectionName = result.SeNa.Replace("(0)", string.Empty).TrimEnd(); // backward compatibility
+        //            selectionName = $"{selectionName} (0)";
+        //        }
+        //        else
+        //        {
+        //            selectionName = result.SeNa.Replace($"(+{absLine})", string.Empty).TrimEnd();  // backward compatibility
+        //            selectionName = selectionName.Replace($"(-{absLine})", string.Empty).TrimEnd();  // backward compatibility
 
-                    if (selectionTemplateId == "1714")
-                    {
+        //            if (selectionTemplateId == "1714")
+        //            {
 
-                        if (decLine > 0)
-                            selectionName = $"{selectionName} (+{absLine})";
-                        else
-                            selectionName = $"{selectionName} (-{absLine})";
-                    }
-                    else if (selectionTemplateId == "1715")
-                    {
-                        if (decLine > 0)
-                            selectionName = $"{selectionName} (-{absLine})";
-                        else
-                            selectionName = $"{selectionName} (+{absLine})";
-                    }
-                }
+        //                if (decLine > 0)
+        //                    selectionName = $"{selectionName} (+{absLine})";
+        //                else
+        //                    selectionName = $"{selectionName} (-{absLine})";
+        //            }
+        //            else if (selectionTemplateId == "1715")
+        //            {
+        //                if (decLine > 0)
+        //                    selectionName = $"{selectionName} (-{absLine})";
+        //                else
+        //                    selectionName = $"{selectionName} (+{absLine})";
+        //            }
+        //        }
 
-                return selectionName;
-            }
+        //        return selectionName;
+        //    }
 
-            return result.SeNa;
-        }
+        //    return result.SeNa;
+        //}
+
         private string GetBoostedSelectionName(string clientCode, string selectionName, List<ClientBoostedSelectionNameMDB> boostedSelectionNames, List<ClientBoostedSelectionNameTranslationMDB> translations, LanguageCode languageCode)
         {
             if (boostedSelectionNames == null) //backward compatibility
@@ -12375,6 +12461,72 @@ namespace Platform.Sportsbook.API.Repository
                 return translated;
 
             return fallback;
+        }
+
+        private Dictionary<string, string> LoadTranslations(
+            List<MarketFilter> markets, 
+            List<SelectionFilter> selections,
+            LanguageCode languageCode)
+        {
+            var stringIds = new HashSet<string>();
+
+            foreach (var market in markets)
+            {
+                AddTranslationKey(stringIds, market.Id, "MaId");
+            }
+
+            foreach (var selection in selections)
+            {
+                AddTranslationKey(stringIds, selection.Id, "SeId");
+            }
+
+            return _translationRepository.GetTranslationsAsync(
+                stringIds.ToList(),
+                languageCode.ToString()).GetAwaiter().GetResult();
+        }
+
+        private Dictionary<string, string> LoadTranslations(
+            List<MarketLimitedProjection> markets,
+            List<SelectionFilter> selections,
+            LanguageCode languageCode)
+        {
+            var stringIds = new HashSet<string>();
+
+            foreach (var market in markets)
+            {
+                AddTranslationKey(stringIds, market.Id, "MaId");
+            }
+
+            foreach (var selection in selections)
+            {
+                AddTranslationKey(stringIds, selection.Id, "SeId");
+            }
+
+            return _translationRepository.GetTranslationsAsync(
+                stringIds.ToList(),
+                languageCode.ToString()).GetAwaiter().GetResult();
+        }
+
+        private Dictionary<string, string> LoadTranslations(
+            List<Market> markets,
+            List<Selection> selections,
+            LanguageCode languageCode)
+        {
+            var stringIds = new HashSet<string>();
+
+            foreach (var market in markets)
+            {
+                AddTranslationKey(stringIds, market.Id, "MaId");
+            }
+
+            foreach (var selection in selections)
+            {
+                AddTranslationKey(stringIds, selection.Id, "SeId");
+            }
+
+            return _translationRepository.GetTranslationsAsync(
+                stringIds.ToList(),
+                languageCode.ToString()).GetAwaiter().GetResult();
         }
 
         private async Task<Dictionary<string, string>> LoadTranslations(

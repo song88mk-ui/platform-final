@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Platform.Shared.Data.Sportsbook;
-using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
@@ -55,7 +54,7 @@ namespace Platform.Sportsbook.API.Repository
             // =========================
             foreach (var stringId in stringIds.Distinct())
             {
-                var cacheKey = $"tr:{languageCode}:{stringId}";
+                var cacheKey = $"{CACHE_PREFIX}{languageCode}:{stringId}";
 
                 var cacheValue = _memCache.GetCache<string>(cacheKey);
 
@@ -92,7 +91,7 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     result[item.StringId] = item.TargetText;
 
-                    var cacheKey = $"tr:{languageCode}:{item.StringId}";
+                    var cacheKey = $"{CACHE_PREFIX}{languageCode}:{item.StringId}";
 
                     _memCache.AddOrUpdateCache(
                         cacheKey,
@@ -102,6 +101,20 @@ namespace Platform.Sportsbook.API.Repository
             }
 
             return result;
+        }
+
+        public void InvalidateTranslationsCache(
+            List<string> stringIds,
+            string languageCode)
+        {
+            if (stringIds == null || stringIds.Count == 0)
+                return;
+
+            foreach (var stringId in stringIds.Distinct())
+            {
+                var cacheKey = $"{CACHE_PREFIX}{languageCode}:{stringId}";
+                _memCache.DeleteCache(cacheKey);
+            }
         }
 
         #endregion

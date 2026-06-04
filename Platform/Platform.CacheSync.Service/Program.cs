@@ -19,6 +19,7 @@ namespace Platform.CacheSync.Service
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<ICacheSyncRepository, CacheSyncRepository>();
                     services.AddSingleton<ISportsbookRepository, SportsbookRepository>();
+                    services.AddSingleton<IHelper, Helper>();
                     services.AddHostedService<Worker>();
                 }).UseWindowsService();
     }

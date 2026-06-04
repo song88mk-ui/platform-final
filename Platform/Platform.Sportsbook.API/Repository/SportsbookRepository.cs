@@ -10310,6 +10310,11 @@ namespace Platform.Sportsbook.API.Repository
                 _memCache.DeleteCache("mtnn");
             }
 
+            if (request.CacheType == CacheType.DynamicTranslation)
+            {
+                _translationRepository.InvalidateTranslationsCache(request.CacheKeys, request.LanguageCode.ToString());
+            }
+
             return new BaseResponseDTO<bool>
             {
                 StatusCode = StatusCode.Success,

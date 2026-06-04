@@ -5,19 +5,21 @@ using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Platform.CacheSync.Service.Repository
 {
     public class CacheSyncRepository : ICacheSyncRepository
     {
+        private readonly IHelper _helper;
         private readonly ISportsbookRepository _sportsbookRepository;
         private readonly IMessageBroker _messageBroker;
         private readonly IConfiguration _configuration;
 
-        public CacheSyncRepository(ISportsbookRepository sportsbookRepository, IMessageBroker messageBroker, IConfiguration configuration)
+        public CacheSyncRepository(IHelper helper, ISportsbookRepository sportsbookRepository, IMessageBroker messageBroker, IConfiguration configuration)
         {
+            _helper = helper;
             _sportsbookRepository = sportsbookRepository;
             _messageBroker = messageBroker;
             _configuration = configuration;
@@ -91,20 +93,57 @@ namespace Platform.CacheSync.Service.Repository
             await DeleteCachePreload_PlatformApi(request);
         }
 
+        public async void ProcessDynamicTranslationChange(OnDeleteCacheMessage message)
+        {
+            var request = new CachePreloadRequestDTO
+            {
+                CacheType = CacheType.DynamicTranslation
+            };
+
+            var publishMessage = await DeleteCachePreload_SportsbookApi(request);
+
+            if (publishMessage)
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    _messageBroker.Publish(
+                        true,
+                        "OnDynamicTranslationChange",
+                        $"r.oe.adapter.ondynamictranslationchange.{i:D2}",
+                        Guid.NewGuid().ToString().ToUpper());
+                }
+            }
+        }
+
         #region Private Methods
         private async Task<bool> DeleteCachePreload_SportsbookApi(CachePreloadRequestDTO request)
         {
-            var apis = bool.Parse(_configuration["IsProduction"]) ? _configuration.GetSection("API:Production:PlatformSportsbookAPI").Get<List<string>>() : _configuration.GetSection("API:Staging:PlatformSportsbookAPI").Get<List<string>>();
+            var hostName = _configuration.GetSection("API:PlatformSportsbookAPI:Host").Get<string>();
             var publishMessage = true;
 
-            foreach (var api in apis)
-            {
-                var result = await _sportsbookRepository.DeleteCachePreload(request, api);
+            var addresses = await Dns.GetHostAddressesAsync(hostName);
 
-                if (result.StatusCode != StatusCode.Success)
+            foreach (var address in addresses)
+            {
+                try
                 {
-                    publishMessage = false;
-                    break;
+                    var url = $"http://{address}:8080";
+
+                    var result = await _sportsbookRepository.DeleteCachePreload(request, url);
+
+                    Console.WriteLine(
+                        $"Purged {address}: {(int)result.StatusCode} {result.Message}");
+
+                    if (result.StatusCode != StatusCode.Success)
+                    {
+                        publishMessage = false;
+                        break;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to purge {address}: {ex.Message}");
                 }
             }
 
@@ -113,19 +152,35 @@ namespace Platform.CacheSync.Service.Repository
 
         private async Task<bool> DeleteCachePreload_BettingApi(CachePreloadRequestDTO request)
         {
-            var apis = bool.Parse(_configuration["IsProduction"]) ? _configuration.GetSection("API:Production:PlatformBettingAPI").Get<List<string>>() : _configuration.GetSection("API:Staging:PlatformBettingAPI").Get<List<string>>();
+            var hostName = _configuration.GetSection("API:PlatformBettingAPI:Host").Get<string>();
             var publishMessage = true;
 
-            foreach (var api in apis)
-            {
-                var result = await _sportsbookRepository.DeleteCachePreload(request, api);
+            var addresses = await Dns.GetHostAddressesAsync(hostName);
 
-                if (result.StatusCode != StatusCode.Success)
+            foreach (var address in addresses)
+            {
+                try
                 {
-                    publishMessage = false;
-                    break;
+                    var url = $"http://{address}:8080";
+
+                    var result = await _sportsbookRepository.DeleteCachePreload(request, url);
+
+                    Console.WriteLine(
+                        $"Purged {address}: {(int)result.StatusCode} {result.Message}");
+
+                    if (result.StatusCode != StatusCode.Success)
+                    {
+                        publishMessage = false;
+                        break;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to purge {address}: {ex.Message}");
                 }
             }
+
 
             return publishMessage;
         }
@@ -133,20 +188,35 @@ namespace Platform.CacheSync.Service.Repository
 
         private async Task<bool> DeleteCachePreload_PlatformApi(CachePreloadRequestDTO request)
         {
-            var apis = bool.Parse(_configuration["IsProduction"]) ? _configuration.GetSection("API:Production:PlatformAPI").Get<List<string>>() : _configuration.GetSection("API:Staging:PlatformAPI").Get<List<string>>();
+            var hostName = _configuration.GetSection("API:PlatformAPI:Host").Get<string>();
             var publishMessage = true;
 
             var header = new Dictionary<string, string>();
-            header["x-api-key"] = bool.Parse(_configuration["IsProduction"]) ? _configuration.GetSection("API:Production:PlatformAPIKey").Get<string>() : _configuration.GetSection("API:Staging:PlatformAPIKey").Get<string>();
+            header["x-api-key"] = _configuration.GetSection("API:PlatformAPI:APIKey").Get<string>();
 
-            foreach (var api in apis)
+            var addresses = await Dns.GetHostAddressesAsync(hostName);
+
+            foreach (var address in addresses)
             {
-                var result = await _sportsbookRepository.DeleteCachePreload(request, api, header);
-
-                if (result.StatusCode != StatusCode.Success)
+                try
                 {
-                    publishMessage = false;
-                    break;
+                    var url = $"http://{address}:8080";
+
+                    var result = await _sportsbookRepository.DeleteCachePreload(request, url, header);
+
+                    Console.WriteLine(
+                        $"Purged {address}: {(int)result.StatusCode} {result.Message}");
+
+                    if (result.StatusCode != StatusCode.Success)
+                    {
+                        publishMessage = false;
+                        break;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to purge {address}: {ex.Message}");
                 }
             }
 

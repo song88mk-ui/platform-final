@@ -7,6 +7,7 @@
         UserFavorites = 2,
         Maintenance = 4,
         ParlayBonus = 5,
-        Client = 6
+        Client = 6,
+        DynamicTranslation = 7,
     }
 }

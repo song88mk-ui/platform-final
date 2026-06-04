@@ -76,6 +76,10 @@ namespace Platform.CacheSync.Service
                         var client = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
                         _cacheSyncRepository.ProcessClientChange(client);
                         break;
+                    case "OnDynamicTranslationChange":
+                        var translationRequest = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
+                        _cacheSyncRepository.ProcessDynamicTranslationChange(translationRequest);
+                        break;
                 }
             }
             catch (Exception ex)

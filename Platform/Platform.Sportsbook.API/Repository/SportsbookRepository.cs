@@ -4037,6 +4037,9 @@ namespace Platform.Sportsbook.API.Repository
 
             await Task.WhenAll(marketCount, markets, selections);
 
+            var validFixtureIds = marketCount.Result.Select(s => s.FiId).Distinct().ToList();
+            initialResult = initialResult.Where(c => validFixtureIds.Contains(Convert.ToInt64(c.FixtureId))).ToList();
+
             var marketTranslations = LoadTranslations(markets.Result, selections.Result, request.LanguageCode);
 
             var filteredBetBuilderMarketTemplates = betBuilderSportIds.Contains(request.SportId) ? betBuilderMarketTemplates.Where(c => c.SportId == request.SportId).ToList() : new List<BetBuilderMarketTemplates>();

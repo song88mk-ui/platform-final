@@ -119,6 +119,7 @@ namespace Platform.CacheSync.Service.Repository
         private async Task<bool> DeleteCachePreload_SportsbookApi(CachePreloadRequestDTO request)
         {
             var hostName = _configuration.GetSection("API:PlatformSportsbookAPI:Host").Get<string>();
+            var port = _configuration.GetSection("API:PlatformSportsbookAPI:Port").Get<string>();
             var publishMessage = true;
 
             var addresses = await Dns.GetHostAddressesAsync(hostName);
@@ -127,12 +128,12 @@ namespace Platform.CacheSync.Service.Repository
             {
                 try
                 {
-                    var url = $"http://{address}:8080";
+                    var url = $"http://{address}:{port}";
 
                     var result = await _sportsbookRepository.DeleteCachePreload(request, url);
 
                     Console.WriteLine(
-                        $"Purged {address}: {(int)result.StatusCode} {result.Message}");
+                        $"Purged {url} -> {(int)result.StatusCode} {result.Message}");
 
                     if (result.StatusCode != StatusCode.Success)
                     {

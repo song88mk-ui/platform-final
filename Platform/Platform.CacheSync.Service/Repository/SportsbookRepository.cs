@@ -45,7 +45,7 @@ namespace Platform.CacheSync.Service.Repository
                         return new BaseResponseDTO<bool>
                         {
                             StatusCode = StatusCode.Error,
-                            Message = $"{StatusCode.Error.ToString().Replace('_', ' ')}"
+                            Message = $"{StatusCode.Error.ToString().Replace('_', ' ')}-{response.ReasonPhrase}"
                         };
                     }
                 }

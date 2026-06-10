@@ -105,10 +105,17 @@ namespace Platform.Sportsbook.API.Repository
 
         public void InvalidateTranslationsCache(
             List<string> stringIds,
-            string languageCode)
+            string languageCode,
+            bool purgeAll = false)
         {
-            if (stringIds == null || stringIds.Count == 0)
+            if (purgeAll == false && (stringIds == null || stringIds.Count == 0))
                 return;
+
+            if(purgeAll)
+            {
+                _memCache.DeleteCacheByPrefix(CACHE_PREFIX);
+                return;
+            }
 
             foreach (var stringId in stringIds.Distinct())
             {

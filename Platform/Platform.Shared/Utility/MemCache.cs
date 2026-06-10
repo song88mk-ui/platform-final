@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Caching;
 
 namespace Platform.Shared.Utility
@@ -54,6 +55,19 @@ namespace Platform.Shared.Utility
         public void DeleteCache(string key)
         {
             MemoryCache.Default.Remove(key);
+        }
+
+        public void DeleteCacheByPrefix(string prefix)
+        {
+            var keys = MemoryCache.Default
+                .Where(kvp => kvp.Key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            foreach (var key in keys)
+            {
+                MemoryCache.Default.Remove(key);
+            }
         }
     }
 }

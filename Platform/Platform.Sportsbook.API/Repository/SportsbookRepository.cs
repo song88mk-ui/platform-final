@@ -10315,7 +10315,7 @@ namespace Platform.Sportsbook.API.Repository
 
             if (request.CacheType == CacheType.DynamicTranslation)
             {
-                _translationRepository.InvalidateTranslationsCache(request.CacheKeys, request.LanguageCode.ToString());
+                _translationRepository.InvalidateTranslationsCache(request.CacheKeys, request.LanguageCode.ToString(), request.PurgeAll);
             }
 
             return new BaseResponseDTO<bool>

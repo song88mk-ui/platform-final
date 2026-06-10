@@ -12,6 +12,7 @@ namespace Platform.Sportsbook.API.Repository
 
         void InvalidateTranslationsCache(
             List<string> stringIds,
-            string languageCode);
+            string languageCode,
+            bool purgeAll = false);
     }
 }

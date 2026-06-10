@@ -9,6 +9,7 @@ namespace Platform.Shared.Models
         public string CacheKey { get; set; }
         public List<string> CacheKeys { get; set; } = new List<string>();
         public LanguageCode LanguageCode { get; set; } = LanguageCode.EN;
+        public bool PurgeAll { get; set; } = false;
     }
 
     public class LeagueTierRatingResponseDTO

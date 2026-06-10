@@ -4631,7 +4631,13 @@ namespace Platform.API.Repository
         public async Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request)
         {
             if (request.CacheType == CacheType.Client)
-                _memCache.DeleteCache(request.CacheKey);
+            {
+                if(request.PurgeAll)
+                    _memCache.DeleteCacheByPrefix("cc");
+                else
+                    _memCache.DeleteCache(request.CacheKey);
+
+            }
 
             return new BaseResponseDTO<bool>
             {

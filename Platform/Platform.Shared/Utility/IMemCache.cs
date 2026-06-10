@@ -15,5 +15,7 @@ namespace Platform.Shared.Utility
 
         KeyValuePair<bool, long> GetCache(string key);
         void DeleteCache(string key);
+
+        void DeleteCacheByPrefix(string prefix);
     }
 }

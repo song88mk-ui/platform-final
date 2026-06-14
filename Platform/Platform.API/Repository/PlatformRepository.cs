@@ -4637,6 +4637,7 @@ namespace Platform.API.Repository
                 else
                     _memCache.DeleteCache(request.CacheKey);
 
+                _logger.LogInformation($"DeleteCachePreload Finished: {JsonSerializer.Serialize(request)}");
             }
 
             return new BaseResponseDTO<bool>

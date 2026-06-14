@@ -3729,6 +3729,8 @@ namespace Platform.Betting.API.Repository
             if (request.CacheType == CacheType.ParlayBonus)
                 _memCache.DeleteCache("pba");
 
+            _logger.LogInformation($"DeleteCachePreload Finished: {JsonSerializer.Serialize(request)}");
+
             return new BaseResponseDTO<bool>
             {
                 StatusCode = StatusCode.Success,

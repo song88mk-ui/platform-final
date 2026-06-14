@@ -10294,7 +10294,10 @@ namespace Platform.Sportsbook.API.Repository
         public async Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request)
         {
             if (request.CacheType == CacheType.MarketSortOrder)
+            {
+                _memCache.DeleteCache("mtg2");
                 _memCache.DeleteCache("cmtg");
+            }
 
             if (request.CacheType == CacheType.SportSortOrder)
             {
@@ -10317,6 +10320,8 @@ namespace Platform.Sportsbook.API.Repository
             {
                 _translationRepository.InvalidateTranslationsCache(request.CacheKeys, request.LanguageCode.ToString(), request.PurgeAll);
             }
+
+            _logger.LogInformation($"DeleteCachePreload Finished: {JsonSerializer.Serialize(request)}");
 
             return new BaseResponseDTO<bool>
             {

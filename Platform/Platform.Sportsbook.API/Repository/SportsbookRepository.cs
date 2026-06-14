@@ -10297,6 +10297,25 @@ namespace Platform.Sportsbook.API.Repository
             {
                 _memCache.DeleteCache("mtg2");
                 _memCache.DeleteCache("cmtg");
+                _memCache.DeleteCacheByPrefix("ntf");
+                _memCache.DeleteCacheByPrefix("ntfbl");
+                _memCache.DeleteCacheByPrefix("nal");
+                _memCache.DeleteCacheByPrefix("ns");
+                _memCache.DeleteCacheByPrefix("nlfc");
+                _memCache.DeleteCacheByPrefix("ntfc");
+                _memCache.DeleteCacheByPrefix("nlf");
+                _memCache.DeleteCacheByPrefix("nlfbl");
+                _memCache.DeleteCacheByPrefix("nuf");
+                _memCache.DeleteCacheByPrefix("nufbl");
+                _memCache.DeleteCacheByPrefix("ndf");
+                _memCache.DeleteCacheByPrefix("ndfbl");
+                _memCache.DeleteCacheByPrefix("ntlf");
+                _memCache.DeleteCacheByPrefix("nfbs");
+                _memCache.DeleteCacheByPrefix("nfbl");
+                _memCache.DeleteCacheByPrefix("nlh");
+                _memCache.DeleteCacheByPrefix("nlhf");
+                _memCache.DeleteCacheByPrefix("ntl");
+                _memCache.DeleteCacheByPrefix("nal");
             }
 
             if (request.CacheType == CacheType.SportSortOrder)
@@ -10304,11 +10323,31 @@ namespace Platform.Sportsbook.API.Repository
                 _memCache.DeleteCache("so");
                 _memCache.DeleteCache("seo");
                 _memCache.DeleteCache("leo");
+                _memCache.DeleteCacheByPrefix("ntf");
+                _memCache.DeleteCacheByPrefix("ntfbl");
+                _memCache.DeleteCacheByPrefix("nal");
+                _memCache.DeleteCacheByPrefix("ns");
+                _memCache.DeleteCacheByPrefix("nlfc");
+                _memCache.DeleteCacheByPrefix("ntfc");
+                _memCache.DeleteCacheByPrefix("nlf");
+                _memCache.DeleteCacheByPrefix("nlfbl");
+                _memCache.DeleteCacheByPrefix("nuf");
+                _memCache.DeleteCacheByPrefix("nufbl");
+                _memCache.DeleteCacheByPrefix("ndf");
+                _memCache.DeleteCacheByPrefix("ndfbl");
+                _memCache.DeleteCacheByPrefix("ntlf");
+                _memCache.DeleteCacheByPrefix("nfbs");
+                _memCache.DeleteCacheByPrefix("nfbl");
+                _memCache.DeleteCacheByPrefix("nlh");
+                _memCache.DeleteCacheByPrefix("nlhf");
+                _memCache.DeleteCacheByPrefix("ntl");
+                _memCache.DeleteCacheByPrefix("nal");
             }
 
             if (request.CacheType == CacheType.UserFavorites)
             {
                 _memCache.DeleteCache(request.CacheKey);
+                _memCache.DeleteCacheByPrefix("nuf");
             }
 
             if (request.CacheType == CacheType.Maintenance)
@@ -10319,6 +10358,26 @@ namespace Platform.Sportsbook.API.Repository
             if (request.CacheType == CacheType.DynamicTranslation)
             {
                 _translationRepository.InvalidateTranslationsCache(request.CacheKeys, request.LanguageCode.ToString(), request.PurgeAll);
+
+                _memCache.DeleteCacheByPrefix("ntf");
+                _memCache.DeleteCacheByPrefix("ntfbl");
+                _memCache.DeleteCacheByPrefix("nal");
+                _memCache.DeleteCacheByPrefix("ns");
+                _memCache.DeleteCacheByPrefix("nlfc");
+                _memCache.DeleteCacheByPrefix("ntfc");
+                _memCache.DeleteCacheByPrefix("nlf");
+                _memCache.DeleteCacheByPrefix("nlfbl");
+                _memCache.DeleteCacheByPrefix("nuf");
+                _memCache.DeleteCacheByPrefix("nufbl");
+                _memCache.DeleteCacheByPrefix("ndf");
+                _memCache.DeleteCacheByPrefix("ndfbl");
+                _memCache.DeleteCacheByPrefix("ntlf");
+                _memCache.DeleteCacheByPrefix("nfbs");
+                _memCache.DeleteCacheByPrefix("nfbl");
+                _memCache.DeleteCacheByPrefix("nlh");
+                _memCache.DeleteCacheByPrefix("nlhf");
+                _memCache.DeleteCacheByPrefix("ntl");
+                _memCache.DeleteCacheByPrefix("nal");
             }
 
             _logger.LogInformation($"DeleteCachePreload Finished: {JsonSerializer.Serialize(request)}");

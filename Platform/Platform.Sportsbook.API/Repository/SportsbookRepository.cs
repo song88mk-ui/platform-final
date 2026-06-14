@@ -12520,24 +12520,60 @@ namespace Platform.Sportsbook.API.Repository
             GetMarketTemplatePlayerProps();
         }
 
-        private void UpdateMarketTemplateGroup(SportMarketTemplateGroup marketTemplateGroups, int fixtureStatusId, List<MarketDTO> finalMarkets)
+        private void UpdateMarketTemplateGroup(
+            SportMarketTemplateGroup marketTemplateGroups,
+            int fixtureStatusId,
+            List<MarketDTO> finalMarkets)
         {
-            if (fixtureStatusId == (int)FixtureStatus.Prematch
-                && marketTemplateGroups.Prematch.Count == 1
-                && marketTemplateGroups.Prematch.FirstOrDefault().MarketTemplateGroupName.ToLower() == _ALLMARKETS.ToLower()
-                && !marketTemplateGroups.Prematch.FirstOrDefault().MarketTemplateIds.Any())
+            if (fixtureStatusId == (int)FixtureStatus.Prematch)
             {
-                marketTemplateGroups.Prematch.FirstOrDefault().MarketTemplateIds.AddRange(finalMarkets.Select(s => s.MarketTemplateId).Distinct().ToList());
+                var allMarkets = marketTemplateGroups.Prematch
+                    .FirstOrDefault(x => x.MarketTemplateGroupName.Equals(
+                        _ALLMARKETS,
+                        StringComparison.OrdinalIgnoreCase));
+
+                if (allMarkets != null)
+                {
+                    if (!allMarkets.MarketTemplateIds.Any())
+                    {
+                        allMarkets.MarketTemplateIds.AddRange(
+                            finalMarkets
+                                .Select(x => x.MarketTemplateId)
+                                .Distinct()
+                                .ToList());
+                    }
+
+                    // Ensure All Markets is first
+                    marketTemplateGroups.Prematch.Remove(allMarkets);
+                    marketTemplateGroups.Prematch.Insert(0, allMarkets);
+                }
             }
 
-            if (fixtureStatusId == (int)FixtureStatus.Live
-                && marketTemplateGroups.Live.Count == 1
-                && marketTemplateGroups.Live.FirstOrDefault().MarketTemplateGroupName.ToLower() == _ALLMARKETS.ToLower()
-                && !marketTemplateGroups.Live.FirstOrDefault().MarketTemplateIds.Any())
+            if (fixtureStatusId == (int)FixtureStatus.Live)
             {
-                marketTemplateGroups.Live.FirstOrDefault().MarketTemplateIds.AddRange(finalMarkets.Select(s => s.MarketTemplateId).Distinct().ToList());
+                var allMarkets = marketTemplateGroups.Live
+                    .FirstOrDefault(x => x.MarketTemplateGroupName.Equals(
+                        _ALLMARKETS,
+                        StringComparison.OrdinalIgnoreCase));
+
+                if (allMarkets != null)
+                {
+                    if (!allMarkets.MarketTemplateIds.Any())
+                    {
+                        allMarkets.MarketTemplateIds.AddRange(
+                            finalMarkets
+                                .Select(x => x.MarketTemplateId)
+                                .Distinct()
+                                .ToList());
+                    }
+
+                    // Ensure All Markets is first
+                    marketTemplateGroups.Live.Remove(allMarkets);
+                    marketTemplateGroups.Live.Insert(0, allMarkets);
+                }
             }
         }
+
         private string GetTranslation(
             Dictionary<string, string> translations,
             object id,

@@ -10157,12 +10157,13 @@ namespace Platform.Sportsbook.API.Repository
                     _sportsbookContext.Database.ExecuteSqlRaw("InserOrUpdateClientMarketTemplateGroup2 {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}",
                         request.ClientId.ToString(), sportId, marketTemplateGroup.FixtureStatusId, 0, marketTemplateGroup.Name, marketTemplateGroup.SortOrder, 1, marketTemplateGroup.MarketTemplateIds);
 
-                    await DeleteCachePreload(new CachePreloadRequestDTO
-                    {
-                        CacheType = CacheType.MarketSortOrder
-                    });
                 }
             }
+
+            await DeleteCachePreload(new CachePreloadRequestDTO
+            {
+                CacheType = CacheType.MarketSortOrder
+            });
 
             return new BaseResponseDTO<ClientPostMarketTemplateGroupResponseDTO>
             {

@@ -133,7 +133,7 @@ namespace Platform.CacheSync.Service.Repository
                     var result = await _sportsbookRepository.DeleteCachePreload(request, url);
 
                     Console.WriteLine(
-                        $"Purged {url} -> {(int)result.StatusCode} {result.Message}");
+                        $"Purged {url} -> {request.CacheType.ToString()} - {(int)result.StatusCode} {result.Message}");
 
                     if (result.StatusCode != StatusCode.Success)
                     {

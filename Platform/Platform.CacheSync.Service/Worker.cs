@@ -4,10 +4,12 @@ using Platform.Shared.MessageModels;
 using Platform.Shared.Utility;
 using RabbitMQ.Client.Events;
 using System;
+using System.Security.Policy;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using static App.Metrics.Health.HealthCheck;
 
 namespace Platform.CacheSync.Service
 {
@@ -46,9 +48,11 @@ namespace Platform.CacheSync.Service
         {
             var payload = Encoding.UTF8.GetString(e.Body);
             var messageType = e.BasicProperties.Type;
-
             try
             {
+                Console.WriteLine(
+                    $"CacheSync Start {DateTime.UtcNow} {messageType} -> {payload}");
+
                 switch (messageType)
                 {
                     case "OnMarketSortOrderChange":

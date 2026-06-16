@@ -154,6 +154,7 @@ namespace Platform.CacheSync.Service.Repository
         private async Task<bool> DeleteCachePreload_BettingApi(CachePreloadRequestDTO request)
         {
             var hostName = _configuration.GetSection("API:PlatformBettingAPI:Host").Get<string>();
+            var port = _configuration.GetSection("API:PlatformSportsbookAPI:Port").Get<string>();
             var publishMessage = true;
 
             var addresses = await Dns.GetHostAddressesAsync(hostName);
@@ -162,12 +163,12 @@ namespace Platform.CacheSync.Service.Repository
             {
                 try
                 {
-                    var url = $"http://{address}:8080";
+                    var url = $"http://{address}:{port}";
 
                     var result = await _sportsbookRepository.DeleteCachePreload(request, url);
 
                     Console.WriteLine(
-                        $"Purged {address}: {(int)result.StatusCode} {result.Message}");
+                        $"Purged {url} -> {request.CacheType.ToString()} - {(int)result.StatusCode} {result.Message}");
 
                     if (result.StatusCode != StatusCode.Success)
                     {
@@ -190,6 +191,7 @@ namespace Platform.CacheSync.Service.Repository
         private async Task<bool> DeleteCachePreload_PlatformApi(CachePreloadRequestDTO request)
         {
             var hostName = _configuration.GetSection("API:PlatformAPI:Host").Get<string>();
+            var port = _configuration.GetSection("API:PlatformSportsbookAPI:Port").Get<string>();
             var publishMessage = true;
 
             var header = new Dictionary<string, string>();
@@ -201,12 +203,12 @@ namespace Platform.CacheSync.Service.Repository
             {
                 try
                 {
-                    var url = $"http://{address}:8080";
+                    var url = $"http://{address}:{port}";
 
                     var result = await _sportsbookRepository.DeleteCachePreload(request, url, header);
 
                     Console.WriteLine(
-                        $"Purged {address}: {(int)result.StatusCode} {result.Message}");
+                        $"Purged {url} -> {request.CacheType.ToString()} - {(int)result.StatusCode} {result.Message}");
 
                     if (result.StatusCode != StatusCode.Success)
                     {

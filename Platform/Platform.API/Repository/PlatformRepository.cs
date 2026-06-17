@@ -3002,6 +3002,13 @@ namespace Platform.API.Repository
         {
             var client = _platformContext.Client.FirstOrDefault(c => c.ClientIdRef == clientRefId);
 
+            if (client == null)
+                return new BaseResponseDTO<BackofficeSportsResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"Client {clientRefId} not found"
+                };
+
             var sportsbookRequest = new BackofficeSportsRequestDTO()
             {
                 ClientId = client.ClientId,
@@ -3015,6 +3022,13 @@ namespace Platform.API.Repository
         public async Task<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>> PostClientTopFixtures(ClientTopFixtureRequest request)
         {
             var client = _platformContext.Client.FirstOrDefault(c => c.ClientIdRef == request.ClientId);
+
+            if (client == null)
+                return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"Client {request.ClientId} not found"
+                };
 
             var sportsbookRequest = new PostClientTopFixtureRequestDTO()
             {

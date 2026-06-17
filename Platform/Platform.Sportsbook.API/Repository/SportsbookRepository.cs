@@ -8813,6 +8813,8 @@ namespace Platform.Sportsbook.API.Repository
 
         public async Task<BaseResponseDTO<BackofficeSportsResponseDTO>> GetSportstreeDetails(BackofficeSportsRequestDTO request)
         {
+            try
+            {
             var maintenance = GetMaintenance();
 
             if (maintenance.isMa)
@@ -8824,7 +8826,8 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => (c.FiStId == (int)FixtureStatus.Prematch || c.FiStId == (int)FixtureStatus.Live) && !c.SpId.IsVirtualSportId());
+            var virtualSportIds = IntExtensions.GetVirtualSportIds();
+            var fixtureFilter = Builders<Fixture>.Filter.Where(c => (c.FiStId == (int)FixtureStatus.Prematch || c.FiStId == (int)FixtureStatus.Live || c.FiStId == (int)FixtureStatus.Suspended) && !virtualSportIds.Contains(c.SpId));
             var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
             if (IsOEEnable(request.ClientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode)).ToList();
@@ -8922,6 +8925,16 @@ namespace Platform.Sportsbook.API.Repository
                     Sports = final
                 }
             };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[GetSportstreeDetails] Exception: {Message}", ex.Message);
+                return new BaseResponseDTO<BackofficeSportsResponseDTO>
+                {
+                    StatusCode = StatusCode.Error,
+                    Message = $"GetSportstreeDetails failed: {ex.GetType().Name} — {ex.Message}"
+                };
+            }
         }
 
         public async Task<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>> PostClientTopFixtures(PostClientTopFixtureRequestDTO request)

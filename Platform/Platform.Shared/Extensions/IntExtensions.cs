@@ -4,12 +4,14 @@ namespace Platform.Shared.Extensions
 {
     public static class IntExtensions
     {
+        public static List<int> GetVirtualSportIds()
+        {
+            return new List<int>(); //todo: append virtual sports here
+        }
+
         public static bool IsVirtualSportId(this int sportId)
         {
-            var listOfVirtualSports = new List<int>();
-            //todo: append virtual sports here
-
-            return listOfVirtualSports.Contains(sportId);
+            return GetVirtualSportIds().Contains(sportId);
         }
 
         public static bool IsESports(this int sportId)

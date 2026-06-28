@@ -39,6 +39,7 @@ namespace Platform.Sportsbook.API.Repository
         private readonly SportsbookContext _sportsbookContext;
         private readonly TranslationContext _translationContext;
         private readonly IConfiguration _configuration;
+        private readonly bool _useTranslationContentKey;
         private readonly ILogger<SportsbookRepository> _logger;
         private readonly ActivitySource _activitySource;
 
@@ -81,6 +82,7 @@ namespace Platform.Sportsbook.API.Repository
             Instrumentation instrumentation)
         {
             _configuration = configuration;
+            _useTranslationContentKey = _configuration.GetValue<bool>("Custom:Translation:UseContentKey", false);
             _sportsbookContext = sportsbookContext;
             _translationContext = translationContext;
             _httpClient = httpClient;
@@ -12564,6 +12566,25 @@ namespace Platform.Sportsbook.API.Repository
             List<SelectionFilter> selections,
             LanguageCode languageCode)
         {
+            if (_useTranslationContentKey)
+            {
+                var map = new Dictionary<string, string>();
+
+                foreach (var market in markets)
+                {
+                    AddContentKey(map, market.Id, "MaId", market.MaNa);
+                }
+
+                foreach (var selection in selections)
+                {
+                    AddContentKey(map, selection.Id, "SeId", selection.SeNa);
+                }
+
+                return _translationRepository.GetTranslationsByContentAsync(
+                    map,
+                    languageCode.ToString()).GetAwaiter().GetResult();
+            }
+
             var stringIds = new HashSet<string>();
 
             foreach (var market in markets)
@@ -12586,6 +12607,25 @@ namespace Platform.Sportsbook.API.Repository
             List<SelectionFilter> selections,
             LanguageCode languageCode)
         {
+            if (_useTranslationContentKey)
+            {
+                var map = new Dictionary<string, string>();
+
+                foreach (var market in markets)
+                {
+                    AddContentKey(map, market.Id, "MaId", market.MaNa);
+                }
+
+                foreach (var selection in selections)
+                {
+                    AddContentKey(map, selection.Id, "SeId", selection.SeNa);
+                }
+
+                return _translationRepository.GetTranslationsByContentAsync(
+                    map,
+                    languageCode.ToString()).GetAwaiter().GetResult();
+            }
+
             var stringIds = new HashSet<string>();
 
             foreach (var market in markets)
@@ -12608,6 +12648,25 @@ namespace Platform.Sportsbook.API.Repository
             List<Selection> selections,
             LanguageCode languageCode)
         {
+            if (_useTranslationContentKey)
+            {
+                var map = new Dictionary<string, string>();
+
+                foreach (var market in markets)
+                {
+                    AddContentKey(map, market.Id, "MaId", market.MaNa);
+                }
+
+                foreach (var selection in selections)
+                {
+                    AddContentKey(map, selection.Id, "SeId", selection.SeNa);
+                }
+
+                return _translationRepository.GetTranslationsByContentAsync(
+                    map,
+                    languageCode.ToString()).GetAwaiter().GetResult();
+            }
+
             var stringIds = new HashSet<string>();
 
             foreach (var market in markets)
@@ -12753,6 +12812,16 @@ namespace Platform.Sportsbook.API.Repository
         }
 
         private void AddTranslationKey(HashSet<string> stringIds, object? id, string prefix) { if (id == null || string.IsNullOrWhiteSpace(id.ToString())) { return; } var key = $"{prefix}:{id}"; stringIds.Add(key); }
+
+        // Content-keyed variant: maps the entity key ("MaId:123") to its source text so the
+        // translation can be matched by SOURCE_HASH. Skips entries with no id or no source text.
+        private void AddContentKey(Dictionary<string, string> map, object? id, string prefix, string sourceText)
+        {
+            if (id == null || string.IsNullOrWhiteSpace(id.ToString()) || string.IsNullOrWhiteSpace(sourceText))
+                return;
+
+            map[$"{prefix}:{id}"] = sourceText;
+        }
     }
 
     public static class CurrentPeriodHelper

@@ -103,6 +103,83 @@ namespace Platform.Sportsbook.API.Repository
             return result;
         }
 
+        // Content-keyed lookup (proposal: docs/proposals/TranslationContentKeying.md).
+        // Input maps each entity key ("MaId:123") -> its source text ("Money Line").
+        // Translations are matched by SOURCE_HASH (= hash of the source text), so identical
+        // texts share one translation. Result stays keyed by the original entity key, so
+        // callers (GetTranslation) are unchanged.
+        public async Task<Dictionary<string, string>> GetTranslationsByContentAsync(
+            Dictionary<string, string> keyToSourceText,
+            string languageCode)
+        {
+            var result = new Dictionary<string, string>();
+
+            if (keyToSourceText == null || keyToSourceText.Count == 0)
+                return result;
+
+            // entity key -> hash of its source text
+            var keyToHash = new Dictionary<string, string>();
+            foreach (var kvp in keyToSourceText)
+            {
+                if (string.IsNullOrWhiteSpace(kvp.Value))
+                    continue;
+
+                keyToHash[kvp.Key] = TranslationHashing.SourceHash(kvp.Value);
+            }
+
+            if (keyToHash.Count == 0)
+                return result;
+
+            // hash -> target text (cache first, keyed by hash so identical texts share an entry)
+            var hashToTarget = new Dictionary<string, string>();
+            var missingHashes = new HashSet<string>();
+
+            foreach (var hash in keyToHash.Values.Distinct())
+            {
+                var cacheKey = $"{CACHE_PREFIX}h:{languageCode}:{hash}";
+                var cacheValue = _memCache.GetCache<string>(cacheKey);
+
+                if (!string.IsNullOrWhiteSpace(cacheValue))
+                    hashToTarget[hash] = cacheValue;
+                else
+                    missingHashes.Add(hash);
+            }
+
+            if (missingHashes.Count > 0)
+            {
+                var missingList = missingHashes.ToList();
+
+                var data = await _context.SportsbookDynamic
+                    .AsNoTracking()
+                    .Where(x =>
+                        missingList.Contains(x.SourceHash)
+                        && x.TargetLanguageId == languageCode
+                        && x.Processed
+                        && !string.IsNullOrEmpty(x.TargetText))
+                    .Select(x => new { x.SourceHash, x.TargetText, x.GlossaryVersion })
+                    .ToListAsync();
+
+                // Several rows can share a hash (pre-dedup, or multiple glossary versions);
+                // take the highest glossary version.
+                foreach (var grp in data.GroupBy(x => x.SourceHash))
+                {
+                    var chosen = grp.OrderByDescending(x => x.GlossaryVersion).First().TargetText;
+                    hashToTarget[grp.Key] = chosen;
+
+                    var cacheKey = $"{CACHE_PREFIX}h:{languageCode}:{grp.Key}";
+                    _memCache.AddOrUpdateCache(cacheKey, chosen, DateTimeOffset.UtcNow.AddHours(6));
+                }
+            }
+
+            foreach (var kvp in keyToHash)
+            {
+                if (hashToTarget.TryGetValue(kvp.Value, out var target) && !string.IsNullOrEmpty(target))
+                    result[kvp.Key] = target;
+            }
+
+            return result;
+        }
+
         public void InvalidateTranslationsCache(
             List<string> stringIds,
             string languageCode,

@@ -10,6 +10,10 @@ namespace Platform.Sportsbook.API.Repository
             List<string> stringIds,
             string languageCode);
 
+        Task<Dictionary<string, string>> GetTranslationsByContentAsync(
+            Dictionary<string, string> keyToSourceText,
+            string languageCode);
+
         void InvalidateTranslationsCache(
             List<string> stringIds,
             string languageCode,

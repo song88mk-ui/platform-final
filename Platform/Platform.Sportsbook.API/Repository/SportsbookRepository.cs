@@ -5233,7 +5233,9 @@ namespace Platform.Sportsbook.API.Repository
                 }
                 else
                 {
-                    var leagueNameTranslation = league.LeNaTr.FirstOrDefault(c => c.LaCo == request.LanguageCode.ToString())?.LeNa.ToLower();
+                    // Use the localized league name when present; fall back to the base (EN) name
+                    // so leagues matched by the base-name fallback in the filter are still categorized.
+                    var leagueNameTranslation = (league.LeNaTr.FirstOrDefault(c => c.LaCo == request.LanguageCode.ToString())?.LeNa ?? league.LeNa)?.ToLower();
 
                     if (leagueNameTranslation != null)
                     {
@@ -5352,7 +5354,20 @@ namespace Platform.Sportsbook.API.Repository
                 }
                 else
                 {
-                    if (fixture.FiNaTr.Where(c => c.LaCo == request.LanguageCode.ToString())?.Select(s => s.FiNa).FirstOrDefault()?.Split(" vs. ").First().ToLower().StartsWith(request.SearchText.ToLower()) ?? false || fixture.FiNa.Split(" vs. ").First().ToLower().StartsWith(request.SearchText.ToLower()))
+                    // Use the localized fixture name when present; fall back to the base (EN) name.
+                    var localizedName = fixture.FiNaTr.FirstOrDefault(c => c.LaCo == request.LanguageCode.ToString())?.FiNa ?? fixture.FiNa;
+                    var fixtureName = localizedName.ToLower();
+                    var searchText = request.SearchText.ToLower();
+
+                    // Fixture names are "Home vs. Away". EN uses " vs. " but localized names may omit the
+                    // surrounding spaces (e.g. "保加利亚vs.乌克兰"), so split on the bare "vs." and trim.
+                    var participants = fixtureName.Split(new[] { "vs." }, StringSplitOptions.None)
+                                                  .Select(p => p.Trim())
+                                                  .ToList();
+                    var home = participants.FirstOrDefault() ?? string.Empty;
+                    var away = participants.Count > 1 ? participants.Last() : string.Empty;
+
+                    if (home.StartsWith(searchText) || away.StartsWith(searchText))
                     {
                         fixtureListStartsWith.Add(new SearchResponse
                         {
@@ -5368,7 +5383,7 @@ namespace Platform.Sportsbook.API.Repository
                     }
                     else
                     {
-                        if (fixture.FiNaTr.Where(c => c.LaCo == request.LanguageCode.ToString())?.Select(s => s.FiNa).FirstOrDefault()?.Split(" vs. ").First().ToLower().Contains(request.SearchText.ToLower()) ?? false)
+                        if (fixtureName.Contains(searchText))
                         {
                             fixtureListNotStartsWith.Add(new SearchResponse
                             {

@@ -5137,29 +5137,18 @@ namespace Platform.Sportsbook.API.Repository
             }
             else
             {
-                if (request.SportGroupId != 0)
-                {
-                    leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.LeNaTr.Any(s => s.LeNa.ToLower().Contains(request.SearchText.ToLower())) && sportsId.Contains(c.SpId));
-                    fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.FiNaTr.Any(s => s.FiNa.ToLower().Contains(request.SearchText.ToLower())) && sportsId.Contains(c.SpId));
-                }
-                else
-                {
-
-                    fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match &&
-                    (c.FiNaTr.Any(s => s.LaCo == request.LanguageCode.ToString() && s.FiNa.ToLower().Contains(request.SearchText.ToLower())) ||
-                    (!c.FiNaTr.Any(s => s.LaCo == request.LanguageCode.ToString()) && c.FiNa.ToLower().Contains(request.SearchText.ToLower()))));
-
-                    leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match &&
-                    (c.LeNaTr.Any(s => s.LaCo == request.LanguageCode.ToString() && s.LeNa.ToLower().Contains(request.SearchText.ToLower())) ||
-                    (!c.LeNaTr.Any(s => s.LaCo == request.LanguageCode.ToString()) && c.LeNa.ToLower().Contains(request.SearchText.ToLower()))
-                    ));
-
-                    //leagueFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.LeNaTr.Any(s => s.LeNa.ToLower().Contains(request.SearchText.ToLower())));
-                    //fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && c.FiNaTr.Any(s => s.FiNa.ToLower().Contains(request.SearchText.ToLower())));
-                }
+                // Localized (non-EN) search. The Mongo base names (LeNa/FiNa) are English only and the
+                // embedded *Tr translation arrays are deprecated/unpopulated, so localized names live in
+                // the SQL translation store (SportsbookDynamic, loaded via LoadTranslations) and cannot be
+                // matched inside the Mongo query. So load the active match fixtures once as a shared
+                // candidate set and filter them in-memory: the categorization loops below apply
+                // MatchLeague to the league results and MatchFixture to the fixture results.
+                leagueFilter = request.SportGroupId != 0
+                    ? Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match && sportsId.Contains(c.SpId))
+                    : Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId == (int)FixtureType.Match);
 
                 leagues = fixtureCollection.Find(leagueFilter).ToListAsync();
-                fixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
+                fixtures = leagues;
             }
 
             await Task.WhenAll(leagues, fixtures);
@@ -5233,79 +5222,40 @@ namespace Platform.Sportsbook.API.Repository
                 }
                 else
                 {
-                    // Use the localized league name when present; fall back to the base (EN) name
-                    // so leagues matched by the base-name fallback in the filter are still categorized.
-                    var leagueNameTranslation = (league.LeNaTr.FirstOrDefault(c => c.LaCo == request.LanguageCode.ToString())?.LeNa ?? league.LeNa)?.ToLower();
+                    // Localized league name from the SQL translation store (falls back to the base EN
+                    // name when no translation exists). This is the same source used for display, so
+                    // search matches exactly what the user sees. Matching rules live in
+                    // LocalizedSearchMatcher (unit tested in Platform.Shared.Test).
+                    var leagueName = GetTranslation(translations, league.LeId, "LeId", league.LeNa);
+                    var leagueMatch = LocalizedSearchMatcher.MatchLeague(leagueName, request.SearchText);
 
-                    if (leagueNameTranslation != null)
+                    if (leagueMatch == SearchMatchKind.StartsWith)
                     {
-                        if (leagueNameTranslation.StartsWith(request.SearchText.ToLower()))
+                        leagueListStartsWith.Add(new SearchResponse
                         {
-                            leagueListStartsWith.Add(new SearchResponse
-                            {
-                                SportId = league.SpId,
-                                SportName = GetTranslation(translations, league.SpId, "SpId", league.SpNa),
-                                SegmentId = league.SegId,
-                                SegmentName = GetTranslation(translations, league.SegId, "SegId", league.SegNa),
-                                LeagueId = league.LeId,
-                                LeagueName = GetTranslation(translations, league.LeId, "LeId", league.LeNa),
-                                FixtureId = string.Empty,
-                                FixtureName = string.Empty
-                            });
-                        }
-                        else
+                            SportId = league.SpId,
+                            SportName = GetTranslation(translations, league.SpId, "SpId", league.SpNa),
+                            SegmentId = league.SegId,
+                            SegmentName = GetTranslation(translations, league.SegId, "SegId", league.SegNa),
+                            LeagueId = league.LeId,
+                            LeagueName = GetTranslation(translations, league.LeId, "LeId", league.LeNa),
+                            FixtureId = string.Empty,
+                            FixtureName = string.Empty
+                        });
+                    }
+                    else if (leagueMatch == SearchMatchKind.Contains)
+                    {
+                        leagueListNotStartsWith.Add(new SearchResponse
                         {
-                            if (leagueNameTranslation.Contains(request.SearchText.ToLower()))
-                            {
-                                leagueListNotStartsWith.Add(new SearchResponse
-                                {
-                                    SportId = league.SpId,
-                                    SportName = GetTranslation(translations, league.SpId, "SpId", league.SpNa),
-                                    SegmentId = league.SegId,
-                                    SegmentName = GetTranslation(translations, league.SegId, "SegId", league.SegNa),
-                                    LeagueId = league.LeId,
-                                    LeagueName = GetTranslation(translations, league.LeId, "LeId", league.LeNa),
-                                    FixtureId = string.Empty,
-                                    FixtureName = string.Empty
-                                });
-                            }
-                        }
-
-                        #region Old Code
-
-                        //if (league.LeNaTr.Where(c => c.LaCo == request.LanguageCode.ToString()).Select(s => s.LeNa).FirstOrDefault().ToLower().StartsWith(request.SearchText.ToLower()))
-                        //{
-                        //    leagueListStartsWith.Add(new SearchResponse
-                        //    {
-                        //        SportId = league.SpId,
-                        //        SportName = GetTranslation(translations, league.SpId, "SpId", league.SpNa),
-                        //        SegmentId = league.SegId,
-                        //        SegmentName = GetTranslation(translations, league.SegId, "SegId", league.SegNa),
-                        //        LeagueId = league.LeId,
-                        //        LeagueName = GetTranslation(translations, league.LeId, "LeId", league.LeNa),
-                        //        FixtureId = string.Empty,
-                        //        FixtureName = string.Empty
-                        //    });
-                        //}
-                        //else
-                        //{
-                        //    if (league.LeNaTr.Where(c => c.LaCo == request.LanguageCode.ToString()).Select(s => s.LeNa).FirstOrDefault().ToLower().Contains(request.SearchText.ToLower()))
-                        //    {
-                        //        leagueListNotStartsWith.Add(new SearchResponse
-                        //        {
-                        //            SportId = league.SpId,
-                        //            SportName = GetTranslation(translations, league.SpId, "SpId", league.SpNa),
-                        //            SegmentId = league.SegId,
-                        //            SegmentName = GetTranslation(translations, league.SegId, "SegId", league.SegNa),
-                        //            LeagueId = league.LeId,
-                        //            LeagueName = GetTranslation(translations, league.LeId, "LeId", league.LeNa),
-                        //            FixtureId = string.Empty,
-                        //            FixtureName = string.Empty
-                        //        });
-                        //    }
-                        //}
-
-                        #endregion
+                            SportId = league.SpId,
+                            SportName = GetTranslation(translations, league.SpId, "SpId", league.SpNa),
+                            SegmentId = league.SegId,
+                            SegmentName = GetTranslation(translations, league.SegId, "SegId", league.SegNa),
+                            LeagueId = league.LeId,
+                            LeagueName = GetTranslation(translations, league.LeId, "LeId", league.LeNa),
+                            FixtureId = string.Empty,
+                            FixtureName = string.Empty
+                        });
                     }
                 }
 
@@ -5354,20 +5304,13 @@ namespace Platform.Sportsbook.API.Repository
                 }
                 else
                 {
-                    // Use the localized fixture name when present; fall back to the base (EN) name.
-                    var localizedName = fixture.FiNaTr.FirstOrDefault(c => c.LaCo == request.LanguageCode.ToString())?.FiNa ?? fixture.FiNa;
-                    var fixtureName = localizedName.ToLower();
-                    var searchText = request.SearchText.ToLower();
+                    // Localized fixture name from the SQL translation store (falls back to the base EN
+                    // name). Same source used for display and GetHomeName/GetAwayName. Matching rules
+                    // (incl. the "Home vs. Away" split) live in LocalizedSearchMatcher (unit tested).
+                    var fixtureLocalizedName = GetTranslation(translations, fixture.Id, "FiId", fixture.FiNa) ?? fixture.FiNa;
+                    var fixtureMatch = LocalizedSearchMatcher.MatchFixture(fixtureLocalizedName, request.SearchText);
 
-                    // Fixture names are "Home vs. Away". EN uses " vs. " but localized names may omit the
-                    // surrounding spaces (e.g. "保加利亚vs.乌克兰"), so split on the bare "vs." and trim.
-                    var participants = fixtureName.Split(new[] { "vs." }, StringSplitOptions.None)
-                                                  .Select(p => p.Trim())
-                                                  .ToList();
-                    var home = participants.FirstOrDefault() ?? string.Empty;
-                    var away = participants.Count > 1 ? participants.Last() : string.Empty;
-
-                    if (home.StartsWith(searchText) || away.StartsWith(searchText))
+                    if (fixtureMatch == SearchMatchKind.StartsWith)
                     {
                         fixtureListStartsWith.Add(new SearchResponse
                         {
@@ -5381,22 +5324,19 @@ namespace Platform.Sportsbook.API.Repository
                             FixtureName = GetTranslation(translations, fixture.Id, "FiId", fixture.FiNa)
                         });
                     }
-                    else
+                    else if (fixtureMatch == SearchMatchKind.Contains)
                     {
-                        if (fixtureName.Contains(searchText))
+                        fixtureListNotStartsWith.Add(new SearchResponse
                         {
-                            fixtureListNotStartsWith.Add(new SearchResponse
-                            {
-                                SportId = fixture.SpId,
-                                SportName = GetTranslation(translations, fixture.SpId, "SpId", fixture.SpNa),
-                                SegmentId = fixture.SegId,
-                                SegmentName = GetTranslation(translations, fixture.SegId, "SegId", fixture.SegNa),
-                                LeagueId = fixture.LeId,
-                                LeagueName = GetTranslation(translations, fixture.LeId, "LeId", fixture.LeNa),
-                                FixtureId = fixture.FiId.ToString(),
-                                FixtureName = GetTranslation(translations, fixture.Id, "FiId", fixture.FiNa)
-                            });
-                        }
+                            SportId = fixture.SpId,
+                            SportName = GetTranslation(translations, fixture.SpId, "SpId", fixture.SpNa),
+                            SegmentId = fixture.SegId,
+                            SegmentName = GetTranslation(translations, fixture.SegId, "SegId", fixture.SegNa),
+                            LeagueId = fixture.LeId,
+                            LeagueName = GetTranslation(translations, fixture.LeId, "LeId", fixture.LeNa),
+                            FixtureId = fixture.FiId.ToString(),
+                            FixtureName = GetTranslation(translations, fixture.Id, "FiId", fixture.FiNa)
+                        });
                     }
                 }
 

@@ -107,7 +107,7 @@ namespace Platform.CacheSync.Service.Repository
                 for (int i = 0; i < 10; i++)
                 {
                     _messageBroker.Publish(
-                        true,
+                        new OnDeleteCacheMessage { CacheType = CacheType.DynamicTranslation, PurgeAll = true },
                         "OnDynamicTranslationChange",
                         $"r.oe.adapter.ondynamictranslationchange.{i:D2}",
                         Guid.NewGuid().ToString().ToUpper());

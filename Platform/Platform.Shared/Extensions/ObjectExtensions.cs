@@ -23,7 +23,7 @@ namespace Platform.Shared.Extensions
         public static string ToSignOG(this object model, string privateKey)
         {
             var dictionary = model.ToDictionary(false);
-            var list = dictionary.Where(c => c.Value != null && c.Key != "signature")
+            var list = dictionary.Where(c => c.Key != "signature")
                 .Select(s => $"{s.Key}={s.Value.ConvertObjectToString()}")
                 .ToList();
 
@@ -75,7 +75,7 @@ namespace Platform.Shared.Extensions
         public static string ToStringOG(this object model)
         {
             var dictionary = model.ToDictionary(false);
-            var list = dictionary.Where(c => c.Value != null && c.Key != "signature")
+            var list = dictionary.Where(c => c.Key != "signature")
                 .Select(s => $"{s.Key}={s.Value.ConvertObjectToString()}")
                 .ToList();
 

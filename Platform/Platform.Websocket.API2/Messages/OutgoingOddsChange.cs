@@ -18,10 +18,6 @@ namespace Platform.WebSocket.API2.Messages
         public OddsChangeFixture()
         {
             Ma = new List<OutgoingMarket>();
-            SpNaTr = new List<OutgoingSportTranslation>();
-            SegNaTr = new List<OutgoingSegmentTranslation>();
-            LeNaTr = new List<OutgoingLeagueTranslation>();
-            FiNaTr = new List<OutgoingFixtureTranslation>();
         }
         public int SpId { get; set; }
         public string SpNa { get; set; }
@@ -46,10 +42,6 @@ namespace Platform.WebSocket.API2.Messages
         public int SoOr { get; set; }
         public int MaCo { get; set; }
         public bool IsBeBu { get; set; }
-        public List<OutgoingSportTranslation> SpNaTr { get; set; }
-        public List<OutgoingSegmentTranslation> SegNaTr { get; set; }
-        public List<OutgoingLeagueTranslation> LeNaTr { get; set; }
-        public List<OutgoingFixtureTranslation> FiNaTr { get; set; }
         public List<OutgoingMarket> Ma { get; set; }
     }
     public class OutgoingMarket
@@ -57,7 +49,6 @@ namespace Platform.WebSocket.API2.Messages
         public OutgoingMarket()
         {
             Se = new List<OutgoingSelection>();
-            MaNaTr = new List<OutgoingMarketTranslation>();
         }
         public string MaTeId { get; set; }
         public string MaId { get; set; }
@@ -67,15 +58,10 @@ namespace Platform.WebSocket.API2.Messages
         public string MaNa { get; set; }
         public int SoOr { get; set; }
         public bool IsBeBu { get; set; }
-        public List<OutgoingMarketTranslation> MaNaTr { get; set; }
         public List<OutgoingSelection> Se { get; set; }
     }
     public class OutgoingSelection
     {
-        public OutgoingSelection()
-        {
-            SeNaTr = new List<OutgoingSelectionTranslation>();
-        }
         public string SeTeId { get; set; }
         public string SeId { get; set; }
         public string SeNa { get; set; }
@@ -85,7 +71,6 @@ namespace Platform.WebSocket.API2.Messages
         public string InOd { get; set; }
         public bool IsAc { get; set; }
         public int SoOr { get; set; }
-        public List<OutgoingSelectionTranslation> SeNaTr { get; set; }
     }
     public class OutgoingSportTranslation
     {

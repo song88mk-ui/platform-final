@@ -393,6 +393,7 @@ namespace Platform.API.Repository
                     MarketId = initialSelection.MarketId,
                     MarketName = initialSelection.MarketName,
                     Line = initialSelection.Line,
+                    IsHandicap = initialSelection.IsHandicap,
                     SelectionTemplateId = initialSelection.SelectionTemplateId,
                     SelectionId = initialSelection.SelectionId,
                     SelectionName = initialSelection.SelectionName,
@@ -781,10 +782,16 @@ namespace Platform.API.Repository
 
                         betFixtureTranslation.Selections.Add(new BetFixtureSelectionTranslationRequestDTO
                         {
+                            SportId = selection.SportId,
+                            SegmentId = selection.SegmentId,
+                            LeagueId = selection.LeagueId,
                             FixtureId = Convert.ToInt64(selection.FixtureId),
+                            MarketTemplateId = selection.MarketTemplateId,
                             MarketId = Convert.ToInt64(selection.MarketId),
+                            SelectionTemplateId = selection.SelectionTemplateId,
                             SelectionId = Convert.ToInt64(selection.SelectionId),
                             Line = selection.Line,
+                            IsHandicap = selection.IsHandicap,
                             SportName = selection.SportName,
                             SegmentName = selection.SegmentName,
                             LeagueName = selection.LeagueName,
@@ -3435,10 +3442,16 @@ namespace Platform.API.Repository
 
                         betFixtureTranslation.Selections.Add(new BetFixtureSelectionTranslationRequestDTO
                         {
+                            SportId = selection.SportId,
+                            SegmentId = selection.SegmentId,
+                            LeagueId = selection.LeagueId,
                             FixtureId = Convert.ToInt64(selection.FixtureId),
+                            MarketTemplateId = selection.MarketTemplateId,
                             MarketId = Convert.ToInt64(selection.MarketId),
+                            SelectionTemplateId = selection.SelectionTemplateId,
                             SelectionId = Convert.ToInt64(selection.SelectionId),
                             Line = selection.Line,
+                            IsHandicap = selection.IsHandicap,
                             SportName = selection.SportName,
                             SegmentName = selection.SegmentName,
                             LeagueName = selection.LeagueName,

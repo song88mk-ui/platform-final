@@ -18,6 +18,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public long MaId { get; set; }
         public string MaTeId { get; set; }
         public string SeTeId { get; set; }
+        public string SeTeNa { get; set; }
         public string SeNa { get; set; }
         public decimal Od { get; set; }
         public bool IsAc { get; set; }
@@ -58,6 +59,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public long FiId { get; set; }
         public long MaId { get; set; }
         public string SeTeId { get; set; }
+        public string SeTeNa { get; set; }
         public string SeNa { get; set; }
         public decimal Od { get; set; }
         public bool IsAc { get; set; }

@@ -18,6 +18,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public string MaTeId { get; set; }
         public string MaNa { get; set; }
         public string Li { get; set; }
+        public bool IsHa { get; set; }
         public int MaStId { get; set; }
         public string MaStNa { get; set; }
         public int MaSoOr { get; set; }
@@ -42,6 +43,7 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public string MaTeId { get; set; }
         public string MaNa { get; set; }
         public string Li { get; set; }
+        public bool IsHa { get; set; }
         public int MaStId { get; set; }
         public string MaStNa { get; set; }
         public int CaStId { get; set; }

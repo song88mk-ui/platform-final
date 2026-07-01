@@ -40,10 +40,16 @@ namespace Platform.Shared.Models
 
     public class BetFixtureSelectionTranslationRequestDTO
     {
+        public int SportId { get; set; }
+        public int SegmentId { get; set; }
+        public int LeagueId { get; set; }
         public long FixtureId { get; set; }
+        public string MarketTemplateId { get; set; }
         public long MarketId { get; set; }
+        public string SelectionTemplateId { get; set; }
         public long SelectionId { get; set; }
         public string Line { get; set; }
+        public bool IsHandicap { get; set; }
         public string SportName { get; set; }
         public string SegmentName { get; set; }
         public string LeagueName { get; set; }

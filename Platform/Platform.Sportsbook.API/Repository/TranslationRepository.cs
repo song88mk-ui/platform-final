@@ -183,6 +183,70 @@ namespace Platform.Sportsbook.API.Repository
             return result;
         }
 
+        // Resolves NON-English translations by looking up TranslationCache.STRING_ID (written by the
+        // external translation script) for the requested TARGET_LANGUAGE. Input maps a caller key (e.g.
+        // "MaId:123") -> the SportsbookGlossary-style STRING_ID for that entity ("MaTe:1234", "Te:789",
+        // ...); output maps the same key -> translated text. English is the base — no lookup; callers
+        // fall back to the stored name. Identical STRING_IDs dedupe naturally (shared cache entry).
+        // Cache namespace sb:translation:s:{lang}:{stringId}; InvalidateTranslationsCache(purgeAll)
+        // clears it.
+        public async Task<Dictionary<string, string>> GetTranslationCacheAsync(
+            Dictionary<string, string> keyToStringId,
+            string languageCode)
+        {
+            // English is the base language — no translation lookup; callers use the stored name.
+            if (keyToStringId == null || keyToStringId.Count == 0 ||
+                string.Equals(languageCode, ENGLISH_LANGUAGE, StringComparison.OrdinalIgnoreCase))
+                return new Dictionary<string, string>();
+
+            // STRING_ID -> target text (cache-first, keyed by STRING_ID so identical keys share one entry)
+            var stringIdToTarget = new Dictionary<string, string>();
+            var missingStringIds = new HashSet<string>();
+
+            foreach (var stringId in keyToStringId.Values.Distinct())
+            {
+                if (string.IsNullOrWhiteSpace(stringId))
+                    continue;
+
+                var cacheKey = $"{CACHE_PREFIX}s:{languageCode}:{stringId}";
+                var cacheValue = _memCache.GetCache<string>(cacheKey);
+
+                if (!string.IsNullOrWhiteSpace(cacheValue))
+                    stringIdToTarget[stringId] = cacheValue;
+                else
+                    missingStringIds.Add(stringId);
+            }
+
+            if (missingStringIds.Count > 0)
+            {
+                var missingList = missingStringIds.ToList();
+
+                var data = await _context.TranslationCache
+                    .AsNoTracking()
+                    .Where(c =>
+                        missingList.Contains(c.StringId)
+                        && c.TargetLanguage == languageCode
+                        && c.TargetText != null && c.TargetText != "")
+                    .Select(c => new { c.StringId, c.TargetText })
+                    .ToListAsync();
+
+                foreach (var item in data)
+                {
+                    stringIdToTarget[item.StringId] = item.TargetText;
+
+                    var cacheKey = $"{CACHE_PREFIX}s:{languageCode}:{item.StringId}";
+                    _memCache.AddOrUpdateCache(cacheKey, item.TargetText, DateTimeOffset.UtcNow.AddHours(6));
+                }
+            }
+
+            var result = new Dictionary<string, string>();
+            foreach (var kvp in keyToStringId)
+                if (stringIdToTarget.TryGetValue(kvp.Value, out var target) && !string.IsNullOrEmpty(target))
+                    result[kvp.Key] = target;
+
+            return result;
+        }
+
         public void InvalidateTranslationsCache(
             List<string> stringIds,
             string languageCode,

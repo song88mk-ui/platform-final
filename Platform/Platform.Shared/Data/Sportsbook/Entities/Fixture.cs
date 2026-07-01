@@ -47,8 +47,10 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public List<LeagueTranslationMDB> LeNaTr { get; set; }
         public List<FixtureTranslationMDB> FiNaTr { get; set; }
         public string HoId { get; set; }
+        public string HoNa { get; set; }
         public int HoBeId { get; set; }
         public string AwId { get; set; }
+        public string AwNa { get; set; }
         public int AwBeId { get; set; }
         public int LeBeId { get; set; }
         public List<PeriodScoreMDB> PeSc { get; set; }

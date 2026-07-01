@@ -103,18 +103,22 @@ namespace Platform.Sportsbook.API.Repository
             return result;
         }
 
-        // Content-keyed lookup (proposal: docs/proposals/TranslationContentKeying.md).
-        // Input maps each entity key ("MaId:123") -> its source text ("Money Line").
-        // Translations are matched by SOURCE_HASH (= hash of the source text), so identical
-        // texts share one translation. Result stays keyed by the original entity key, so
-        // callers (GetTranslation) are unchanged.
+        // Content-keyed lookup against TranslationCache (non-English translations, written by the
+        // external translation script). Input maps each entity key ("MaId:123") -> its source text
+        // ("Money Line"). Translations are matched by SOURCE_HASH (= hash of the source text), so
+        // identical texts share one translation. Result stays keyed by the original entity key, so
+        // callers (GetTranslation) are unchanged. English is the base language -- no lookup; callers
+        // fall back to the stored source name.
+        private const string ENGLISH_LANGUAGE = "EN";
+
         public async Task<Dictionary<string, string>> GetTranslationsByContentAsync(
             Dictionary<string, string> keyToSourceText,
             string languageCode)
         {
             var result = new Dictionary<string, string>();
 
-            if (keyToSourceText == null || keyToSourceText.Count == 0)
+            if (keyToSourceText == null || keyToSourceText.Count == 0 ||
+                string.Equals(languageCode, ENGLISH_LANGUAGE, StringComparison.OrdinalIgnoreCase))
                 return result;
 
             // entity key -> hash of its source text
@@ -149,25 +153,24 @@ namespace Platform.Sportsbook.API.Repository
             {
                 var missingList = missingHashes.ToList();
 
-                var data = await _context.SportsbookDynamic
+                // TranslationCache PK is (SOURCE_HASH, SOURCE_LANGUAGE, TARGET_LANGUAGE), so at most
+                // one row can match per hash -- no version tie-break needed.
+                var data = await _context.TranslationCache
                     .AsNoTracking()
                     .Where(x =>
                         missingList.Contains(x.SourceHash)
-                        && x.TargetLanguageId == languageCode
-                        && x.Processed
+                        && x.SourceLanguage == ENGLISH_LANGUAGE
+                        && x.TargetLanguage == languageCode
                         && !string.IsNullOrEmpty(x.TargetText))
-                    .Select(x => new { x.SourceHash, x.TargetText, x.GlossaryVersion })
+                    .Select(x => new { x.SourceHash, x.TargetText })
                     .ToListAsync();
 
-                // Several rows can share a hash (pre-dedup, or multiple glossary versions);
-                // take the highest glossary version.
-                foreach (var grp in data.GroupBy(x => x.SourceHash))
+                foreach (var item in data)
                 {
-                    var chosen = grp.OrderByDescending(x => x.GlossaryVersion).First().TargetText;
-                    hashToTarget[grp.Key] = chosen;
+                    hashToTarget[item.SourceHash] = item.TargetText;
 
-                    var cacheKey = $"{CACHE_PREFIX}h:{languageCode}:{grp.Key}";
-                    _memCache.AddOrUpdateCache(cacheKey, chosen, DateTimeOffset.UtcNow.AddHours(6));
+                    var cacheKey = $"{CACHE_PREFIX}h:{languageCode}:{item.SourceHash}";
+                    _memCache.AddOrUpdateCache(cacheKey, item.TargetText, DateTimeOffset.UtcNow.AddHours(6));
                 }
             }
 

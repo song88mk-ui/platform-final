@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Matches Platform.Sportsbook.API's TargetFramework/EF Core version. EF Core 5.x's query
+         compiler is incompatible with the net6.0+ System.Linq.Queryable surface (QueryableMethods
+         static-ctor breaks), so this can't run on the same net8.0 host as Platform.Shared.Test. -->
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="3.1.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Platform.Sportsbook.API\Platform.Sportsbook.API.csproj" />
+  </ItemGroup>
+
+</Project>

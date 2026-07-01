@@ -97,9 +97,28 @@ namespace Platform.Shared.Data.Sportsbook
             });
 
             modelBuilder.Entity<SportsbookStatic>().HasKey(k => new { k.LanguageCode, k.Name });
+
+            // Non-English translations written by the external translation script, keyed by SOURCE_HASH.
+            modelBuilder.Entity<TranslationCache>(entity =>
+            {
+                entity.ToTable("TranslationCache");
+
+                entity.HasKey(e => new { e.SourceHash, e.SourceLanguage, e.TargetLanguage })
+                    .HasName("PK_TranslationCache");
+
+                entity.Property(e => e.SourceHash).HasColumnName("SOURCE_HASH").HasMaxLength(64).IsRequired();
+                entity.Property(e => e.SourceLanguage).HasColumnName("SOURCE_LANGUAGE").HasMaxLength(10).IsRequired();
+                entity.Property(e => e.TargetLanguage).HasColumnName("TARGET_LANGUAGE").HasMaxLength(10).IsRequired();
+                entity.Property(e => e.SourceText).HasColumnName("SOURCE_TEXT");
+                entity.Property(e => e.TargetText).HasColumnName("TARGET_TEXT");
+                entity.Property(e => e.CreatedAt).HasColumnName("CREATED_AT");
+                entity.Property(e => e.GlossaryVersion).HasColumnName("GLOSSARY_VERSION");
+                entity.Property(e => e.UpdatedAt).HasColumnName("UPDATED_AT");
+            });
         }
         public DbSet<SportsbookDynamic> SportsbookDynamic { get; set; }
         public DbSet<SportsbookStatic> SportsbookStatic { get; set; }
+        public DbSet<TranslationCache> TranslationCache { get; set; }
 
     }
 }

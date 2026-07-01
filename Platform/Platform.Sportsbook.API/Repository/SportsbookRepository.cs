@@ -39,7 +39,6 @@ namespace Platform.Sportsbook.API.Repository
         private readonly SportsbookContext _sportsbookContext;
         private readonly TranslationContext _translationContext;
         private readonly IConfiguration _configuration;
-        private readonly bool _useTranslationContentKey;
         private readonly ILogger<SportsbookRepository> _logger;
         private readonly ActivitySource _activitySource;
 
@@ -82,7 +81,6 @@ namespace Platform.Sportsbook.API.Repository
             Instrumentation instrumentation)
         {
             _configuration = configuration;
-            _useTranslationContentKey = _configuration.GetValue<bool>("Custom:Translation:UseContentKey", false);
             _sportsbookContext = sportsbookContext;
             _translationContext = translationContext;
             _httpClient = httpClient;
@@ -12566,39 +12564,20 @@ namespace Platform.Sportsbook.API.Repository
             List<SelectionFilter> selections,
             LanguageCode languageCode)
         {
-            if (_useTranslationContentKey)
-            {
-                var map = new Dictionary<string, string>();
-
-                foreach (var market in markets)
-                {
-                    AddContentKey(map, market.Id, "MaId", market.MaNa);
-                }
-
-                foreach (var selection in selections)
-                {
-                    AddContentKey(map, selection.Id, "SeId", selection.SeNa);
-                }
-
-                return _translationRepository.GetTranslationsByContentAsync(
-                    map,
-                    languageCode.ToString()).GetAwaiter().GetResult();
-            }
-
-            var stringIds = new HashSet<string>();
+            var map = new Dictionary<string, string>();
 
             foreach (var market in markets)
             {
-                AddTranslationKey(stringIds, market.Id, "MaId");
+                AddContentKey(map, market.Id, "MaId", market.MaNa);
             }
 
             foreach (var selection in selections)
             {
-                AddTranslationKey(stringIds, selection.Id, "SeId");
+                AddContentKey(map, selection.Id, "SeId", selection.SeNa);
             }
 
-            return _translationRepository.GetTranslationsAsync(
-                stringIds.ToList(),
+            return _translationRepository.GetTranslationsByContentAsync(
+                map,
                 languageCode.ToString()).GetAwaiter().GetResult();
         }
 
@@ -12607,39 +12586,20 @@ namespace Platform.Sportsbook.API.Repository
             List<SelectionFilter> selections,
             LanguageCode languageCode)
         {
-            if (_useTranslationContentKey)
-            {
-                var map = new Dictionary<string, string>();
-
-                foreach (var market in markets)
-                {
-                    AddContentKey(map, market.Id, "MaId", market.MaNa);
-                }
-
-                foreach (var selection in selections)
-                {
-                    AddContentKey(map, selection.Id, "SeId", selection.SeNa);
-                }
-
-                return _translationRepository.GetTranslationsByContentAsync(
-                    map,
-                    languageCode.ToString()).GetAwaiter().GetResult();
-            }
-
-            var stringIds = new HashSet<string>();
+            var map = new Dictionary<string, string>();
 
             foreach (var market in markets)
             {
-                AddTranslationKey(stringIds, market.Id, "MaId");
+                AddContentKey(map, market.Id, "MaId", market.MaNa);
             }
 
             foreach (var selection in selections)
             {
-                AddTranslationKey(stringIds, selection.Id, "SeId");
+                AddContentKey(map, selection.Id, "SeId", selection.SeNa);
             }
 
-            return _translationRepository.GetTranslationsAsync(
-                stringIds.ToList(),
+            return _translationRepository.GetTranslationsByContentAsync(
+                map,
                 languageCode.ToString()).GetAwaiter().GetResult();
         }
 
@@ -12648,39 +12608,20 @@ namespace Platform.Sportsbook.API.Repository
             List<Selection> selections,
             LanguageCode languageCode)
         {
-            if (_useTranslationContentKey)
-            {
-                var map = new Dictionary<string, string>();
-
-                foreach (var market in markets)
-                {
-                    AddContentKey(map, market.Id, "MaId", market.MaNa);
-                }
-
-                foreach (var selection in selections)
-                {
-                    AddContentKey(map, selection.Id, "SeId", selection.SeNa);
-                }
-
-                return _translationRepository.GetTranslationsByContentAsync(
-                    map,
-                    languageCode.ToString()).GetAwaiter().GetResult();
-            }
-
-            var stringIds = new HashSet<string>();
+            var map = new Dictionary<string, string>();
 
             foreach (var market in markets)
             {
-                AddTranslationKey(stringIds, market.Id, "MaId");
+                AddContentKey(map, market.Id, "MaId", market.MaNa);
             }
 
             foreach (var selection in selections)
             {
-                AddTranslationKey(stringIds, selection.Id, "SeId");
+                AddContentKey(map, selection.Id, "SeId", selection.SeNa);
             }
 
-            return _translationRepository.GetTranslationsAsync(
-                stringIds.ToList(),
+            return _translationRepository.GetTranslationsByContentAsync(
+                map,
                 languageCode.ToString()).GetAwaiter().GetResult();
         }
 
@@ -12688,15 +12629,15 @@ namespace Platform.Sportsbook.API.Repository
             List<SportsLookupProjection> fixtures,
             LanguageCode languageCode)
         {
-            var stringIds = new HashSet<string>();
+            var map = new Dictionary<string, string>();
 
             foreach (var fixture in fixtures)
             {
-                AddTranslationKey(stringIds, fixture.SpId, "SpId");
+                AddContentKey(map, fixture.SpId, "SpId", fixture.SpNa);
             }
 
-            return await _translationRepository.GetTranslationsAsync(
-                stringIds.ToList(),
+            return await _translationRepository.GetTranslationsByContentAsync(
+                map,
                 languageCode.ToString());
         }
 
@@ -12704,18 +12645,18 @@ namespace Platform.Sportsbook.API.Repository
             List<Fixture> fixtures,
             LanguageCode languageCode)
         {
-            var stringIds = new HashSet<string>();
+            var map = new Dictionary<string, string>();
 
             foreach (var fixture in fixtures)
             {
-                AddTranslationKey(stringIds, fixture.SpId, "SpId");
-                AddTranslationKey(stringIds, fixture.SegId, "SegId");
-                AddTranslationKey(stringIds, fixture.LeId, "LeId");
-                AddTranslationKey(stringIds, fixture.Id, "FiId");
+                AddContentKey(map, fixture.SpId, "SpId", fixture.SpNa);
+                AddContentKey(map, fixture.SegId, "SegId", fixture.SegNa);
+                AddContentKey(map, fixture.LeId, "LeId", fixture.LeNa);
+                AddContentKey(map, fixture.Id, "FiId", fixture.FiNa);
             }
 
-            return await _translationRepository.GetTranslationsAsync(
-                stringIds.ToList(),
+            return await _translationRepository.GetTranslationsByContentAsync(
+                map,
                 languageCode.ToString());
         }
 
@@ -12723,18 +12664,18 @@ namespace Platform.Sportsbook.API.Repository
             List<ActiveFixtureProjection> fixtures,
             LanguageCode languageCode)
         {
-            var stringIds = new HashSet<string>();
+            var map = new Dictionary<string, string>();
 
             foreach (var fixture in fixtures)
             {
-                AddTranslationKey(stringIds, fixture.SpId, "SpId");
-                AddTranslationKey(stringIds, fixture.SegId, "SegId");
-                AddTranslationKey(stringIds, fixture.LeId, "LeId");
-                AddTranslationKey(stringIds, fixture.Id, "FiId");
+                AddContentKey(map, fixture.SpId, "SpId", fixture.SpNa);
+                AddContentKey(map, fixture.SegId, "SegId", fixture.SegNa);
+                AddContentKey(map, fixture.LeId, "LeId", fixture.LeNa);
+                AddContentKey(map, fixture.Id, "FiId", fixture.FiNa);
             }
 
-            return await _translationRepository.GetTranslationsAsync(
-                stringIds.ToList(),
+            return await _translationRepository.GetTranslationsByContentAsync(
+                map,
                 languageCode.ToString());
         }
 
@@ -12742,16 +12683,15 @@ namespace Platform.Sportsbook.API.Repository
             List<ActiveFixtureCountProjection> fixtures,
             LanguageCode languageCode)
         {
-            var stringIds = new HashSet<string>();
+            var map = new Dictionary<string, string>();
 
             foreach (var fixture in fixtures)
             {
-                AddTranslationKey(stringIds, fixture.SpId, "SpId");
-                AddTranslationKey(stringIds, fixture.Id, "FiId");
+                AddContentKey(map, fixture.SpId, "SpId", fixture.SpNa);
             }
 
-            return await _translationRepository.GetTranslationsAsync(
-                stringIds.ToList(),
+            return await _translationRepository.GetTranslationsByContentAsync(
+                map,
                 languageCode.ToString());
         }
 
@@ -12759,17 +12699,16 @@ namespace Platform.Sportsbook.API.Repository
             List<SegmentsLookupProjection> fixtures,
             LanguageCode languageCode)
         {
-            var stringIds = new HashSet<string>();
+            var map = new Dictionary<string, string>();
 
             foreach (var fixture in fixtures)
             {
-                AddTranslationKey(stringIds, fixture.SpId, "SpId");
-                AddTranslationKey(stringIds, fixture.SegId, "SegId");
-                AddTranslationKey(stringIds, fixture.Id, "FiId");
+                AddContentKey(map, fixture.SpId, "SpId", fixture.SpNa);
+                AddContentKey(map, fixture.SegId, "SegId", fixture.SegNa);
             }
 
-            return await _translationRepository.GetTranslationsAsync(
-                stringIds.ToList(),
+            return await _translationRepository.GetTranslationsByContentAsync(
+                map,
                 languageCode.ToString());
         }
 
@@ -12777,18 +12716,17 @@ namespace Platform.Sportsbook.API.Repository
             List<LeaguesLookupProjection> fixtures,
             LanguageCode languageCode)
         {
-            var stringIds = new HashSet<string>();
+            var map = new Dictionary<string, string>();
 
             foreach (var fixture in fixtures)
             {
-                AddTranslationKey(stringIds, fixture.SpId, "SpId");
-                AddTranslationKey(stringIds, fixture.SegId, "SegId");
-                AddTranslationKey(stringIds, fixture.LeId, "LeId");
-                AddTranslationKey(stringIds, fixture.Id, "FiId");
+                AddContentKey(map, fixture.SpId, "SpId", fixture.SpNa);
+                AddContentKey(map, fixture.SegId, "SegId", fixture.SegNa);
+                AddContentKey(map, fixture.LeId, "LeId", fixture.LeNa);
             }
 
-            return await _translationRepository.GetTranslationsAsync(
-                stringIds.ToList(),
+            return await _translationRepository.GetTranslationsByContentAsync(
+                map,
                 languageCode.ToString());
         }
 
@@ -12796,22 +12734,20 @@ namespace Platform.Sportsbook.API.Repository
             List<FixtureDetailsLimitedProjection> fixtures,
             LanguageCode languageCode)
         {
-            var stringIds = new HashSet<string>();
+            var map = new Dictionary<string, string>();
 
             foreach (var fixture in fixtures)
             {
-                AddTranslationKey(stringIds, fixture.SpId, "SpId");
-                AddTranslationKey(stringIds, fixture.SegId, "SegId");
-                AddTranslationKey(stringIds, fixture.LeId, "LeId");
-                AddTranslationKey(stringIds, fixture.Id, "FiId");
+                AddContentKey(map, fixture.SpId, "SpId", fixture.SpNa);
+                AddContentKey(map, fixture.SegId, "SegId", fixture.SegNa);
+                AddContentKey(map, fixture.LeId, "LeId", fixture.LeNa);
+                AddContentKey(map, fixture.Id, "FiId", fixture.FiNa);
             }
 
-            return await _translationRepository.GetTranslationsAsync(
-                stringIds.ToList(),
+            return await _translationRepository.GetTranslationsByContentAsync(
+                map,
                 languageCode.ToString());
         }
-
-        private void AddTranslationKey(HashSet<string> stringIds, object? id, string prefix) { if (id == null || string.IsNullOrWhiteSpace(id.ToString())) { return; } var key = $"{prefix}:{id}"; stringIds.Add(key); }
 
         // Content-keyed variant: maps the entity key ("MaId:123") to its source text so the
         // translation can be matched by SOURCE_HASH. Skips entries with no id or no source text.

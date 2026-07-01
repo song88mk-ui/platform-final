@@ -4597,6 +4597,39 @@ namespace Platform.API.Repository
             return await _sportsbookRepository.GetTranslationByLanguageCode(request);
         }
 
+        public async Task<BaseResponseDTO<Dictionary<string, string>>> GetTranslationsByContent(string apiKey, string clientId, string langCode, Dictionary<string, string> keyToSourceText)
+        {
+            var languageCode = (LanguageCode)Enum.Parse(typeof(LanguageCode), langCode);
+
+            if (!IsValidLanguageCode(languageCode))
+            {
+                return new BaseResponseDTO<Dictionary<string, string>>
+                {
+                    StatusCode = StatusCode.Unsupported_LanguageCode,
+                    Message = StatusCode.Unsupported_LanguageCode.ToString().Replace('_', ' ')
+                };
+            }
+
+            var clientResponse = await GetClient(clientId);
+
+            if (clientResponse.StatusCode != StatusCode.Success)
+            {
+                return new BaseResponseDTO<Dictionary<string, string>>
+                {
+                    StatusCode = clientResponse.StatusCode,
+                    Message = clientResponse.Message
+                };
+            }
+
+            var request = new TranslationByContentRequestDTO
+            {
+                LanguageCode = languageCode,
+                KeyToSourceText = keyToSourceText
+            };
+
+            return await _sportsbookRepository.GetTranslationsByContent(request);
+        }
+
         public async Task<BaseResponseDTO<BetStatus>> GetBetStatus(string clientId, BetStatusRequest request)
         {
             try

@@ -10419,6 +10419,22 @@ namespace Platform.Sportsbook.API.Repository
 
             return result;
         }
+
+        public async Task<BaseResponseDTO<Dictionary<string, string>>> GetTranslationsByContent(TranslationByContentRequestDTO request)
+        {
+            var languageCode = request.LanguageCode.ToString().ToUpper();
+
+            var result = await _translationRepository.GetTranslationsByContentAsync(
+                request.KeyToSourceText ?? new Dictionary<string, string>(),
+                languageCode);
+
+            return new BaseResponseDTO<Dictionary<string, string>>
+            {
+                StatusCode = StatusCode.Success,
+                Message = StatusCode.Success.ToString(),
+                Result = result
+            };
+        }
         private MarketDTO GetTopGameMarket(List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, Guid clientid, string clientCode, int sportId, int fixtureTypeId, int fixtureStatusId, List<ClientMarketTemplateGroup> clientMarketTemplateGroups, List<BetBuilderMarketTemplates> betBuilderMarketTemplates)
         {
             var translations = LoadTranslations(markets, selections, languageCode);

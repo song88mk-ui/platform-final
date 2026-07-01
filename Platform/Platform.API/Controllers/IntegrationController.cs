@@ -2522,6 +2522,41 @@ namespace Platform.API.Controllers
             }
         }
 
+        [HttpPost("v2/sportsbook/translations")]
+        public async Task<IActionResult> GetTranslationsByContent([FromBody] Dictionary<string, string> keyToSourceText)
+        {
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var apiKey = HttpContext.Request.Headers["x-api-key"].FirstOrDefault();
+            var xUserIP = HttpContext.Request.Headers["x-user-ip"].FirstOrDefault();
+            var clientId = HttpContext.Request.Headers["x-client-id"].FirstOrDefault();
+            var languageCode = string.IsNullOrEmpty(HttpContext.Request.Headers["x-language-code"].FirstOrDefault()) ? "EN" : HttpContext.Request.Headers["x-language-code"].FirstOrDefault().Trim().ToUpper();
+
+            var result = await _platformRepository.GetTranslationsByContent(apiKey, clientId, languageCode, keyToSourceText);
+
+            var properties = new Dictionary<string, object>
+            {
+                                { "x-client-id", clientId },
+                                { "x-user-ip", xUserIP },
+                                { "x-language-code", languageCode },
+                                { "referer", HttpContext.Request.Headers["X-Referer"].FirstOrDefault() ?? HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "none"},
+                                { "statusCode", result.StatusCode },
+                                { "message", result.Message }
+                            };
+
+            foreach(var prop in properties)
+                activity?.SetTag(prop.Key, prop.Value);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpGet("v1/sportsbook/highlights")]
         public async Task<IActionResult> GetLeagueHighlights()
         {

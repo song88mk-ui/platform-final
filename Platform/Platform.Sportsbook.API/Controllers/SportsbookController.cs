@@ -1344,6 +1344,23 @@ namespace Platform.Sportsbook.API.Controllers
             }
         }
 
+        [HttpPost("v2/sportsbook/translations")]
+        public async Task<IActionResult> GetTranslationsByContent([FromBody] TranslationByContentRequestDTO request)
+        {
+            using var activity = _activitySource.StartActivity(HttpContext.Request.Path);
+
+            var result = await _sportsbookRepository.GetTranslationsByContent(request);
+
+            switch (result.StatusCode)
+            {
+                case Shared.Enums.StatusCode.Success:
+                case Shared.Enums.StatusCode.Maintenance:
+                    return Ok(result);
+                default:
+                    return BadRequest(result);
+            }
+        }
+
         [HttpPost("v2/sportsbook/highlights")]
         public async Task<IActionResult> GetLeagueHighlights([FromBody] LeagueHighlightsRequestDTO request)
         {

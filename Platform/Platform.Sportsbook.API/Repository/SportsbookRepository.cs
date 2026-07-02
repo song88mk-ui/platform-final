@@ -16,6 +16,7 @@ using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using Platform.Sportsbook.API.Models;
 using Platform.Sportsbook.API.Telemetry;
+using Platform.Sportsbook.API.Utility;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -1547,7 +1548,7 @@ namespace Platform.Sportsbook.API.Repository
                         MarketId = s.MarketId,
                         MarketName = GetTranslation(stringIdTranslations, s.MarketId, "MaId", s.MarketName),
                         SelectionId = s.SelectionId,
-                        SelectionName = ComposeSelectionName(
+                        SelectionName = SelectionNameComposer.Compose(
                             s.Line,
                             GetTranslation(stringIdTranslations, s.SelectionId, "SeId", s.SelectionName),
                             s.SelectionTemplateId,
@@ -12638,48 +12639,9 @@ namespace Platform.Sportsbook.API.Repository
             // Selection names (translated template + recomposed line).
             foreach (var c in selectionContext)
                 if (resolved.TryGetValue(c.entityKey, out var template) && !string.IsNullOrEmpty(template))
-                    result[c.entityKey] = ComposeSelectionName(c.li, template, c.seTeId, c.isHa);
+                    result[c.entityKey] = SelectionNameComposer.Compose(c.li, template, c.seTeId, c.isHa);
 
             return result;
-        }
-
-        // Ports bet-genius OddsFeedRepository.GetSelectionName so the display name recomposed from the
-        // translated template + line matches the SeNa stored in SportsbookDynamic byte-for-byte.
-        // Over/Under templates (SeTeId 30/31) append " {line}"; other handicap markets append the
-        // signed line, with the sign flipped for templates 1/4. Non-handicap markets are unchanged.
-        private static string ComposeSelectionName(string line, string selectionName, string selectionTemplateId, bool isHandicap)
-        {
-            if (!isHandicap)
-                return selectionName;
-
-            var isOverUnder = selectionTemplateId == "30" || selectionTemplateId == "31";
-
-            if (isOverUnder)
-                return $"{selectionName} {line}";
-
-            decimal decLine;
-            try
-            {
-                decLine = Convert.ToDecimal(line);
-            }
-            catch
-            {
-                return selectionName; // malformed line — safest to leave the template name untouched
-            }
-
-            var absLine = Math.Abs(decLine);
-
-            if (decLine == 0m)
-                return $"{selectionName}(0)";
-
-            if (decLine < 0)
-                return (selectionTemplateId == "1" || selectionTemplateId == "4")
-                    ? $"{selectionName}(+{absLine})"
-                    : $"{selectionName}(-{absLine})";
-
-            return (selectionTemplateId == "1" || selectionTemplateId == "4")
-                ? $"{selectionName}(-{absLine})"
-                : $"{selectionName}(+{absLine})";
         }
 
         private Dictionary<string, string> LoadTranslations(

@@ -1486,24 +1486,6 @@ namespace Platform.Sportsbook.API.Repository
             };
         }
 
-        private async Task<Tuple<List<Fixture>, List<Market>, List<Selection>>> GetBetFixtureTranslations(BetFixtureTranslationRequestDTO request)
-        {
-            var fixtureIds = request.Selections.Select(s => s.FixtureId).ToList();
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => fixtureIds.Contains(c.FiId));
-            var fixtures = fixtureCollection.Find(fixtureFilter).ToListAsync();
-
-            var marketIds = request.Selections.Select(s => s.MarketId).ToList();
-            var marketFilter = Builders<Market>.Filter.Where(c => marketIds.Contains(c.MaId));
-            var markets = marketCollection.Find(marketFilter).ToListAsync();
-
-            var selectionIds = request.Selections.Select(s => s.SelectionId).ToList();
-            var selectionFilter = Builders<Selection>.Filter.Where(c => selectionIds.Contains(c.SeId));
-            var selections = selectionCollection.Find(selectionFilter).ToListAsync();
-
-            await Task.WhenAll(fixtures, markets, selections);
-
-            return new Tuple<List<Fixture>, List<Market>, List<Selection>>(fixtures.Result, markets.Result, selections.Result);
-        }
         public async Task<BaseResponseDTO<BetFixtureTranslationResponseDTO>> GetBetFixtureTranslation(BetFixtureTranslationRequestDTO request)
         {
             var maintenance = GetMaintenance();
@@ -1517,9 +1499,25 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var result = await GetBetFixtureTranslations(request);
-            var translations = await LoadTranslations(result.Item1, request.LanguageCode);
-            var marketTranslations = LoadTranslations(result.Item2, result.Item3, request.LanguageCode);
+            // Bet-history/manual-bet-details selections carry their own source text (captured at bet
+            // placement, permanent in SQL) and no longer resolve via the live Mongo catalogue -- a
+            // settled bet's fixture/market/selection can age out of Mongo (owned by odds-engine-2),
+            // which silently broke translation for older bets. Match by content hash instead, keyed
+            // off the caller-supplied source text, so translation no longer depends on the fixture
+            // still being live.
+            var contentMap = new Dictionary<string, string>();
+
+            foreach (var s in request.Selections)
+            {
+                AddContentKey(contentMap, s.FixtureId, "SpId", s.SportName);
+                AddContentKey(contentMap, s.FixtureId, "SegId", s.SegmentName);
+                AddContentKey(contentMap, s.FixtureId, "LeId", s.LeagueName);
+                AddContentKey(contentMap, s.FixtureId, "FiId", s.FixtureName);
+                AddContentKey(contentMap, s.MarketId, "MaId", s.MarketName);
+                AddContentKey(contentMap, s.SelectionId, "SeId", s.SelectionName);
+            }
+
+            var translations = await _translationRepository.GetTranslationsByContentAsync(contentMap, request.LanguageCode.ToString());
 
             return new BaseResponseDTO<BetFixtureTranslationResponseDTO>
             {
@@ -1529,20 +1527,15 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     Selections = request.Selections.Select(s => new BetFixtureSelectionTranslationResponseDTO
                     {
-                        SportId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SpId).FirstOrDefault(),
-                        SportName = GetTranslation(translations, result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SpId).FirstOrDefault(), "SpId", result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SpNa).FirstOrDefault()),
-                        SegmentId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SegId).FirstOrDefault(),
-                        SegmentName = GetTranslation(translations, result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SegId).FirstOrDefault(), "SegId", result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SegNa).FirstOrDefault()),
-                        LeagueId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.LeId).FirstOrDefault(),
-                        LeagueName = GetTranslation(translations, result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.LeId).FirstOrDefault(), "LeId", result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.LeNa).FirstOrDefault()),
-                        FixtureId = result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiId).FirstOrDefault(),
-                        FixtureName = GetTranslation(translations, result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.Id).FirstOrDefault(), "FiId", result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.FiNa).FirstOrDefault()),
-                        MarketId = result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.MaId).FirstOrDefault(),
-                        //MarketName = GetMarketName(result.Item2.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId).Select(ss => ss.MaNa).FirstOrDefault(), result.Item2.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId).Select(ss => ss.MaNaTr).FirstOrDefault(), request.LanguageCode),
-                        MarketName = GetTranslation(marketTranslations, result.Item2.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId).Select(ss => ss.Id).FirstOrDefault(), "MaId", result.Item2.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId).Select(ss => ss.MaNa).FirstOrDefault()),
-                        SelectionId = result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeId).FirstOrDefault(),
-                        //SelectionName = GetComputedSelectionName(result.Item3.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId && c.SeId == s.SelectionId).Select(ss => ss.SeNa).FirstOrDefault(), result.Item3.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId && c.SeId == s.SelectionId).Select(ss => ss.SeNaTr).FirstOrDefault(), request.LanguageCode, result.Item1.Where(c => c.FiId == s.FixtureId).Select(ss => ss.SpId).FirstOrDefault(), result.Item2.Where(c => c.MaId == s.MarketId).Select(ss => ss.MaTeId).FirstOrDefault(), result.Item3.Where(c => c.SeId == s.SelectionId).Select(ss => ss.SeTeId).FirstOrDefault(), s.Line)
-                        SelectionName = GetTranslation(marketTranslations, result.Item3.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId && c.SeId == s.SelectionId).Select(ss => ss.Id).FirstOrDefault(), "SeId", result.Item3.Where(c => c.FiId == s.FixtureId && c.MaId == s.MarketId && c.SeId == s.SelectionId).Select(ss => ss.SeNa).FirstOrDefault())
+                        SportName = GetTranslation(translations, s.FixtureId, "SpId", s.SportName),
+                        SegmentName = GetTranslation(translations, s.FixtureId, "SegId", s.SegmentName),
+                        LeagueName = GetTranslation(translations, s.FixtureId, "LeId", s.LeagueName),
+                        FixtureId = s.FixtureId,
+                        FixtureName = GetTranslation(translations, s.FixtureId, "FiId", s.FixtureName),
+                        MarketId = s.MarketId,
+                        MarketName = GetTranslation(translations, s.MarketId, "MaId", s.MarketName),
+                        SelectionId = s.SelectionId,
+                        SelectionName = GetTranslation(translations, s.SelectionId, "SeId", s.SelectionName)
                     }).ToList()
                 }
             };

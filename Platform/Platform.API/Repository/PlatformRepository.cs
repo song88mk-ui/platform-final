@@ -784,7 +784,13 @@ namespace Platform.API.Repository
                             FixtureId = Convert.ToInt64(selection.FixtureId),
                             MarketId = Convert.ToInt64(selection.MarketId),
                             SelectionId = Convert.ToInt64(selection.SelectionId),
-                            Line = selection.Line
+                            Line = selection.Line,
+                            SportName = selection.SportName,
+                            SegmentName = selection.SegmentName,
+                            LeagueName = selection.LeagueName,
+                            FixtureName = selection.FixtureName,
+                            MarketName = selection.MarketName,
+                            SelectionName = selection.SelectionName
                         });
                     }
                 }
@@ -3432,7 +3438,13 @@ namespace Platform.API.Repository
                             FixtureId = Convert.ToInt64(selection.FixtureId),
                             MarketId = Convert.ToInt64(selection.MarketId),
                             SelectionId = Convert.ToInt64(selection.SelectionId),
-                            Line = selection.Line
+                            Line = selection.Line,
+                            SportName = selection.SportName,
+                            SegmentName = selection.SegmentName,
+                            LeagueName = selection.LeagueName,
+                            FixtureName = selection.FixtureName,
+                            MarketName = selection.MarketName,
+                            SelectionName = selection.SelectionName
                         });
                     }
                 }

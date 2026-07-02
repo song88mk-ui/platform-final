@@ -44,5 +44,11 @@ namespace Platform.Shared.Models
         public long MarketId { get; set; }
         public long SelectionId { get; set; }
         public string Line { get; set; }
+        public string SportName { get; set; }
+        public string SegmentName { get; set; }
+        public string LeagueName { get; set; }
+        public string FixtureName { get; set; }
+        public string MarketName { get; set; }
+        public string SelectionName { get; set; }
     }
 }

@@ -16,6 +16,7 @@ using Platform.Shared.Providers;
 using Platform.Shared.Utility;
 using Platform.Sportsbook.API.Models;
 using Platform.Sportsbook.API.Telemetry;
+using Platform.Sportsbook.API.Utility;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -39,6 +40,12 @@ namespace Platform.Sportsbook.API.Repository
         private readonly SportsbookContext _sportsbookContext;
         private readonly TranslationContext _translationContext;
         private readonly IConfiguration _configuration;
+        private readonly bool _useTranslationTemplateKey;
+        // Resolves non-EN names from the per-language *NaTr lists already fetched with the Mongo
+        // documents (written by OE.Sportsbook.Service from the adapter's TranslationCache2
+        // enrichment — 2026-07 translation-flow redesign) instead of SQL. Takes precedence over
+        // Custom:Translation:UseTemplateKey. Default OFF until the Mongo translations are populated.
+        private readonly bool _useMongoTranslations;
         private readonly ILogger<SportsbookRepository> _logger;
         private readonly ActivitySource _activitySource;
 
@@ -81,6 +88,8 @@ namespace Platform.Sportsbook.API.Repository
             Instrumentation instrumentation)
         {
             _configuration = configuration;
+            _useTranslationTemplateKey = _configuration.GetValue<bool>("Custom:Translation:UseTemplateKey", false);
+            _useMongoTranslations = _configuration.GetValue<bool>("Custom:Translation:UseMongoTranslations", false);
             _sportsbookContext = sportsbookContext;
             _translationContext = translationContext;
             _httpClient = httpClient;
@@ -1499,25 +1508,35 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            // Bet-history/manual-bet-details selections carry their own source text (captured at bet
-            // placement, permanent in SQL) and no longer resolve via the live Mongo catalogue -- a
-            // settled bet's fixture/market/selection can age out of Mongo (owned by odds-engine-2),
-            // which silently broke translation for older bets. Match by content hash instead, keyed
-            // off the caller-supplied source text, so translation no longer depends on the fixture
-            // still being live.
+            // Bet-history/manual-bet-details selections carry their own ids and source text (captured
+            // at bet placement, permanent in SQL) and no longer resolve via the live Mongo catalogue --
+            // a settled bet's fixture/market/selection can age out of Mongo (owned by odds-engine-2),
+            // which silently broke translation for older bets. Sport/Segment/League resolve by their
+            // own id and Market/Selection by their MaTeId/SeTeId template (the same SportsbookGlossary
+            // STRING_ID keys the live-catalogue path uses -- see ResolveTemplateTranslations); selection
+            // names are recomposed with the stored Line/IsHandicap via ComposeSelectionName. FixtureName
+            // has no template-id equivalent captured in the bet ledger (no stored home/away team ids),
+            // so it keeps resolving by SOURCE_HASH content-hash of the stored name.
+            var stringIdLookup = new Dictionary<string, string>();
             var contentMap = new Dictionary<string, string>();
 
             foreach (var s in request.Selections)
             {
-                AddContentKey(contentMap, s.FixtureId, "SpId", s.SportName);
-                AddContentKey(contentMap, s.FixtureId, "SegId", s.SegmentName);
-                AddContentKey(contentMap, s.FixtureId, "LeId", s.LeagueName);
+                stringIdLookup[$"SpId:{s.FixtureId}"] = $"SpId:{s.SportId}";
+                stringIdLookup[$"SegId:{s.FixtureId}"] = $"SegId:{s.SegmentId}";
+                stringIdLookup[$"LeId:{s.FixtureId}"] = $"LeId:{s.LeagueId}";
+
+                if (!string.IsNullOrWhiteSpace(s.MarketTemplateId))
+                    stringIdLookup[$"MaId:{s.MarketId}"] = $"MaTe:{s.MarketTemplateId}";
+
+                if (!string.IsNullOrWhiteSpace(s.MarketTemplateId) && !string.IsNullOrWhiteSpace(s.SelectionTemplateId))
+                    stringIdLookup[$"SeId:{s.SelectionId}"] = $"SeTe:{s.MarketTemplateId}:{s.SelectionTemplateId}";
+
                 AddContentKey(contentMap, s.FixtureId, "FiId", s.FixtureName);
-                AddContentKey(contentMap, s.MarketId, "MaId", s.MarketName);
-                AddContentKey(contentMap, s.SelectionId, "SeId", s.SelectionName);
             }
 
-            var translations = await _translationRepository.GetTranslationsByContentAsync(contentMap, request.LanguageCode.ToString());
+            var stringIdTranslations = await _translationRepository.GetTranslationCacheAsync(stringIdLookup, request.LanguageCode.ToString());
+            var contentTranslations = await _translationRepository.GetTranslationsByContentAsync(contentMap, request.LanguageCode.ToString());
 
             return new BaseResponseDTO<BetFixtureTranslationResponseDTO>
             {
@@ -1527,15 +1546,19 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     Selections = request.Selections.Select(s => new BetFixtureSelectionTranslationResponseDTO
                     {
-                        SportName = GetTranslation(translations, s.FixtureId, "SpId", s.SportName),
-                        SegmentName = GetTranslation(translations, s.FixtureId, "SegId", s.SegmentName),
-                        LeagueName = GetTranslation(translations, s.FixtureId, "LeId", s.LeagueName),
+                        SportName = GetTranslation(stringIdTranslations, s.FixtureId, "SpId", s.SportName),
+                        SegmentName = GetTranslation(stringIdTranslations, s.FixtureId, "SegId", s.SegmentName),
+                        LeagueName = GetTranslation(stringIdTranslations, s.FixtureId, "LeId", s.LeagueName),
                         FixtureId = s.FixtureId,
-                        FixtureName = GetTranslation(translations, s.FixtureId, "FiId", s.FixtureName),
+                        FixtureName = GetTranslation(contentTranslations, s.FixtureId, "FiId", s.FixtureName),
                         MarketId = s.MarketId,
-                        MarketName = GetTranslation(translations, s.MarketId, "MaId", s.MarketName),
+                        MarketName = GetTranslation(stringIdTranslations, s.MarketId, "MaId", s.MarketName),
                         SelectionId = s.SelectionId,
-                        SelectionName = GetTranslation(translations, s.SelectionId, "SeId", s.SelectionName)
+                        SelectionName = SelectionNameComposer.Compose(
+                            s.Line,
+                            GetTranslation(stringIdTranslations, s.SelectionId, "SeId", s.SelectionName),
+                            s.SelectionTemplateId,
+                            s.IsHandicap)
                     }).ToList()
                 }
             };
@@ -1583,6 +1606,7 @@ namespace Platform.Sportsbook.API.Repository
                     MarketId = initialMarket.MaId,
                     MarketName = initialMarket.MaNa,
                     Line = initialMarket.Li,
+                    IsHandicap = initialMarket.IsHa,
                     SelectionTemplateId = initialSelectionExtension.SeTeId,
                     SelectionId = initialSelectionExtension.SeId,
                     SelectionName = initialSelectionExtension.SeNa,
@@ -1694,11 +1718,11 @@ namespace Platform.Sportsbook.API.Repository
                     var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
                     var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-                    var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+                    var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
                     var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
                     var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-                    var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+                    var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
                     var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
                     await Task.WhenAll(marketCount, markets, selections);
@@ -1803,11 +1827,11 @@ namespace Platform.Sportsbook.API.Repository
                     var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
                     var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-                    var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+                    var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
                     var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
                     var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-                    var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+                    var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
                     var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
                     await Task.WhenAll(marketCount, markets, selections);
@@ -2331,11 +2355,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(marketCount, markets, selections);
@@ -2686,11 +2710,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(marketCount, markets, selections);
@@ -2868,11 +2892,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(marketCount, markets, selections);
@@ -3106,11 +3130,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(marketCount, markets, selections);
@@ -3344,11 +3368,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(marketCount, markets, selections);
@@ -3584,11 +3608,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(marketCount, markets, selections);
@@ -3823,11 +3847,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(marketCount, markets, selections);
@@ -4021,11 +4045,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(marketCount, markets, selections);
@@ -4218,11 +4242,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(marketCount, markets, selections);
@@ -4386,16 +4410,16 @@ namespace Platform.Sportsbook.API.Repository
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
 
-            //var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            //var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
 
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr);
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr);
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
 
-            //var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            //var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
 
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr);
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr);
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -4544,11 +4568,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -4752,11 +4776,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(marketCount, markets, selections);
@@ -4891,11 +4915,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(marketCount, markets, selections);
@@ -5019,11 +5043,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && marketTemplateIds.Contains(c.MaTeId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(marketCount, markets, selections);
@@ -5459,13 +5483,13 @@ namespace Platform.Sportsbook.API.Repository
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            //var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr);
+            //var marketProjection = Builders<Market>.Projection.Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr);
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            //var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr);
+            //var selectionProjection = Builders<Selection>.Projection.Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr);
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -5557,12 +5581,14 @@ namespace Platform.Sportsbook.API.Repository
 
             var fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiId == Convert.ToInt64(request.FixtureId));
             var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.Id).Include(c => c.ChTyId).Include(c => c.FiId).Include(c => c.PrFiId).Include(c => c.FiStId).Include(c => c.ClCo).Include(c => c.SpId)
-                .Include(c => c.SpNa).Include(c => c.SegId).Include(c => c.SegNa).Include(c => c.LeId).Include(c => c.LeNa).Include(c => c.FiNa).Include(c => c.FiTyId)
+                .Include(c => c.SpNa).Include(c => c.SegId).Include(c => c.SegNa).Include(c => c.LeId).Include(c => c.LeNa).Include(c => c.FiNa).Include(c => c.HoId).Include(c => c.AwId).Include(c => c.HoNa).Include(c => c.AwNa).Include(c => c.FiTyId)
                 .Include(c => c.FiStDa).Include(c => c.FiStNa).Include(c => c.IsOfLi).Include(c => c.LiId).Include(c => c.GeAl)
                 .Include(c => c.SpNaTr).ElemMatch(c => c.SpNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
                 .Include(c => c.SegNaTr).ElemMatch(c => c.SegNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
                 .Include(c => c.LeNaTr).ElemMatch(c => c.LeNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
-                .Include(c => c.FiNaTr).ElemMatch(c => c.FiNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+                .Include(c => c.FiNaTr).ElemMatch(c => c.FiNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
+                .Include(c => c.HoNaTr).ElemMatch(c => c.HoNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
+                .Include(c => c.AwNaTr).ElemMatch(c => c.AwNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var tempFixture = fixtureCollection.Find(fixtureFilter).Project<FixtureDetailsLimitedProjection>(fixtureProjection).FirstOrDefaultAsync();
 
             var bettingStatusFilter = Builders<BettingStatus>.Filter.Where(c => c.BeSo == "betstop");
@@ -5589,7 +5615,7 @@ namespace Platform.Sportsbook.API.Repository
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.MaId).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.MaId).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketLimitedProjection>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
@@ -5672,11 +5698,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && c.MaId == Convert.ToInt64(request.MarketId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(markets, selections);
@@ -7072,12 +7098,14 @@ namespace Platform.Sportsbook.API.Repository
             }
 
             var fixtureProjection = Builders<Fixture>.Projection.Include(c => c.ChTyId).Include(c => c.Id).Include(c => c.FiId).Include(c => c.PrFiId).Include(c => c.FiStId).Include(c => c.ClCo).Include(c => c.SpId)
-                .Include(c => c.SpNa).Include(c => c.SegId).Include(c => c.SegNa).Include(c => c.LeId).Include(c => c.LeNa).Include(c => c.FiNa).Include(c => c.FiTyId)
+                .Include(c => c.SpNa).Include(c => c.SegId).Include(c => c.SegNa).Include(c => c.LeId).Include(c => c.LeNa).Include(c => c.FiNa).Include(c => c.HoId).Include(c => c.AwId).Include(c => c.HoNa).Include(c => c.AwNa).Include(c => c.FiTyId)
                 .Include(c => c.FiTyNa).Include(c => c.FiStDa).Include(c => c.FiStNa).Include(c => c.IsOfLi).Include(c => c.LiId).Include(c => c.GeAl)
                 .Include(c => c.SpNaTr).ElemMatch(c => c.SpNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
                 .Include(c => c.SegNaTr).ElemMatch(c => c.SegNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
                 .Include(c => c.LeNaTr).ElemMatch(c => c.LeNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
-                .Include(c => c.FiNaTr).ElemMatch(c => c.FiNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+                .Include(c => c.FiNaTr).ElemMatch(c => c.FiNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
+                .Include(c => c.HoNaTr).ElemMatch(c => c.HoNaTr, cc => cc.LaCo == request.LanguageCode.ToString())
+                .Include(c => c.AwNaTr).ElemMatch(c => c.AwNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var fixtures = await fixtureCollection.Find(fixtureFilter).Project<ActiveFixtureProjection>(fixtureProjection).ToListAsync();
             if (IsOEEnable(request.ClientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId.IsVirtualSportId() || f.FiTyId == (int)FixtureType.Outright).ToList();
@@ -7389,11 +7417,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId) && c.ClBo.Contains(request.ClientCode));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.IsBo).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.IsBo).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.ClBoOd).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString()).Include(c => c.ClBoSeNa).Include(c => c.ClBoSeNaTr).ElemMatch(c => c.ClBoSeNaTr, cc => cc.ClCoLaCo == $"{request.ClientCode}:{request.LanguageCode.ToString()}");
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.ClBoOd).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString()).Include(c => c.ClBoSeNa).Include(c => c.ClBoSeNaTr).ElemMatch(c => c.ClBoSeNaTr, cc => cc.ClCoLaCo == $"{request.ClientCode}:{request.LanguageCode.ToString()}");
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(marketCount, markets, selections);
@@ -7523,7 +7551,7 @@ namespace Platform.Sportsbook.API.Repository
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
@@ -8449,7 +8477,7 @@ namespace Platform.Sportsbook.API.Repository
                     //var marketTemplateIds = GetMainMarketTemplates(fixture.SpId);
 
                     var marketFilter = Builders<Market>.Filter.Where(c => c.FiId == long.Parse(request.FixtureId));
-                    var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa);
+                    var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa);
                     var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
                     var marketMappingFilter = Builders<MarketMapping>.Filter.Where(c => c.PrFiId == fixture.FiSp);
@@ -8458,7 +8486,7 @@ namespace Platform.Sportsbook.API.Repository
 
                     var selectionIds = request.Selections.Select(s => long.Parse(s.SelectionId)).ToList();
                     var selectionFilter = Builders<Selection>.Filter.Where(c => c.FiId == long.Parse(request.FixtureId) && selectionIds.Contains(c.SeId));
-                    var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId);
+                    var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId);
                     var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
                     await Task.WhenAll(markets, marketMappings, selections);
@@ -10338,7 +10366,25 @@ namespace Platform.Sportsbook.API.Repository
 
             if (request.CacheType == CacheType.DynamicTranslation)
             {
-                _translationRepository.InvalidateTranslationsCache(request.CacheKeys, request.LanguageCode.ToString(), request.PurgeAll);
+                // Payload-carrying translation change (2026-07 translation-flow redesign): the
+                // request lists the exact changed (StringId, TargetLanguage) pairs — invalidate
+                // per language so the next read re-fetches the new text immediately instead of
+                // serving the stale entry until its TTL.
+                if (request.Translations?.Count > 0)
+                {
+                    foreach (var languageGroup in request.Translations
+                        .Where(t => t != null && !string.IsNullOrWhiteSpace(t.StringId) && !string.IsNullOrWhiteSpace(t.TargetLanguage))
+                        .GroupBy(t => t.TargetLanguage.ToUpperInvariant()))
+                    {
+                        _translationRepository.InvalidateTranslationsCache(
+                            languageGroup.Select(t => t.StringId).ToList(),
+                            languageGroup.Key);
+                    }
+                }
+                else
+                {
+                    _translationRepository.InvalidateTranslationsCache(request.CacheKeys, request.LanguageCode.ToString(), request.PurgeAll);
+                }
 
                 _memCache.DeleteCacheByPrefix("ntf");
                 _memCache.DeleteCacheByPrefix("ntfbl");
@@ -10862,7 +10908,7 @@ namespace Platform.Sportsbook.API.Repository
             var marketStatusIds = new List<int> { (int)MarketStatus.Active, (int)MarketStatus.Suspended };
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr);
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr);
             var markets = await marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             #region Prepare MarketIds
@@ -10910,7 +10956,7 @@ namespace Platform.Sportsbook.API.Repository
             #endregion
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => marketIds.Contains(c.MaId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr);
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr);
             var selections = await selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
@@ -11181,11 +11227,11 @@ namespace Platform.Sportsbook.API.Repository
             var marketCount = marketCollection.Find(marketCountFilter).Project<MarketCount>(marketCountProjection).ToListAsync();
 
             var marketFilter = Builders<Market>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var marketProjection = Builders<Market>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaTeId).Include(c => c.MaId).Include(c => c.MaNa).Include(c => c.Li).Include(c => c.IsHa).Include(c => c.MaStId).Include(c => c.MaStNa).Include(c => c.MaStNa).Include(c => c.CaStId).Include(c => c.ClCo).Include(c => c.ClCoMa).Include(c => c.MaNaTr).ElemMatch(c => c.MaNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var markets = marketCollection.Find(marketFilter).Project<MarketFilter>(marketProjection).ToListAsync();
 
             var selectionFilter = Builders<Selection>.Filter.Where(c => fixtureIds.Contains(c.FiId) && marketStatusIds.Contains(c.MaStId));
-            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
+            var selectionProjection = Builders<Selection>.Projection.Include(c => c.Id).Include(c => c.FiId).Include(c => c.MaId).Include(c => c.SeTeId).Include(c => c.SeTeNa).Include(c => c.SeId).Include(c => c.SeNa).Include(c => c.Od).Include(c => c.IsAc).Include(c => c.SeSoOr).Include(c => c.CoId).Include(c => c.SeNaTr).ElemMatch(c => c.SeNaTr, cc => cc.LaCo == request.LanguageCode.ToString());
             var selections = selectionCollection.Find(selectionFilter).Project<SelectionFilter>(selectionProjection).ToListAsync();
 
             await Task.WhenAll(marketCount, markets, selections, bettingStatusCollectionResponse);
@@ -12568,11 +12614,180 @@ namespace Platform.Sportsbook.API.Repository
             return fallback;
         }
 
+        // Mongo-sourced translation helpers (Custom:Translation:UseMongoTranslations, 2026-07
+        // translation-flow redesign): names resolve from the per-language *NaTr lists already
+        // fetched with the documents (ElemMatch projections), so no SQL round-trip. Result keys
+        // mirror the SQL paths ("SpId:{id}" / "FiId:{id}" / "MaId:{id}" / "SeId:{id}") so
+        // GetTranslation callers are unchanged; missing entries fall back to the English name.
+
+        private static string FindTranslation<T>(
+            List<T> translations,
+            string languageCode,
+            Func<T, string> languageSelector,
+            Func<T, string> textSelector)
+        {
+            if (translations == null)
+                return null;
+
+            foreach (var translation in translations)
+            {
+                if (translation != null && string.Equals(languageSelector(translation), languageCode, StringComparison.OrdinalIgnoreCase))
+                {
+                    var text = textSelector(translation);
+
+                    return string.IsNullOrEmpty(text) ? null : text;
+                }
+            }
+
+            return null;
+        }
+
+        private static void AddMongoTranslation(Dictionary<string, string> map, string key, string translated)
+        {
+            if (!string.IsNullOrEmpty(translated))
+                map[key] = translated;
+        }
+
+        // Fixture names for non-EN languages are composed from the two translated team names,
+        // mirroring ResolveFixtureTranslations (GetHomeName/GetAwayName split on " vs. ").
+        private static string ComposeMongoFixtureName(
+            List<TeamTranslationMDB> hoNaTr,
+            List<TeamTranslationMDB> awNaTr,
+            string languageCode)
+        {
+            var home = FindTranslation(hoNaTr, languageCode, t => t.LaCo, t => t.TeNa);
+            var away = FindTranslation(awNaTr, languageCode, t => t.LaCo, t => t.TeNa);
+
+            return !string.IsNullOrEmpty(home) && !string.IsNullOrEmpty(away)
+                ? $"{home} vs. {away}"
+                : null;
+        }
+
+        // Markets carry the translated market TEMPLATE in MaNaTr; selections carry the translated
+        // selection template in SeNaTr — the handicap line is recomposed exactly like the
+        // template-key path (SelectionNameComposer).
+        private static Dictionary<string, string> BuildMongoMarketSelectionTranslations(
+            IEnumerable<(string entityId, long maId, string li, bool isHa, List<MarketTranslationMDB> maNaTr)> markets,
+            IEnumerable<(string entityId, long maId, string seTeId, List<SelectionTranslationMDB> seNaTr)> selections,
+            LanguageCode languageCode)
+        {
+            var map = new Dictionary<string, string>();
+
+            if (languageCode == LanguageCode.EN)
+                return map;
+
+            var language = languageCode.ToString();
+            var marketContextByMaId = new Dictionary<long, (string li, bool isHa)>();
+
+            foreach (var market in markets)
+            {
+                marketContextByMaId[market.maId] = (market.li, market.isHa);
+
+                AddMongoTranslation(map, $"MaId:{market.entityId}", FindTranslation(market.maNaTr, language, t => t.LaCo, t => t.MaNa));
+            }
+
+            foreach (var selection in selections)
+            {
+                var template = FindTranslation(selection.seNaTr, language, t => t.LaCo, t => t.SeNa);
+
+                if (string.IsNullOrEmpty(template))
+                    continue;
+
+                marketContextByMaId.TryGetValue(selection.maId, out var market);
+
+                AddMongoTranslation(map, $"SeId:{selection.entityId}", SelectionNameComposer.Compose(market.li, template, selection.seTeId, market.isHa));
+            }
+
+            return map;
+        }
+
+        // Template-glossary resolution (Custom:Translation:UseTemplateKey). Looks up TranslationCache
+        // directly by STRING_ID — the same key bet-genius writes to SportsbookGlossary — rather than
+        // hashing source text. Markets resolve by market template (MaTe:{MaTeId}); selections by
+        // selection template (SeTe:{MaTeId}:{SeTeId}) with the handicap line re-composed onto the
+        // translated template (mirrors bet-genius GetSelectionName). Both are re-keyed to the entity
+        // keys ("MaId:{id}" / "SeId:{id}") so GetTranslation callers are unchanged. Falls back to the
+        // stored name (via GetTranslation) when a template is missing.
+        private Dictionary<string, string> ResolveTemplateTranslations(
+            Dictionary<string, string> marketKeyToMaTeId,
+            Dictionary<long, (string li, bool isHa, string maTeId)> marketByMaId,
+            List<(string selectionId, long maId, string seTeId)> selections,
+            LanguageCode languageCode)
+        {
+            // entity key -> SportsbookGlossary STRING_ID (MaTe:{MaTeId} / SeTe:{MaTeId}:{SeTeId}).
+            var lookup = new Dictionary<string, string>();
+
+            foreach (var kvp in marketKeyToMaTeId)
+                lookup[kvp.Key] = $"MaTe:{kvp.Value}";
+
+            // selection entity key -> (line, isHandicap, seTeId) for line recomposition
+            var selectionContext = new List<(string entityKey, string li, bool isHa, string seTeId)>();
+
+            foreach (var selection in selections)
+            {
+                if (string.IsNullOrWhiteSpace(selection.seTeId))
+                    continue;
+
+                if (!marketByMaId.TryGetValue(selection.maId, out var market) || string.IsNullOrWhiteSpace(market.maTeId))
+                    continue;
+
+                var entityKey = $"SeId:{selection.selectionId}";
+                lookup[entityKey] = $"SeTe:{market.maTeId}:{selection.seTeId}";
+
+                selectionContext.Add((entityKey, market.li, market.isHa, selection.seTeId));
+            }
+
+            var result = new Dictionary<string, string>();
+
+            if (lookup.Count == 0)
+                return result;
+
+            var resolved = _translationRepository
+                .GetTranslationCacheAsync(lookup, languageCode.ToString())
+                .GetAwaiter().GetResult();
+
+            // Market names (translated template as-is).
+            foreach (var kvp in marketKeyToMaTeId)
+                if (resolved.TryGetValue(kvp.Key, out var name) && !string.IsNullOrEmpty(name))
+                    result[kvp.Key] = name;
+
+            // Selection names (translated template + recomposed line).
+            foreach (var c in selectionContext)
+                if (resolved.TryGetValue(c.entityKey, out var template) && !string.IsNullOrEmpty(template))
+                    result[c.entityKey] = SelectionNameComposer.Compose(c.li, template, c.seTeId, c.isHa);
+
+            return result;
+        }
+
         private Dictionary<string, string> LoadTranslations(
             List<MarketFilter> markets,
             List<SelectionFilter> selections,
             LanguageCode languageCode)
         {
+            if (_useMongoTranslations)
+                return BuildMongoMarketSelectionTranslations(
+                    markets.Select(m => (m.Id, m.MaId, m.Li, m.IsHa, m.MaNaTr)),
+                    selections.Select(s => (s.Id, s.MaId, s.SeTeId, s.SeNaTr)),
+                    languageCode);
+
+            if (_useTranslationTemplateKey)
+            {
+                var marketKeyToMaTeId = new Dictionary<string, string>();
+                var marketByMaId = new Dictionary<long, (string li, bool isHa, string maTeId)>();
+                foreach (var market in markets)
+                {
+                    if (!string.IsNullOrWhiteSpace(market.MaTeId))
+                        marketKeyToMaTeId[$"MaId:{market.Id}"] = market.MaTeId;
+                    marketByMaId[market.MaId] = (market.Li, market.IsHa, market.MaTeId);
+                }
+
+                var selectionInputs = new List<(string selectionId, long maId, string seTeId)>();
+                foreach (var selection in selections)
+                    selectionInputs.Add((selection.Id, selection.MaId, selection.SeTeId));
+
+                return ResolveTemplateTranslations(marketKeyToMaTeId, marketByMaId, selectionInputs, languageCode);
+            }
+
             var map = new Dictionary<string, string>();
 
             foreach (var market in markets)
@@ -12595,6 +12810,30 @@ namespace Platform.Sportsbook.API.Repository
             List<SelectionFilter> selections,
             LanguageCode languageCode)
         {
+            if (_useMongoTranslations)
+                return BuildMongoMarketSelectionTranslations(
+                    markets.Select(m => (m.Id, m.MaId, m.Li, m.IsHa, m.MaNaTr)),
+                    selections.Select(s => (s.Id, s.MaId, s.SeTeId, s.SeNaTr)),
+                    languageCode);
+
+            if (_useTranslationTemplateKey)
+            {
+                var marketKeyToMaTeId = new Dictionary<string, string>();
+                var marketByMaId = new Dictionary<long, (string li, bool isHa, string maTeId)>();
+                foreach (var market in markets)
+                {
+                    if (!string.IsNullOrWhiteSpace(market.MaTeId))
+                        marketKeyToMaTeId[$"MaId:{market.Id}"] = market.MaTeId;
+                    marketByMaId[market.MaId] = (market.Li, market.IsHa, market.MaTeId);
+                }
+
+                var selectionInputs = new List<(string selectionId, long maId, string seTeId)>();
+                foreach (var selection in selections)
+                    selectionInputs.Add((selection.Id, selection.MaId, selection.SeTeId));
+
+                return ResolveTemplateTranslations(marketKeyToMaTeId, marketByMaId, selectionInputs, languageCode);
+            }
+
             var map = new Dictionary<string, string>();
 
             foreach (var market in markets)
@@ -12617,6 +12856,30 @@ namespace Platform.Sportsbook.API.Repository
             List<Selection> selections,
             LanguageCode languageCode)
         {
+            if (_useMongoTranslations)
+                return BuildMongoMarketSelectionTranslations(
+                    markets.Select(m => (m.Id, m.MaId, m.Li, m.IsHa, m.MaNaTr)),
+                    selections.Select(s => (s.Id, s.MaId, s.SeTeId, s.SeNaTr)),
+                    languageCode);
+
+            if (_useTranslationTemplateKey)
+            {
+                var marketKeyToMaTeId = new Dictionary<string, string>();
+                var marketByMaId = new Dictionary<long, (string li, bool isHa, string maTeId)>();
+                foreach (var market in markets)
+                {
+                    if (!string.IsNullOrWhiteSpace(market.MaTeId))
+                        marketKeyToMaTeId[$"MaId:{market.Id}"] = market.MaTeId;
+                    marketByMaId[market.MaId] = (market.Li, market.IsHa, market.MaTeId);
+                }
+
+                var selectionInputs = new List<(string selectionId, long maId, string seTeId)>();
+                foreach (var selection in selections)
+                    selectionInputs.Add((selection.Id, selection.MaId, selection.SeTeId));
+
+                return ResolveTemplateTranslations(marketKeyToMaTeId, marketByMaId, selectionInputs, languageCode);
+            }
+
             var map = new Dictionary<string, string>();
 
             foreach (var market in markets)
@@ -12638,6 +12901,21 @@ namespace Platform.Sportsbook.API.Repository
             List<SportsLookupProjection> fixtures,
             LanguageCode languageCode)
         {
+            if (_useMongoTranslations)
+            {
+                var mongoMap = new Dictionary<string, string>();
+
+                if (languageCode == LanguageCode.EN)
+                    return mongoMap;
+
+                var language = languageCode.ToString();
+
+                foreach (var fixture in fixtures)
+                    AddMongoTranslation(mongoMap, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
+
+                return mongoMap;
+            }
+
             var map = new Dictionary<string, string>();
 
             foreach (var fixture in fixtures)
@@ -12654,6 +12932,29 @@ namespace Platform.Sportsbook.API.Repository
             List<Fixture> fixtures,
             LanguageCode languageCode)
         {
+            if (_useMongoTranslations)
+            {
+                var mongoMap = new Dictionary<string, string>();
+
+                if (languageCode == LanguageCode.EN)
+                    return mongoMap;
+
+                var language = languageCode.ToString();
+
+                foreach (var fixture in fixtures)
+                {
+                    AddMongoTranslation(mongoMap, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
+                    AddMongoTranslation(mongoMap, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
+                    AddMongoTranslation(mongoMap, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
+                    AddMongoTranslation(mongoMap, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language));
+                }
+
+                return mongoMap;
+            }
+
+            if (_useTranslationTemplateKey)
+                return await ResolveFixtureTemplates(fixtures, languageCode);
+
             var map = new Dictionary<string, string>();
 
             foreach (var fixture in fixtures)
@@ -12669,10 +12970,104 @@ namespace Platform.Sportsbook.API.Repository
                 languageCode.ToString());
         }
 
+        private Task<Dictionary<string, string>> ResolveFixtureTemplates(
+            List<Fixture> fixtures,
+            LanguageCode languageCode)
+        {
+            var data = fixtures
+                .Select(f => (f.Id, f.SpId, f.SegId, f.LeId, f.HoId, f.AwId))
+                .ToList();
+
+            return ResolveFixtureTranslations(data, languageCode);
+        }
+
+        // Shared fixture resolution: sport/segment/league resolve by their own ids (STRING_ID ==
+        // "SpId:{id}"/"SegId:{id}"/"LeId:{id}", same as the entity key); each fixture NAME is composed
+        // from its two TRANSLATED team names ("{Ho} vs. {Aw}", STRING_ID "Te:{teamId}") and re-keyed to
+        // "FiId:{id}" so GetTranslation / GetHomeName / GetAwayName (which split on " vs. ") are
+        // unchanged. Falls back to the stored fixture name when either team has no translation.
+        private async Task<Dictionary<string, string>> ResolveFixtureTranslations(
+            List<(string fiId, int spId, int segId, int leId, string hoId, string awId)> fixtures,
+            LanguageCode languageCode)
+        {
+            var lookup = new Dictionary<string, string>();
+
+            foreach (var f in fixtures)
+            {
+                lookup[$"SpId:{f.spId}"] = $"SpId:{f.spId}";
+                lookup[$"SegId:{f.segId}"] = $"SegId:{f.segId}";
+                lookup[$"LeId:{f.leId}"] = $"LeId:{f.leId}";
+
+                if (!string.IsNullOrWhiteSpace(f.hoId))
+                    lookup[$"Ho:{f.fiId}"] = $"Te:{f.hoId}";
+                if (!string.IsNullOrWhiteSpace(f.awId))
+                    lookup[$"Aw:{f.fiId}"] = $"Te:{f.awId}";
+            }
+
+            var result = new Dictionary<string, string>();
+
+            if (lookup.Count == 0)
+                return result;
+
+            var resolved = await _translationRepository.GetTranslationCacheAsync(
+                lookup,
+                languageCode.ToString());
+
+            foreach (var f in fixtures)
+            {
+                // Sport / segment / league pass straight through (result keyed as GetTranslation expects).
+                if (resolved.TryGetValue($"SpId:{f.spId}", out var sp) && !string.IsNullOrEmpty(sp))
+                    result[$"SpId:{f.spId}"] = sp;
+                if (resolved.TryGetValue($"SegId:{f.segId}", out var seg) && !string.IsNullOrEmpty(seg))
+                    result[$"SegId:{f.segId}"] = seg;
+                if (resolved.TryGetValue($"LeId:{f.leId}", out var le) && !string.IsNullOrEmpty(le))
+                    result[$"LeId:{f.leId}"] = le;
+
+                // Fixture name composed from the two translated team names.
+                if (resolved.TryGetValue($"Ho:{f.fiId}", out var home)
+                    && resolved.TryGetValue($"Aw:{f.fiId}", out var away)
+                    && !string.IsNullOrEmpty(home) && !string.IsNullOrEmpty(away))
+                {
+                    result[$"FiId:{f.fiId}"] = $"{home} vs. {away}";
+                }
+            }
+
+            return result;
+        }
+
         private async Task<Dictionary<string, string>> LoadTranslations(
             List<ActiveFixtureProjection> fixtures,
             LanguageCode languageCode)
         {
+            if (_useMongoTranslations)
+            {
+                var mongoMap = new Dictionary<string, string>();
+
+                if (languageCode == LanguageCode.EN)
+                    return mongoMap;
+
+                var language = languageCode.ToString();
+
+                foreach (var fixture in fixtures)
+                {
+                    AddMongoTranslation(mongoMap, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
+                    AddMongoTranslation(mongoMap, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
+                    AddMongoTranslation(mongoMap, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
+                    AddMongoTranslation(mongoMap, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language));
+                }
+
+                return mongoMap;
+            }
+
+            if (_useTranslationTemplateKey)
+            {
+                var data = fixtures
+                    .Select(f => (f.Id, f.SpId, f.SegId, f.LeId, f.HoId, f.AwId))
+                    .ToList();
+
+                return await ResolveFixtureTranslations(data, languageCode);
+            }
+
             var map = new Dictionary<string, string>();
 
             foreach (var fixture in fixtures)
@@ -12692,6 +13087,21 @@ namespace Platform.Sportsbook.API.Repository
             List<ActiveFixtureCountProjection> fixtures,
             LanguageCode languageCode)
         {
+            if (_useMongoTranslations)
+            {
+                var mongoMap = new Dictionary<string, string>();
+
+                if (languageCode == LanguageCode.EN)
+                    return mongoMap;
+
+                var language = languageCode.ToString();
+
+                foreach (var fixture in fixtures)
+                    AddMongoTranslation(mongoMap, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
+
+                return mongoMap;
+            }
+
             var map = new Dictionary<string, string>();
 
             foreach (var fixture in fixtures)
@@ -12708,6 +13118,24 @@ namespace Platform.Sportsbook.API.Repository
             List<SegmentsLookupProjection> fixtures,
             LanguageCode languageCode)
         {
+            if (_useMongoTranslations)
+            {
+                var mongoMap = new Dictionary<string, string>();
+
+                if (languageCode == LanguageCode.EN)
+                    return mongoMap;
+
+                var language = languageCode.ToString();
+
+                foreach (var fixture in fixtures)
+                {
+                    AddMongoTranslation(mongoMap, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
+                    AddMongoTranslation(mongoMap, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
+                }
+
+                return mongoMap;
+            }
+
             var map = new Dictionary<string, string>();
 
             foreach (var fixture in fixtures)
@@ -12725,6 +13153,25 @@ namespace Platform.Sportsbook.API.Repository
             List<LeaguesLookupProjection> fixtures,
             LanguageCode languageCode)
         {
+            if (_useMongoTranslations)
+            {
+                var mongoMap = new Dictionary<string, string>();
+
+                if (languageCode == LanguageCode.EN)
+                    return mongoMap;
+
+                var language = languageCode.ToString();
+
+                foreach (var fixture in fixtures)
+                {
+                    AddMongoTranslation(mongoMap, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
+                    AddMongoTranslation(mongoMap, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
+                    AddMongoTranslation(mongoMap, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
+                }
+
+                return mongoMap;
+            }
+
             var map = new Dictionary<string, string>();
 
             foreach (var fixture in fixtures)
@@ -12743,6 +13190,35 @@ namespace Platform.Sportsbook.API.Repository
             List<FixtureDetailsLimitedProjection> fixtures,
             LanguageCode languageCode)
         {
+            if (_useMongoTranslations)
+            {
+                var mongoMap = new Dictionary<string, string>();
+
+                if (languageCode == LanguageCode.EN)
+                    return mongoMap;
+
+                var language = languageCode.ToString();
+
+                foreach (var fixture in fixtures)
+                {
+                    AddMongoTranslation(mongoMap, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
+                    AddMongoTranslation(mongoMap, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
+                    AddMongoTranslation(mongoMap, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
+                    AddMongoTranslation(mongoMap, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language));
+                }
+
+                return mongoMap;
+            }
+
+            if (_useTranslationTemplateKey)
+            {
+                var data = fixtures
+                    .Select(f => (f.Id, f.SpId, f.SegId, f.LeId, f.HoId, f.AwId))
+                    .ToList();
+
+                return await ResolveFixtureTranslations(data, languageCode);
+            }
+
             var map = new Dictionary<string, string>();
 
             foreach (var fixture in fixtures)

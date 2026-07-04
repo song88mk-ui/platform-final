@@ -5,6 +5,7 @@ using Platform.Shared.Models;
 using Platform.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -97,7 +98,13 @@ namespace Platform.CacheSync.Service.Repository
         {
             var request = new CachePreloadRequestDTO
             {
-                CacheType = CacheType.DynamicTranslation
+                CacheType = CacheType.DynamicTranslation,
+                // The legacy ON_DYNAMIC_TRANSLATION_CHANGE message is purge-only (no keys/language
+                // on the wire — matching the hardcoded PurgeAll=true re-publish to the adapters
+                // below). Without this flag the request reached Sportsbook.API with neither keys
+                // nor PurgeAll, and InvalidateTranslationsCache's empty-keys guard silently
+                // no-opped — the sb:translation cache was never purged on this path.
+                PurgeAll = true
             };
 
             var publishMessage = await DeleteCachePreload_SportsbookApi(request);
@@ -112,6 +119,45 @@ namespace Platform.CacheSync.Service.Repository
                         $"r.oe.adapter.ondynamictranslationchange.{i:D2}",
                         Guid.NewGuid().ToString().ToUpper());
                 }
+            }
+        }
+
+        // Payload-carrying successor to ProcessDynamicTranslationChange (2026-07 translation-flow
+        // redesign): purges the Sportsbook.API translation cache PER CHANGED KEY (the deltas carry
+        // exactly the (StringId, TargetLanguage) pairs to invalidate — no purge-all), then relays
+        // the changed TranslationCache2 rows on r.oe.ontranslationchange, where the topic exchange
+        // delivers them to both OE.Adapter.Service (in-memory enrichment cache) and
+        // OE.Translation.Service (Mongo persistence + translation-only odds pushes).
+        public async void ProcessTranslationChange(OnTranslationChangeMessage message)
+        {
+            if (message?.Tr == null || message.Tr.Count == 0)
+                return;
+
+            var request = new CachePreloadRequestDTO
+            {
+                CacheType = CacheType.DynamicTranslation,
+                Translations = message.Tr
+                    .Where(t => t != null
+                        && !string.IsNullOrWhiteSpace(t.StId)
+                        && !string.IsNullOrWhiteSpace(t.LaCo))
+                    .Select(t => new TranslationChangeRequestDTO
+                    {
+                        StringId = t.StId,
+                        TargetLanguage = t.LaCo,
+                        TargetText = t.Tx
+                    })
+                    .ToList()
+            };
+
+            var publishMessage = await DeleteCachePreload_SportsbookApi(request);
+
+            if (publishMessage)
+            {
+                _messageBroker.Publish(
+                    message,
+                    "OnTranslationChange",
+                    "r.oe.ontranslationchange",
+                    Guid.NewGuid().ToString().ToUpper());
             }
         }
 

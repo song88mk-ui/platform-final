@@ -14,6 +14,7 @@ namespace Platform.Sportsbook.API.Models
         public string MaTeId { get; set; }
         public string MaNa { get; set; }
         public string Li { get; set; }
+        public bool IsHa { get; set; }
         public int MaStId { get; set; }
         public string MaStNa { get; set; }
         public string ClCo { get; set; }

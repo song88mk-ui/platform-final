@@ -21,6 +21,10 @@ namespace Platform.Sportsbook.API.Models
         public int LeId { get; set; }
         public string LeNa { get; set; }
         public string FiNa { get; set; }
+        public string HoId { get; set; }
+        public string AwId { get; set; }
+        public string HoNa { get; set; }
+        public string AwNa { get; set; }
         public int FiTyId { get; set; }
         public string FiTyNa { get; set; }
         public DateTime FiStDa { get; set; }
@@ -32,5 +36,7 @@ namespace Platform.Sportsbook.API.Models
         public List<SegmentTranslationMDB> SegNaTr { get; set; }
         public List<LeagueTranslationMDB> LeNaTr { get; set; }
         public List<FixtureTranslationMDB> FiNaTr { get; set; }
+        public List<TeamTranslationMDB> HoNaTr { get; set; }
+        public List<TeamTranslationMDB> AwNaTr { get; set; }
     }
 }

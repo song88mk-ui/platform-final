@@ -98,7 +98,8 @@ namespace Platform.Shared.Data.Sportsbook
 
             modelBuilder.Entity<SportsbookStatic>().HasKey(k => new { k.LanguageCode, k.Name });
 
-            // Non-English translations written by the external translation script, keyed by SOURCE_HASH.
+            // Non-English translations written by the external translation script, keyed by SOURCE_HASH
+            // (content-hash, default path) or STRING_ID (template-key, opt-in path).
             modelBuilder.Entity<TranslationCache>(entity =>
             {
                 entity.ToTable("TranslationCache");
@@ -107,6 +108,7 @@ namespace Platform.Shared.Data.Sportsbook
                     .HasName("PK_TranslationCache");
 
                 entity.Property(e => e.SourceHash).HasColumnName("SOURCE_HASH").HasMaxLength(64).IsRequired();
+                entity.Property(e => e.StringId).HasColumnName("STRING_ID").HasMaxLength(200).IsRequired();
                 entity.Property(e => e.SourceLanguage).HasColumnName("SOURCE_LANGUAGE").HasMaxLength(10).IsRequired();
                 entity.Property(e => e.TargetLanguage).HasColumnName("TARGET_LANGUAGE").HasMaxLength(10).IsRequired();
                 entity.Property(e => e.SourceText).HasColumnName("SOURCE_TEXT");

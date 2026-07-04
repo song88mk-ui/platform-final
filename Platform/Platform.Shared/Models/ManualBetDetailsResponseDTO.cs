@@ -84,6 +84,7 @@ namespace Platform.Shared.Models
         public string MarketTemplateId { get; set; }
         public string MarketId { get; set; }
         public string MarketName { get; set; }
+        public bool IsHandicap { get; set; }
         public string SelectionTemplateId { get; set; }
         public string SelectionId { get; set; }
         public string SelectionName { get; set; }

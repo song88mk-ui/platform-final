@@ -31,6 +31,7 @@ namespace Platform.API.Repository
         private readonly PlatformContext _platformContext;
         private readonly IMemCache _memCache;
         private readonly IConfiguration _configuration;
+        private readonly IMessageBroker _messageBroker;
         private readonly ILogger<PlatformRepository> _logger;
 
         private readonly ActivitySource _activitySource;
@@ -63,7 +64,7 @@ namespace Platform.API.Repository
                 };
         }
 
-        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, ICasinoRepository casinoRepository, PlatformContext platformContext, IMemCache memCache, IConfiguration configuration, Instrumentation instrumentation, ILogger<PlatformRepository> logger)
+        public PlatformRepository(IOperatorRepository operatorRepository, IBettingRepository bettingRepository, ISportsbookRepository sportsbookRepository, ICasinoRepository casinoRepository, PlatformContext platformContext, IMemCache memCache, IConfiguration configuration, IMessageBroker messageBroker, Instrumentation instrumentation, ILogger<PlatformRepository> logger)
         {
             _operatorRepository = operatorRepository;
             _bettingRepository = bettingRepository;
@@ -72,6 +73,7 @@ namespace Platform.API.Repository
             _platformContext = platformContext;
             _memCache = memCache;
             _configuration = configuration;
+            _messageBroker = messageBroker;
 
             _activitySource = instrumentation.ActivitySource;
             _logger = logger;
@@ -393,6 +395,7 @@ namespace Platform.API.Repository
                     MarketId = initialSelection.MarketId,
                     MarketName = initialSelection.MarketName,
                     Line = initialSelection.Line,
+                    IsHandicap = initialSelection.IsHandicap,
                     SelectionTemplateId = initialSelection.SelectionTemplateId,
                     SelectionId = initialSelection.SelectionId,
                     SelectionName = initialSelection.SelectionName,
@@ -781,10 +784,16 @@ namespace Platform.API.Repository
 
                         betFixtureTranslation.Selections.Add(new BetFixtureSelectionTranslationRequestDTO
                         {
+                            SportId = selection.SportId,
+                            SegmentId = selection.SegmentId,
+                            LeagueId = selection.LeagueId,
                             FixtureId = Convert.ToInt64(selection.FixtureId),
+                            MarketTemplateId = selection.MarketTemplateId,
                             MarketId = Convert.ToInt64(selection.MarketId),
+                            SelectionTemplateId = selection.SelectionTemplateId,
                             SelectionId = Convert.ToInt64(selection.SelectionId),
                             Line = selection.Line,
+                            IsHandicap = selection.IsHandicap,
                             SportName = selection.SportName,
                             SegmentName = selection.SegmentName,
                             LeagueName = selection.LeagueName,
@@ -3435,10 +3444,16 @@ namespace Platform.API.Repository
 
                         betFixtureTranslation.Selections.Add(new BetFixtureSelectionTranslationRequestDTO
                         {
+                            SportId = selection.SportId,
+                            SegmentId = selection.SegmentId,
+                            LeagueId = selection.LeagueId,
                             FixtureId = Convert.ToInt64(selection.FixtureId),
+                            MarketTemplateId = selection.MarketTemplateId,
                             MarketId = Convert.ToInt64(selection.MarketId),
+                            SelectionTemplateId = selection.SelectionTemplateId,
                             SelectionId = Convert.ToInt64(selection.SelectionId),
                             Line = selection.Line,
+                            IsHandicap = selection.IsHandicap,
                             SportName = selection.SportName,
                             SegmentName = selection.SegmentName,
                             LeagueName = selection.LeagueName,
@@ -4697,6 +4712,39 @@ namespace Platform.API.Repository
                     _memCache.DeleteCache(request.CacheKey);
 
                 _logger.LogInformation($"DeleteCachePreload Finished: {JsonSerializer.Serialize(request)}");
+            }
+
+            // Payload-carrying translation change (external translation script, 2026-07 translation-
+            // flow redesign): forward the changed TranslationCache2 rows to Platform.CacheSync.Service,
+            // which purges the Sportsbook.API translation cache and relays them to OE.Adapter.Service.
+            if (request.CacheType == CacheType.DynamicTranslation && request.Translations?.Count > 0)
+            {
+                var message = new OnTranslationChangeMessage
+                {
+                    Tr = request.Translations
+                        .Where(t => t != null
+                            && !string.IsNullOrWhiteSpace(t.StringId)
+                            && !string.IsNullOrWhiteSpace(t.TargetLanguage))
+                        .Select(t => new TranslationChangeItem
+                        {
+                            StId = t.StringId,
+                            LaCo = t.TargetLanguage,
+                            Tx = t.TargetText ?? string.Empty
+                        })
+                        .ToList()
+                };
+
+                if (message.Tr.Count > 0)
+                {
+                    // 5-arg CPublish: the only overload that lazily connects (GetConnection) and
+                    // opens its own channel — Platform.API is publish-only and never calls
+                    // Connect(), so the 4-arg overload (which delegates to Publish -> _model)
+                    // would NullReference here. Queue/RoutingKey are intentionally empty in
+                    // appsettings so the lazy connect never starts a consumer.
+                    _messageBroker.CPublish(message, "OnTranslationChange", "r.oe.cachesync.ontranslationchange", Guid.NewGuid().ToString().ToUpper(), 0);
+
+                    _logger.LogInformation($"DeleteCachePreload published OnTranslationChange with {message.Tr.Count} items");
+                }
             }
 
             return new BaseResponseDTO<bool>

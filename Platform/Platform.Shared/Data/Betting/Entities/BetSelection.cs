@@ -21,6 +21,10 @@ namespace Platform.Shared.Data.Betting.Entities
         public string MarketTemplateId { get; set; }
         public long MarketId { get; set; }
         public string MarketName { get; set; }
+        // Captured from the live Mongo Market at bet placement. Bets placed before this column
+        // existed default to false (DB column default) -- translation lookups for those rows render
+        // the template name without a recomposed line/handicap suffix.
+        public bool IsHandicap { get; set; }
         public string SelectionTemplateId { get; set; }
         public long SelectionId { get; set; }
         public string SelectionName { get; set; }

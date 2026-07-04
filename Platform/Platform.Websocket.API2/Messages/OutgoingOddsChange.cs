@@ -43,6 +43,14 @@ namespace Platform.WebSocket.API2.Messages
         public int MaCo { get; set; }
         public bool IsBeBu { get; set; }
         public List<OutgoingMarket> Ma { get; set; }
+        // Translation deltas ({language code, translated text}) forwarded from
+        // OE.Websocket.Service only when the value changed upstream and the list is non-empty.
+        // Null = unchanged/none — clients keep their current translated names.
+        public List<OutgoingTranslation> SpTr { get; set; }
+        public List<OutgoingTranslation> SegTr { get; set; }
+        public List<OutgoingTranslation> LeTr { get; set; }
+        public List<OutgoingTranslation> HoTr { get; set; }
+        public List<OutgoingTranslation> AwTr { get; set; }
     }
     public class OutgoingMarket
     {
@@ -53,11 +61,14 @@ namespace Platform.WebSocket.API2.Messages
         public string MaTeId { get; set; }
         public string MaId { get; set; }
         public string Li { get; set; }
+        public bool IsHa { get; set; } // IsHandicap — clients recompose translated selection names from template + line
         public int MaStId { get; set; }
         public string MaStNa { get; set; }
         public string MaNa { get; set; }
         public int SoOr { get; set; }
         public bool IsBeBu { get; set; }
+        // See OddsChangeFixture translation deltas.
+        public List<OutgoingTranslation> MaTeTr { get; set; }
         public List<OutgoingSelection> Se { get; set; }
     }
     public class OutgoingSelection
@@ -71,6 +82,13 @@ namespace Platform.WebSocket.API2.Messages
         public string InOd { get; set; }
         public bool IsAc { get; set; }
         public int SoOr { get; set; }
+        // See OddsChangeFixture translation deltas.
+        public List<OutgoingTranslation> SeTeTr { get; set; }
+    }
+    public class OutgoingTranslation
+    {
+        public string LaCo { get; set; }
+        public string Tx { get; set; }
     }
     public class OutgoingSportTranslation
     {

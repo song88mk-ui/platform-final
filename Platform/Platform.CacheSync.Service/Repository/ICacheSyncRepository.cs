@@ -11,5 +11,6 @@ namespace Platform.CacheSync.Service.Repository
         void ProcessParlayBonusChange(OnDeleteCacheMessage message);
         void ProcessClientChange(OnDeleteCacheMessage message);
         void ProcessDynamicTranslationChange(OnDeleteCacheMessage message);
+        void ProcessTranslationChange(OnTranslationChangeMessage message);
     }
 }

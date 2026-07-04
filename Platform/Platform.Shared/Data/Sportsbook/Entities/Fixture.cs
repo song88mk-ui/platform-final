@@ -53,6 +53,11 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public string AwNa { get; set; }
         public int AwBeId { get; set; }
         public int LeBeId { get; set; }
+        // Team-name translations (written by OE.Sportsbook.Service from TranslationCache2 keys
+        // "Te:{HoId}" / "Te:{AwId}", 2026-07 translation-flow redesign). Fixture names for non-EN
+        // languages are composed from these two lists ("{Ho} vs. {Aw}").
+        public List<TeamTranslationMDB> HoNaTr { get; set; }
+        public List<TeamTranslationMDB> AwNaTr { get; set; }
         public List<PeriodScoreMDB> PeSc { get; set; }
         public int CuSe { get; set; }
     }
@@ -145,6 +150,13 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         [BsonId]
         public string LaCo { get; set; }
         public string FiNa { get; set; }
+    }
+
+    public class TeamTranslationMDB
+    {
+        [BsonId]
+        public string LaCo { get; set; }
+        public string TeNa { get; set; }
     }
 
     public class FixtureProbabilityFilter

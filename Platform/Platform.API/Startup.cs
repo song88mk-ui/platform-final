@@ -82,6 +82,12 @@ namespace Platform.API
             services.AddControllers();
 
             services.AddSingleton<IMemCache, MemCache>();
+            // Publish-only broker — used by DeleteCachePreload to forward OnTranslationChange to
+            // Platform.CacheSync.Service. Nothing calls Connect(): publishes MUST use the 5-arg
+            // CPublish overload (lazy GetConnection + own channel); the 4-arg overloads require a
+            // prior Connect() and would NullReference. MessageBroker:Queue is intentionally empty
+            // so the lazy connect never declares a queue or starts consuming.
+            services.AddSingleton<IMessageBroker, MessageBroker>();
             services.AddScoped<IPlatformRepository, PlatformRepository>();
             services.AddHttpClient<IBettingRepository, BettingRepository>();
             services.AddHttpClient<IOperatorRepository, OperatorRepository>();

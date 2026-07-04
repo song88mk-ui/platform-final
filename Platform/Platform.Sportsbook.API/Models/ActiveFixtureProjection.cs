@@ -36,5 +36,7 @@ namespace Platform.Sportsbook.API.Models
         public List<SegmentTranslationMDB> SegNaTr { get; set; }
         public List<LeagueTranslationMDB> LeNaTr { get; set; }
         public List<FixtureTranslationMDB> FiNaTr { get; set; }
+        public List<TeamTranslationMDB> HoNaTr { get; set; }
+        public List<TeamTranslationMDB> AwNaTr { get; set; }
     }
 }

@@ -263,8 +263,13 @@ namespace Platform.Sportsbook.API.Repository
 
             foreach (var stringId in stringIds.Distinct())
             {
-                var cacheKey = $"{CACHE_PREFIX}{languageCode}:{stringId}";
-                _memCache.DeleteCache(cacheKey);
+                // Both read-through namespaces cache per (language, STRING_ID): the plain one
+                // (SportsbookDynamic path) and "s:" (TranslationCache STRING_ID / template-key
+                // path — previously missed here, leaving stale entries until TTL). The content-
+                // hash namespace ("h:") can't be derived from a STRING_ID and is only cleared by
+                // PurgeAll.
+                _memCache.DeleteCache($"{CACHE_PREFIX}{languageCode}:{stringId}");
+                _memCache.DeleteCache($"{CACHE_PREFIX}s:{languageCode}:{stringId}");
             }
         }
 

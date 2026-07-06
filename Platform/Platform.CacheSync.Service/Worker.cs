@@ -88,6 +88,10 @@ namespace Platform.CacheSync.Service
                         var translationChange = JsonSerializer.Deserialize<OnTranslationChangeMessage>(payload);
                         _cacheSyncRepository.ProcessTranslationChange(translationChange);
                         break;
+                    case "OnStaticTranslationChange":
+                        var staticTranslation = JsonSerializer.Deserialize<OnDeleteCacheMessage>(payload);
+                        _cacheSyncRepository.ProcessStaticTranslationChange(staticTranslation);
+                        break;
                 }
             }
             catch (Exception ex)

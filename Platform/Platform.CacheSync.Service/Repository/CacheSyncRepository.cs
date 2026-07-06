@@ -161,6 +161,20 @@ namespace Platform.CacheSync.Service.Repository
             }
         }
 
+        // Static UI-label change (Backoffice SportsbookStatic edit): purge the Sportsbook.API
+        // "tr" / "tr-{LANG}" caches so the next v1/sportsbook/translations call re-reads SQL.
+        // No onward publish — nothing downstream of Sportsbook.API consumes static labels.
+        public async void ProcessStaticTranslationChange(OnDeleteCacheMessage message)
+        {
+            var request = new CachePreloadRequestDTO
+            {
+                CacheType = CacheType.StaticTranslation,
+                CacheKey = message?.CacheKey ?? string.Empty
+            };
+
+            await DeleteCachePreload_SportsbookApi(request);
+        }
+
         #region Private Methods
         private async Task<bool> DeleteCachePreload_SportsbookApi(CachePreloadRequestDTO request)
         {

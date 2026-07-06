@@ -10407,6 +10407,15 @@ namespace Platform.Sportsbook.API.Repository
                 _memCache.DeleteCacheByPrefix("nal");
             }
 
+            if (request.CacheType == CacheType.StaticTranslation)
+            {
+                // Backoffice edited a SportsbookStatic row. Drop the whole-table cache and every
+                // per-language merged result — EN rows are merged into all languages, so a single
+                // language's edit can invalidate them all (GetTranslationByLanguageCode).
+                _memCache.DeleteCache("tr");
+                _memCache.DeleteCacheByPrefix("tr-");
+            }
+
             _logger.LogInformation($"DeleteCachePreload Finished: {JsonSerializer.Serialize(request)}");
 
             return new BaseResponseDTO<bool>

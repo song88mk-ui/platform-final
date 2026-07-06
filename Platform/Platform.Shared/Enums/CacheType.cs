@@ -9,5 +9,6 @@
         ParlayBonus = 5,
         Client = 6,
         DynamicTranslation = 7,
+        StaticTranslation = 8,
     }
 }

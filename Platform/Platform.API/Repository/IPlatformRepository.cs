@@ -88,7 +88,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<ESportConfigResponseDTO>> GetESportConfig(string clientId, string operatorToken, string langCode, OGClientRequest ogParameters);
         Task<BaseResponseDTO<CasinoBetHistoryResponseDTO>> GetCasinoBetHistory(string apiKey, string clientId, string langCode, string operatorToken, BetHistoryRequest request, OGClientRequest ogParameters);
         Task<BaseResponseDTO<List<TranslationResponseDTO>>> GetTranslationByLanguageCode(string apiKey, string clientId, string langCode);
-        Task<BaseResponseDTO<Dictionary<string, string>>> GetTranslationsByContent(string apiKey, string clientId, string langCode, Dictionary<string, string> keyToSourceText);
         Task<BaseResponseDTO<BetStatus>> GetBetStatus(string clientId, BetStatusRequest request);
         Task<BaseResponseDTO<bool>> DeleteCachePreload(CachePreloadRequestDTO request);
         Task<BaseResponseDTO<List<LeagueHighlightsResponseDTO>>> GetLeagueHighlights(string clientId, string langCode);

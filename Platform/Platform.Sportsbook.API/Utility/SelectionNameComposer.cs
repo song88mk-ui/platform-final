@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Platform.Sportsbook.API.Utility
 {
     // Ports bet-genius OddsFeedRepository.GetSelectionName so the display name recomposed from the
-    // translated template + line matches the SeNa stored in SportsbookDynamic byte-for-byte.
+    // translated template + line matches the English SeNa composed by the feed byte-for-byte.
     // Over/Under templates append " {line}"; other handicap markets append the signed line, with
     // the sign flipped for SignFlipHandicapTemplateIds. Non-handicap markets are unchanged.
     // Template-id numbering is bet-genius's SeTeId scheme (the only source in production today) --

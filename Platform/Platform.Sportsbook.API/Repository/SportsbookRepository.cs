@@ -40,12 +40,6 @@ namespace Platform.Sportsbook.API.Repository
         private readonly SportsbookContext _sportsbookContext;
         private readonly TranslationContext _translationContext;
         private readonly IConfiguration _configuration;
-        private readonly bool _useTranslationTemplateKey;
-        // Resolves non-EN names from the per-language *NaTr lists already fetched with the Mongo
-        // documents (written by OE.Sportsbook.Service from the adapter's TranslationCache2
-        // enrichment — 2026-07 translation-flow redesign) instead of SQL. Takes precedence over
-        // Custom:Translation:UseTemplateKey. Default OFF until the Mongo translations are populated.
-        private readonly bool _useMongoTranslations;
         private readonly ILogger<SportsbookRepository> _logger;
         private readonly ActivitySource _activitySource;
 
@@ -66,7 +60,6 @@ namespace Platform.Sportsbook.API.Repository
         private readonly IRabbitMQRepository _rabbitMQRepository;
         private readonly IBetBuilderRepository _betBuilderRepository;
         private readonly IServiceScopeFactory _scopeFactory;
-        private readonly ITranslationRepository _translationRepository;
 
         private readonly List<string> _africaClientCodes = new List<string>();
         private readonly List<string> _countryWhiteList = new List<string>();
@@ -83,13 +76,10 @@ namespace Platform.Sportsbook.API.Repository
             IRabbitMQRepository rabbitMQRepository,
             IBetBuilderRepository betBuilderRepository,
             IServiceScopeFactory scopeFactory,
-            ITranslationRepository translationRepository,
             ILogger<SportsbookRepository> logger,
             Instrumentation instrumentation)
         {
             _configuration = configuration;
-            _useTranslationTemplateKey = _configuration.GetValue<bool>("Custom:Translation:UseTemplateKey", false);
-            _useMongoTranslations = _configuration.GetValue<bool>("Custom:Translation:UseMongoTranslations", false);
             _sportsbookContext = sportsbookContext;
             _translationContext = translationContext;
             _httpClient = httpClient;
@@ -100,7 +90,6 @@ namespace Platform.Sportsbook.API.Repository
             _rabbitMQRepository = rabbitMQRepository;
             _betBuilderRepository = betBuilderRepository;
             _scopeFactory = scopeFactory;
-            _translationRepository = translationRepository;
 
             _africaClientCodes = _configuration["Custom:AfricaClientCodes"].Split(',').ToList();
             _countryWhiteList = _configuration["Custom:CountryWhiteList"].Split(',').ToList();
@@ -1508,35 +1497,51 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            // Bet-history/manual-bet-details selections carry their own ids and source text (captured
-            // at bet placement, permanent in SQL) and no longer resolve via the live Mongo catalogue --
-            // a settled bet's fixture/market/selection can age out of Mongo (owned by odds-engine-2),
-            // which silently broke translation for older bets. Sport/Segment/League resolve by their
-            // own id and Market/Selection by their MaTeId/SeTeId template (the same SportsbookGlossary
-            // STRING_ID keys the live-catalogue path uses -- see ResolveTemplateTranslations); selection
-            // names are recomposed with the stored Line/IsHandicap via ComposeSelectionName. FixtureName
-            // has no template-id equivalent captured in the bet ledger (no stored home/away team ids),
-            // so it keeps resolving by SOURCE_HASH content-hash of the stored name.
-            var stringIdLookup = new Dictionary<string, string>();
-            var contentMap = new Dictionary<string, string>();
+            // Bet-history/manual-bet-details names resolve from the live Mongo catalogue's *NaTr
+            // lists (the SQL cachekey path was removed -- Mongo + websocket deltas are the only
+            // translation sources). A settled bet's fixture/market/selection can age out of Mongo
+            // (owned by odds-engine-2); a missing document simply yields no map entry, so names
+            // fall back to the stored English source text captured at bet placement.
+            var translations = new Dictionary<string, string>();
 
-            foreach (var s in request.Selections)
+            if (request.LanguageCode != LanguageCode.EN && request.Selections.Count > 0)
             {
-                stringIdLookup[$"SpId:{s.FixtureId}"] = $"SpId:{s.SportId}";
-                stringIdLookup[$"SegId:{s.FixtureId}"] = $"SegId:{s.SegmentId}";
-                stringIdLookup[$"LeId:{s.FixtureId}"] = $"LeId:{s.LeagueId}";
+                var language = request.LanguageCode.ToString();
 
-                if (!string.IsNullOrWhiteSpace(s.MarketTemplateId))
-                    stringIdLookup[$"MaId:{s.MarketId}"] = $"MaTe:{s.MarketTemplateId}";
+                var fixtureIds = request.Selections.Select(s => s.FixtureId).Distinct().ToList();
+                var marketIds = request.Selections.Select(s => s.MarketId).Distinct().ToList();
+                var selectionIds = request.Selections.Select(s => s.SelectionId).Distinct().ToList();
 
-                if (!string.IsNullOrWhiteSpace(s.MarketTemplateId) && !string.IsNullOrWhiteSpace(s.SelectionTemplateId))
-                    stringIdLookup[$"SeId:{s.SelectionId}"] = $"SeTe:{s.MarketTemplateId}:{s.SelectionTemplateId}";
+                var fixtures = await fixtureCollection
+                    .Find(Builders<Fixture>.Filter.In(f => f.FiId, fixtureIds))
+                    .ToListAsync();
 
-                AddContentKey(contentMap, s.FixtureId, "FiId", s.FixtureName);
+                var markets = await marketCollection
+                    .Find(Builders<Market>.Filter.In(m => m.MaId, marketIds))
+                    .ToListAsync();
+
+                var selections = await selectionCollection
+                    .Find(Builders<Selection>.Filter.In(s => s.SeId, selectionIds))
+                    .ToListAsync();
+
+                // Sport/Segment/League are keyed per fixture (mirroring the response builder);
+                // fixture names compose from the two translated team names.
+                foreach (var fixture in fixtures)
+                {
+                    AddMongoTranslation(translations, $"SpId:{fixture.FiId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
+                    AddMongoTranslation(translations, $"SegId:{fixture.FiId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
+                    AddMongoTranslation(translations, $"LeId:{fixture.FiId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
+                    AddMongoTranslation(translations, $"FiId:{fixture.FiId}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language));
+                }
+
+                foreach (var market in markets)
+                    AddMongoTranslation(translations, $"MaId:{market.MaId}", FindTranslation(market.MaNaTr, language, t => t.LaCo, t => t.MaNa));
+
+                // SeNaTr carries the translated selection TEMPLATE; the handicap line is recomposed
+                // in the response builder from the Line/IsHandicap captured at bet placement.
+                foreach (var selection in selections)
+                    AddMongoTranslation(translations, $"SeId:{selection.SeId}", FindTranslation(selection.SeNaTr, language, t => t.LaCo, t => t.SeNa));
             }
-
-            var stringIdTranslations = await _translationRepository.GetTranslationCacheAsync(stringIdLookup, request.LanguageCode.ToString());
-            var contentTranslations = await _translationRepository.GetTranslationsByContentAsync(contentMap, request.LanguageCode.ToString());
 
             return new BaseResponseDTO<BetFixtureTranslationResponseDTO>
             {
@@ -1546,17 +1551,17 @@ namespace Platform.Sportsbook.API.Repository
                 {
                     Selections = request.Selections.Select(s => new BetFixtureSelectionTranslationResponseDTO
                     {
-                        SportName = GetTranslation(stringIdTranslations, s.FixtureId, "SpId", s.SportName),
-                        SegmentName = GetTranslation(stringIdTranslations, s.FixtureId, "SegId", s.SegmentName),
-                        LeagueName = GetTranslation(stringIdTranslations, s.FixtureId, "LeId", s.LeagueName),
+                        SportName = GetTranslation(translations, s.FixtureId, "SpId", s.SportName),
+                        SegmentName = GetTranslation(translations, s.FixtureId, "SegId", s.SegmentName),
+                        LeagueName = GetTranslation(translations, s.FixtureId, "LeId", s.LeagueName),
                         FixtureId = s.FixtureId,
-                        FixtureName = GetTranslation(contentTranslations, s.FixtureId, "FiId", s.FixtureName),
+                        FixtureName = GetTranslation(translations, s.FixtureId, "FiId", s.FixtureName),
                         MarketId = s.MarketId,
-                        MarketName = GetTranslation(stringIdTranslations, s.MarketId, "MaId", s.MarketName),
+                        MarketName = GetTranslation(translations, s.MarketId, "MaId", s.MarketName),
                         SelectionId = s.SelectionId,
                         SelectionName = SelectionNameComposer.Compose(
                             s.Line,
-                            GetTranslation(stringIdTranslations, s.SelectionId, "SeId", s.SelectionName),
+                            GetTranslation(translations, s.SelectionId, "SeId", s.SelectionName),
                             s.SelectionTemplateId,
                             s.IsHandicap)
                     }).ToList()
@@ -5154,10 +5159,10 @@ namespace Platform.Sportsbook.API.Repository
             }
             else
             {
-                // Localized (non-EN) search. The Mongo base names (LeNa/FiNa) are English only and the
-                // embedded *Tr translation arrays are deprecated/unpopulated, so localized names live in
-                // the SQL translation store (SportsbookDynamic, loaded via LoadTranslations) and cannot be
-                // matched inside the Mongo query. So load the active match fixtures once as a shared
+                // Localized (non-EN) search. The Mongo base names (LeNa/FiNa) are English only;
+                // localized names come from the per-document *NaTr arrays (resolved via
+                // LoadTranslations after the query), so they cannot be text-matched inside the
+                // Mongo query itself. So load the active match fixtures once as a shared
                 // candidate set and filter them in-memory: the categorization loops below apply
                 // MatchLeague to the league results and MatchFixture to the fixture results.
                 leagueFilter = request.SportGroupId != 0
@@ -10366,26 +10371,10 @@ namespace Platform.Sportsbook.API.Repository
 
             if (request.CacheType == CacheType.DynamicTranslation)
             {
-                // Payload-carrying translation change (2026-07 translation-flow redesign): the
-                // request lists the exact changed (StringId, TargetLanguage) pairs — invalidate
-                // per language so the next read re-fetches the new text immediately instead of
-                // serving the stale entry until its TTL.
-                if (request.Translations?.Count > 0)
-                {
-                    foreach (var languageGroup in request.Translations
-                        .Where(t => t != null && !string.IsNullOrWhiteSpace(t.StringId) && !string.IsNullOrWhiteSpace(t.TargetLanguage))
-                        .GroupBy(t => t.TargetLanguage.ToUpperInvariant()))
-                    {
-                        _translationRepository.InvalidateTranslationsCache(
-                            languageGroup.Select(t => t.StringId).ToList(),
-                            languageGroup.Key);
-                    }
-                }
-                else
-                {
-                    _translationRepository.InvalidateTranslationsCache(request.CacheKeys, request.LanguageCode.ToString(), request.PurgeAll);
-                }
-
+                // Translation change (2026-07 translation-flow redesign): names now come from the
+                // Mongo *NaTr lists (the SQL cachekey read-through cache was removed), so only the
+                // cached REST responses need purging — the next read re-fetches the documents with
+                // the freshly-persisted translations.
                 _memCache.DeleteCacheByPrefix("ntf");
                 _memCache.DeleteCacheByPrefix("ntfbl");
                 _memCache.DeleteCacheByPrefix("nal");
@@ -10468,21 +10457,6 @@ namespace Platform.Sportsbook.API.Repository
             return result;
         }
 
-        public async Task<BaseResponseDTO<Dictionary<string, string>>> GetTranslationsByContent(TranslationByContentRequestDTO request)
-        {
-            var languageCode = request.LanguageCode.ToString().ToUpper();
-
-            var result = await _translationRepository.GetTranslationsByContentAsync(
-                request.KeyToSourceText ?? new Dictionary<string, string>(),
-                languageCode);
-
-            return new BaseResponseDTO<Dictionary<string, string>>
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = result
-            };
-        }
         private MarketDTO GetTopGameMarket(List<MarketFilter> markets, List<SelectionFilter> selections, LanguageCode languageCode, Guid clientid, string clientCode, int sportId, int fixtureTypeId, int fixtureStatusId, List<ClientMarketTemplateGroup> clientMarketTemplateGroups, List<BetBuilderMarketTemplates> betBuilderMarketTemplates)
         {
             var translations = LoadTranslations(markets, selections, languageCode);
@@ -12623,11 +12597,12 @@ namespace Platform.Sportsbook.API.Repository
             return fallback;
         }
 
-        // Mongo-sourced translation helpers (Custom:Translation:UseMongoTranslations, 2026-07
-        // translation-flow redesign): names resolve from the per-language *NaTr lists already
-        // fetched with the documents (ElemMatch projections), so no SQL round-trip. Result keys
-        // mirror the SQL paths ("SpId:{id}" / "FiId:{id}" / "MaId:{id}" / "SeId:{id}") so
-        // GetTranslation callers are unchanged; missing entries fall back to the English name.
+        // Mongo-sourced translation helpers (2026-07 translation-flow redesign; made the ONLY
+        // path when the UseMongoTranslations flag and the legacy SQL cachekey resolution were
+        // removed): names resolve from the per-language *NaTr lists already fetched with the
+        // documents (ElemMatch projections), so no SQL round-trip. Result keys are
+        // "SpId:{id}" / "FiId:{id}" / "MaId:{id}" / "SeId:{id}"; missing entries fall back to
+        // the English name via GetTranslation.
 
         private static string FindTranslation<T>(
             List<T> translations,
@@ -12657,8 +12632,8 @@ namespace Platform.Sportsbook.API.Repository
                 map[key] = translated;
         }
 
-        // Fixture names for non-EN languages are composed from the two translated team names,
-        // mirroring ResolveFixtureTranslations (GetHomeName/GetAwayName split on " vs. ").
+        // Fixture names for non-EN languages are composed from the two translated team names
+        // (GetHomeName/GetAwayName downstream split on " vs. ").
         private static string ComposeMongoFixtureName(
             List<TeamTranslationMDB> hoNaTr,
             List<TeamTranslationMDB> awNaTr,
@@ -12710,108 +12685,15 @@ namespace Platform.Sportsbook.API.Repository
             return map;
         }
 
-        // Template-glossary resolution (Custom:Translation:UseTemplateKey). Looks up TranslationCache
-        // directly by STRING_ID — the same key bet-genius writes to SportsbookGlossary — rather than
-        // hashing source text. Markets resolve by market template (MaTe:{MaTeId}); selections by
-        // selection template (SeTe:{MaTeId}:{SeTeId}) with the handicap line re-composed onto the
-        // translated template (mirrors bet-genius GetSelectionName). Both are re-keyed to the entity
-        // keys ("MaId:{id}" / "SeId:{id}") so GetTranslation callers are unchanged. Falls back to the
-        // stored name (via GetTranslation) when a template is missing.
-        private Dictionary<string, string> ResolveTemplateTranslations(
-            Dictionary<string, string> marketKeyToMaTeId,
-            Dictionary<long, (string li, bool isHa, string maTeId)> marketByMaId,
-            List<(string selectionId, long maId, string seTeId)> selections,
-            LanguageCode languageCode)
-        {
-            // entity key -> SportsbookGlossary STRING_ID (MaTe:{MaTeId} / SeTe:{MaTeId}:{SeTeId}).
-            var lookup = new Dictionary<string, string>();
-
-            foreach (var kvp in marketKeyToMaTeId)
-                lookup[kvp.Key] = $"MaTe:{kvp.Value}";
-
-            // selection entity key -> (line, isHandicap, seTeId) for line recomposition
-            var selectionContext = new List<(string entityKey, string li, bool isHa, string seTeId)>();
-
-            foreach (var selection in selections)
-            {
-                if (string.IsNullOrWhiteSpace(selection.seTeId))
-                    continue;
-
-                if (!marketByMaId.TryGetValue(selection.maId, out var market) || string.IsNullOrWhiteSpace(market.maTeId))
-                    continue;
-
-                var entityKey = $"SeId:{selection.selectionId}";
-                lookup[entityKey] = $"SeTe:{market.maTeId}:{selection.seTeId}";
-
-                selectionContext.Add((entityKey, market.li, market.isHa, selection.seTeId));
-            }
-
-            var result = new Dictionary<string, string>();
-
-            if (lookup.Count == 0)
-                return result;
-
-            var resolved = _translationRepository
-                .GetTranslationCacheAsync(lookup, languageCode.ToString())
-                .GetAwaiter().GetResult();
-
-            // Market names (translated template as-is).
-            foreach (var kvp in marketKeyToMaTeId)
-                if (resolved.TryGetValue(kvp.Key, out var name) && !string.IsNullOrEmpty(name))
-                    result[kvp.Key] = name;
-
-            // Selection names (translated template + recomposed line).
-            foreach (var c in selectionContext)
-                if (resolved.TryGetValue(c.entityKey, out var template) && !string.IsNullOrEmpty(template))
-                    result[c.entityKey] = SelectionNameComposer.Compose(c.li, template, c.seTeId, c.isHa);
-
-            return result;
-        }
-
         private Dictionary<string, string> LoadTranslations(
             List<MarketFilter> markets,
             List<SelectionFilter> selections,
             LanguageCode languageCode)
         {
-            if (_useMongoTranslations)
-                return BuildMongoMarketSelectionTranslations(
-                    markets.Select(m => (m.Id, m.MaId, m.Li, m.IsHa, m.MaNaTr)),
-                    selections.Select(s => (s.Id, s.MaId, s.SeTeId, s.SeNaTr)),
-                    languageCode);
-
-            if (_useTranslationTemplateKey)
-            {
-                var marketKeyToMaTeId = new Dictionary<string, string>();
-                var marketByMaId = new Dictionary<long, (string li, bool isHa, string maTeId)>();
-                foreach (var market in markets)
-                {
-                    if (!string.IsNullOrWhiteSpace(market.MaTeId))
-                        marketKeyToMaTeId[$"MaId:{market.Id}"] = market.MaTeId;
-                    marketByMaId[market.MaId] = (market.Li, market.IsHa, market.MaTeId);
-                }
-
-                var selectionInputs = new List<(string selectionId, long maId, string seTeId)>();
-                foreach (var selection in selections)
-                    selectionInputs.Add((selection.Id, selection.MaId, selection.SeTeId));
-
-                return ResolveTemplateTranslations(marketKeyToMaTeId, marketByMaId, selectionInputs, languageCode);
-            }
-
-            var map = new Dictionary<string, string>();
-
-            foreach (var market in markets)
-            {
-                AddContentKey(map, market.Id, "MaId", market.MaNa);
-            }
-
-            foreach (var selection in selections)
-            {
-                AddContentKey(map, selection.Id, "SeId", selection.SeNa);
-            }
-
-            return _translationRepository.GetTranslationsByContentAsync(
-                map,
-                languageCode.ToString()).GetAwaiter().GetResult();
+            return BuildMongoMarketSelectionTranslations(
+                markets.Select(m => (m.Id, m.MaId, m.Li, m.IsHa, m.MaNaTr)),
+                selections.Select(s => (s.Id, s.MaId, s.SeTeId, s.SeNaTr)),
+                languageCode);
         }
 
         private Dictionary<string, string> LoadTranslations(
@@ -12819,45 +12701,10 @@ namespace Platform.Sportsbook.API.Repository
             List<SelectionFilter> selections,
             LanguageCode languageCode)
         {
-            if (_useMongoTranslations)
-                return BuildMongoMarketSelectionTranslations(
-                    markets.Select(m => (m.Id, m.MaId, m.Li, m.IsHa, m.MaNaTr)),
-                    selections.Select(s => (s.Id, s.MaId, s.SeTeId, s.SeNaTr)),
-                    languageCode);
-
-            if (_useTranslationTemplateKey)
-            {
-                var marketKeyToMaTeId = new Dictionary<string, string>();
-                var marketByMaId = new Dictionary<long, (string li, bool isHa, string maTeId)>();
-                foreach (var market in markets)
-                {
-                    if (!string.IsNullOrWhiteSpace(market.MaTeId))
-                        marketKeyToMaTeId[$"MaId:{market.Id}"] = market.MaTeId;
-                    marketByMaId[market.MaId] = (market.Li, market.IsHa, market.MaTeId);
-                }
-
-                var selectionInputs = new List<(string selectionId, long maId, string seTeId)>();
-                foreach (var selection in selections)
-                    selectionInputs.Add((selection.Id, selection.MaId, selection.SeTeId));
-
-                return ResolveTemplateTranslations(marketKeyToMaTeId, marketByMaId, selectionInputs, languageCode);
-            }
-
-            var map = new Dictionary<string, string>();
-
-            foreach (var market in markets)
-            {
-                AddContentKey(map, market.Id, "MaId", market.MaNa);
-            }
-
-            foreach (var selection in selections)
-            {
-                AddContentKey(map, selection.Id, "SeId", selection.SeNa);
-            }
-
-            return _translationRepository.GetTranslationsByContentAsync(
-                map,
-                languageCode.ToString()).GetAwaiter().GetResult();
+            return BuildMongoMarketSelectionTranslations(
+                markets.Select(m => (m.Id, m.MaId, m.Li, m.IsHa, m.MaNaTr)),
+                selections.Select(s => (s.Id, s.MaId, s.SeTeId, s.SeNaTr)),
+                languageCode);
         }
 
         private Dictionary<string, string> LoadTranslations(
@@ -12865,392 +12712,151 @@ namespace Platform.Sportsbook.API.Repository
             List<Selection> selections,
             LanguageCode languageCode)
         {
-            if (_useMongoTranslations)
-                return BuildMongoMarketSelectionTranslations(
-                    markets.Select(m => (m.Id, m.MaId, m.Li, m.IsHa, m.MaNaTr)),
-                    selections.Select(s => (s.Id, s.MaId, s.SeTeId, s.SeNaTr)),
-                    languageCode);
-
-            if (_useTranslationTemplateKey)
-            {
-                var marketKeyToMaTeId = new Dictionary<string, string>();
-                var marketByMaId = new Dictionary<long, (string li, bool isHa, string maTeId)>();
-                foreach (var market in markets)
-                {
-                    if (!string.IsNullOrWhiteSpace(market.MaTeId))
-                        marketKeyToMaTeId[$"MaId:{market.Id}"] = market.MaTeId;
-                    marketByMaId[market.MaId] = (market.Li, market.IsHa, market.MaTeId);
-                }
-
-                var selectionInputs = new List<(string selectionId, long maId, string seTeId)>();
-                foreach (var selection in selections)
-                    selectionInputs.Add((selection.Id, selection.MaId, selection.SeTeId));
-
-                return ResolveTemplateTranslations(marketKeyToMaTeId, marketByMaId, selectionInputs, languageCode);
-            }
-
-            var map = new Dictionary<string, string>();
-
-            foreach (var market in markets)
-            {
-                AddContentKey(map, market.Id, "MaId", market.MaNa);
-            }
-
-            foreach (var selection in selections)
-            {
-                AddContentKey(map, selection.Id, "SeId", selection.SeNa);
-            }
-
-            return _translationRepository.GetTranslationsByContentAsync(
-                map,
-                languageCode.ToString()).GetAwaiter().GetResult();
+            return BuildMongoMarketSelectionTranslations(
+                markets.Select(m => (m.Id, m.MaId, m.Li, m.IsHa, m.MaNaTr)),
+                selections.Select(s => (s.Id, s.MaId, s.SeTeId, s.SeNaTr)),
+                languageCode);
         }
 
-        private async Task<Dictionary<string, string>> LoadTranslations(
+        private Task<Dictionary<string, string>> LoadTranslations(
             List<SportsLookupProjection> fixtures,
             LanguageCode languageCode)
         {
-            if (_useMongoTranslations)
-            {
-                var mongoMap = new Dictionary<string, string>();
-
-                if (languageCode == LanguageCode.EN)
-                    return mongoMap;
-
-                var language = languageCode.ToString();
-
-                foreach (var fixture in fixtures)
-                    AddMongoTranslation(mongoMap, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
-
-                return mongoMap;
-            }
-
             var map = new Dictionary<string, string>();
 
-            foreach (var fixture in fixtures)
-            {
-                AddContentKey(map, fixture.SpId, "SpId", fixture.SpNa);
-            }
+            if (languageCode == LanguageCode.EN)
+                return Task.FromResult(map);
 
-            return await _translationRepository.GetTranslationsByContentAsync(
-                map,
-                languageCode.ToString());
+            var language = languageCode.ToString();
+
+            foreach (var fixture in fixtures)
+                AddMongoTranslation(map, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
+
+            return Task.FromResult(map);
         }
 
-        private async Task<Dictionary<string, string>> LoadTranslations(
+        private Task<Dictionary<string, string>> LoadTranslations(
             List<Fixture> fixtures,
             LanguageCode languageCode)
         {
-            if (_useMongoTranslations)
-            {
-                var mongoMap = new Dictionary<string, string>();
-
-                if (languageCode == LanguageCode.EN)
-                    return mongoMap;
-
-                var language = languageCode.ToString();
-
-                foreach (var fixture in fixtures)
-                {
-                    AddMongoTranslation(mongoMap, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
-                    AddMongoTranslation(mongoMap, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
-                    AddMongoTranslation(mongoMap, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
-                    AddMongoTranslation(mongoMap, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language));
-                }
-
-                return mongoMap;
-            }
-
-            if (_useTranslationTemplateKey)
-                return await ResolveFixtureTemplates(fixtures, languageCode);
-
             var map = new Dictionary<string, string>();
+
+            if (languageCode == LanguageCode.EN)
+                return Task.FromResult(map);
+
+            var language = languageCode.ToString();
 
             foreach (var fixture in fixtures)
             {
-                AddContentKey(map, fixture.SpId, "SpId", fixture.SpNa);
-                AddContentKey(map, fixture.SegId, "SegId", fixture.SegNa);
-                AddContentKey(map, fixture.LeId, "LeId", fixture.LeNa);
-                AddContentKey(map, fixture.Id, "FiId", fixture.FiNa);
+                AddMongoTranslation(map, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
+                AddMongoTranslation(map, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
+                AddMongoTranslation(map, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
+                AddMongoTranslation(map, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language));
             }
 
-            return await _translationRepository.GetTranslationsByContentAsync(
-                map,
-                languageCode.ToString());
+            return Task.FromResult(map);
         }
 
-        private Task<Dictionary<string, string>> ResolveFixtureTemplates(
-            List<Fixture> fixtures,
-            LanguageCode languageCode)
-        {
-            var data = fixtures
-                .Select(f => (f.Id, f.SpId, f.SegId, f.LeId, f.HoId, f.AwId))
-                .ToList();
-
-            return ResolveFixtureTranslations(data, languageCode);
-        }
-
-        // Shared fixture resolution: sport/segment/league resolve by their own ids (STRING_ID ==
-        // "SpId:{id}"/"SegId:{id}"/"LeId:{id}", same as the entity key); each fixture NAME is composed
-        // from its two TRANSLATED team names ("{Ho} vs. {Aw}", STRING_ID "Te:{teamId}") and re-keyed to
-        // "FiId:{id}" so GetTranslation / GetHomeName / GetAwayName (which split on " vs. ") are
-        // unchanged. Falls back to the stored fixture name when either team has no translation.
-        private async Task<Dictionary<string, string>> ResolveFixtureTranslations(
-            List<(string fiId, int spId, int segId, int leId, string hoId, string awId)> fixtures,
-            LanguageCode languageCode)
-        {
-            var lookup = new Dictionary<string, string>();
-
-            foreach (var f in fixtures)
-            {
-                lookup[$"SpId:{f.spId}"] = $"SpId:{f.spId}";
-                lookup[$"SegId:{f.segId}"] = $"SegId:{f.segId}";
-                lookup[$"LeId:{f.leId}"] = $"LeId:{f.leId}";
-
-                if (!string.IsNullOrWhiteSpace(f.hoId))
-                    lookup[$"Ho:{f.fiId}"] = $"Te:{f.hoId}";
-                if (!string.IsNullOrWhiteSpace(f.awId))
-                    lookup[$"Aw:{f.fiId}"] = $"Te:{f.awId}";
-            }
-
-            var result = new Dictionary<string, string>();
-
-            if (lookup.Count == 0)
-                return result;
-
-            var resolved = await _translationRepository.GetTranslationCacheAsync(
-                lookup,
-                languageCode.ToString());
-
-            foreach (var f in fixtures)
-            {
-                // Sport / segment / league pass straight through (result keyed as GetTranslation expects).
-                if (resolved.TryGetValue($"SpId:{f.spId}", out var sp) && !string.IsNullOrEmpty(sp))
-                    result[$"SpId:{f.spId}"] = sp;
-                if (resolved.TryGetValue($"SegId:{f.segId}", out var seg) && !string.IsNullOrEmpty(seg))
-                    result[$"SegId:{f.segId}"] = seg;
-                if (resolved.TryGetValue($"LeId:{f.leId}", out var le) && !string.IsNullOrEmpty(le))
-                    result[$"LeId:{f.leId}"] = le;
-
-                // Fixture name composed from the two translated team names.
-                if (resolved.TryGetValue($"Ho:{f.fiId}", out var home)
-                    && resolved.TryGetValue($"Aw:{f.fiId}", out var away)
-                    && !string.IsNullOrEmpty(home) && !string.IsNullOrEmpty(away))
-                {
-                    result[$"FiId:{f.fiId}"] = $"{home} vs. {away}";
-                }
-            }
-
-            return result;
-        }
-
-        private async Task<Dictionary<string, string>> LoadTranslations(
+        private Task<Dictionary<string, string>> LoadTranslations(
             List<ActiveFixtureProjection> fixtures,
             LanguageCode languageCode)
         {
-            if (_useMongoTranslations)
-            {
-                var mongoMap = new Dictionary<string, string>();
-
-                if (languageCode == LanguageCode.EN)
-                    return mongoMap;
-
-                var language = languageCode.ToString();
-
-                foreach (var fixture in fixtures)
-                {
-                    AddMongoTranslation(mongoMap, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
-                    AddMongoTranslation(mongoMap, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
-                    AddMongoTranslation(mongoMap, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
-                    AddMongoTranslation(mongoMap, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language));
-                }
-
-                return mongoMap;
-            }
-
-            if (_useTranslationTemplateKey)
-            {
-                var data = fixtures
-                    .Select(f => (f.Id, f.SpId, f.SegId, f.LeId, f.HoId, f.AwId))
-                    .ToList();
-
-                return await ResolveFixtureTranslations(data, languageCode);
-            }
-
             var map = new Dictionary<string, string>();
+
+            if (languageCode == LanguageCode.EN)
+                return Task.FromResult(map);
+
+            var language = languageCode.ToString();
 
             foreach (var fixture in fixtures)
             {
-                AddContentKey(map, fixture.SpId, "SpId", fixture.SpNa);
-                AddContentKey(map, fixture.SegId, "SegId", fixture.SegNa);
-                AddContentKey(map, fixture.LeId, "LeId", fixture.LeNa);
-                AddContentKey(map, fixture.Id, "FiId", fixture.FiNa);
+                AddMongoTranslation(map, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
+                AddMongoTranslation(map, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
+                AddMongoTranslation(map, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
+                AddMongoTranslation(map, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language));
             }
 
-            return await _translationRepository.GetTranslationsByContentAsync(
-                map,
-                languageCode.ToString());
+            return Task.FromResult(map);
         }
 
-        private async Task<Dictionary<string, string>> LoadTranslations(
+        private Task<Dictionary<string, string>> LoadTranslations(
             List<ActiveFixtureCountProjection> fixtures,
             LanguageCode languageCode)
         {
-            if (_useMongoTranslations)
-            {
-                var mongoMap = new Dictionary<string, string>();
-
-                if (languageCode == LanguageCode.EN)
-                    return mongoMap;
-
-                var language = languageCode.ToString();
-
-                foreach (var fixture in fixtures)
-                    AddMongoTranslation(mongoMap, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
-
-                return mongoMap;
-            }
-
             var map = new Dictionary<string, string>();
 
-            foreach (var fixture in fixtures)
-            {
-                AddContentKey(map, fixture.SpId, "SpId", fixture.SpNa);
-            }
+            if (languageCode == LanguageCode.EN)
+                return Task.FromResult(map);
 
-            return await _translationRepository.GetTranslationsByContentAsync(
-                map,
-                languageCode.ToString());
+            var language = languageCode.ToString();
+
+            foreach (var fixture in fixtures)
+                AddMongoTranslation(map, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
+
+            return Task.FromResult(map);
         }
 
-        private async Task<Dictionary<string, string>> LoadTranslations(
+        private Task<Dictionary<string, string>> LoadTranslations(
             List<SegmentsLookupProjection> fixtures,
             LanguageCode languageCode)
         {
-            if (_useMongoTranslations)
-            {
-                var mongoMap = new Dictionary<string, string>();
-
-                if (languageCode == LanguageCode.EN)
-                    return mongoMap;
-
-                var language = languageCode.ToString();
-
-                foreach (var fixture in fixtures)
-                {
-                    AddMongoTranslation(mongoMap, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
-                    AddMongoTranslation(mongoMap, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
-                }
-
-                return mongoMap;
-            }
-
             var map = new Dictionary<string, string>();
+
+            if (languageCode == LanguageCode.EN)
+                return Task.FromResult(map);
+
+            var language = languageCode.ToString();
 
             foreach (var fixture in fixtures)
             {
-                AddContentKey(map, fixture.SpId, "SpId", fixture.SpNa);
-                AddContentKey(map, fixture.SegId, "SegId", fixture.SegNa);
+                AddMongoTranslation(map, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
+                AddMongoTranslation(map, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
             }
 
-            return await _translationRepository.GetTranslationsByContentAsync(
-                map,
-                languageCode.ToString());
+            return Task.FromResult(map);
         }
 
-        private async Task<Dictionary<string, string>> LoadTranslations(
+        private Task<Dictionary<string, string>> LoadTranslations(
             List<LeaguesLookupProjection> fixtures,
             LanguageCode languageCode)
         {
-            if (_useMongoTranslations)
-            {
-                var mongoMap = new Dictionary<string, string>();
-
-                if (languageCode == LanguageCode.EN)
-                    return mongoMap;
-
-                var language = languageCode.ToString();
-
-                foreach (var fixture in fixtures)
-                {
-                    AddMongoTranslation(mongoMap, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
-                    AddMongoTranslation(mongoMap, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
-                    AddMongoTranslation(mongoMap, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
-                }
-
-                return mongoMap;
-            }
-
             var map = new Dictionary<string, string>();
+
+            if (languageCode == LanguageCode.EN)
+                return Task.FromResult(map);
+
+            var language = languageCode.ToString();
 
             foreach (var fixture in fixtures)
             {
-                AddContentKey(map, fixture.SpId, "SpId", fixture.SpNa);
-                AddContentKey(map, fixture.SegId, "SegId", fixture.SegNa);
-                AddContentKey(map, fixture.LeId, "LeId", fixture.LeNa);
+                AddMongoTranslation(map, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
+                AddMongoTranslation(map, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
+                AddMongoTranslation(map, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
             }
 
-            return await _translationRepository.GetTranslationsByContentAsync(
-                map,
-                languageCode.ToString());
+            return Task.FromResult(map);
         }
 
-        private async Task<Dictionary<string, string>> LoadTranslations(
+        private Task<Dictionary<string, string>> LoadTranslations(
             List<FixtureDetailsLimitedProjection> fixtures,
             LanguageCode languageCode)
         {
-            if (_useMongoTranslations)
-            {
-                var mongoMap = new Dictionary<string, string>();
-
-                if (languageCode == LanguageCode.EN)
-                    return mongoMap;
-
-                var language = languageCode.ToString();
-
-                foreach (var fixture in fixtures)
-                {
-                    AddMongoTranslation(mongoMap, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
-                    AddMongoTranslation(mongoMap, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
-                    AddMongoTranslation(mongoMap, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
-                    AddMongoTranslation(mongoMap, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language));
-                }
-
-                return mongoMap;
-            }
-
-            if (_useTranslationTemplateKey)
-            {
-                var data = fixtures
-                    .Select(f => (f.Id, f.SpId, f.SegId, f.LeId, f.HoId, f.AwId))
-                    .ToList();
-
-                return await ResolveFixtureTranslations(data, languageCode);
-            }
-
             var map = new Dictionary<string, string>();
+
+            if (languageCode == LanguageCode.EN)
+                return Task.FromResult(map);
+
+            var language = languageCode.ToString();
 
             foreach (var fixture in fixtures)
             {
-                AddContentKey(map, fixture.SpId, "SpId", fixture.SpNa);
-                AddContentKey(map, fixture.SegId, "SegId", fixture.SegNa);
-                AddContentKey(map, fixture.LeId, "LeId", fixture.LeNa);
-                AddContentKey(map, fixture.Id, "FiId", fixture.FiNa);
+                AddMongoTranslation(map, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
+                AddMongoTranslation(map, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
+                AddMongoTranslation(map, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
+                AddMongoTranslation(map, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language));
             }
 
-            return await _translationRepository.GetTranslationsByContentAsync(
-                map,
-                languageCode.ToString());
-        }
-
-        // Content-keyed variant: maps the entity key ("MaId:123") to its source text so the
-        // translation can be matched by SOURCE_HASH. Skips entries with no id or no source text.
-        private void AddContentKey(Dictionary<string, string> map, object? id, string prefix, string sourceText)
-        {
-            if (id == null || string.IsNullOrWhiteSpace(id.ToString()) || string.IsNullOrWhiteSpace(sourceText))
-                return;
-
-            map[$"{prefix}:{id}"] = sourceText;
+            return Task.FromResult(map);
         }
     }
 

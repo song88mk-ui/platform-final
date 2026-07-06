@@ -61,7 +61,6 @@ namespace Platform.API.Repository
         Task<BaseResponseDTO<ClientFixtureSortOrderResponseDTO>> GetFixtureSortOrder(FixtureSortOrderRequestDTO request);
         Task<BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>> GetMarketTemplatePlayerProps(MarketTemplatePlayerPropsRequestDTO request);
         Task<BaseResponseDTO<List<TranslationResponseDTO>>> GetTranslationByLanguageCode(TranslationRequestDTO request);
-        Task<BaseResponseDTO<Dictionary<string, string>>> GetTranslationsByContent(TranslationByContentRequestDTO request);
         Task<BaseResponseDTO<List<LeagueHighlightsResponseDTO>>> GetLeagueHighlights(LeagueHighlightsRequestDTO request);
         Task<BaseResponseDTO<TWResponseDTO>> GetLeagueHighlightsFixtures(LeagueHighlightsRequestDTO request);
         Task<BaseResponseDTO<bool>> TranslationRecovery(TranslationRecoveryRequestDTO request);

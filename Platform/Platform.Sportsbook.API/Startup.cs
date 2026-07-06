@@ -56,7 +56,6 @@ namespace Platform.Sportsbook.API
             services.AddHttpClient<ISportsbookRepository, SportsbookRepository>();
             services.AddHttpClient<IRabbitMQRepository, RabbitMQRepository>();
             services.AddHttpClient<IBetBuilderRepository, BetBuilderRepository>();
-            services.AddScoped<ITranslationRepository, TranslationRepository>();
 
             services.AddSwaggerGen(c =>
             {

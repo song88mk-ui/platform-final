@@ -896,7 +896,26 @@ namespace Platform.Sportsbook.API.Repository
                 fixtureFilter = Builders<Fixture>.Filter.Where(c => c.FiStId < 2 && c.FiTyId < 2 && selectedSportIds.Contains(c.SpId));
             }
 
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+            var fixtureProjection = Builders<Fixture>.Projection
+                .Include(c => c.Id)
+                .Include(c => c.FiId)
+                .Include(c => c.ClCo)
+                .Include(c => c.SpId)
+                .Include(c => c.SpNa)
+                .Include(c => c.SpNaTr)
+                .Include(c => c.SegId)
+                .Include(c => c.SegNa)
+                .Include(c => c.SegNaTr)
+                .Include(c => c.LeId)
+                .Include(c => c.LeNa)
+                .Include(c => c.LeNaTr)
+                .Include(c => c.FiStDa)
+                .Include(c => c.FiStId)
+                .Include(c => c.FiTyId)
+                .Include(c => c.HoNaTr)
+                .Include(c => c.AwNaTr);
+
+            var fixtures = await fixtureCollection.Find(fixtureFilter).Project<SportsTreeFixtureProjection>(fixtureProjection).ToListAsync();
 
             if (IsOEEnable(request.ClientCode))
                 fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode, StringComparison.OrdinalIgnoreCase) || f.SpId.IsVirtualSportId() || f.FiTyId == (int)FixtureType.Outright).OrderBy(o => o.FiTyId).ThenByDescending(o => o.FiStId).ThenBy(o => o.FiStDa).ToList();
@@ -948,11 +967,14 @@ namespace Platform.Sportsbook.API.Repository
                     leagueSortOrder.FirstOrDefault(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId)?.SortOrder + 1000 ?? 2000
             }).ToList();
 
+            var fixturesBySport = fixtures.GroupBy(f => f.SpId).ToDictionary(g => g.Key, g => g.ToList());
+            var sportsWithOutrights = new HashSet<int>(fixtures.Where(f => f.FiTyId == (int)FixtureType.Outright).Select(f => f.SpId));
+
             var sportResult = fixtures.Where(c => activeSportIds.Contains(c.SpId)).Select(s => new TempOrderedSport
             {
                 SportId = s.SpId,
                 SportName = GetTranslation(translations, s.SpId, "SpId", s.SpNa),
-                HasOutrights = fixtures.Any(c => c.SpId == s.SpId && c.FiTyId == (int)FixtureType.Outright),
+                HasOutrights = sportsWithOutrights.Contains(s.SpId),
                 SortOrder = sportSortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
                     == 0 ? 1000 : sportSortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
             }).ToList().OrderBy(o => o.SortOrder).ThenBy(o => o.SportName).ToList();
@@ -964,8 +986,7 @@ namespace Platform.Sportsbook.API.Repository
                 if (finalResult.Any(c => c.SportId == item.SportId))
                     continue;
 
-                var refFixtures = fixtures.Where(c => c.SpId == item.SportId).ToList();
-                //var fixture = refFixtures.FirstOrDefault(c => c.SpId == item.SportId);
+                var refFixtures = fixturesBySport.TryGetValue(item.SportId, out var sf) ? sf : new List<SportsTreeFixtureProjection>();
 
                 item.Scope = GetScope(refFixtures);
                 item.FixtureCount = refFixtures.Count;
@@ -974,7 +995,7 @@ namespace Platform.Sportsbook.API.Repository
 
                 if (item.SportId == 1055 || item.SportId == 1058)
                 {
-                    var temp = fixtures.Where(c => c.SpId == item.SportId).FirstOrDefault();
+                    var temp = refFixtures.FirstOrDefault();
 
                     if (temp != null)
                     {
@@ -1013,9 +1034,12 @@ namespace Platform.Sportsbook.API.Repository
             }
 
             var final = new List<SportDTO>();
+            var resultBySport = result.GroupBy(r => r.SportId).ToDictionary(g => g.Key, g => g.ToList());
 
             foreach (var sport in finalResult)
             {
+                var sportLeagues = resultBySport.TryGetValue(sport.SportId, out var rl) ? rl : new List<TempOrderedLeague>();
+
                 if (segmentOrder.Any(c => c.SportId == sport.SportId))
                 {
                     var segment = segmentOrder.Where(c => c.SportId == sport.SportId).ToList();
@@ -1026,7 +1050,7 @@ namespace Platform.Sportsbook.API.Repository
                         SportName = sport.SportName,
                         Scope = sport.Scope,
                         FixtureCount = sport.FixtureCount,
-                        Segments = result.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
+                        Segments = sportLeagues.GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
                         {
                             SegmentId = s.Key,
                             SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
@@ -1050,7 +1074,7 @@ namespace Platform.Sportsbook.API.Repository
                         SportName = sport.SportName,
                         Scope = sport.Scope,
                         FixtureCount = sport.FixtureCount,
-                        Segments = result.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
+                        Segments = sportLeagues.GroupBy(gse => gse.SegmentId).Select(s => new SegmentDTO
                         {
                             SegmentId = s.Key,
                             SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
@@ -1078,7 +1102,10 @@ namespace Platform.Sportsbook.API.Repository
             };
 
             if (final.Count > 0)
-                _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddSeconds(120));
+                // shortened from 120s: a finished sport/segment/league must disappear from the
+                // sports tree promptly, and this cache has no invalidation hook on fixture-status
+                // changes - only the TTL bounds staleness
+                _memCache.AddOrUpdateCache(mKey, returnResult, DateTimeOffset.UtcNow.AddSeconds(10));
 
             return returnResult;
         }
@@ -12563,6 +12590,44 @@ namespace Platform.Sportsbook.API.Repository
             return retval;
         }
 
+        private string GetScope(List<SportsTreeFixtureProjection> fixtures)
+        {
+            var retval = string.Empty;
+
+            var orderedFixtures = fixtures.OrderBy(x => x.FiStDa).ToList();
+            var fixture = orderedFixtures.FirstOrDefault(x => x.FiTyId == (int)FixtureType.Match) ?? orderedFixtures.FirstOrDefault();
+
+            if (fixture.FiTyId == (int)FixtureType.Match)
+            {
+                if (fixture.FiStId == (int)FixtureStatus.Live)
+                {
+                    retval = "Today";
+                }
+                else
+                {
+                    if (fixture.FiStDa.Date == DateTime.UtcNow.Date)
+                        retval = $"Today|{fixture.FiStDa:MM/dd/yyyy hh:mm:ss tt}";
+                    else
+                    {
+                        if (fixture.FiStDa.Date > DateTime.UtcNow.AddDays(7).Date && orderedFixtures.Any(x => x.FiTyId == (int)FixtureType.Outright))
+                        {
+                            retval = "Outrights";
+                        }
+                        else
+                        {
+                            retval = $"Early|{fixture.SegId}|{fixture.LeId}|{fixture.FiStDa:MM/dd/yyyy hh:mm:ss tt}";
+                        }
+                    }
+                }
+            }
+            else if (fixture.FiTyId == (int)FixtureType.Outright)
+            {
+                retval = "Outrights";
+            }
+
+            return retval;
+        }
+
         private void CacheClSeMaTeAndMaTePlPr()
         {
             GetClientSelectorMarketTemplate();
@@ -12780,6 +12845,28 @@ namespace Platform.Sportsbook.API.Repository
 
         private Task<Dictionary<string, string>> LoadTranslations(
             List<Fixture> fixtures,
+            LanguageCode languageCode)
+        {
+            var map = new Dictionary<string, string>();
+
+            if (languageCode == LanguageCode.EN)
+                return Task.FromResult(map);
+
+            var language = languageCode.ToString();
+
+            foreach (var fixture in fixtures)
+            {
+                AddMongoTranslation(map, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
+                AddMongoTranslation(map, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
+                AddMongoTranslation(map, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
+                AddMongoTranslation(map, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language));
+            }
+
+            return Task.FromResult(map);
+        }
+
+        private Task<Dictionary<string, string>> LoadTranslations(
+            List<SportsTreeFixtureProjection> fixtures,
             LanguageCode languageCode)
         {
             var map = new Dictionary<string, string>();

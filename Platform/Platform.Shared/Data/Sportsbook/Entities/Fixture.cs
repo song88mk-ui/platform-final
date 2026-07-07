@@ -179,6 +179,31 @@ namespace Platform.Shared.Data.Sportsbook.Entities
         public string SpNa { get; set; }
     }
 
+    // Lean projection for the sports-tree endpoint (GetSports): only the fields that
+    // feed sport/segment/league grouping, translations, and outright detection - not
+    // the full Fixture document (odds/score/stream fields the tree never reads).
+    public class SportsTreeFixtureProjection
+    {
+        [BsonId]
+        public string Id { get; set; }
+        public long FiId { get; set; }
+        public string ClCo { get; set; }
+        public int SpId { get; set; }
+        public string SpNa { get; set; }
+        public List<SportTranslationMDB> SpNaTr { get; set; }
+        public int SegId { get; set; }
+        public string SegNa { get; set; }
+        public List<SegmentTranslationMDB> SegNaTr { get; set; }
+        public int LeId { get; set; }
+        public string LeNa { get; set; }
+        public List<LeagueTranslationMDB> LeNaTr { get; set; }
+        public DateTime FiStDa { get; set; }
+        public int FiStId { get; set; }
+        public int FiTyId { get; set; }
+        public List<TeamTranslationMDB> HoNaTr { get; set; }
+        public List<TeamTranslationMDB> AwNaTr { get; set; }
+    }
+
     public class FixtureSettlementFilter
     {
         public long FiId { get; set; }

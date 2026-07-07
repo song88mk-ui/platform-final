@@ -38,3 +38,10 @@ Ctrl.Web2/.config/dotnet-tools.json
 Platform/Platform.Sportsbook.API/.config/dotnet-tools.json
 
 **/appsettings.Development.json
+
+# Claude Code project files (settings, commands, skills, docs, CLAUDE.md, AGENTS.md) — kept
+# local for now; un-ignore later to share with the team
+.claude/
+/CLAUDE.md
+/AGENTS.md
+/docs/

@@ -16,6 +16,9 @@ namespace Platform.API.Repository
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
 
+        // shared instance: JsonSerializerOptions caches type metadata per instance; a fresh instance per call rebuilds it every request
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         public SportsbookRepository(HttpClient httpClient, IConfiguration configuration)
         {
             _configuration = configuration;
@@ -30,11 +33,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/livestream", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<LivestreamResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<LivestreamResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<LivestreamResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<LivestreamResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<LivestreamResponseDTO>
@@ -62,11 +65,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/topleagues", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TopLeaguesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TopLeaguesResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TopLeaguesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TopLeaguesResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TopLeaguesResponseDTO>
@@ -93,11 +96,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/allleagues", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TopLeaguesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TopLeaguesResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TopLeaguesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TopLeaguesResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TopLeaguesResponseDTO>
@@ -125,11 +128,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/allleagues", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TopLeaguesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TopLeaguesResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TopLeaguesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TopLeaguesResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TopLeaguesResponseDTO>
@@ -157,11 +160,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/topfixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TopFixturesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TopFixturesResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TopFixturesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TopFixturesResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TopFixturesResponseDTO>
@@ -188,11 +191,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/markettemplategroups", new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<MarketTemplateGroupResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<MarketTemplateGroupResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<MarketTemplateGroupResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<MarketTemplateGroupResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<MarketTemplateGroupResponseDTO>
@@ -219,11 +222,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/selectormarkettemplates", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<List<SportSelectorMarketTemplateDTO>>
@@ -250,11 +253,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/marketsortorder", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<ClientMarketTemplateGroupResponseDTO2>
@@ -281,11 +284,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/fixturesortorder", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<ClientFixtureSortOrderResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientFixtureSortOrderResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<ClientFixtureSortOrderResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientFixtureSortOrderResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<ClientFixtureSortOrderResponseDTO>
@@ -312,11 +315,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/betfixture", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<BetFixtureResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<BetFixtureResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<BetFixtureResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<BetFixtureResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<BetFixtureResponseDTO>
@@ -343,11 +346,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/betfixture/translation", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<BetFixtureTranslationResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<BetFixtureTranslationResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<BetFixtureTranslationResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<BetFixtureTranslationResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<BetFixtureTranslationResponseDTO>
@@ -374,11 +377,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/topfixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -406,11 +409,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/activefixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixturesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ActiveFixturesResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixturesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ActiveFixturesResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<ActiveFixturesResponseDTO>
@@ -438,11 +441,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/fixtures/details/limited", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ActiveFixtureDetailsResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<ActiveFixtureDetailsResponseDTO>
@@ -470,11 +473,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/topfixtures/fixtureId", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TopFixturesIdsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TopFixturesIdsResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TopFixturesIdsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TopFixturesIdsResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TopFixturesIdsResponseDTO>
@@ -501,11 +504,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/livefixturecount", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWFixtureCountResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWFixtureCountResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWFixtureCountResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWFixtureCountResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWFixtureCountResponseDTO>
@@ -532,11 +535,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/todayfixturecount", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWFixtureCountResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWFixtureCountResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWFixtureCountResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWFixtureCountResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWFixtureCountResponseDTO>
@@ -563,11 +566,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/livefixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -594,11 +597,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/sports/segments/leagues/livefixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -625,11 +628,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/todayfixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -656,11 +659,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/sports/segments/leagues/todayfixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -687,11 +690,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/upcomingfixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -718,11 +721,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/sports/segments/leagues/upcomingfixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -749,11 +752,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/dailyfixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -780,11 +783,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/sports/segments/leagues/dailyfixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -811,11 +814,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/topleaguefixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -842,11 +845,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/segments/fixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -873,11 +876,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/fixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -904,11 +907,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/sports", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<SportsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<SportsResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<SportsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<SportsResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<SportsResponseDTO>
@@ -935,11 +938,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/fixtures/details", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -966,11 +969,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/fixtures/markets/selections/details", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -997,11 +1000,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/outrightfixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -1028,11 +1031,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/sports/segments/leagues/outrightfixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -1059,11 +1062,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/userfavorites/get/all", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -1090,11 +1093,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/search", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWSearchResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWSearchResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWSearchResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWSearchResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWSearchResponseDTO>
@@ -1121,11 +1124,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/userfavorites/get", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<UserFavoriteResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<UserFavoriteResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<UserFavoriteResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<UserFavoriteResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<UserFavoriteResponseDTO>
@@ -1152,11 +1155,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/userfavorites/insert", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<UserFavoriteResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<UserFavoriteResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<UserFavoriteResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<UserFavoriteResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<UserFavoriteResponseDTO>
@@ -1183,11 +1186,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/userfavorites/remove", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<UserFavoriteResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<UserFavoriteResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<UserFavoriteResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<UserFavoriteResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<UserFavoriteResponseDTO>
@@ -1215,11 +1218,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/client/topfixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<ClientTopFixtureResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientTopFixtureResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<ClientTopFixtureResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientTopFixtureResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<ClientTopFixtureResponseDTO>
@@ -1248,11 +1251,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/client/topfixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<ClientTopFixtureResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientTopFixtureResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<ClientTopFixtureResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientTopFixtureResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<ClientTopFixtureResponseDTO>
@@ -1281,11 +1284,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/sports/details", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<BackofficeSportsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<BackofficeSportsResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<BackofficeSportsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<BackofficeSportsResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<BackofficeSportsResponseDTO>
@@ -1314,11 +1317,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/client/topfixtures/post", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
@@ -1347,11 +1350,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/client/topfixtures/copy", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientTopFixtureMessageResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<ClientTopFixtureMessageResponseDTO>
@@ -1380,12 +1383,12 @@ namespace Platform.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return JsonSerializer.Deserialize<BaseResponseDTO<ClientTopLeaguesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientTopLeaguesResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 }
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<ClientTopLeaguesResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientTopLeaguesResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<ClientTopLeaguesResponseDTO>
@@ -1413,11 +1416,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/client/topleagues/post", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
@@ -1445,11 +1448,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/client/topleagues/copy", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<ClientTopLeaguesMessageResponseDTO>
@@ -1477,11 +1480,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/client/sports", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<SportsLookupResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<SportsLookupResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<SportsLookupResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<SportsLookupResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<SportsLookupResponseDTO>
@@ -1509,11 +1512,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/client/sportgroups", new StringContent(string.Empty));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<SportGroupResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<SportGroupResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<SportGroupResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<SportGroupResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<SportGroupResponseDTO>
@@ -1541,11 +1544,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/boostedfixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<BoostedResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<BoostedResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<BoostedResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<BoostedResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<BoostedResponseDTO>
@@ -1573,11 +1576,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/betbuilder/markettemplates", new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<BetBuilderMarketTemplatesDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<BetBuilderMarketTemplatesDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<BetBuilderMarketTemplatesDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<BetBuilderMarketTemplatesDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<BetBuilderMarketTemplatesDTO>
@@ -1605,11 +1608,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/betbuilder/fixtures/totalodds", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<BetBuilderSelectionsOddsResponseDTO>
@@ -1637,11 +1640,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/client/markettemplateplayerprops", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<List<MarketTemplatePlayerPropsResponseDTO>>
@@ -1668,11 +1671,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/translations", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<List<TranslationResponseDTO>>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<List<TranslationResponseDTO>>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<List<TranslationResponseDTO>>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<List<TranslationResponseDTO>>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<List<TranslationResponseDTO>>
@@ -1699,11 +1702,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/highlights", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<List<LeagueHighlightsResponseDTO>>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<List<LeagueHighlightsResponseDTO>>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<List<LeagueHighlightsResponseDTO>>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<List<LeagueHighlightsResponseDTO>>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<List<LeagueHighlightsResponseDTO>>
@@ -1730,11 +1733,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v2/sportsbook/highlights/fixtures", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<TWResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<TWResponseDTO>
@@ -1763,13 +1766,13 @@ namespace Platform.API.Repository
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return JsonSerializer.Deserialize<BaseResponseDTO<bool>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<bool>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 }
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
-                        return JsonSerializer.Deserialize<BaseResponseDTO<bool>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<bool>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     }
                     else
                     {
@@ -1798,11 +1801,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/announcements", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<AnnouncementResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<AnnouncementResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<AnnouncementResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<AnnouncementResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<AnnouncementResponseDTO>
@@ -1830,11 +1833,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/client/announcements", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<BackofficeAnnouncementResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<BackofficeAnnouncementResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<BackofficeAnnouncementResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<BackofficeAnnouncementResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<BackofficeAnnouncementResponseDTO>
@@ -1862,11 +1865,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/client/announcements/post", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<BackofficeAnnouncementResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<BackofficeAnnouncementResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<BackofficeAnnouncementResponseDTO>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<BackofficeAnnouncementResponseDTO>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<BackofficeAnnouncementResponseDTO>
@@ -1894,11 +1897,11 @@ namespace Platform.API.Repository
                 var response = await _httpClient.PostAsync($"v1/sportsbook/client/announcements/delete", new StringContent(JsonSerializer.Serialize(request), System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
-                    return JsonSerializer.Deserialize<BaseResponseDTO<bool>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    return await JsonSerializer.DeserializeAsync<BaseResponseDTO<bool>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                 else
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
-                        return JsonSerializer.Deserialize<BaseResponseDTO<bool>>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                        return await JsonSerializer.DeserializeAsync<BaseResponseDTO<bool>>(await response.Content.ReadAsStreamAsync(), _jsonOptions);
                     else
                     {
                         return new BaseResponseDTO<bool>

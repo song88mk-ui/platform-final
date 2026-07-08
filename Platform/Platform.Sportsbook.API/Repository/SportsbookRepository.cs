@@ -1558,7 +1558,7 @@ namespace Platform.Sportsbook.API.Repository
                     AddMongoTranslation(translations, $"SpId:{fixture.FiId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
                     AddMongoTranslation(translations, $"SegId:{fixture.FiId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
                     AddMongoTranslation(translations, $"LeId:{fixture.FiId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
-                    AddMongoTranslation(translations, $"FiId:{fixture.FiId}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language));
+                    AddMongoTranslation(translations, $"FiId:{fixture.FiId}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language, fixture.HoNa, fixture.AwNa));
                 }
 
                 foreach (var market in markets)
@@ -12747,8 +12747,22 @@ namespace Platform.Sportsbook.API.Repository
             List<TeamTranslationMDB> awNaTr,
             string languageCode)
         {
-            var home = FindTranslation(hoNaTr, languageCode, t => t.LaCo, t => t.TeNa);
-            var away = FindTranslation(awNaTr, languageCode, t => t.LaCo, t => t.TeNa);
+            return ComposeMongoFixtureName(hoNaTr, awNaTr, languageCode, null, null);
+        }
+
+        // Overload used where the English team names are available as a per-side fallback: a team
+        // with no translated entry still renders in English rather than reverting BOTH sides to
+        // English just because its opponent's translation is missing (matches the WebSocket push
+        // path in TranslationDeltaApplier, which updates Home/Away independently).
+        private static string ComposeMongoFixtureName(
+            List<TeamTranslationMDB> hoNaTr,
+            List<TeamTranslationMDB> awNaTr,
+            string languageCode,
+            string hoNaFallback,
+            string awNaFallback)
+        {
+            var home = FindTranslation(hoNaTr, languageCode, t => t.LaCo, t => t.TeNa) ?? hoNaFallback;
+            var away = FindTranslation(awNaTr, languageCode, t => t.LaCo, t => t.TeNa) ?? awNaFallback;
 
             return !string.IsNullOrEmpty(home) && !string.IsNullOrEmpty(away)
                 ? $"{home} vs. {away}"
@@ -12859,7 +12873,7 @@ namespace Platform.Sportsbook.API.Repository
                 AddMongoTranslation(map, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
                 AddMongoTranslation(map, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
                 AddMongoTranslation(map, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
-                AddMongoTranslation(map, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language));
+                AddMongoTranslation(map, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language, fixture.HoNa, fixture.AwNa));
             }
 
             return Task.FromResult(map);
@@ -12903,7 +12917,7 @@ namespace Platform.Sportsbook.API.Repository
                 AddMongoTranslation(map, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
                 AddMongoTranslation(map, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
                 AddMongoTranslation(map, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
-                AddMongoTranslation(map, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language));
+                AddMongoTranslation(map, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language, fixture.HoNa, fixture.AwNa));
             }
 
             return Task.FromResult(map);
@@ -12983,7 +12997,7 @@ namespace Platform.Sportsbook.API.Repository
                 AddMongoTranslation(map, $"SpId:{fixture.SpId}", FindTranslation(fixture.SpNaTr, language, t => t.LaCo, t => t.SpNa));
                 AddMongoTranslation(map, $"SegId:{fixture.SegId}", FindTranslation(fixture.SegNaTr, language, t => t.LaCo, t => t.SegNa));
                 AddMongoTranslation(map, $"LeId:{fixture.LeId}", FindTranslation(fixture.LeNaTr, language, t => t.LaCo, t => t.LeNa));
-                AddMongoTranslation(map, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language));
+                AddMongoTranslation(map, $"FiId:{fixture.Id}", ComposeMongoFixtureName(fixture.HoNaTr, fixture.AwNaTr, language, fixture.HoNa, fixture.AwNa));
             }
 
             return Task.FromResult(map);

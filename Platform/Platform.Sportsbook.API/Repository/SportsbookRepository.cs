@@ -10503,7 +10503,8 @@ namespace Platform.Sportsbook.API.Repository
             var finalTranslations = englishTranslations.GroupJoin(refTranslations,
                 en => en.Name,
                 la => la.Name,
-                (english, language) => new { english, language })
+                (english, language) => new { english, language },
+                StringComparer.OrdinalIgnoreCase)
                 .SelectMany(s => s.language.DefaultIfEmpty(),
                 (left, right) => new TranslationResponseDTO
                 {

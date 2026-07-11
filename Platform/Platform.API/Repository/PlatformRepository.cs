@@ -4605,17 +4605,9 @@ namespace Platform.API.Repository
                 };
             }
 
-            var clientResponse = await GetClient(clientId);
-
-            if (clientResponse.StatusCode != StatusCode.Success)
-            {
-                return new BaseResponseDTO<List<TranslationResponseDTO>>
-                {
-                    StatusCode = clientResponse.StatusCode,
-                    Message = clientResponse.Message
-                };
-            }
-
+            // Static UI-label translations are not client-scoped (only LanguageCode is used
+            // below), so this endpoint intentionally does not gate on clientId registration
+            // unlike client-specific endpoints elsewhere in this repository.
             var request = new TranslationRequestDTO
             {
                 LanguageCode = languageCode

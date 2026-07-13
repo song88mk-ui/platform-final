@@ -290,6 +290,8 @@ namespace Platform.Operator.Servicev2.Repository
         }
         private void AcceptBet(Guid betId, string correlationId, IMessageBroker messageBroker, OperatorBetResponseDTO operatorResponse, bool isBoosted = false, bool isBetBuilder = false, string userAgent = "")
         {
+            _logger.LogInformation($"AcceptBet: {betId}");
+
             var payload = new OnBetPlacement();
             payload.IsBoosted = isBoosted;
             payload.IsBetBuilder = isBetBuilder;
@@ -464,15 +466,19 @@ namespace Platform.Operator.Servicev2.Repository
                             UserId = payload.Bet.UserId,
                             Balance = operatorResponse.Balance
                         }, "OnWalletChange", $"r.wallet.{payload.Bet.ClientCode.ToString().ToLower()}", correlationId, 10);
+
+                        _logger.LogInformation($"AcceptBet: {betId} completed, OnBetStatus/OnWalletChange published");
                     }
                     catch (Exception ex)
                     {
+                        _logger.LogError(ex, $"AcceptBet: {betId} failed");
+
                         messageBroker.Publish(new OnBetPlacementError
                         {
                             BetId = betId.ToString(),
                             Error = ex.Message,
                             StackTrace = ex.StackTrace,
-                            InnerException = ex.InnerException.ToString()
+                            InnerException = ex.InnerException?.ToString()
                         }, "OnBetPlacementError", "r.bet.placement.error", correlationId);
                     }
                 }

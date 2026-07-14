@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"UserPromptSubmit\\\",\\\"additionalContext\\\":\\\"STANDING RULES (platform-final) - apply before responding: (1) Consult CLAUDE.md and AGENTS.md first. (2) Follow the mandatory workflow: understand, search the repo, consult docs/, trace end-to-end in the actual code and cite file:line (never answer from memory), identify reuse and risks, explain the plan and WAIT for approval before any architectural change, make the smallest possible change, validate, update docs. (3) Label every claim verified / assumption / unknown - never guess. (4) Production is READ-ONLY: do not run queries, deploy, change schema, or invalidate caches unless explicitly instructed.\\\"}}\"",
+            "statusMessage": "Loading platform-final standing rules"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,107 @@
+# Logging & Observability
+
+> Phase 2. Confidence **High [Verified]** — read from `Program.cs`, `appsettings.json` `Serilog`
+> sections, `Telemetry/Instrumentation.cs`, and `MessageBroker.cs`. Covers the logging framework,
+> structured logging, correlation, enrichment, sinks, and the tracing/metrics stack.
+
+## Framework: Serilog `[Verified]`
+- The logging provider is **Serilog**, wired in `Program.cs` via
+  `UseSerilog((ctx,_,log) => log.ReadFrom.Configuration(ctx.Configuration))` — configuration is
+  **entirely data-driven** from the `Serilog` section of `appsettings.json`. **[Verified]**
+- Packages: `Serilog` 4.3.0, `Serilog.AspNetCore` 10.0.0, `Serilog.Settings.Configuration` 10.0.0,
+  `Serilog.Sinks.Console` 6.1.1, `Serilog.Formatting.Compact` 3.0.0. **[Verified]**
+- A few projects (`Client.API`, `ClientSportsbook.API`) **do not** call `UseSerilog` — they fall
+  back to the default `Microsoft.Extensions.Logging` console provider. **[Verified]** (gap, TD-08).
+
+## Configuration (representative `Serilog` section) `[Verified]`
+```json
+"Serilog": {
+  "Using": ["Serilog.Sinks.Console"],
+  "MinimumLevel": {
+    "Default": "Information",
+    "Override": {
+      "Microsoft": "Warning",
+      "System.Net.Http.HttpClient.OtlpMetricExporter": "Warning",
+      "System.Net.Http.HttpClient.OtlpTraceExporter": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  },
+  "WriteTo": [ { "Name": "Console" } ],
+  "Enrich": ["FromLogContext"]
+}
+```
+
+## Sinks `[Verified]`
+- **Console is the only sink** for almost all services — correct for containers (stdout scraped by
+  the cluster log pipeline). **[Likely]** the console output is JSON via
+  `CompactJsonFormatter` (the `Serilog.Formatting.Compact` package is referenced); confirm the
+  formatter binding per service.
+- **File sink with retention** in `BetStatus.Service` (`LogSettings:DirectoryPath`,
+  `RetentionInDays`, AppData fallback). **[Verified]**
+- No Seq/Elasticsearch/CloudWatch Serilog sink is configured in-repo; downstream aggregation is
+  handled by the platform log pipeline (`infrastructure`/`argocd`). **[Likely]**
+
+## Structured logging `[Verified]`
+- Logs use Serilog **message templates with named properties**, e.g.
+  `_logger.LogInformation("{event} {@properties}", "PublishOddsChangeForMainMarkets", properties)`
+  (`Websocket.API2/WebSocketRepository.cs`). The `{@properties}` destructures a dictionary of
+  request context (ipAddress, x-api-key, x-client-id, statusCode, message). **[Verified]**
+- Controllers/handlers attach the same context as **OpenTelemetry tags** on the active `Activity`
+  in parallel with logging (see Tracing). **[Verified]**
+
+## Log level control `[Verified]`
+- Two parallel level configs exist: the `Logging:LogLevel` section (MEL) **and** the `Serilog`
+  `MinimumLevel` section. Since Serilog replaces the provider, the **`Serilog` section is
+  authoritative** where `UseSerilog` is present; `Logging:LogLevel` governs the MEL fallback in
+  the non-Serilog services. **[Verified]**
+- The OTLP exporter HttpClient categories are pinned to `Warning` to avoid feedback-loop log noise
+  from the telemetry pipeline itself. **[Verified]**
+
+## Correlation & enrichment `[Verified]`
+- **Enrichment:** `Enrich:[FromLogContext]` only — no machine/thread/environment enrichers, no
+  request-id enricher. **[Verified]**
+- **There is no HTTP correlation-id middleware** and no `X-Correlation-Id` propagation. Correlation
+  is achieved two other ways:
+  1. **OpenTelemetry trace context** — each request/handler opens an `Activity`; the trace/span IDs
+     are the correlation backbone, and `MessageBroker` **injects W3C trace context into RabbitMQ
+     message headers** so a trace continues across async hops (e.g. `Settlement.Service` extracts
+     it on receive). **[Verified]**
+  2. **Domain `CorrelationId`** — bet flows carry a `CorrelationId` on `BetRequest`/`BetSelection`
+     DTOs and on RabbitMQ `BasicProperties.CorrelationId` (used by `BetForwarder.Service`,
+     `AgentReports.Service`). This is a **business** correlation id, distinct from the trace id.
+     **[Verified]**
+- Net effect: cross-service correlation in logs relies on **trace IDs (OTel)** and **business
+  CorrelationId**, not on a logging-framework correlation enricher. **[Verified]**
+
+## Tracing & metrics (OpenTelemetry) `[Verified]`
+- Each instrumented project has `Telemetry/Instrumentation.cs` defining an `ActivitySource` and a
+  `Meter`, both named `Platform.<Project>`, registered `AddSingleton<Instrumentation>()`. **[Verified]**
+- Wired via the private **`Infra.Extensions.Telemetry`** package's `AddTelemetry(new
+  TelemetrySettings(ServiceName, ActivitySourceName, MeterName))`. **[Verified]**
+- Export is **OTLP over gRPC (HTTP/2 cleartext)** — hence the `Http2UnencryptedSupport` AppContext
+  switch in 11 `Main` methods. **[Verified]**
+- `Telemetry:Enabled` config gates it (committed default `"false"`; enabled per environment).
+  **[Verified]**
+- Usage idioms: `using var activity = _activitySource.StartActivity(path)`; `activity?.SetTag(...)`;
+  `activity?.SetStatus(ActivityStatusCode.Error, ex.Message)`; counters via the `Meter` for
+  throughput (e.g. bet-placement counters in `Placement.Servicev2`). **[Verified]**
+- Coverage is **not uniform**: `Client.TopMarket` and the non-Serilog client APIs lack OTel
+  instrumentation. **[Verified]** (TD-08).
+
+## What is absent `[Verified]`
+- No request-logging middleware (`UseSerilogRequestLogging` is **not** called) — per-request HTTP
+  logging relies on controller-level logs + OTel spans, not an access log.
+- No audit-log framework at the logging layer (domain audit is in DB tables like `BetAudit`).
+- No PII scrubbing/redaction in log config — and controllers may log header values (`x-api-key`)
+  as tags/properties, which can leak the API key into logs. **[Verified]** — hardening item.
+
+## Observability summary
+| Concern | Mechanism | Where |
+|---------|-----------|-------|
+| App logs | Serilog → Console (JSON) | `Program.cs` + `Serilog` config |
+| Service file logs | Serilog File sink + retention | `BetStatus.Service` |
+| Traces | OTel `ActivitySource` → OTLP/gRPC | `Telemetry/Instrumentation.cs` |
+| Metrics | OTel `Meter` counters → OTLP/gRPC | per service |
+| Cross-async correlation | W3C trace context in RabbitMQ headers | `MessageBroker.cs` |
+| Business correlation | `CorrelationId` on DTOs / MQ `BasicProperties` | bet flow |
+| Aggregation/storage | external (cluster log pipeline + OTel collector) | `infrastructure`/`argocd` `[Likely]` |

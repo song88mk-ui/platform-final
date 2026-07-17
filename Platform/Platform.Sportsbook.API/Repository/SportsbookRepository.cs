@@ -10381,6 +10381,10 @@ namespace Platform.Sportsbook.API.Repository
             {
                 _memCache.DeleteCache("mtg2");
                 _memCache.DeleteCache("cmtg");
+                // Client selector market templates (ClientSelectorMarketTemplate2) are edited from
+                // Backoffice on the same OnMarketSortOrderChange route; without this purge the csmt
+                // cache serves stale rows for up to 24h.
+                _memCache.DeleteCache("csmt");
                 _memCache.DeleteCacheByPrefix("ntf");
                 _memCache.DeleteCacheByPrefix("ntfbl");
                 _memCache.DeleteCacheByPrefix("nal");

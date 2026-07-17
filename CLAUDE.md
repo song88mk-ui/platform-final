@@ -127,6 +127,9 @@ Follow these steps in order on every task (Phase 12 standing rule):
 - **Production is READ-ONLY by default.** Never perform write operations, deployments, schema changes,
   cache invalidations, or administrative actions unless **explicitly instructed**
   ([.claude/playbooks/production-readonly.md](.claude/playbooks/production-readonly.md)).
+- **Every SQL script must be idempotent** (data fixes, seeds, DDL, hand-run/flyway migrations): guard
+  INSERTs with `NOT EXISTS`/`MERGE`, schema changes with `IF NOT EXISTS`/`OBJECT_ID` checks, so
+  re-running is a no-op with the same end state.
 - **External repos: identify dependencies, don't invent behavior.** Siblings (`odds-engine-2`, `Auth`,
   `backoffice-final`, `bet-genius`, `oddsfeed`, `argocd`, `infrastructure`) are read-only references;
   **never modify files outside this repo**; prefer `odds-engine-2` over the obsolete `oddsengine`.

@@ -37,6 +37,8 @@ architectural changes** → implement the **smallest possible change** → **val
 - **Never guess** — distinguish verified / assumption / unknown; record unknowns.
 - **Production is READ-ONLY by default** — no writes/deploys/schema/cache-invalidation/admin actions
   unless explicitly instructed.
+- **SQL scripts must be idempotent** — guard INSERTs with `NOT EXISTS`/`MERGE` and schema changes with
+  `IF NOT EXISTS`/`OBJECT_ID` checks so re-running is a no-op.
 - **External repos:** identify dependencies, don't invent behavior; never modify outside this repo.
 - **Keep docs + Claude assets synchronized** with architectural changes.
 See [CLAUDE.md](CLAUDE.md) §Engineering principles.

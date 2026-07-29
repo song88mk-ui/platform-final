@@ -227,7 +227,7 @@ namespace Platform.Shared.Repositories
         {
             using (var activity = _activitySource.StartActivity("betgenius.livestream"))
             {
-                var cacheKey = $"bg:livestream:{fixtureId}";
+                var cacheKey = $"bg:livestream:{fixtureId}:{device?.ToLower()}:{region?.ToLower()}";
                 var cache = _memCache.GetCache<BaseResponseDTO<BGLiveStreamResponseDto>>(cacheKey);
 
                 if (cache != null)
@@ -248,7 +248,10 @@ namespace Platform.Shared.Repositories
                     {
                         endUserSessionId = Guid.NewGuid().ToString(),
                         region = region,
-                        device = device
+                        device = device,
+                        // GM-652: Genius derives the token's hw restriction from this request;
+                        // allow both so desktop browsers can play the stream too
+                        hw = new[] { "mobile", "desktop" }
                     };
 
                     var jsonPayload = JsonSerializer.Serialize(payload);
@@ -290,7 +293,7 @@ namespace Platform.Shared.Repositories
                             };
 
                             _logger.LogError($"GetLiveStream Error: Not found");
-                            _memCache.AddOrUpdateCache(cacheKey, result, DateTimeOffset.UtcNow.AddHours(5));
+                            _memCache.DeleteCache(cacheKey);
                             return result;
                         }
                         var responseMessage = await response.Content.ReadAsStringAsync();

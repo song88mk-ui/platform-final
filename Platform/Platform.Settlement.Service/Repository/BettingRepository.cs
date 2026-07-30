@@ -614,7 +614,7 @@ namespace Platform.Settlement.Service.Repository
                         }
                         catch (Exception ex)
                         {
-
+                            _logger.LogError(ex, "Error processing back-office manual settlement for BetId: {BetId}", betItem.BetId);
                         }
                     }
                 }
@@ -1181,14 +1181,16 @@ namespace Platform.Settlement.Service.Repository
 
             var bet = context.Bet.Find(betSelection.BetId);
             if (bet != null)
+            {
                 if (bet.IsResettled && bet.BetStatusId != (int)BetStatus.Running && isManualSettle == false)
                     return new Tuple<bool, bool>(false, false);
 
-            if (bet.IsAgent)
-                return new Tuple<bool, bool>(false, false);
+                if (bet.IsAgent)
+                    return new Tuple<bool, bool>(false, false);
 
-            if (bet.BetStatusId == (int)BetStatus.CashedOut)
-                return new Tuple<bool, bool>(false, false);
+                if (bet.BetStatusId == (int)BetStatus.CashedOut)
+                    return new Tuple<bool, bool>(false, false);
+            }
 
             filteredSelection.BetSelectionStatusId = (int)message.SelectionStatus;
             filteredSelection.BetSelectionStatusName = message.SelectionStatus.ToString();

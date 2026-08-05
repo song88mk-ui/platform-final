@@ -166,6 +166,147 @@ published image, so all environment-specific config must come from env vars. Thi
 mirrors CI (`.github/workflows/ci.yml`), which builds these images and, on release,
 pushes them to AWS ECR for EKS deployment via the sibling `argocd` repo.
 
+## Quick start (concrete example)
+
+The fastest path from a clean checkout to something visible in a browser. The smallest
+single service worth running is `Platform.Sportsbook.API`: it serves Swagger UI in all
+environments and has one endpoint (`GET /v1/sportsbook/client/asian`) that answers
+purely from configuration, so you get a real JSON response before any database exists.
+
+Startup dependencies, traced from `Platform/Platform.Sportsbook.API/Startup.cs` and
+`appsettings.json` (verified in source, not by execution - see status note below):
+
+- **To start: nothing external.** The two SQL `DbContext`s (`Sportsbook`,
+  `Translation`) are registered in `ConfigureServices` but EF Core only opens a
+  connection on first query. The MongoDB client is created inside the
+  `SportsbookRepository` constructor, which runs on the first controller request, and
+  the `MongoClient` constructor performs no network I/O. There is no RabbitMQ broker
+  connection in this service - only an HTTP client pointed at `API:RabbitMQAPI`
+  (`http://localhost:55866`), used by publish/curation endpoints. Nothing in
+  `Program.cs`/`Startup.cs` touches SQL, MongoDB or RabbitMQ at boot, so the process
+  starts and Swagger renders with zero infrastructure running.
+- **At first data request:** catalogue endpoints need MongoDB
+  (`ConnectionStrings:MongoDB-Sportsbook`); curation/translation endpoints need the
+  `Sportsbook`/`Translation` SQL databases; a handful of write endpoints need the
+  RabbitMQ.API bridge. Missing infrastructure fails per-request, not at startup.
+
+### Steps
+
+1. One-time machine setup - register the private GitHub Packages feed
+   (`Platform.Sportsbook.API` references `Infra.Extensions.Telemetry`, which is not on
+   nuget.org):
+
+   ```
+   dotnet nuget add source --username <github-user> --password <GITHUB_PAT> \
+     --store-password-in-clear-text \
+     --name github "https://nuget.pkg.github.com/FlyingCockatoo/index.json"
+   ```
+
+2. Run the service (needs the .NET Core 3.1 runtime - see "Target frameworks /
+   prerequisites"):
+
+   ```
+   dotnet run --project Platform/Platform.Sportsbook.API --urls http://localhost:63752
+   ```
+
+3. Open `http://localhost:63752/swagger`. You should see the Swagger UI titled
+   "Sportsbook API V1" listing the ~82 `v1/sportsbook/*` and `v2/sportsbook/*`
+   endpoints. OpenTelemetry exporter warnings in the console are expected and harmless
+   when no local OTLP collector is running.
+
+4. In Swagger, execute `GET /v1/sportsbook/client/asian` (or just browse to
+   `http://localhost:63752/v1/sportsbook/client/asian`). No database is touched; the
+   values come from `Custom:AsianClientCodes` in the committed `appsettings.json` plus a
+   hardcoded template list. Expected response:
+
+   ```json
+   {
+     "statusCode": 100,
+     "message": "Success",
+     "result": {
+       "clientCodes": ["S88", "G01"],
+       "marketTemplateIds": ["16", "18", "66", "68"]
+     }
+   }
+   ```
+
+   (`statusCode` 100 is `StatusCode.Success`; responses use default System.Text.Json
+   camelCase with enums as numbers.)
+
+Status: **should work, unverified.** The machine this guide was written on had neither
+the ASP.NET Core 3.1 runtime nor a feed PAT, so steps 2-4 are traced from
+`Startup.cs`, `Properties/launchSettings.json` and the controller/repository source
+rather than executed. If a step fails, please fix this section in your PR.
+
+### Option A - real catalogue data via the committed staging defaults
+
+The committed `appsettings.json` points at shared staging infrastructure: MongoDB at
+`10.49.100.55:27017` (an RFC1918 private address) and SQL Server at
+`stg-song88-mssql-server.cz8wmg0s28pd.ap-south-1.rds.amazonaws.com` (publicly resolvable
+in DNS, but to a 100.64.0.0/10 VPC-internal address - checked 2026-08-05). Neither host
+speaks HTTP, so no health-endpoint check was possible; both are only reachable from
+inside the staging network/VPN.
+
+If you are on that network, the run command above should serve real data with no config
+changes ("should work, unverified"). Try it in Swagger with
+`POST /v1/sportsbook/lookup/sports` and body:
+
+```json
+{ "clientCode": "S88", "languageCode": 1 }
+```
+
+(`languageCode` 1 = EN.) A populated staging catalogue returns
+`{"statusCode": 100, "message": "Success", "result": {"sports": [...]}}` with one entry
+per sport that currently has active fixtures; an unreachable Mongo host instead surfaces
+a 500/timeout on this request while `/swagger` and `client/asian` keep working.
+
+### Option B - fully local infrastructure
+
+Passwords below are examples for LOCAL-ONLY containers - never reuse them anywhere
+shared. Start the containers:
+
+```
+docker run -d --name mssql -p 1433:1433 \
+  -e ACCEPT_EULA=Y -e SA_PASSWORD="YourStrong@Passw0rd123" \
+  mcr.microsoft.com/mssql/server:2019-latest
+
+docker run -d --name mongo -p 27017:27017 mongo:4.4
+
+docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+```
+
+(MongoDB 4.4 matches the `MongoDB.Driver` 2.11.6 the project uses; RabbitMQ is only
+needed once you also run `Platform.RabbitMQ.API` or the workers - Sportsbook.API itself
+never opens a broker connection.)
+
+Then override the connection strings via environment variables and run:
+
+```
+ConnectionStrings__Sportsbook="Data Source=localhost,1433;Database=Sportsbook;User Id=sa;Password=YourStrong@Passw0rd123;TrustServerCertificate=True"
+ConnectionStrings__Translation="Data Source=localhost,1433;Database=Translation;User Id=sa;Password=YourStrong@Passw0rd123;TrustServerCertificate=True"
+ConnectionStrings__MongoDB-Sportsbook="mongodb://localhost:27017/sportsbook"
+
+dotnet run --project Platform/Platform.Sportsbook.API --urls http://localhost:63752
+```
+
+(Set them in your shell before `dotnet run`; note the literal dash in
+`ConnectionStrings__MongoDB-Sportsbook` - in PowerShell use
+`${env:ConnectionStrings__MongoDB-Sportsbook} = "..."`, in bash use `env` or Docker
+`-e`, since `export` rejects dashes in names.)
+
+Honest gaps with fully local infra:
+
+- **SQL schema provisioning is a gap.** There are no EF migrations and, on this branch,
+  no provisioning scripts for the `Sportsbook`/`Translation` databases (the only SQL
+  files in the repo are `Platform/Platform.Shared/Data/Betting/Scripts/` and
+  `Platform/Platform.Shared/DatabaseScripts/`, which assume existing schema). You need a
+  schema/backup from the team or staging; until then, curation/translation endpoints
+  will fail at first query. See "Database schema and migrations".
+- An empty local Mongo does not error - catalogue endpoints simply return empty results
+  (`"statusCode": 100` with an empty list), because the `sportsbook` database is
+  populated by `odds-engine-2`, not by this repo. Swagger and `client/asian` behave
+  exactly as in the zero-infrastructure case.
+
 ## API endpoints
 
 Endpoint inventory per API service, taken from the controller source (none of the

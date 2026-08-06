@@ -1,15 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Platform.Shared.Data.Betting;
 using Platform.Shared.Data.Betting.Entities;
 using Platform.Shared.Enums;
+using Platform.Shared.Extensions;
 using Platform.Shared.Helpers;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
+using Platform.Shared.Providers;
 using Platform.Shared.Utility;
-using Sportradar.MTS.SDK.API;
-using Sportradar.MTS.SDK.Entities.Builders;
 using Sportradar.MTS.SDK.Entities.Enums;
 using System;
 using System.Collections.Generic;
@@ -24,15 +25,16 @@ namespace Platform.CashOut.Service.Repository
     public class BettingRepository : IBettingRepository
     {
         private readonly ILogger<BettingRepository> _logger;
-        private IBuilderFactory _factory;
         private readonly IConfiguration _configuration;
-        public BettingRepository(IConfiguration configuration, ILogger<BettingRepository> logger)
+        private readonly IServiceScopeFactory _scopeFactory;
+        public BettingRepository(IConfiguration configuration, ILogger<BettingRepository> logger, IServiceScopeFactory scopeFactory)
         {
             _configuration = configuration;
             _logger = logger;
+            _scopeFactory = scopeFactory;
         }
 
-        private void ProcessCashOutSettlement(OnCashoutBetSettlement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
+        private void ProcessCashOutSettlement(OnCashoutBetSettlement message, IMessageBroker messageBroker, string correlationId)
         {
             var bet = new Bet();
 
@@ -80,23 +82,63 @@ namespace Platform.CashOut.Service.Repository
                             Tuple<CashoutAcceptance, string> result;
                             var partialCashout = context.PartialCashoutAudit.AsNoTracking().Where(c => c.BetId == bet.BetId).ToList();
 
-                            if (!partialCashout.Any() && message.CashoutType == CashoutType.Full)
+                            var selections = context.BetSelection.Where(c => c.BetId == message.BetId).ToList();
+                            if (selections.Count == 0)
                             {
-                                result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ? SendCashoutToMTS(message, mts) : new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Accepted, "1024 - Cashout Accepted (MTS disabled)");
+                                scope.Complete();
+                                return;
                             }
-                            else
+
+                            // Pre-acceptance provider gate: the provider is resolved from the
+                            // message's ChannelTypeId (BG -> GTS assessment, SR -> MTS ticket
+                            // cashout), same resolver pattern as Platform.Placement.Servicev2.
+                            // Providers self-gate on Custom:IsProviderEnabled.
+                            var isFullCashout = !partialCashout.Any() && message.CashoutType == CashoutType.Full;
+
+                            decimal cashoutPercent = 0m;
+                            decimal prevCashoutAmount = 0m;
+
+                            if (!isFullCashout)
                             {
-                                var prevCashoutAmount = partialCashout.Any() ? partialCashout.Sum(s => s.CashoutAmount) : 0;
+                                prevCashoutAmount = partialCashout.Any() ? partialCashout.Sum(s => s.CashoutAmount) : 0;
                                 var originalStake = partialCashout.Any() ? partialCashout.FirstOrDefault(c => c.BetId == bet.BetId).OriginalStake : bet.Stake;
                                 var remainingStake = bet.Stake - (bet.Stake * message.CashOutStakePercent);
-                                var cashoutPercent = (originalStake - remainingStake) / originalStake;
-
-                                result = Convert.ToBoolean(_configuration["Custom:IsMTSEnabled"]) ? SendPartialCashoutToMTS(message, mts, cashoutPercent, prevCashoutAmount) : new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Accepted, "1024 - Cashout Accepted (MTS disabled)");
+                                cashoutPercent = (originalStake - remainingStake) / originalStake;
                             }
+
+                            result = ValidateCashoutWithProvider(message, bet, selections, isFullCashout, cashoutPercent, prevCashoutAmount);
 
                             if (result.Item1 == CashoutAcceptance.Accepted)
                             {
+                                // Double-cashout guard: two concurrent messages for the same bet can
+                                // both pass the initial Running check (a plain ReadCommitted read
+                                // releases its shared lock immediately) and the GTS gate is read-only,
+                                // so it accepts both. Re-read the status under UPDLOCK — held to the
+                                // end of the transaction, it serializes concurrent settlers; the loser
+                                // sees CashedOut here and declines instead of settling twice.
+                                var lockedStatusId = context.Bet
+                                    .FromSqlRaw("SELECT * FROM [Bet] WITH (UPDLOCK, ROWLOCK) WHERE [BetId] = {0}", message.BetId)
+                                    .AsNoTracking()
+                                    .Select(b => b.BetStatusId)
+                                    .FirstOrDefault();
+
+                                if (lockedStatusId != (int)BetStatus.Running)
+                                {
+                                    messageBroker.Publish(new OnBetStatus
+                                    {
+                                        ClientId = message.ClientId.ToString().ToUpper(),
+                                        UserId = message.UserId,
+                                        BetId = message.BetId.ToString().ToUpper(),
+                                        BetStatus = (BetStatus)lockedStatusId,
+                                        Message = "Cashout request has been declined"
+                                    }, "OnBetStatus", $"r.bet.betstatus.{message.ClientCode.ToLower()}", correlationId, 10);
+
+                                    _logger.LogWarning("{@betId} - Cashout declined: bet is no longer Running (concurrent cashout/settlement)", message.BetId);
+                                    return;
+                                }
+
                                 var payload = new OnBetSettlement();
+                                payload.ChannelTypeId = message.ChannelTypeId;
                                 OnBetSettlementPartial partialPayload = null;
                                 if (message.CashoutType == CashoutType.Partial)
                                 {
@@ -113,13 +155,6 @@ namespace Platform.CashOut.Service.Repository
 
                                 payload.NonTaxedPayout = message.NonTaxedPayout;
 
-                                var selections = context.BetSelection.Where(c => c.BetId == message.BetId).ToList();
-                                if (selections.Count == 0)
-                                {
-                                    scope.Complete();
-                                    return;
-                                }
-
                                 var filteredSelections = selections.Where(c => c.BetId == message.BetId).ToList();
 
                                 if (filteredSelections.Count == 0)
@@ -129,7 +164,7 @@ namespace Platform.CashOut.Service.Repository
                                 }
 
                                 if (message.CashoutType == CashoutType.Full)
-                                    bet.Reason = $"{result.Item2} (MTS)";
+                                    bet.Reason = result.Item2;
 
                                 isPublish = SettleBet(message, bet, isPublish, payload, settledDate, context, selections, filteredSelections, correlationId);
 
@@ -148,6 +183,7 @@ namespace Platform.CashOut.Service.Repository
                                         partialPayload.IsAudit = payload.IsAudit;
                                         partialPayload.Message = payload.Message;
                                         partialPayload.IsRetry = payload.IsRetry;
+                                        partialPayload.ChannelTypeId = payload.ChannelTypeId;
                                         messageBroker.Publish(partialPayload, "OnBetPartialCashOut", "r.bet.operator", correlationId, 10);
                                     }
 
@@ -488,78 +524,35 @@ namespace Platform.CashOut.Service.Repository
         }
 
 
-        private Tuple<CashoutAcceptance, string> SendCashoutToMTS(OnCashoutBetSettlement message, IMtsSdk mts)
+        // Resolves the bet's provider (BG -> GTSBetProvider, SR -> MtsBetProvider) and runs
+        // its pre-acceptance cash-out gate. A decline stops the cashout before any money
+        // moves, feeding the existing declined path (OnBetStatus -> r.bet.betstatus.{clientcode}).
+        // Fail-fast: resolver/provider errors reject the cashout; the player can retry.
+        private Tuple<CashoutAcceptance, string> ValidateCashoutWithProvider(OnCashoutBetSettlement message, Bet bet, List<BetSelection> selections, bool isFullCashout, decimal cashoutPercent, decimal prevCashoutAmount)
         {
             try
             {
-                _factory = mts.BuilderFactory;
+                using var scope = _scopeFactory.CreateScope();
+                var betProviderFactory = scope.ServiceProvider.GetRequiredService<IBetProviderFactory>();
 
-                CashoutAcceptance betStatus;
-                string reason;
+                var provider = betProviderFactory.Resolve(message.ChannelTypeId);
 
-                var cashoutStake = (long)0;
+                var providerResult = provider.ValidateCashoutAsync(message, bet, selections, isFullCashout, cashoutPercent, prevCashoutAmount).GetAwaiter().GetResult();
 
-                if (message.ClientCode.ToUpper() == "RKP")
-                    cashoutStake = (long)(message.CashOutStake * .10m) * 10000;
-                else
-                    cashoutStake = (long)(message.CashOutStake * 10000);
+                _logger.LogInformation("ValidateCashoutWithProvider: {betId} channel {channelTypeId} -> {acceptance} ({reason})", message.BetId, message.ChannelTypeId, providerResult.Acceptance, providerResult.Reason);
 
-                //var cashoutStake = (long)(message.CashOutStake * 10000);
-
-                var betCashout = _factory.CreateTicketCashoutBuilder().SetTicketId(message.BetId.ToString().ToUpper()).SetCashoutStake(cashoutStake).BuildTicket();
-
-                var response = mts.SendTicketCashoutBlocking(betCashout);
-
-                betStatus = response.Status;
-                reason = $"{response.Reason.Code} - {response.Reason.Message}";
-
-                return new Tuple<CashoutAcceptance, string>(betStatus, reason);
+                return new Tuple<CashoutAcceptance, string>(
+                    providerResult.Acceptance == BetAcceptance.Accepted ? CashoutAcceptance.Accepted : CashoutAcceptance.Rejected,
+                    providerResult.Reason);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "ValidateCashoutWithProvider Error for bet {betId}", message.BetId);
                 return new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Rejected, $"10000 - {ex.Message}");
             }
         }
 
-        private Tuple<CashoutAcceptance, string> SendPartialCashoutToMTS(OnCashoutBetSettlement message, IMtsSdk mts, decimal cashoutPercent, decimal prevCashoutAmount)
-        {
-            try
-            {
-                _factory = mts.BuilderFactory;
-
-                CashoutAcceptance betStatus;
-                string reason;
-
-                var cashoutStake = (long)0;
-                var cashoutStakePercent = (int)0;
-
-                if (message.ClientCode.ToUpper() == "RKP")
-                {
-                    cashoutStake = (long)((prevCashoutAmount + message.CashOutStake) * .10m) * 10000;
-                    cashoutStakePercent = (int)((cashoutPercent * 100) * .10m) * 10000;
-                }
-                else
-                {
-                    cashoutStake = (long)((prevCashoutAmount + message.CashOutStake) * 10000);
-                    cashoutStakePercent = (int)((cashoutPercent * 100) * 10000);
-                }
-
-                var betCashout = _factory.CreateTicketCashoutBuilder().SetTicketId(message.BetId.ToString().ToUpper()).SetCashoutStake(cashoutStake).SetCashoutPercent(cashoutStakePercent).BuildTicket();
-
-                var response = mts.SendTicketCashoutBlocking(betCashout);
-
-                betStatus = response.Status;
-                reason = $"{response.Reason.Code} - {response.Reason.Message}";
-
-                return new Tuple<CashoutAcceptance, string>(betStatus, reason);
-            }
-            catch (Exception ex)
-            {
-                return new Tuple<CashoutAcceptance, string>(CashoutAcceptance.Rejected, $"10000 - {ex.Message}");
-            }
-        }
-
-        public void ProcessCashOut(OnCashoutBetSettlement message, IMtsSdk mts, IMessageBroker messageBroker, string correlationId)
+        public void ProcessCashOut(OnCashoutBetSettlement message, IMessageBroker messageBroker, string correlationId)
         {
             try
             {
@@ -578,18 +571,26 @@ namespace Platform.CashOut.Service.Repository
                     {
                         var result = JsonSerializer.Deserialize<BaseResponseDTO<CashoutStateResponseDTO>>(initial.Content.ReadAsStringAsync().Result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
+                        // For partial cashouts the fresh quote values are for the WHOLE bet and must
+                        // be scaled by the requested percent, mirroring Betting.API's original
+                        // publish (quote value x CashOutStakePercent) — otherwise a partial live
+                        // cashout is settled with the full-bet amounts.
+                        var isPartial = message.CashoutType == CashoutType.Partial;
+                        var percent = isPartial ? message.CashOutStakePercent : 1m;
+
                         var payload = new OnCashoutBetSettlement
                         {
                             BetId = result.Result.BetId,
                             ClientId = message.ClientId,
                             ClientCode = message.ClientCode,
                             UserId = message.UserId,
+                            ChannelTypeId = message.ChannelTypeId,
                             CashoutType = message.CashoutType,
-                            CashOutStake = result.Result.CashOutStake,
+                            CashOutStake = result.Result.CashOutStake * percent,
                             CashOutStakePercent = message.CashOutStakePercent,
-                            TaxedStake = result.Result.TaxedStake,
-                            TaxedWinnings = result.Result.TaxedWinnings,
-                            NonTaxedPayout = result.Result.NonTaxedPayout,
+                            TaxedStake = result.Result.TaxedStake * percent,
+                            TaxedWinnings = result.Result.TaxedWinnings * percent,
+                            NonTaxedPayout = result.Result.NonTaxedPayout * percent,
                             HasLive = message.HasLive,
                             Probabilities = result.Result.Probabilities,
                             Endpoint = message.Endpoint,
@@ -639,7 +640,7 @@ namespace Platform.CashOut.Service.Repository
 
                         if (isSuccess == true)
                         {
-                            ProcessCashOutSettlement(payload, mts, messageBroker, correlationId);
+                            ProcessCashOutSettlement(payload, messageBroker, correlationId);
                         }
                     }
                     else
@@ -659,7 +660,7 @@ namespace Platform.CashOut.Service.Repository
                 }
                 else
                 {
-                    ProcessCashOutSettlement(message, mts, messageBroker, correlationId);
+                    ProcessCashOutSettlement(message, messageBroker, correlationId);
                 }
 
             }

@@ -281,6 +281,7 @@ namespace Platform.Betting.API.Repository
                             probabilites.Add(new Probabilities
                             {
                                 BetSelectionId = selection.BetSelectionId,
+                                IsLive = selectionProbability.FixtureStatusId == (int)FixtureStatus.Live,
                                 CashOutStatusId = 1,
                                 Probability = selectionProbability.Probability,
                                 WonProbability = selectionProbability.WonProbability,
@@ -398,6 +399,7 @@ namespace Platform.Betting.API.Repository
                                         Probabilities = probabilites.Select(s => new Probabilities
                                         {
                                             BetSelectionId = s.BetSelectionId,
+                                            IsLive = s.IsLive,
                                             CashOutStatusId = s.CashOutStatusId,
                                             Probability = s.Probability,
                                             WonProbability = s.WonProbability,
@@ -438,6 +440,7 @@ namespace Platform.Betting.API.Repository
                                         Probabilities = probabilites.Select(s => new Probabilities
                                         {
                                             BetSelectionId = s.BetSelectionId,
+                                            IsLive = s.IsLive,
                                             CashOutStatusId = s.CashOutStatusId,
                                             Probability = s.Probability,
                                             WonProbability = s.WonProbability,

@@ -49,6 +49,31 @@ HttpClient. Read-through caching inside the repo. See [RepositoryPatterns.md](Re
 matches by `ChannelType` (BG/EM/OD/SR); `ILiveStreamFactory` mirrors it. Add a provider = implement
 the interface + register. See [SharedLibraries.md](SharedLibraries.md) §3.
 
+### How to resolve a provider from a worker service (the canonical recipe)
+Reference implementations: `Platform.Placement.Servicev2` (placement), `Platform.Provider.Service`
+(cancellation/settlement/cashout bet update), `Platform.CashOut.Service` (cashout gate).
+
+1. **The message must carry the channel.** Use the `ChannelTypeId` property on the message model
+   (`OnBetPlacement`, `OnBetSettlement`, `OnCashoutBetSettlement` all default it to
+   `(int)ChannelType.BG`). If a flow re-builds a payload (e.g. the live-cashout re-quote), copy
+   `ChannelTypeId` across or the default silently wins.
+2. **Register with the per-service `AddBettingProviders()` extension**
+   (`Extensions/ServiceCollectionBettingExtensions.cs`, copy the one in `Platform.Placement.Servicev2`):
+   Scoped `IBetProviderFactory`, `AddHttpClient` for the GTS **and** MTS repositories, Scoped
+   `MtsBetProvider` + `GTSBetProvider`, `IParlayBonusService`, Singleton `IMemCache`.
+3. **Both providers are constructed on every `Resolve`** (the factory takes
+   `IEnumerable<IBetProvider>`), so appsettings must contain the API endpoints for **both**
+   providers even if only one is used: `API:GTSAuthAPI|GTSAPI|MTSAuthAPI|MTSMaxStakeAPI`
+   (+ `Custom:GTSClientID|GTSClientSecret`) — a missing key throws `new Uri(null)` at resolve time.
+4. **From a Singleton repository/worker**: inject `IServiceScopeFactory`, then per message
+   `using var scope = _scopeFactory.CreateScope();` →
+   `scope.ServiceProvider.GetRequiredService<IBetProviderFactory>()` → `Resolve(message.ChannelTypeId)`.
+5. **Never add call-site provider flags.** Providers self-gate on `Custom:IsProviderEnabled`
+   (disabled ⇒ auto-accept); the legacy `Custom:IsMTSEnabled` pattern is retired.
+6. **The MTS SDK is provider-owned** (`MtsBetProvider.EnsureInitialized`, reads `App.config` via
+   `MtsSdk.GetConfiguration()` — the service needs an `App.config`). Do not open an `MtsSdk` in a
+   `Worker`.
+
 ## 5. Extension methods `[Verified]`
 Two kinds: (a) **`IServiceCollection` registration extensions** (the DI grouping idiom); (b)
 **type extensions** in `Platform.Shared/Extensions` (DateTime/Decimal/String/Hash/List/Int/Object/

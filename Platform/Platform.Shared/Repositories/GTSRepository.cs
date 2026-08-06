@@ -389,7 +389,134 @@ namespace Platform.Shared.Repositories
         }
 
 
-        public async Task<BaseResponseDTO<string>> SendBet(string authToken, SendBet request, string testPrefix = "", bool isSettled = false)
+        // Cash-out eligibility via Bet Assessment API (GTS Back-End Integration doc):
+        // same message as a bet assessment, but betId gets a "cashout-" prefix, totalStake is
+        // a default unit of 1, and legs settled before the cashout are excluded.
+        // gameState per leg: the stored BetSelection.FixtureStatusId is placement-time and goes
+        // stale when a prematch fixture goes live, so prefer the quote-time per-leg liveness in
+        // `probabilities` (matched by BetSelectionId); fall back to the bet-level isInPlay flag,
+        // then to the stored fixture status.
+        public async Task<BaseResponseDTO<ProviderAssessmentResponseDTO>> CashoutAssessment(string authToken, OnBetSettlement request, string testPrefix = "", bool isInPlay = false, List<CashedOutProbabilities> probabilities = null)
+        {
+            using (var activity = _activitySource.StartActivity("gts.cashout.assessment"))
+            {
+                activity?.SetTag("provider.enabled", _configuration["Custom:IsProviderEnabled"]);
+
+                if (Convert.ToBoolean(_configuration["Custom:IsProviderEnabled"]) == false)
+                {
+                    return new BaseResponseDTO<ProviderAssessmentResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString(),
+                        Result = new ProviderAssessmentResponseDTO
+                        {
+                            Stake = 0m,
+                            IsBetAllowed = true
+                        }
+                    };
+                }
+
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
+
+                try
+                {
+                    var bookmakerId = request.Bet.LimitId;
+
+                    activity?.SetTag("gts.bookmaker.id", bookmakerId);
+
+                    // Legs already settled (won/lost/void/...) before the cashout must be excluded;
+                    // legs cashed out now were Running until this cashout, so they are included.
+                    var activeSelections = request.BetSelections
+                        .Where(s => s.BetSelectionStatusId == (int)BetStatus.Running
+                                 || s.BetSelectionStatusId == (int)BetStatus.CashedOut)
+                        .ToList();
+
+                    var payload = new
+                    {
+                        betId = $"cashout-{testPrefix}{request.Bet.BetId.ToString().ToUpper()}",
+                        playerId = request.Bet.UserId,
+                        totalStake = 1m,
+                        currencyCode = "EUR",
+                        legs = activeSelections.Select(s => new
+                        {
+                            selectionId = s.SelectionSpecifier.Split(':').LastOrDefault(),
+                            gameState = GetCashoutGameState(s, isInPlay, probabilities),
+                            price = s.Odds
+                        }).ToList(),
+                        priceChangeRule = "AcceptAny"
+                    };
+
+                    activity?.SetTag("gts.cashout.assessment.payload", payload);
+                    _logger.LogInformation($"CashoutAssessment Payload: {JsonSerializer.Serialize(payload)}");
+
+                    var response = await _httpClient.PostAsync($"v1/platforms/song88/bookmakers/{bookmakerId}/assessment", new StringContent(JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var initialResult = JsonSerializer.Deserialize<GTSAssessmentResponseDTO>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                        if (initialResult.IsBetAllowed == false)
+                            _logger.LogWarning($"CashoutAssessment Result: {JsonSerializer.Serialize(initialResult)}");
+
+                        activity?.SetTag("gts.cashout.assessment.result", initialResult);
+                        activity?.SetStatus(ActivityStatusCode.Ok);
+
+                        return new BaseResponseDTO<ProviderAssessmentResponseDTO>
+                        {
+                            StatusCode = StatusCode.Success,
+                            Message = StatusCode.Success.ToString(),
+                            Result = new ProviderAssessmentResponseDTO
+                            {
+                                Stake = initialResult.MaxAllowedStake,
+                                IsBetAllowed = initialResult.IsBetAllowed,
+                                IsPending = initialResult.BetAssessmentResult == "AssessmentDelayed",
+                                Message = initialResult.IsBetAllowed == false ?
+                                    initialResult.Legs?.FirstOrDefault(l => l.RejectReason != null)?.RejectReason?.ReasonMessage ?? string.Empty :
+                                    string.Empty
+                            }
+                        };
+                    }
+                    else
+                    {
+                        var responseError = await response.Content.ReadAsStringAsync();
+                        _logger.LogError($"CashoutAssessment Error: {responseError}");
+
+                        activity?.SetStatus(ActivityStatusCode.Error, responseError);
+
+                        return new BaseResponseDTO<ProviderAssessmentResponseDTO>
+                        {
+                            StatusCode = StatusCode.Error,
+                            Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({responseError})",
+                            Result = new ProviderAssessmentResponseDTO
+                            {
+                                Stake = 0,
+                                Message = $"1027 - Failed sending Cashout Assessment to GTS ({responseError})"
+                            }
+                        };
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"CashoutAssessment Exception: {ex.Message}-{ex.StackTrace}");
+
+                    activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+
+                    return new BaseResponseDTO<ProviderAssessmentResponseDTO>
+                    {
+                        StatusCode = StatusCode.Error,
+                        Message = $"{StatusCode.Error.ToString().Replace('_', ' ')} ({ex.Message})",
+                        Result = new ProviderAssessmentResponseDTO
+                        {
+                            Stake = 0,
+                            Message = $"1025 - Failed sending Cashout Assessment to GTS ({ex.Message})"
+                        }
+                    };
+                }
+            } // activity
+        }
+
+        public async Task<BaseResponseDTO<string>> SendBet(string authToken, SendBet request, string testPrefix = "", bool isSettled = false, GtsCashout cashout = null)
         {
             using(var activity = _activitySource.StartActivity("gts.bet.placement"))
             {
@@ -404,29 +531,47 @@ namespace Platform.Shared.Repositories
                     var totalStake = ConvertToEur(request.Bet.TrueStake, request.Bet.ExchangeRate);
                     var updateDate = isSettled ? DateTime.UtcNow : request.Bet.BetDate;
 
-                    var payload = new
+                    var legs = request.BetSelections.Select(s => new
                     {
-                        id = $"{testPrefix}{request.Bet.BetId.ToString().ToUpper()}",
-                        betPlacedTimestampUTC = request.Bet.BetDate,
-                        betUpdatedTimestampUTC = DateTime.UtcNow,
-                        bookMakerName = request.Bet.ClientCode,
-                        playerId = request.Bet.UserId,
-                        totalStake = totalStake,
-                        currencyCode = "EUR",
-                        status = GetGtsBetStatus(request.Bet.BetStatusId),
-                        payout = isSettled ? (decimal?)(ConvertToEur(request.Bet.Payout, request.Bet.ExchangeRate)) : null,
-                        legs = request.BetSelections.Select(s => new
+                        status = GetGtsSelectionStatus(s.BetSelectionStatusId),
+                        gameState = GetGameState((int)s.FixtureStatusId),
+                        price = s.Odds,
+                        payoutPrice = isSettled ? GetSelectionPayout(s.BetSelectionStatusId, s.Odds, request.Bet, request.BetSelections.Count == 1) : null,
+                        betGeniusContent = new
                         {
-                            status = GetGtsBetStatus(s.BetSelectionStatusId),
-                            gameState = GetGameState((int)s.FixtureStatusId),
-                            price = s.Odds,
-                            payoutPrice = isSettled ? GetSelectionPayout(s.BetSelectionStatusId, s.Odds, request.Bet, request.BetSelections.Count == 1) : null,
-                            betGeniusContent = new
-                            {
-                                selectionId = s.SelectionSpecifier.Split(':').LastOrDefault()
-                            }
-                        }).ToList(),
-                    };
+                            selectionId = s.SelectionSpecifier.Split(':').LastOrDefault()
+                        }
+                    }).ToList();
+
+                    object payload = cashout == null
+                        ? (object)new
+                        {
+                            id = $"{testPrefix}{request.Bet.BetId.ToString().ToUpper()}",
+                            betPlacedTimestampUTC = request.Bet.BetDate,
+                            betUpdatedTimestampUTC = DateTime.UtcNow,
+                            bookMakerName = request.Bet.ClientCode,
+                            playerId = request.Bet.UserId,
+                            totalStake = totalStake,
+                            currencyCode = "EUR",
+                            status = GetGtsBetStatus(request.Bet.BetStatusId),
+                            payout = isSettled ? (decimal?)(ConvertToEur(request.Bet.Payout, request.Bet.ExchangeRate)) : null,
+                            legs = legs,
+                        }
+                        : new
+                        {
+                            id = $"{testPrefix}{request.Bet.BetId.ToString().ToUpper()}",
+                            betPlacedTimestampUTC = request.Bet.BetDate,
+                            betUpdatedTimestampUTC = DateTime.UtcNow,
+                            bookMakerName = request.Bet.ClientCode,
+                            playerId = request.Bet.UserId,
+                            totalStake = totalStake,
+                            currencyCode = "EUR",
+                            status = GetGtsBetStatus(request.Bet.BetStatusId),
+                            payout = isSettled ? (decimal?)(ConvertToEur(request.Bet.Payout, request.Bet.ExchangeRate)) : null,
+                            legs = legs,
+                            cashedOutTotalStake = ConvertToEur(cashout.CashedOutTotalStake, request.Bet.ExchangeRate),
+                            cashedOutAmount = ConvertToEur(cashout.CashedOutAmount, request.Bet.ExchangeRate),
+                        };
 
                     activity?.SetTag("gts.bet.placement.payload", payload);
                     _logger.LogInformation($"SendBet Payload: {payload}");
@@ -577,11 +722,31 @@ namespace Platform.Shared.Repositories
             _ => Enums.Provider.GTS.BetStatus.Settled.ToString()
         };
 
+        // Leg-level status: per Genius Sports guidance, cashed-out legs are not updated —
+        // they stay Open (with payoutPrice null); the cashout is carried by the bet-level
+        // status/cashedOutTotalStake/cashedOutAmount/payout fields.
+        private string GetGtsSelectionStatus(int statusId) => statusId == (int)BetStatus.CashedOut
+            ? Enums.Provider.GTS.BetStatus.Open.ToString()
+            : GetGtsBetStatus(statusId);
+
         private string GetGameState(int fixtureStatusId) => fixtureStatusId switch
         {
             var s when s == 1 => "InPlay",
             _ => "PreMatch"
         };
+
+        // Per-leg gameState for the cashout assessment: quote-time liveness (exact, per leg)
+        // wins; without it, fall back to the bet-level in-play flag, then the stored
+        // placement-time fixture status.
+        private string GetCashoutGameState(BetSelection selection, bool isInPlay, List<CashedOutProbabilities> probabilities)
+        {
+            var probability = probabilities?.FirstOrDefault(p => p.BetSelectionId == selection.BetSelectionId);
+
+            if (probability != null)
+                return probability.IsLive ? "InPlay" : "PreMatch";
+
+            return isInPlay ? "InPlay" : GetGameState(selection.FixtureStatusId);
+        }
 
         private string GetPriceChangeRule(OddsChangeType oddsChangeType)
         {
@@ -613,6 +778,9 @@ namespace Platform.Shared.Repositories
                 (int)BetStatus.Won => odds,
                 (int)BetStatus.Void => 1,
                 (int)BetStatus.Cancelled => 1,
+                // Cashout: per Genius Sports guidance, cashed-out legs keep payoutPrice null —
+                // the cashout is reported only through the bet-level fields.
+                (int)BetStatus.CashedOut => (decimal?)null,
                 _ => 0m
             };
         }

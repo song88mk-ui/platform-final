@@ -22,6 +22,7 @@ namespace Platform.CashOut.Service
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddBettingProviders();
                     services.AddSingleton<IMessageBroker, MessageBroker>();
                     services.AddSingleton<IBettingRepository, BettingRepository>();
                     services.AddHostedService<Worker>();

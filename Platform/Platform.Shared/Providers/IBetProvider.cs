@@ -1,8 +1,10 @@
-﻿using Platform.Shared.Enums;
+﻿using Platform.Shared.Data.Betting.Entities;
+using Platform.Shared.Enums;
 using Platform.Shared.MessageModels;
 using Platform.Shared.Models;
 using Sportradar.MTS.SDK.Entities.Enums;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,8 +16,16 @@ namespace Platform.Shared.Providers
 
         Task<BetProviderResult> ValidateAsync(OnBetPlacement bet, CancellationToken cancellationToken);
 
+        // Pre-acceptance cash-out gate: called by Platform.CashOut.Service before any money moves.
+        // isFullCashout: full cashout with no prior partial cashouts on the bet.
+        Task<BetProviderResult> ValidateCashoutAsync(OnCashoutBetSettlement message, Bet bet, List<BetSelection> selections, bool isFullCashout, decimal cashoutPercent, decimal prevCashoutAmount);
+
         void ProcessCancellation(Guid betId, string limitId, string clientCode, string correlationId, bool isBackOfficeTrigger = false);
         void ProcessSettlement(OnBetSettlement bet, string correlationId);
+        // Returns Task (not async void) so the caller can hold its DI scope open until the
+        // provider call completes — otherwise the scoped HttpClient is disposed mid-flight
+        // and the update to the provider is silently lost.
+        Task ProcessCashout(OnBetSettlement bet, CashoutType cashoutType, string correlationId);
 
         Task<ProviderStakeResult> GetMaxStakeAsync(BetRequestDTO request);
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -28,7 +29,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
 using System.Xml;
-using static App.Metrics.Health.HealthCheck;
 using BettingStatus = Platform.Shared.Data.Sportsbook.Entities.BettingStatus;
 
 namespace Platform.Sportsbook.API.Repository
@@ -414,7 +414,9 @@ namespace Platform.Sportsbook.API.Repository
 
             var result = new List<TempTopLeague>();
 
-            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+            var sortOrder = GetLeagueOrder(request.ClientId).Where(c => c.SportId == request.SportId)
+                                .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                .ToDictionary(g => g.Key, g => g.First().SortOrder);
 
             var clientTopLeagues = new List<ClientTopLeague>();
 
@@ -438,8 +440,7 @@ namespace Platform.Sportsbook.API.Repository
                     SegmentName = GetTranslation(translations, s.SegId, "SegId", s.SegNa),
                     LeagueId = s.LeId,
                     LeagueName = GetTranslation(translations, s.LeId, "LeId", s.LeNa),
-                    SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                    SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
                 }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ToList();
             }
             else
@@ -472,8 +473,7 @@ namespace Platform.Sportsbook.API.Repository
                         SegmentName = GetTranslation(translations, s.SegId, "SegId", s.SegNa),
                         LeagueId = s.LeId,
                         LeagueName = GetTranslation(translations, s.LeId, "LeId", s.LeNa),
-                        SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                         == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                        SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
                     }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ToList();
                 }
             }
@@ -709,7 +709,9 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = GetTierLeagueOrder();
+            var sortOrder = GetLeagueOrder(request.ClientId)
+                                .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                .ToDictionary(g => g.Key, g => g.First().SortOrder);
 
             var translations = await LoadTranslations(fixtures, request.LanguageCode);
 
@@ -724,8 +726,7 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureId = s.FiId.ToString(),
                 FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                 FixtureStartDate = s.FiStDa,
-                SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             var finalResult = new List<TopFixture>();
@@ -778,7 +779,9 @@ namespace Platform.Sportsbook.API.Repository
                 };
             }
 
-            var sortOrder = GetTierLeagueOrder();
+            var sortOrder = GetLeagueOrder(request.ClientId)
+                                .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                .ToDictionary(g => g.Key, g => g.First().SortOrder);
 
             var translations = await LoadTranslations(fixtures, request.LanguageCode);
 
@@ -793,8 +796,7 @@ namespace Platform.Sportsbook.API.Repository
                 FixtureId = s.FiId.ToString(),
                 FixtureName = GetTranslation(translations, s.Id, "FiId", s.FiNa),
                 FixtureStartDate = s.FiStDa,
-                SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             var finalResult = new List<string>();
@@ -945,12 +947,13 @@ namespace Platform.Sportsbook.API.Repository
             }
 
             var translations = await LoadTranslations(fixtures, request.LanguageCode);
-            var sportIds = fixtures.Select(s => s.SpId).Distinct().ToList();
 
-            var leagueSortOrder = GetTierLeagueOrder().Where(c => sportIds.Contains(c.SportId)).ToList();
+            var sortOrder = GetLeagueOrder(request.ClientId)
+                                .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                .ToDictionary(g => g.Key, g => g.First().SortOrder);
+
             var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId && c.IsActive == true).ToList();
             var segmentOrder = GetSegmentOrder(request.ClientId);
-            var leagueOrder = GetLeagueOrder(request.ClientId);
             var activeSportIds = sportSortOrder.Select(s => s.SportId).ToList();
 
             var result = fixtures.Where(c => activeSportIds.Contains(c.SpId) && c.FiTyId == (int)FixtureType.Match).Select(s => new TempOrderedLeague
@@ -963,8 +966,7 @@ namespace Platform.Sportsbook.API.Repository
                 LeagueId = s.LeId,
                 LeagueName = GetTranslation(translations, s.LeId, "LeId", s.LeNa),
                 LeagueNameEN = s.LeNa,
-                LeagueSortOrder = leagueOrder.FirstOrDefault(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId)?.SortOrder ??
-                    leagueSortOrder.FirstOrDefault(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId)?.SortOrder + 1000 ?? 2000
+                LeagueSortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 2000
             }).ToList();
 
             var fixturesBySport = fixtures.GroupBy(f => f.SpId).ToDictionary(g => g.Key, g => g.ToList());
@@ -2703,10 +2705,10 @@ namespace Platform.Sportsbook.API.Repository
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
             var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
 
-            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
-            var sortOrderByLeague = sortOrder
+            var sortOrderByLeague = GetLeagueOrder(request.ClientId).Where(c => c.SportId == request.SportId)
                 .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
                 .ToDictionary(g => g.Key, g => g.First().SortOrder);
+
             var result = fixtures.Select(s => new TempFixtureDTO
             {
                 SportId = s.SpId,
@@ -2893,7 +2895,9 @@ namespace Platform.Sportsbook.API.Repository
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
             var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
 
-            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+            var sortOrder = GetLeagueOrder(request.ClientId).Where(c => c.SportId == request.SportId)
+                                .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                .ToDictionary(g => g.Key, g => g.First().SortOrder);
 
             var result = fixtures.Select(s => new TempFixtureDTO
             {
@@ -2925,8 +2929,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
-                SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                    SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             var initialResult = new List<TempFixtureDTO>();
@@ -3088,7 +3091,6 @@ namespace Platform.Sportsbook.API.Repository
             }
             var translations = await LoadTranslations(fixtures, request.LanguageCode);
 
-            List<TierLeagueOrder> sortOrder;
             List<TempFixtureDTO> result;
 
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
@@ -3130,8 +3132,7 @@ namespace Platform.Sportsbook.API.Repository
             }
             else
             {
-                sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
-            var sortOrderByLeague = sortOrder
+            var sortOrder = GetLeagueOrder(request.ClientId).Where(c => c.SportId == request.SportId)
                 .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
                 .ToDictionary(g => g.Key, g => g.First().SortOrder);
 
@@ -3165,7 +3166,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStop = s.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo,
                     IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
-                    SortOrder = sortOrderByLeague.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
+                    SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
                 }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             }
 
@@ -3342,7 +3343,6 @@ namespace Platform.Sportsbook.API.Repository
             }
             var translations = await LoadTranslations(fixtures, request.LanguageCode);
 
-            List<TierLeagueOrder> sortOrder;
             List<TempFixtureDTO> result;
 
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
@@ -3384,7 +3384,9 @@ namespace Platform.Sportsbook.API.Repository
             }
             else
             {
-                sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+                var sortOrder = GetLeagueOrder(request.ClientId).Where(c => c.SportId == request.SportId)
+                                    .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                    .ToDictionary(g => g.Key, g => g.First().SortOrder);
 
                 result = fixtures.Select(s => new TempFixtureDTO
                 {
@@ -3416,8 +3418,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStop = s.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo,
                     IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
-                    SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                    == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                    SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
                 }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             }
 
@@ -3579,7 +3580,6 @@ namespace Platform.Sportsbook.API.Repository
             }
             var translations = await LoadTranslations(fixtures, request.LanguageCode);
 
-            List<TierLeagueOrder> sortOrder;
             List<TempFixtureDTO> result;
 
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
@@ -3621,7 +3621,9 @@ namespace Platform.Sportsbook.API.Repository
             }
             else
             {
-                sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+                var sortOrder = GetLeagueOrder(request.ClientId).Where(c => c.SportId == request.SportId)
+                                    .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                    .ToDictionary(g => g.Key, g => g.First().SortOrder);
 
                 result = fixtures.Select(s => new TempFixtureDTO
                 {
@@ -3653,8 +3655,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStop = s.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo,
                     IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
-                    SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                    == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                    SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
                 }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             }
 
@@ -3821,7 +3822,6 @@ namespace Platform.Sportsbook.API.Repository
             }
             var translations = await LoadTranslations(fixtures, request.LanguageCode);
 
-            List<TierLeagueOrder> sortOrder;
             List<TempFixtureDTO> result;
 
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
@@ -3863,7 +3863,9 @@ namespace Platform.Sportsbook.API.Repository
             }
             else
             {
-                sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+                var sortOrder = GetLeagueOrder(request.ClientId).Where(c => c.SportId == request.SportId)
+                                    .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                    .ToDictionary(g => g.Key, g => g.First().SortOrder);
 
                 result = fixtures.Select(s => new TempFixtureDTO
                 {
@@ -3895,8 +3897,7 @@ namespace Platform.Sportsbook.API.Repository
                     IsBetStop = s.IsSu,
                     IsBetStopGlobal = bettingStatus.IsBeSo,
                     IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
-                    SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                    == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                    SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
                 }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
             }
 
@@ -4055,7 +4056,9 @@ namespace Platform.Sportsbook.API.Repository
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
             var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
 
-            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+            var sortOrder = GetLeagueOrder(request.ClientId).Where(c => c.SportId == request.SportId)
+                                .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                .ToDictionary(g => g.Key, g => g.First().SortOrder);
             var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
                                     new CountrySegment
                                     {
@@ -4094,8 +4097,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
-                SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             var initialResult = new List<TempFixtureDTO>();
@@ -4252,7 +4254,9 @@ namespace Platform.Sportsbook.API.Repository
             var betBuilderMarketTemplates = GetBetBuilderMarketTemplates();
             var betBuilderSportIds = betBuilderMarketTemplates.Select(s => s.SportId).Distinct().ToList();
 
-            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+            var sortOrder = GetLeagueOrder(request.ClientId).Where(c => c.SportId == request.SportId)
+                                .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                .ToDictionary(g => g.Key, g => g.First().SortOrder);
             var countrySegment = GetSegmentCountry().SelectMany(s => s.SportSegmentIds.Split(',').Select(ss =>
                                     new CountrySegment
                                     {
@@ -4291,8 +4295,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
-                SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             var initialResult = new List<TempFixtureDTO>();
@@ -4430,7 +4433,9 @@ namespace Platform.Sportsbook.API.Repository
             }
             var translations = await LoadTranslations(fixtures, request.LanguageCode);
 
-            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+            var sortOrder = GetLeagueOrder(request.ClientId).Where(c => c.SportId == request.SportId)
+                                .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                .ToDictionary(g => g.Key, g => g.First().SortOrder);
 
             var result = fixtures.Select(s => new TempFixtureDTO
             {
@@ -4463,8 +4468,7 @@ namespace Platform.Sportsbook.API.Repository
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
-                SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.EnSegmentName).ThenBy(o => o.EnLeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.EnFixtureName).ToList();
 
             var initialResult = new List<TempFixtureDTO>();
@@ -4592,7 +4596,9 @@ namespace Platform.Sportsbook.API.Repository
             }
             var translations = await LoadTranslations(fixtures, request.LanguageCode);
 
-            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+            var sortOrder = GetLeagueOrder(request.ClientId).Where(c => c.SportId == request.SportId)
+                                .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                .ToDictionary(g => g.Key, g => g.First().SortOrder);
 
             var result = fixtures.Select(s => new TempFixtureDTO
             {
@@ -4622,8 +4628,7 @@ namespace Platform.Sportsbook.API.Repository
                 BetStop = s.IsSu ? new List<int> { 1 } : new List<int> { },
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
-                SortOrder = sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
 
             var initialResult = new List<TempFixtureDTO>();
@@ -4750,7 +4755,9 @@ namespace Platform.Sportsbook.API.Repository
 
             var resultInitial = new List<TempTopLeague>();
 
-            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId).ToList();
+            var sortOrder = GetLeagueOrder(request.ClientId).Where(c => c.SportId == request.SportId)
+                                .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                .ToDictionary(g => g.Key, g => g.First().SortOrder);
 
             var clientTopLeagues = new List<ClientTopLeague>();
 
@@ -4774,8 +4781,7 @@ namespace Platform.Sportsbook.API.Repository
                     SegmentName = s.SegNa,
                     LeagueId = s.LeId,
                     LeagueName = s.LeNa,
-                    SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                    == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                    SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
                 }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ToList();
             }
             else
@@ -4808,8 +4814,7 @@ namespace Platform.Sportsbook.API.Repository
                         SegmentName = s.SegNa,
                         LeagueId = s.LeId,
                         LeagueName = s.LeNa,
-                        SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                         == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
+                        SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
                     }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ToList();
                 }
             }
@@ -4873,6 +4878,10 @@ namespace Platform.Sportsbook.API.Repository
                                         SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
                                     }).ToList()).ToList();
 
+            var clientTopLeagueOrder = clientTopLeagues
+                                .GroupBy(c => (c.SegmentId, c.LeagueId))
+                                .ToDictionary(g => g.Key, g => g.First().SortOrder);
+
             var result = fixtures2.Select(s => new FixtureDTO
             {
                 SportId = s.SpId,
@@ -4903,7 +4912,8 @@ namespace Platform.Sportsbook.API.Repository
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
-                SortOrder = clientTopLeagues.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() == 0 ? sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() : clientTopLeagues.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault(),
+                SortOrder = clientTopLeagueOrder.TryGetValue((s.SegId, s.LeId), out var cto) && cto != 0 ? cto
+                                : (sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000),
                 CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == s.SpId && cc.SegmentId == s.SegId)?.CountryId ?? 0,
                 Markets = GetMainMarkets(marketTranslations, s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, s.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -4978,7 +4988,9 @@ namespace Platform.Sportsbook.API.Repository
                                         SegmentId = Convert.ToInt32(ss.Split(':').LastOrDefault())
                                     }).ToList()).ToList();
 
-            var sortOrder = GetTierLeagueOrder().Where(c => c.SportId == request.SportId && c.SegmentId == request.SegmentId).ToList();
+            var sortOrder = GetLeagueOrder(request.ClientId).Where(c => c.SportId == request.SportId)
+                                .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                .ToDictionary(g => g.Key, g => g.First().SortOrder);
 
             var fixtureIds = fixtures.Select(s => Convert.ToInt64(s.FiId)).ToList();
             var marketTemplateIds = GetMainMarketTemplates(request.SportId, request.ClientId);
@@ -5031,7 +5043,7 @@ namespace Platform.Sportsbook.API.Repository
                 IsBetStop = s.IsSu,
                 IsBetStopGlobal = bettingStatus.IsBeSo,
                 IsBetBuilder = IsBetBuilder(s.SpId, s.FiTyId, s.FiStId, betBuilderMarketTemplates),
-                SortOrder = sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault() == 0 ? 1000 : sortOrder.Where(c => c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault(),
+                SortOrder = sortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000,
                 CountryId = countrySegment.FirstOrDefault(cc => cc.SportId == s.SpId && cc.SegmentId == s.SegId)?.CountryId ?? 0,
                 Markets = GetMainMarkets(marketTranslations, s.SpId, s.FiTyId, markets.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), selections.Result.Where(c => c.FiId == Convert.ToInt64(s.FiId)).ToList(), request.LanguageCode, request.ClientCode, s.FiStId, filteredBetBuilderMarketTemplates, request.ClientId)
             }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ThenBy(o => o.LeagueName).ThenBy(o => o.FixtureStartDate).ThenBy(o => o.FixtureName).ToList();
@@ -5269,7 +5281,9 @@ namespace Platform.Sportsbook.API.Repository
             var fixtureListStartsWith = new List<SearchResponse>();
             var fixtureListNotStartsWith = new List<SearchResponse>();
 
-            var sortOrder = GetTierLeagueOrder();
+            var sortOrder = GetLeagueOrder(request.ClientId)
+                                .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                .ToDictionary(g => g.Key, g => g.First().SortOrder);
 
             foreach (var league in finalLeagues)
             {
@@ -5453,8 +5467,7 @@ namespace Platform.Sportsbook.API.Repository
                 LeagueName = s.LeagueName,
                 FixtureId = s.FixtureId,
                 FixtureName = s.FixtureName,
-                SortOrder = sortOrder.Where(c => c.SportId == s.SportId && c.SegmentId == s.SegmentId && c.LeagueId == s.LeagueId).Select(s => s.SortOrder).FirstOrDefault()
-                == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SportId && c.SegmentId == s.SegmentId && c.LeagueId == s.LeagueId).Select(s => s.SortOrder).FirstOrDefault()
+                SortOrder = sortOrder.TryGetValue((s.SportId, s.SegmentId, s.LeagueId), out var so) && so != 0 ? so : 1000
             }).OrderBy(o => o.SortOrder).ToList();
 
             var final2 = notStartsWith.Select(s => new TempSearchResponse
@@ -5467,8 +5480,7 @@ namespace Platform.Sportsbook.API.Repository
                 LeagueName = s.LeagueName,
                 FixtureId = s.FixtureId,
                 FixtureName = s.FixtureName,
-                SortOrder = sortOrder.Where(c => c.SportId == s.SportId && c.SegmentId == s.SegmentId && c.LeagueId == s.LeagueId).Select(s => s.SortOrder).FirstOrDefault()
-                == 0 ? 1000 : sortOrder.Where(c => c.SportId == s.SportId && c.SegmentId == s.SegmentId && c.LeagueId == s.LeagueId).Select(s => s.SortOrder).FirstOrDefault()
+                SortOrder = sortOrder.TryGetValue((s.SportId, s.SegmentId, s.LeagueId), out var so) && so != 0 ? so : 1000
             }).OrderBy(o => o.SortOrder).ToList();
 
             if (final1.Count > 0)
@@ -8866,116 +8878,117 @@ namespace Platform.Sportsbook.API.Repository
         {
             try
             {
-            var maintenance = GetMaintenance();
+                var maintenance = GetMaintenance();
 
-            if (maintenance.isMa)
-            {
-                return new BaseResponseDTO<BackofficeSportsResponseDTO>
+                if (maintenance.isMa)
                 {
-                    StatusCode = StatusCode.Maintenance,
-                    Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
-                };
-            }
+                    return new BaseResponseDTO<BackofficeSportsResponseDTO>
+                    {
+                        StatusCode = StatusCode.Maintenance,
+                        Message = StatusCode.Maintenance.ToString().Replace('_', ' ')
+                    };
+                }
 
-            var virtualSportIds = IntExtensions.GetVirtualSportIds();
-            var fixtureFilter = Builders<Fixture>.Filter.Where(c => (c.FiStId == (int)FixtureStatus.Prematch || c.FiStId == (int)FixtureStatus.Live || c.FiStId == (int)FixtureStatus.Suspended) && !virtualSportIds.Contains(c.SpId));
-            var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
-            if (IsOEEnable(request.ClientCode))
-                fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode)).ToList();
+                var virtualSportIds = IntExtensions.GetVirtualSportIds();
+                var fixtureFilter = Builders<Fixture>.Filter.Where(c => (c.FiStId == (int)FixtureStatus.Prematch || c.FiStId == (int)FixtureStatus.Live || c.FiStId == (int)FixtureStatus.Suspended) && !virtualSportIds.Contains(c.SpId));
+                var fixtures = await fixtureCollection.Find(fixtureFilter).ToListAsync();
+                if (IsOEEnable(request.ClientCode))
+                    fixtures = fixtures.Where(f => f.ClCo.Contains(request.ClientCode)).ToList();
 
-            if (fixtures.Count == 0)
-            {
+                if (fixtures.Count == 0)
+                {
+                    return new BaseResponseDTO<BackofficeSportsResponseDTO>
+                    {
+                        StatusCode = StatusCode.Success,
+                        Message = StatusCode.Success.ToString(),
+                        Result = new BackofficeSportsResponseDTO()
+                    };
+                }
+
+                var sportIds = fixtures.Select(s => s.SpId).Distinct().ToList();
+
+                var leagueSortOrder = GetLeagueOrder(request.ClientId)
+                                    .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                    .ToDictionary(g => g.Key, g => g.First().SortOrder);
+                var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
+
+                var fixtureResult = fixtures.Where(c => c.FiTyId == (int)FixtureType.Match)
+                    .Select(s => new TempOrderedFixture
+                    {
+                        SportId = s.SpId,
+                        SportName = s.SpNa,
+                        SegmentId = s.SegId,
+                        SegmentName = s.SegNa,
+                        LeagueId = s.LeId,
+                        LeagueName = s.LeNa,
+                        FixtureId = s.FiId,
+                        FixtureName = s.FiNa,
+                        StartDate = s.FiStDa,
+                        FixtureStatus = s.FiStNa,
+                        SortOrder = leagueSortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
+                    }).ToList();
+
+                var sportResult = fixtures.Select(s => new TempDistinctOrderedSport
+                {
+                    SportId = s.SpId,
+                    SportName = s.SpNa,
+                    HasOutrights = fixtures.Any(c => c.SpId == s.SpId && c.FiTyId == (int)FixtureType.Outright),
+                    SortOrder = sportSortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
+                        == 0 ? 1000 : sportSortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
+                }).Distinct().OrderBy(o => o.SortOrder).ThenBy(o => o.SportName).ToList();
+
+                var finalResult = sportResult.Select(s => new OrderedSport
+                {
+                    SportId = s.SportId,
+                    SportName = s.SportName
+                }).ToList();
+
+                var final = new List<BackofficeSportDTO>();
+
+                foreach (var sport in finalResult)
+                {
+                    final.Add(new BackofficeSportDTO
+                    {
+                        SportId = sport.SportId,
+                        SportName = sport.SportName,
+                        Segments = fixtureResult.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new BackofficeSegmentDTO
+                        {
+                            SegmentId = s.Key,
+                            SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
+                            SortOrder = s.Select(se => se.SortOrder).FirstOrDefault(),
+                            Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new BackofficeLeagueDTO
+                            {
+                                LeagueId = l.Key,
+                                LeagueName = l.Select(le => le.LeagueName).FirstOrDefault(),
+                                SortOrder = l.Select(le => le.SortOrder).FirstOrDefault(),
+                                Fixtures = l.Select(f => new BackofficeFixtureDTO
+                                {
+                                    SportId = f.SportId,
+                                    SportName = f.SportName,
+                                    SegmentId = f.SegmentId,
+                                    SegmentName = f.SegmentName,
+                                    LeagueId = f.LeagueId,
+                                    LeagueName = f.LeagueName,
+                                    FixtureId = f.FixtureId.ToString(),
+                                    FixtureName = f.FixtureName,
+                                    StartDate = f.StartDate,
+                                    FixtureStatus = f.FixtureStatus,
+                                    SortOrder = f.SortOrder
+                                }).OrderBy(o => o.SortOrder).ThenBy(o => o.FixtureName).ToList()
+                            }).OrderBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ToList()
+                        }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ToList()
+                    });
+                }
+
                 return new BaseResponseDTO<BackofficeSportsResponseDTO>
                 {
                     StatusCode = StatusCode.Success,
                     Message = StatusCode.Success.ToString(),
-                    Result = new BackofficeSportsResponseDTO()
-                };
-            }
-
-            var sportIds = fixtures.Select(s => s.SpId).Distinct().ToList();
-
-            var leagueSortOrder = GetTierLeagueOrder().Where(c => sportIds.Contains(c.SportId)).ToList();
-            var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
-
-            var fixtureResult = fixtures.Where(c => c.FiTyId == (int)FixtureType.Match)
-                .Select(s => new TempOrderedFixture
-                {
-                    SportId = s.SpId,
-                    SportName = s.SpNa,
-                    SegmentId = s.SegId,
-                    SegmentName = s.SegNa,
-                    LeagueId = s.LeId,
-                    LeagueName = s.LeNa,
-                    FixtureId = s.FiId,
-                    FixtureName = s.FiNa,
-                    StartDate = s.FiStDa,
-                    FixtureStatus = s.FiStNa,
-                    SortOrder = leagueSortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                    == 0 ? 1000 : leagueSortOrder.Where(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId).Select(s => s.SortOrder).FirstOrDefault()
-                }).ToList();
-
-            var sportResult = fixtures.Select(s => new TempDistinctOrderedSport
-            {
-                SportId = s.SpId,
-                SportName = s.SpNa,
-                HasOutrights = fixtures.Any(c => c.SpId == s.SpId && c.FiTyId == (int)FixtureType.Outright),
-                SortOrder = sportSortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
-                    == 0 ? 1000 : sportSortOrder.Where(c => c.SportId == s.SpId).Select(s => s.SortOrder).FirstOrDefault()
-            }).Distinct().OrderBy(o => o.SortOrder).ThenBy(o => o.SportName).ToList();
-
-            var finalResult = sportResult.Select(s => new OrderedSport
-            {
-                SportId = s.SportId,
-                SportName = s.SportName
-            }).ToList();
-
-            var final = new List<BackofficeSportDTO>();
-
-            foreach (var sport in finalResult)
-            {
-                final.Add(new BackofficeSportDTO
-                {
-                    SportId = sport.SportId,
-                    SportName = sport.SportName,
-                    Segments = fixtureResult.Where(c => c.SportId == sport.SportId).GroupBy(gse => gse.SegmentId).Select(s => new BackofficeSegmentDTO
+                    Result = new BackofficeSportsResponseDTO
                     {
-                        SegmentId = s.Key,
-                        SegmentName = s.Select(se => se.SegmentName).FirstOrDefault(),
-                        SortOrder = s.Select(se => se.SortOrder).FirstOrDefault(),
-                        Leagues = s.GroupBy(gle => gle.LeagueId).Select(l => new BackofficeLeagueDTO
-                        {
-                            LeagueId = l.Key,
-                            LeagueName = l.Select(le => le.LeagueName).FirstOrDefault(),
-                            SortOrder = l.Select(le => le.SortOrder).FirstOrDefault(),
-                            Fixtures = l.Select(f => new BackofficeFixtureDTO
-                            {
-                                SportId = f.SportId,
-                                SportName = f.SportName,
-                                SegmentId = f.SegmentId,
-                                SegmentName = f.SegmentName,
-                                LeagueId = f.LeagueId,
-                                LeagueName = f.LeagueName,
-                                FixtureId = f.FixtureId.ToString(),
-                                FixtureName = f.FixtureName,
-                                StartDate = f.StartDate,
-                                FixtureStatus = f.FixtureStatus,
-                                SortOrder = f.SortOrder
-                            }).OrderBy(o => o.SortOrder).ThenBy(o => o.FixtureName).ToList()
-                        }).OrderBy(o => o.SortOrder).ThenBy(o => o.LeagueName).ToList()
-                    }).OrderBy(o => o.SortOrder).ThenBy(o => o.SegmentName).ToList()
-                });
-            }
-
-            return new BaseResponseDTO<BackofficeSportsResponseDTO>
-            {
-                StatusCode = StatusCode.Success,
-                Message = StatusCode.Success.ToString(),
-                Result = new BackofficeSportsResponseDTO
-                {
-                    Sports = final
-                }
-            };
+                        Sports = final
+                    }
+                };
             }
             catch (Exception ex)
             {
@@ -11137,7 +11150,10 @@ namespace Platform.Sportsbook.API.Repository
             }
             var translations = await LoadTranslations(fixtures, request.LanguageCode);
 
-            var tierLeagueSortOrder = GetTierLeagueOrder().ToList();
+            var leagueSortOrder = GetLeagueOrder(request.ClientId)
+                                .GroupBy(c => (c.SportId, c.SegmentId, c.LeagueId))
+                                .ToDictionary(g => g.Key, g => g.First().SortOrder);
+
             var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
             var segmentSortOrder = GetSegmentOrder(request.ClientId);
 
@@ -11151,7 +11167,7 @@ namespace Platform.Sportsbook.API.Repository
                 SegmentOrder = segmentSortOrder.FirstOrDefault(c => c.SportId == s.SpId && c.SegmentId == s.SegId)?.SortOrder ?? 1000,
                 LeagueId = s.LeId,
                 LeagueName = GetTranslation(translations, s.LeId, "LeId", s.LeNa),
-                TierLeagueSortOrder = tierLeagueSortOrder.FirstOrDefault(c => c.SportId == s.SpId && c.SegmentId == s.SegId && c.LeagueId == s.LeId)?.SortOrder ?? 1000
+                TierLeagueSortOrder = leagueSortOrder.TryGetValue((s.SpId, s.SegId, s.LeId), out var so) && so != 0 ? so : 1000
             }).OrderBy(o => o.SportOrder).ToList();
 
             var sportIds = result.Select(s => s.SportId).Distinct().Take(5).ToList();
@@ -11235,11 +11251,12 @@ namespace Platform.Sportsbook.API.Repository
             var twResponse = new TWResponseDTO();
 
             var numSize = 5;
-            var tierLeagueSortOrder = GetTierLeagueOrder().ToList();
+            var leagueSortOrder = GetLeagueOrder(request.ClientId);
+
             var sportSortOrder = GetSportOrder().Where(c => c.ClientId == request.ClientId).ToList();
             var segmentSortOrder = GetSegmentOrder(request.ClientId);
 
-            var tierLeagueFixtures = tierLeagueSortOrder.GroupBy(x => x.SportId)
+            var tierLeagueFixtures = leagueSortOrder.GroupBy(x => x.SportId)
                                 .Select(x => new
                                 {
                                     Key = x.Key,

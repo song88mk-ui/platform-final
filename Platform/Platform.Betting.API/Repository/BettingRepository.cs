@@ -3111,11 +3111,18 @@ namespace Platform.Betting.API.Repository
                     }
                 }
 
-                // check if there are any bets that failed the validation
-                // if yes, then don't proceed to the next step
-                if (response.Data.Count(m => !m.IsSuccess) > 0)
+                // report bets that failed validation, but still settle the ones that passed
+                var failedBets = response.Data.Where(m => !m.IsSuccess).ToList();
+                if (failedBets.Count > 0)
                 {
-                    response.Message = string.Join(";", response.Data.Where(m => !m.IsSuccess).Select(s => s.Message).Distinct());
+                    response.Message = string.Join(";", failedBets.Select(s => s.Message).Distinct());
+                }
+
+                var validBetIds = response.Data.Where(m => m.IsSuccess).Select(m => m.BetDetails.BetId).ToHashSet();
+                betList = betList.Where(b => validBetIds.Contains(b.BetId)).ToList();
+
+                if (betList.Count == 0)
+                {
                     return new BaseResponseDTO<ManualSettlementResponseDTO>
                     {
                         StatusCode = StatusCode.Error,
@@ -3144,7 +3151,7 @@ namespace Platform.Betting.API.Repository
                 return new BaseResponseDTO<ManualSettlementResponseDTO>
                 {
                     StatusCode = success ? StatusCode.Success : StatusCode.Error,
-                    Message = success ? string.Empty : StatusCode.Error.ToString(),
+                    Message = success ? (response.Message ?? string.Empty) : StatusCode.Error.ToString(),
                     Result = response
                 };
             }
